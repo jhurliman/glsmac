@@ -19,10 +19,23 @@
 #include "gse/value/Float.h"
 #include "gse/value/Array.h"
 #include "game/backend/map/tile/TileManager.h"
+#include <memory>
+#include <limits>
 
 namespace game {
 namespace backend {
 namespace unit {
+
+static const std::string s_snapshot_format = "GLSMAC_UNITS_V1";
+
+static size_t ReadSnapshotCount( types::Buffer& buf ) {
+	const auto count = buf.ReadInt();
+	// Every record contains at least one typed Buffer frame (six bytes).
+	if ( count < 0 || buf.lenr > buf.lenw || static_cast< uint64_t >( count ) > ( buf.lenw - buf.lenr ) / 6 ) {
+		THROW( "invalid unit snapshot record count" );
+	}
+	return static_cast< size_t >( count );
+}
 
 UnitManager::UnitManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -36,7 +49,7 @@ UnitManager::~UnitManager() {
 
 void UnitManager::Clear() {
 	for ( auto& it : m_unprocessed_units ) {
-		delete it;
+		delete it.unit;
 	}
 	m_unprocessed_units.clear();
 
@@ -45,15 +58,14 @@ void UnitManager::Clear() {
 	}
 	m_units.clear();
 
-	for ( auto& it : m_unit_moralesets ) {
-		delete it.second;
-	}
-	m_unit_moralesets.clear();
-
 	for ( auto& it : m_unit_defs ) {
 		delete it.second;
 	}
 	m_unit_defs.clear();
+	for ( auto& it : m_unit_moralesets ) {
+		delete it.second;
+	}
+	m_unit_moralesets.clear();
 
 	m_unit_updates.clear();
 }
@@ -74,9 +86,13 @@ void UnitManager::DefineMoraleSet( MoraleSet* moraleset ) {
 void UnitManager::UndefineMoraleSet( const std::string& id ) {
 	Log( "Undefining unit moraleset ('" + id + "')" );
 
-	ASSERT( m_unit_moralesets.find( id ) != m_unit_moralesets.end(), "Unit moraleset '" + id + "' not found" );
-
-	m_unit_moralesets.erase( id );
+	const auto found = m_unit_moralesets.find( id );
+	if ( found == m_unit_moralesets.end() ) { THROW( "unit morale set not found: " + id ); }
+	for ( const auto& entry : m_unit_defs ) {
+		if ( entry.second->m_moraleset == found->second ) { THROW( "unit morale set is still in use: " + id ); }
+	}
+	delete found->second;
+	m_unit_moralesets.erase( found );
 }
 
 void UnitManager::DefineUnit( Def* def ) {
@@ -99,9 +115,16 @@ void UnitManager::DefineUnit( Def* def ) {
 void UnitManager::UndefineUnit( const std::string& id ) {
 	Log( "Undefining unit ('" + id + "')" );
 
-	ASSERT( m_unit_defs.find( id ) != m_unit_defs.end(), "Unit definition '" + id + "' not found" );
-
-	m_unit_defs.erase( id );
+	const auto found = m_unit_defs.find( id );
+	if ( found == m_unit_defs.end() ) { THROW( "unit definition not found: " + id ); }
+	for ( const auto& entry : m_units ) {
+		if ( entry.second->m_def == found->second ) { THROW( "unit definition is still in use: " + id ); }
+	}
+	for ( const auto& pending : m_unprocessed_units ) {
+		if ( pending.unit->m_def == found->second ) { THROW( "unit definition is still in use: " + id ); }
+	}
+	delete found->second;
+	m_unit_defs.erase( found );
 
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UNDEFINE );
 	NEW( fr.data.unit_undefine.id, std::string, id );
@@ -110,19 +133,14 @@ void UnitManager::UndefineUnit( const std::string& id ) {
 
 void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 	if ( !m_game->IsRunning() ) {
-		m_unprocessed_units.push_back( unit );
+		m_unprocessed_units.push_back( { unit, true } );
 		return;
 	}
+	RegisterUnit( unit );
+	TriggerSpawnHook( GSE_CALL, unit );
+}
 
-	auto* tile = unit->GetTile();
-
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ( " + unit->m_def->m_id + " ) at " + tile->ToString() );
-
-	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
-	m_units.insert_or_assign( unit->m_id, unit );
-
-	QueueUnitUpdate( unit, UUO_SPAWN );
-
+void UnitManager::TriggerSpawnHook( GSE_CALLABLE, Unit* unit ) {
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
 		state->TriggerObject( this, "unit_spawn", ARGS_F( &unit, this ) {
@@ -132,6 +150,21 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 			},
 		}; } );
 	}
+}
+
+void UnitManager::RegisterUnit( Unit* unit ) {
+	if ( !m_units.emplace( unit->m_id, unit ).second ) {
+		THROW( "duplicate unit ID" );
+	}
+	QueueUnitUpdate( unit, UUO_SPAWN );
+}
+
+bool UnitManager::HasUnitId( const size_t id ) const {
+	if ( m_units.find( id ) != m_units.end() ) { return true; }
+	for ( const auto& pending : m_unprocessed_units ) {
+		if ( pending.unit->m_id == id ) { return true; }
+	}
+	return false;
 }
 
 void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
@@ -200,10 +233,14 @@ const std::map< size_t, Unit* >& UnitManager::GetUnits() const {
 
 void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	ASSERT( m_game->IsRunning(), "game not running" );
-	for ( auto& it : m_unprocessed_units ) {
-		SpawnUnit( GSE_CALL, it );
+	while ( !m_unprocessed_units.empty() ) {
+		const auto pending = m_unprocessed_units.front();
+		RegisterUnit( pending.unit );
+		// Ownership has moved to m_units. Remove the pending owner before any
+		// gameplay callback can throw; untouched entries remain pending.
+		m_unprocessed_units.erase( m_unprocessed_units.begin() );
+		if ( pending.is_new ) { TriggerSpawnHook( GSE_CALL, pending.unit ); }
 	}
-	m_unprocessed_units.clear();
 }
 
 void UnitManager::PushUpdates() {
@@ -523,6 +560,8 @@ WRAPIMPL_END_PTR()
 UNWRAPIMPL_PTR( UnitManager )
 
 void UnitManager::Serialize( types::Buffer& buf ) const {
+	if ( !m_unprocessed_units.empty() ) { THROW( "cannot snapshot units before startup registration" ); }
+	buf.WriteString( s_snapshot_format );
 
 	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
 	buf.WriteInt( m_unit_moralesets.size() );
@@ -549,40 +588,60 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 }
 
 void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
-	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
-	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
-	ASSERT( m_units.empty(), "units not empty" );
-	ASSERT( m_unprocessed_units.empty(), "unprocessed units not empty" );
+	if ( !m_unit_moralesets.empty() || !m_unit_defs.empty() || !m_units.empty() || !m_unprocessed_units.empty() ) {
+		THROW( "unit snapshot requires an empty manager" );
+	}
+	// Old unversioned snapshots begin with an integer and fail the typed read.
+	if ( buf.ReadString() != s_snapshot_format ) {
+		THROW( "unsupported unit snapshot format (expected " + s_snapshot_format + ")" );
+	}
 
-	size_t sz = buf.ReadInt();
+	size_t sz = ReadSnapshotCount( buf );
 	Log( "Unserializing " + std::to_string( sz ) + " unit moralesets" );
 	m_unit_moralesets.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineMoraleSet( MoraleSet::Deserialize( b ) );
+		auto morale = std::unique_ptr< MoraleSet >( MoraleSet::Deserialize( b ) );
+		if ( name.empty() || name != morale->m_id || GetMoraleSet( name ) || b.lenr != b.lenw ) {
+			THROW( "invalid or duplicate morale set in unit snapshot" );
+		}
+		DefineMoraleSet( morale.release() );
 	}
 
-	sz = buf.ReadInt();
+	sz = ReadSnapshotCount( buf );
 	Log( "Unserializing " + std::to_string( sz ) + " unit defs" );
 	m_unit_defs.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineUnit( Def::Deserialize( b ) );
+		auto def = std::unique_ptr< Def >( Def::Deserialize( b, this ) );
+		if ( name != def->m_id || GetUnitDef( name ) || b.lenr != b.lenw ) {
+			THROW( "invalid or duplicate unit definition in snapshot" );
+		}
+		DefineUnit( def.release() );
 	}
 
-	sz = buf.ReadInt();
+	sz = ReadSnapshotCount( buf );
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_units.reserve( sz );
 	}
+	size_t highest_id = 0;
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnUnit( GSE_CALL, Unit::Deserialize( GSE_CALL, b, this ) );
+		auto* unit = Unit::Deserialize( GSE_CALL, b, this );
+		highest_id = std::max( highest_id, unit->m_id );
+		if ( m_game->IsRunning() ) { RegisterUnit( unit ); }
+		else { m_unprocessed_units.push_back( { unit, false } ); }
 	}
 
-	Unit::SetNextId( buf.ReadInt() );
+	const auto next_id = buf.ReadInt();
+	if ( next_id <= 0 || static_cast< uint64_t >( next_id ) <= highest_id ||
+		static_cast< uint64_t >( next_id ) >= std::numeric_limits< size_t >::max() || buf.lenr != buf.lenw ) {
+		THROW( "invalid next unit ID in snapshot" );
+	}
+	Unit::SetNextId( static_cast< size_t >( next_id ) );
 	Log( "Restored next unit id: " + std::to_string( Unit::GetNextId() ) );
 }
 

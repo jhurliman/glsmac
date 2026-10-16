@@ -71,7 +71,8 @@ const process_growth = (game, base) => {
 		accumulated = 0;
 	}
 	accumulated += get_pending_growth(base);
-	if (accumulated < 0) {
+	// Empty bases must reach their initial-population branch below.
+	if (accumulated < 0 && base.get_size() > 0) {
 		let pop = null;
 		// try to remove non-worker pop first
 		for (p of base.get_pops()) {

@@ -809,7 +809,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddInitialPopulationTests( task::gsetests::GSETests* task ) {
-	for ( const auto scenario : { std::pair< int64_t, bool >( -2, false ), { 0, false }, { 2, false }, { 35, false }, { -2, true } } ) {
+	for ( const auto scenario : { std::pair< int64_t, bool >( std::numeric_limits< int64_t >::min(), false ), { std::numeric_limits< int64_t >::min() + 1, false }, { -2, false }, { 0, false }, { 2, false }, { 35, false }, { std::numeric_limits< int64_t >::max(), false }, { -2, true } } ) {
 		task->AddTest( "test initial population with center nutrients " + std::to_string( scenario.first ) + ( scenario.second ? " preserves populated starvation" : " grows an empty base" ), GT( scenario ) {
 			using namespace game::backend::base;
 			using namespace game::backend::event;

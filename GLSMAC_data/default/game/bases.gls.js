@@ -19,9 +19,10 @@ const reset_nutrients = (game, base) => {
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
-	let updated = accumulated - nfg;
-	if (updated < 0) {
-		updated = 0;
+	let updated = 0;
+	// Compare first: subtracting growth cost from a signed deficit can underflow.
+	if (accumulated > nfg) {
+		updated = accumulated - nfg;
 	}
 	base.set_accumulated_nutrients(updated);
 };

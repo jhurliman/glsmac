@@ -27,12 +27,25 @@ production code fails the first three pre-transfer cases in the initial five-cas
 suite (2 passed, 3 failed); both transfer controls pass. The fixture cleans up
 after those expected failures without leaving tracked allocations.
 
-The final Linux Clang 15 build passes all six focused cases with allocation
+The source implementation `62c816fa13a834a2e8775713f4496f845b1fb751`
+passes all six focused Linux Clang 15 cases with allocation
 tracking and the full eight CTests (50.67 seconds). The separate ASan/UBSan build
 passes the same tracked cases and all eight CTests with leak detection enabled
 (107.69 seconds during concurrent local build activity). The configured
 correctness checks report no findings for `Game.cpp` (11.18 seconds). These are
-local measurements; no Windows, macOS or rendered startup result is claimed.
+local measurements from that source branch.
+
+Focused publication commit `7e5d7334efef1fa22ec4a59e1bffbf338c1c3599`
+passes all five available Linux CTests in 22.25 seconds. Its test adaptation adds
+only the fixture's isolated `ResetWorld` helper; it does not bring in unrelated
+snapshot restoration code from the source branch. This older publication fixture
+does not establish the source branch's allocation-tracking or sanitizer claims.
+
+Combined integration `cd2613d12fce4613ec6e13ab4d2f3b9e50586f07`
+passes Windows CTest 8/8 in 50.84 seconds, Linux ASan/UBSan/LSan CTest 8/8 in
+49.10 seconds, and all 298 eligible production translation units under LLVM 15
+analysis in 65.15 seconds, with zero failures. Windows-only networking is outside
+that Linux analysis. No native macOS or rendered startup result is claimed.
 
 These tests retire worlds within the fixture's existing script accumulation.
 They establish presentation ownership, not native reset/collector exclusion,

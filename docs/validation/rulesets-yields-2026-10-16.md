@@ -605,3 +605,15 @@ Both runs remain in `/home/jhurliman/src/glsmac-unit-publication/`, named
 `world-completion-missing-bool-ctest.log` and
 `world-completion-bool-ctest.log`. These checks do not establish rendered
 multiplayer-join correctness or explain the older intermittent timeout.
+
+GitHub review of PR #77 at
+`6805e3a3e5980eb01dba846f4fecbca6d400f0ba` subsequently identified three
+unresolved concurrency/dispatch gaps: live roster mutation between validation
+and flag commit, MT reset between queued-failure validation and InitFailed,
+and unrestricted MT dispatch before the parked-failure guard. The tests above
+exercise foreign-thread enqueueing but do not prove exclusion of those live
+overlaps. PR #77 remains held pending deterministic concurrent regressions and
+repairs. Session-token cancellation alone cannot protect an already-executing
+callback from native teardown. The passing results remain valid for the cases
+actually run and are not a claim that this snapshot implementation is ready
+to merge.

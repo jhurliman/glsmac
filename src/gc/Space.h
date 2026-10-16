@@ -92,6 +92,7 @@ private:
 private:
 	friend class Object;
 	void Add( Object* object );
+	void CancelPending( Object* object ) noexcept;
 
 };
 

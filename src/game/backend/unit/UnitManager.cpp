@@ -238,7 +238,7 @@ void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 		RegisterUnit( pending.unit );
 		// Ownership has moved to m_units. Remove the pending owner before any
 		// gameplay callback can throw; untouched entries remain pending.
-		m_unprocessed_units.erase( m_unprocessed_units.begin() );
+		m_unprocessed_units.pop_front();
 		if ( pending.is_new ) { TriggerSpawnHook( GSE_CALL, pending.unit ); }
 	}
 }
@@ -624,9 +624,6 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 
 	sz = ReadSnapshotCount( buf );
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
-	if ( !m_game->IsRunning() ) {
-		m_unprocessed_units.reserve( sz );
-	}
 	size_t highest_id = 0;
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );

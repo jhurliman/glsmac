@@ -117,6 +117,10 @@ void GlobalSettings::LockRuleset() {
 	m_ruleset_locked = true;
 }
 
+bool GlobalSettings::IsRulesetLocked() const {
+	return m_ruleset_locked;
+}
+
 void GlobalSettings::ResetRuleset() {
 	m_ruleset = RULESET_UNSELECTED;
 	m_ruleset_locked = false;

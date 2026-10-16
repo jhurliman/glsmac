@@ -30,6 +30,7 @@ protected:
 	void SendGameEvents( const game_events_t& game_events ) override;
 
 private:
+	friend class gse::tests::BackendFixture;
 	bool m_are_global_settings_received = false;
 	game_state_t m_announced_game_state = GS_NONE;
 	void AnnounceGameState();

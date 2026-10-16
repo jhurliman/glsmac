@@ -20,6 +20,7 @@ CLASS( Buffer, common::Class )
 	~Buffer();
 
 	Buffer( const Buffer& other );
+	Buffer& operator=( const Buffer& other );
 
 	data_t* data;
 	data_t* dw;

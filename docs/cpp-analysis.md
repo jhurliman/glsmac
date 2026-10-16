@@ -27,8 +27,11 @@ To check a branch against the merge base with its target, including local edits:
 python3 tools/analyze_cpp.py --base origin/main
 ```
 
-Use `--all` for a complete scan and `--jobs N` to set parallelism. The manually
-dispatched GitHub workflow always runs a full scan. `--clang-tidy PATH` supports
+Use `--all` to scan every production translation unit in the compilation database
+and `--jobs N` to set parallelism. This mode does not require Git, so it cannot
+detect newly added sources omitted from a stale database; reconfigure first.
+The manually dispatched GitHub workflow always configures a fresh database and
+runs a full scan. `--clang-tidy PATH` supports
 version 15 installed under another name. The runner rejects other versions so
 an unreviewed toolchain upgrade cannot silently change the blocking rules.
 Reconfigure CMake after adding source files or changing build settings.
@@ -47,10 +50,20 @@ the scan. This avoids incomplete include-dependency guesses; source deletion
 alone needs no analysis. A changed source missing from the compilation database
 fails with a reconfiguration request.
 
-Diagnostics from project headers remain enabled. There is no changed-line
-filter, warning baseline, or `NOLINT` suppression. Every enabled finding fails
-the check, including findings outside the edited lines. Compiler errors,
-analyzer failures, and per-file timeouts fail too. Failed-file diagnostics print
+Two known `.cpp` files are not independent Linux translation units.
+`src/network/impl/Windows.cpp` is explicitly excluded from this Linux check;
+relevant runs report it in the console and `summary.json` as skipped.
+`src/ui/dom/Object.colormap.cpp` is included by `Object.cpp`, so its changes
+trigger a full scan just like a header. These are exact paths; other sources
+missing from the database still fail instead of being silently skipped.
+
+Diagnostics from project headers remain enabled. This policy introduces no
+changed-line filter, warning baseline, or local suppressions. Explicit `NOLINT`,
+`NOLINTNEXTLINE`, and `NOLINTBEGIN` directives remain supported by clang-tidy;
+the runner does not reject them, so additions or changes require code review.
+Every reported finding from an enabled check fails the job, including findings
+outside the edited lines. Compiler errors, analyzer failures, and per-file
+timeouts fail too. Failed-file diagnostics print
 in the job log; complete per-file output and `summary.json` are saved under
 `build/analysis/analysis-results/` and uploaded by CI. Compiler warnings outside
 the selected policy remain available in those logs.
@@ -88,6 +101,13 @@ findings, at eight jobs. These are local
 measurements with clang-tidy 15.0.7 on WSL Ubuntu 22.04, 32 logical CPUs, and
 sources on the mounted Windows filesystem; they are not hosted CI estimates.
 CI uses four jobs, and dependency installation/configuration adds time.
+
+The [hosted PR #16 run](https://github.com/jhurliman/glsmac/actions/runs/38867153319/job/116862507393)
+at commit `e635bbc1` on October 16, 2026 scanned all 284 production translation
+units in **151.05 seconds** at four jobs, with zero failures. The Ubuntu 24.04
+job took about **3 minutes 26 seconds** including installation, all 14 runner
+tests, configuration, and artifact upload. This is an observed run, not a CI
+latency guarantee; queue time is excluded.
 
 The initial findings produced separate fixes and regression tests for missing
 native event-handler returns, clearing a scene camera, and embedded NUL bytes

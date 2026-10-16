@@ -7,6 +7,7 @@
 #include "CvrGeometryReader.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
+#include "CvrBasisConverter.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -56,6 +57,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrBasisConverterTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

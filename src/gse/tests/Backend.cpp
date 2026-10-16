@@ -12,8 +12,9 @@
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
 #include "game/backend/Game.h"
-#include "game/backend/State.h"
 #include "game/backend/Random.h"
+#include "game/backend/State.h"
+#include "game/backend/event/Event.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/FacilityDef.h"
@@ -148,6 +149,19 @@ public:
 		} );
 	}
 
+	game::backend::base::Base* AddBaseWithPop( const size_t id, const size_t pop_id, const size_t x = 4 ) {
+		using namespace game::backend::base;
+		Base* base = nullptr;
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			base = new Base( &m_game, id, &m_game.GetState()->m_slots->GetSlot( 2 ), m_game.GetFaction( "GAIANS" ),
+				m_game.GetMap()->GetTile( x, 4 ), "Test base " + std::to_string( id ), {},
+				{ { pop_id, Pop( nullptr, pop_id, m_game.GetBM()->GetPopDef( "WORKER" ), 0 ) } }, pop_id + 1 );
+			gse::ExecutionPointer ep;
+			m_game.GetBM()->SpawnBase( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep, base );
+		} );
+		return base;
+	}
+
 	void RestoreBaseManager( types::Buffer& snapshot ) {
 		std::exception_ptr error;
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &snapshot, &error ]() {
@@ -211,7 +225,124 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 
 }
 
+static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test nested event population references resolve in the destination base",
+		GT() {
+			using namespace game::backend::base;
+			using game::backend::event::Event;
+			const auto next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ next_id ]() { Base::SetNextId( next_id ); } );
+			BackendFixture source;
+			BackendFixture destination;
+			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			destination.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			auto* source_base = source.AddBaseWithPop( 201, 7 );
+			auto* other_base = destination.AddBaseWithPop( 202, 7, 6 );
+			auto* destination_base = destination.AddBaseWithPop( 201, 7 );
+			types::Buffer snapshot;
+			const auto write_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* pop = source_base->m_pops.at( 7 ).Wrap( GSE_CALL );
+				types::Buffer reference;
+				Value::Serialize( &reference, pop );
+				types::Buffer expected;
+				expected.WriteInt( VT_OBJECT );
+				expected.WriteString( "Pop" );
+				expected.WriteInt( 201 );
+				expected.WriteInt( 7 );
+				GT_ASSERT( reference.ToString() == expected.ToString(), "population reference is not the base/pop ID pair" );
+				auto* object = new value::Object( GSE_CALL, { { "pop", pop } } );
+				auto* array = new value::Array( gc_space, { object } );
+				auto* event = new Event( source.GetGame(), Event::ES_LOCAL, 2, GSE_CALL, "population_change",
+					{ { "base", source_base->Wrap( GSE_CALL ) }, { "changes", array } }, "pop-reference-test" );
+				event->SetResolved( new value::Object( GSE_CALL, { { "pops", new value::Array( gc_space, { pop } ) } } ) );
+				snapshot = event->Serialize();
+				GT_OK();
+			} );
+			GT_ASSERT( write_error.empty(), "population event serialization failed: " + write_error );
+			const auto read_error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* event = Event::Deserialize( destination.GetGame(), Event::ES_SERVER, GSE_CALL, snapshot );
+				GT_ASSERT( event->GetId() == "pop-reference-test" && event->GetEventName() == "population_change" && event->GetCaller() == 2, "event metadata changed" );
+				auto* data = VALUE_DATA( value::Object, event->GetData().at( "data" ) );
+				GT_ASSERT( Base::Unwrap( data->Get( "base" ) ) == destination_base, "existing base reference format changed" );
+				auto* changes = VALUE_DATA( value::Array, data->Get( "changes" ) );
+				auto* change = VALUE_DATA( value::Object, changes->Get( 0 ) );
+				auto* pop = Pop::Unwrap( change->Get( "pop" ) );
+				GT_ASSERT( pop == &destination_base->m_pops.at( 7 ), "event pop did not resolve in destination base" );
+				GT_ASSERT( pop != &source_base->m_pops.at( 7 ) && pop != &other_base->m_pops.at( 7 ), "event pop resolved in the wrong world or base" );
+				auto* resolved = VALUE_DATA( value::Object, event->GetResolved() );
+				auto* pops = VALUE_DATA( value::Array, resolved->Get( "pops" ) );
+				GT_ASSERT( Pop::Unwrap( pops->Get( 0 ) ) == pop, "resolved event result lost its population reference" );
+				GT_ASSERT( event->Serialize().ToString() == snapshot.ToString(), "event bytes changed after population reference reload" );
+				GT_OK();
+			} );
+			GT_ASSERT( read_error.empty(), "population event deserialization failed: " + read_error );
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test population reference deserialization rejects missing and removed members",
+		GT() {
+			using namespace game::backend::base;
+			const auto next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ next_id ]() { Base::SetNextId( next_id ); } );
+			BackendFixture fixture;
+			fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			auto* base = fixture.AddBaseWithPop( 201, 7 );
+			const auto make_reference = []( long long base_id, long long pop_id ) {
+				types::Buffer buffer;
+				buffer.WriteInt( VT_OBJECT );
+				buffer.WriteString( "Pop" );
+				buffer.WriteInt( base_id );
+				buffer.WriteInt( pop_id );
+				return buffer;
+			};
+			for ( const auto ids : { std::pair< long long, long long >{ 999, 7 }, { 201, 999 }, { -1, 7 }, { 201, -1 } } ) {
+				auto reference = make_reference( ids.first, ids.second );
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					Value::Deserialize( GSE_CALL, &reference, fixture.GetGame() );
+					GT_OK();
+				} );
+				GT_ASSERT( error.find( "pop reference" ) != std::string::npos, "invalid population reference was not rejected: " + error );
+			}
+			const auto removal_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto valid = make_reference( 201, 7 );
+				auto* wrapper = Value::Deserialize( GSE_CALL, &valid, fixture.GetGame() );
+				GT_ASSERT( Pop::Unwrap( wrapper ) == &base->m_pops.at( 7 ), "valid population reference failed" );
+				base->RemovePop( 7 );
+				GT_ASSERT( wrapper->type == VT_UNDEFINED, "removed population left a live script wrapper" );
+				auto removed = make_reference( 201, 7 );
+				try {
+					Value::Deserialize( GSE_CALL, &removed, fixture.GetGame() );
+				}
+				catch ( const std::runtime_error& error ) {
+					GT_ASSERT( std::string( error.what() ).find( "pop reference" ) != std::string::npos, "unexpected removed population error" );
+					GT_OK();
+				}
+				GT_FAIL( "removed population reference was accepted" );
+			} );
+			GT_ASSERT( removal_error.empty(), "population removal reference check failed: " + removal_error );
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test population reference serialization rejects a detached population",
+		GT() {
+			BackendFixture fixture;
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				game::backend::base::Pop detached;
+				types::Buffer reference;
+				Value::Serialize( &reference, detached.Wrap( GSE_CALL ) );
+				GT_OK();
+			} );
+			GT_ASSERT( error.find( "pop reference" ) != std::string::npos, "detached population reference was not rejected: " + error );
+			GT_OK();
+		}
+	);
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddPopReferenceTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate

@@ -16,6 +16,7 @@
 #include "UnitDesignResolver.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
+#include "CvrGeometryReader.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
 #include "GSE.h"
@@ -67,6 +68,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
+		tests::AddCvrGeometryReaderTests( task );
 		tests::AddValueTests( task );
 		task->AddTest(
 			"test if tests work",

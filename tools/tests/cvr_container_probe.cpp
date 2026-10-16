@@ -2,6 +2,7 @@
 // Build instructions and the supported envelope are in docs/cvr-container.md.
 #include "loader/cvr/CvrContainerReader.h"
 #include "loader/cvr/CvrSceneReader.h"
+#include "loader/cvr/CvrGeometryReader.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -14,9 +15,10 @@
 #include <vector>
 
 int main( const int argc, const char* const* argv ) {
-	const bool inspect_scene = argc >= 2 && std::string( argv[ 1 ] ) == "--scene";
+	const bool inspect_geometry = argc >= 2 && std::string( argv[ 1 ] ) == "--geometry";
+	const bool inspect_scene = inspect_geometry || ( argc >= 2 && std::string( argv[ 1 ] ) == "--scene" );
 	if ( argc != ( inspect_scene ? 3 : 2 ) ) {
-		std::cerr << "usage: cvr_container_probe [--scene] <installed asset directory>\n";
+		std::cerr << "usage: cvr_container_probe [--scene|--geometry] <installed asset directory>\n";
 		return 2;
 	}
 	try {
@@ -32,6 +34,8 @@ int main( const int argc, const char* const* argv ) {
 		size_t accepted = 0, rejected = 0;
 		uint64_t total_bytes = 0;
 		uint64_t total_objects = 0, geometry_objects = 0, frame_records = 0;
+		size_t geometry_accepted = 0, geometry_rejected = 0;
+		uint64_t geometry_groups = 0, geometry_records = 0;
 		for ( const auto& path : files ) {
 			try {
 				std::ifstream stream( path, std::ios::binary );
@@ -44,14 +48,26 @@ int main( const int argc, const char* const* argv ) {
 				std::cout << path.filename().string() << '\t' << bytes.size();
 				for ( const auto& chunk : container.chunks ) { std::cout << '\t' << chunk.tag << ':' << chunk.payload.size(); }
 				if ( scene ) {
-					std::cout << "\tobjects:" << scene->objects.size() << "\tframes:" << scene->frame_count;
+					std::cout << "\tobjects:" << scene->objects.size() << "\tframes:" << scene->frame_count << '\n';
 					total_objects += scene->objects.size();
 					for ( const auto& object : scene->objects ) {
 						geometry_objects += object.voxel_data.has_value();
 						frame_records += object.frames.size();
+						if ( inspect_geometry && object.voxel_data ) {
+							try {
+								const auto geometry = loader::cvr::CvrGeometryReader::Read( *object.voxel_data );
+								++geometry_accepted;
+								geometry_groups += geometry.groups.size();
+								for ( const auto& group : geometry.groups ) { geometry_records += group.records.size(); }
+							}
+							catch ( const std::invalid_argument& error ) {
+								++geometry_rejected;
+								std::cerr << path.filename().string() << " object " << object.name << ": " << error.what() << '\n';
+							}
+						}
 					}
 				}
-				std::cout << '\n';
+				else { std::cout << '\n'; }
 				total_bytes += bytes.size();
 				++accepted;
 			}
@@ -64,7 +80,11 @@ int main( const int argc, const char* const* argv ) {
 		if ( inspect_scene ) {
 			std::cout << "objects=" << total_objects << " geometry_objects=" << geometry_objects << " frame_records=" << frame_records << '\n';
 		}
-		return rejected ? 1 : 0;
+		if ( inspect_geometry ) {
+			std::cout << "geometry_accepted=" << geometry_accepted << " geometry_rejected=" << geometry_rejected <<
+				" geometry_groups=" << geometry_groups << " geometry_records=" << geometry_records << '\n';
+		}
+		return rejected || geometry_rejected ? 1 : 0;
 	}
 	catch ( const std::exception& error ) {
 		std::cerr << error.what() << '\n';

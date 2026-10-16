@@ -196,6 +196,12 @@ using the single-file option to narrow the required check.
 ## Current status
 
 M0 and the prerequisites for M1 are in progress. No milestone is complete.
+The later checkpoint at `f4f79581` passes Windows and leak-enabled Linux CTest
+8/8, actual sanitized Engine shutdown in both thread modes, and a 300-source
+correctness scan. Its [validation record](validation/native-retirement-2026-10-16.md)
+also preserves an incomplete rendered retry caused by a stuck UI-control helper.
+The earlier [coordinator check](validation/windows-coordinator-2026-10-16.md)
+successfully restarted and closed the Windows game at `12a58670`.
 The reviewed SDL/main-thread foundation landed in fork PR #1 at
 [`428cf01f7a9a13b70dd29ff505e9e5e7aec1f496`](https://github.com/jhurliman/glsmac/commit/428cf01f7a9a13b70dd29ff505e9e5e7aec1f496)
 as a development baseline. Native macOS build, tests, map interaction and
@@ -286,8 +292,14 @@ The next implementation slices are:
    tests pass in both modes, along
    with Windows and leak-enabled Linux CTest 8/8. These results are recorded in
    the validation ledger and do not establish rendered Mac shutdown.
-   Executing-callback exclusion, startup phase coordination and native
-   reset/collector coordination remain open; queued cancellation is insufficient.
+   PR #97 adds owned startup checkpoints across admission, configuration,
+   captured ingress, Start and Failure, with native execution parked through
+   each Running owner operation. PR #99 adds native reset/collector exclusion,
+   keeping transport waits and presentation destruction outside its new guard.
+   Both have tested narrow publication stacks as well as combined validation.
+   They remain pending GitHub review; #77's findings are not marked resolved.
+   Native map construction publication and roster/settings mutation still need
+   separate lifetime fixes; queued cancellation alone is insufficient.
    The script-entry guard in #82 has user-confirmed rendered restart evidence
    on the pinned Mac integration; this does not establish clean shutdown.
    See the [pinned roster ownership plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md) for the
@@ -296,7 +308,8 @@ The next implementation slices are:
    defense, reactor, chassis and counted predefined-design parsers are queued
    in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact
    component keys, preserving row identity and rejecting ambiguous or mismatched
-   ruleset references. Reactor selection, ability-bit mapping, conventional
+   ruleset references. PR #94 adds owned ability-table metadata without
+   interpreting its flags or cost encoding. Reactor selection, ability-bit mapping, conventional
    design state, CVR rendering and gameplay commands remain separate work.
    The local asset inventory contains 140 CVR containers. Merged PR #73 reads
    their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
@@ -315,6 +328,13 @@ The next implementation slices are:
    records bitwise. Six other positive original cases use synthetic
    prefix/capacity inputs and are reported separately. This does not render a
    conventional unit or establish palette, projection and draw semantics.
+   PR #93 now executes the bounded original indexed draw path; #95's pure
+   rasterizer matches 42 original cases, including 21,231 geometry records and
+   11,414 successful samples. Supplied basis, origin and lookup tables remain
+   explicit. Original basis conversion (#96) and its integer-only implementation
+   (#100) match 41 cases and 369 outputs. Camera/frame/scalar composition,
+   initial sample position and lighting/RGB preparation remain separate evidence
+   work; none of these helpers is a live conventional-unit rendering path.
    Do not turn the current native-unit movement assumptions into standard-unit
    behavior or invent reactor/cost defaults.
 3. Review #70's evaluating-base route. Worker intake, scoring and base-screen
@@ -327,6 +347,12 @@ The next implementation slices are:
    comparisons; the energy kernel matches 3,122 direct checks. A native bridge,
    complete frozen rules profile and authoritative terrain, technology, social,
    capability and phase-specific event producers precede normal-game activation.
+   Independent PR #98 calculates mineral cost factors from explicit resolved
+   inputs and matches 2,021 retained original factor outputs; it does not compute
+   ranking/dominance or schedule construction. The next production slice stores
+   current item/minerals and independent retool baseline item/minerals in Base
+   snapshots. Initial target selection, posting, retooling, completion, ordered
+   queues and UI activation follow as separate validated changes.
 
 World downloads are now bound to the frozen host profile before map allocation,
 and faction snapshots preserve flags and ordered land/water names. Those
@@ -365,4 +391,5 @@ The new #81, #82, #86 and #87 heads still require their own completed reviews.
 New and revised PR heads remain unmerged until their required reviews complete.
 Local implementation, independent review and tests continue; neither a review
 request nor local success substitutes for that GitHub gate. No retry is planned
-while the reported review quota remains unchanged.
+for an unchanged head while the reported review quota remains unchanged. Each
+new PR or materially revised head receives its own review request.

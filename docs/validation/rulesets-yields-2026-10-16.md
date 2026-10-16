@@ -953,6 +953,57 @@ Quota failures are explicit on
 [#85](https://github.com/jhurliman/glsmac/pull/85#issuecomment-6218357350),
 [#87](https://github.com/jhurliman/glsmac/pull/87#issuecomment-6218724895) and
 [#88](https://github.com/jhurliman/glsmac/pull/88#issuecomment-6219022882).
-No additional review request is made while that reported limit is unchanged.
+No repeat review request for an unchanged head is made while that reported limit is unchanged.
 Local validation and independent peer review do not replace the requested
 GitHub Codex review, and these PRs remain unmerged.
+
+## Later startup, rendering and production checkpoint
+
+PR #97 at `62b9423d71822cebb81450874518014db207e1ca` combines the #90 startup
+stack with the exact #77 and #80 snapshot/packet prerequisites and adds the owned
+initialization coordinator. Its narrow publication passes full CTest 6/6 and
+the actual Engine shutdown harness in both modes. The earlier combined Windows
+source at `12a58670` also passes a rendered restart and exit; see the separate
+[coordinator validation](windows-coordinator-2026-10-16.md).
+
+PR #99 at `a6be97c047410ce9f019b2e8467d89e2a6475c2c` adds native world retirement
+under collection exclusion. Its narrow publication passes CTest 6/6 and both
+tracked Engine modes. The larger integration at `f4f79581` passes Windows and
+leak-enabled Linux CTest 8/8, actual sanitized Engine shutdown and full
+300-production-TU analysis. Its [record](native-retirement-2026-10-16.md) retains
+the incomplete rendered follow-up and the remaining map/roster publication
+findings. Those failures are not inferred fixed by the passing retirement suite.
+
+| PR | Recorded head | New boundary |
+| --- | --- | --- |
+| [#93](https://github.com/jhurliman/glsmac/pull/93) | `cd512c5937d1f5e8f233131e680488292cc7a0ff` | Bounded original indexed pixel execution |
+| [#94](https://github.com/jhurliman/glsmac/pull/94) | `ddda8e3e356cfc3f6c7dddbee099d0cf88cc1550` | Owned ability metadata; flags and costs remain uninterpreted |
+| [#95](https://github.com/jhurliman/glsmac/pull/95) | `eed8603df7266b0fffd80b30c72c9e1dff293e36` | Explicit-input indexed rasterizer; 42 original cases match |
+| [#96](https://github.com/jhurliman/glsmac/pull/96) | `cd68e034d995e66ae7914eb4d7186238c0b70c67` | Original supplied-matrix conversion and x87 helper |
+| [#98](https://github.com/jhurliman/glsmac/pull/98) | `2e2cd74f1f37cd79e88938ee93e538662acb4d9a` | Explicit mineral factor; 2,021 original outputs match |
+| [#100](https://github.com/jhurliman/glsmac/pull/100) | `fec94f79f08e32e458cf7daffe023c3b1bb673be` | Integer-only basis conversion; 41 original cases / 369 values match |
+
+The rasterizer initially failed Windows compilation because its test used the
+SDK macro name `near`; the current head above renames that local only, and all
+applicable hosted checks pass. The basis converter similarly required a test
+local `small` rename; current-head checks remain separate from the earlier
+Linux evidence. No production arithmetic was changed by either rename.
+
+All applicable hosted checks at the recorded #93–#97 heads pass. The newer
+#98–#100 heads still have checks in flight at this update. Every new PR and
+revised head has a GitHub Codex review request; quota-limited or missing reviews
+remain pending. No PR was merged based solely on these local or CI results.
+
+The mineral factor and basis converter are combined at
+[`5c12172fc95b02d6ddd2f7bcefb47d44a5faaf27`](https://github.com/jhurliman/glsmac/commit/5c12172fc95b02d6ddd2f7bcefb47d44a5faaf27),
+retained at `codex/validation-20261016-mineral-basis`. Linux ASan/UBSan/LSan
+CTest passes 8/8 in 44.72 seconds. Explicit analysis of the two new production
+translation units passes in 0.41 seconds; this is not another full-source scan.
+The Windows build exposed the `small` test-name collision described above.
+After that test-only rename, source
+[`59ed2161340350d9d0b1c69bbe190320e44d1221`](https://github.com/jhurliman/glsmac/commit/59ed2161340350d9d0b1c69bbe190320e44d1221),
+retained at `codex/validation-20261016-mineral-basis-windows`, passes Windows
+CTest 8/8 in 61.57 seconds. Production code is identical across these two pins.
+The first failing build and successful retry are retained separately under
+`out/mineral-basis-windows-` and `out/mineral-basis-windows-retry-`; Linux evidence
+uses `mineral-basis-` under `/home/jhurliman/src/glsmac-gc-audit/`.

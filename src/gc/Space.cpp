@@ -27,9 +27,15 @@ Space::~Space() {
 	g_engine->GetGC()->RemoveSpace( this );
 
 	{
-		// cleanup anything that didn't execute in time
-		std::lock_guard guard( m_pending_accumulations_mutex );
-		for ( const auto& it : m_pending_accumulations ) {
+		// Retire queued work before invoking cleanup callbacks. Owners and
+		// captures must be released before the final collection. Cleanup may
+		// release resources only; no producers may schedule more work now.
+		decltype( m_pending_accumulations ) pending;
+		{
+			std::lock_guard guard( m_pending_accumulations_mutex );
+			pending.swap( m_pending_accumulations );
+		}
+		for ( const auto& it : pending ) {
 			if ( it.second.cleanup ) {
 				it.second.cleanup();
 			}
@@ -106,6 +112,13 @@ const bool Space::IsAccumulating() {
 void Space::SetThreadId( const std::thread::id& thread_id ) {
 	ASSERT( !m_thread_id.has_value(), "gc space thread id already set" );
 	m_thread_id = thread_id;
+}
+
+void Space::BeginTeardown() {
+	ASSERT( m_thread_id.has_value(), "gc space thread id not set" );
+	ASSERT( !IsAccumulating(), "cannot destroy a space during accumulation" );
+	std::lock_guard guard( m_accumulation_mutex );
+	m_thread_id = std::this_thread::get_id();
 }
 
 void Space::ProcessAccumulations() {

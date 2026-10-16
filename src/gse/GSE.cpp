@@ -30,7 +30,13 @@ GSE::GSE()
 }
 
 GSE::~GSE() {
-	{
+	// The original script owner must have stopped before destruction. Timers
+	// and root cleanup must execute here even when this is a different thread.
+	m_gc_space->BeginTeardown();
+	// The space remains registered with the collector until its destructor.
+	// Keep collection excluded throughout timer draining, including timer-map
+	// updates between callbacks, and the subsequent root/context cleanup.
+	m_gc_space->Accumulate( this, [ this ]() {
 		Finish();
 		for ( auto& it : m_include_cache ) {
 			it.second.Cleanup( this );
@@ -43,7 +49,7 @@ GSE::~GSE() {
 		m_async = nullptr;
 		m_modules.clear();
 		m_root_objects.clear();
-	}
+	} );
 	delete m_gc_space;
 }
 

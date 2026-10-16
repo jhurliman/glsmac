@@ -2,6 +2,7 @@
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
+#include "gse/Async.h"
 #include "gse/value/Null.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -9,12 +10,183 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/context/GlobalContext.h"
+#include "gc/GC.h"
 #include "gc/Space.h"
+#include "engine/Engine.h"
+#include "util/FinallyGuard.h"
+
+#include <atomic>
+#include <thread>
 
 namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+
+	task->AddTest(
+		"test if GSE teardown excludes concurrent garbage collection",
+		GT() {
+			std::atomic< bool > stop = false;
+			std::atomic< size_t > collections = 0;
+			// Exercise the production collector between every lifecycle, without
+			// waiting for the normal one-second collection interval.
+			std::thread collector( [ &stop, &collections ]() {
+				while ( !stop.load() ) {
+					g_engine->GetGC()->Iterate();
+					collections++;
+					std::this_thread::yield();
+				}
+			} );
+			util::FinallyGuard join_collector( [ &stop, &collector ]() {
+				stop = true;
+				collector.join();
+			} );
+
+			for ( size_t cycle = 0 ; cycle < 32 ; cycle++ ) {
+				GSE nested;
+				auto* space = nested.GetGCSpace();
+				space->Accumulate( &nested, [ &nested, space ]() {
+					ExecutionPointer ep;
+					for ( size_t i = 0 ; i < 16 ; i++ ) {
+						auto* context = nested.CreateGlobalContext();
+						context->CreateVariable( "kept", new value::Int( space, i ), {}, ep );
+					}
+					auto* context = nested.CreateGlobalContext();
+					nested.RunScript( space, context, {}, ep, "./GLSMAC_data/tests/_gc_lifecycle" );
+				} );
+				const auto before = collections.load();
+				while ( collections.load() == before ) {
+					std::this_thread::yield();
+				}
+				// Roots, cached include results and their contexts must remain
+				// stable until an in-flight mark has finished.
+			}
+			GT_ASSERT( collections.load() >= 32, "collector did not exercise every lifecycle" );
+			GT_OK();
+		}
+	);
+
+	task->AddTest(
+		"test if GSE timer drain excludes collection between callbacks",
+		GT() {
+			std::atomic< bool > draining = false;
+			std::atomic< bool > collector_attempted = false;
+			std::atomic< size_t > marks_during_drain = 0;
+			std::atomic< size_t > executions = 0;
+			std::atomic< size_t > destructions = 0;
+			class DrainTimer : public value::Callable {
+			public:
+				DrainTimer( gc::Space* space, context::Context* context, std::atomic< bool >& draining,
+					std::atomic< bool >& collector_attempted, std::atomic< size_t >& marks,
+					std::atomic< size_t >& executions, std::atomic< size_t >& destructions )
+					: value::Callable( space, context ), draining( draining ), collector_attempted( collector_attempted ),
+					  marks( marks ), executions( executions ), destructions( destructions ) {}
+				~DrainTimer() override { destructions++; }
+				void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+					if ( draining.load() ) {
+						marks++;
+					}
+					value::Callable::GetReachableObjects( reachable_objects );
+				}
+				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
+					if ( ++executions == 1 ) {
+						draining = true;
+						while ( !collector_attempted.load() ) {
+							std::this_thread::yield();
+						}
+						// ProcessTimers updates its maps and ProcessAndExit waits here
+						// outside the callback's own Accumulate. The outer teardown
+						// accumulation must protect both that gap and the next callback.
+						return VALUE( value::Int, , 100 );
+					}
+					return VALUE( value::Bool, , false );
+				}
+			private:
+				std::atomic< bool >& draining;
+				std::atomic< bool >& collector_attempted;
+				std::atomic< size_t >& marks;
+				std::atomic< size_t >& executions;
+				std::atomic< size_t >& destructions;
+			};
+			GSE* nested = nullptr;
+			std::thread owner( [ & ]() {
+				nested = new GSE();
+				auto* space = nested->GetGCSpace();
+				space->Accumulate( nested, [ & ]() {
+					ExecutionPointer ep;
+					auto* context = nested->CreateGlobalContext();
+					auto* timer = new DrainTimer( space, context, draining, collector_attempted, marks_during_drain, executions, destructions );
+					nested->GetAsync()->CreateTimer( 0, timer, context, {}, ep );
+				} );
+			} );
+			owner.join();
+			std::thread collector( [ & ]() {
+				while ( !draining.load() ) {
+					std::this_thread::yield();
+				}
+				collector_attempted = true;
+				g_engine->GetGC()->Iterate();
+			} );
+			util::FinallyGuard join_collector( [ & ]() { collector.join(); } );
+			delete nested;
+			GT_ASSERT( executions.load() == 2, "pending repeat timer was not fully drained" );
+			GT_ASSERT( destructions.load() == 1, "drained timer was not collected" );
+			GT_ASSERT( marks_during_drain.load() == 0, "collector traversed timer state while teardown was draining it" );
+			GT_OK();
+		}
+	);
+
+	for ( const bool queue_callback : { false, true } ) {
+		task->AddTest(
+			queue_callback
+				? "test if cross-thread GSE teardown releases pending callback owners"
+				: "test if cross-thread GSE teardown drains timers and clears roots",
+			GT( queue_callback ) {
+				std::atomic< size_t > destructions = 0;
+				std::atomic< size_t > executions = 0;
+				class TrackedCallable : public value::Callable {
+				public:
+					TrackedCallable( gc::Space* space, context::Context* context, std::atomic< size_t >& destructions, std::atomic< size_t >& executions )
+						: value::Callable( space, context ), destructions( destructions ), executions( executions ) {}
+					~TrackedCallable() override { destructions++; }
+					Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
+						executions++;
+						return VALUE( value::Bool, , false );
+					}
+				private:
+					std::atomic< size_t >& destructions;
+					std::atomic< size_t >& executions;
+				};
+				GSE* nested = nullptr;
+				TrackedCallable* tracked = nullptr;
+				std::thread owner( [ & ]() {
+					nested = new GSE();
+					auto* space = nested->GetGCSpace();
+					space->Accumulate( nested, [ & ]() {
+						ExecutionPointer ep;
+						auto* context = nested->CreateGlobalContext();
+						nested->RunScript( space, context, {}, ep, "./GLSMAC_data/tests/_gc_lifecycle" );
+						tracked = new TrackedCallable( space, context, destructions, executions );
+						nested->AddRootObject( tracked );
+						nested->GetAsync()->CreateTimer( 0, tracked, context, {}, ep );
+					} );
+				} );
+				owner.join(); // The original owner must stop using the space before destruction.
+				bool callback_ran = false;
+				size_t cleanups = 0;
+				if ( queue_callback ) {
+					nested->GetGCSpace()->Accumulate( tracked, [ & ]() { callback_ran = true; }, [ & ]() { cleanups++; } );
+				}
+				delete nested;
+				GT_ASSERT( executions.load() == 1, "pending timer did not run exactly once during teardown" );
+				GT_ASSERT( destructions.load() == 1, "rooted callback was not collected during teardown" );
+				GT_ASSERT( !callback_ran, "queued accumulation must not run during teardown" );
+				GT_ASSERT( cleanups == ( queue_callback ? 1 : 0 ), "queued callback cleanup did not run exactly once" );
+				GT_OK();
+			}
+		);
+	}
 
 	class Sum : public value::Callable {
 	public:

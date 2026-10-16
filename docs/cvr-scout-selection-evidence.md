@@ -32,7 +32,7 @@ The installed `alpha.txt` is 53,073 bytes, SHA-256
 `38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4`.
 Its Scout Patrol references are `Infantry`, `Gun`, `Scout`: respectively
 chassis row 0, weapon row 0 (Hand Weapons, attack 1, mode 0), and defense row
-0 (No Armor). The [component resolver](unit-component-resolution.md) preserves
+0 (No Armor). The [component resolver](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/unit-component-resolution.md) preserves
 these explicit table identities. `#UNITS` supplies no reactor field; this
 audit does not fill that gap with a presumed default.
 
@@ -57,7 +57,7 @@ The independently hashed installed `VI.cvr` is
 `d2044c1f77a0e0377bc79c2dcbedc7fc3813d9c5e434a042a0e52fc9f0b779f1`;
 `Vw00.cvr` is
 `18395bc46eecb0988164c00365d4d7cbc9ca527e3e732067608fd366c62ae497`.
-The earlier [asset audit](conventional-unit-rendering-plan.md) established
+The earlier [asset audit](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md) established
 58 objects and 17 frames in VI, and one object and 17 frames in Vw00. Those
 counts alone do not establish composition or animation.
 
@@ -169,12 +169,31 @@ Local evidence hashes:
 - `selector-probe-report.json`: SHA-256
   `d0a603597db02d4f288d7a902b4e11cde8f028d40366bc5639ed7d4bd23f235c`.
 
-The script runs with the local reference environment's Python (Capstone
-5.0.7 and Unicorn 2.1.4), from the audit checkout:
+The exact local experiment above used the audit checkout command below:
 
 ```powershell
 & 'C:/Users/jhurliman/Documents/Code/jhurliman/glsmac/tmp/reference/emulation-venv/Scripts/python.exe' out/validation-cvr-selection/probe_selectors.py
 ```
+
+The retained [repository probe](../tools/reference/probe_scout_selectors.py)
+adds explicit input/output paths and enforces Capstone 5.0.7 and Unicorn 2.1.4.
+It includes no original executable, asset payload or community implementation.
+Install those two Python dependencies in a reference-only virtual environment,
+then run from the checkout root with your purchased matching installation:
+
+```sh
+python tools/reference/probe_scout_selectors.py /path/to/terran.exe --output out/reference/scout-selector-report.json
+```
+
+By default it reads `alpha.txt` beside the executable; `--rules` selects an
+explicit path. Both hashes are checked before emulation. The generated report
+is local evidence, not a repository asset. The original experiment hashes
+above identify the earlier local script and report, not the parameterized
+repository script.
+
+The parameterized repository command was rerun on October 16, 2026: all 28
+selector executions and three policy controls passed, and its report SHA-256
+was exactly `d0a603597db02d4f288d7a902b4e11cde8f028d40366bc5639ed7d4bd23f235c`.
 
 This is not an original-renderer screenshot or a geometry/attachment fidelity
 test. The next reference gaps remain: default reactor construction, actual

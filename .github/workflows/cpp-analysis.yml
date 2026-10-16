@@ -1,0 +1,54 @@
+name: C++ correctness
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - 'CMake*Presets.json'
+      - '**/.clang-tidy'
+      - 'tools/analyze_cpp.py'
+      - 'tools/tests/test_analyze_cpp*.py'
+      - '.github/workflows/cpp-analysis.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpp-analysis-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install analysis dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang-tidy-15 cmake ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+      - name: Test scope selection and real correctness diagnostics
+        run: python3 -m unittest discover -s tools/tests -p 'test_analyze_cpp*.py'
+      - name: Configure compilation database
+        run: |
+          cmake -S . -B build/analysis -G Ninja -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTING=OFF
+          cmake --build build/analysis --target glsmac_version
+      - name: Analyze changed translation units
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 tools/analyze_cpp.py --base "$BASE_SHA" --jobs 4
+      - name: Analyze all production translation units
+        if: github.event_name == 'workflow_dispatch'
+        run: python3 tools/analyze_cpp.py --all --jobs 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpp-analysis
+          path: build/analysis/analysis-results/
+          if-no-files-found: ignore

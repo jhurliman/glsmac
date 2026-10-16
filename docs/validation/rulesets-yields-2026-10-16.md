@@ -26,10 +26,18 @@ Short labels below resolve to these exact source revisions:
 | `4de263fc` | [4de263fc548387dec7b0aa5ad04fba300cb648a4](https://github.com/jhurliman/glsmac/commit/4de263fc548387dec7b0aa5ad04fba300cb648a4) |
 | `d57fc5a3` | [d57fc5a3f74ffc107884ae22439bed0a93a85121](https://github.com/jhurliman/glsmac/commit/d57fc5a3f74ffc107884ae22439bed0a93a85121) |
 | `fa69e2d4` | [fa69e2d4c4722932b0241dd505fd66f85b8b9123](https://github.com/jhurliman/glsmac/commit/fa69e2d4c4722932b0241dd505fd66f85b8b9123) |
+| `b36c56d2` | [b36c56d2c6599f51876ce1d2a71b7c3c395873a7](https://github.com/jhurliman/glsmac/commit/b36c56d2c6599f51876ce1d2a71b7c3c395873a7) |
+| `3ddccad0` | [3ddccad0c5b6579784f0065012529a463083f2a7](https://github.com/jhurliman/glsmac/commit/3ddccad0c5b6579784f0065012529a463083f2a7) |
+| `ddcf747a` | [ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a](https://github.com/jhurliman/glsmac/commit/ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a) |
 
-The latter two revisions are retained on the immutable
+The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
 above.
+
+The later three pins are retained on immutable branches
+`codex/validation-20261016-world-widget`,
+`codex/validation-20261016-snapshot-bonus`, and
+`codex/validation-20261016-unit-ui`, respectively.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -159,7 +167,7 @@ Local logs are under `/home/jhurliman/src/glsmac-gc-constructor-unwind/`:
 `fixed-normal-ctest.log`, `fixed-asan-no-leak-ctest.log`, and `fixed-asan-ctest.log`.
 This headless experiment does not identify the cause of any GUI access violation.
 
-## Memory-tracked interactive runs remain incomplete
+## Earlier memory-tracked interactive failures
 
 The ordinary interactive successes above omitted `--memorydebug`. Subsequent
 tracked runs exposed separate failures, each retained rather than treated as
@@ -193,4 +201,72 @@ The preceding local logs are `out/mesh-memory-ui-stdout.log`, its stderr file,
 and `out/mesh-memory-cdb.log`. Earlier first-chance evidence is in
 `out/yields-memory-cdb-fast.log`. No complete interactive memory-tracked pass,
 heap-leak result, soak result, save/reload result, or multiplayer convergence
-result is established here. Later fixes require their own relevant checks.
+result was established by these earlier runs. Later results are recorded below.
+
+## Tracked two-world runs and remaining allocations
+
+At `b36c56d2`, the all-tile `-2/300/3` fixture reached Sparta Command.
+The base showed N `-4`, consumption `2`, surplus `-006`, M `600`, E `6`.
+Removing the worked tile changed these to N `-2`, surplus `-004`, M `300`,
+E `3`; restoring it returned the original totals. Closing the base and choosing
+Menu → Game → Start New Game → Yes produced another quickstart world.
+Title-bar close exited 0 with empty stderr. Shutdown nevertheless reported
+384 tracked objects and 785 raw allocations retained, including Surface and
+Widget actors. Logs: `out/world-widget-ui-stdout.log` and its stderr file.
+
+At `ddcf747a`, including the detached-root actor/texture repair, the same
+sequence reached The Hive and then University Base. The worker interaction
+produced the same synthetic totals above. Both maps rendered and title-bar
+close exited 0 with empty stderr. Shutdown reported 20 tracked objects and
+60 raw allocations retained: 18 object entries at `Render.cpp:172`, two at
+`FBO.cpp:261`, and raw storage at `Mesh.cpp:17/18` and `Texture.cpp:76`.
+No OpenGL resource warning group was emitted. These are functional tracked
+passes, not clean leak checks. The worlds had different random seeds, so the
+counts are observations rather than a controlled before/after leak measurement.
+
+Both runs used the disposable data path in `out/mesh-memory-ui-data-path.txt`,
+with original assets remaining in the local GOG installation. The later run's
+prefix is `out/detached-ui-20261016`; stdout/stderr use `out/detached-ui-`.
+The launch options after the local asset/data/prefix paths were:
+
+```text
+--smactype gog --windowed --window-size 1280x800 --quickstart --quickstart-mapsize 32x32 --ruleset smac --memorydebug
+```
+
+The live executable remained `ddcf747a` throughout this run even though source
+work continued afterward. No turn advance, full save/load, multiplayer or
+long-running soak result follows from these interactions.
+
+## Later headless results and fixture timeouts
+
+| Commit | Check | Result |
+| --- | --- | --- |
+| `b36c56d2` | Windows CTest | 7/7, 30.36 s |
+| `3ddccad0` | Linux ASan/UBSan CTest | 7/7, 36.69 s |
+| `3ddccad0` | LLVM 15 correctness policy | 288 production translation units, 56.14 s, zero failures |
+| `3ddccad0` | Windows CTest | Main GSE test timed out at 300.11 s; other six passed; total 310.33 s |
+| `3ddccad0` | Unchanged Windows main-GSE retry | Passed, 18.43 s; does not erase the timeout |
+| `ddcf747a` | Linux ASan/UBSan CTest | 7/7, 36.75 s |
+| `ddcf747a` | Windows CTest | Main GSE passed in 18.03 s; focused mesh script timed out at 30.19 s; remaining five passed; total 61.14 s |
+
+The world-download fixture previously joined a worker and drained queued
+accumulations while already holding an outer accumulation lock. Its repair
+separates setup, dispatch/drain and assertions without changing production
+locks. Reintroducing the old nesting now fails the two fixture preconditions
+promptly (203 passing / two expected failures in 25.11 s), and the restored
+source worktree passed all seven CTests in 35.92 s. That repair is included in
+`ddcf747a`; its successful main GSE test is distinct from the later mesh timeout.
+
+The focused mesh script's new UI fixture creates a nested GSE runtime while
+inside the script's accumulation. Source inspection identifies an inversion
+between the active space lock and the global GC spaces lock. Nine unchanged
+direct Windows retries exited 0, so no stuck retry was available for a Windows
+stack capture. A separate native-test selection repair is in progress; these
+retries do not establish that the inversion is absent.
+
+Windows logs: `out/snapshot-bonus-windows-ctest.log`,
+`out/snapshot-bonus-windows-gse-retry.log`, `out/unit-ui-windows-ctest.log`,
+`out/mesh-timeout-probe-stdout.log`, and numbered probe logs 1–8.
+Linux logs under `/home/jhurliman/src/glsmac-gc-audit/` use
+`snapshot-bonus-asan-`, `snapshot-bonus-analysis`, and `unit-ui-asan-`.
+Sanitizer options and their leak-detection limitation remain as recorded above.

@@ -225,6 +225,14 @@ public:
 		return result;
 	}
 
+	void DestroyMapBeforeManagers() {
+		// Mirrors ResetGame: the map dies before the collector-owned managers.
+		m_map.reset();
+		m_game.m_map = nullptr;
+	}
+
+	size_t FrontendRequestCount() const { return m_frontend_requests.size(); }
+
 	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &id, &name, flags ]() {
 			m_game.GetBM()->DefinePop( new game::backend::base::PopDef( id, name, {}, {}, flags ) );

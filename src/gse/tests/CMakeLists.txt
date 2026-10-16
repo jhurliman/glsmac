@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/Buffer.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

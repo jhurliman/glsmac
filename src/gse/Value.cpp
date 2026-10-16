@@ -27,6 +27,7 @@
 #include "game/backend/Player.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/Pop.h"
 #include "game/backend/unit/Unit.h"
 
 namespace gse {
@@ -53,6 +54,7 @@ static const std::string s_t_unknown = "Unknown";
     X_CUSTOM_CLASS( Player, game::backend::Player ), \
     X_CUSTOM_CLASS( Tile, game::backend::map::tile::Tile ), \
     X_CUSTOM_CLASS( Base, game::backend::base::Base ), \
+    X_CUSTOM_CLASS( Pop, game::backend::base::Pop ), \
     X_CUSTOM_CLASS( Unit, game::backend::unit::Unit )
 
 typedef std::function< void( types::Buffer* const buf, const Wrappable* const wrapobj ) > custom_serialize_func_t;

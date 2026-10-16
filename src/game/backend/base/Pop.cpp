@@ -1,5 +1,7 @@
 #include "Pop.h"
 
+#include <limits>
+
 #include "game/backend/Game.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
@@ -48,6 +50,43 @@ void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 void Pop::SetBase( Base* const base ) {
 	ASSERT( !m_base, "pop base already set" );
 	m_base = base;
+}
+
+WRAPIMPL_SERIALIZE( Pop )
+	if ( !obj || !obj->m_base ) {
+		THROW( "can't serialize pop reference - population has no base" );
+	}
+	const auto member = obj->m_base->m_pops.find( obj->m_id );
+	if ( member == obj->m_base->m_pops.end() || &member->second != obj ) {
+		THROW( "can't serialize pop reference - population is not a member of its base" );
+	}
+	if ( obj->m_base->m_id > std::numeric_limits< long long >::max() || obj->m_id > std::numeric_limits< long long >::max() ) {
+		THROW( "can't serialize pop reference - ID is out of range" );
+	}
+	// Population IDs are local to a base, not unique across the game.
+	buf->WriteInt( obj->m_base->m_id );
+	buf->WriteInt( obj->m_id );
+}
+
+WRAPIMPL_DESERIALIZE( Pop )
+	const auto base_id = buf->ReadInt();
+	const auto pop_id = buf->ReadInt();
+	if ( base_id < 0 || pop_id < 0 || static_cast< unsigned long long >( base_id ) > std::numeric_limits< size_t >::max()
+		|| static_cast< unsigned long long >( pop_id ) > std::numeric_limits< size_t >::max() ) {
+		THROW( "can't deserialize pop reference - ID is out of range" );
+	}
+	if ( !game || !game->GetBM() ) {
+		THROW( "can't deserialize pop reference - game has no base manager" );
+	}
+	auto* base = game->GetBM()->GetBase( static_cast< size_t >( base_id ) );
+	if ( !base ) {
+		THROW( "can't deserialize pop reference - base not found: " + std::to_string( base_id ) );
+	}
+	const auto member = base->m_pops.find( static_cast< size_t >( pop_id ) );
+	if ( member == base->m_pops.end() ) {
+		THROW( "can't deserialize pop reference - population not found: " + std::to_string( pop_id ) );
+	}
+	return member->second.Wrap( GSE_CALL );
 }
 
 WRAPIMPL_BEGIN( Pop )

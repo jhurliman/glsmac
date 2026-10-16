@@ -6,6 +6,8 @@
 
 #include "Types.h"
 
+#include <deque>
+
 namespace game {
 namespace backend {
 
@@ -73,7 +75,7 @@ private:
 		Unit* unit;
 		bool is_new;
 	};
-	std::vector< pending_unit_t > m_unprocessed_units = {};
+	std::deque< pending_unit_t > m_unprocessed_units = {};
 	// Restored units need the same frontend publication, without new-unit hooks.
 	void RegisterUnit( Unit* unit );
 	void TriggerSpawnHook( GSE_CALLABLE, Unit* unit );

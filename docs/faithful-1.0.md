@@ -198,8 +198,10 @@ using the single-file option to narrow the required check.
 M0 and the prerequisites for M1 are in progress. No milestone is complete.
 The reviewed SDL/main-thread foundation landed in fork PR #1 at
 [`428cf01f7a9a13b70dd29ff505e9e5e7aec1f496`](https://github.com/jhurliman/glsmac/commit/428cf01f7a9a13b70dd29ff505e9e5e7aec1f496)
-as a development baseline; its interactive macOS and hardware Linux checks
-remain open. Subsequent implementation PRs are still being reviewed and
+as a development baseline. Native macOS build, tests, map interaction and
+restart now pass on the pinned integration described in the
+[Mac validation report](https://github.com/jhurliman/glsmac/blob/19d01b9afa306176f41779355263441a7a1c7a35/docs/validation/macos-native-2026-10-16.md); shutdown and
+hardware Linux checks remain open. Subsequent implementation PRs are still being reviewed and
 integrated. The integration checkout now exercises
 real backend entities, event serialization, base snapshots and their script
 bindings without the original assets. Linux and Windows CTest pass; selected
@@ -209,13 +211,15 @@ These checks establish infrastructure behavior, not gameplay fidelity.
 The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
 rendered two quickstart worlds in one process, opened a base screen, advanced a
 turn and exited normally. It also records visible rendering and input follow-ups.
-Interactive macOS validation, hardware Linux validation, long-running sessions,
-complete save/reload and multiplayer convergence remain open.
+The later Mac check confirms map interaction, base inspection, turn advancement
+and a second world in the same process. Hardware Linux validation, long-running
+sessions, complete save/reload and multiplayer convergence remain open.
 
 The subsequent integration contains authoritative worker coordinates and reverse
 claims, optimistic-event wire preservation and acknowledgement bookkeeping,
 exact population rollback, and explicit pre-initialization ruleset selection.
-These remain separate reviewed PRs, not merged release functionality. The
+Several of these slices have landed; the remaining work continues through
+separate reviewed PRs. The
 verified SMAC base-square calculator and strict RESOURCEINFO parser are pure
 components; the live resource callback has not been switched to them.
 
@@ -268,10 +272,16 @@ The next implementation slices are:
    PR #81 captures callback identity before extraction and retires old queued
    work across reset, including event root handoff and copied animation IDs.
    Integration `078a72fb` passes Windows and leak-enabled Linux CTest 8/8 and
-   a fresh 297-unit correctness scan. Executing-callback exclusion, explicit
-   MT request admission, and native reset/collector coordination remain open;
-   queued cancellation alone is insufficient. The script-entry guard blocks
-   active/pending-reset run reentry, with rendered restart validation still open.
+   a fresh 297-unit correctness scan. PR #86 now supplies owned world admission
+   tickets, execution-time request validation, frontend request retirement and
+   the two-step reset barrier; its integration passes Windows CTest 8/8 and a
+   fresh 298-unit correctness scan. The public reset polling implementation
+   also passes native same-thread regressions, removing the old self-wait.
+   Early initialization failure cleanup handles absent maps and throwing error
+   hooks. Executing-callback exclusion, startup phase coordination and native
+   reset/collector coordination remain open; queued cancellation is insufficient.
+   The script-entry guard in #82 has user-confirmed rendered restart evidence
+   on the pinned Mac integration; this does not establish clean shutdown.
    See the [roster ownership plan](player-roster-ownership-plan.md) for the
    canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
@@ -282,14 +292,16 @@ The next implementation slices are:
    design state, CVR rendering and gameplay commands remain separate work.
    The local asset inventory contains 140 CVR containers. Merged PR #73 reads
    their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
-   all installed files pass both probes. PR #83 decodes owned raw geometry
+   all installed files pass both probes. Merged PR #83 decodes owned raw geometry
    records for 438 payloads and explicitly rejects two unsupported variants;
    all seven focused Windows tracking tests pass. Model composition and
    rendering semantics remain unverified. The next steps are in the
    [pinned rendering plan](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md).
    The existing native
    sprite sheet is not conventional-unit art; source model names alone do not
-   establish design-to-model mappings.
+   establish design-to-model mappings. Merged PR #84 adds a bounded original
+   Scout selector probe, resolving the observed component choices and frame
+   selection separately from unverified composition and rendering semantics.
    Do not turn the current native-unit movement assumptions into standard-unit
    behavior or invent reactor/cost defaults.
 3. Review #70's evaluating-base route. Worker intake, scoring and base-screen
@@ -332,3 +344,8 @@ crash in the reference notes. Original executable research proceeds separately;
 keep its evidence level distinct from full-game observations. See each PR's
 reviewed commit and checks for current validation, rather than treating this
 plan as proof that queued work has landed.
+
+GitHub Codex review reached its account usage limit while reviewing #85 on
+October 16. New and revised PR heads remain unmerged until their required
+reviews complete. Local implementation, independent review and tests continue;
+neither the review request nor local success substitutes for that GitHub gate.

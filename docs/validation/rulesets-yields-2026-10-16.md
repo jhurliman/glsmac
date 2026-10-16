@@ -713,7 +713,8 @@ The controlled test process was terminated (exit -1). Its logs are
 empty before termination. Two harness attempts remain separate evidence:
 the missing-ruleset command correctly exited 1, and a hidden-window launch
 exposed no targetable window and was terminated. Neither is a game-crash or
-successful shutdown result. The rendered restart gate remains open.
+successful shutdown result. That Windows run leaves its rendered restart gate
+open; the later native Mac restart evidence below is a separate run.
 
 None of these checks establishes executing-callback/native-reset exclusion,
 safe stale MT request admission, or the held PR77 concurrency fixes.
@@ -743,3 +744,70 @@ negative aggregate-count control and exact unsupported profile are recorded
 in the [versioned geometry contract](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/cvr-geometry-records.md).
 These are structural ingestion results, not decoded rendering meanings,
 original-renderer comparisons or a live conventional unit.
+
+## Native Mac restart and request retirement
+
+The [native Mac report](https://github.com/jhurliman/glsmac/blob/19d01b9afa306176f41779355263441a7a1c7a35/docs/validation/macos-native-2026-10-16.md)
+records integration
+[`5cd78418271231121fb9a8e1d136faa82bbc5dd0`](https://github.com/jhurliman/glsmac/commit/5cd78418271231121fb9a8e1d136faa82bbc5dd0)
+on honey's Apple M2 Max. Native CTest passes 8/8 in 28.55 seconds, and both the
+hidden context diagnostic and the game create OpenGL 4.1 core contexts. The
+user confirms map interaction, base inspection, turn advancement and Menu >
+Start New Game. User screenshots and logs corroborate distinct Morgan and
+University worlds in one process. Restart delay is reported but unmeasured;
+the process was still alive at the subsequent read-only check. This closes
+the interactive restart check for #82's integrated guard, not clean shutdown,
+performance, concurrency, or pixel fidelity. SMAC rules are hash-matched;
+the differing Mac alphax.txt is explicitly not treated as SMAX validation.
+
+The admission implementation is retained at
+[`a5af8fe88515846535f0244066654f68ddda270c`](https://github.com/jhurliman/glsmac/commit/a5af8fe88515846535f0244066654f68ddda270c)
+on immutable branch `codex/validation-20261016-admission-source`.
+It binds pending/accepted/failed world ownership to exact session identities,
+validates native requests at execution and retires every frontend MT ID.
+Integration
+[`8392f67aed7a331cef6c978a7e99abd6c89b580d`](https://github.com/jhurliman/glsmac/commit/8392f67aed7a331cef6c978a7e99abd6c89b580d),
+retained at `codex/validation-20261016-world-admission`, passes Windows CTest
+8/8 in 50.48 seconds and a fresh 298-unit LLVM15 scan in 62.67 seconds with
+zero failures. Focused publication
+[`8cb32997dbc0b05451a26f50da73244f2888dd0b`](https://github.com/jhurliman/glsmac/commit/8cb32997dbc0b05451a26f50da73244f2888dd0b)
+passes Linux CTest 5/5 in 22.28 seconds. It is an ancestor of PR #86's retained
+publication branch. Its older allocation fixtures are not claimed to reproduce
+the integration's tracked/sanitizer results.
+
+## Failure cleanup and polled reset
+
+The failure helper source
+[`67ac1e6357681bdc5060c2d44864b975cfb40b8c`](https://github.com/jhurliman/glsmac/commit/67ac1e6357681bdc5060c2d44864b975cfb40b8c)
+is retained at `codex/validation-20261016-init-failure-source`; the public
+polling controller source
+[`b2ec36b83ee3bbd68f9bd6073eed2fcc4b35fb1b`](https://github.com/jhurliman/glsmac/commit/b2ec36b83ee3bbd68f9bd6073eed2fcc4b35fb1b)
+is retained at `codex/validation-20261016-reset-poll-source`. Seven helper
+regressions cover null maps, throwing hooks and ownership; five actual
+controller cases exercise callback boundaries and same-thread progress.
+The copied old reset controller times out on its self-wait. These tests do
+not substitute for native reset/collector exclusion or startup coordination.
+
+Combined integration
+[`9663fcdabab888e3a77d7361dafd1bbec3ab3673`](https://github.com/jhurliman/glsmac/commit/9663fcdabab888e3a77d7361dafd1bbec3ab3673),
+retained at `codex/validation-20261016-reset-poll`, passes Windows CTest 8/8
+in 48.83 seconds and Linux ASan/UBSan/LSan CTest 8/8 in 111.62 seconds with
+leak detection enabled. The sanitizer cache retains its documented local
+non-PIE startup workaround. A fresh full LLVM15 scan covers 298 production
+translation units in 56.86 seconds with zero failures. Linux analysis excludes
+the Windows network implementation. Logs use `out/reset-poll-windows-` and
+`/home/jhurliman/src/glsmac-gc-audit/reset-poll-`.
+
+The first focused failure-helper publication timed out in its native hook
+test because that older base omitted the existing #54 callback-lock repair.
+GDB showed the handler check blocked on that mutex. Including #54 unchanged
+gives publication
+[`1f39d966247ee2fe0e6c25f9ca55d3d75a052a8d`](https://github.com/jhurliman/glsmac/commit/1f39d966247ee2fe0e6c25f9ca55d3d75a052a8d)
+Linux CTest 5/5 in 23.29 seconds. This source is retained in PR #87's branch;
+the original timeout and passing retry remain separate evidence.
+
+PRs #20, #21, #22, #23, #24, #83 and #84 have now merged after their current
+heads passed the required review and checks. New and revised heads remain
+pending: GitHub Codex review reports an account quota limit from #85 onward.
+The local checks above do not waive that review gate or resolve #77's held
+concurrency findings.

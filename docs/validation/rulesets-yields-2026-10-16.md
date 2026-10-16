@@ -700,3 +700,27 @@ successful shutdown result. The rendered restart gate remains open.
 
 None of these checks establishes executing-callback/native-reset exclusion,
 safe stale MT request admission, or the held PR77 concurrency fixes.
+
+## Owned CVR geometry records
+
+At `e022b688e4206ee9848050d816329dd125ade4ca`, the geometry reader validates
+the observed simple/grouped profiles before allocating owned raw records.
+All seven focused Windows cases passed with allocation tracking, exit 0 and
+no reported memory/OpenGL leaks. Fresh LLVM15 analysis covered 298 production
+translation units in 55.88 seconds with zero failures, with the same Linux
+platform exclusion. Source is retained on immutable branch
+`codex/validation-20261016-cvr-geometry`. Logs use
+`out/cvr-geometry-windows-` and
+`/home/jhurliman/src/glsmac-gc-audit/cvr-geometry-analysis`.
+
+The focused main-based source `3090f15e395257bd3eeec4e432b78af5959e1ccf`
+passed Linux CTest 4/4 in 46.71 seconds (GSE 43.44 seconds); publication logs
+use `/home/jhurliman/src/glsmac-unit-publication/cvr-geometry-`.
+Submitted as #83. The installed Release probe accepts 438 geometry payloads,
+897 groups and 3,620,629 records, with two explicit unsupported variants.
+That full installed-set geometry probe exits 1; envelope/scene modes retain
+140 accepted files and exit 0. The source slice's synthetic sanitizer cases,
+negative aggregate-count control and exact unsupported profile are recorded
+in the [versioned geometry contract](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/cvr-geometry-records.md).
+These are structural ingestion results, not decoded rendering meanings,
+original-renderer comparisons or a live conventional unit.

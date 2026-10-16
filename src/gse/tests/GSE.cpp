@@ -3,6 +3,7 @@
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
 #include "gse/Async.h"
+#include "gse/Wrappable.h"
 #include "gse/value/Null.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -23,6 +24,46 @@ namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+
+	task->AddTest(
+		"test if event handler return validation handles missing values",
+		GT() {
+			class EventSource : public Wrappable {
+				Value* const Wrap( GSE_CALLABLE ) override { return VALUE( value::Undefined ); }
+			} source;
+			auto* gc_space = gse->GetGCSpace();
+			std::string missing_error, wrong_type_error;
+			bool valid_result = false, unconstrained_result = false;
+			gc_space->Accumulate( nullptr, [ & ]() {
+				ExecutionPointer ep;
+				Value* returned = nullptr;
+				source.On( gc_space, ctx, {}, ep, "event", NATIVE_CALL( &returned ) { return returned; } ) );
+				auto* args = VALUEEXT( value::Object, gc_space, ctx, {}, ep, value::object_properties_t{} );
+				try {
+					source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL );
+				}
+				catch ( const Exception& e ) {
+					if ( e.class_name == EC.INVALID_HANDLER ) { missing_error = e.reason; }
+				}
+				auto* result = source.Trigger( gc_space, ctx, {}, ep, "event", args );
+				unconstrained_result = result->type == VT_BOOL && !( (value::Bool*)result )->value;
+				returned = VALUE( value::Int, , 7 );
+				try {
+					source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL );
+				}
+				catch ( const Exception& e ) {
+					if ( e.class_name == EC.INVALID_HANDLER ) { wrong_type_error = e.reason; }
+				}
+				returned = VALUE( value::Bool, , true );
+				valid_result = source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL ) == returned;
+				source.ClearHandlers();
+			} );
+			GT_ASSERT( missing_error == "Event handler is expected to return Bool, got no value", + missing_error );
+			GT_ASSERT( wrong_type_error == "Event handler is expected to return Bool, got Int: 7", + wrong_type_error );
+			GT_ASSERT( valid_result && unconstrained_result, "valid or unconstrained handler result changed" );
+			GT_OK();
+		}
+	);
 
 	task->AddTest(
 		"test if GSE teardown excludes concurrent garbage collection",

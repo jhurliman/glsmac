@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
@@ -432,6 +434,8 @@ private:
 	common::Mutex m_event_handlers_mutex;
 
 	std::vector< event::Event* > m_pending_events = {};
+	// Bridges extraction to the Space queue without holding this mutex while queueing.
+	std::vector< std::shared_ptr< gc::Object > > m_event_batch_handoffs;
 	common::Mutex m_pending_events_mutex;
 
 	struct event_waiting_for_response_t {

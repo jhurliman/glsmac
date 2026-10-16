@@ -9,6 +9,8 @@
 #include "Types.h"
 #include "TileLock.h"
 
+namespace gse::tests { class BackendFixture; }
+
 namespace game {
 namespace backend {
 
@@ -43,6 +45,7 @@ public:
 	WRAPDEFS_PTR( TileManager )
 
 private:
+	friend class gse::tests::BackendFixture;
 	Game* m_game = nullptr;
 
 	// server-side lock tracking

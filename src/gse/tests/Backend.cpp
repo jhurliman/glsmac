@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "GLSMAC.h"
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -9,6 +10,7 @@
 #include "gc/Space.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
+#include "game/backend/Random.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/FacilityDef.h"
@@ -17,6 +19,7 @@
 #include "game/backend/faction/FactionManager.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/MapState.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "util/FinallyGuard.h"
 
@@ -26,14 +29,16 @@
 namespace gse {
 namespace tests {
 
-// Real backend objects with a tile-only map; no game start, script callbacks,
-// renderer, connection, or original-game files are involved in these tests.
+// Real backend objects and event dispatch; no game start, renderer, connection,
+// default mod scripts, or original-game files are involved in these tests.
 class BackendFixture {
 public:
 	BackendFixture()
-		: m_gse( new GSE() ) {
-		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this ]() {
-			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_gse->CreateGlobalContext(), nullptr );
+		: m_random( new game::backend::Random( &m_game, 12345 ) )
+		, m_gse( CreateRuntime() )
+		, m_glsmac( new GLSMAC( m_gse ) ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
 			m_gse->AddRootObject( state );
 			state->SetGame( &m_game );
 			m_game.SetState( state );
@@ -47,6 +52,7 @@ public:
 				}
 			}
 			m_game.m_map = m_map.get();
+			m_game.m_random = m_random.get();
 			m_game.m_pending_frontend_requests = &m_frontend_requests;
 			m_game.m_bm = new game::backend::base::BaseManager( &m_game );
 		} );
@@ -55,10 +61,12 @@ public:
 	~BackendFixture() {
 		// State and BaseManager belong to this GSE's collector. Destroy its
 		// space while the game, map, and frontend request queue are still alive.
-		m_gse.reset();
+		m_glsmac.reset();
+		m_gse = nullptr;
 		m_game.m_state = nullptr;
 		m_game.m_bm = nullptr;
 		m_game.m_map = nullptr;
+		m_game.m_random = nullptr;
 		m_game.m_pending_frontend_requests = nullptr;
 	}
 
@@ -66,9 +74,30 @@ public:
 		return &m_game;
 	}
 
+	void SetRunning( const bool running ) {
+		m_game.m_game_state = running ? game::backend::Game::GS_RUNNING : game::backend::Game::GS_NONE;
+	}
+
+	void WithRW( const std::function< void() >& f ) {
+		m_game.WithRW( f );
+	}
+
+	const std::vector< game::FrontendRequest >& PushBaseUpdates() {
+		// Frontend spawn messages need tile coordinates, but no rendered assets.
+		if ( !m_map->m_map_state ) {
+			NEW( m_map->m_map_state, game::backend::map::MapState );
+			m_map->m_map_state->dimensions = { 8, 8 };
+			const common::mt_flag_t canceled = false;
+			m_map->m_map_state->LinkTileStates( canceled );
+		}
+		m_frontend_requests.clear();
+		m_game.GetBM()->PushUpdates();
+		return m_frontend_requests;
+	}
+
 	std::string WithScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
 		std::string result;
-		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &check, &result ]() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &check, &result ]() {
 			try {
 				gse::ExecutionPointer ep;
 				result = check( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep );
@@ -82,20 +111,20 @@ public:
 	}
 
 	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
-		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &id, &name, flags ]() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &id, &name, flags ]() {
 			m_game.GetBM()->DefinePop( new game::backend::base::PopDef( id, name, {}, {}, flags ) );
 		} );
 	}
 
 	void DefineFacility( game::backend::base::FacilityDef* def ) {
-		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, def ]() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, def ]() {
 			m_game.GetBM()->DefineFacility( def );
 		} );
 	}
 
 	void RestoreBaseManager( types::Buffer& snapshot ) {
 		std::exception_ptr error;
-		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &snapshot, &error ]() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &snapshot, &error ]() {
 			try {
 				gse::ExecutionPointer ep;
 				m_game.GetBM()->Deserialize( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep, snapshot );
@@ -112,10 +141,18 @@ public:
 	}
 
 private:
+	static GSE* CreateRuntime() {
+		// GLSMAC owns this runtime and destroys it through tracked DELETE.
+		NEWV( runtime, GSE );
+		return runtime;
+	}
+
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
 	std::unique_ptr< game::backend::map::Map > m_map;
-	std::unique_ptr< GSE > m_gse;
+	std::unique_ptr< game::backend::Random > m_random;
+	GSE* m_gse; // owned by m_glsmac
+	std::unique_ptr< GLSMAC > m_glsmac;
 };
 
 namespace {
@@ -155,6 +192,133 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	for ( const bool immediate : { true, false } ) {
+		task->AddTest(
+			immediate
+				? "test immediate base manager restore skips new-base hooks and preserves frontend updates"
+				: "test deferred base manager restore skips new-base hooks and preserves frontend updates",
+			[ immediate ]( GSE* gse, context::Context* ctx ) -> std::string {
+				using namespace game::backend::base;
+				const auto previous_next_id = Base::GetNextId();
+				util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+				size_t spawn_calls[ 2 ] = {};
+				BackendFixture source;
+				BackendFixture restored;
+				BackendFixture* fixtures[] = { &source, &restored };
+				for ( size_t i = 0 ; i < 2 ; i++ ) {
+					auto* fixture = fixtures[ i ];
+					auto* game = fixture->GetGame();
+					const auto error = fixtures[ i ]->WithScriptValues( [ &, i, game ]( GSE_CALLABLE ) -> std::string {
+						GT_ASSERT( game->GetState()->IsMaster(), "fixture must exercise master gameplay hooks" );
+						game->GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( fixture, game, &spawn_calls, i ) {
+							spawn_calls[ i ]++;
+							N_EXPECT_ARGS( 1 );
+							N_GETVALUE( event, 0, Object );
+							N_GETPROP_UNWRAP( base, event, "base", Base );
+							// Like the default test-world hook, initializing a new base
+							// adds random citizens and consumes the gameplay RNG.
+							auto* wrapped = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+							auto* create_pop = static_cast< value::Callable* >( wrapped->Get( "create_pop" ) );
+							auto* info = new value::Object( GSE_CALL, { { "type", new value::String( gc_space, "WORKER" ) } } );
+							const auto extra_pops = game->GetRandom()->GetUInt( 1, 3 );
+							fixture->WithRW( [ & ]() {
+								for ( size_t n = 0 ; n < extra_pops ; n++ ) {
+									create_pop->Run( GSE_CALL, { info } );
+								}
+							} );
+							return VALUE( value::Undefined );
+						} ) );
+						GT_OK();
+					} );
+					GT_ASSERT( error.empty(), "spawn hook setup failed: " + error );
+				}
+				source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+				auto* source_game = source.GetGame();
+				auto* restored_game = restored.GetGame();
+				const auto original_rng = source_game->GetRandom()->GetStateString();
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					for ( size_t i = 0 ; i < 2 ; i++ ) {
+						auto* base = new Base(
+							source_game, 301 + i, &source_game->GetState()->m_slots->GetSlot( 2 ),
+							source_game->GetFaction( "GAIANS" ), source_game->GetMap()->GetTile( 2 + i * 2, 2 ),
+							i ? "Forest Primeval" : "Gaia's Landing", {},
+							{ { 7, Pop( nullptr, 7, source_game->GetBM()->GetPopDef( "WORKER" ), 1 ) } }, 23
+						);
+						source_game->GetBM()->SpawnBase( GSE_CALL, base );
+					}
+					GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "new-base spawn failed: " + source_error );
+				GT_ASSERT( spawn_calls[ 0 ] == 2, "new bases did not invoke their gameplay hooks" );
+				GT_ASSERT( source_game->GetRandom()->GetStateString() != original_rng, "new-base hook did not consume gameplay RNG" );
+				types::Buffer snapshot;
+				source_game->GetBM()->Serialize( snapshot );
+				restored_game->GetRandom()->SetState( source_game->GetRandom()->GetState() );
+				const auto saved_rng = restored_game->GetRandom()->GetStateString();
+				restored.SetRunning( immediate );
+				restored.RestoreBaseManager( snapshot );
+				if ( !immediate ) {
+					GT_ASSERT( restored_game->GetBM()->GetBases().empty(), "deferred bases registered before startup" );
+					GT_ASSERT( spawn_calls[ 1 ] == 0, "deferred snapshot invoked gameplay hooks before startup" );
+					restored.SetRunning( true );
+					const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+						restored_game->GetBM()->ProcessUnprocessed( GSE_CALL );
+						GT_OK();
+					} );
+					GT_ASSERT( error.empty(), "deferred base processing failed: " + error );
+				}
+				GT_ASSERT( snapshot.lenr == snapshot.lenw, "base manager snapshot has unread fields" );
+				GT_ASSERT( restored_game->GetBM()->GetBases().size() == 2, "restored base count changed" );
+				for ( const auto& entry : source_game->GetBM()->GetBases() ) {
+					const auto* expected = entry.second;
+					const auto* actual = restored_game->GetBM()->GetBase( entry.first );
+					GT_ASSERT( actual, "restored base ID disappeared" );
+					GT_ASSERT( actual->m_pops.size() == expected->m_pops.size(), "restore reran new-base initialization and changed population count" );
+					for ( const auto& pop : expected->m_pops ) {
+						const auto it = actual->m_pops.find( pop.first );
+						GT_ASSERT( it != actual->m_pops.end(), "restored population ID disappeared" );
+						GT_ASSERT( it->second.m_id == pop.second.m_id && it->second.m_variant == pop.second.m_variant, "restored population identity changed" );
+						GT_ASSERT( it->second.m_base == actual, "restored citizen points to the wrong base" );
+						GT_ASSERT( it->second.m_def == restored_game->GetBM()->GetPopDef( pop.second.m_def->m_id ), "restored citizen points to the wrong definition" );
+					}
+					GT_ASSERT( Base::Serialize( actual ).ToString() == Base::Serialize( expected ).ToString(), "restored base bytes changed" );
+				}
+				GT_ASSERT( spawn_calls[ 1 ] == 0, "restore invoked a new-base gameplay hook" );
+				GT_ASSERT( restored_game->GetRandom()->GetStateString() == saved_rng, "restore consumed gameplay RNG" );
+				const auto& requests = restored.PushBaseUpdates();
+				GT_ASSERT( requests.size() == 4, "restored bases need one frontend spawn and refresh each" );
+				std::unordered_set< size_t > spawned, refreshed;
+				for ( const auto& request : requests ) {
+					if ( request.type == game::FrontendRequest::FR_BASE_SPAWN ) {
+						const auto& data = request.data.base_spawn;
+						const auto* base = restored_game->GetBM()->GetBase( data.base_id );
+						GT_ASSERT( base && *data.name == base->m_name, "frontend spawn lost the restored base name" );
+						GT_ASSERT( data.tile_coords.x == base->GetTile()->coord.x && data.tile_coords.y == base->GetTile()->coord.y, "frontend spawn lost the restored base location" );
+						spawned.insert( data.base_id );
+					}
+					else if ( request.type == game::FrontendRequest::FR_BASE_UPDATE ) {
+						const auto& data = request.data.base_update;
+						const auto* base = restored_game->GetBM()->GetBase( data.base_id );
+						GT_ASSERT( base && data.pops->size() == base->m_pops.size(), "frontend refresh lost the restored population" );
+						refreshed.insert( data.base_id );
+					}
+				}
+				GT_ASSERT( spawned.size() == 2 && refreshed == spawned, "frontend did not spawn and refresh every restored base" );
+				const auto new_base_error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* base = new Base( restored_game, Base::GetNextId(), &restored_game->GetState()->m_slots->GetSlot( 2 ),
+						restored_game->GetFaction( "GAIANS" ), restored_game->GetMap()->GetTile( 6, 2 ), "Gaia's Landing", {}, {} );
+					restored_game->GetBM()->SpawnBase( GSE_CALL, base );
+					GT_ASSERT( base->m_name == "Gaia's Landing 2", "restored names were not registered for future new bases" );
+					GT_ASSERT( !base->m_pops.empty(), "new base after restore did not initialize population" );
+					GT_OK();
+				} );
+				GT_ASSERT( new_base_error.empty(), "new-base spawn after restore failed: " + new_base_error );
+				GT_ASSERT( spawn_calls[ 1 ] == 1, "new-base gameplay hook no longer runs after restore" );
+				GT_ASSERT( restored_game->GetRandom()->GetStateString() != saved_rng, "new-base gameplay RNG no longer advances after restore" );
+				GT_OK();
+			}
+		);
+	}
 	task->AddTest(
 		"test nested script snapshots resolve tiles in the destination world",
 		GT() {

@@ -86,6 +86,15 @@ GLSMAC::GLSMAC()
 
 }
 
+GLSMAC::GLSMAC( gse::GSE* gse )
+	: gse::GCWrappable( nullptr )
+	, m_gse( gse )
+	, m_gc_space( gse->GetGCSpace() ) {
+	m_gc_space->Accumulate( this, [ this ]() {
+		m_ctx = m_gse->CreateGlobalContext();
+	} );
+}
+
 GLSMAC::~GLSMAC() {
 
 	if ( m_load_thread ) {
@@ -112,14 +121,18 @@ GLSMAC::~GLSMAC() {
 		delete m_console;
 	}
 
-	m_gc_space->Accumulate( this, [ this ](){
-		gse::ExecutionPointer ep;
-		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
-	}, nullptr, true);
+	if ( m_ui ) {
+		m_gc_space->Accumulate( this, [ this ](){
+			gse::ExecutionPointer ep;
+			m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
+		}, nullptr, true);
+	}
 
 	DELETE( m_gse );
 
-	s_glsmac = nullptr;
+	if ( s_glsmac == this ) {
+		s_glsmac = nullptr;
+	}
 }
 
 void GLSMAC::Iterate() {

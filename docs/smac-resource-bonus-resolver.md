@@ -27,6 +27,10 @@ raise `std::invalid_argument`. Evaluated signed-int32 arithmetic intermediates
 are checked using int64; values outside that domain raise
 `std::overflow_error` rather than guessing original overflow behavior.
 Unused automatic-pattern arithmetic is not evaluated when presence is forced.
+The original still constructs the coordinate phase before its deep-water
+altitude rejection, including when presence is forced. The checked port domain
+therefore also rejects an overflowing coordinate sum in that branch. This does
+not claim an original overflow result outside the verified arithmetic domain.
 These validation boundaries are port policy, not claims about original error
 handling or extreme-overflow behavior.
 

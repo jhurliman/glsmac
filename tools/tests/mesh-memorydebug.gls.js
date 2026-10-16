@@ -1,4 +1,4 @@
-// CTest enables allocation tracking from startup, then runs the same native
-// assertions as the full suite without initializing the renderer or assets.
+// Pure mesh assertions are safe inside script accumulation. The UI ownership
+// fixtures run separately through --gse-tests-native-filter in CTest.
 const error = test.check_mesh_coordinate_outputs();
 test.assert(error == '', error);

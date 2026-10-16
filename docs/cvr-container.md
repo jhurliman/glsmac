@@ -110,6 +110,7 @@ files, I/O errors, or an empty inventory. For example, from the repository root:
 ```sh
 clang++ -std=c++17 -O2 -DNDEBUG -Isrc \
   src/loader/cvr/CvrContainerReader.cpp src/loader/cvr/CvrSceneReader.cpp \
+  src/loader/cvr/CvrGeometryReader.cpp \
   tools/tests/cvr_container_probe.cpp \
   -o /tmp/cvr-container-probe
 /tmp/cvr-container-probe '/path/to/installed/Alpha Centauri'
@@ -118,6 +119,9 @@ clang++ -std=c++17 -O2 -DNDEBUG -Isrc \
 The optional `--scene` mode additionally validates and reports the
 [nested scene records](cvr-scene-records.md). The default mode retains the
 envelope-only check.
+The optional `--geometry` mode also validates the supported
+[geometry-record profile](cvr-geometry-records.md), reporting its rejections
+separately. Any rejection makes the probe return nonzero.
 
 Local validation on Linux/WSL with Clang 15:
 

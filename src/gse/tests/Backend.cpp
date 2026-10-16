@@ -1,10 +1,78 @@
 #include "Backend.h"
 
 #include "task/gsetests/GSETests.h"
+#include "gse/GSE.h"
+#include "gse/context/GlobalContext.h"
+#include "gc/Space.h"
+#include "game/backend/Game.h"
+#include "game/backend/State.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/PopDef.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
+#include "game/backend/slot/Slots.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
+#include "util/FinallyGuard.h"
+
+#include <memory>
 
 namespace gse {
 namespace tests {
+
+// Real backend objects with a tile-only map; no game start, script callbacks,
+// renderer, connection, or original-game files are involved in these tests.
+class BackendFixture {
+public:
+	BackendFixture()
+		: m_gse( new GSE() ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this ]() {
+			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_gse->CreateGlobalContext(), nullptr );
+			m_gse->AddRootObject( state );
+			state->SetGame( &m_game );
+			m_game.SetState( state );
+			state->m_slots->Resize( 3 );
+			state->GetFM()->Add( new game::backend::faction::Faction( "GAIANS", "Gaia's Stepdaughters" ) );
+			m_map.reset( new game::backend::map::Map( &m_game, 8, 8 ) );
+			m_map->GetTilesPtr()->Clear();
+			for ( size_t y = 0 ; y < 8 ; y++ ) {
+				for ( size_t x = y & 1 ; x < 8 ; x += 2 ) {
+					m_map->GetTile( x, y )->Update();
+				}
+			}
+			m_game.m_map = m_map.get();
+			m_game.m_pending_frontend_requests = &m_frontend_requests;
+			m_game.m_bm = new game::backend::base::BaseManager( &m_game );
+		} );
+	}
+
+	~BackendFixture() {
+		// State and BaseManager belong to this GSE's collector. Destroy its
+		// space while the game, map, and frontend request queue are still alive.
+		m_gse.reset();
+		m_game.m_state = nullptr;
+		m_game.m_bm = nullptr;
+		m_game.m_map = nullptr;
+		m_game.m_pending_frontend_requests = nullptr;
+	}
+
+	game::backend::Game* GetGame() {
+		return &m_game;
+	}
+
+	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &id, &name, flags ]() {
+			m_game.GetBM()->DefinePop( new game::backend::base::PopDef( id, name, {}, {}, flags ) );
+		} );
+	}
+
+private:
+	game::backend::Game m_game;
+	std::vector< game::FrontendRequest > m_frontend_requests;
+	std::unique_ptr< game::backend::map::Map > m_map;
+	std::unique_ptr< GSE > m_gse;
+};
 
 namespace {
 
@@ -31,6 +99,57 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test backend base snapshots resolve population by definition id",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			BackendFixture source;
+			BackendFixture restored;
+			// Display names may coincide or change without changing definition IDs.
+			source.DefinePop( "WORKER", "Citizen", PopDef::PF_TILE_WORKER );
+			source.DefinePop( "DOCTOR", "Citizen", PopDef::PF_NONE );
+			restored.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			restored.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			auto* source_game = source.GetGame();
+			auto* restored_game = restored.GetGame();
+			Base expected(
+				source_game, 101, &source_game->GetState()->m_slots->GetSlot( 2 ),
+				source_game->GetFaction( "GAIANS" ), source_game->GetMap()->GetTile( 2, 2 ), "Gaia's Landing", {},
+				{
+					{ 7, Pop( nullptr, 7, source_game->GetBM()->GetPopDef( "WORKER" ), 0 ) },
+					{ 19, Pop( nullptr, 19, source_game->GetBM()->GetPopDef( "DOCTOR" ), 1 ) },
+				},
+				23
+			);
+			auto snapshot = Base::Serialize( &expected );
+			std::unique_ptr< Base > actual;
+			try {
+				actual.reset( Base::Deserialize( snapshot, restored_game ) );
+			}
+			catch ( const std::runtime_error& error ) {
+				GT_FAIL( "base snapshot reload failed: " + std::string( error.what() ) );
+			}
+			GT_ASSERT( actual->m_pops.size() == 2, "population size changed" );
+			for ( const auto& entry : expected.m_pops ) {
+				const auto it = actual->m_pops.find( entry.first );
+				GT_ASSERT( it != actual->m_pops.end(), "population ID disappeared" );
+				const auto& pop = it->second;
+				GT_ASSERT( pop.m_id == entry.second.m_id, "population ID changed" );
+				GT_ASSERT( pop.m_variant == entry.second.m_variant, "population variant changed" );
+				GT_ASSERT( pop.m_base == actual.get(), "population points to the wrong base" );
+				GT_ASSERT( pop.m_def == restored_game->GetBM()->GetPopDef( entry.second.m_def->m_id ), "population resolved the wrong definition" );
+				GT_ASSERT( pop.m_def != entry.second.m_def, "population still points into the source world" );
+			}
+			GT_ASSERT( actual->m_owner == &restored_game->GetState()->m_slots->GetSlot( 2 ), "base owner was not restored" );
+			GT_ASSERT( actual->m_faction == restored_game->GetFaction( "GAIANS" ), "base faction was not restored" );
+			GT_ASSERT( actual->GetTile() == restored_game->GetMap()->GetTile( 2, 2 ), "base tile was not restored" );
+			GT_ASSERT( actual->GetTile()->base == actual.get(), "restored tile does not point to the base" );
+			GT_ASSERT( Base::Serialize( actual.get() ).ToString() == snapshot.ToString(), "base snapshot bytes changed after reload" );
+			GT_OK();
+		}
+	);
 	task->AddTest(
 		"test backend tile snapshots preserve asymmetric elevations and terrain",
 		GT() {

@@ -24,6 +24,10 @@
 
 class GLSMAC;
 
+namespace gse::tests {
+class BackendFixture;
+}
+
 namespace types {
 namespace texture {
 class Texture;
@@ -349,6 +353,7 @@ public:
 	void SetSlotNum( const size_t slotnum ); // not thread-safe, make sure to call from game thread only
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

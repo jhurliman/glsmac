@@ -25,6 +25,8 @@
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/resource/ResourceManager.h"
+#include "game/backend/resource/Resource.h"
+#include "game/backend/map/tile/TileManager.h"
 #include "game/backend/State.h"
 #include "game/backend/connection/Client.h"
 #include "types/Packet.h"
@@ -242,6 +244,22 @@ public:
 			}
 		} );
 		return result;
+	}
+
+	void EnableYieldFixture() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			using namespace game::backend;
+			m_game.m_rm = new resource::ResourceManager( &m_game );
+			m_game.m_tm = new map::tile::TileManager( &m_game );
+			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
+				m_game.m_rm->DefineResource( new resource::Resource( id, id, {} ) );
+			}
+			for ( const size_t slot : { 0, 2 } ) {
+				NEWV( player, Player, "Test player", Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
+				m_game.GetState()->AddPlayer( player );
+				m_game.GetState()->m_slots->GetSlot( slot ).SetPlayer( player, 0, "" );
+			}
+		} );
 	}
 
 	void EnableTurns() {

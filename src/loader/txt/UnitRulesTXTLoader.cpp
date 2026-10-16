@@ -165,4 +165,33 @@ ChassisTable UnitRulesTXTLoader::ParseChassis( const std::string& source, const 
 	return result;
 }
 
+UnitTable UnitRulesTXTLoader::ParseUnits( const std::string& source, const std::string& ruleset_id ) {
+	const std::string section = "UNITS";
+	const auto rows = Rows( source, ruleset_id, section );
+	// Diagnostic rows include the count header; the first unit is row 2.
+	const auto count_text = util::String::TrimCopy( rows[ 0 ].substr( 0, rows[ 0 ].find( ';' ) ) );
+	const auto count = Integer( count_text, section, 1, 1 );
+	if ( count < 0 || static_cast< size_t >( count ) != rows.size() - 1 ) {
+		throw std::invalid_argument( "#UNITS row 1: count must be nonnegative and match the following records" );
+	}
+	UnitTable result{ ruleset_id, {} };
+	for ( size_t i = 1 ; i < rows.size() ; ++i ) {
+		const auto row = i + 1;
+		const auto fields = Fields( rows[ i ], section, row, 10 );
+		for ( const size_t column : { 2, 3, 7 } ) { RequiredText( fields[ column ], section, row, column + 1 ); }
+		const auto plan = Integer( fields[ 4 ], section, row, 5 );
+		const auto cost = Integer( fields[ 5 ], section, row, 6 );
+		const auto carry = Integer( fields[ 6 ], section, row, 7 );
+		const auto icon = Integer( fields[ 8 ], section, row, 9 );
+		if ( plan < -1 || plan > 12 ) {
+			throw std::invalid_argument( Location( section, row, 5 ) + ": unsupported unit plan" );
+		}
+		if ( fields[ 9 ].find_first_not_of( "01" ) != std::string::npos ) {
+			throw std::invalid_argument( Location( section, row, 10 ) + ": ability flags must be a nonempty binary string" );
+		}
+		result.units.push_back( { fields[ 0 ], fields[ 1 ], fields[ 2 ], fields[ 3 ], static_cast< UnitPlan >( plan ), cost, carry, fields[ 7 ], icon, fields[ 9 ] } );
+	}
+	return result;
+}
+
 }

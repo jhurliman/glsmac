@@ -13,6 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTileNutrients.cpp
 	${PWD}/SmacResourceBonus.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/GSE.cpp

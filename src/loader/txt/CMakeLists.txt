@@ -4,5 +4,6 @@ SET( SRC ${SRC}
 	${PWD}/TXTLoader.cpp
 	${PWD}/FactionTXTLoader.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
 
 	PARENT_SCOPE )

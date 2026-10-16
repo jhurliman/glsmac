@@ -5,7 +5,7 @@ observed simple/grouped records in `CvrSceneObject::voxel_data`. It returns
 owned header fields, ordered groups and exact three-byte records. It does not
 reconstruct positions, interpret normals/colors, apply transforms, generate
 meshes, choose unit assets or activate rendering. The
-[rendering plan](conventional-unit-rendering-plan.md) describes those separate
+[rendering plan](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md) describes those separate
 dependencies.
 
 ## Supported profile
@@ -109,7 +109,9 @@ Seven synthetic native groups cover all four profiles, signed endpoints,
 exact scalar bits including subnormals, all accepted codes, terminal rules,
 repeated records, every truncated prefix with original/repaired size fields,
 invalid counts/extents, unsupported flags, late bad groups and independent
-source/copy/move lifetimes. They run in the existing `gse` CTest. Focused run:
+source/copy/move lifetimes. They run in the existing `gse` CTest. The focused
+command requires the native test filter from PR57 or its integration; the
+ordinary `--gse-tests` command includes these cases on the focused publication:
 
 ```sh
 build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^CVR geometry' \

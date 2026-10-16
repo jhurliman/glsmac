@@ -10,6 +10,7 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
+#include "scene/Scene.h"
 
 #include "gse/program/Program.h"
 #include "gse/program/Variable.h"
@@ -46,6 +47,17 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		task->AddTest(
+			"test if an empty scene accepts clearing its camera",
+			GT() {
+				scene::Scene scene( "camera test", scene::SCENE_TYPE_WORLD );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "empty scene acquired a camera" );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "repeated clearing changed the camera" );
+				GT_OK();
+			}
+		);
 		tests::AddParserTests( task );
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );

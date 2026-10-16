@@ -75,6 +75,8 @@ void AddSmacResourceBonusTests( task::gsetests::GSETests* task ) {
 		const auto minimum = std::numeric_limits< int32_t >::min();
 		for ( const auto input : {
 			ResourceBonusInputs( maximum, 1, AltitudeBand::Land3, 0, true, true, false, false, false ),
+			ResourceBonusInputs( maximum, 1, AltitudeBand::DeepOcean, 0, true, true, false, false, false ),
+			ResourceBonusInputs( maximum, 1, AltitudeBand::Trench, 0, true, true, false, false, false ),
 			ResourceBonusInputs( 0, 2, AltitudeBand::Land3, maximum, true, false, false, false, false ),
 			ResourceBonusInputs( 8, 0, AltitudeBand::Land3, minimum, true, false, false, false, false ),
 		} ) {

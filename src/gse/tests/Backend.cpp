@@ -37,6 +37,7 @@
 #include "types/texture/Texture.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
+#include "network/Network.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
 #include "game/backend/connection/Connection.h"
@@ -617,7 +618,7 @@ public:
 		} );
 		return check();
 	}
-	void ProcessMapProgress( game::backend::map::module::Module& module ) {
+	void ProcessMapProgress( game::backend::map::module::Module& module, const size_t tile_count = 1 ) {
 		// Invoke the actual progress/cancellation loop without render assets.
 		auto* const map = m_game.m_map;
 		if ( !map->m_map_state ) {
@@ -627,7 +628,7 @@ public:
 			map->m_map_state->LinkTileStates( canceled );
 		}
 		game::backend::map::Map::module_passes_t passes{ { &module } };
-		game::backend::map::Map::tiles_t tiles{ map->GetTile( 0, 0 ) };
+		game::backend::map::Map::tiles_t tiles( tile_count, map->GetTile( 0, 0 ) );
 		// The old progress pump can execute ResetGame and delete this Map.
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
@@ -1051,6 +1052,118 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 }
 
 static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
+	for ( const bool disconnect : { false, true } ) {
+		task->AddTest( disconnect
+			? "map processing defers queued disconnect until ordinary state iteration"
+			: "map processing defers queued roster replacement until ordinary state iteration", GT( disconnect ) {
+			using namespace game::backend;
+			// Keep the actual Network request/response queue and Client packet
+			// dispatcher; replace only socket I/O with a fixture-owned transport.
+			class FixtureNetwork final : public network::Network {
+			public:
+				~FixtureNetwork() override { Stop(); }
+				void Queue( const network::Event& event ) { AddEvent( event ); }
+			protected:
+				network::MT_Response ListenStart() override { return Success(); }
+				network::MT_Response ListenStop() override { return Success(); }
+				network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+				network::MT_Response Disconnect() override { return Success(); }
+				network::MT_Response DisconnectClient( const network::cid_t ) override { return Success(); }
+				void ProcessEvents() override { GetEvents(); }
+			} network;
+			class FixtureClient final : public connection::Client {
+			public:
+				FixtureClient( gc::Space* space, settings::LocalSettings* settings, network::Network* network )
+					: Client( space, settings, network ) {}
+				bool IsDisconnectRequested() const { return !m_disconnect_reason.empty(); }
+			};
+			BackendFixture fixture;
+			fixture.EnableTurnPlayers();
+			auto* const game = fixture.GetGame();
+			auto* const state = game->GetState();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				state->m_settings.local.remote_address = "fixture";
+				auto* client = new FixtureClient( gc_space, &state->m_settings.local, &network );
+				state->SetConnection( client );
+				client->Connect();
+				network.Iterate();
+				state->Iterate();
+				size_t roster_updates = 0, disconnects = 0;
+				util::FinallyGuard finish_connection( [ & ]() {
+					if ( state->GetConnection() ) {
+						client->Disconnect();
+						network.Iterate();
+						state->Iterate();
+					}
+				} );
+				GT_ASSERT( client->IsConnected(), "fixture did not use the real connection completion path" );
+				auto* const original = state->m_slots->GetSlot( 0 ).GetPlayer();
+				client->m_on_players_list_update = [ & ]( size_t ) { ++roster_updates; };
+				client->m_on_disconnect = [ & ]() { ++disconnects; };
+				// First request the next event batch, then fill its real response.
+				state->Iterate();
+				network::Event event;
+				if ( disconnect ) {
+					event.type = network::Event::ET_DISCONNECT;
+				}
+				else {
+					Player replacement( "Replacement", Player::PR_HOST, nullptr, "" );
+					slot::Slots slots( state );
+					slots.Resize( 3 );
+					slots.GetSlot( 0 ).SetPlayer( &replacement, 0, "" );
+					types::Packet packet( types::Packet::PT_PLAYERS );
+					packet.data.num = 0; // full roster update, not initial slot assignment
+					packet.data.str = slots.Serialize().ToString();
+					event.type = network::Event::ET_PACKET;
+					event.data.packet_data = packet.Serialize().ToString();
+				}
+				network.Queue( event );
+				network.Iterate();
+				return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+					class ProgressModule final : public map::module::Module {
+					public:
+						explicit ProgressModule( map::Map* map ) : Module( map ) {}
+						std::function< void() > visit;
+						void GenerateTile( const map::tile::Tile*, map::tile::TileState*, map::MapState* ) override { visit(); }
+					} module( game->GetMap() );
+					size_t visits = 0;
+					bool changed_inside_map = false;
+					common::mt_id_t progress = 0, ping = 0;
+					module.visit = [ & ]() {
+						if ( !visits++ ) {
+							progress = game->MT_GetFrontendRequests();
+							ping = game->MT_Ping();
+						}
+						changed_inside_map |= state->m_slots->GetSlot( 0 ).GetPlayer() != original || client->IsDisconnectRequested();
+					};
+					// Cross the former 64-tile State::Iterate threshold. Repeated
+					// tile references avoid needing a larger rendered map fixture.
+					fixture.ProcessMapProgress( module, 65 );
+					GT_ASSERT( visits == 65, "map did not cross the former packet-pump boundary" );
+					GT_ASSERT( !changed_inside_map && !roster_updates && !disconnects, "map processing applied queued roster/disconnect events" );
+					GT_ASSERT( state->m_slots->GetSlot( 0 ).GetPlayer() == original && client->IsConnected() && !client->IsDisconnectRequested(), "map processing changed the live connection or roster" );
+					const auto response = game->MT_GetResponse( progress );
+					util::FinallyGuard free_response( [ & ]() { game->MT_DestroyResponse( response ); } );
+					GT_ASSERT( response.result == R_SUCCESS && response.data.get_frontend_requests.requests && !response.data.get_frontend_requests.requests->empty(), "map progress polling stopped" );
+					GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "map progress ping stopped" );
+					state->Iterate();
+					if ( disconnect ) {
+						network.Iterate();
+						state->Iterate();
+						GT_ASSERT( disconnects == 1 && !state->GetConnection() && state->m_slots->GetCount() == 0, "ordinary state iteration did not apply disconnect cleanup" );
+					}
+					else {
+						GT_ASSERT( roster_updates == 1 && state->m_slots->GetSlot( 0 ).GetPlayer() != original && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Replacement", "ordinary state iteration did not apply the queued roster" );
+						state->Iterate();
+						GT_ASSERT( roster_updates == 1, "queued roster was applied more than once" );
+					}
+					GT_OK();
+				} );
+			} );
+			GT_ASSERT( error.empty(), "map packet deferral check: " + error );
+			GT_OK();
+		} );
+	}
 	task->AddTest( "loader progress keeps reset queued until actual map processing returns", GT() {
 		using namespace game::backend;
 		BackendFixture fixture;
@@ -2342,6 +2455,31 @@ static bool RejectsSettings( const std::function< void() >& operation ) {
 }
 
 static void AddRulesetTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "decoded roster players follow State teardown allocation ownership", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* const state = fixture.GetGame()->GetState();
+			auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+			state->SetConnection( client );
+			// A null faction keeps this allocation test independent of the
+			// existing detached Faction ownership in Player::Deserialize.
+			Player source( "Decoded player", Player::PR_HOST, nullptr, "" );
+			slot::Slots slots( state );
+			slots.Resize( 1 );
+			slots.GetSlot( 0 ).SetPlayer( &source, 0, "" );
+			types::Packet packet( types::Packet::PT_PLAYERS );
+			packet.data.num = 0;
+			packet.data.str = slots.Serialize().ToString();
+			client->Receive( packet );
+			GT_ASSERT( state->m_slots->GetCount() == 1 && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Decoded player", "actual Client roster decode did not publish player" );
+			state->Reset();
+			GT_ASSERT( state->m_slots->GetCount() == 0 && !state->GetConnection(), "actual State reset did not retire decoded roster" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "decoded roster ownership check: " + error );
+		GT_OK();
+	} );
 	task->AddTest( "test production faction configure registers both rulesets", GT() {
 		using game::backend::faction::Faction;
 		BackendFixture fixture;

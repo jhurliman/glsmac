@@ -25,6 +25,99 @@ namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+	for ( const int kind : { 1, 2, 0 } ) {
+		task->AddTest( std::string( "test event callbacks recover after " ) + ( kind == 1 ? "native exceptions" : kind == 2 ? "nonstandard exceptions" : "GSE exceptions" ), GT( kind ) {
+			class EventSource : public Wrappable {
+			public:
+				Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			} source;
+			auto* gc_space = gse->GetGCSpace();
+			const si_t si;
+			ExecutionPointer ep;
+			std::string error;
+			gc_space->Accumulate( nullptr, [ & ]() {
+				error = [ & ]() -> std::string {
+					std::vector< int > order;
+					bool fail = true;
+					size_t arguments_built = 0;
+					const auto first = source.On( GSE_CALL, "event", NATIVE_CALL( &order, &fail, kind ) {
+						order.push_back( 1 );
+						if ( fail ) {
+							fail = false;
+							if ( kind == 1 ) { throw std::runtime_error( "native event failure" ); }
+							if ( kind == 2 ) { throw 73; }
+							GSE_ERROR( EC.GAME_ERROR, "GSE event failure" );
+						}
+						return VALUE( value::Int,, 11 );
+					} ) );
+					source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 2 ); return VALUE( value::Int,, 22 ); } ) );
+					const f_args_t args = [ & ]( GSE_CALLABLE, value::object_properties_t& properties ) {
+						++arguments_built;
+						properties.emplace( "argument", VALUE( value::Int,, 41 ) );
+					};
+					bool caught = false;
+					try { source.Trigger( GSE_CALL, "event", args, VT_INT ); }
+					catch ( const Exception& exception ) { caught = kind == 0 && exception.class_name == EC.GAME_ERROR && exception.reason == "GSE event failure"; }
+					catch ( const std::runtime_error& exception ) { caught = kind == 1 && std::string( exception.what() ) == "native event failure"; }
+					catch ( const int value ) { caught = kind == 2 && value == 73; }
+					GT_ASSERT( caught && order == std::vector< int >{ 1 } && arguments_built == 1, "callback exception or stop order changed" );
+					// This real second dispatch hangs with the old unlocked lock_guard.
+					auto* result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+					GT_ASSERT( VALUE_GET( value::Int, result ) == 22 && order == ( std::vector< int >{ 1, 1, 2 } ) && arguments_built == 2, "subsequent callback order/result changed" );
+					source.Off( GSE_CALL, "event", first );
+					source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 3 ); return VALUE( value::Int,, 33 ); } ) );
+					result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+					GT_ASSERT( VALUE_GET( value::Int, result ) == 33 && order == ( std::vector< int >{ 1, 1, 2, 2, 3 } ) && arguments_built == 3, "handler changes after failure did not take effect" );
+					source.ClearHandlers();
+					GT_ASSERT( !source.HasHandlers( "event" ), "handler cleanup failed after callback exception" );
+					GT_OK();
+				}();
+			} );
+			GT_ASSERT( error.empty(), "event recovery failed: " + error );
+			GT_OK();
+		} );
+	}
+	task->AddTest( "test event callbacks keep snapshot order and unlock during reentrant changes", GT() {
+		class EventSource : public Wrappable {
+		public:
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+		} source;
+		auto* gc_space = gse->GetGCSpace();
+		const si_t si;
+		ExecutionPointer ep;
+		std::string error;
+		gc_space->Accumulate( nullptr, [ & ]() {
+			error = [ & ]() -> std::string {
+				std::vector< int > order;
+				Wrappable::callback_id_t second;
+				bool changed = false;
+				auto* third = NATIVE_CALL( &order ) { order.push_back( 3 ); return VALUE( value::Int,, 33 ); } );
+				source.On( GSE_CALL, "event", NATIVE_CALL( &source, &order, &changed, &second, third ) {
+					order.push_back( 1 );
+					if ( !changed ) {
+						changed = true;
+						source.Off( GSE_CALL, "event", second );
+						source.On( GSE_CALL, "event", third );
+					}
+					return VALUE( value::Int,, 11 );
+				} ) );
+				second = source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 2 ); return VALUE( value::Int,, 22 ); } ) );
+				auto* args = VALUEEXT( value::Object, GSE_CALL );
+				auto* result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+				GT_ASSERT( VALUE_GET( value::Int, result ) == 22 && order == ( std::vector< int >{ 1, 2 } ), "callback changes altered the active snapshot" );
+				bool rejected = false;
+				try { source.Trigger( GSE_CALL, "event", args, VT_STRING ); }
+				catch ( const Exception& exception ) { rejected = exception.class_name == EC.INVALID_HANDLER; }
+				GT_ASSERT( rejected && order == ( std::vector< int >{ 1, 2, 1 } ), "return-type failure changed callback order" );
+				result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+				GT_ASSERT( VALUE_GET( value::Int, result ) == 33 && order == ( std::vector< int >{ 1, 2, 1, 1, 3 } ), "callback registry did not survive return-type failure" );
+				source.ClearHandlers();
+				GT_OK();
+			}();
+		} );
+		GT_ASSERT( error.empty(), "event snapshot validation failed: " + error );
+		GT_OK();
+	} );
 
 	for ( const bool nested : { false, true } ) {
 		task->AddTest(

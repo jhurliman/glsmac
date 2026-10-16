@@ -39,6 +39,10 @@ namespace console {
 class Console;
 }
 
+namespace gse::tests {
+class BackendFixture;
+}
+
 CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	GLSMAC();
 	~GLSMAC();
@@ -61,6 +65,11 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+	friend class gse::tests::BackendFixture;
+	// Own a script runtime for asset-free backend tests. This initializes only
+	// event dispatch: no singleton registration, bindings, main script, or UI.
+	explicit GLSMAC( gse::GSE* gse );
+
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;
 	gc::Space* m_gc_space = nullptr;

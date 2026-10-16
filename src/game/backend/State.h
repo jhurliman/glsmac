@@ -49,10 +49,26 @@ CLASS( State, gse::GCWrappable )
 
 	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
 	typedef std::function< void( Game* const game, GSE_CALLABLE ) > game_func_t;
+	class GameSession {
+	public:
+		bool IsActive() const { return active.load(); }
+	private:
+		friend class State;
+		GameSession( State* state, Game* game ) : state( state ), game( game ) {}
+		State* const state;
+		Game* const game;
+		std::atomic< bool > active{ true };
+	};
+	using game_session_t = std::shared_ptr< const GameSession >;
+	game_session_t CaptureGameSession();
+	bool IsGameSessionActive( const game_session_t& session ) const;
 
 	// Cancels work that has not started when its session is retired. This does
 	// not exclude concurrent teardown from an already executing callback.
 	void WithGame( gc::Object* owner, const game_func_t& f, const f_cleanup_t& cleanup = nullptr, bool need_now = false );
+	// Producers that stage work before queue registration must keep the identity
+	// captured before extraction/handler installation; never resample it later.
+	void WithGameSession( const game_session_t& session, gc::Object* owner, const game_func_t& f, const f_cleanup_t& cleanup = nullptr, bool need_now = false );
 
 	void WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup = nullptr, const bool need_now = false );
 
@@ -106,11 +122,6 @@ private:
 
 	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
-	struct GameSession {
-		explicit GameSession( Game* game ) : game( game ) {}
-		Game* const game;
-		std::atomic< bool > active{ true };
-	};
 	std::mutex m_game_session_mutex;
 	std::shared_ptr< GameSession > m_game_session;
 

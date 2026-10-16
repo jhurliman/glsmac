@@ -49,16 +49,27 @@
 namespace game {
 namespace backend {
 
-namespace {
-class EventBatchRoots final : public gc::Object {
+class Game::EventBatchRoots final : public gc::Object {
 public:
-	explicit EventBatchRoots( std::vector< event::Event* > events ) : gc::Object( nullptr ), events( std::move( events ) ) {}
+	EventBatchRoots( State* state, std::vector< event::Event* > events ) : gc::Object( nullptr ), state( state ), events( std::move( events ) ) {}
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
 		gc::Object::GetReachableObjects( reachable_objects );
+		GC_REACHABLE( state );
 		for ( auto* event : events ) { GC_REACHABLE( event ); }
 	}
+	State* const state;
 	const std::vector< event::Event* > events;
 };
+
+Game::EventBatchHandoff::EventBatchHandoff( Game* game, State* state, State::game_session_t session, std::shared_ptr< EventBatchRoots > roots )
+	: game( game ), state( state ), session( std::move( session ) ), roots( std::move( roots ) ) {}
+
+Game::EventBatchHandoff::~EventBatchHandoff() {
+	if ( published ) {
+		std::lock_guard guard( game->m_pending_events_mutex );
+		const auto it = std::find( game->m_event_batch_handoffs.begin(), game->m_event_batch_handoffs.end(), roots );
+		if ( it != game->m_event_batch_handoffs.end() ) { game->m_event_batch_handoffs.erase( it ); }
+	}
 }
 
 response_map_data_t::~response_map_data_t() {
@@ -1512,26 +1523,34 @@ const std::string& Game::GetTurnStatusString() const {
 }
 
 void Game::ProcessEvents() {
-	std::shared_ptr< EventBatchRoots > batch;
-	util::FinallyGuard release_handoff( [ this, &batch ]() {
-		if ( batch ) {
-			std::lock_guard guard( m_pending_events_mutex );
-			const auto it = std::find( m_event_batch_handoffs.begin(), m_event_batch_handoffs.end(), batch );
-			if ( it != m_event_batch_handoffs.end() ) { m_event_batch_handoffs.erase( it ); }
-		}
-	} );
+	auto* const state = m_state;
+	const auto session = state->CaptureGameSession();
+	DispatchEventBatch( ExtractEventBatch( state, session ) );
+}
+
+std::unique_ptr< Game::EventBatchHandoff > Game::ExtractEventBatch( State* state, const State::game_session_t& session ) {
+	std::unique_ptr< EventBatchHandoff > handoff;
 	{
 		std::lock_guard guard( m_pending_events_mutex );
-		if ( m_pending_events.empty() ) { return; }
-		batch = std::make_shared< EventBatchRoots >( m_pending_events );
-		m_event_batch_handoffs.push_back( batch );
+		// A producer delayed before extraction must not consume events that a
+		// replacement session has since published into this same Game.
+		if ( !state->IsGameSessionActive( session ) || m_pending_events.empty() ) { return nullptr; }
+		handoff = std::make_unique< EventBatchHandoff >( this, state, session, std::make_shared< EventBatchRoots >( state, m_pending_events ) );
+		m_event_batch_handoffs.push_back( handoff->roots );
+		handoff->published = true;
 		m_pending_events.clear();
 	}
+	return handoff;
+}
+
+void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
+	if ( !handoff ) { return; }
+	const auto& batch = handoff->roots;
 	// Queue registration takes Space's pending mutex. Release the events mutex
 	// first: Collect takes pending before traversing Game's roots. The handoff
 	// root keeps this extracted batch reachable until the queue owns it.
 	{
-		m_state->WithGame( batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
+		handoff->state->WithGameSession( handoff->session, batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
 			const std::string* errptr = nullptr;
 			for ( const auto& event : batch->events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
@@ -2016,17 +2035,21 @@ std::string Game::SerializeWorldSnapshot() const {
 }
 
 void Game::ConfigureWorldDownload( connection::Client* connection ) {
+	auto* const state = m_state;
+	const auto session = state->CaptureGameSession();
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
-	connection->m_on_download_progress = [ this ]( const float progress ) -> void {
+	connection->m_on_download_progress = [ this, state, session, connection ]( const float progress ) -> void {
+		if ( !session || !session->IsActive() || state->GetConnection() != connection ) { return; }
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 	};
-	connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
+	connection->m_on_download_complete = [ this, state, session, connection ]( const std::string serialized_snapshot ) -> void {
+		if ( !session || !session->IsActive() || state->GetConnection() != connection ) { return; }
 		connection->m_on_download_complete = nullptr;
 		connection->m_on_download_progress = nullptr;
 		MTModule::Log( "Unpacking world snapshot" );
 
-		m_state->WithGame( connection, [ this, connection, serialized_snapshot ]( Game* const, GSE_CALLABLE ) {
+		state->WithGameSession( session, connection, [ this, connection, serialized_snapshot ]( Game* const, GSE_CALLABLE ) {
 			if ( m_state->GetConnection() != connection ) { return; }
 
 			try {

@@ -53,7 +53,7 @@ State::~State() {
 
 void State::SetGame( Game* game ) {
 	ASSERT( !m_game, "game already set" );
-	const auto session = std::make_shared< GameSession >( game );
+	const auto session = std::shared_ptr< GameSession >( new GameSession( this, game ) );
 	{
 		std::lock_guard guard( m_game_session_mutex );
 		m_game = game;
@@ -92,16 +92,24 @@ void State::WithGSE( gc::Object* const owner, const gse_func_t& f, const f_clean
 }
 
 void State::WithGame( gc::Object* const owner, const game_func_t& f, const f_cleanup_t& cleanup, const bool need_now ) {
-	std::shared_ptr< GameSession > session;
-	{
-		std::lock_guard guard( m_game_session_mutex );
-		session = m_game_session;
-	}
+	WithGameSession( CaptureGameSession(), owner, f, cleanup, need_now );
+}
+
+State::game_session_t State::CaptureGameSession() {
+	std::lock_guard guard( m_game_session_mutex );
+	return m_game_session;
+}
+
+bool State::IsGameSessionActive( const game_session_t& session ) const {
+	return session && session->state == this && session->IsActive();
+}
+
+void State::WithGameSession( const game_session_t& session, gc::Object* const owner, const game_func_t& f, const f_cleanup_t& cleanup, const bool need_now ) {
 	const auto roots = std::make_shared< GameCallbackRoots >( this, owner );
 	m_gc_space->Accumulate( roots.get(), [ this, session, roots, f ]() {
 		// Check before any context, captured world object, or Game access. A new
 		// binding always gets another identity, even for the same State/Game.
-		if ( !session || !session->active.load() ) { return; }
+		if ( !IsGameSessionActive( session ) ) { return; }
 		gse::ExecutionPointer ep;
 		f( session->game, m_gc_space, m_ctx, {}, ep );
 	}, cleanup, need_now );

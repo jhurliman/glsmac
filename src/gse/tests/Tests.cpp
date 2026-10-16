@@ -1,4 +1,5 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
 #include "Buffer.h"
@@ -71,6 +72,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		);
 		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
 		task->AddTest(
 			"test UUID generation works independently of an existing account",
 			GT() {

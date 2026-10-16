@@ -77,7 +77,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 	}
 
 	if ( count > 0 ) {
-		std::vector< const types::mesh::Render* > meshes = {};
+		std::vector< scene::actor::Sprite::mesh_ptr_t > meshes = {};
 		std::vector< types::texture::Texture* > textures = {};
 		std::vector< backend::map::pcx_texture_coordinates_t > whs = {};
 		size_t index = 0;
@@ -120,7 +120,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 			AddMeshAndTexture(
 				widget,
 				index++,
-				meshes.at( i ),
+				meshes.at( i ).get(),
 				textures.at( i ),
 				false,
 				{
@@ -146,7 +146,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		AddMeshAndTexture(
 			widget,
 			0,
-			sprite->GenerateMesh(),
+			sprite->GenerateMesh().get(),
 			sprite->GetTexture(),
 			false,
 			{

@@ -43,10 +43,15 @@ const types::Vec2< types::mesh::tex_coord_t >& Sprite::GetDstOffsets() const {
 	return m_dst_offsets;
 }
 
-const types::mesh::Render* Sprite::GenerateMesh() const {
+void Sprite::MeshDeleter::operator()( const types::mesh::Render* mesh ) const {
+	DELETE( mesh );
+}
+
+Sprite::mesh_ptr_t Sprite::GenerateMesh() const {
 	auto* mesh = types::mesh::Render::Rectangle( m_dimensions.x, m_dimensions.y, m_tex_coords );
+	mesh_ptr_t owned_mesh( mesh );
 	mesh->UpdateAllNormals();
-	return mesh;
+	return owned_mesh;
 }
 
 const types::Vec3 Sprite::NormalizePosition( const types::Vec3& position ) const {

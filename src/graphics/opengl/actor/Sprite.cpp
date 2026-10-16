@@ -60,7 +60,7 @@ void Sprite::LoadMesh() {
 	m_last_dimensions = actor->GetDimensions();
 	m_last_tex_coords = actor->GetTexCoords();
 
-	auto* mesh = actor->GenerateMesh();
+	auto mesh = actor->GenerateMesh();
 
 	m_opengl->WithBindBuffers(
 		m_vbo, m_ibo, [ &mesh ]() {
@@ -71,7 +71,6 @@ void Sprite::LoadMesh() {
 
 	m_ibo_size = mesh->GetIndexCount();
 
-	DELETE( mesh );
 }
 
 void Sprite::LoadTexture() {

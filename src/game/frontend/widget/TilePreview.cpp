@@ -63,7 +63,7 @@ void TilePreview::Update( ui::dom::Widget* const widget, const void* const data 
 		auto* actor = m_game->GetISM()->GetInstancedSpriteByKey( s )->actor;
 		auto sprite = actor->GetSpriteActor();
 		auto mesh = sprite->GenerateMesh();
-		AddMeshAndTexture( widget, index++, mesh, sprite->GetTexture() );
+		AddMeshAndTexture( widget, index++, mesh.get(), sprite->GetTexture() );
 	}
 
 }

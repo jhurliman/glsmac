@@ -215,7 +215,9 @@ IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE S
 			"-DGLSMAC_TEST_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/test-data-native-filter"
 			-P "${PROJECT_SOURCE_DIR}/tools/tests/check-gse-native-filter.cmake"
 	)
-	SET_TESTS_PROPERTIES( gse_native_filter_cli PROPERTIES TIMEOUT 30 )
+	# Eight sequential subprocesses retain their individual 10-second limits.
+	# Let the wrapper report a slow/failing case before CTest kills the batch.
+	SET_TESTS_PROPERTIES( gse_native_filter_cli PROPERTIES TIMEOUT 90 )
 
 	FOREACH ( CASE success failure missing )
 		ADD_TEST( NAME gse_exit_${CASE}

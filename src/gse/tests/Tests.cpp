@@ -6,6 +6,7 @@
 #include "SmacResourceBonus.h"
 #include "SmacTileNutrients.h"
 #include "SmacTileMinerals.h"
+#include "SmacTileEnergy.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -98,6 +99,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacResourceBonusTests( task );
 		tests::AddSmacTileNutrientTests( task );
 		tests::AddSmacTileMineralTests( task );
+		tests::AddSmacTileEnergyTests( task );
 	}
 	tests::AddScriptsTests( task );
 

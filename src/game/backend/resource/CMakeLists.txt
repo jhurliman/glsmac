@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 	${PWD}/Resource.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacTileMinerals.cpp
+	${PWD}/SmacTileEnergy.cpp
 	${PWD}/SmacTileNutrients.cpp
 	${PWD}/SmacResourceBonus.cpp
 

@@ -1,0 +1,143 @@
+// In-memory engine boundaries for the real base rules and population events.
+// Keep rule calculations in default/game/bases.gls.js, not in these mocks.
+const configure_bases = #include('../default/game/bases');
+const population_events = {
+	add_base_pop: #include('../default/game/event/add_base_pop'),
+	remove_base_pop: #include('../default/game/event/remove_base_pop'),
+};
+
+const custom_properties = () => {
+	const values = {};
+	return {
+		get: (key) => { return values[key]; },
+		set: (key, value) => { values[key] = value; },
+		unset: (key) => { values[key] = #undefined; },
+		has: (key) => { return #is_defined(values[key]); },
+	};
+};
+
+const create_tile = (x, nutrients) => {
+	const tile = custom_properties() + {
+		x: x,
+		y: 0,
+	};
+	tile.set('nutrients', nutrients);
+	tile.get_resources = () => {
+		return {NUTRIENTS: tile.get('nutrients'), MINERALS: 0, ENERGY: 0};
+	};
+	return tile;
+};
+
+const create_fixture = () => {
+	const game_handlers = {};
+	const base_handlers = {};
+	const pops = [];
+	const worked = [];
+	const events = [];
+	const center = create_tile(0, 2);
+	const tiles = [create_tile(2, 2), create_tile(4, 4), create_tile(6, 0)];
+	const owner = {id: 0};
+	let next_pop_id = 1;
+	const base = custom_properties();
+	base.get_owner = () => { return owner; };
+	base.get_tile = () => { return center; };
+	base.get_size = () => { return #sizeof(pops); };
+	base.get_pops = () => { return pops; };
+	base.get_worked_tiles = () => { return worked; };
+	base.get_unworked_tiles = () => {
+		let result = [];
+		for (tile of tiles) {
+			if (!tile.has('working_pop')) {
+				result :+ tile;
+			}
+		}
+		return result;
+	};
+	base.add_worked_tile = (tile) => {
+		for (existing of worked) {
+			test.assert(existing != tile, 'A worked tile must not be added twice');
+		}
+		worked :+ tile;
+	};
+	base.remove_worked_tile = (tile) => {
+		let found = false;
+		for (let i = 0; i < #sizeof(worked); i++) {
+			if (worked[i] == tile) {
+				worked :- i;
+				found = true;
+				break;
+			}
+		}
+		test.assert(found, 'Cannot remove a tile that is not worked');
+	};
+	base.create_pop = (data) => {
+		const pop = custom_properties() + {id: next_pop_id, type: data.type};
+		next_pop_id++;
+		pop.get_type = () => { return pop.type; };
+		pop.set_type = (type) => { pop.type = type; };
+		pops :+ pop;
+		return pop;
+	};
+	base.destroy_pop = (pop) => {
+		test.assert(!pop.has('worked_tile'), 'Release tile ownership before destroying a population');
+		let found = false;
+		for (let i = 0; i < #sizeof(pops); i++) {
+			if (pops[i] == pop) {
+				pops :- i;
+				found = true;
+				break;
+			}
+		}
+		test.assert(found, 'Cannot destroy a missing population');
+	};
+	base.get_intake = () => { return base_handlers.get_base_intake({base: base}); };
+	base.get_consumption = () => { return base_handlers.get_base_consumption({base: base}); };
+
+	const bm = {
+		on: (name, handler) => { base_handlers[name] = handler; },
+		get_bases: () => { return [base]; },
+	};
+	const tm = {
+		get_map_width: () => { return 20; },
+		get_map_height: () => { return 20; },
+	};
+	const game = custom_properties() + {
+		get_bm: () => { return bm; },
+		get_tm: () => { return tm; },
+		on: (name, handler) => { game_handlers[name] = handler; },
+	};
+	game.event = (name, data) => {
+		// Definitions need no engine assets for these population-rule tests.
+		if (name == 'define_base_pop' || name == 'define_base_facility') {
+			return;
+		}
+		const handler = population_events[name];
+		test.assert(#is_defined(handler), 'Unexpected population event: ' + name);
+		const event = {game: game, caller: 0, data: data, name: name};
+		test.assert(!#is_defined(handler.validate(event)), 'Population event must validate');
+		event.applied = handler.apply(event);
+		events :+ event;
+		return event;
+	};
+
+	configure_bases(game);
+	game_handlers.start({game: game});
+	return {
+		game: game,
+		base: base,
+		center: center,
+		tiles: tiles,
+		get_events: () => { return events; },
+		seed_pop: (type, tile) => {
+			const pop = base.create_pop({type: type});
+			if (#is_defined(tile)) {
+				game.get('f_base_pop_work_tile')(base, pop, tile);
+			}
+			return pop;
+		},
+		turn: () => { game_handlers.turn({}); },
+		rollback: (event) => { population_events[event.name].rollback(event); },
+	};
+};
+
+return {create_fixture: create_fixture, events: population_events};

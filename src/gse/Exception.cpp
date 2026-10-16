@@ -55,7 +55,9 @@ Exception::Exception( const std::string& class_name, const std::string& reason, 
 			}
 		}
 	);
-
+	// The diagnostic is immutable after stack capture. Own it here so what()
+	// neither allocates in its noexcept path nor transfers ownership to callers.
+	m_formatted_message = ToString();
 }
 
 const Exception::stacktrace_t& Exception::GetStackTrace() const {
@@ -78,7 +80,7 @@ const std::string Exception::ToString() const {
 }
 
 const char* Exception::what() const noexcept {
-	return strdup( ToString().c_str() );
+	return m_formatted_message.c_str();
 }
 
 }

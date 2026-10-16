@@ -73,12 +73,14 @@ public:
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
+			m_state = state;
 			m_gse->AddRootObject( state );
 			state->SetGame( &m_game );
 			m_game.SetState( state );
 			state->m_slots->Resize( 3 );
 			state->GetFM()->Add( new game::backend::faction::Faction( "GAIANS", "Gaia's Stepdaughters" ) );
-			m_map.reset( new game::backend::map::Map( &m_game, 8, 8 ) );
+			NEWV( map, game::backend::map::Map, &m_game, 8, 8 );
+			m_map.reset( map );
 			m_map->GetTilesPtr()->Clear();
 			for ( size_t y = 0 ; y < 8 ; y++ ) {
 				for ( size_t x = y & 1 ; x < 8 ; x += 2 ) {
@@ -94,7 +96,7 @@ public:
 
 	~BackendFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
-			m_game.GetState()->DetachConnection();
+			m_state->DetachConnection();
 		} );
 		// State and BaseManager belong to this GSE's collector. Destroy its
 		// space while the game, map, and frontend request queue are still alive.
@@ -151,6 +153,24 @@ public:
 	}
 
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
+	void SetSnapshotTurn( const size_t turn ) { m_game.m_current_turn.AdvanceTurn( turn ); }
+	void RestoreWorldBody( GSE_CALLABLE, const std::string& snapshot ) {
+		types::Buffer buffer( snapshot );
+		game::backend::world_snapshot::ValidateHeader( buffer, m_game.GetState()->m_settings.global );
+		const auto random = game::backend::world_snapshot::ReadRandomState( buffer );
+		const auto map = buffer.ReadString();
+		m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP;
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random );
+	}
+	void CompleteWorldRestore( GSE_CALLABLE ) {
+		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		m_game.InitComplete( GSE_CALL );
+	}
+	void ResetWorld() { m_map.release(); m_game.ResetGame(); }
+	void CancelWorldInitialization() { m_map.release(); m_game.InitFailed( "Operation aborted" ); }
+	bool HasPendingSnapshotRandom() const { return m_game.m_pending_snapshot_random.has_value(); }
 	std::string WorldManagers() const {
 		types::Buffer result, resources, units, bases, animations;
 		m_game.GetRM()->Serialize( resources );
@@ -171,6 +191,7 @@ public:
 		client->m_download_state.buffer.clear();
 	}
 	bool IsPreparingMap() const { return m_game.m_game_state == game::backend::Game::GS_PREPARING_MAP; }
+	bool IsRunning() const { return m_game.IsRunning(); }
 	bool HasMap() const { return m_game.m_map != nullptr; }
 	bool IsDownloadFinished( game::backend::connection::Client* client ) const {
 		return !client->m_download_state.is_downloading && client->m_download_state.buffer.empty();
@@ -299,11 +320,14 @@ public:
 	}
 
 private:
+	struct MapDeleter { void operator()( game::backend::map::Map* map ) const { DELETE( map ); } };
+
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
-	std::unique_ptr< game::backend::map::Map > m_map;
+	std::unique_ptr< game::backend::map::Map, MapDeleter > m_map;
 	std::unique_ptr< game::backend::Random > m_random;
 	GSE* m_gse; // owned by m_glsmac
+	game::backend::State* m_state = nullptr; // retained by the runtime even after InitFailed clears Game's pointer
 	std::unique_ptr< GLSMAC > m_glsmac;
 };
 
@@ -880,7 +904,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
-	task->AddTest( "actual world snapshot writer prefixes frozen profile without changing body layout", GT() {
+	task->AddTest( "actual world snapshot writer captures RNG without drawing or changing body layout", GT() {
 		for ( const auto* id : { "smac", "smax" } ) {
 			BackendFixture fixture;
 			fixture.EnableWorldSnapshot();
@@ -895,9 +919,14 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			old_body.WriteInt( game->GetTurnId() );
+			game->GetRandom()->GetUInt();
+			const auto before_rng = game->GetRandom()->GetStateString();
 			const auto snapshot = fixture.WorldSnapshot();
+			GT_ASSERT( game->GetRandom()->GetStateString() == before_rng, "snapshot writing advanced RNG" );
 			types::Buffer input( snapshot );
 			game::backend::world_snapshot::ValidateHeader( input, settings );
+			util::random::Random captured( 1 ); captured.SetState( game::backend::world_snapshot::ReadRandomState( input ) );
+			GT_ASSERT( captured.GetStateString() == before_rng, "writer captured another RNG boundary" );
 			GT_ASSERT( snapshot.substr( input.lenr ) == old_body.ToString(), "world body order or content changed" );
 			fixture.DestroyMapBeforeManagers();
 			GT_ASSERT( fixture.WorldSnapshot().empty(), "not-yet-generated map no longer returns an empty download response" );
@@ -908,11 +937,13 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 		task->AddTest( std::string( "real final download chunk rejects invalid world profile before map allocation " ) + ( queued ? "queued" : "immediate" ), GT( queued ) {
 			using namespace game::backend;
 			auto rejected = world_rules_fixture::InvalidSmacHeaders();
+			const auto rng_rejected = world_rules_fixture::InvalidRandomHeaders();
+			rejected.insert( rejected.end(), rng_rejected.begin(), rng_rejected.end() );
 			// Matching headers reach the actual body's first read, still before
 			// Map's asset-bearing constructor. Native errors there must also be
 			// caught when completion executes later on the accumulation thread.
-			rejected.emplace_back( "matching header without map frame", world_rules_fixture::Header().ToString() );
-			auto wrong_body = world_rules_fixture::Header();
+			rejected.emplace_back( "matching header without map frame", world_rules_fixture::FullHeader().ToString() );
+			auto wrong_body = world_rules_fixture::FullHeader();
 			wrong_body.WriteInt( 0 );
 			rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
 			for ( const auto& invalid : rejected ) {
@@ -947,6 +978,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				const auto before_settings = state->m_settings.global.Serialize().ToString();
 				const auto before_managers = fixture.WorldManagers();
 				const auto before_turn = game->GetTurnId();
+				const auto before_rng = game->GetRandom()->GetStateString();
 				const auto before_frontend = fixture.FrontendRequestCount();
 				const auto dispatch = [ & ]() -> std::string {
 					// Collect locks pending work before collection; an outer Accumulate
@@ -979,6 +1011,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( client->DisconnectReason() == "Snapshot format mismatch", "invalid profile did not safely disconnect" );
 					GT_ASSERT( fixture.IsDownloadFinished( client ) && !client->m_on_download_complete && !client->m_on_download_progress, "completion did not retire download state and callbacks" );
 					GT_ASSERT( !fixture.HasMap() && fixture.IsPreparingMap(), "invalid profile allocated or initialized a map" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == before_rng && !fixture.HasPendingSnapshotRandom(), "rejected header changed or staged RNG" );
 					GT_ASSERT( state->m_settings.global.Serialize().ToString() == before_settings, "world profile changed frozen settings" );
 					GT_ASSERT( fixture.WorldManagers() == before_managers && game->GetTurnId() == before_turn && fixture.FrontendRequestCount() == before_frontend, "profile rejection changed managers, turn or frontend state" );
 					GT_OK();
@@ -1034,6 +1067,135 @@ private:
 	size_t& m_destroyed;
 };
 
+}
+
+static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
+	using game::backend::base::Base;
+	using game::backend::base::PopDef;
+	for ( const auto* ruleset : { "smac", "smax" } ) {
+		task->AddTest( std::string( "world RNG continuation installs after actual restore setup " ) + ruleset, GT( ruleset ) {
+			const auto old_unit_id = Unit::GetNextId(), old_base_id = Base::GetNextId();
+			util::FinallyGuard restore_ids( [ = ]() { Unit::SetNextId( old_unit_id ); Base::SetNextId( old_base_id ); } );
+			for ( const auto state : { util::random::state_t{ 0, 0, 0, 0 }, util::random::state_t{ UINT32_MAX, 0, 2147483648u, 7 } } ) {
+				BackendFixture source, destination;
+				for ( auto* fixture : { &source, &destination } ) {
+					fixture->EnableWorldSnapshot();
+					auto& settings = fixture->GetGame()->GetState()->m_settings.global;
+					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source );
+				}
+				source.SetRunning( true ); source.SetSnapshotTurn( 37 );
+				source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+				source.AddBaseWithPop( 601, 9 );
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					DefineSnapshotUnit( source.GetGame()->GetUM() ); SpawnSnapshotUnit( GSE_CALL, source, 71 ); GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "source setup failed: " + source_error );
+				source.GetGame()->GetRandom()->SetState( state );
+				const auto snapshot = source.WorldSnapshot();
+				const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = destination.GetGame(); auto* random = game->GetRandom();
+					const auto before = random->GetStateString();
+					destination.RestoreWorldBody( GSE_CALL, snapshot );
+					GT_ASSERT( destination.HasPendingSnapshotRandom() && random->GetStateString() == before, "decode installed RNG before reconstruction" );
+					GT_ASSERT( game->GetUM()->GetUnits().empty() && game->GetBM()->GetBases().empty(), "decoded instances bypassed deferred registration" );
+					// The asset-free map skips renderer initialization. Model its draws
+					// before exercising the real start and deferred instance sequence.
+					for ( size_t i = 0 ; i < 11 ; ++i ) { random->GetUInt(); }
+					size_t starts = 0, setup_spawns = 0;
+					game->On( GSE_CALL, "start", NATIVE_CALL( &starts, random ) {
+						++starts; random->GetUInt(); return VALUE( value::Undefined );
+					} ) );
+					game->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &setup_spawns, random ) {
+						++setup_spawns; random->GetUInt(); return VALUE( value::Undefined );
+					} ) );
+					// An extra setup-only unit forces a real pending-registration hook
+					// draw after start, catching installation between these two phases.
+					SpawnSnapshotUnit( GSE_CALL, destination, 88, 6 );
+					destination.CompleteWorldRestore( GSE_CALL );
+					GT_ASSERT( starts == 1 && setup_spawns == 1, "setup sequence or restored-unit hook suppression changed" );
+					GT_ASSERT( !destination.HasPendingSnapshotRandom() && destination.IsRunning() && game->GetTurnId() == 37, "restore did not complete" );
+					const auto* unit = game->GetUM()->GetUnit( 71 ); const auto* base = game->GetBM()->GetBase( 601 );
+					GT_ASSERT( unit && unit->m_def == game->GetUM()->GetUnitDef( "TEST_UNIT" ) && unit->m_moved_this_turn && unit->m_movement == 0.375f, "actual unit reconstruction changed state or definition ownership" );
+					GT_ASSERT( base && base->m_pops.size() == 1 && base->m_pops.count( 9 ), "actual base/pop reconstruction failed" );
+					GT_ASSERT( random->GetStateString() == source.GetGame()->GetRandom()->GetStateString(), "setup draws changed saved continuation" );
+					for ( size_t i = 0 ; i < 24 ; ++i ) {
+						auto* expected = source.GetGame()->GetRandom();
+						GT_ASSERT( random->GetUInt() == expected->GetUInt() && random->GetInt64( -1000, 1000 ) == expected->GetInt64( -1000, 1000 ) && random->GetFloat() == expected->GetFloat(), "resumed RNG sequence diverged" );
+					}
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "world RNG restore failed: " + error );
+			}
+			GT_OK();
+		} );
+	}
+	task->AddTest( "world RNG ordinary initialization preserves its existing draw ordering", GT() {
+		const auto old_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( old_id ); } );
+		BackendFixture fixture; fixture.EnableWorldSnapshot();
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame(); auto* random = game->GetRandom();
+			DefineSnapshotUnit( game->GetUM() ); SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+			util::random::Random expected( 1 ); expected.SetState( random->GetState() );
+			std::vector< uint32_t > draws;
+			game->On( GSE_CALL, "start", NATIVE_CALL( &draws, random ) { draws.push_back( random->GetUInt() ); return VALUE( value::Undefined ); } ) );
+			game->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &draws, random ) { draws.push_back( random->GetUInt() ); return VALUE( value::Undefined ); } ) );
+			fixture.CompleteWorldRestore( GSE_CALL );
+			GT_ASSERT( draws.size() == 2 && draws[ 0 ] == expected.GetUInt() && draws[ 1 ] == expected.GetUInt(), "ordinary setup draw ordering changed" );
+			GT_ASSERT( !fixture.HasPendingSnapshotRandom() && random->GetStateString() == expected.GetStateString(), "ordinary initialization reset RNG" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "ordinary initialization failed: " + error ); GT_OK();
+	} );
+	task->AddTest( "world RNG reset cancellation and setup failure discard staged continuation", GT() {
+		BackendFixture source; source.EnableWorldSnapshot();
+		source.GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" );
+		source.GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		source.GetGame()->GetRandom()->SetState( { UINT32_MAX, 1, 2, 3 } );
+		const auto snapshot = source.WorldSnapshot();
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5 } ) {
+			BackendFixture fixture; fixture.EnableWorldSnapshot();
+			auto* game = fixture.GetGame();
+			game->GetState()->m_settings.global.SelectRuleset( "smax" );
+			game->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				const auto before = game->GetRandom()->GetStateString();
+				if ( scenario == 4 ) {
+					bool rejected = false;
+					try { fixture.RestoreWorldBody( GSE_CALL, snapshot.substr( 0, snapshot.size() - 1 ) ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected, "truncated body was accepted" );
+				}
+				else {
+					fixture.RestoreWorldBody( GSE_CALL, snapshot );
+					GT_ASSERT( fixture.HasPendingSnapshotRandom(), "valid body did not stage continuation" );
+					if ( scenario == 0 ) { fixture.ResetWorld(); }
+					if ( scenario == 1 ) { fixture.CancelWorldInitialization(); }
+					if ( scenario == 5 ) {
+						auto* state = game->GetState();
+						auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+						state->SetConnection( client );
+						fixture.PrepareWorldDownload( client, 0 );
+						client->ResetHandlers(); state->DetachConnection();
+					}
+					if ( scenario == 2 || scenario == 3 ) {
+						game->On( GSE_CALL, "start", NATIVE_CALL( scenario ) {
+							if ( scenario == 2 ) { throw std::runtime_error( "RNG setup failure" ); }
+							GSE_ERROR( EC.GAME_ERROR, "RNG setup failure" );
+						} ) );
+						bool threw = false;
+						try { fixture.CompleteWorldRestore( GSE_CALL ); }
+						catch ( const std::runtime_error& ) { threw = true; }
+						GT_ASSERT( threw == ( scenario == 2 ), "setup error path changed" );
+					}
+				}
+				GT_ASSERT( !fixture.HasPendingSnapshotRandom() && game->GetRandom()->GetStateString() == before, "failure/reset installed or retained saved RNG" );
+				if ( scenario == 0 || scenario == 1 || scenario == 3 ) { GT_ASSERT( !fixture.HasMap(), "real reset/cancel path retained map" ); }
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "RNG discard scenario " + std::to_string( scenario ) + " failed: " + error );
+		}
+		GT_OK();
+	} );
 }
 
 static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
@@ -1379,6 +1541,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddWorldRandomTests( task );
 	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );

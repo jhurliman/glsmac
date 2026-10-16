@@ -215,39 +215,58 @@ components; the live resource callback has not been switched to them.
 The [follow-up validation record](validation/rulesets-yields-2026-10-16.md)
 pins the combined source, successful ruleset and signed-yield Windows smoke
 tests, later headless checks, and the tracked GUI failures and subsequent
-functional passes. The latest tracked two-world run at `9d258151` exited
-normally without tracked-object or OpenGL warnings, but retained 22 raw bitmap
-allocations; it is not a leak-clean result. Its Windows and ASan/UBSan CTests
-passed 8/8 and its 291-translation-unit correctness scan reported zero failures.
+functional passes. The tracked two-world run at `705cc939` passed worker
+removal/restoration, map replacement and minimap rendering, then exited 0 with
+empty stderr and no tracked memory/OpenGL leaks. Earlier retained allocations
+and failures remain recorded. At `68081411`, Windows CTest passed 8/8 and Linux
+ASan/UBSan/LSan CTest passed 8/8 with leak detection enabled after repairing
+normal switch-scope ownership. These are bounded checks, not a soak or full
+save/reload result. An older PR head's async-cancellation timeout remains under
+deterministic investigation; passing retries do not resolve it.
 Focused UUID and mesh allocation checks add approximately one second each
 locally to CTest. Full allocation-tracked suites and interactive debugging
 remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Close the remaining renderer ownership leaks. Generated sprite meshes and
-   consumed minimap captures now have explicit ownership and focused native
-   tests. The real two-world sequence passes with 22 raw bitmap allocations
-   remaining. Repair Surface background replacement, test owned/borrowed
-   transitions, and repeat the interactive sequence. Native fixture selection
-   has removed the identified nested script/GC lock inversion from this check.
-2. Build conventional-unit content from explicit component tables. Unit snapshot
-   restore now resolves manager-owned definitions and skips spawn hooks/RNG.
-   The pure weapon/package parser is queued in PR #59; defense/reactor parsing
-   and chassis metadata follow before predefined design resolution, CVR
-   rendering and gameplay commands. Preserve
-   the separate SMAC/SMAX tables and do not invent reactor or cost defaults.
-3. Complete verified tile resource components before live activation. Resource
-   bonus, nutrient and mineral calculators have original-routine comparisons;
-   energy and authoritative terrain/faction/technology/event adapters remain.
-   Keep each calculator and adapter in its own reviewed, testable slice.
+1. Repair the deterministic timer-cancellation ordering exposed by Windows CI.
+   A repeating callback must remain cancelable by later callbacks at the same
+   deadline; canceled callbacks must not run from a stale copied bucket. Test
+   the actual scheduler without sleep-based races, including self-cancel,
+   sibling cancellation, nested timers and stopping all timers.
+2. Resolve conventional-unit content from explicit component tables. Weapon,
+   defense, reactor, chassis and counted predefined-design parsers are queued
+   in PRs #59, #60, #62 and #65. The next slice creates owned metadata by exact
+   component keys, preserving row identity and rejecting ambiguous or mismatched
+   ruleset references. Reactor selection, ability-bit mapping, conventional
+   design state, CVR rendering and gameplay commands remain separate work.
+   Do not turn the current native-unit movement assumptions into standard-unit
+   behavior or invent reactor/cost defaults.
+3. Connect resource requests to their actual evaluating base. Worker intake and
+   base-screen previews must pass the same canonical base and owner, preserving
+   legacy context-free calls. Exercise real work/unwork events and destination-
+   world snapshot identities with a fully specified synthetic yield fixture.
+   Resource bonus, nutrient, mineral and energy kernels now have original-routine
+   comparisons; the energy kernel matches 3,122 direct checks. A native bridge,
+   complete frozen rules profile and authoritative terrain, technology, social,
+   capability and phase-specific event producers precede normal-game activation.
 
 World downloads are now bound to the frozen host profile before map allocation,
 and faction snapshots preserve flags and ordered land/water names. Those
 changes and canonical unit snapshots are queued in PRs #47, #48 and #53;
 they do not complete disk savegames, whole-state rollback or network convergence.
 The native test exit-code gate landed in PR #3 after current-head cross-platform
-checks and Codex review. The remaining stack continues through that same gate.
+checks and Codex review. Population-removal bookkeeping, OpenGL context checks
+and boolean operand evaluation have also landed through that gate. The remaining
+stack continues through the same review and validation process.
+
+The checkpoint work still needs complete RNG state, side-effect-free turn
+restoration, canonical player/faction links and turn checksums. The current
+world-download path is not a disk-save or deterministic replay implementation.
+Production still lacks authoritative current-item/mineral/baseline state, and
+its interface contains placeholder progress. Complete these dependencies in
+small slices alongside conventional units and founding before claiming the M2
+conquest loop.
 
 Live center yields follow only after the adapter can supply authoritative
 economy, facilities, terrain/bonus, faction and phase-specific event inputs.

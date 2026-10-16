@@ -2,6 +2,7 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "Faction.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
@@ -175,6 +176,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );
 		tests::AddBufferTests( task );
+		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );

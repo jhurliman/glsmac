@@ -14,6 +14,10 @@
 #include "types/texture/Texture.h"
 #include "types/texture/LazyTexture.h"
 
+#include <limits>
+#include <memory>
+#include <stdexcept>
+
 namespace game {
 namespace backend {
 namespace faction {
@@ -229,7 +233,10 @@ UNWRAPIMPL_PTR( FactionManager )
 const types::Buffer FactionManager::Serialize() const {
 	types::Buffer buf;
 
-	buf.WriteInt( m_factions_order.size() );
+	if ( m_factions_order.size() > static_cast< unsigned long long >( std::numeric_limits< long long >::max() ) ) {
+		throw std::runtime_error( "Faction count exceeds snapshot integer range" );
+	}
+	buf.WriteInt( static_cast< long long >( m_factions_order.size() ) );
 	for ( auto& it : m_factions_order ) {
 		const auto* faction = m_factions.at( it.second ).faction;
 		buf.WriteString( it.second );
@@ -242,13 +249,23 @@ const types::Buffer FactionManager::Serialize() const {
 void FactionManager::Deserialize( types::Buffer buf ) {
 	Clear();
 
-	const size_t factions_count = buf.ReadInt();
-	for ( size_t i = 0 ; i < factions_count ; i++ ) {
-		const auto faction_id = buf.ReadString();
-		ASSERT( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
-		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Deserialize( buf.ReadString() );
-		m_factions_order.insert( { m_next_faction_idx, faction_id } );
+	const auto factions_count = buf.ReadInt();
+	// Each entry has two framed strings. Bound work by available input rather
+	// than allocating storage from an unchecked serialized count.
+	if ( factions_count < 0 || static_cast< unsigned long long >( factions_count ) > ( buf.lenw - buf.lenr ) / 2 ) {
+		throw std::runtime_error( "Invalid faction snapshot count" );
 	}
+	for ( long long i = 0 ; i < factions_count ; i++ ) {
+		const auto faction_id = buf.ReadString();
+		if ( Get( faction_id ) ) { throw std::runtime_error( "Duplicate faction snapshot ID" ); }
+		auto faction = std::make_unique< Faction >();
+		faction->Deserialize( buf.ReadString() );
+		if ( faction->m_id != faction_id ) { throw std::runtime_error( "Faction snapshot ID does not match manager key" ); }
+		// A failed record never publishes a partial Faction. Earlier complete
+		// records remain: restoring the whole manager is not transactional.
+		Add( faction.release() );
+	}
+	if ( buf.lenr != buf.lenw ) { throw std::runtime_error( "Unexpected trailing faction manager snapshot data" ); }
 }
 
 

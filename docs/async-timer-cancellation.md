@@ -43,6 +43,10 @@ cancellation of an unrun sibling, self-cancellation alongside another repeat,
 `StopTimers()` followed by a nested timer, nested same-deadline insertion,
 delay changes and one-shot completion, and exception propagation/bookkeeping.
 
+The local measurements below used the integration with the separate native-test
+selector and switch-scope ownership repairs. They are not a claim that this
+timer-only PR's older parent has those fixes or a clean parser leak baseline.
+
 On the unchanged scheduler, five of the initial seven cases failed immediately;
 the ordinary repeat and stop-all controls passed. All eight final cases pass
 after the fix. The full GSE suite, including the production async script,
@@ -53,7 +57,14 @@ workaround was retained; no repository toolchain flags were changed. Normal CTes
 also passed all eight checks in 41.98 seconds; focused Clang-Tidy 15 analysis
 of `Async.cpp` reported no findings.
 
-Focused command (use the executable from the configured build):
+Run the full suite with the executable from the configured build:
+
+```sh
+./build/bin/GLSMAC --gse-tests --quiet
+```
+
+On an integration that includes the separate native-test selector (PR #57),
+the deterministic cases can also run alone:
 
 ```sh
 ./build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^test async ' --quiet

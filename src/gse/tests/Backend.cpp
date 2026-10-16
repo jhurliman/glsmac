@@ -463,6 +463,331 @@ public:
 		if ( response.result != game::backend::R_SUCCESS ) { throw std::runtime_error( "reset request failed" ); }
 	}
 	void ProcessRequests() { m_game.MTModule::Iterate(); }
+	void RequireInitializationReset() { m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP; }
+	std::string CheckStartupCoordinator( const int mode ) {
+		using namespace game::backend;
+		EnableTurnPlayers();
+		pending_initialization_t pending;
+		common::mt_id_t ping = 0, reset = 0;
+		size_t initialized = 0, configured = 0;
+		bool order = true, cancellation_parked = false;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			ResetRequest();
+			m_state->SetGame( &m_game );
+			m_game.On( GSE_CALL, "initialize", NATIVE_CALL( this, &initialized, &order, &reset, &cancellation_parked, mode ) {
+				++initialized;
+				order = order && !m_game.m_tm && !m_game.m_rm && !m_game.m_um && !m_game.m_bm && !m_game.m_am &&
+					m_game.m_game_state == Game::GS_PREPARING_MAP && m_game.m_slot_num == 0;
+				if ( mode == 4 ) { throw std::runtime_error( "coordinated initialize failure" ); }
+				if ( mode == 2 ) {
+					const auto session = m_state->CaptureGameSession();
+					// The worker performs only the actual native admission/reset and
+					// parked Iterate paths; it never requests Space accumulation.
+					std::thread native( [ & ]() {
+						reset = m_game.MT_Reset( m_game.m_active_admission->ticket );
+						m_game.Iterate();
+						cancellation_parked = m_game.MT_GetResponse( reset ).result == R_NONE && session->IsActive() && m_state->GetGame() == &m_game;
+					} );
+					native.join();
+				}
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.On( GSE_CALL, "configure", NATIVE_CALL( this, &initialized, &configured, &order ) {
+				++configured;
+				order = order && initialized == 1 && m_game.m_tm && m_game.m_rm && m_game.m_um && m_game.m_bm && m_game.m_am;
+				m_game.ShowLoader( "configure output" );
+				return VALUE( value::Undefined );
+			} ) );
+			pending = m_game.MT_Init( m_state );
+			ping = m_game.MT_Ping();
+			ProcessRequests();
+			GT_ASSERT( initialized == 0 && configured == 0 && !m_game.m_map && !m_game.m_um, "OP_INIT ran owner hooks or native preparation before terminal admission" );
+			GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS && m_game.MT_GetResponse( ping ).result == R_SUCCESS,
+				"init and following extracted request did not finish before owner work" );
+			GT_OK();
+		} );
+		if ( !setup.empty() ) { return setup; }
+		if ( mode == 1 || mode == 3 || mode == 5 ) {
+			std::exception_ptr error;
+			std::thread producer( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } );
+			producer.join();
+			if ( error ) { std::rethrow_exception( error ); }
+			GT_ASSERT( initialized == 0 && m_game.OwnerBlocksNative(), "foreign backend did not publish Pending without running owner" );
+			const auto previous_transition = m_game.m_owner_transition;
+			ping = m_game.MT_Ping();
+			m_game.Iterate();
+			GT_ASSERT( m_game.MT_GetResponse( ping ).result == R_NONE, "Pending admitted a native Ping" );
+			if ( mode == 1 || mode == 5 ) {
+				reset = m_game.MT_Reset( pending.ticket );
+				const auto result = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					m_game.Iterate();
+					GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_state->GetGame(), "canceled Pending required owner drain before reset" );
+					GT_OK();
+				} );
+				if ( !result.empty() ) { return result; }
+			}
+			if ( mode == 5 ) {
+				const auto replace = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					m_state->SetGame( &m_game );
+					m_game.On( GSE_CALL, "initialize", NATIVE_CALL( &initialized ) { ++initialized; return VALUE( value::Undefined ); } ) );
+					const auto fresh = m_game.MT_Init( m_state ); ProcessRequests();
+					GT_ASSERT( m_game.MT_GetResponse( fresh.request ).result == R_SUCCESS, "replacement admission failed" ); GT_OK();
+				} );
+				if ( !replace.empty() ) { return replace; }
+				std::thread replacement( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } );
+				replacement.join(); if ( error ) { std::rethrow_exception( error ); }
+				GT_ASSERT( m_game.OwnerBlocksNative(), "replacement did not publish its own Pending owner operation" );
+				// Space does not promise owner-key iteration order. Invoke the real
+				// old cleanup explicitly while the replacement is still Pending;
+				// its eventual queued cleanup must remain harmless as well.
+				m_game.FinishOwnerTransition( previous_transition );
+				GT_ASSERT( m_game.OwnerBlocksNative(), "old finalizer cleared the replacement's Pending operation" );
+				g_engine->GetGC()->Iterate();
+			}
+			ProcessAccumulations();
+			if ( mode == 1 ) { GT_ASSERT( initialized == 0 && configured == 0 && !m_game.OwnerBlocksNative(), "canceled owner callback executed or retained parking" ); GT_OK(); }
+			if ( mode == 5 ) { GT_ASSERT( initialized == 1 && configured == 0 && m_game.m_um && !m_game.OwnerBlocksNative(), "stale owner finalizer cleared or executed the replacement transition" ); GT_OK(); }
+		}
+		else {
+			const auto result = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.Iterate(); GT_OK(); } );
+			if ( !result.empty() ) { return result; }
+		}
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			GT_ASSERT( order && initialized == 1 && configured == ( mode == 4 ? 0u : 1u ) && !m_game.OwnerBlocksNative(), "owner hook order/managers or terminal parking is wrong" );
+			if ( mode == 4 ) {
+				const auto request = m_game.MT_GetMapData( pending.ticket ); ProcessRequests();
+				const auto response = m_game.MT_GetResponse( request );
+				util::FinallyGuard release( [ & ]() { m_game.MT_DestroyResponse( response ); } );
+				GT_ASSERT( response.result == R_ERROR && *response.data.error.error_text == "coordinated initialize failure" && !m_game.m_map, "owner failure lost ticket error or early cleanup" );
+			}
+			else if ( mode == 2 ) {
+				GT_ASSERT( cancellation_parked, "Running reset destroyed state or completed before owner exit" );
+				m_game.Iterate();
+				GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_state->GetGame(), "Running reset did not execute after owner exit" );
+			}
+			else {
+				GT_ASSERT( m_game.m_active_admission->stage == Game::StartupStage::PrepareBindings && !m_game.m_map && m_frontend_requests.size() == 1,
+					"inline phase fell through into native preparation or cleared configure output" );
+			}
+			GT_OK();
+		} );
+	}
+	std::string CheckConfigureCheckpoint( const bool client_side ) {
+		using namespace game::backend;
+		EnableTurnPlayers();
+		size_t validated = 0, applied = 0, caller = 99;
+		bool bindings_ready = false;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			ResetRequest(); m_state->SetGame( &m_game );
+			if ( client_side ) {
+				auto* client = new connection::Client( gc_space, &m_state->m_settings.local );
+				client->m_slot = 2; m_state->SetConnection( client );
+			}
+			else { m_state->SetConnection( new connection::Server( gc_space, &m_state->m_settings.local ) ); }
+			auto* validate = NATIVE_CALL( &validated, &caller ) {
+					++validated;
+					caller = VALUE_GET( value::Int, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "caller" ) );
+					if ( caller ) { return VALUE( value::String,, "host only" ); }
+					return VALUE( value::Undefined );
+				} );
+				auto* apply = NATIVE_CALL( this, &applied, &bindings_ready, client_side ) {
+					++applied;
+					bindings_ready = !client_side && m_state->GetConnection()->m_game_state == connection::Connection::GS_INITIALIZING;
+					m_game.Event( GSE_CALL, "bootstrap", {} );
+					return VALUE( value::Undefined );
+				} );
+				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+			RegisterEvent( "bootstrap", new event::EventHandler( gc_space, "bootstrap", validate, nullptr, apply, noop ) );
+			m_game.On( GSE_CALL, "configure", NATIVE_CALL( this ) {
+				m_game.Event( GSE_CALL, "bootstrap", {} );
+				return VALUE( value::Undefined );
+			} ) );
+			const auto pending = m_game.MT_Init( m_state ); ProcessRequests();
+			GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS, "bootstrap admission failed" );
+			m_game.Iterate(); m_game.Iterate();
+			GT_ASSERT( validated == 0 && m_game.m_pending_events.size() == 1 && m_game.m_active_admission->stage == Game::StartupStage::ConfigureEvents,
+				"configure events ran before native connection preparation" );
+			GT_OK();
+		} );
+		if ( !setup.empty() ) { return setup; }
+		std::exception_ptr escaped;
+		std::thread producer( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { escaped = std::current_exception(); } } );
+		producer.join(); if ( escaped ) { std::rethrow_exception( escaped ); }
+		GT_ASSERT( m_game.OwnerBlocksNative() && m_game.m_pending_events.empty() && !validated, "configure batch was not captured before owner publication" );
+		const auto late = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.Event( GSE_CALL, "bootstrap", {} ); GT_OK(); } );
+		if ( !late.empty() ) { return late; }
+		g_engine->GetGC()->Iterate();
+		ProcessAccumulations();
+		GT_ASSERT( validated == 1 && caller == ( client_side ? 2u : 0u ) && applied == ( client_side ? 0u : 1u ),
+			"bootstrap checkpoint changed event authority or processed more than its captured batch" );
+		GT_ASSERT( client_side || bindings_ready, "host bootstrap apply preceded GS_INITIALIZING" );
+		GT_ASSERT( m_game.m_pending_events.size() == ( client_side ? 1u : 2u ) && m_game.m_active_admission->stage == Game::StartupStage::AcquireMap,
+			"generated/late events were recursively drained or map acquisition ran inline" );
+		GT_OK();
+	}
+	std::string CheckStartupFinish( const bool restored, const bool cancel ) {
+		using namespace game::backend;
+		EnableWorldSnapshot(); EnableTurnPlayers();
+		BackendFixture source;
+		source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
+		for ( auto* state : { m_state, source.m_state } ) {
+			state->m_settings.global.SelectRuleset( "smax" );
+			state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		}
+		const auto saved_random = source.m_game.GetRandom()->GetStateString();
+		size_t starts = 0, worlds = 0, advances = 0, statuses = 0, parked_checks = 0;
+		bool parked = true;
+		common::mt_id_t reset = 0;
+		std::vector< common::mt_id_t > pings;
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			if ( restored ) {
+				m_state->SetConnection( new RecordingConnection( gc_space ) );
+				RestoreWorldBody( GSE_CALL, source.WorldSnapshot() );
+			}
+			const auto ticket = FixtureWorldTicket();
+			m_game.m_active_admission->connection = m_state->GetConnection();
+			m_game.m_active_admission->slot = 0;
+			m_game.m_active_admission->stage = Game::StartupStage::Start;
+			m_game.m_game_state = Game::GS_STARTING;
+			const auto session = m_state->CaptureGameSession();
+			const auto probe = [ & ]() {
+				++parked_checks;
+				std::thread native( [ & ]() {
+					if ( cancel && !reset ) { reset = m_game.MT_Reset( ticket ); }
+					const auto ping = m_game.MT_Ping(); pings.push_back( ping );
+					m_game.Iterate();
+					parked = parked && m_game.MT_GetResponse( ping ).result == R_NONE &&
+						( !reset || m_game.MT_GetResponse( reset ).result == R_NONE ) && session->IsActive();
+				} );
+				native.join();
+			};
+			m_game.On( GSE_CALL, "create_world", NATIVE_CALL( &worlds, &probe ) { ++worlds; probe(); return VALUE( value::Undefined ); } ) );
+			m_game.On( GSE_CALL, "start", NATIVE_CALL( this, &starts, &probe ) { ++starts; m_game.m_random->GetUInt( 0, 99 ); probe(); return VALUE( value::Undefined ); } ) );
+			m_game.On( GSE_CALL, "turn_status", NATIVE_CALL( &statuses, &probe ) { ++statuses; probe(); return VALUE( value::Undefined ); } ) );
+			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+			auto* apply = NATIVE_CALL( this, &advances, &probe ) {
+				++advances; probe(); m_game.AdvanceTurn( 1 ); return VALUE( value::Undefined );
+			} );
+			RegisterEvent( "advance_turn", new event::EventHandler( gc_space, "advance_turn", noop, nullptr, apply, noop ) );
+			m_map.release();
+			util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+			m_game.Iterate();
+			GT_ASSERT( parked && parked_checks >= 2 && starts == 1 && worlds == ( restored ? 0u : 1u ) && advances == ( restored ? 0u : 1u ) && statuses,
+				"Start/FirstTurn/status released native work before the complete owner operation" );
+			GT_ASSERT( m_game.IsRunning() && !m_game.OwnerBlocksNative() && m_game.m_current_turn.GetId() == ( restored ? 37u : 1u ), "owner Start did not finish its full continuation" );
+			GT_ASSERT( !restored || ( !HasPendingSnapshotTurn() && m_game.GetRandom()->GetStateString() == saved_random ), "Start released before saved turn/RNG installation" );
+			GT_ASSERT( session->IsActive() != cancel, "cancellation retired the binding before owner exit or failed to retire it afterward" );
+			m_game.Iterate();
+			for ( const auto ping : pings ) { GT_ASSERT( m_game.MT_GetResponse( ping ).result == R_SUCCESS, "parked request did not finish after owner exit" ); }
+			if ( cancel ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_map, "deferred reset did not retire the finished owner world" ); }
+			GT_OK();
+		} );
+	}
+	std::string CheckStartupDownloadBatch( const bool queued, const bool cancel ) {
+		using namespace game::backend;
+		class Transport final : public network::Network {
+		public:
+			~Transport() override { Stop(); }
+			void Queue( const types::Packet& packet ) {
+				network::Event event; event.type = network::Event::ET_PACKET;
+				event.data.packet_data = packet.Serialize().ToString(); AddEvent( event );
+			}
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		} transport;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void ServerReady() { m_game_state = GS_RUNNING; }
+			const std::string& Reason() const { return m_disconnect_reason; }
+		};
+		EnableTurnPlayers();
+		Client* client = nullptr;
+		pending_initialization_t pending{};
+		size_t messages = 0, errors = 0, roster_updates = 0;
+		bool full_batch_before_owner = false, message_saw_roster = false;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			ResetRequest(); m_state->SetGame( &m_game );
+			m_state->m_settings.global.SelectRuleset( "smax" );
+			m_state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			m_state->m_settings.local.remote_address = "fixture";
+			client = new Client( gc_space, &m_state->m_settings.local, &transport );
+			m_state->SetConnection( client ); client->Connect(); transport.Iterate(); m_state->Iterate(); client->ServerReady();
+			m_game.On( GSE_CALL, "message", NATIVE_CALL( this, &messages, &message_saw_roster ) {
+				++messages; message_saw_roster = m_state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Replacement";
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+			pending = m_game.MT_Init( m_state ); ProcessRequests();
+			GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS, "client admission failed" );
+			// Run the actual initialize/configure, native binding, captured event,
+			// and map-acquisition phases. Only the socket transport is synthetic.
+			for ( size_t i = 0; i < 4; ++i ) { transport.Iterate(); m_game.Iterate(); }
+			GT_ASSERT( m_game.m_active_admission && m_game.m_active_admission->stage == Game::StartupStage::AwaitDownload && !m_game.m_map,
+				"client did not reach download through actual startup stages" );
+			client->m_on_players_list_update = [ & ]( size_t ) {
+				++roster_updates; full_batch_before_owner = messages == 0 && m_game.m_pending_events.empty() && client->Reason().empty();
+			};
+			types::Buffer invalid; invalid.WriteString( "legacy untyped snapshot" );
+			PrepareWorldDownload( client, invalid.ToString().size() );
+			// Ensure the next real GETEVENTS response owns this entire packet batch.
+			if ( client->m_mt_ids.events ) { transport.MT_Cancel( client->m_mt_ids.events ); transport.MT_GetResult( client->m_mt_ids.events ); client->m_mt_ids.events = 0; }
+			m_state->Iterate();
+			types::Packet message( types::Packet::PT_MESSAGE ); message.data.str = "before download"; transport.Queue( message );
+			event::Event original( &m_game, event::Event::ES_SERVER, 0, GSE_CALL, "captured_server_event", {}, "staged-event" );
+			types::Buffer event_data; event_data.WriteString( original.Serialize().ToString() );
+			types::Packet event_packet( types::Packet::PT_GAME_EVENT ); event_packet.data.str = event_data.ToString(); transport.Queue( event_packet );
+			types::Packet chunk( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+			chunk.data.str = invalid.ToString(); chunk.udata.download.offset = 0; chunk.udata.download.size = chunk.data.str.size(); transport.Queue( chunk );
+			message.data.str = "after rejected download"; transport.Queue( message );
+			Player replacement( "Replacement", Player::PR_HOST, nullptr, "" );
+			slot::Slots slots( m_state ); slots.Resize( 3 ); slots.GetSlot( 0 ).SetPlayer( &replacement, 0, "" );
+			types::Packet roster( types::Packet::PT_PLAYERS ); roster.data.num = 0; roster.data.str = slots.Serialize().ToString(); transport.Queue( roster );
+			GT_OK();
+		} );
+		util::FinallyGuard cleanup( [ & ]() {
+			WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				if ( m_state->GetConnection() ) { client->Disconnect(); transport.Iterate(); m_state->Iterate(); }
+				GT_OK();
+			} );
+		} );
+		if ( !setup.empty() ) { return setup; }
+		transport.Iterate();
+		std::exception_ptr escaped;
+		const auto iterate = [ & ]() { try { m_game.Iterate(); } catch ( ... ) { escaped = std::current_exception(); } };
+		if ( queued ) { std::thread producer( iterate ); producer.join(); } else { iterate(); }
+		if ( escaped ) { std::rethrow_exception( escaped ); }
+		GT_ASSERT( roster_updates == 1 && full_batch_before_owner, "download/event/message owner work ran before the complete native packet batch" );
+		if ( queued ) {
+			GT_ASSERT( messages == 0 && m_game.m_pending_events.empty() && m_game.OwnerBlocksNative(), "queued ingress decoded before owner claim" );
+			g_engine->GetGC()->Iterate(); // actual collection with pending owned payloads
+			if ( cancel ) {
+				const auto reset = m_game.MT_Reset( pending.ticket );
+				const auto result = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					m_game.Iterate(); GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "pending download reset required owner drain" ); GT_OK();
+				} );
+				if ( !result.empty() ) { return result; }
+			}
+			ProcessAccumulations();
+		}
+		if ( cancel ) { GT_ASSERT( !messages && !errors && !m_game.m_map && !m_game.OwnerBlocksNative(), "retired download ingress affected the world" ); GT_OK(); }
+		GT_ASSERT( messages == 1 && message_saw_roster && m_game.m_pending_events.size() == 1 && !m_game.m_map && client->Reason() == "Snapshot format mismatch",
+			"ingress order, exact owned event, current roster, or terminal decoder rejection changed" );
+		GT_ASSERT( !errors, "decoder failure executed another owner phase inline" );
+		const auto result = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_game.Iterate();
+			GT_ASSERT( errors == 1 && !m_game.m_map && m_game.m_pending_events.empty(), "failed download did not reach exact owner cleanup" );
+			const auto id = m_game.MT_GetMapData( pending.ticket ); ProcessRequests();
+			const auto response = m_game.MT_GetResponse( id ); util::FinallyGuard release( [ & ]() { m_game.MT_DestroyResponse( response ); } );
+			GT_ASSERT( response.result == R_ERROR, "download failure lost its accepted ticket" ); GT_OK();
+		} );
+		return result;
+	}
 	// Older backend fixtures directly construct a running world. Give that
 	// fixture world an explicit ticket; admission tests below use real MT_Init.
 	game::backend::world_ticket_t FixtureWorldTicket() {
@@ -601,6 +926,14 @@ public:
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
 		m_game.Iterate();
+	}
+	void ValidateSnapshotBeforeMapInitialization() {
+		// These decoder fixtures deliberately bypass admission and asset-bearing
+		// map initialization. Exercise its real validation helper directly; the
+		// coordinator tests separately cover production Iterate admission.
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		m_game.CheckPendingSnapshotTurn();
 	}
 	std::string WithTransferableFrontendQueue( const std::function< std::string() >& check ) {
 		// The production request transfers this queue to the response recipient.
@@ -931,7 +1264,7 @@ public:
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &check, &result ]() {
 			try {
 				gse::ExecutionPointer ep;
-				result = check( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep );
+				result = check( m_gse->GetGCSpace(), m_state->m_ctx, {}, ep );
 			}
 			catch ( const std::exception& error ) {
 				// Report malformed values after leaving GC accumulation normally.
@@ -2043,6 +2376,35 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 		} );
 	}
 	using namespace game::backend;
+	for ( const bool client : { false, true } ) {
+		task->AddTest( "startup coordinator captured configure batch client " + std::to_string( client ), GT( client ) {
+			BackendFixture fixture; return fixture.CheckConfigureCheckpoint( client );
+		} );
+	}
+	for ( const bool queued : { false, true } ) {
+		for ( const bool cancel : { false, true } ) {
+			if ( cancel && !queued ) { continue; }
+			task->AddTest( "startup coordinator complete packet batch queued " + std::to_string( queued ) + " cancellation " + std::to_string( cancel ), GT( queued, cancel ) {
+				BackendFixture fixture; return fixture.CheckStartupDownloadBatch( queued, cancel );
+			} );
+		}
+	}
+	for ( const bool restored : { false, true } ) {
+		for ( const bool cancel : { false, true } ) {
+			task->AddTest( "startup coordinator complete Start " + std::to_string( restored ) + " cancellation " + std::to_string( cancel ), GT( restored, cancel ) {
+				BackendFixture fixture; return fixture.CheckStartupFinish( restored, cancel );
+			} );
+		}
+	}
+	for ( const auto& scenario : std::vector< std::pair< int, std::string > >{
+		{ 0, "terminal admission then inline initialize configure" }, { 1, "Pending cancellation resets without owner drain" },
+		{ 2, "Running cancellation parks reset until owner exit" }, { 3, "queued owner uses identical startup order" },
+		{ 4, "early owner exception retains ticket error" },
+		{ 5, "stale Pending finalizer preserves replacement transition" },
+	} ) {
+		const auto mode = scenario.first;
+		task->AddTest( "startup coordinator " + scenario.second, GT( mode ) { BackendFixture fixture; return fixture.CheckStartupCoordinator( mode ); } );
+	}
 	for ( const auto& scenario : std::vector< std::pair< int, std::string > >{
 		{ 0, "reset before response envelope" }, { 1, "reset with aliased response envelope" }, { 2, "failure with aliased response envelope" },
 		{ 3, "frontend transfer survives backend reset" }, { 4, "completed response cancellation owns transferred assets" },
@@ -2143,7 +2505,7 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		} );
 	} );
-	task->AddTest( "world admission completes immediate initialization errors without corrupting the error payload", GT( prepare ) {
+	task->AddTest( "world admission reports owner initialization failure on its accepted map ticket", GT( prepare ) {
 		BackendFixture fixture;
 		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			prepare( fixture, gc_space );
@@ -2151,7 +2513,12 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 			game->On( GSE_CALL, "initialize", NATIVE_CALL() { throw std::runtime_error( "intentional admission initialization error" ); } ) );
 			const auto pending = game->MT_Init( game->GetState() );
 			fixture.ProcessRequests();
-			const auto response = game->MT_GetResponse( pending.request );
+			const auto admitted = game->MT_GetResponse( pending.request );
+			GT_ASSERT( admitted.result == R_SUCCESS && admitted.world_ticket == pending.ticket, "initialization did not complete terminal admission before owner work" );
+			fixture.WithoutDisconnectIO( game->GetState()->GetConnection(), [ & ]() { game->Iterate(); } );
+			const auto poll = game->MT_GetMapData( pending.ticket );
+			fixture.ProcessRequests();
+			const auto response = game->MT_GetResponse( poll );
 			util::FinallyGuard destroy( [ & ]() { game->MT_DestroyResponse( response ); } );
 			GT_ASSERT( response.result == R_ERROR && response.world_ticket == pending.ticket && response.data.error.error_text &&
 				*response.data.error.error_text == "intentional admission initialization error", "initialization failed without a terminal owned error" );
@@ -2375,6 +2742,9 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 			client = new BlockingClient( gc_space, &game->GetState()->m_settings.local );
 			game->GetState()->SetConnection( client );
 			game->On( GSE_CALL, "initialize", NATIVE_CALL( &callbacks ) { ++callbacks; return VALUE( value::Undefined ); } ) );
+			// A reinitialization still performs native teardown inside OP_INIT;
+			// only its owner hooks moved behind the terminal admission response.
+			fixture.RequireInitializationReset();
 			pending = game->MT_Init( game->GetState() );
 			GT_OK();
 		} );
@@ -2547,6 +2917,7 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 			fixture.ProcessRequests();
 			const auto response = game->MT_GetResponse( id.request );
 			GT_ASSERT( response.result == game::backend::R_SUCCESS && fixture.IsPreparingMap(), "asset-free client initialization failed" );
+			game->Iterate(); // explicit post-response startup owner checkpoint
 			GT_OK();
 		} );
 		GT_ASSERT( result.empty(), "initialization ordering failed: " + result );
@@ -3770,7 +4141,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 		} );
 		GT_ASSERT( setup.empty(), "parked event setup: " + setup );
 		std::exception_ptr escaped;
-		const auto iterate = [ & ]() { try { fixture.IterateWorldRestore(); } catch ( ... ) { escaped = std::current_exception(); } };
+		const auto iterate = [ & ]() { try { fixture.ValidateSnapshotBeforeMapInitialization(); } catch ( ... ) { escaped = std::current_exception(); } };
 		// Queue real ordinary event/base work before the download enters its
 		// failure state. It must not run stale work ahead of the error callback.
 		std::thread before_download( iterate ); before_download.join();
@@ -3811,7 +4182,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( setup.empty(), "early rejection setup: " + setup );
 			GT_ASSERT( !fixture.IsAccumulating(), "early rejection must exercise real outside-accumulation Iterate" );
 			std::exception_ptr escaped;
-			const auto iterate = [ & ]() { try { fixture.IterateWorldRestore(); } catch ( ... ) { escaped = std::current_exception(); } };
+			const auto iterate = [ & ]() { try { fixture.ValidateSnapshotBeforeMapInitialization(); } catch ( ... ) { escaped = std::current_exception(); } };
 			if ( scenario == 0 ) { iterate(); }
 			else { std::thread backend( iterate ); backend.join(); }
 			if ( escaped ) { try { std::rethrow_exception( escaped ); } catch ( const std::exception& error ) { GT_FAIL( "early rejection escaped: " + std::string( error.what() ) ); } }
@@ -3982,7 +4353,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 					NEWV( extra, Player, "Extra", Player::PR_SINGLE, game->GetFaction( "GAIANS" ), "" ); state->AddPlayer( extra ); state->m_slots->GetSlot( 1 ).SetPlayer( extra, 0, "" );
 				}
 				fixture.ClearFrontendRequests();
-				if ( scenario == 0 || scenario == 4 || scenario == 5 ) { fixture.IterateWorldRestore(); }
+				if ( scenario == 0 || scenario == 4 || scenario == 5 ) { fixture.ValidateSnapshotBeforeMapInitialization(); }
 				else { fixture.CompleteWorldRestore( GSE_CALL ); }
 				GT_ASSERT( errors == 1 && starts == ( scenario == 2 || scenario == 3 ? 1u : 0u ) && !turns, "identity rejection did not use terminal initialization failure at the correct boundary" );
 				GT_ASSERT( !first->IsTurnCompleted() && current->IsTurnCompleted(), "identity rejection partially installed completion flags" );

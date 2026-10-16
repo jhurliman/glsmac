@@ -249,6 +249,12 @@ The next implementation slices are:
    that commit is included and all five focused CTests now pass. Canonical
    player/faction links and safe retirement of queued session work are next;
    full saves, event catch-up and future host/client lockstep remain separate.
+   PR #77 is held for review findings: concurrent roster mutation can race
+   completion validation/commit, MT reset can overtake queued failure handling,
+   and parked failure currently dispatches ordinary MT requests too early.
+   Passing sequential tests do not establish exclusion for those overlaps.
+   See the [roster ownership plan](player-roster-ownership-plan.md) for the
+   canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
    defense, reactor, chassis and counted predefined-design parsers are queued
    in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact

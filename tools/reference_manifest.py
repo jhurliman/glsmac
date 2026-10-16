@@ -211,7 +211,10 @@ def main(argv=None):
         if args.output is None:
             sys.stdout.write(encoded)
         else:
-            output = args.output.expanduser().resolve()
+            requested_output = args.output.expanduser()
+            # Resolve parent links for the installation boundary check, while
+            # replacing the requested leaf itself instead of a symlink target.
+            output = requested_output.parent.resolve() / requested_output.name
             root = Path(manifest["installation_path"])
             if output == root or root in output.parents:
                 raise ReferenceManifestError(

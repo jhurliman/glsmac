@@ -130,6 +130,44 @@ class ReferenceManifestTests(unittest.TestCase):
         self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["schema_version"], 1)
         self.assertFalse(output.samefile(original))
 
+    def test_overwrite_replaces_symlink_without_changing_its_target(self):
+        original = self.put("alpha.txt", b"original rules")
+        unrelated = Path(self.temp.name) / "unrelated.txt"
+        unrelated.write_bytes(b"unrelated contents")
+        for target in (original, unrelated):
+            with self.subTest(target=target):
+                output = Path(self.temp.name) / (target.name + ".manifest.json")
+                before = target.read_bytes()
+                try:
+                    output.symlink_to(target)
+                except OSError as error:
+                    self.skipTest(f"Symlinks unavailable: {error}")
+
+                refused = self.run_cli(self.root, "--output", output)
+                self.assertEqual(refused.returncode, 2)
+                self.assertTrue(output.is_symlink())
+                self.assertEqual(target.read_bytes(), before)
+
+                replaced = self.run_cli(self.root, "--output", output, "--overwrite")
+                self.assertEqual(replaced.returncode, 0, replaced.stderr)
+                self.assertFalse(output.is_symlink())
+                self.assertEqual(target.read_bytes(), before)
+                self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["schema_version"], 1)
+
+    def test_output_parent_symlink_cannot_bypass_installation_boundary(self):
+        self.put("alpha.txt")
+        link = Path(self.temp.name) / "game-link"
+        try:
+            link.symlink_to(self.root, target_is_directory=True)
+        except OSError as error:
+            self.skipTest(f"Symlinks unavailable: {error}")
+
+        result = self.run_cli(self.root, "--output", link / "manifest.json")
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("outside the reference installation", result.stderr)
+        self.assertFalse((self.root / "manifest.json").exists())
+
     def test_failed_replacement_preserves_output_and_removes_temporary_file(self):
         output = Path(self.temp.name) / "reference" / "manifest.json"
         output.parent.mkdir()

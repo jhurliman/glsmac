@@ -219,23 +219,27 @@ components; the live resource callback has not been switched to them.
 The [follow-up validation record](validation/rulesets-yields-2026-10-16.md)
 pins the combined source, successful ruleset and signed-yield Windows smoke
 tests, later headless checks, and the tracked GUI failures and subsequent
-functional passes. The latest tracked two-world run exited normally but still
-reported retained mesh and texture allocations; it is not a leak-clean result.
+functional passes. The latest tracked two-world run at `9d258151` exited
+normally without tracked-object or OpenGL warnings, but retained 22 raw bitmap
+allocations; it is not a leak-clean result. Its Windows and ASan/UBSan CTests
+passed 8/8 and its 291-translation-unit correctness scan reported zero failures.
 Focused UUID and mesh allocation checks add approximately one second each
 locally to CTest. Full allocation-tracked suites and interactive debugging
 remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Close the remaining tracked renderer ownership leaks. The detached UI repair
-   removes actors and widget textures during root destruction; investigate the
-   remaining mesh-copy and framebuffer-texture owners, add focused owner tests,
-   and repeat the real two-world sequence. Move the focused UI test out of its
-   script accumulation to eliminate its separately identified lock inversion.
+1. Close the remaining renderer ownership leaks. Generated sprite meshes and
+   consumed minimap captures now have explicit ownership and focused native
+   tests. The real two-world sequence passes with 22 raw bitmap allocations
+   remaining. Repair Surface background replacement, test owned/borrowed
+   transitions, and repeat the interactive sequence. Native fixture selection
+   has removed the identified nested script/GC lock inversion from this check.
 2. Build conventional-unit content from explicit component tables. Unit snapshot
    restore now resolves manager-owned definitions and skips spawn hooks/RNG.
-   Start with the weapon/package table, then resolve chassis, defense, reactor
-   and predefined designs before CVR rendering and gameplay commands. Preserve
+   The pure weapon/package parser is queued in PR #59; defense/reactor parsing
+   and chassis metadata follow before predefined design resolution, CVR
+   rendering and gameplay commands. Preserve
    the separate SMAC/SMAX tables and do not invent reactor or cost defaults.
 3. Complete verified tile resource components before live activation. Resource
    bonus, nutrient and mineral calculators have original-routine comparisons;

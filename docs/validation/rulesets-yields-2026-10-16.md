@@ -29,6 +29,7 @@ Short labels below resolve to these exact source revisions:
 | `b36c56d2` | [b36c56d2c6599f51876ce1d2a71b7c3c395873a7](https://github.com/jhurliman/glsmac/commit/b36c56d2c6599f51876ce1d2a71b7c3c395873a7) |
 | `3ddccad0` | [3ddccad0c5b6579784f0065012529a463083f2a7](https://github.com/jhurliman/glsmac/commit/3ddccad0c5b6579784f0065012529a463083f2a7) |
 | `ddcf747a` | [ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a](https://github.com/jhurliman/glsmac/commit/ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a) |
+| `9d258151` | [9d2581512718470e6dadbd5131303d2bd9d2cdc3](https://github.com/jhurliman/glsmac/commit/9d2581512718470e6dadbd5131303d2bd9d2cdc3) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -38,6 +39,8 @@ The later three pins are retained on immutable branches
 `codex/validation-20261016-world-widget`,
 `codex/validation-20261016-snapshot-bonus`, and
 `codex/validation-20261016-unit-ui`, respectively.
+The renderer/native-test integration at `9d258151` is retained on
+`codex/validation-20261016-renderer-native`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -270,3 +273,44 @@ Windows logs: `out/snapshot-bonus-windows-ctest.log`,
 Linux logs under `/home/jhurliman/src/glsmac-gc-audit/` use
 `snapshot-bonus-asan-`, `snapshot-bonus-analysis`, and `unit-ui-asan-`.
 Sanitizer options and their leak-detection limitation remain as recorded above.
+
+## Native ownership fixtures and renderer follow-up
+
+At `9d258151`, generated sprite meshes have a tracked smart-pointer owner and
+the minimap consumes capture-response textures after copying. The focused
+memory-debug CTest now runs eight native ownership cases directly, outside
+script accumulation. The script bridge retains only three pure mesh checks.
+Invalid or unmatched native filters fail with exit 1; CLI checks also exercise
+selector conflicts and verify that scripts are not run in native-filter mode.
+
+| Check at `9d258151` | Result |
+| --- | --- |
+| Native Windows Debug CTest | 8/8, 51.05 s; full GSE 19.49 s; tracked ownership 1.42 s; filter CLI 11.45 s |
+| Linux ASan/UBSan CTest | 8/8, 41.63 s; tracked ownership 1.06 s |
+| LLVM 15 correctness policy | 291 production translation units, 56.28 s, zero failures |
+
+The first sanitizer invocation could not load the local SDL image shared
+library and ran no tests successfully. Supplying the existing dependency prefix
+in `LD_LIBRARY_PATH` produced the passing run above. Leak detection remains
+disabled for the separately recorded parser baseline. Passing these checks
+does not establish freedom from intermittent concurrency failures.
+
+The tracked Windows sequence used the same disposable all-tile `-2/300/3`
+fixture. New Jerusalem showed N `-4`, consumption `2`, surplus `-006`, M `600`,
+E `6`; removing its worked tile changed these to N `-2`, surplus `-004`, M `300`,
+E `3`, and restoring it restored the original totals. Closing the base and
+starting a new game in the same process produced The Hive with a rendered
+minimap. Title-bar close returned 0 with empty stderr.
+
+Shutdown emitted no tracked-object or OpenGL warning group. It still reported
+22 raw bitmap allocations at `Texture.cpp:76`. This is not a leak-clean result.
+The different random worlds preclude treating total counts as a controlled
+before/after measurement. Surface background replacement is the next focused
+ownership investigation. Turn advancement, save/load, networking and a long
+soak were not exercised in this sequence.
+
+The configuration prefix is `out/renderer-native-ui-20261016`; Windows logs use
+`out/renderer-native-ui-` and `out/renderer-native-windows-`. Linux logs under
+`/home/jhurliman/src/glsmac-gc-audit/` use `renderer-native-asan-` and
+`renderer-native-analysis`. The published evidence pin contains the tested
+source, not the locally installed assets or these machine-local logs.

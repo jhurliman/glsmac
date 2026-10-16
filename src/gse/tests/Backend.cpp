@@ -40,6 +40,7 @@
 #include <memory>
 #include <exception>
 #include <limits>
+#include <stdexcept>
 #include <thread>
 
 namespace gse {
@@ -169,7 +170,11 @@ public:
 	bool IsDownloadFinished( game::backend::connection::Client* client ) const {
 		return !client->m_download_state.is_downloading && client->m_download_state.buffer.empty();
 	}
-	void ProcessAccumulations() { m_gse->GetGCSpace()->ProcessAccumulations(); }
+	bool IsAccumulating() const { return m_gse->GetGCSpace()->IsAccumulating(); }
+	void ProcessAccumulations() {
+		if ( IsAccumulating() ) { throw std::logic_error( "download fixture must drain outside accumulation" ); }
+		m_gse->GetGCSpace()->ProcessAccumulations();
+	}
 
 	void WithRW( const std::function< void() >& f ) {
 		m_game.WithRW( f );
@@ -898,39 +903,62 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				fixture.EnableWorldSnapshot();
 				fixture.DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
 				fixture.DestroyMapBeforeManagers();
-				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-					auto* game = fixture.GetGame();
-					auto* state = game->GetState();
+				auto* game = fixture.GetGame();
+				auto* state = game->GetState();
+				RulesetClient* client = nullptr;
+				// State is a runtime root and reaches its attached Client. Keep that
+				// ownership across setup, worker dispatch, owner drain and assertions.
+				util::FinallyGuard cleanup( [ & ]() {
+					fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+						if ( client ) { client->ResetHandlers(); state->DetachConnection(); }
+						GT_OK();
+					} );
+				} );
+				types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+				packet.data.str = invalid.second;
+				packet.udata.download.offset = 0;
+				packet.udata.download.size = packet.data.str.size();
+				const auto setup_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 					state->m_settings.global.SelectRuleset( "smac" );
 					state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
-					const auto before_settings = state->m_settings.global.Serialize().ToString();
-					const auto before_managers = fixture.WorldManagers();
-					const auto before_turn = game->GetTurnId();
-					const auto before_frontend = fixture.FrontendRequestCount();
-					auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+					client = new RulesetClient( gc_space, &state->m_settings.local );
 					state->SetConnection( client );
-					util::FinallyGuard cleanup( [ & ]() { client->ResetHandlers(); state->DetachConnection(); } );
-					types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
-					packet.data.str = invalid.second;
-					packet.udata.download.offset = 0;
-					packet.udata.download.size = packet.data.str.size();
 					fixture.PrepareWorldDownload( client, packet.data.str.size() );
+					GT_OK();
+				} );
+				GT_ASSERT( setup_error.empty(), "download setup failed: " + setup_error );
+				const auto before_settings = state->m_settings.global.Serialize().ToString();
+				const auto before_managers = fixture.WorldManagers();
+				const auto before_turn = game->GetTurnId();
+				const auto before_frontend = fixture.FrontendRequestCount();
+				const auto dispatch = [ & ]() -> std::string {
+					// Collect locks pending work before collection; an outer Accumulate
+					// would hold collection while joining a producer waiting for pending.
+					GT_ASSERT( !fixture.IsAccumulating(), "download fixture must dispatch outside accumulation" );
 					std::exception_ptr escaped;
 					std::string early_error;
-					fixture.WithoutDisconnectIO( client, [ & ]() {
-						if ( queued ) {
-							std::thread worker( [ & ]() {
-								try { client->Receive( packet ); }
-								catch ( ... ) { escaped = std::current_exception(); }
-							} );
-							worker.join();
-							early_error = client->DisconnectReason();
-							fixture.ProcessAccumulations();
-						}
-						else { client->Receive( packet ); }
-					} );
+					try {
+						fixture.WithoutDisconnectIO( client, [ & ]() {
+							if ( queued ) {
+								std::thread worker( [ & ]() {
+									try { client->Receive( packet ); }
+									catch ( ... ) { escaped = std::current_exception(); }
+								} );
+								worker.join();
+								early_error = client->DisconnectReason();
+								fixture.ProcessAccumulations();
+							}
+							else { client->Receive( packet ); }
+						} );
+					}
+					catch ( const std::exception& error ) { return error.what(); }
 					GT_ASSERT( !escaped, "download dispatcher threw on worker thread" );
 					GT_ASSERT( !queued || early_error.empty(), "queued validation ran before accumulation processing" );
+					GT_OK();
+				};
+				const auto dispatch_error = dispatch();
+				GT_ASSERT( dispatch_error.empty(), "download dispatch failed: " + dispatch_error );
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 					GT_ASSERT( client->DisconnectReason() == "Snapshot format mismatch", "invalid profile did not safely disconnect" );
 					GT_ASSERT( fixture.IsDownloadFinished( client ) && !client->m_on_download_complete && !client->m_on_download_progress, "completion did not retire download state and callbacks" );
 					GT_ASSERT( !fixture.HasMap() && fixture.IsPreparingMap(), "invalid profile allocated or initialized a map" );

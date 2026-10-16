@@ -126,7 +126,7 @@ void Tile::Deserialize( types::Buffer buf ) {
 	*elevation.left = buf.ReadInt();
 	*elevation.top = buf.ReadInt();
 	*elevation.right = buf.ReadInt();
-	*elevation.center = buf.ReadInt();
+	*elevation.bottom = buf.ReadInt();
 
 	moisture = buf.ReadInt();
 	rockiness = buf.ReadInt();

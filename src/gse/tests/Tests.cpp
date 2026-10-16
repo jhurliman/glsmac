@@ -1,5 +1,6 @@
 #include "Tests.h"
 
+#include "Backend.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -46,6 +47,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddGSETests( task );
 		tests::AddParserTests( task );
 		tests::AddRunnerTests( task );
+		tests::AddBackendTests( task );
 	}
 	tests::AddScriptsTests( task );
 

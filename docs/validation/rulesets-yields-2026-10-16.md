@@ -493,4 +493,4 @@ translation units in 56.32 s at eight jobs, with zero failures. This includes th
 new RNG and CVR sources and exception ownership repair. The Windows-only network
 source remains explicitly excluded. Logs use `rng-cvr-analysis` under the Linux
 directory above. Focused reader sanitizer checks, Debug/Release analysis and
-three weakened-reader controls are recorded in [the component notes](../cvr-container.md).
+three weakened-reader controls are recorded in [the versioned component notes](https://github.com/jhurliman/glsmac/blob/c9aafc83a0e55870af33e0f479c11db064079a7b/docs/cvr-container.md).

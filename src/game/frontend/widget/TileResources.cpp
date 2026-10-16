@@ -93,7 +93,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 				auto h = row_height * 0.8f;
 				auto w = h * icon->wh.x / icon->wh.y / aspect;
 				if ( w > 0.22f ) { h *= 0.22f / w; w = 0.22f; }
-				AddMeshAndTexture( widget, index++, sprite->GenerateMesh(), sprite->GetTexture(), false,
+				AddMeshAndTexture( widget, index++, sprite->GenerateMesh().get(), sprite->GetTexture(), false,
 					{ w, h }, { 0.03f + ( 0.22f - w ) / 2, center_y - h / 2 } );
 			}
 			if ( !entry.display.label.empty() ) {
@@ -135,7 +135,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 	}
 
 	if ( count > 0 ) {
-		std::vector< const types::mesh::Render* > meshes = {};
+		std::vector< scene::actor::Sprite::mesh_ptr_t > meshes = {};
 		std::vector< types::texture::Texture* > textures = {};
 		std::vector< backend::map::pcx_texture_coordinates_t > whs = {};
 		size_t index = 0;
@@ -178,7 +178,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 			AddMeshAndTexture(
 				widget,
 				index++,
-				meshes.at( i ),
+				meshes.at( i ).get(),
 				textures.at( i ),
 				false,
 				{
@@ -204,7 +204,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		AddMeshAndTexture(
 			widget,
 			0,
-			sprite->GenerateMesh(),
+			sprite->GenerateMesh().get(),
 			sprite->GetTexture(),
 			false,
 			{

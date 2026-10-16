@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Actor.h"
 
 #include "Types.h"
@@ -32,7 +34,12 @@ CLASS( Sprite, Actor )
 	types::texture::Texture* GetTexture() const;
 	const types::mesh::tex_coords_t& GetTexCoords() const;
 	const types::Vec2< types::mesh::tex_coord_t >& GetDstOffsets() const;
-	const types::mesh::Render* GenerateMesh() const;
+	struct MeshDeleter {
+		void operator()( const types::mesh::Render* mesh ) const;
+	};
+	using mesh_ptr_t = std::unique_ptr< const types::mesh::Render, MeshDeleter >;
+	// Fresh geometry belongs to the caller; sprite textures remain borrowed.
+	mesh_ptr_t GenerateMesh() const;
 
 	const types::Vec3 NormalizePosition( const types::Vec3& position ) const override;
 

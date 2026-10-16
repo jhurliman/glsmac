@@ -10,6 +10,7 @@
 #include "engine/Engine.h"
 #include "graphics/Null.h"
 #include "game/frontend/widget/Widget.h"
+#include "game/frontend/widget/Minimap.h"
 #include "gc/Space.h"
 #include "gc/GC.h"
 #include "gse/GSE.h"
@@ -18,8 +19,11 @@
 #include "gse/value/Callable.h"
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "rr/Capture.h"
 #include "scene/Scene.h"
 #include "scene/actor/Mesh.h"
+#include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
 #include "ui/UI.h"
 #include "ui/dom/Root.h"
@@ -302,6 +306,168 @@ static std::string CheckDetachedUIOwnership( const bool detached ) {
 	return result;
 }
 
+static std::string CheckGeneratedSpriteOwnership() {
+	class WidgetPresenter : public game::frontend::widget::Widget {
+	public:
+		explicit WidgetPresenter( ::ui::UI* ui ) : Widget( nullptr, ui, ::ui::WT_TILE_PREVIEW, "sprite-test", {} ) {}
+		using Widget::AddMeshAndTexture;
+		void Update( ::ui::dom::Widget*, const void* ) override {}
+		void Register( ::ui::dom::Widget* ) override {}
+	};
+	class CountedMesh : public types::mesh::Rectangle {
+	public:
+		explicit CountedMesh( size_t& destroyed ) : m_destroyed( destroyed ) {}
+		~CountedMesh() override { ++m_destroyed; }
+	private:
+		size_t& m_destroyed;
+	};
+	std::string result;
+	try {
+		WidgetGraphicsFixture graphics;
+		GSE runtime;
+		auto* gc_space = runtime.GetGCSpace();
+		gc_space->Accumulate( &runtime, [ & ]() {
+			auto* ctx = runtime.CreateGlobalContext();
+			const si_t si;
+			ExecutionPointer ep;
+			auto* ui = new ::ui::UI( GSE_CALL );
+			auto* widget = new ::ui::dom::Widget( GSE_CALL, ui, nullptr, {} );
+			WidgetPresenter presenter( ui );
+			util::FinallyGuard cleanup( [ & ]() {
+				widget->Destroy( GSE_CALL );
+				ui->GetRoot()->Container::Destroy( GSE_CALL );
+			} );
+			widget->GetGeometry()->SetWidth( 16 );
+			widget->GetGeometry()->SetHeight( 16 );
+			types::texture::Texture atlas( 2, 2 );
+			const auto color = types::Color::RGBA( 31, 63, 127, 255 );
+			atlas.SetPixel( 0, 0, color );
+			scene::actor::Sprite sprite( "ownership", { 2, 3 }, &atlas, { { 0, 0 }, { 1, 1 } }, { 0, 0 } );
+			result = [ & ]() -> std::string {
+				for ( const bool unwinding : { false, true } ) {
+					size_t destroyed = 0;
+					NEWV( counted, CountedMesh, destroyed );
+					try {
+						scene::actor::Sprite::mesh_ptr_t owned( counted );
+						if ( unwinding ) { throw std::runtime_error( "copy interrupted" ); }
+					}
+					catch ( const std::runtime_error& ) {}
+					const bool released = destroyed == 1;
+					if ( !released ) { DELETE( counted ); } // clean an intentionally disabled deleter control
+					GT_ASSERT( released, "generated-mesh deleter did not release its owner exactly once" );
+					const types::mesh::Render* source = nullptr;
+					scene::actor::Mesh* actor = nullptr;
+					try {
+						auto mesh = sprite.GenerateMesh();
+						source = mesh.get();
+						actor = presenter.AddMeshAndTexture( widget, 0, mesh.get(), sprite.GetTexture(), true );
+						GT_ASSERT( actor->GetMesh() != source, "widget unexpectedly consumed the source geometry" );
+						if ( unwinding ) { throw std::runtime_error( "after widget copy" ); }
+					}
+					catch ( const std::runtime_error& ) {}
+#ifdef DEBUG
+					if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
+						bool absent = false;
+						try { debug::g_memory_watcher->Delete( source, __FILE__, __LINE__ ); }
+						catch ( const std::runtime_error& error ) {
+							absent = std::string( error.what() ).find( "delete on non-allocated object" ) != std::string::npos;
+						}
+						if ( !absent ) { delete source; } // metadata was removed above
+						GT_ASSERT( absent, "sprite source mesh survived widget copying" );
+					}
+#endif
+					GT_ASSERT( actor->GetMesh()->GetVertexCount() == 4 && actor->GetMesh()->GetIndexCount() == 6, "copied sprite geometry changed" );
+					GT_ASSERT( actor->GetTexture() == &atlas, "sprite atlas borrowing changed" );
+					widget->Clear();
+					GT_ASSERT( atlas.GetPixel( 0, 0 ) == color, "clearing sprite widget damaged the borrowed atlas" );
+				}
+				GT_OK();
+			}();
+		} );
+	}
+	catch ( const std::exception& error ) { GT_FAIL( std::string( "sprite ownership check failed: " ) + error.what() ); }
+	return result;
+}
+
+static std::string CheckMinimapCaptureOwnership() {
+	class CountedTexture : public types::texture::Texture {
+	public:
+		CountedTexture( size_t& destroyed, bool fail ) : Texture( 2, 2 ), m_destroyed( destroyed ), m_fail( fail ) {}
+		~CountedTexture() override { ++m_destroyed; }
+		const size_t GetWidth() const override {
+			if ( m_fail ) { throw std::runtime_error( "capture read failed" ); }
+			return Texture::GetWidth();
+		}
+	private:
+		size_t& m_destroyed;
+		bool m_fail;
+	};
+	std::string result;
+	try {
+		WidgetGraphicsFixture graphics;
+		GSE runtime;
+		auto* gc_space = runtime.GetGCSpace();
+		gc_space->Accumulate( &runtime, [ & ]() {
+			auto* ctx = runtime.CreateGlobalContext();
+			const si_t si;
+			ExecutionPointer ep;
+			auto* ui = new ::ui::UI( GSE_CALL );
+			game::frontend::widget::Minimap minimap( nullptr, ui );
+			util::FinallyGuard cleanup( [ & ]() { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
+			auto* root = static_cast< value::Object* >( ui->GetRoot()->Wrap( GSE_CALL ) );
+			auto create_widget = [ & ]() {
+				auto* properties = new value::Object( GSE_CALL, {
+					{ "type", new value::String( gc_space, "minimap" ) },
+					{ "width", new value::Int( gc_space, 2 ) },
+					{ "height", new value::Int( gc_space, 2 ) },
+				} );
+				return static_cast< ::ui::dom::Widget* >( ::ui::dom::Object::Unwrap(
+					static_cast< value::Callable* >( root->Get( "widget" ) )->Run( GSE_CALL, { properties } ) ) );
+			};
+			auto* widget = create_widget();
+			result = [ & ]() -> std::string {
+				GT_ASSERT( widget->GetTexture( 0 )->GetWidth() == 2 && widget->GetTexture( 0 )->GetHeight() == 2,
+					"minimap fixture size is " + std::to_string( widget->GetTexture( 0 )->GetWidth() ) + "x" + std::to_string( widget->GetTexture( 0 )->GetHeight() ) );
+				for ( size_t iteration = 0 ; iteration < 2 ; ++iteration ) {
+					size_t destroyed = 0;
+					const auto color = types::Color::RGBA( 31 + iteration, 63, 127, 255 );
+					NEWV( texture, CountedTexture, destroyed, false );
+					for ( size_t y = 0 ; y < 2 ; ++y ) {
+						for ( size_t x = 0 ; x < 2 ; ++x ) { texture->SetPixel( x, y, color ); }
+					}
+					// Model only the GPU producer; exercise real response transfer and consuming copy.
+					scene::actor::Mesh terrain( "capture-test" );
+					const auto id = terrain.CaptureToTexture( nullptr, { 2, 2 } );
+					auto* response = terrain.RR_GetRequests< rr::Capture >().at( 0 );
+					response->texture = texture;
+					response->SetProcessed();
+					minimap.UpdateCapture( terrain.GetCaptureToTextureResponse( id ) );
+					const bool released = destroyed == 1;
+					if ( !released ) { DELETE( texture ); }
+					GT_ASSERT( released, "consumed framebuffer capture was not released exactly once" );
+					GT_ASSERT( widget->GetTexture( 0 )->GetPixel( 0, 0 ) == color, "minimap pixels did not survive capture destruction" );
+					// Reattach after layout: initial property sizing occurs after registration.
+					// The new layers must redraw from the cache after the source is destroyed.
+					widget->Hide();
+					widget->Show();
+					GT_ASSERT( widget->GetTexture( 0 )->GetPixel( 0, 0 ) == color, "minimap redraw retained the destroyed capture" );
+				}
+				size_t destroyed = 0;
+				NEWV( failed, CountedTexture, destroyed, true );
+				bool threw = false;
+				try { minimap.UpdateCapture( failed ); }
+				catch ( const std::runtime_error& error ) { threw = std::string( error.what() ) == "capture read failed"; }
+				const bool released = destroyed == 1;
+				if ( !released ) { DELETE( failed ); }
+				GT_ASSERT( threw && released, "failed minimap copying did not release its capture" );
+				GT_OK();
+			}();
+		} );
+	}
+	catch ( const std::exception& error ) { GT_FAIL( std::string( "minimap ownership check failed: " ) + error.what() ); }
+	return result;
+}
+
 std::string CheckMeshCoordinateOutputs() {
 	std::string errors;
 	// Script callbacks hold their Space accumulation lock. UI fixtures create a
@@ -317,6 +483,14 @@ std::string CheckMeshCoordinateOutputs() {
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test generated sprite ownership survives widget copies and exceptions",
+		GT() { return CheckGeneratedSpriteOwnership(); }
+	);
+	task->AddTest(
+		"test minimap capture ownership survives redraws and exceptions",
+		GT() { return CheckMinimapCaptureOwnership(); }
+	);
 	task->AddTest(
 		"test mesh coordinates can be read into caller-owned stack storage",
 		GT() { return CheckMeshCoordinates(); }

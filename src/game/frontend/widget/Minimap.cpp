@@ -1,5 +1,7 @@
 #include "Minimap.h"
 
+#include <memory>
+
 #include "ui/dom/Widget.h"
 #include "types/mesh/Rectangle.h"
 #include "ui/geometry/Rectangle.h"
@@ -134,6 +136,12 @@ const types::Vec2< ui::coord_t > Minimap::FindLargestArea() const {
 		}
 	} );
 	return result;
+}
+
+void Minimap::UpdateCapture( types::texture::Texture* texture ) {
+	const auto release = []( types::texture::Texture* value ) { DELETE( value ); };
+	std::unique_ptr< types::texture::Texture, decltype( release ) > capture( texture, release );
+	Update( nullptr, capture.get() );
 }
 
 void Minimap::Update( ui::dom::Widget* const widget, const void* const data ) {

@@ -17,9 +17,10 @@ namespace backend {
 namespace connection {
 
 Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings )
-	: Connection( gc_space, network::CM_CLIENT, settings ) {
-	//
-}
+	: Client( gc_space, settings, g_engine->GetNetwork() ) {}
+
+Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings, network::Network* const network )
+	: Connection( gc_space, network::CM_CLIENT, settings, network ) {}
 
 void Client::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );

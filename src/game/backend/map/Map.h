@@ -169,7 +169,6 @@ private:
 	std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > m_sprite_instances_to_add = {};
 
 private:
-	const int ITERATE_STATE_EVERY_N_TILES = 64;
 
 	Game* m_game = nullptr;
 

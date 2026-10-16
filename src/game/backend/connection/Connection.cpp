@@ -45,11 +45,14 @@ void Connection::ResetHandlers() {
 }
 
 Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
+	: Connection( gc_space, connection_mode, settings, g_engine->GetNetwork() ) {}
+
+Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings, network::Network* const network )
 	: gse::GCWrappable( gc_space )
 	, m_gc_space( gc_space )
 	, m_connection_mode( connection_mode )
 	, m_settings( settings )
-	, m_network( g_engine->GetNetwork() ) {}
+	, m_network( network ) {}
 
 Connection::~Connection() {
 	if ( m_mt_ids.disconnect ) {

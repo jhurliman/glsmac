@@ -1792,6 +1792,9 @@ void Game::Deinitialize() {
 	}
 	m_actors_map.clear();
 
+	// The world scene survives map reloads; unlink before destroying its camera.
+	m_world_scene->SetCamera( nullptr );
+
 #define x( _obj ) \
     if ( _obj ) { \
         DELETE( _obj ); \

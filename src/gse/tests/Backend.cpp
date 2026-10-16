@@ -222,7 +222,8 @@ public:
 			state.WriteString( m_state->m_settings.global.Serialize().ToString() );
 			faction::Faction first( "FIRST", "First complete faction" );
 			factions.WriteInt( malformed ? 2 : 1 ); factions.WriteString( first.m_id ); factions.WriteString( first.Serialize().ToString() );
-			if ( malformed ) { factions.WriteString( "BROKEN" ); factions.WriteString( "invalid framed faction" ); }
+			// A wrong-type next key rejects before insertion on both supported manager codecs.
+			if ( malformed ) { factions.WriteInt( 42 ); }
 			state.WriteString( factions.ToString() ); packet.data.str = state.ToString(); GT_OK();
 		} );
 		GT_ASSERT( setup.empty(), "faction setup: " + setup );

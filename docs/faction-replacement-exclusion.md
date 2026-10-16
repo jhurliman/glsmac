@@ -21,9 +21,12 @@ The caller retains the State and its owning Space throughout the operation.
 ## Preserved behavior and limits
 
 The wire format and failure semantics are unchanged. Global settings are decoded
-first; faction-manager decoding clears the old registry and publishes complete
-records in order. A later malformed record leaves earlier complete replacements.
-This is not a transaction or rollback mechanism. Linked Faction wrappers become
+first; faction-manager decoding clears the old registry and restores records in
+order. The malformed second key used by the publication regression leaves the
+first complete replacement. Other malformed-record behavior remains that of the
+existing decoder; the older publication decoder can publish an incomplete record
+before rejecting its body. This is not a transaction or rollback mechanism.
+Linked Faction wrappers become
 undefined when retired; detached color values returned by `Color::Wrap` remain
 valid independent values.
 
@@ -49,10 +52,22 @@ starts another collector and observes its completion before returning; this
 checks that notification work remains outside the replacement guard. Its bounded
 wait records failure, with joining deferred until the packet callback has returned.
 
+On the focused publication branch, run the supported full native/script harness
+or its registered CTest suite; all four cases are registered in that harness:
+
+```sh
+build/bin/GLSMAC --gse-tests --prefix build/faction-replacement-test-data
+ctest --test-dir build --output-on-failure
+```
+
+The source validation below also used the newer native regex filter and explicit
+analyzer source selector. These are available in the source integration revision,
+but are not dependencies of this publication branch (whose parent is
+`7eae6d84df539a001e30e11cc47bc4d65428b6d6`):
+
 ```sh
 build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^faction replacement' \
   --memorydebug --prefix build/faction-replacement-test-data
-ctest --test-dir build --output-on-failure
 python3 tools/analyze_cpp.py --build-dir build \
   --source src/game/backend/State.cpp --output-dir build/faction-analysis
 ```
@@ -81,3 +96,27 @@ Fixed results (including runner time where stated):
 
 Commands, original/copy source, logs and hash manifest are retained at
 `/home/jhurliman/src/glsmac-faction-replacement-audit/`.
+
+## Focused publication validation
+
+The focused branch is based on PR102 revision
+`7eae6d84df539a001e30e11cc47bc4d65428b6d6`. Its `State.cpp` is identical to
+source commit `c42d4bfe9fd725f373affbbffeeb14ac617aad16`; no faction codec or
+new test-selection feature is imported. The include conflict only removed a
+duplicate `<filesystem>` include while retaining the new `<future>` include.
+
+The first publication run passed 5/6 CTests but aborted in the new malformed
+fixture: this older manager inserts a Faction before decoding its body, leaving
+its order index inconsistent after that body rejects. The source integration's
+malformed-body case remains valid evidence for that newer codec. The publication
+fixture instead writes a wrong-type second key frame, which rejects before the
+second insertion on either codec and preserves the same collection exclusion,
+partial first-record, wrapper invalidation and notification assertions.
+
+After that fixture-only adaptation, the normal Clang 15 Debug build (`-j4`)
+and all six publication CTests passed: 6/6 in 28.88 seconds (28.93 including
+runner), with all four new native cases present in the full harness output.
+The unchanged production guard's source sanitizer evidence above is retained;
+no repeat sanitizer run or native Windows/macOS result is claimed for this
+publication checkout. Logs, the initial failed run and the source/diff receipt
+are retained at `/home/jhurliman/src/glsmac-faction-replacement-publication/`.

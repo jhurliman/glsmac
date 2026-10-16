@@ -75,6 +75,9 @@ The sanitizer build used the existing dependency library paths and a local
 `-no-pie` linker workaround for the previously observed WSL pre-main sanitizer
 startup failure; no build policy is changed. These are focused sanitizer/leak
 results, not a claim that the full suite's known parser leak baseline is fixed.
+The focused command requires the separate native-selector change in PR #57,
+which is included in the validation source. On a branch without that selector,
+run the full `--gse-tests` suite; all five restoration cases are registered there.
 The existing curated clang-tidy checks passed for `UnitManager.cpp`. Final logs
 are `final-ctest.log`, `final-asan.log`, `final-memorydebug.log` and
 `final-analysis.log` in the evidence directory above. Native Windows combined

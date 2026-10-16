@@ -1523,6 +1523,13 @@ void Game::ProcessEvents() {
 						else {
 							process_now = true;
 						}
+						// Optimistic application can destroy objects referenced by the
+						// request, invalidating their script wrappers. Preserve the wire
+						// data now, but queue it only after application succeeds.
+						std::string serialized_request;
+						if ( event->GetSource() == event::Event::ES_LOCAL ) {
+							serialized_request = event->Serialize().ToString();
+						}
 						gse::Value* rollback_data = nullptr;
 						if ( process_now ) {
 							WithRW( [ &f_process, &rollback_data ](){
@@ -1542,7 +1549,7 @@ void Game::ProcessEvents() {
 									}
 								}
 							);
-							m_state->m_connection->SendGameEvent( event );
+							m_state->m_connection->SendGameEvent( event, serialized_request );
 						}
 					}
 				}

@@ -22,7 +22,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V1";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V2";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -172,14 +172,7 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 			}
 		}
 	}
-	m_registered_base_names.insert( base->m_name );
-
-	Log( "Spawning base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
-
-	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
-	m_bases.insert_or_assign( base->m_id, base );
-
-	QueueBaseUpdate( base, BUO_SPAWN );
+	RegisterBase( base );
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -190,7 +183,14 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 			},
 		}; } );
 	}
+}
 
+void BaseManager::RegisterBase( Base* base ) {
+	Log( "Registering base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
+	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
+	m_bases.insert_or_assign( base->m_id, base );
+	m_registered_base_names.insert( base->m_name );
+	QueueBaseUpdate( base, BUO_SPAWN );
 	RefreshBase( base );
 }
 
@@ -243,7 +243,7 @@ const BaseManager::popdefs_t& BaseManager::GetBasePopDefs() const {
 
 void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	for ( auto& it : m_unprocessed_bases ) {
-		SpawnBase( GSE_CALL, Base::Deserialize( it, m_game ) );
+		RegisterBase( Base::Deserialize( it, m_game ) );
 	}
 	m_unprocessed_bases.clear();
 }
@@ -623,7 +623,7 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
 		if ( m_game->IsRunning() ) {
-			SpawnBase( GSE_CALL, Base::Deserialize( b, m_game ) );
+			RegisterBase( Base::Deserialize( b, m_game ) );
 		}
 		else {
 			m_unprocessed_bases.push_back( b );

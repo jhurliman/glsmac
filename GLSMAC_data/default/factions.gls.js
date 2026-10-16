@@ -15,10 +15,23 @@ const factions = [
 	['Usurpers', 'usurper', {is_progenitor: true}],
 ];
 
-return {
+const get_roster = (ruleset) => {
+	if (ruleset != 'smac' && ruleset != 'smax') {
+		throw Error('Unknown gameplay ruleset: ' + ruleset);
+	}
+	let roster = [];
+	const count = ruleset == 'smac' ? 7 : #sizeof(factions);
+	for (let idx = 0; idx < count; idx++) {
+		roster :+factions[idx];
+	}
+	return roster;
+};
 
-	configure: (fm) => {
-		for (f of factions) {
+return {
+	get_roster: get_roster,
+
+	configure: (fm, ruleset) => {
+		for (f of get_roster(ruleset)) {
 			fm.add(#uppercase(f[0]), {
 				name: f[0],
 				colors: fm.import_colors(f[1] + '.pcx'),

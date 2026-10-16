@@ -67,7 +67,39 @@ void GlobalSettings::Initialize() {
 	difficulty_level = rules.GetDefaultDifficultyLevelV();
 }
 
+GlobalSettings::ruleset_t GlobalSettings::ParseRuleset( const std::string& id ) {
+	if ( id == "smac" ) { return RULESET_SMAC; }
+	if ( id == "smax" ) { return RULESET_SMAX; }
+	THROW( "Unknown gameplay ruleset: " + id + " (expected smac or smax)" );
+}
+
+const std::string& GlobalSettings::GetRulesetId() const {
+	static const std::string ids[] = { "unselected", "smac", "smax" };
+	return ids[ m_ruleset ];
+}
+
+void GlobalSettings::SelectRuleset( const std::string& id ) {
+	const auto selected = ParseRuleset( id );
+	if ( m_ruleset_locked ) {
+		THROW( "Gameplay ruleset is locked; return to the main menu to start a new game" );
+	}
+	m_ruleset = selected;
+}
+
+void GlobalSettings::LockRuleset() {
+	if ( m_ruleset == RULESET_UNSELECTED ) {
+		THROW( "Select a gameplay ruleset before starting a game" );
+	}
+	m_ruleset_locked = true;
+}
+
+void GlobalSettings::ResetRuleset() {
+	m_ruleset = RULESET_UNSELECTED;
+	m_ruleset_locked = false;
+}
+
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
+			WRAPIMPL_GET_CUSTOM( "ruleset", String, GetRulesetId() )
 			WRAPIMPL_GET_WRAPPED( map )
 			WRAPIMPL_GET_WRAPPED( rules )
 			WRAPIMPL_GET_MAPPED_CUSTOM( difficulty_level, rules.m_difficulty_levels )
@@ -81,6 +113,12 @@ WRAPIMPL_DYNAMIC_END()
 const types::Buffer GlobalSettings::Serialize() const {
 	types::Buffer buf;
 
+	if ( m_ruleset == RULESET_UNSELECTED ) {
+		THROW( "Cannot serialize global settings without a gameplay ruleset" );
+	}
+	// The integer prefix rejects the old string-first format in both directions.
+	buf.WriteInt( 1 );
+	buf.WriteString( GetRulesetId() );
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
@@ -90,10 +128,22 @@ const types::Buffer GlobalSettings::Serialize() const {
 }
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
+	if ( buf.ReadInt() != 1 ) {
+		THROW( "Unsupported global settings format (expected version 1)" );
+	}
+	const auto ruleset = ParseRuleset( buf.ReadString() );
+	if ( m_ruleset_locked && m_ruleset != ruleset ) {
+		THROW( "Host changed the gameplay ruleset of an initialized session" );
+	}
 	map.Deserialize( buf.ReadString() );
 	rules.Deserialize( buf.ReadString() );
 	difficulty_level = buf.ReadInt();
 	game_name = buf.ReadString();
+	if ( buf.lenr != buf.lenw ) {
+		THROW( "Unexpected fields in global settings" );
+	}
+	m_ruleset = ruleset;
+	m_ruleset_locked = true;
 }
 
 WRAPMAP( game_mode, LocalSettings::game_mode_t,

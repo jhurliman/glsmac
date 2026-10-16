@@ -121,3 +121,23 @@ correctness.
 - Performance and longevity runs use named hardware, graphics drivers, build
   type, seed/options and a recorded workload. Capture baseline and changed
   results using the same method.
+
+## Base snapshot compatibility
+
+The base-manager section of a world snapshot starts with the typed string
+`GLSMAC_BASES_V1`. It contains population definitions, facility definitions, base
+instances, and the next base ID, in that order. Definitions must be restored
+before a base can resolve its population and facility IDs.
+
+Old unversioned base snapshots are unsupported. Their initial integer population
+count fails the new reader's string-type check; the new string marker likewise
+fails an old reader's integer-type check. Unknown version markers are rejected
+before changing base-manager state. Mixed-version peers therefore cannot join
+using these incompatible formats. This section marker does not establish a
+stable save-game contract or implement top-level protocol negotiation.
+
+The native backend tests run without original assets and exercise facility
+metadata and base references through real managers and entities, plus legacy
+and unknown-format rejection. Collection-count limits, malformed snapshot
+hardening, complete authoritative state, and full save/reload validation remain
+separate M1 work.

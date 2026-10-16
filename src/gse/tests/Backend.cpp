@@ -2,12 +2,14 @@
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
+#include "gse/ExecutionPointer.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/base/FacilityDef.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
@@ -17,6 +19,7 @@
 #include "util/FinallyGuard.h"
 
 #include <memory>
+#include <exception>
 
 namespace gse {
 namespace tests {
@@ -67,6 +70,30 @@ public:
 		} );
 	}
 
+	void DefineFacility( game::backend::base::FacilityDef* def ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, def ]() {
+			m_game.GetBM()->DefineFacility( def );
+		} );
+	}
+
+	void RestoreBaseManager( types::Buffer& snapshot ) {
+		std::exception_ptr error;
+		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &snapshot, &error ]() {
+			try {
+				gse::ExecutionPointer ep;
+				m_game.GetBM()->Deserialize( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep, snapshot );
+			}
+			catch ( ... ) {
+				// Buffer errors are native exceptions; leave accumulation normally
+				// before reporting them so the fixture's GC state stays consistent.
+				error = std::current_exception();
+			}
+		} );
+		if ( error ) {
+			std::rethrow_exception( error );
+		}
+	}
+
 private:
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
@@ -77,6 +104,18 @@ private:
 namespace {
 
 using namespace game::backend::map::tile;
+
+class CountedFacilityDef : public game::backend::base::FacilityDef {
+public:
+	CountedFacilityDef( size_t& destructions, const std::string& id )
+		: FacilityDef( id, id, "", 1, {} )
+		, m_destructions( destructions ) {}
+	~CountedFacilityDef() override {
+		m_destructions++;
+	}
+private:
+	size_t& m_destructions;
+};
 
 std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 	const auto location = " at " + expected.ToString();
@@ -99,6 +138,115 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test backend base manager snapshots restore facility definitions before base instances",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			BackendFixture source;
+			BackendFixture restored;
+			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			source.DefineFacility( new FacilityDef( "HEADQUARTERS", "Headquarters", "Administration", 0, { "facilities.pcx", 1, 2, 24, 32 } ) );
+			source.DefineFacility( new FacilityDef( "RECYCLING_TANKS", "Recycling Tanks", "Recycles base resources", 40, { "facilities.pcx", 37, 44, 48, 64 } ) );
+			auto* source_game = source.GetGame();
+			auto* restored_game = restored.GetGame();
+			Base expected(
+				source_game, 201, &source_game->GetState()->m_slots->GetSlot( 2 ),
+				source_game->GetFaction( "GAIANS" ), source_game->GetMap()->GetTile( 4, 4 ), "Gaia's Landing",
+				{
+					{ "HEADQUARTERS", source_game->GetBM()->GetFacilityDef( "HEADQUARTERS" ) },
+					{ "RECYCLING_TANKS", source_game->GetBM()->GetFacilityDef( "RECYCLING_TANKS" ) },
+				},
+				{ { 7, Pop( nullptr, 7, source_game->GetBM()->GetPopDef( "WORKER" ), 1 ) } },
+				8
+			);
+			types::Buffer definitions;
+			source_game->GetBM()->Serialize( definitions );
+			auto snapshot = Base::Serialize( &expected );
+			std::unique_ptr< Base > actual;
+			try {
+				restored.RestoreBaseManager( definitions );
+				for ( const auto& entry : expected.m_facilities ) {
+					const auto* def = restored_game->GetBM()->GetFacilityDef( entry.first );
+					GT_ASSERT( def, "facility definition missing after manager reload: " + entry.first );
+					GT_ASSERT( def != entry.second, "facility definition still points into source world" );
+					GT_ASSERT( FacilityDef::Serialize( def ).ToString() == FacilityDef::Serialize( entry.second ).ToString(), "facility metadata changed: " + entry.first );
+				}
+				actual.reset( Base::Deserialize( snapshot, restored_game ) );
+			}
+			catch ( const std::runtime_error& error ) {
+				GT_FAIL( "facility snapshot reload failed: " + std::string( error.what() ) );
+			}
+			GT_ASSERT( definitions.lenr == definitions.lenw, "manager snapshot has unread fields" );
+			GT_ASSERT( actual->m_facilities.size() == 2, "base facility count changed" );
+			for ( const auto& entry : actual->m_facilities ) {
+				GT_ASSERT( entry.second == restored_game->GetBM()->GetFacilityDef( entry.first ), "base facility does not use restored definition" );
+			}
+			GT_ASSERT( Base::Serialize( actual.get() ).ToString() == snapshot.ToString(), "base snapshot changed after restoring facility definitions" );
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test backend base manager rejects legacy and unknown snapshot formats before mutation",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			for ( const bool legacy : { true, false } ) {
+				BackendFixture restored;
+				types::Buffer snapshot;
+				if ( !legacy ) {
+					snapshot.WriteString( "GLSMAC_BASES_V2" );
+				}
+				// The complete old empty-manager format is valid under the old
+				// reader; an added format marker must reject it before changing IDs.
+				snapshot.WriteInt( 0 );
+				snapshot.WriteInt( 0 );
+				snapshot.WriteInt( previous_next_id + 123 );
+				bool rejected = false;
+				try {
+					restored.RestoreBaseManager( snapshot );
+				}
+				catch ( const std::runtime_error& ) {
+					rejected = true;
+				}
+				GT_ASSERT( rejected, "unsupported snapshot format was accepted" );
+				GT_ASSERT( restored.GetGame()->GetBM()->GetBasePopDefs().empty(), "unsupported snapshot created definitions" );
+				GT_ASSERT( restored.GetGame()->GetBM()->GetBases().empty(), "unsupported snapshot created bases" );
+				GT_ASSERT( Base::GetNextId() == previous_next_id, "unsupported snapshot changed the next base ID" );
+			}
+			BackendFixture source;
+			types::Buffer current;
+			source.GetGame()->GetBM()->Serialize( current );
+			bool old_reader_rejected = false;
+			try {
+				current.ReadInt(); // first operation performed by the legacy reader
+			}
+			catch ( const std::runtime_error& ) {
+				old_reader_rejected = true;
+			}
+			GT_ASSERT( old_reader_rejected, "new snapshot could be mistaken for a legacy population count" );
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test backend base manager owns and clears facility definitions",
+		GT() {
+			size_t destructions = 0;
+			BackendFixture fixture;
+			fixture.DefineFacility( new CountedFacilityDef( destructions, "HEADQUARTERS" ) );
+			fixture.DefineFacility( new CountedFacilityDef( destructions, "RECYCLING_TANKS" ) );
+			auto* manager = fixture.GetGame()->GetBM();
+			manager->Clear();
+			GT_ASSERT( destructions == 2, "Clear did not destroy both owned facility definitions" );
+			GT_ASSERT( !manager->GetFacilityDef( "HEADQUARTERS" ), "Clear retained headquarters definition" );
+			GT_ASSERT( !manager->GetFacilityDef( "RECYCLING_TANKS" ), "Clear retained recycling tanks definition" );
+			manager->Clear();
+			GT_ASSERT( destructions == 2, "repeated Clear destroyed facility definitions twice" );
+			GT_OK();
+		}
+	);
 	task->AddTest(
 		"test backend base snapshots resolve population by definition id",
 		GT() {

@@ -20,6 +20,10 @@ namespace game {
 namespace backend {
 namespace base {
 
+// A typed string also makes old readers, which expect an integer count first,
+// reject this format before interpreting any definitions or base instances.
+static const std::string s_snapshot_format = "GLSMAC_BASES_V1";
+
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
 	, m_game( game ) {
@@ -39,6 +43,10 @@ void BaseManager::Clear() {
 		delete it.second;
 	}
 	m_bases.clear();
+	for ( auto& it : m_base_facilitydefs ) {
+		delete it.second;
+	}
+	m_base_facilitydefs.clear();
 
 	m_base_updates.clear();
 }
@@ -553,12 +561,19 @@ void BaseManager::TriggerUpdates( GSE_CALLABLE ) {
 }
 
 void BaseManager::Serialize( types::Buffer& buf ) const {
+	buf.WriteString( s_snapshot_format );
 
 	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
 	buf.WriteInt( m_base_popdefs.size() );
 	for ( const auto& it : m_base_popdefs ) {
 		buf.WriteString( it.first );
 		buf.WriteString( PopDef::Serialize( it.second ).ToString() );
+	}
+
+	Log( "Serializing " + std::to_string( m_base_facilitydefs.size() ) + " base facility defs" );
+	buf.WriteInt( m_base_facilitydefs.size() );
+	for ( const auto& it : m_base_facilitydefs ) {
+		buf.WriteString( FacilityDef::Serialize( it.second ).ToString() );
 	}
 
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
@@ -573,8 +588,15 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 
 void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
+	ASSERT( m_base_facilitydefs.empty(), "base facility defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
+
+	// Unversioned snapshots start with an integer and fail the typed read;
+	// unknown versions fail here, before mutating any manager state.
+	if ( buf.ReadString() != s_snapshot_format ) {
+		THROW( "unsupported base snapshot format (expected " + s_snapshot_format + ")" );
+	}
 
 	size_t sz = buf.ReadInt();
 	m_base_popdefs.reserve( sz );
@@ -583,6 +605,14 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
 		DefinePop( PopDef::Deserialize( b ) );
+	}
+
+	sz = buf.ReadInt();
+	m_base_facilitydefs.reserve( sz );
+	Log( "Unserializing " + std::to_string( sz ) + " base facility defs" );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		auto b = types::Buffer( buf.ReadString() );
+		DefineFacility( FacilityDef::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();

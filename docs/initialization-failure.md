@@ -42,7 +42,9 @@ GDB identified the unconditional `m_map->m_textures.terrain` access inside
 InitFailed. Logs are retained in the isolated worktree's ignored validation
 directory. No proprietary assets are needed.
 
-Final local Linux validation passed all seven focused cases with allocation
+Implementation integration
+[`67ac1e6357681bdc5060c2d44864b975cfb40b8c`](https://github.com/jhurliman/glsmac/commit/67ac1e6357681bdc5060c2d44864b975cfb40b8c)
+passed all seven focused Linux cases with allocation
 tracking, normal CTest 8/8 in 50.58 seconds, and ASan/UBSan/LSan CTest 8/8 in
 44.64 seconds with leak detection enabled. The sanitizer build retains the
 documented local `-no-pie` startup workaround. LLVM 15.0.7 correctness analysis
@@ -52,6 +54,25 @@ old-map alias or borrowed the original error each failed their targeted case
 controls. The first fixed run exposed a test observer calling the map-required
 getter in the no-map case; that observer was corrected before the final runs.
 These are local measurements, not hosted or cross-platform guarantees.
+
+The focused publication initially timed out in the native-error-hook case
+because its older base omitted PR #54's callback-mutex exception repair.
+GDB showed the test waiting in `Wrappable::HasHandlers` and collection waiting
+for its active accumulation. The unchanged #54 repair and its regressions are
+included as a prerequisite; no test is skipped. Publication
+[`1f39d966247ee2fe0e6c25f9ca55d3d75a052a8d`](https://github.com/jhurliman/glsmac/commit/1f39d966247ee2fe0e6c25f9ca55d3d75a052a8d)
+then passes Linux CTest 5/5 in 23.29 seconds. The older focused fixture lacks
+some integration allocation-tracking repairs, so the sanitizer results above
+apply to the named integration, not this publication. Initial and corrected
+logs use `early-failure-` and `early-failure-with-trigger-` under
+`/home/jhurliman/src/glsmac-unit-publication/`.
+
+Combined integration
+[`9663fcdabab888e3a77d7361dafd1bbec3ab3673`](https://github.com/jhurliman/glsmac/commit/9663fcdabab888e3a77d7361dafd1bbec3ab3673)
+adds the public reset polling prerequisite. It passes Windows CTest 8/8 in
+48.83 seconds and a fresh LLVM 15 scan of 298 Linux production translation
+units in 56.86 seconds with zero failures; Windows network code is outside
+that Linux analyzer scope.
 
 This prerequisite does not schedule early startup failure notifications itself.
 The owner-transition coordinator must establish when initialization/configuration

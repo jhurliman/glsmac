@@ -177,7 +177,9 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 		try {
 			f();
 		}
-		catch ( const gse::Exception& e ) {
+		catch ( ... ) {
+			// Native callbacks can throw C++ exceptions as well as GSE errors.
+			// Restore accumulation state before either kind leaves the space.
 			commit();
 			throw;
 		}

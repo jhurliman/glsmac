@@ -11,6 +11,9 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
+#include "scene/Scene.h"
+#include "types/Color.h"
+#include "util/String.h"
 
 #include "gse/program/Program.h"
 #include "gse/program/Variable.h"
@@ -48,6 +51,43 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		task->AddTest(
+			"test if an empty scene accepts clearing its camera",
+			GT() {
+				scene::Scene scene( "camera test", scene::SCENE_TYPE_WORLD );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "empty scene acquired a camera" );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "repeated clearing changed the camera" );
+				GT_OK();
+			}
+		);
+		task->AddTest(
+			"test if hex color parsing validates every input byte",
+			GT() {
+				types::Color color;
+				GT_ASSERT( util::String::ParseColorHex( "#1234aB", color ), "valid RGB rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGB( 0x12, 0x34, 0xab ), "RGB decoded incorrectly" );
+				GT_ASSERT( util::String::ParseColorHex( "#CdEF0180", color ), "valid RGBA rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGBA( 0xcd, 0xef, 0x01, 0x80 ), "RGBA decoded incorrectly" );
+				const auto unchanged = color.GetRGBA();
+				for ( const auto& valid : { std::string( "#123456" ), std::string( "#12345678" ) } ) {
+					for ( size_t i = 1 ; i < valid.size() ; i++ ) {
+						for ( const char invalid : { '\0', '/', ':', 'G', 'g' } ) {
+							auto input = valid;
+							input[i] = invalid;
+							GT_ASSERT( !util::String::ParseColorHex( input, color ), "invalid digit accepted" );
+							GT_ASSERT( color.GetRGBA() == unchanged, "rejected input changed the output" );
+						}
+					}
+				}
+				for ( const auto& invalid : { "", "1234567", "#12345", "#1234567", "#123456789" } ) {
+					GT_ASSERT( !util::String::ParseColorHex( invalid, color ), "invalid format accepted" );
+					GT_ASSERT( color.GetRGBA() == unchanged, "rejected format changed the output" );
+				}
+				GT_OK();
+			}
+		);
 		tests::AddParserTests( task );
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );

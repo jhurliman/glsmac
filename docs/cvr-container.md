@@ -109,10 +109,15 @@ files, I/O errors, or an empty inventory. For example, from the repository root:
 
 ```sh
 clang++ -std=c++17 -O2 -DNDEBUG -Isrc \
-  src/loader/cvr/CvrContainerReader.cpp tools/tests/cvr_container_probe.cpp \
+  src/loader/cvr/CvrContainerReader.cpp src/loader/cvr/CvrSceneReader.cpp \
+  tools/tests/cvr_container_probe.cpp \
   -o /tmp/cvr-container-probe
 /tmp/cvr-container-probe '/path/to/installed/Alpha Centauri'
 ```
+
+The optional `--scene` mode additionally validates and reports the
+[nested scene records](cvr-scene-records.md). The default mode retains the
+envelope-only check.
 
 Local validation on Linux/WSL with Clang 15:
 

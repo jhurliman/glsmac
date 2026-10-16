@@ -2,6 +2,7 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "Value.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -39,6 +40,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddValueTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

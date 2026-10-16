@@ -30,5 +30,6 @@ Synthetic native tests exercise the production parser and pass custom parsed
 rules into the production center calculator. They include malformed tables,
 every required numeric field, signed boundaries and section isolation; CI
 needs no original assets. These tests validate this ingestion contract, not
-the original game's permissiveness for malformed/custom files. Host-authoritative
-loading, settings serialization and world-snapshot binding are separate work.
+the original game's permissiveness for malformed/custom files. The separate
+[host-rules integration](smac-host-rules.md) handles session loading and settings
+serialization. World-snapshot binding remains a later step.

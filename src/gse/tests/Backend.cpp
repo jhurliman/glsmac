@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "fixtures/SmacRulesSource.h"
 #include "GLSMAC.h"
 #include "ui/UI.h"
 
@@ -123,6 +124,14 @@ public:
 	void FlushEvents() { m_game.GetState()->GetConnection()->ProcessPending( true ); }
 	size_t PendingWireEvents() { return m_game.GetState()->GetConnection()->m_pending_game_events.size(); }
 	size_t WaitingResponses() { return m_game.m_events_waiting_for_responses.size(); }
+	void WithoutDisconnectIO( game::backend::connection::Connection* connection, const std::function< void() >& operation ) {
+		// Exercise the real protocol-error path as if a disconnect were already
+		// pending, without submitting a network request from an asset-free test.
+		const auto saved = connection->m_mt_ids.disconnect;
+		connection->m_mt_ids.disconnect = 1;
+		util::FinallyGuard restore( [ & ]() { connection->m_mt_ids.disconnect = saved; } );
+		operation();
+	}
 
 	void SetRunning( const bool running ) {
 		m_game.m_game_state = running ? game::backend::Game::GS_RUNNING : game::backend::Game::GS_NONE;
@@ -999,6 +1008,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 class RulesetClient : public game::backend::connection::Client {
 public:
 	using Client::Client;
+	bool HasProtocolError() const { return m_disconnect_reason == "Network protocol error"; }
 	void Receive( const types::Packet& packet ) {
 		network::Event event;
 		event.type = network::Event::ET_PACKET;
@@ -1082,15 +1092,16 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( RejectsSettings( [ & ]() { settings.LockRuleset(); } ), "unset settings initialized" );
 		GT_ASSERT( RejectsSettings( [ & ]() { settings.SelectRuleset( "gog" ); } ), "installer type accepted as ruleset" );
 		settings.SelectRuleset( "smac" );
+		settings.InitializeHostRules( smac_rules_fixture::Source );
 		settings.game_name = "unchanged";
 		settings.map.size_x = 86;
 		const auto before = settings.Serialize().ToString();
 		std::vector< types::Buffer > invalid( 4 );
 		invalid[ 0 ].WriteString( settings.map.Serialize().ToString() ); // legacy, string-first format
-		invalid[ 1 ].WriteInt( 2 ); // unsupported version
-		invalid[ 2 ].WriteInt( 1 );
+		invalid[ 1 ].WriteInt( 3 ); // unsupported version
+		invalid[ 2 ].WriteInt( 2 );
 		invalid[ 2 ].WriteString( "unselected" );
-		invalid[ 3 ].WriteInt( 1 ); // truncated before identity
+		invalid[ 3 ].WriteInt( 2 ); // truncated before identity
 		for ( const auto& snapshot : invalid ) {
 			GT_ASSERT( RejectsSettings( [ & ]() { settings.Deserialize( snapshot ); } ), "invalid settings accepted" );
 			GT_ASSERT( settings.Serialize().ToString() == before, "identity rejection mutated settings" );
@@ -1114,6 +1125,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			BackendFixture source, destination;
 			auto* state = source.GetGame()->GetState();
 			state->m_settings.global.SelectRuleset( id );
+			state->m_settings.PrepareRuleset( smac_rules_fixture::Source );
 			state->m_settings.global.game_name = "Ruleset roundtrip";
 			state->m_settings.global.map.size_x = 86;
 			types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
@@ -1122,6 +1134,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			decoded.Deserialize( packet.Serialize() );
 			auto* restored = destination.GetGame()->GetState();
 			restored->Deserialize( types::Buffer( decoded.data.str ) );
+			GT_ASSERT( std::string( id ) == "smac" ? smac_rules_fixture::Matches( restored->m_settings.global ) : !restored->m_settings.global.GetSmacBaseSquareRules(), "State/Packet lost host numeric rules" );
 			GT_ASSERT( restored->Serialize().ToString() == state->Serialize().ToString(), "state roundtrip changed settings or factions" );
 			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* script = destination.RunScript( GSE_CALL, "./GLSMAC_data/tests/_ruleset" );
@@ -1142,11 +1155,13 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			for ( const auto announced : { connection::Connection::GS_LOBBY, connection::Connection::GS_RUNNING } ) {
 				BackendFixture source;
 				source.GetGame()->GetState()->m_settings.global.SelectRuleset( id );
+				source.GetGame()->GetState()->m_settings.PrepareRuleset( smac_rules_fixture::Source );
 				types::Packet settings( types::Packet::PT_GLOBAL_SETTINGS );
 				settings.data.str = source.GetGame()->GetState()->Serialize().ToString();
 				const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 					auto* state = destination.GetGame()->GetState();
-					state->m_settings.global.ResetRuleset(); // return to menu before joining a different host
+					state->m_settings.local.network_role = game::backend::settings::LocalSettings::NR_CLIENT;
+					state->m_settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "client tried reading local alpha.txt" ); } );
 					if ( state->m_slots->GetSlot( 0 ).GetState() != slot::Slot::SS_PLAYER ) {
 						NEWV( host, Player, "Host", Player::PR_HOST, nullptr, "Transcend" );
 						state->AddPlayer( host );
@@ -1160,9 +1175,11 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 					} );
 					size_t callbacks = 0;
 					std::string callback_ruleset;
+					bool callback_rules_valid = false;
 					client->m_on_game_state_change = [ & ]( const connection::Connection::game_state_t actual ) {
 						callbacks++;
 						callback_ruleset = actual == announced ? state->m_settings.global.GetRulesetId() : "wrong state";
+						callback_rules_valid = std::string( id ) == "smac" ? smac_rules_fixture::Matches( state->m_settings.global ) : !state->m_settings.global.GetSmacBaseSquareRules();
 					};
 					size_t script_callbacks = 0;
 					std::string script_ruleset;
@@ -1181,6 +1198,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 					client->Receive( settings );
 					GT_ASSERT( callbacks == 1 && client->HasGlobalSettings(), "state callback not released after settings" );
 					GT_ASSERT( callback_ruleset == id, "callback observed stale or unset ruleset" );
+					GT_ASSERT( callback_rules_valid, "state callback ran without the host's numeric rules" );
 					GT_ASSERT( script_callbacks == 1 && script_ruleset == id, "GSE state event observed stale or unset ruleset" );
 					client->Receive( status );
 					GT_ASSERT( callbacks == 1 && script_callbacks == 1, "duplicate state notification" );
@@ -1188,6 +1206,63 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				} );
 				GT_ASSERT( error.empty(), "join packet dispatch failed: " + error );
 			}
+		}
+		GT_OK();
+	} );
+}
+
+static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
+		using namespace game::backend;
+		for ( const int scenario : { 0, 1, 2 } ) {
+			BackendFixture source, destination;
+			auto* host_state = source.GetGame()->GetState();
+			host_state->m_settings.global.SelectRuleset( "smac" );
+			host_state->m_settings.PrepareRuleset( smac_rules_fixture::Source );
+			types::Packet valid( types::Packet::PT_GLOBAL_SETTINGS );
+			valid.data.str = host_state->Serialize().ToString();
+			auto host_snapshot = host_state->Serialize();
+			host_snapshot.ReadString();
+			const auto factions = host_snapshot.ReadString();
+			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
+			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
+			if ( scenario == 2 ) { values[ 7 ] = 77; }
+			types::Buffer invalid_state;
+			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values ).ToString() );
+			invalid_state.WriteString( factions );
+			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
+			invalid.data.str = invalid_state.ToString();
+			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* state = destination.GetGame()->GetState();
+				state->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT;
+				state->m_settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "client read local file" ); } );
+				NEWV( host, Player, "Host", Player::PR_HOST, nullptr, "Transcend" );
+				state->AddPlayer( host );
+				state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+				auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+				state->SetConnection( client );
+				util::FinallyGuard cleanup( [ & ]() { client->ResetHandlers(); state->DetachConnection(); } );
+				size_t callbacks = 0, settings_updates = 0;
+				client->m_on_game_state_change = [ & ]( connection::Connection::game_state_t ) { ++callbacks; };
+				client->m_on_global_settings_update = [ & ]() { ++settings_updates; };
+				types::Packet status( types::Packet::PT_GAME_STATE );
+				status.udata.game_state.state = connection::Connection::GS_LOBBY;
+				client->Receive( status );
+				if ( scenario == 2 ) { client->Receive( valid ); } // Lock before the tampered update.
+				const auto before_map = state->m_settings.global.map.Serialize().ToString();
+				const auto before_name = state->m_settings.global.game_name;
+				const auto before_factions = state->GetFM()->Serialize().ToString();
+				const auto expected_updates = scenario == 2 ? 1 : 0;
+				destination.WithoutDisconnectIO( client, [ & ]() { client->Receive( invalid ); } );
+				GT_ASSERT( client->HasProtocolError(), "invalid host payload did not reach the protocol error path" );
+				GT_ASSERT( callbacks == expected_updates && settings_updates == expected_updates, "rejected host payload published callbacks" );
+				GT_ASSERT( client->HasGlobalSettings() == ( scenario == 2 ), "rejected host rules were accepted as initialized settings" );
+				GT_ASSERT( state->m_settings.global.map.Serialize().ToString() == before_map && state->m_settings.global.game_name == before_name, "rejected packet changed live global settings" );
+				GT_ASSERT( state->GetFM()->Serialize().ToString() == before_factions, "rejected rules packet reached faction publication" );
+				GT_ASSERT( scenario == 2 ? smac_rules_fixture::Matches( state->m_settings.global ) : state->m_settings.global.GetRulesetId() == "unselected" && !state->m_settings.global.GetSmacBaseSquareRules(), "rejected packet changed session identity or values" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "host rules packet rejection failed: " + error );
 		}
 		GT_OK();
 	} );
@@ -1415,6 +1490,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
 	AddRulesetTests( task );
+	AddHostRulesPacketTests( task );
 	AddPopReferenceTests( task );
 	AddPopulationRollbackTests( task );
 	task->AddTest(

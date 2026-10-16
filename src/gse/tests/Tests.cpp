@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "SmacHostRules.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -175,6 +176,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddBufferTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
+		tests::AddSmacHostRulesTests( task );
 	}
 	tests::AddScriptsTests( task );
 

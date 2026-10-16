@@ -88,6 +88,26 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
+// These owners may notify the renderer when destroyed. Detach them while
+// native roots are excluded from collection, then release them after the guard.
+struct Game::DetachedMapPresentation {
+	response_map_data_t* response = nullptr;
+	types::texture::Texture* texture = nullptr;
+	types::mesh::Render* mesh = nullptr;
+	types::mesh::Data* data = nullptr;
+	map::MapState* state = nullptr;
+	DetachedMapPresentation() = default;
+	DetachedMapPresentation( const DetachedMapPresentation& ) = delete;
+	DetachedMapPresentation& operator=( const DetachedMapPresentation& ) = delete;
+	~DetachedMapPresentation() {
+		if ( response ) { DELETE( response ); }
+		if ( texture ) { DELETE( texture ); }
+		if ( mesh ) { DELETE( mesh ); }
+		if ( data ) { DELETE( data ); }
+		if ( state ) { DELETE( state ); }
+	}
+};
+
 Game::Game()
 	: gse::GCWrappable( nullptr ) {}
 
@@ -348,32 +368,28 @@ void Game::Stop() {
 		if ( m_active_admission ) { CancelAdmission( m_active_admission ); }
 	}
 
-	if ( m_state ) {
-	   m_state->RetireGameCallbacks();
-	   m_state = nullptr;
-	}
-
+	// Preserve Stop's original no-transport-work contract: Network may already
+	// be stopping. The borrowed Space survives State unpublication below.
+	WithNativeRetirement( [ this ]() {
+		if ( m_state ) { m_state->RetireGameCallbacks(); m_state = nullptr; }
+	} );
 	ResetGame();
-
-	m_tm = nullptr;
-	m_rm = nullptr;
-	m_um = nullptr;
-	m_bm = nullptr;
-	m_am = nullptr;
-
+	RetireOldMap();
+	WithNativeRetirement( [ this ]() {
+		DELETE( m_random );
+		m_random = nullptr;
+	} );
 	DELETE( m_pending_frontend_requests );
 	m_pending_frontend_requests = nullptr;
 
-	DELETE( m_random );
-	m_random = nullptr;
-
 	MTModule::Stop();
-	{
+	WithNativeRetirement( [ this ]() {
 		std::lock_guard guard( m_admission_mutex );
 		m_admissions.clear();
 		m_failed_admission.reset();
 		m_failed_admission_error.clear();
-	}
+	} );
+	m_world_space = nullptr;
 }
 
 void Game::Iterate() {
@@ -1002,6 +1018,9 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 
 	if ( m_map ) {
 		GC_REACHABLE( m_map );
+	}
+	if ( m_old_map ) {
+		GC_REACHABLE( m_old_map );
 	}
 
 	GC_DEBUG_BEGIN( "events" );
@@ -2062,11 +2081,7 @@ void Game::InitializeMap() {
 		m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
 		m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
-		if ( m_old_map ) {
-			MTModule::Log( "Destroying old map state" );
-			DELETE( m_old_map );
-			m_old_map = nullptr;
-		}
+		RetireOldMap();
 
 		// notify server of successful initialization
 		m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
@@ -2706,33 +2721,52 @@ std::optional< size_t > Game::ApplySnapshotTurn() {
 	return id;
 }
 
+void Game::WithNativeRetirement( const std::function< void() >& f ) {
+	if ( m_world_space ) { m_world_space->WithNativeMutation( f ); }
+	else {
+		if ( m_map || m_old_map ) { throw std::runtime_error( "Native world retirement has no owning Space" ); }
+		f(); // Before the first State is bound, no script wrappers can exist.
+	}
+}
+
+void Game::DetachMapPresentation( map::Map* map, response_map_data_t*& response, DetachedMapPresentation& detached ) {
+	detached.response = std::exchange( response, nullptr );
+	if ( !map ) { return; }
+	// The owning response may alias any subset of the Map presentation.
+	if ( detached.response ) {
+		if ( map->m_textures.terrain == detached.response->terrain_texture ) { map->m_textures.terrain = nullptr; }
+		if ( map->m_meshes.terrain == detached.response->terrain_mesh ) { map->m_meshes.terrain = nullptr; }
+		if ( map->m_meshes.terrain_data == detached.response->terrain_data_mesh ) { map->m_meshes.terrain_data = nullptr; }
+	}
+	detached.texture = std::exchange( map->m_textures.terrain, nullptr );
+	detached.mesh = std::exchange( map->m_meshes.terrain, nullptr );
+	detached.data = std::exchange( map->m_meshes.terrain_data, nullptr );
+}
+
+void Game::RetireMap( map::Map*& map, DetachedMapPresentation& detached ) {
+	if ( map ) {
+		detached.state = std::exchange( map->m_map_state, nullptr );
+		auto* retired = std::exchange( map, nullptr );
+		DELETE( retired ); // Actual Tile/Map wrapper invalidation stays protected.
+	}
+}
+
+void Game::RetireOldMap() {
+	if ( !m_old_map ) { return; }
+	MTModule::Log( "Destroying old map state" );
+	DetachedMapPresentation detached;
+	WithNativeRetirement( [ & ]() {
+		response_map_data_t* no_response = nullptr;
+		DetachMapPresentation( m_old_map, no_response, detached );
+		RetireMap( m_old_map, detached );
+	} );
+}
+
 void Game::ClearUntransferredMapData() {
-	// Until GET_MAP_DATA transfers ownership, the response envelope may
-	// alias the Map's presentation. Detach those aliases before its owning
-	// destructor runs, including a partially populated envelope.
-	if ( m_response_map_data ) {
-		if ( m_map ) {
-			if ( m_map->m_textures.terrain == m_response_map_data->terrain_texture ) { m_map->m_textures.terrain = nullptr; }
-			if ( m_map->m_meshes.terrain == m_response_map_data->terrain_mesh ) { m_map->m_meshes.terrain = nullptr; }
-			if ( m_map->m_meshes.terrain_data == m_response_map_data->terrain_data_mesh ) { m_map->m_meshes.terrain_data = nullptr; }
-		}
-		DELETE( m_response_map_data );
-		m_response_map_data = nullptr;
-	}
-	if ( m_map ) {
-		if ( m_map->m_textures.terrain ) {
-			DELETE( m_map->m_textures.terrain );
-			m_map->m_textures.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain ) {
-			DELETE( m_map->m_meshes.terrain );
-			m_map->m_meshes.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain_data ) {
-			DELETE( m_map->m_meshes.terrain_data );
-			m_map->m_meshes.terrain_data = nullptr;
-		}
-	}
+	// Called from the existing owner error checkpoint. Its accumulation owns
+	// exclusion; unlike foreign native reset it may already notify the renderer.
+	DetachedMapPresentation detached;
+	DetachMapPresentation( m_map, m_response_map_data, detached );
 }
 
 void Game::ResetGame() {
@@ -2740,70 +2774,78 @@ void Game::ResetGame() {
 		std::lock_guard guard( m_admission_mutex );
 		ASSERT( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running || m_owner_transition->thread == std::this_thread::get_id(), "native reset during owner initialization" );
 		if ( m_owner_transition && m_owner_transition->phase == OwnerTransition::Pending ) { m_owner_transition->phase = OwnerTransition::Cancelled; }
-		if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
-		m_active_admission.reset();
 	}
 	if ( m_state ) { m_state->RetireGameCallbacks(); }
-
-	m_pending_snapshot_random.reset();
-	DiscardSnapshotTurn();
-	ClearHandlers();
-
-	if ( m_game_state != GS_NONE ) {
-		// TODO: do something?
-		m_game_state = GS_NONE;
+	// The coordinator excludes native packet producers and executing owner
+	// transitions. Keep State/Connection published throughout this transport wait.
+	if ( m_state && m_state->m_connection ) {
+		m_state->m_connection->Disconnect();
+		m_state->m_connection->DrainEventRequest();
 	}
-	m_init_cancel = false;
-	m_player = nullptr;
-	m_slot_num = 0;
-	m_slot = nullptr;
-
-	{
-		std::lock_guard guard( m_events_waiting_for_responses_mutex );
-		m_events_waiting_for_responses.clear();
-	}
-	{
-		std::lock_guard guard( m_pending_event_responses_mutex );
-		m_pending_event_responses.clear();
-	}
-	{
-		std::lock_guard guard( m_pending_events_mutex );
-		m_pending_events.clear();
-	}
-	{
-		std::lock_guard guard( m_event_handlers_mutex );
-		m_event_handlers.clear();
-	}
-	m_next_event_id = 0;
-
-	m_tm = nullptr;
-	m_rm = nullptr;
-	m_um = nullptr;
-	m_bm = nullptr;
-	m_am = nullptr;
-
-	ClearUntransferredMapData();
-	if ( m_map ) {
-		MTModule::Log( "Resetting map" );
-		DELETE( m_map );
-		m_map = nullptr;
-	}
-
-	ASSERT( m_pending_frontend_requests, "pending events not set" );
-	m_pending_frontend_requests->clear();
-
-	m_current_turn.Reset();
-	m_is_turn_complete = false;
-	m_turn_status = turn::TS_PLEASE_WAIT;
-
-	if ( m_state ) {
-		// ui thread will reset state as needed
-		m_state->UnsetGame();
-		if ( m_state->m_connection ) {
-			m_state->m_connection->Disconnect();
-			m_state->m_connection->ResetHandlers();
+	if ( m_map ) { MTModule::Log( "Resetting map" ); }
+	DetachedMapPresentation detached;
+	WithNativeRetirement( [ & ]() {
+		{
+			std::lock_guard guard( m_admission_mutex );
+			if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
+			m_active_admission.reset();
 		}
-	}
+
+		m_pending_snapshot_random.reset();
+		DiscardSnapshotTurn();
+		ClearHandlers();
+
+		if ( m_game_state != GS_NONE ) {
+			// TODO: do something?
+			m_game_state = GS_NONE;
+		}
+		m_init_cancel = false;
+		m_player = nullptr;
+		m_slot_num = 0;
+		m_slot = nullptr;
+
+		{
+			std::lock_guard guard( m_events_waiting_for_responses_mutex );
+			m_events_waiting_for_responses.clear();
+		}
+		{
+			std::lock_guard guard( m_pending_event_responses_mutex );
+			m_pending_event_responses.clear();
+		}
+		{
+			std::lock_guard guard( m_pending_events_mutex );
+			m_pending_events.clear();
+		}
+		{
+			std::lock_guard guard( m_event_handlers_mutex );
+			m_event_handlers.clear();
+		}
+		m_next_event_id = 0;
+
+		m_tm = nullptr;
+		m_rm = nullptr;
+		m_um = nullptr;
+		m_bm = nullptr;
+		m_am = nullptr;
+
+		DetachMapPresentation( m_map, m_response_map_data, detached );
+		RetireMap( m_map, detached );
+
+		ASSERT( m_pending_frontend_requests, "pending events not set" );
+		m_pending_frontend_requests->clear();
+
+		m_current_turn.Reset();
+		m_is_turn_complete = false;
+		m_turn_status = turn::TS_PLEASE_WAIT;
+
+		if ( m_state ) {
+			// ui thread will reset state as needed
+			m_state->UnsetGame();
+			if ( m_state->m_connection ) {
+				m_state->m_connection->ResetHandlers();
+			}
+		}
+	} );
 }
 
 bool Game::IsLocalTurnComplete() const {
@@ -2842,6 +2884,10 @@ const std::string Game::GenerateEventId() {
 
 void Game::SetState( State* const state ) {
 	ASSERT( state, "state is null" );
+	if ( m_world_space && m_world_space != state->m_gc_space ) {
+		throw std::runtime_error( "Game cannot move native wrappers to another Space before Stop" );
+	}
+	m_world_space = state->m_gc_space;
 	if ( state != m_state ) {
 		ASSERT( !m_state, "game state already set" );
 		m_state = state;

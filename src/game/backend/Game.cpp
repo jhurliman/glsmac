@@ -47,6 +47,7 @@
 #include <limits>
 #include <exception>
 #include <utility>
+#include <algorithm>
 
 namespace game {
 namespace backend {

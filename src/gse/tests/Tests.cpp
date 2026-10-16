@@ -4,6 +4,7 @@
 #include "Buffer.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacResourceBonus.h"
+#include "SmacTileNutrients.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -94,6 +95,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddBufferTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );
+		tests::AddSmacTileNutrientTests( task );
 	}
 	tests::AddScriptsTests( task );
 

@@ -42,6 +42,7 @@ class Console;
 
 namespace gse::tests {
 class BackendFixture;
+class EngineShutdownFixture;
 }
 
 CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
@@ -67,6 +68,7 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 
 private:
 	friend class gse::tests::BackendFixture;
+	friend class gse::tests::EngineShutdownFixture;
 	// Own a script runtime for asset-free backend tests. This initializes only
 	// event dispatch: no singleton registration, bindings, main script, or UI.
 	explicit GLSMAC( gse::GSE* gse );

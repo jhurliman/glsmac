@@ -278,6 +278,86 @@ static void CheckNormalEngineShutdown() {
 	fixture.CheckStopped();
 }
 
+static void CheckEarlyModuleStop( const std::string& failure ) {
+	common::Thread thread( "EARLY_STOP" );
+	thread.SetIPS( 100000 );
+	LifecycleModule first, early, last;
+	std::vector< std::string > events;
+	first.on_start = [ & ]() { events.push_back( "first.start" ); };
+	early.on_start = [ & ]() {
+		events.push_back( "early.start" );
+		if ( failure == "early_start" ) { throw std::runtime_error( "primary" ); }
+	};
+	last.on_start = [ & ]() {
+		events.push_back( "last.start" );
+		if ( failure == "late_start" ) { throw std::runtime_error( "primary" ); }
+	};
+	first.on_stop = [ & ]() { events.push_back( "first.stop" ); };
+	early.on_stop = [ & ]() {
+		events.push_back( "early.stop" );
+		if ( failure == "early_stop" || failure == "iterate_and_stop" ) {
+			throw std::runtime_error( failure == "early_stop" ? "primary" : "secondary" );
+		}
+	};
+	last.on_stop = [ & ]() { events.push_back( "last.stop" ); };
+	last.on_iterate = [ & ]() {
+		if ( failure == "iterate_and_stop" ) { throw std::runtime_error( "primary" ); }
+	};
+	thread.AddModule( &first ); thread.AddModule( &early ); thread.AddModule( &last );
+	thread.StopModuleFirst( &early );
+	bool caught = false;
+	try { thread.RunOnCurrentThread( [ & ]() { return failure != "iterate_and_stop"; } ); }
+	catch ( const std::runtime_error& error ) {
+		caught = true;
+		Require( std::string( error.what() ) == "primary", "early cleanup masked original failure" );
+	}
+	Require( caught == !failure.empty(), "early stop failure outcome changed" );
+	std::vector< std::string > expected{ "first.start", "early.start" };
+	if ( failure != "early_start" ) { expected.push_back( "last.start" ); expected.push_back( "early.stop" ); }
+	if ( failure != "early_start" && failure != "late_start" ) { expected.push_back( "last.stop" ); }
+	expected.push_back( "first.stop" );
+	Require( events == expected, "early module changed start order or stopped outside its completed lifetime" );
+	Require( first.stops == 1 && early.stops == ( failure == "early_start" ? 0u : 1u ) &&
+		last.stops == ( failure == "early_start" || failure == "late_start" ? 0u : 1u ), "early module stopped twice or cleanup omitted a module" );
+}
+
+static void CheckEarlyModuleConfiguration() {
+	common::Thread thread( "EARLY_STOP_CONFIG" );
+	thread.SetIPS( 100000 );
+	LifecycleModule first, second;
+	const auto rejects = [ & ]( common::Module* module ) {
+		bool caught = false;
+		try { thread.StopModuleFirst( module ); } catch ( const std::runtime_error& ) { caught = true; }
+		Require( caught, "invalid early-stop nomination was accepted" );
+	};
+	rejects( nullptr ); rejects( &first );
+	{
+		common::Thread duplicate( "DUPLICATE_EARLY_STOP" );
+		duplicate.AddModule( &first ); duplicate.AddModule( &first );
+		bool caught = false;
+		try { duplicate.StopModuleFirst( &first ); } catch ( const std::runtime_error& ) { caught = true; }
+		Require( caught, "duplicate early-stop module registration was accepted" );
+	}
+	thread.AddModule( &first ); thread.AddModule( &second );
+	thread.StopModuleFirst( &first ); thread.StopModuleFirst( &first );
+	rejects( &second );
+	thread.RunOnCurrentThread( []() { return true; } );
+	rejects( &first );
+}
+
+static void CheckSingleThreadEngineStopOrder() {
+	EngineFixture fixture( true );
+	std::vector< std::string > events;
+	fixture.game.on_start = [ & ]() { events.push_back( "game.start" ); };
+	fixture.scheduler.on_start = [ & ]() { events.push_back( "scheduler.start" ); };
+	fixture.game.on_stop = [ & ]() { events.push_back( "game.stop" ); };
+	fixture.scheduler.on_stop = [ & ]() { events.push_back( "scheduler.stop" ); };
+	fixture.input.on_iterate = [ & ]() { fixture.engine->ShutDown(); };
+	Require( fixture.engine->Run() == EXIT_SUCCESS, "single-thread shutdown failed" );
+	Require( events == std::vector< std::string >{ "game.start", "scheduler.start", "game.stop", "scheduler.stop" }, "backend did not stop before scheduler-owned runtime" );
+	fixture.CheckStopped();
+}
+
 static void CheckWorkerJoinAfterCleanup() {
 	EngineFixture fixture;
 	common::Thread worker( "JOIN_BOUNDARY" );
@@ -326,7 +406,14 @@ int main() {
 		CheckPartialWorkerLaunch();
 		CheckNormalEngineShutdown();
 		CheckWorkerJoinAfterCleanup();
-		std::cout << "17 lifecycle regression cases passed\n";
+		CheckEarlyModuleStop( "" );
+		CheckEarlyModuleStop( "early_start" );
+		CheckEarlyModuleStop( "late_start" );
+		CheckEarlyModuleStop( "early_stop" );
+		CheckEarlyModuleStop( "iterate_and_stop" );
+		CheckEarlyModuleConfiguration();
+		CheckSingleThreadEngineStopOrder();
+		std::cout << "24 lifecycle regression cases passed\n";
 		return EXIT_SUCCESS;
 	}
 	catch ( const std::exception& error ) {

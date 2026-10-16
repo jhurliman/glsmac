@@ -63,6 +63,7 @@ public:
 	Pop* const AddPop( const Pop& pop );
 	void RemovePop( const size_t pop_id );
 	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
+	void SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, map::tile::Tile* tile );
 	int64_t GetAccumulatedNutrients() const;
 	void SetAccumulatedNutrients( const int64_t nutrients );
 
@@ -84,8 +85,6 @@ public:
 
 private:
 	Game* const m_game;
-
-	std::unordered_set< map::tile::Tile* > m_worked_tiles = {};
 
 	size_t m_next_pop_id = 1;
 	int64_t m_accumulated_nutrients = 0;

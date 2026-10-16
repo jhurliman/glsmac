@@ -241,9 +241,14 @@ The next implementation slices are:
    checks. PR #74 restores turn metadata without replaying gameplay hooks and
    initializes the minimap from cached status. Integration `519a0bd7` passes
    Linux sanitizers; a first Windows timeout and subsequent passing retry are
-   retained in the validation record. Next persist player completion at the
-   world-snapshot boundary, with canonical roster/lifetime checks. Canonical
-   faction links and future host/client lockstep remain separate contracts.
+   retained in the validation record. PR #77 now persists player completion at
+   the world-snapshot boundary, with canonical roster/lifetime checks and
+   owner-thread rejection of a changed roster. Its combined integration
+   `a16fa30b` passes Windows and leak-enabled Linux CTest 8/8. The focused
+   publication initially exposed a missing Boolean-decoder prerequisite (#24);
+   that commit is included and all five focused CTests now pass. Canonical
+   player/faction links and safe retirement of queued session work are next;
+   full saves, event catch-up and future host/client lockstep remain separate.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
    defense, reactor, chassis and counted predefined-design parsers are queued
    in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact
@@ -251,7 +256,7 @@ The next implementation slices are:
    ruleset references. Reactor selection, ability-bit mapping, conventional
    design state, CVR rendering and gameplay commands remain separate work.
    The local asset inventory contains 140 CVR containers. Merged PR #73 reads
-   their observed envelopes. PR #75 decodes owned scene/object/frame records;
+   their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
    all installed files pass both probes. Next verify geometry, model composition
    and presentation. The existing native
    sprite sheet is not conventional-unit art; source model names alone do not
@@ -279,8 +284,8 @@ and boolean operand evaluation have also landed through that gate. The remaining
 stack continues through the same review and validation process.
 
 The checkpoint work has reviewed RNG-continuation and side-effect-free turn
-restoration candidates. Persisted completion, canonical player/faction links
-and turn checksums remain. The current
+restoration candidates, with persisted completion now submitted in #77.
+Canonical player/faction links and turn checksums remain. The current
 world-download path is not a disk-save or deterministic replay implementation.
 Production still lacks authoritative current-item/mineral/baseline state, and
 its interface contains placeholder progress. Complete these dependencies in

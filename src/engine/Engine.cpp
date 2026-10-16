@@ -236,11 +236,14 @@ int Engine::Run() {
 		}
 	}
 
-	return result;
+	return result == EXIT_SUCCESS ? m_exit_code.load() : result;
 }
 
-void Engine::ShutDown() {
-
+void Engine::ShutDown( const int exit_code ) {
+	// A later successful shutdown request must not hide a failure.
+	if ( exit_code != EXIT_SUCCESS ) {
+		m_exit_code = exit_code;
+	}
 	m_is_shutting_down = true;
 }
 

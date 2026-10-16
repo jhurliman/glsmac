@@ -167,9 +167,30 @@ exist. A speculative list of hundreds of tickets is not an implementation plan.
   differences, save compatibility policy and installation instructions alongside
   the release artifacts.
 
+## Analysis and development-loop policy
+
+Prioritize short edit/build/test cycles. Static analysis should eliminate
+classes of correctness defects, not turn each gameplay PR into a style rewrite.
+Keep local checks explicit and fast, with a small reviewed set of blocking
+correctness checks in PR CI. Analyze changed translation units without hiding
+diagnostics by changed-line filtering; widen analysis when shared headers or
+build configuration change. Offer a separate full analysis command for broader
+investigation. Measure runtime and inspect actual findings before promoting a
+rule into the gate.
+
+Do not block on readability, naming, formatting, or wholesale modernization
+rules. Record existing findings and fix them in focused PRs; avoid suppressions
+that hide newly introduced defects. Any necessary suppression needs a narrow
+scope and an explanation. Compiler diagnostics, static analysis, sanitizer
+tests, and deterministic gameplay regressions cover different failure modes;
+none substitutes for the others. Keep platform-specific checks visible and
+do not describe an unsupported analyzer invocation as coverage.
+
 ## Current status
 
 M0 is in progress. No milestone is complete. The original installation was found
-on aleph0, but no original-game launch or gameplay observation has been verified
-by this effort yet. See PRs and their check results for implementation status;
-do not treat this document as proof that queued work has landed.
+on aleph0 and SMAX PRACX reached setup, but gameplay-rule observations remain
+blocked by the reproduced startup/base-creation crash described in the reference
+notes. Engine implementation continues independently. See PRs and their check
+results for implementation status; do not treat this document as proof that
+queued work has landed.

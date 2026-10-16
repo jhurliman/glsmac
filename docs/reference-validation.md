@@ -17,11 +17,14 @@ Read-only inventory on 2026-10-15 found:
 - `alpha.txt`, `alphax.txt`, manuals, patch readmes and a DDraw compatibility
   layer. Record their actual hashes with the inventory tool.
 
-This is an installation observation, not a successful launch test. The two
-executables in Planetary Pack can be used as separately labelled references if
-they run. Whether another GOG installation runs on Windows 11 is unresolved;
-do not infer that it is impossible from one failed launch. Preserve the working
-installation and its configuration while collecting evidence.
+The installation inventory alone does not establish successful execution.
+On 2026-10-15, SMAX PRACX reached the main menu and initial base-naming dialog,
+but crashed after accepting the name, including when launched through its
+installed shortcut. The user reports that shortcut has reached gameplay before.
+The plain SMAX executable crashed at startup in this attempt. See the
+[startup observation](reference-cases/SMAX-START-001.md) for exact conditions.
+These results do not establish general Windows 11 incompatibility or behavior
+of the separate SMAC executable. Preserve the installation while investigating.
 
 ## Capture an installation manifest
 

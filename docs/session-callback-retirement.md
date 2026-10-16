@@ -27,8 +27,8 @@ leaves the queue retained until a later successful drain or Space teardown.
 Retiring that session makes a later drain skip its body and perform cleanup.
 
 The migrated producers are Game initialization/start, turn/status/message,
-event processing and responses, world download completion and snapshot-failure
-notification; Client/Server game-event ingress; animation completion; and the
+event processing and responses, world download completion;
+Client/Server game-event ingress; animation completion; and the
 TileManager's deferred lock-request batch. Animation IDs and tile-lock batches
 are copied before their request storage leaves scope. Packet delivery also
 checks that its captured connection remains State's current connection.
@@ -110,6 +110,21 @@ build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^test session' --memoryd
 
 Normal `--gse-tests` also includes these cases. Reset tests themselves own GC
 exclusion; they do not deliberately race native Map deletion with collection.
+
+## Focused publication and integration validation
+
+The focused publication is based on loader progress PR78 and includes the
+existing producers above without depending on the held V3 completion PR77.
+At `ab9e5413194ab4f38c81667646836dd72fafcbfb`, Linux Debug build and CTest passed
+5/5 in 21.33 seconds. The fixture carries minimal tile-manager/player setup;
+later yield and turn restoration features are not prerequisites.
+
+Integration at `078a72fbd0265c8d709d646d5823cc842ed849d5` additionally migrates
+V3 snapshot-failure notification, which remains part of held PR77. Windows
+CTest passed 8/8 in 53.00 seconds and Linux ASan/UBSan/LSan CTest passed 8/8 in
+44.39 seconds, with leak detection enabled. Fresh LLVM15 correctness analysis
+covered 297 production translation units in 61.53 seconds with zero failures;
+the Windows-only network implementation remains outside the Linux scan.
 
 ## Initial implementation validation
 

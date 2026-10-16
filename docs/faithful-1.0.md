@@ -282,8 +282,12 @@ The next implementation slices are:
    design state, CVR rendering and gameplay commands remain separate work.
    The local asset inventory contains 140 CVR containers. Merged PR #73 reads
    their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
-   all installed files pass both probes. Next verify geometry, model composition
-   and presentation. The existing native
+   all installed files pass both probes. PR #83 decodes owned raw geometry
+   records for 438 payloads and explicitly rejects two unsupported variants;
+   all seven focused Windows tracking tests pass. Model composition and
+   rendering semantics remain unverified. The next steps are in the
+   [pinned rendering plan](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md).
+   The existing native
    sprite sheet is not conventional-unit art; source model names alone do not
    establish design-to-model mappings.
    Do not turn the current native-unit movement assumptions into standard-unit

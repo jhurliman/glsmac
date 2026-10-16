@@ -214,25 +214,36 @@ components; the live resource callback has not been switched to them.
 
 The [follow-up validation record](validation/rulesets-yields-2026-10-16.md)
 pins the combined source, successful ruleset and signed-yield Windows smoke
-tests, later headless checks, and unresolved memory-tracked GUI failures.
+tests, later headless checks, and the tracked GUI failures and subsequent
+functional passes. The latest tracked two-world run exited normally but still
+reported retained mesh and texture allocations; it is not a leak-clean result.
 Focused UUID and mesh allocation checks add approximately one second each
 locally to CTest. Full allocation-tracked suites and interactive debugging
 remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Finish the tracked Windows startup/base-screen/shutdown sequence. The
-   constructor-registration and consuming-mesh repairs have focused negative
-   controls and clean reviews; a later run identified stale widget-actor
-   tracking. Exercise actual widget cleanup before repeating the GUI sequence.
-2. Bind world-download snapshots to the accepted immutable profile before map
-   allocation. Exercise mismatch, truncation and late-join ordering through the
-   real reader. Host-only loading, freezing and GlobalSettings synchronization
-   are implemented in PR #44; joining clients accept host values and SMAX
-   carries no SMAC defaults. This does not complete disk savegames.
-3. Preserve faction flags and ordered land/water base-name lists in versioned
-   snapshots, with staged record validation and real round-trip tests. Keep
-   faction identity/ownership and whole-state rollback as separate work.
+1. Close the remaining tracked renderer ownership leaks. The detached UI repair
+   removes actors and widget textures during root destruction; investigate the
+   remaining mesh-copy and framebuffer-texture owners, add focused owner tests,
+   and repeat the real two-world sequence. Move the focused UI test out of its
+   script accumulation to eliminate its separately identified lock inversion.
+2. Build conventional-unit content from explicit component tables. Unit snapshot
+   restore now resolves manager-owned definitions and skips spawn hooks/RNG.
+   Start with the weapon/package table, then resolve chassis, defense, reactor
+   and predefined designs before CVR rendering and gameplay commands. Preserve
+   the separate SMAC/SMAX tables and do not invent reactor or cost defaults.
+3. Complete verified tile resource components before live activation. Resource
+   bonus, nutrient and mineral calculators have original-routine comparisons;
+   energy and authoritative terrain/faction/technology/event adapters remain.
+   Keep each calculator and adapter in its own reviewed, testable slice.
+
+World downloads are now bound to the frozen host profile before map allocation,
+and faction snapshots preserve flags and ordered land/water names. Those
+changes and canonical unit snapshots are queued in PRs #47, #48 and #53;
+they do not complete disk savegames, whole-state rollback or network convergence.
+The native test exit-code gate landed in PR #3 after current-head cross-platform
+checks and Codex review. The remaining stack continues through that same gate.
 
 Live center yields follow only after the adapter can supply authoritative
 economy, facilities, terrain/bonus, faction and phase-specific event inputs.

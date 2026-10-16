@@ -97,6 +97,17 @@ for sanitizer startup; this does not change the repository toolchain. LLVM
 reported no failures in 11.86 seconds. These are local measurements, not hosted
 or cross-platform runtime guarantees.
 
+The focused publication at
+[`8cb32997`](https://github.com/jhurliman/glsmac/commit/8cb32997)
+passes Linux CTest 5/5 in 22.28 seconds. The broader integration at
+[`8392f67aed7a331cef6c978a7e99abd6c89b580d`](https://github.com/jhurliman/glsmac/commit/8392f67aed7a331cef6c978a7e99abd6c89b580d)
+passes Windows CTest 8/8 in 50.48 seconds and a fresh full-scope LLVM 15.0.7
+scan of all 298 Linux production translation units in 62.67 seconds with zero
+failures. The Windows-only network implementation is outside that analyzer
+scope. The focused publication excludes the separately held world-completion
+and map-packet-deferral changes; its test-context adaptation preserves the
+request-admission cases without importing those unrelated tests.
+
 Five isolated source-copy negative controls each failed their targeted test:
 omitting completed-response retirement, skipping execution-time ticket checks,
 using only State pointer identity, ignoring the controller cutoff, and canceling

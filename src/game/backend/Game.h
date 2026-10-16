@@ -440,6 +440,7 @@ private:
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );
 	void ResetGame();
+	void ClearUntransferredMapData();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;

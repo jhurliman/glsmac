@@ -191,9 +191,13 @@ do not describe an unsupported analyzer invocation as coverage.
 M0 and the prerequisites for M1 are in progress. No milestone is complete, and
 the implementation PRs remain unmerged. The integration checkout now exercises
 real backend entities, event serialization, base snapshots and their script
-bindings without the original assets. Linux and Windows CTest pass; selected
-correctness analysis scans the complete production codebase without findings.
-These checks establish infrastructure behavior, not gameplay fidelity.
+bindings without the original assets. On October 16, 2026, integration commit
+[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
+passed Linux and Windows CTest, and the selected correctness scan of all 284
+production translation units reported zero failures. Commands, timings and the
+separate sanitizer retry are in the [validation record](validation/windows-smoke-2026-10-16.md#headless-checks).
+These dated checks establish infrastructure behavior at that commit, not
+gameplay fidelity or the status of later changes.
 
 The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
 rendered two quickstart worlds in one process, opened a base screen, advanced a

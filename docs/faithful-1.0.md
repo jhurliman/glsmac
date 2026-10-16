@@ -188,7 +188,7 @@ do not describe an unsupported analyzer invocation as coverage.
 
 The focused LLVM 15 correctness gate has landed on main through PR #16;
 readability and modernization checks remain disabled. The explicit single-file
-runner is under review in #55. The analyzer still honors explicit NOLINT
+runner has landed in #55. The analyzer still honors explicit NOLINT
 directives, so those require review; there is no blanket suppression baseline.
 Shared-header changes continue to trigger a full production scan rather than
 using the single-file option to narrow the required check.
@@ -267,8 +267,15 @@ The next implementation slices are:
    The separate loader repair in #78 prevents reset from deleting a Map inside
    its progress callback. It passes Windows CTest 8/8 and focused Linux CTest
    5/5; a 297-unit correctness scan is clean. It does not fix those concurrent
-   snapshot races. Session callback retirement and deferring network mutation
-   during native map initialization are the next prerequisites.
+   snapshot races. PR #79 pairs decoded Player allocation with State's tracked
+   deletion. PR #80 defers connection events until native map processing returns.
+   PR #81 captures callback identity before extraction and retires old queued
+   work across reset, including event root handoff and copied animation IDs.
+   Integration `078a72fb` passes Windows and leak-enabled Linux CTest 8/8 and
+   a fresh 297-unit correctness scan. Executing-callback exclusion, explicit
+   MT request admission, and native reset/collector coordination remain open;
+   queued cancellation alone is insufficient. The script-entry guard blocks
+   active/pending-reset run reentry, with rendered restart validation still open.
    See the [roster ownership plan](player-roster-ownership-plan.md) for the
    canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,

@@ -653,3 +653,50 @@ ignored `out/validation-loader/` directory.
 Submitted as #78. This does not establish generic GC exclusion, retire old
 session requests, serialize concurrent snapshot initialization, or fix nested
 network dispatch. No rendered initialization/cancellation smoke is claimed.
+
+## Map packets and queued session identity
+
+Integration `20a643a35ac1163a30b20604350fcc4627863d4c` pairs decoded Player
+allocation with State's tracked teardown (#79) and removes State::Iterate
+from the synchronous map loop (#80). Actual Network queue/Client decoding
+regressions show roster replacement and disconnect wait until the map pass
+returns, while restricted progress polling remains available. Both old-pump
+negative cases fail. Windows CTest passed 8/8 in 79.27 seconds; the focused
+Slot publication `7340b20122164246707f904821a5f8b4dd270db4` passed Linux CTest
+5/5 in 21.37 seconds, and map publication
+`186ab971ef74c84c2ce100905fad267a5bcaf801` passed 5/5 in 22.42 seconds.
+
+Integration `078a72fbd0265c8d709d646d5823cc842ed849d5` additionally retires
+queued callbacks with identities captured before staging (#81) and guards
+script run reentry. Windows CTest passed 8/8 in 53.00 seconds; Linux
+ASan/UBSan/LSan passed 8/8 in 44.39 seconds with leak detection enabled. Fresh
+LLVM15 analysis covered 297 production translation units in 61.53 seconds
+with zero failures. Linux analysis excludes the Windows network implementation.
+The focused session publication `ab9e5413194ab4f38c81667646836dd72fafcbfb`
+passed Linux CTest 5/5 in 21.33 seconds without depending on held PR77.
+The script-entry publication `3299f7d534d5831c08f9d5ede9c514451191ff14`
+passed 5/5 in 22.34 seconds. Separate source-slice positive/negative controls
+are recorded in the session callback and script run documents.
+
+The four map/session revisions above are retained on immutable branches
+`codex/validation-20261016-map-packets`, `-map-publication`,
+`-session-identity`, and `-session-publication`, respectively. Windows logs use
+`out/session-map-windows-` and `out/session-identity-windows-`; Linux combined
+logs use `/home/jhurliman/src/glsmac-gc-audit/session-identity-`; focused logs
+use `/home/jhurliman/src/glsmac-unit-publication/` with `decoded-player-`,
+`map-packet-`, `session-identity-`, and `run-entry-` prefixes.
+
+Rendered quickstart at `078a72fb` reached a SMAC map in the window titled
+`GLSMAC v0.3-???????-debug`, showing Sparta Command and mission year 2101.
+The title's version text does not identify the source; the explicit build pin
+above does. The UI helper timed out on the Menu click and remained busy after
+its documented recovery, so restart and clean shutdown were not verified.
+The controlled test process was terminated (exit -1). Its logs are
+`out/session-identity-ui-visible-stdout.log` and `-stderr.log`; stderr was
+empty before termination. Two harness attempts remain separate evidence:
+the missing-ruleset command correctly exited 1, and a hidden-window launch
+exposed no targetable window and was terminated. Neither is a game-crash or
+successful shutdown result. The rendered restart gate remains open.
+
+None of these checks establishes executing-callback/native-reset exclusion,
+safe stale MT request admission, or the held PR77 concurrency fixes.

@@ -68,6 +68,7 @@
 #include <atomic>
 #include <new>
 #include <chrono>
+#include <future>
 #include <fstream>
 #include <condition_variable>
 
@@ -143,6 +144,130 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+	std::string CheckFactionReplacement( const bool native_packet, const bool malformed ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} gate;
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			std::atomic< bool > retired{ false };
+			void NotifyDependencyDestruction( const Wrappable* ) override { retired = true; }
+		} observer;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings ) : connection::Client( space, settings ) { m_game_state = GS_LOBBY; }
+			void Receive( const types::Packet& packet ) {
+				network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event );
+			}
+			bool HasProtocolError() const { return m_disconnect_reason == "Network protocol error"; }
+		};
+		auto* const old = m_state->GetFM()->Get( "GAIANS" );
+		Value* wrapper = nullptr; Value* color_wrapper = nullptr;
+		Client* client = nullptr;
+		bool rooted = false, observing = false;
+		std::thread collector, receiver, notification_collector;
+		std::exception_ptr collect_error, receive_error, notification_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::atomic< bool > started{ false };
+		std::promise< void > notification_done; auto notification_future = notification_done.get_future();
+		bool notification_collected = false;
+		size_t notifications = 0;
+		util::FinallyGuard cleanup( [ & ]() {
+			gate.Release();
+			if ( receiver.joinable() ) { receiver.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			if ( notification_collector.joinable() ) { notification_collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( observing && !observer.retired ) { old->Undepend( &observer ); }
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( client ) { client->ResetHandlers(); m_state->DetachConnection(); }
+			} );
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			gate.Enter();
+		};
+		types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEWV( host, Player, "Host", Player::PR_SINGLE, nullptr, "" );
+			m_state->AddPlayer( host ); m_state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+			m_state->m_settings.global.SelectRuleset( "smax" );
+			wrapper = old->Wrap( GSE_CALL ); color_wrapper = old->m_colors.text.Wrap( GSE_CALL );
+			ctx->CreateConst( "retired_faction", wrapper, si, ep ); ctx->CreateConst( "retired_faction_color", color_wrapper, si, ep );
+			old->Depend( &observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			client = new Client( gc_space, &m_state->m_settings.local ); m_state->SetConnection( client );
+			client->m_on_global_settings_update = [ & ]() {
+				++notifications;
+				if ( native_packet ) {
+					// This callback must stay outside the native replacement guard.
+					// The timeout records failure; joining happens only after it returns.
+					notification_collector = std::thread( [ & ]() {
+						try { g_engine->GetGC()->Iterate(); } catch ( ... ) { notification_error = std::current_exception(); }
+						notification_done.set_value();
+					} );
+					notification_collected = notification_future.wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready;
+				}
+			};
+			types::Buffer state, factions;
+			state.WriteString( m_state->m_settings.global.Serialize().ToString() );
+			faction::Faction first( "FIRST", "First complete faction" );
+			factions.WriteInt( malformed ? 2 : 1 ); factions.WriteString( first.m_id ); factions.WriteString( first.Serialize().ToString() );
+			if ( malformed ) { factions.WriteString( "BROKEN" ); factions.WriteString( "invalid framed faction" ); }
+			state.WriteString( factions.ToString() ); packet.data.str = state.ToString(); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "faction setup: " + setup );
+		bool retired_during_collect = false;
+		if ( native_packet ) {
+			collector = std::thread( [ & ]() {
+				{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+				try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+			} );
+			GT_ASSERT( gate.Wait(), "collector did not reach faction retirement barrier" );
+			receiver = std::thread( [ & ]() {
+				started = true;
+				try { WithoutDisconnectIO( client, [ & ]() { client->Receive( packet ); } ); }
+				catch ( ... ) { receive_error = std::current_exception(); }
+			} );
+			const auto start_deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 2 );
+			while ( !started && std::chrono::steady_clock::now() < start_deadline ) { std::this_thread::yield(); }
+			GT_ASSERT( started, "native packet receiver did not start" );
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !observer.retired && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			retired_during_collect = observer.retired;
+			gate.Release(); receiver.join(); collector.join();
+			if ( notification_collector.joinable() ) { notification_collector.join(); }
+			if ( receive_error ) { std::rethrow_exception( receive_error ); }
+			if ( collect_error ) { std::rethrow_exception( collect_error ); }
+			if ( notification_error ) { std::rethrow_exception( notification_error ); }
+		}
+		else {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				WithoutDisconnectIO( client, [ & ]() { client->Receive( packet ); } );
+				GT_ASSERT( gc_space->IsAccumulating(), "nested replacement lost owner accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested replacement: " + nested );
+		}
+		ProcessAccumulations();
+		GT_ASSERT( observer.retired && wrapper->type == VT_UNDEFINED && color_wrapper->type == VT_OBJECT, "replacement did not invalidate the linked faction or preserve its detached color value" );
+		GT_ASSERT( !m_state->GetFM()->Get( "GAIANS" ) && m_state->GetFM()->GetAll().size() == 1 && m_state->GetFM()->Get( "FIRST" ),
+			"replacement changed existing clear-first/per-complete-record behavior" );
+		GT_ASSERT( client->HasProtocolError() == malformed && notifications == ( malformed ? 0 : 1 ), "packet result/notification changed on decode failure" );
+		GT_ASSERT( !native_packet || malformed || notification_collected, "settings notification ran while native replacement still excluded collection" );
+		GT_ASSERT( !retired_during_collect, "faction retirement crossed an active collection" );
+		g_engine->GetGC()->Iterate();
+		GT_OK();
+	}
+
 	std::string CheckMapPublication( const bool prepare ) {
 		using namespace game::backend;
 		struct Gate {
@@ -3370,6 +3495,14 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	for ( const bool native : { false, true } ) {
+		for ( const bool malformed : { false, true } ) {
+			task->AddTest( "faction replacement excludes collection native " + std::to_string( native ) + " malformed " + std::to_string( malformed ), GT( native, malformed ) {
+				BackendFixture fixture; return fixture.CheckFactionReplacement( native, malformed );
+			} );
+		}
+	}
+
 	for ( const int mode : { 1, 2 } ) {
 		task->AddTest( "map publication actual native file acquisition " + std::to_string( mode ), GT( mode ) {
 			const auto error = BackendFixture::CheckMapAcquisition( mode ); GT_ASSERT( error.empty(), "acquisition: " + error ); GT_OK();

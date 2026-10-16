@@ -10,10 +10,12 @@ The successful interactive runs used
 [`314bdc4c`](https://github.com/jhurliman/glsmac/commit/314bdc4c81cf8fde22cab2b855302163fa8a592f),
 published on the immutable
 [`codex/validation-20261016-ui`](https://github.com/jhurliman/glsmac/tree/codex/validation-20261016-ui)
-branch. Later checks below name their own commits. Those commits are ancestors
-of the immutable
+branch. The subsequent checks through `4de263fc` are retained as ancestors of
+the immutable
 [`codex/validation-20261016-followup`](https://github.com/jhurliman/glsmac/tree/codex/validation-20261016-followup)
-branch at `4de263fc548387dec7b0aa5ad04fba300cb648a4`.
+branch at `4de263fc548387dec7b0aa5ad04fba300cb648a4`. Checks after that revision
+use the separate evidence pins identified below; they are not contained in this
+older follow-up branch.
 
 Short labels below resolve to these exact source revisions:
 

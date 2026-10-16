@@ -12,6 +12,7 @@
 #include "SmacTileEnergy.h"
 #include "SmacRulesTXTLoader.h"
 #include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
 #include "GSE.h"
@@ -60,6 +61,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		tests::AddValueTests( task );
 		task->AddTest(
 			"test if tests work",

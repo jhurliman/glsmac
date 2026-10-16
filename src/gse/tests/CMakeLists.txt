@@ -15,6 +15,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacResourceBonus.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
 	${PWD}/UnitRulesTXTLoader.cpp
+	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/GSE.cpp

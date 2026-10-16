@@ -27,8 +27,9 @@ twenty-three records. Each record has ten columns:
 Although the source comment calls components indices and names an `ARMOR`
 list, the inspected records contain textual references. All 111 references
 across the 37 installed records match exact keys in the same rules file:
-the first chassis name, weapon short name and `#DEFENSES` short name. A future
-resolver must keep catalog identity and ownership explicit. This decoder
+the first chassis name, weapon short name and `#DEFENSES` short name. The separate
+[component resolver](unit-component-resolution.md) keeps catalog identity and
+ownership explicit. This decoder
 preserves the strings even if their referenced tables are absent. It does not
 case-fold names or remove apostrophes (`'Copter` and `Copter` differ between
 the inspected catalogs).
@@ -76,6 +77,6 @@ names, unresolved exact references, all documented plans, signed endpoints,
 variable-width ability strings, zero/mismatched/invalid counts, comments and
 each malformed column. A read-only Release probe checks both installed tables,
 the initial three records, ability widths and all component references. No
-original tables or assets are redistributed. Catalog resolution, reactor
-selection, calculated cost/carry, ability interpretation and live unit
-activation remain separate work.
+original tables or assets are redistributed. Catalog resolution is a separate
+API; reactor selection, calculated cost/carry, ability interpretation and live
+unit activation remain unimplemented by these metadata APIs.

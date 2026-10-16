@@ -2,6 +2,8 @@
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/WorldSnapshotRules.h"
 #include "GLSMAC.h"
+#include "engine/Engine.h"
+#include "gc/GC.h"
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -74,6 +76,7 @@ public:
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
+			m_state = state;
 			m_gse->AddRootObject( state );
 			state->SetGame( &m_game );
 			m_game.SetState( state );
@@ -140,6 +143,7 @@ public:
 	}
 
 	size_t PendingResponses() const { return m_game.m_pending_event_responses.size(); }
+	const std::vector< game::backend::event::Event* >& PendingEvents() const { return m_game.m_pending_events; }
 	void RebindSession() { m_state->UnsetGame(); m_state->SetGame( &m_game ); }
 	void ResetRequest() {
 		// This test owns the GC exclusion. The independent OP_RESET/collector
@@ -395,6 +399,7 @@ public:
 	}
 
 private:
+	game::backend::State* m_state = nullptr;
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
 	std::unique_ptr< game::backend::map::Map > m_map;

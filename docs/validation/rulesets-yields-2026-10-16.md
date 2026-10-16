@@ -1,8 +1,9 @@
 # Ruleset, resource and memory-debug checks — 2026-10-16
 
-These are GLSMAC integration checks on aleph0, not original-game comparisons
-or completion claims for either ruleset. Original assets were loaded locally
-from the purchased GOG Planetary Pack; none are included in the repository.
+These are GLSMAC integration checks on aleph0, with separately identified
+original-routine comparisons in later sections. Neither is a completion claim
+for either ruleset. Original assets were loaded locally from the purchased GOG
+Planetary Pack; none are included in the repository.
 
 ## Reconstructible source
 
@@ -808,6 +809,150 @@ the original timeout and passing retry remain separate evidence.
 
 PRs #20, #21, #22, #23, #24, #83 and #84 have now merged after their current
 heads passed the required review and checks. New and revised heads remain
-pending: GitHub Codex review reports an account quota limit from #85 onward.
-The local checks above do not waive that review gate or resolve #77's held
-concurrency findings.
+pending as detailed below. The local checks do not waive that review gate or
+resolve #77's held concurrency findings.
+
+## Reset publication and startup presentation ownership
+
+PR #88 is published at
+[`c05359e6ba3c6dfb82646e3821471cb0e5363d6a`](https://github.com/jhurliman/glsmac/commit/c05359e6ba3c6dfb82646e3821471cb0e5363d6a),
+retained on `codex/validation-20261016-lifecycle-publication`. Its
+[versioned controller contract](https://github.com/jhurliman/glsmac/blob/c05359e6ba3c6dfb82646e3821471cb0e5363d6a/docs/polled-reset-controller.md)
+distinguishes the original `b2ec36b8` source checks and combined `9663fcda`
+integration from the narrower publication stack. The callback-retirement
+prerequisite now includes its direct `<algorithm>` header after hosted MinGW
+and libstdc++ exposed reliance on a transitive include.
+
+PR #89 is published at
+[`c513707d8b7c73e1f6e51b8e5bb2fc5749c1d6a3`](https://github.com/jhurliman/glsmac/commit/c513707d8b7c73e1f6e51b8e5bb2fc5749c1d6a3).
+The backend detaches response-envelope aliases before releasing terrain texture,
+render mesh and data mesh. Failed initialization and reset release assets still
+owned by the backend; a completed transfer leaves ownership with the frontend
+or the unconsumed response. The
+[versioned ownership contract](https://github.com/jhurliman/glsmac/blob/c513707d8b7c73e1f6e51b8e5bb2fc5749c1d6a3/docs/startup-payload-ownership.md)
+records the six tracked cases and separates source implementation `62c816fa`
+from focused publication `7e5d7334` (Linux CTest 5/5 in 22.25 seconds).
+
+Combined payload integration
+[`cd2613d12fce4613ec6e13ab4d2f3b9e50586f07`](https://github.com/jhurliman/glsmac/commit/cd2613d12fce4613ec6e13ab4d2f3b9e50586f07),
+retained at `codex/validation-20261016-startup-payload`, passes Windows CTest
+8/8 in 50.84 seconds, Linux ASan/UBSan/LSan CTest 8/8 in 49.10 seconds, and a
+fresh full LLVM15 scan of 298 production translation units in 65.15 seconds
+with zero failures. Leak detection is enabled. Windows-only networking remains
+outside the Linux analysis. Logs use `out/startup-payload-windows-` and
+`/home/jhurliman/src/glsmac-gc-audit/startup-payload-`.
+
+These fixtures perform native reset within existing accumulation. They prove
+payload ownership, not native reset/collector exclusion or startup phase
+coordination. No newer native Mac or rendered-game result is inferred.
+
+## Actual Engine single-thread shutdown
+
+The source implementation is
+[`f586b523b8764152586987bb3638105f740191e9`](https://github.com/jhurliman/glsmac/commit/f586b523b8764152586987bb3638105f740191e9),
+retained at `codex/validation-20261016-engine-source`. Its
+[versioned regression and evidence](https://github.com/jhurliman/glsmac/blob/f586b523b8764152586987bb3638105f740191e9/docs/engine-shutdown-order.md)
+use real Engine, backend Game, scheduler, GC, GLSMAC, GSE and State with
+asset-free presentation services. Original single-thread cleanup destroyed
+State before Game::Stop; the copied original Engine fails the final harness's
+lifetime assertion while default mode passes. An isolated unchanged-Stop
+control triggers UBSan on the destroyed State. The fix stops the successfully
+started Game before scheduler teardown without changing Start/Iterate order.
+
+Combined integration
+[`2b7ca61c39e34e56965a13edade6fd63f57e7a30`](https://github.com/jhurliman/glsmac/commit/2b7ca61c39e34e56965a13edade6fd63f57e7a30),
+retained at `codex/validation-20261016-engine-shutdown`, passes Windows CTest
+8/8 in 63.50 seconds, Linux ASan/UBSan/LSan CTest 8/8 in 51.63 seconds, and
+the full 298-unit LLVM15 scan in 68.99 seconds with zero failures. The opt-in
+actual Engine runner passes default and single-thread modes with tracking and
+sanitizers, after exporting the existing build's compilation database. Its
+initial invocation failed the runner's missing-database precondition; that
+attempt is retained and is not a passing runtime test. The fast GCC sanitizer
+lifecycle harness passes all 24 cases.
+
+Integration logs use `out/engine-shutdown-windows-` and
+`/home/jhurliman/src/glsmac-gc-audit/engine-shutdown-`, including
+`engine-shutdown-actual.log` and `engine-shutdown-actual-retry.log`.
+Source-slice results and copied-code negative controls remain separately under
+`/home/jhurliman/src/glsmac-engine-shutdown-audit`. A narrower publication attempt
+at `35bdc9ca58f8dc344dbd28c21ed1fcc535bdec1a` failed actual Engine tracking on the
+older UUID allocation prerequisite; no passing actual-runtime result is claimed
+for it. PR #90 includes the unchanged UUID repair and its focused tracked
+regression. Publication `e48d050cc4c372ec916ddaedbe42aedfdf89add6` passes Linux
+CTest 6/6 in 23.34 seconds, GCC sanitizer lifecycle 24/24, and both actual Engine
+modes with tracking. Its documented head is
+[`7c3794a0fb685928aaa10c06d37e82066afe8768`](https://github.com/jhurliman/glsmac/commit/7c3794a0fb685928aaa10c06d37e82066afe8768).
+These publication checks do not claim the full sanitizer coverage of `2b7ca61c`.
+The later publication chain is retained at immutable branch
+`codex/validation-20261016-shutdown-publication`, pointing to
+[`ccd8561a0e428bc251bee1a8bcf8f02ca5f9d157`](https://github.com/jhurliman/glsmac/commit/ccd8561a0e428bc251bee1a8bcf8f02ca5f9d157).
+It retains the failed and passing publication revisions above after prerequisite
+merges moved the live PR heads again.
+
+This is bounded Engine shutdown evidence, not a rendered-world soak, native Mac
+close confirmation, or the independent executing-callback and collector reset
+guards. The user-confirmed native Mac remains pinned to `5cd78418`; restart
+latency and close are still unverified.
+
+## Original composition and owned CVR frame assembly
+
+PR #91 publishes bounded original composition evidence at
+[`1f572b450ea6e09c74412c515bb46c14d07872fa`](https://github.com/jhurliman/glsmac/commit/1f572b450ea6e09c74412c515bb46c14d07872fa).
+PR #92 adds the pure assembler at `c9e009d3ec294ce57b58afba9e9906b48b83d91b`
+and clarifies its arithmetic contract at
+[`0ead74e464fcc48156ac0dfc39ca797895d5b761`](https://github.com/jhurliman/glsmac/commit/0ead74e464fcc48156ac0dfc39ca797895d5b761).
+The [versioned assembly contract](https://github.com/jhurliman/glsmac/blob/0ead74e464fcc48156ac0dfc39ca797895d5b761/docs/cvr-frame-assembly.md)
+separates raw geometry ownership, explicit scene/frame selection and bounded
+location addition from model activation or rendering.
+
+The Release production reader/assembler matches **30 original-executed
+installed-input cases and all 1,755 records bitwise**. These are 18 direct cases
+and 12 reached through the original selector. The original report's other six
+positive cases use synthetic pre-existing prefixes or capacity inputs; native
+tests cover the corresponding policies separately. They are not six additional
+installed-file differential matches. Neither the original loader nor rasterizer
+is executed by this comparison, and no conventional unit is rendered.
+
+Combined integration
+[`6500014756dbf2365e0ece1a2bc342b13112832a`](https://github.com/jhurliman/glsmac/commit/6500014756dbf2365e0ece1a2bc342b13112832a),
+retained at `codex/validation-20261016-cvr-assembly`, passes Windows CTest 8/8
+in 61.47 seconds, Linux ASan/UBSan/LSan CTest 8/8 in 50.13 seconds, and a fresh
+full LLVM15 scan of 299 production translation units in 61.21 seconds with
+zero failures. This integration validation is separate from the original-routine
+comparison and does not extend the pinned native Mac result.
+
+## Review checkpoint
+
+The following are exact open heads observed during this update; merge-forward
+means prerequisite changes were merged into the PR branch, not that the PR
+itself landed:
+
+| PR | Head | Review boundary |
+| --- | --- | --- |
+| [#81](https://github.com/jhurliman/glsmac/pull/81) | `e8774b2f5640c8fb2f3f4ef423181401f53219a5` | Direct `<algorithm>` fix; replacement-head review pending |
+| [#82](https://github.com/jhurliman/glsmac/pull/82) | `4421cc971268d434eaa95270c2feba93b3b30b19` | Prerequisite merged forward; replacement-head review pending |
+| [#86](https://github.com/jhurliman/glsmac/pull/86) | `685f13768571d1528e57efbd1791948db8b41d75` | Missing callback-lock prerequisite added after hosted timeout; replacement-head checks and review pending |
+| [#87](https://github.com/jhurliman/glsmac/pull/87) | `05fccf546b00a74080f48a8d67549af9f7966c77` | Prerequisite merged forward; replacement-head review pending |
+| [#88](https://github.com/jhurliman/glsmac/pull/88) | `c05359e6ba3c6dfb82646e3821471cb0e5363d6a` | Review unavailable under reported quota limit |
+| [#89](https://github.com/jhurliman/glsmac/pull/89) | `c513707d8b7c73e1f6e51b8e5bb2fc5749c1d6a3` | Required current-head review remains pending |
+| [#90](https://github.com/jhurliman/glsmac/pull/90) | `7c3794a0fb685928aaa10c06d37e82066afe8768` | Required current-head review remains pending |
+| [#91](https://github.com/jhurliman/glsmac/pull/91) | `1f572b450ea6e09c74412c515bb46c14d07872fa` | Required current-head review remains pending |
+| [#92](https://github.com/jhurliman/glsmac/pull/92) | `0ead74e464fcc48156ac0dfc39ca797895d5b761` | Required current-head review remains pending |
+
+PR #86's [clean receipt](https://github.com/jhurliman/glsmac/pull/86#issuecomment-6218551761)
+names the older `43a14890bb` head. It does not review the newer head above.
+Hosted Windows CTest on `0592d21144a2e6289379021a5d05edf8ce159bea` timed out
+after 300 seconds in the immediate initialization-error admission test. The
+replacement adds the existing #54 callback-lock repair; its validation is still
+pending at the initial head observation. A subsequent local run at `685f1376`
+passes Linux CTest 5/5 in 22.28 seconds; this is not a hosted Windows retry or
+new-head Codex review. The earlier Linux publication and broader Windows
+integration successes do not make that failed hosted revision green. Applicable
+hosted checks on the recorded #85, #87 and #88 heads pass, independently of review.
+Quota failures are explicit on
+[#85](https://github.com/jhurliman/glsmac/pull/85#issuecomment-6218357350),
+[#87](https://github.com/jhurliman/glsmac/pull/87#issuecomment-6218724895) and
+[#88](https://github.com/jhurliman/glsmac/pull/88#issuecomment-6219022882).
+No additional review request is made while that reported limit is unchanged.
+Local validation and independent peer review do not replace the requested
+GitHub Codex review, and these PRs remain unmerged.

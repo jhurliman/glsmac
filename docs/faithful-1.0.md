@@ -279,14 +279,22 @@ The next implementation slices are:
    a fresh 297-unit correctness scan. PR #86 now supplies owned world admission
    tickets, execution-time request validation, frontend request retirement and
    the two-step reset barrier; its integration passes Windows CTest 8/8 and a
-   fresh 298-unit correctness scan. The public reset polling implementation
-   also passes native same-thread regressions, removing the old self-wait.
-   Early initialization failure cleanup handles absent maps and throwing error
-   hooks. Executing-callback exclusion, startup phase coordination and native
+   fresh 298-unit correctness scan. PR #88's public reset polling implementation
+   passes native same-thread regressions, removing the old self-wait. PR #87's
+   early initialization failure cleanup handles absent maps and throwing error
+   hooks; #89 releases untransferred startup presentation exactly once. Payload
+   integration `cd2613d1` passes Windows and leak-enabled Linux CTest 8/8 and a
+   fresh 298-unit correctness scan. The separate Engine teardown repair at
+   `2b7ca61c` (published separately in #90) keeps backend Game alive ahead of
+   script-runtime destruction in single-thread mode; actual asset-free Engine
+   tests pass in both modes, along
+   with Windows and leak-enabled Linux CTest 8/8. These results are recorded in
+   the validation ledger and do not establish rendered Mac shutdown.
+   Executing-callback exclusion, startup phase coordination and native
    reset/collector coordination remain open; queued cancellation is insufficient.
    The script-entry guard in #82 has user-confirmed rendered restart evidence
    on the pinned Mac integration; this does not establish clean shutdown.
-   See the [roster ownership plan](player-roster-ownership-plan.md) for the
+   See the [pinned roster ownership plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md) for the
    canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
    defense, reactor, chassis and counted predefined-design parsers are queued
@@ -298,14 +306,19 @@ The next implementation slices are:
    their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
    all installed files pass both probes. Merged PR #83 decodes owned raw geometry
    records for 438 payloads and explicitly rejects two unsupported variants;
-   all seven focused Windows tracking tests pass. Model composition and
-   rendering semantics remain unverified. The next steps are in the
+   all seven focused Windows tracking tests pass. Original loader, projection,
+   palette and rendering semantics remain unverified. The next steps are in the
    [pinned rendering plan](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md).
    The existing native
    sprite sheet is not conventional-unit art; source model names alone do not
    establish design-to-model mappings. Merged PR #84 adds a bounded original
    Scout selector probe, resolving the observed component choices and frame
-   selection separately from unverified composition and rendering semantics.
+   selection separately from rendering semantics. Later bounded original
+   composition execution (#91) and a pure frame assembler (#92) are integrated at
+   `65000147`; the assembler matches 30 installed-input cases containing 1,755
+   records bitwise. Six other positive original cases use synthetic
+   prefix/capacity inputs and are reported separately. This does not render a
+   conventional unit or establish palette, projection and draw semantics.
    Do not turn the current native-unit movement assumptions into standard-unit
    behavior or invent reactor/cost defaults.
 3. Review #70's evaluating-base route. Worker intake, scoring and base-screen
@@ -349,7 +362,11 @@ keep its evidence level distinct from full-game observations. See each PR's
 reviewed commit and checks for current validation, rather than treating this
 plan as proof that queued work has landed.
 
-GitHub Codex review reached its account usage limit while reviewing #85 on
-October 16. New and revised PR heads remain unmerged until their required
-reviews complete. Local implementation, independent review and tests continue;
-neither the review request nor local success substitutes for that GitHub gate.
+GitHub Codex review reported quota failures on #85, #87 and #88 on October 16.
+PR #86 did receive a clean receipt for its older `43a14890bb` head; that does
+not review its replacement head after prerequisites were merged forward.
+The new #81, #82, #86 and #87 heads still require their own completed reviews.
+New and revised PR heads remain unmerged until their required reviews complete.
+Local implementation, independent review and tests continue; neither a review
+request nor local success substitutes for that GitHub gate. No retry is planned
+while the reported review quota remains unchanged.

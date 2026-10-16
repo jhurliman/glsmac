@@ -205,18 +205,37 @@ turn and exited normally. It also records visible rendering and input follow-ups
 Interactive macOS validation, hardware Linux validation, long-running sessions,
 complete save/reload and multiplayer convergence remain open.
 
+The subsequent integration contains authoritative worker coordinates and reverse
+claims, optimistic-event wire preservation and acknowledgement bookkeeping,
+exact population rollback, and explicit pre-initialization ruleset selection.
+These remain separate reviewed PRs, not merged release functionality. The
+verified SMAC base-square calculator and strict RESOURCEINFO parser are pure
+components; the live resource callback has not been switched to them.
+
+The [follow-up validation record](validation/rulesets-yields-2026-10-16.md)
+pins the combined source, successful ruleset and signed-yield Windows smoke
+tests, later headless checks, and unresolved memory-tracked GUI failures.
+Focused UUID and mesh allocation checks add approximately one second each
+locally to CTest. Full allocation-tracked suites and interactive debugging
+remain separate from the ordinary development loop.
+
 The next implementation slices are:
 
-1. Persist worker assignments as authoritative population coordinates with an
-   ID-based reverse index. Exercise actual work/unwork/add/remove handlers,
-   rollback, immediate/deferred restore and teardown after map destruction.
-2. Preserve outgoing event bytes before optimistic destructive application,
-   then separately repair acceptance/rejection bookkeeping and population
-   identity restoration. Test actual queue and acknowledgement ordering.
-3. Select and synchronize an explicit SMAC or SMAX ruleset before content
-   initialization, including host/join and running-game reconnect. This is a
-   prerequisite for implementing the researched yield rules in the live game;
-   selecting a ruleset does not make that ruleset complete.
+1. Repair demonstrated constructor-failure GC registration and consuming-mesh
+   tracking defects with negative controls, then repeat the tracked Windows
+   startup/base-screen/shutdown sequence. Do not infer success from normal
+   tests or from a later cleanup exception masking the first failure.
+2. Load the parsed SMAC resource triples once for the host, freeze them with
+   the selected ruleset, and version/validate their GlobalSettings payload.
+   Joining clients accept host values; SMAX must not read SMAC defaults.
+3. Bind world-download snapshots to the accepted immutable profile before map
+   allocation. Exercise mismatch, truncation and late-join ordering through the
+   real reader. This does not complete disk savegames.
+
+Live center yields follow only after the adapter can supply authoritative
+economy, facilities, terrain/bonus, faction and phase-specific event inputs.
+The calculator's resolved event flags are not a replacement for persistent
+event state. Original SMAC evidence must not silently become SMAX behavior.
 
 The original installation was found on aleph0 and SMAX PRACX reached setup, but
 full-game rule observations remain blocked by the reproduced startup/base-creation

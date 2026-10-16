@@ -5,6 +5,7 @@
 #include <atomic>
 #include <string>
 #include <functional>
+#include <cstdlib>
 
 namespace common {
 class Thread;
@@ -93,7 +94,7 @@ public:
 
 	~Engine();
 	int Run();
-	void ShutDown();
+	void ShutDown( const int exit_code = EXIT_SUCCESS );
 
 	config::Config* GetConfig() const { return m_config; }
 	resource::ResourceManager* GetResourceManager() const { return m_resource_manager; }
@@ -118,6 +119,7 @@ public:
 private:
 
 	std::atomic< bool > m_is_shutting_down = false;
+	std::atomic< int > m_exit_code = EXIT_SUCCESS;
 
 	std::vector< common::Thread* > m_threads = {};
 

@@ -62,6 +62,7 @@ CLASS( State, gse::GCWrappable )
 	using game_session_t = std::shared_ptr< const GameSession >;
 	game_session_t CaptureGameSession();
 	bool IsGameSessionActive( const game_session_t& session ) const;
+	void RetireGameCallbacks( const game_session_t& expected_session );
 
 	// Cancels work that has not started when its session is retired. This does
 	// not exclude concurrent teardown from an already executing callback.

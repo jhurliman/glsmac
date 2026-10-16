@@ -39,7 +39,7 @@ class BackendFixture {
 public:
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
-		, m_gse( new GSE() )
+		, m_gse( CreateRuntime() )
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
@@ -89,7 +89,7 @@ public:
 	const std::vector< game::FrontendRequest >& PushBaseUpdates() {
 		// Frontend spawn messages need tile coordinates, but no rendered assets.
 		if ( !m_map->m_map_state ) {
-			m_map->m_map_state = new game::backend::map::MapState();
+			NEW( m_map->m_map_state, game::backend::map::MapState );
 			m_map->m_map_state->dimensions = { 8, 8 };
 			const common::mt_flag_t canceled = false;
 			m_map->m_map_state->LinkTileStates( canceled );
@@ -167,6 +167,12 @@ public:
 	}
 
 private:
+	static GSE* CreateRuntime() {
+		// GLSMAC owns this runtime and destroys it through tracked DELETE.
+		NEWV( runtime, GSE );
+		return runtime;
+	}
+
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
 	std::unique_ptr< game::backend::map::Map > m_map;

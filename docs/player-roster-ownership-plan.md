@@ -1,7 +1,11 @@
 # Player roster ownership and canonical factions: implementation plan
 
 Status: source audit and proposed work, not implemented behavior. Audited at
-`708511942604826959cd476200f69662133b5c3d`. The separate world V3 completion
+[708511942604826959cd476200f69662133b5c3d](https://github.com/jhurliman/glsmac/commit/708511942604826959cd476200f69662133b5c3d).
+That source is an ancestor of immutable retention branch
+`codex/validation-20261016-player-roster-audit`, pinned at
+[fa939625bc87de69d193c8e732e883807e8d3c93](https://github.com/jhurliman/glsmac/commit/fa939625bc87de69d193c8e732e883807e8d3c93).
+The separate world V3 completion
 restoration is documented in [the V3 snapshot contract](https://github.com/jhurliman/glsmac/blob/a16fa30b4f8d1a812d306cf7a719de318cbcba3a/docs/world-snapshot-turn.md).
 This plan neither changes that wire format nor claims complete save/load or
 host/client lockstep.

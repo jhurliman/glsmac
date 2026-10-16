@@ -2378,12 +2378,12 @@ void Game::AcquireInitializationMap() {
 
 		MTModule::Log( "Game seed: " + m_random->GetStateString() );
 
-		ASSERT( !m_old_map, "old map not null" );
-		m_old_map = nullptr;
-		if ( m_map ) {
-			m_old_map = m_map;
-		}
-		NEW( m_map, map::Map, this );
+		PrepareInitializationMap();
+		// Native generation and its progress/IO calls must not hold collection
+		// exclusion. Keep all partially constructed tile storage unpublished.
+		map::Map* candidate = nullptr;
+		util::FinallyGuard discard( [ & ]() { DiscardInitializationMap( candidate ); } );
+		NEW( candidate, map::Map, this );
 
 		const auto* config = g_engine->GetConfig();
 
@@ -2400,7 +2400,7 @@ void Game::AcquireInitializationMap() {
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			MTModule::Log( (std::string)"Loading map dump from " + filename );
 			SetLoaderText( "Loading dump" );
-			m_map->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
+			candidate->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else
@@ -2408,16 +2408,16 @@ void Game::AcquireInitializationMap() {
 		{
 			if ( !connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
-				ec = m_map->LoadFromFile( filename );
+				ec = candidate->LoadFromFile( filename );
 			}
 			else {
 				auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
-					ec = m_map->LoadFromFile( map_settings.filename );
+					ec = candidate->LoadFromFile( map_settings.filename );
 				}
 				else {
-					ec = m_map->Generate( &map_settings, m_init_cancel );
+					ec = candidate->Generate( &map_settings, m_init_cancel );
 				}
 			}
 
@@ -2428,6 +2428,7 @@ void Game::AcquireInitializationMap() {
 		}
 
 		if ( !ec ) {
+			PublishInitializationMap( candidate );
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
 			if ( connection ) {
 				connection->UpdateSlot( m_slot_num, m_slot, true );
@@ -2477,6 +2478,33 @@ void Game::AcquireInitializationMap() {
 			}
 		);
 	}
+}
+
+void Game::PrepareInitializationMap() {
+	WithNativeRetirement( [ this ]() {
+		ASSERT( !m_old_map, "old map not null" );
+		// Preserve the existing error path: InitFailed restores this ownership
+		// after retiring a failed current map, including a still-private attempt.
+		m_old_map = std::exchange( m_map, nullptr );
+	} );
+}
+
+void Game::PublishInitializationMap( map::Map*& candidate ) {
+	WithNativeRetirement( [ & ]() {
+		if ( m_init_cancel ) { throw std::runtime_error( map::Map::GetErrorString( map::Map::EC_ABORTED ) ); }
+		ASSERT( !m_map && candidate && candidate->m_tiles, "invalid initialization map publication" );
+		m_map = std::exchange( candidate, nullptr );
+	} );
+}
+
+void Game::DiscardInitializationMap( map::Map*& candidate ) {
+	// Only unpublished candidates belong here: no script wrapper or renderer
+	// borrower can exist. Presentation cleanup may notify the renderer, so it
+	// stays outside the native collection guard, including exception unwinding.
+	DetachedMapPresentation detached;
+	response_map_data_t* no_response = nullptr;
+	DetachMapPresentation( candidate, no_response, detached );
+	RetireMap( candidate, detached );
 }
 
 std::string Game::SerializeWorldSnapshot() const {

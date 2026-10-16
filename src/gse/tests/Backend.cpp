@@ -20,6 +20,7 @@
 #include "gc/GC.h"
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
+#include "loader/texture/TextureLoader.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
@@ -73,6 +74,7 @@
 #include <new>
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <condition_variable>
 
 namespace gse {
@@ -147,6 +149,319 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+	std::string CheckMapPublication( const bool prepare ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} gate;
+		class Root final : public gc::Object {
+		public:
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		map::Map* candidate = nullptr;
+		auto* const old = m_game.m_map;
+		Value* old_wrapper = nullptr;
+		std::thread collector, publisher;
+		std::exception_ptr collect_error, publish_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::atomic< bool > started{ false }, done{ false };
+		bool rooted = false;
+		util::FinallyGuard cleanup( [ & ]() {
+			gate.Release();
+			if ( publisher.joinable() ) { publisher.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { if ( rooted ) { m_gse->RemoveRootObject( &root ); } } );
+			m_game.DiscardInitializationMap( candidate );
+			m_game.RetireOldMap();
+			m_map.reset( m_game.m_map );
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			gate.Enter();
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			old_wrapper = old->Wrap( GSE_CALL ); ctx->CreateConst( "old_publication_map", old_wrapper, si, ep );
+			m_gse->AddRootObject( &root ); rooted = true; GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "publication setup: " + setup );
+		m_map.release();
+		if ( !prepare ) {
+			m_game.PrepareInitializationMap();
+			NEW( candidate, map::Map, &m_game, 8, 8 );
+			auto bytes = old->GetTilesPtr()->Serialize();
+			GT_ASSERT( candidate->LoadFromBuffer( bytes ) == map::Map::EC_NONE, "private candidate failed valid tile decode" );
+			const auto unexposed = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				std::unordered_set< gc::Object* > reachable; m_game.GetReachableObjects( reachable );
+				GT_ASSERT( reachable.count( old ) && !reachable.count( candidate ) && !m_game.m_map, "private candidate became a collector root" ); GT_OK();
+			} );
+			GT_ASSERT( unexposed.empty(), "fixture: " + unexposed );
+		}
+		collector = std::thread( [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+			try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+		} );
+		GT_ASSERT( gate.Wait(), "actual Collect did not reach publication barrier" );
+		publisher = std::thread( [ & ]() {
+			started = true;
+			try { if ( prepare ) { m_game.PrepareInitializationMap(); } else { m_game.PublishInitializationMap( candidate ); } }
+			catch ( ... ) { publish_error = std::current_exception(); }
+			done = true;
+		} );
+		const auto start_deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 2 );
+		while ( !started && std::chrono::steady_clock::now() < start_deadline ) { std::this_thread::yield(); }
+		GT_ASSERT( started, "map publisher did not enter its mutation attempt" );
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+		while ( !done && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+		const bool crossed = done;
+		gate.Release(); publisher.join(); collector.join();
+		if ( publish_error ) { std::rethrow_exception( publish_error ); }
+		if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		GT_ASSERT( started && done && !crossed, "map root publication crossed active collection" );
+		GT_ASSERT( m_game.m_old_map == old && old_wrapper->type == VT_OBJECT, "publication lost or retired the previous map" );
+		GT_ASSERT( prepare ? !m_game.m_map : ( m_game.m_map && !candidate ), "publication did not transfer exact candidate ownership" );
+		if ( !prepare ) {
+			const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* tile = m_game.m_map->GetTile( 2, 2 )->Wrap( GSE_CALL ); ctx->CreateConst( "published_tile", tile, si, ep );
+				std::unordered_set< gc::Object* > reachable; m_game.GetReachableObjects( reachable );
+				GT_ASSERT( reachable.count( old ) && reachable.count( m_game.m_map ), "committed maps are missing from collector roots" ); GT_OK();
+			} );
+			GT_ASSERT( check.empty(), "fixture: " + check );
+		}
+		g_engine->GetGC()->Iterate();
+		m_game.RetireOldMap();
+		GT_ASSERT( old_wrapper->type == VT_UNDEFINED, "old map was not retired through the existing guarded path" ); GT_OK();
+	}
+
+	std::string CheckMapCandidateFailure( const int mode ) {
+		using namespace game::backend;
+		struct Probe { size_t textures = 0, meshes = 0; } probe;
+		struct Texture final : types::texture::Texture {
+			Probe& probe; explicit Texture( Probe& probe ) : types::texture::Texture( 1, 1 ), probe( probe ) {}
+			~Texture() override { ++probe.textures; }
+		};
+		struct Render final : types::mesh::Render {
+			Probe& probe; explicit Render( Probe& probe ) : types::mesh::Render( 3, 1 ), probe( probe ) {}
+			~Render() override { ++probe.meshes; }
+		};
+		struct Data final : types::mesh::Data {
+			Probe& probe; explicit Data( Probe& probe ) : types::mesh::Data( 3, 1 ), probe( probe ) {}
+			~Data() override { ++probe.meshes; }
+		};
+		auto* const old = m_game.m_map;
+		Value* old_wrapper = nullptr;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			old_wrapper = old->Wrap( GSE_CALL ); ctx->CreateConst( "surviving_old_map", old_wrapper, si, ep ); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "fixture: " + setup );
+		m_map.release();
+		util::FinallyGuard recover( [ & ]() { m_game.m_init_cancel = false; m_game.RetireOldMap(); m_map.reset( m_game.m_map ); } );
+		m_game.PrepareInitializationMap();
+		bool rejected = false;
+		try {
+			map::Map* candidate = nullptr;
+			util::FinallyGuard discard( [ & ]() { m_game.DiscardInitializationMap( candidate ); } );
+			NEW( candidate, map::Map, &m_game, 8, 8 );
+			NEW( candidate->m_textures.terrain, Texture, probe );
+			NEW( candidate->m_meshes.terrain, Render, probe ); NEW( candidate->m_meshes.terrain_data, Data, probe );
+			NEW( candidate->m_map_state, map::MapState );
+			candidate->m_map_state->dimensions = { 8, 8 }; const common::mt_flag_t canceled = false;
+			candidate->m_map_state->LinkTileStates( canceled );
+			NEW( candidate->m_map_state->At( 2, 2 )->moisture_original, Texture, probe );
+			// The real candidate decoder and cancellation cleanup have
+			// no published roots. Collection remains possible between stages.
+			if ( mode == 0 ) {
+				types::Buffer invalid; invalid.WriteString( "not a tile width" );
+				if ( candidate->LoadFromBuffer( invalid ) != map::Map::EC_NONE ) { throw std::runtime_error( "candidate map decode failed" ); }
+			}
+			g_engine->GetGC()->Iterate();
+			if ( mode == 1 ) { m_game.m_init_cancel = true; m_game.PublishInitializationMap( candidate ); }
+			else { throw std::runtime_error( "candidate setup failure" ); }
+		} catch ( const std::runtime_error& ) { rejected = true; }
+		GT_ASSERT( rejected && !m_game.m_map && m_game.m_old_map == old && old_wrapper->type == VT_OBJECT,
+			"failed or canceled candidate was published or lost the old map" );
+		GT_ASSERT( probe.textures == 2 && probe.meshes == 2 && !m_game.m_response_map_data, "candidate-only presentation leaked or touched a response envelope" );
+		m_game.m_init_cancel = false;
+		g_engine->GetGC()->Iterate();
+		const auto failed = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.InitFailed( "candidate failed" ); GT_OK(); } );
+		GT_ASSERT( failed.empty() && m_game.m_map == old && !m_game.m_old_map && old_wrapper->type == VT_OBJECT,
+			"actual InitFailed failed to restore old ownership once: " + failed );
+		GT_OK();
+	}
+
+	static std::string CheckMapAcquisition( const int mode ) {
+		using namespace game::backend;
+		// The production Map constructor only borrows these two source textures.
+		// All constructor/modules, packet decode, owner stages and collection are
+		// real; no terrain rendering or original-game resource is involved.
+		::resource::ResourceManager resources( "unused-map-publication-fixture" );
+		resources.m_resource_paths = {
+			{ ::resource::PCX_TEXTURE, "fixture-texture" }, { ::resource::PCX_TER1, "fixture-ter1" }
+		};
+		class Textures final : public loader::texture::TextureLoader {
+		public:
+			types::texture::Texture texture{ 1, 1 }, terrain{ 1, 1 };
+			size_t loads = 0;
+			std::function< void() > on_load;
+		protected:
+			types::texture::Texture* LoadTextureImpl( const std::string& path, types::texture::texture_flag_t ) override {
+				++loads;
+				if ( on_load ) { on_load(); }
+				if ( path == "fixture-texture" ) { return &texture; }
+				if ( path == "fixture-ter1" ) { return &terrain; }
+				throw std::runtime_error( "unexpected map source texture" );
+			}
+			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override {
+				throw std::runtime_error( "map failure fixture unexpectedly rendered a texture region" );
+			}
+		} textures;
+		class Transport final : public network::Network {
+		public: ~Transport() override { Stop(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		} transport;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void Receive( const types::Packet& packet ) {
+				network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event );
+			}
+		};
+		auto* const old_resources = g_engine->m_resource_manager;
+		auto* const old_textures = g_engine->m_texture_loader;
+		{
+			std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_resource_manager = &resources; g_engine->m_texture_loader = &textures;
+		}
+		util::FinallyGuard restore( [ & ]() {
+			std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
+		} );
+		// Runtime is destroyed before services/transport are restored or freed.
+		BackendFixture fixture;
+		fixture.EnableTurnPlayers();
+		if ( mode ) {
+			// Slot::Update uses the actual Engine backend during acquisition.
+			// The queued notification captures that backend before restoration.
+			auto* const previous_game = g_engine->m_game;
+			{ std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = &fixture.m_game; }
+			util::FinallyGuard restore_game( [ & ]() {
+				std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = previous_game;
+			} );
+			auto* const old = fixture.m_game.m_map;
+			const auto path = std::filesystem::temp_directory_path() / ( "glsmac-map-publication-" + util::UUID::Generate() + ".map" );
+			util::FinallyGuard remove_file( [ & ]() { std::error_code ignored; std::filesystem::remove( path, ignored ); } );
+			const auto bytes = old->GetTilesPtr()->Serialize().ToString();
+			{ std::ofstream file( path, std::ios::binary ); file.write( bytes.data(), bytes.size() ); if ( !file ) { throw std::runtime_error( "could not write synthetic map" ); } }
+			fixture.m_state->m_settings.global.map.type = settings::MapSettings::MT_MAPFILE;
+			fixture.m_state->m_settings.global.map.filename = path.string();
+			fixture.m_game.m_slot = &fixture.m_state->m_slots->GetSlot( 0 );
+			fixture.m_game.m_player = fixture.m_game.m_slot->GetPlayer();
+			bool unpublished = true;
+			textures.on_load = [ & ]() {
+				unpublished = unpublished && !fixture.m_game.m_map && fixture.m_game.m_old_map == old;
+				g_engine->GetGC()->Iterate(); // actual collection while construction is private
+				if ( mode == 2 ) { fixture.m_game.m_init_cancel = true; }
+			};
+			fixture.m_map.release();
+			util::FinallyGuard recover( [ & ]() {
+				textures.on_load = nullptr;
+				fixture.m_game.m_init_cancel = false;
+				fixture.m_game.RetireOldMap(); fixture.m_map.reset( fixture.m_game.m_map );
+			} );
+			std::exception_ptr error;
+			std::thread native( [ & ]() { try { fixture.m_game.AcquireInitializationMap(); } catch ( ... ) { error = std::current_exception(); } } );
+			native.join();
+			GT_ASSERT( unpublished && textures.loads == 2, "actual acquisition exposed current/partial map during constructor source loads" );
+			if ( mode == 1 ) {
+				if ( error ) { std::rethrow_exception( error ); }
+				GT_ASSERT( fixture.m_game.m_map && fixture.m_game.m_map != old && fixture.m_game.m_old_map == old &&
+					fixture.m_game.m_map->GetTilesPtr()->Serialize().ToString() == bytes && fixture.m_game.m_game_state == Game::GS_INITIALIZING,
+					"actual file acquisition did not commit complete equivalent tile storage" );
+				fixture.ProcessAccumulations();
+			} else {
+				GT_ASSERT( error && !fixture.m_game.m_map && fixture.m_game.m_old_map == old, "actual canceled acquisition published a candidate" );
+				fixture.m_game.m_init_cancel = false;
+				const auto failure = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.m_game.InitFailed( "canceled candidate" ); GT_OK(); } );
+				GT_ASSERT( failure.empty() && fixture.m_game.m_map == old && !fixture.m_game.m_old_map, "actual canceled acquisition lost old map: " + failure );
+			}
+			GT_OK();
+		}
+		Client* client = nullptr;
+		size_t errors = 0;
+		types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.ResetRequest(); fixture.m_state->SetGame( &fixture.m_game );
+			fixture.m_state->m_settings.global.SelectRuleset( "smax" );
+			fixture.m_state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			client = new Client( gc_space, &fixture.m_state->m_settings.local, &transport ); fixture.m_state->SetConnection( client );
+			fixture.FixtureWorldTicket();
+			fixture.m_game.m_active_admission->connection = client;
+			fixture.m_game.m_active_admission->stage = Game::StartupStage::AwaitDownload;
+			fixture.m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+			types::Buffer bytes, bad_tiles; bad_tiles.WriteString( "invalid tile width" );
+			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
+			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
+			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
+			bytes.WriteString( bad_tiles.ToString() );
+			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
+			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "fixture: " + setup );
+		std::exception_ptr native_error;
+		const auto checkpoint = [ & ]( const bool receive ) {
+			std::thread worker( [ & ]() {
+				try {
+					if ( receive ) { client->Receive( packet ); }
+					// Real post-batch continuation, separated explicitly from socket
+					// polling so this case tests the Ingress/Failure boundary alone.
+					fixture.m_game.AdvanceInitialization();
+				} catch ( ... ) { native_error = std::current_exception(); }
+			} ); worker.join();
+			if ( native_error ) { std::rethrow_exception( native_error ); }
+			fixture.ProcessAccumulations();
+		};
+		util::FinallyGuard cleanup( [ & ]() {
+			transport.Iterate();
+			fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				client->IterateAndMaybeDelete(); client->ResetHandlers(); fixture.m_state->DetachConnection();
+				fixture.m_map.release(); fixture.m_game.ResetGame(); GT_OK();
+			} );
+		} );
+		checkpoint( true );
+		GT_ASSERT( textures.loads == 2 && !errors && fixture.m_game.m_map && !fixture.m_game.m_map->m_tiles &&
+			fixture.m_game.m_active_admission && fixture.m_game.m_active_admission->stage == Game::StartupStage::Failure,
+			"real download did not leave its rejected empty Map between owner checkpoints" );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( !errors && fixture.m_game.m_map, "collection prematurely ran failure cleanup" );
+		checkpoint( false );
+		GT_ASSERT( errors == 1 && !fixture.m_game.m_map && !fixture.m_game.OwnerBlocksNative(), "later Failure checkpoint did not retire rejected map exactly once" );
+		GT_OK();
+	}
+
+	std::string CheckEmptyMapCollection() {
+		// Model the rooted state left by a failed actual map-body decode; the
+		// separate packet case also covers the Ingress -> Failure interval.
+		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			types::Buffer invalid; invalid.WriteString( "not a tile width" );
+			GT_ASSERT( m_game.m_map->LoadFromBuffer( invalid ) == game::backend::map::Map::EC_MAPFILE_FORMAT_ERROR,
+				"invalid tile body was accepted" );
+			GT_ASSERT( !m_game.m_map->m_tiles, "failed decoder did not produce an empty map" ); GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "fixture: " + error );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( m_game.m_map && !m_game.m_map->m_tiles, "collection changed the rooted empty map" ); GT_OK();
+	}
+
 	std::string CheckNativeRetirementOverlap( const bool collector_first, const bool old_map ) {
 		struct Gate {
 			std::mutex mutex; std::condition_variable cv;
@@ -3492,6 +3807,27 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	for ( const int mode : { 1, 2 } ) {
+		task->AddTest( "map publication actual native file acquisition " + std::to_string( mode ), GT( mode ) {
+			const auto error = BackendFixture::CheckMapAcquisition( mode ); GT_ASSERT( error.empty(), "acquisition: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "map publication collects rejected final chunk between Ingress and Failure", GT() {
+		const auto error = BackendFixture::CheckMapAcquisition( 0 ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+	} );
+	for ( const bool prepare : { true, false } ) {
+		task->AddTest( std::string( "map publication excludes collection during " ) + ( prepare ? "old root transfer" : "candidate commit" ), GT( prepare ) {
+			BackendFixture fixture; const auto error = fixture.CheckMapPublication( prepare ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+		} );
+	}
+	for ( const int mode : { 0, 1, 2 } ) {
+		task->AddTest( "map publication discards failed candidate and restores old ownership " + std::to_string( mode ), GT( mode ) {
+			BackendFixture fixture; const auto error = fixture.CheckMapCandidateFailure( mode ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "map publication collects a rooted failed map before its failure checkpoint", GT() {
+		BackendFixture fixture; const auto error = fixture.CheckEmptyMapCollection(); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+	} );
 	task->AddTest( "native retirement drains real transport requests before collector exclusion", GT() {
 		const auto error = BackendFixture::CheckResetTransportDrain();
 		GT_ASSERT( error.empty(), "transport drain: " + error ); GT_OK();

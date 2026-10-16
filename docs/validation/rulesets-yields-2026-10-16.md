@@ -424,7 +424,8 @@ this elapsed time is an observation, not a new development-loop budget. Logs
 use `energy-units-switch-analysis` under the Linux directory above.
 
 The separately reviewed weapon-table PR's older head
-`e680240238ba3c3d963dc98245d1a0f65b8b404c` hit a Windows full-GSE timeout in
+[e680240238ba3c3d963dc98245d1a0f65b8b404c](https://github.com/jhurliman/glsmac/commit/e680240238ba3c3d963dc98245d1a0f65b8b404c),
+retained at immutable `codex/validation-20261016-world-timeout`, hit a Windows full-GSE timeout in
 [job 116940520918](https://github.com/jhurliman/glsmac/actions/runs/38891098136/job/116940520918).
 The repeating async callback continued beyond its scheduled cancellation.
 Same-deadline timer cancellation was subsequently reproduced without relying
@@ -614,7 +615,8 @@ Both runs remain in `/home/jhurliman/src/glsmac-unit-publication/`, named
 multiplayer-join correctness or explain the older intermittent timeout.
 
 GitHub review of PR #77 at
-`6805e3a3e5980eb01dba846f4fecbca6d400f0ba` subsequently identified three
+[6805e3a3e5980eb01dba846f4fecbca6d400f0ba](https://github.com/jhurliman/glsmac/commit/6805e3a3e5980eb01dba846f4fecbca6d400f0ba),
+retained at immutable `codex/validation-20261016-completion-reviewed`, subsequently identified three
 unresolved concurrency/dispatch gaps: live roster mutation between validation
 and flag commit, MT reset between queued-failure validation and InitFailed,
 and unrestricted MT dispatch before the parked-failure guard. The tests above
@@ -718,7 +720,7 @@ safe stale MT request admission, or the held PR77 concurrency fixes.
 
 ## Owned CVR geometry records
 
-At `e022b688e4206ee9848050d816329dd125ade4ca`, the geometry reader validates
+At [e022b688e4206ee9848050d816329dd125ade4ca](https://github.com/jhurliman/glsmac/commit/e022b688e4206ee9848050d816329dd125ade4ca), the geometry reader validates
 the observed simple/grouped profiles before allocating owned raw records.
 All seven focused Windows cases passed with allocation tracking, exit 0 and
 no reported memory/OpenGL leaks. Fresh LLVM15 analysis covered 298 production

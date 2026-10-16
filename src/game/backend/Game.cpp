@@ -472,7 +472,11 @@ void Game::SetLoaderText( const std::string& text ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_TEXT );
 	NEW( fr.data.loader.text, std::string, text );
 	AddFrontendRequest( fr );
-	ProcessRequests(); // allow frontend to update % while backend is busy
+	// Map methods can still be on the stack. Deliver progress without running
+	// reset or other operations that mutate/consume the world being prepared.
+	ProcessRequests( []( const MT_Request& request ) noexcept {
+		return request.op == OP_GET_FRONTEND_REQUESTS || request.op == OP_PING;
+	} );
 }
 
 void Game::HideLoader() {

@@ -9,8 +9,10 @@ Original files are never copied into the output. Run with Python 3.9 or newer.
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
+import tempfile
 
 
 # Keep this allowlist explicit: do not inventory unrelated user files or saves.
@@ -150,6 +152,33 @@ def build_manifest(installation):
     }
 
 
+def _write_manifest(output, encoded):
+    """Replace the destination without modifying an existing hard-linked file.
+
+    The new manifest uses tempfile's permissions (owner-only on POSIX), rather
+    than inheriting permissions or links from any previous output file.
+    """
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="\n",
+            dir=output.parent,
+            prefix=f".{output.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as destination:
+            temporary = Path(destination.name)
+            destination.write(encoded)
+        os.replace(temporary, output)
+        temporary = None
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("installation", type=Path, help="Installed game directory")
@@ -173,9 +202,7 @@ def main(argv=None):
                     "Output must be outside the reference installation; "
                     "use a path such as tmp/reference/manifest.json."
                 )
-            output.parent.mkdir(parents=True, exist_ok=True)
-            with output.open("w", encoding="utf-8", newline="\n") as destination:
-                destination.write(encoded)
+            _write_manifest(output, encoded)
     except (ReferenceManifestError, OSError) as error:
         parser.error(str(error))
     return 0

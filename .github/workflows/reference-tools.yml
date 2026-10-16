@@ -1,0 +1,32 @@
+name: Reference inventory tests
+
+on:
+  push:
+    paths:
+      - tools/reference_manifest.py
+      - tools/tests/test_reference_manifest.py
+      - .github/workflows/reference-tools.yml
+  pull_request:
+    paths:
+      - tools/reference_manifest.py
+      - tools/tests/test_reference_manifest.py
+      - .github/workflows/reference-tools.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Test using synthetic files
+        run: python -B -m unittest discover -s tools/tests -p test_reference_manifest.py -v

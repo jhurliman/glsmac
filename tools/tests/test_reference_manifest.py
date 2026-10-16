@@ -3,11 +3,13 @@
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "reference_manifest.py"
@@ -115,6 +117,30 @@ class ReferenceManifestTests(unittest.TestCase):
                 self.assertIn("outside the reference installation", result.stderr)
         self.assertEqual(original.read_bytes(), b"do not modify")
         self.assertFalse((self.root / "new-manifest.json").exists())
+
+    def test_output_replaces_hardlink_without_changing_reference_file(self):
+        original = self.put("alpha.txt", b"do not modify")
+        output = Path(self.temp.name) / "manifest.json"
+        os.link(original, output)
+
+        result = self.run_cli(self.root, "--output", output)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(original.read_bytes(), b"do not modify")
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["schema_version"], 1)
+        self.assertFalse(output.samefile(original))
+
+    def test_failed_replacement_preserves_output_and_removes_temporary_file(self):
+        output = Path(self.temp.name) / "reference" / "manifest.json"
+        output.parent.mkdir()
+        output.write_text("previous manifest", encoding="utf-8")
+
+        with mock.patch.object(reference_manifest.os, "replace", side_effect=OSError("replace failed")):
+            with self.assertRaisesRegex(OSError, "replace failed"):
+                reference_manifest._write_manifest(output, "{}\n")
+
+        self.assertEqual(output.read_text(encoding="utf-8"), "previous manifest")
+        self.assertEqual(list(output.parent.iterdir()), [output])
 
     def test_bad_paths_have_actionable_errors(self):
         for path in (self.root / "missing", self.put("not-a-directory.txt")):

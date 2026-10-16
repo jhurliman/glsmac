@@ -43,6 +43,8 @@ Short labels below resolve to these exact source revisions:
 | `575a5b3c` | [575a5b3c9405aac2d7d5e898cf128d07ea2eeb6d](https://github.com/jhurliman/glsmac/commit/575a5b3c9405aac2d7d5e898cf128d07ea2eeb6d) |
 | `519a0bd7` | [519a0bd7ee26db3b62cb8d2e392244c7a132eaf5](https://github.com/jhurliman/glsmac/commit/519a0bd7ee26db3b62cb8d2e392244c7a132eaf5) |
 | `b1935890` | [b19358908b8cc49bdb82f159e0b4c6763a4187dc](https://github.com/jhurliman/glsmac/commit/b19358908b8cc49bdb82f159e0b4c6763a4187dc) |
+| `b819ecda` | [b819ecda1384a4fb3d9191618ef190bb5156c467](https://github.com/jhurliman/glsmac/commit/b819ecda1384a4fb3d9191618ef190bb5156c467) |
+| `b66d017e` | [b66d017e5fcb854ba1157f374344348bb6325946](https://github.com/jhurliman/glsmac/commit/b66d017e5fcb854ba1157f374344348bb6325946) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -71,6 +73,9 @@ and CVR `575a5b3c` are retained in the merged histories of PRs #72 and #73.
 Turn restoration `519a0bd7` and its focused publication source `b1935890`
 are retained on `codex/validation-20261016-world-turn` and
 `codex/validation-20261016-world-turn-publication`, respectively.
+The CVR scene integration `b819ecda` is retained on
+`codex/validation-20261016-cvr-scene`; its focused publication source
+`b66d017e` is the reviewed source of PR #75.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -505,3 +510,53 @@ new RNG and CVR sources and exception ownership repair. The Windows-only network
 source remains explicitly excluded. Logs use `rng-cvr-analysis` under the Linux
 directory above. Focused reader sanitizer checks, Debug/Release analysis and
 three weakened-reader controls are recorded in [the versioned component notes](https://github.com/jhurliman/glsmac/blob/c9aafc83a0e55870af33e0f479c11db064079a7b/docs/cvr-container.md).
+
+## Turn restoration and current-script smoke test
+
+At `519a0bd7`, downloaded turn metadata is assigned without replaying ordinary
+turn hooks. Setup sees the restored year; readiness and minimap status are
+published after reconstruction. Existing destination completion flags remain
+preserved, but this change does not yet serialize them. The actual world/body,
+initialization and minimap-script regressions are described in
+[the versioned contract](https://github.com/jhurliman/glsmac/blob/519a0bd7ee26db3b62cb8d2e392244c7a132eaf5/docs/world-snapshot-turn.md).
+
+Linux ASan/UBSan/LSan passed 8/8 CTests in 44.81 s (GSE 31.96 s), with leak
+detection enabled. The first Windows suite timed out at 300 s after logging
+the pre-existing queued invalid-download case, leaving 7/8 passing overall.
+That case passed standalone; a full retry passed 8/8 in 60.90 s, and twenty
+additional quiet focused repetitions passed. A debugger attachment during the
+retry caught a subsequent CLI test, not a stuck download; it is not causal
+evidence, and the retry duration includes that instrumentation. The original
+timeout remains unexplained. The focused publication source `b1935890`
+separately passed 5/5 Linux CTests in 23.35 s.
+
+The Windows binary built from `519a0bd7` also ran with allocation tracking and
+the unchanged current production scripts. Gaia's Landing showed N/M/E intake
+3/2/2, nutrient consumption 2, and nutrient surplus +1. Removing its worker
+changed intake to 2/1/2 and nutrient surplus to zero; restoring the worker
+restored the original totals. Completing the turn through its unmoved-unit
+confirmation advanced the visible year from 2101 to 2102. Title-bar close
+exited 0, with empty stderr and no tracked memory/OpenGL leaks reported.
+This exercises the current evaluating-base UI route and ordinary advancement,
+not a rendered multiplayer restore, original-game yield parity or a soak test.
+
+Logs are `out/turn-windows-ctest.log`, `out/turn-windows-retry-ctest.log`,
+`out/queued-download-windows-*`, `out/queued-stress-1.log` through
+`out/queued-stress-20.log`, and `out/turn-visible-ui-*`; Linux logs use
+`turn-asan-` in the directory above. An earlier hidden launch was explicitly
+terminated because it exposed no targetable window; its `out/turn-current-ui-*`
+logs and exit -1 are harness evidence, not a successful shutdown or game crash.
+
+## CVR scene integration
+
+At `b819ecda`, eight new scene groups plus the five envelope groups passed
+native Windows with allocation tracking and exit 0. The explicitly waited
+process logs are `out/cvr-scene-windows-stdout.log` and `-stderr.log`.
+The main-based publication source `b66d017e` passed 4/4 Linux CTests in
+16.25 s (GSE 13.09 s). Installed-file probing, focused sanitizer checks,
+analysis and negative controls are recorded in
+[the versioned scene notes](https://github.com/jhurliman/glsmac/blob/b819ecda1384a4fb3d9191618ef190bb5156c467/docs/cvr-scene-records.md).
+The decoder accepts all 140 installed files and retains owned scene records,
+including empty and duplicate object names. Geometry and original-renderer
+equivalence remain unimplemented; these results do not activate conventional
+units.

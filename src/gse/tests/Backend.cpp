@@ -148,6 +148,18 @@ public:
 	}
 
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
+	void EnableTurnPlayers() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			for ( const size_t id : { 0, 2 } ) {
+				NEWV( player, game::backend::Player, "Turn player", game::backend::Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
+				m_game.GetState()->AddPlayer( player );
+				m_game.GetState()->m_slots->GetSlot( id ).SetPlayer( player, 0, "" );
+			}
+			m_game.m_slot_num = 2;
+			m_game.m_slot = &m_game.GetState()->m_slots->GetSlot( 2 );
+			m_game.m_player = m_game.m_slot->GetPlayer();
+		} );
+	}
 	void IterateWorldRestore() {
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );

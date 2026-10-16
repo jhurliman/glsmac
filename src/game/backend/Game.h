@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
 
 #include "common/MTModule.h"
 #include "gse/GCWrappable.h"
@@ -17,6 +18,7 @@
 #include "game/FrontendRequest.h"
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
+#include "util/random/Types.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -390,10 +392,13 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state );
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
+	// Install only after map presentation and deferred instance reconstruction.
+	std::optional< util::random::state_t > m_pending_snapshot_random;
 	State* m_state = nullptr;
 
 	map::Map* m_map = nullptr;

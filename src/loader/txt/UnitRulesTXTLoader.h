@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 #include <string>
 #include <vector>
 
@@ -51,6 +52,29 @@ struct ReactorTable {
 	std::vector< ReactorComponent > reactors;
 };
 
+enum class ChassisTriad : int32_t { Land = 0, Sea = 1, Air = 2 };
+
+struct ChassisName {
+	std::string name, grammar; // M1/M2/F1/F2/N1/N2, preserved as source metadata
+};
+
+struct ChassisComponent {
+	// First four name/grammar pairs, then the two trailing large-name pairs.
+	// names[0].name is the catalog key referenced by unit designs.
+	std::array< ChassisName, 6 > names;
+	int32_t speed;
+	ChassisTriad triad;
+	int32_t range;
+	bool missile;
+	int32_t cargo, cost;
+	std::string prerequisite;
+};
+
+struct ChassisTable {
+	std::string ruleset_id;
+	std::vector< ChassisComponent > chassis;
+};
+
 class UnitRulesTXTLoader {
 public:
 	// Pure #WEAPONS decoder. The caller supplies contents and an explicit
@@ -65,6 +89,9 @@ public:
 	// these decoders do not select a reactor or validate a playable design.
 	static DefenseTable ParseDefenses( const std::string& source, const std::string& ruleset_id );
 	static ReactorTable ParseReactors( const std::string& source, const std::string& ruleset_id );
+	// Nineteen columns; six name/grammar pairs, triad 0..2 and missile 0/1.
+	// Signed speed/range/cargo/cost are metadata, not design eligibility.
+	static ChassisTable ParseChassis( const std::string& source, const std::string& ruleset_id );
 };
 
 }

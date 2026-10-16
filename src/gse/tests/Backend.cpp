@@ -15,6 +15,8 @@
 #include "game/backend/Random.h"
 #include "game/backend/State.h"
 #include "game/backend/event/Event.h"
+#include "game/backend/event/EventHandler.h"
+#include "game/backend/connection/Connection.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/FacilityDef.h"
@@ -34,8 +36,20 @@
 namespace gse {
 namespace tests {
 
-// Real backend objects and event dispatch; no game start, renderer, connection,
-// or original-game files are involved in these tests.
+class RecordingConnection : public game::backend::connection::Connection {
+public:
+	explicit RecordingConnection( gc::Space* space ) : Connection( space, network::CM_CLIENT, nullptr ) {}
+	void UpdateSlot( size_t, game::backend::slot::Slot*, bool ) override {}
+	void SendMessage( const std::string& ) override {}
+	std::vector< std::string > sent;
+protected:
+	void SendGameEvents( const game_events_t& events ) override {
+		for ( const auto& event : events ) { sent.push_back( event.serialized_data ); }
+	}
+};
+
+// Real backend objects and event dispatch; no game start, renderer, network
+// traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
 	BackendFixture()
@@ -64,6 +78,9 @@ public:
 	}
 
 	~BackendFixture() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.GetState()->DetachConnection();
+		} );
 		// State and BaseManager belong to this GSE's collector. Destroy its
 		// space while the game, map, and frontend request queue are still alive.
 		m_glsmac.reset();
@@ -78,6 +95,21 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+
+	RecordingConnection* UseClientConnection( gc::Space* space ) {
+		auto* connection = new RecordingConnection( space );
+		m_game.GetState()->SetConnection( connection );
+		return connection;
+	}
+
+	void RegisterEvent( const std::string& name, game::backend::event::EventHandler* handler ) {
+		m_game.m_event_handlers.emplace( name, handler );
+	}
+
+	void ProcessEvents() { m_game.ProcessEvents(); }
+	void FlushEvents() { m_game.GetState()->GetConnection()->ProcessPending( true ); }
+	size_t PendingWireEvents() { return m_game.GetState()->GetConnection()->m_pending_game_events.size(); }
+	size_t WaitingResponses() { return m_game.m_events_waiting_for_responses.size(); }
 
 	void SetRunning( const bool running ) {
 		m_game.m_game_state = running ? game::backend::Game::GS_RUNNING : game::backend::Game::GS_NONE;
@@ -231,6 +263,109 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 
 }
 
+static void AddEventTransportTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test optimistic population removal sends its original reference to the authority",
+		GT() {
+			using namespace game::backend::base;
+			using namespace game::backend::event;
+			const auto next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ next_id ]() { Base::SetNextId( next_id ); } );
+			size_t local_applies = 0, authoritative_applies = 0;
+			BackendFixture client;
+			BackendFixture authority;
+			client.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			authority.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			auto* local_base = client.AddBaseWithPop( 201, 7 );
+			auto* authoritative_base = authority.AddBaseWithPop( 201, 7 );
+			const std::string name = "transport_remove_population";
+			const auto install = [ &name ]( BackendFixture& fixture, size_t& applies, GSE_CALLABLE ) {
+				auto* validate = NATIVE_CALL() {
+					auto* event = VALUE_DATA( value::Object, arguments.at( 0 ) );
+					if ( VALUE_GET( value::Int, event->Get( "caller" ) ) != 2 ) {
+						return VALUE( value::String,, "only the owner may remove this population" );
+					}
+					return VALUE( value::Undefined );
+				} );
+				auto* apply = NATIVE_CALL( &fixture, &applies ) {
+					if ( fixture.GetGame()->GetState()->GetConnection() && fixture.PendingWireEvents() ) {
+						THROW( "event was queued before optimistic application succeeded" );
+					}
+					auto* data = VALUE_DATA( value::Object, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "data" ) );
+					auto* base = Base::Unwrap( data->Get( "base" ) );
+					auto* pop = Pop::Unwrap( data->Get( "pop" ) );
+					const auto id = pop->m_id;
+					base->RemovePop( id );
+					++applies;
+					return VALUE( value::Int,, id );
+				} );
+				auto* rollback = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+				fixture.RegisterEvent( name, new EventHandler( gc_space, name, validate, nullptr, apply, rollback ) );
+			};
+			std::string wire;
+			const auto local_error = client.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* connection = client.UseClientConnection( gc_space );
+				install( client, local_applies, GSE_CALL );
+				auto* pop = local_base->m_pops.at( 7 ).Wrap( GSE_CALL );
+				auto* event = new Event( client.GetGame(), Event::ES_LOCAL, 2, GSE_CALL, name,
+					{ { "base", local_base->Wrap( GSE_CALL ) }, { "pop", pop } }, "optimistic-removal" );
+				client.GetGame()->AddEvent( event );
+				client.ProcessEvents();
+				GT_ASSERT( local_applies == 1 && local_base->m_pops.empty() && pop->type == VT_UNDEFINED, "optimistic removal did not invalidate its live wrapper" );
+				GT_ASSERT( client.WaitingResponses() == 1 && client.PendingWireEvents() == 1, "request was not queued after optimistic application" );
+				client.FlushEvents();
+				GT_ASSERT( connection->sent.size() == 1, "connection did not send exactly one request" );
+				wire = connection->sent.front();
+				GT_OK();
+			} );
+			GT_ASSERT( local_error.empty(), "local transport processing failed: " + local_error );
+			const auto authority_error = authority.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				install( authority, authoritative_applies, GSE_CALL );
+				auto* event = Event::Deserialize( authority.GetGame(), Event::ES_CLIENT, GSE_CALL, wire );
+				auto* data = VALUE_DATA( value::Object, event->GetData().at( "data" ) );
+				GT_ASSERT( data->Get( "pop" )->type == VT_OBJECT, "wire request lost the population reference after optimistic removal" );
+				GT_ASSERT( Pop::Unwrap( data->Get( "pop" ) ) == &authoritative_base->m_pops.at( 7 ), "request did not resolve the authority's population" );
+				GT_ASSERT( event->GetId() == "optimistic-removal" && event->GetCaller() == 2 && event->GetEventName() == name, "request metadata changed" );
+				authority.GetGame()->AddEvent( event );
+				authority.ProcessEvents();
+				GT_ASSERT( authoritative_applies == 1 && authoritative_base->m_pops.empty(), "authority did not apply the received removal" );
+				GT_OK();
+			} );
+			GT_ASSERT( authority_error.empty(), "authoritative transport processing failed: " + authority_error );
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test local transport still defers resolved events and does not queue failed applications",
+		GT() {
+			using namespace game::backend::event;
+			for ( const bool deferred : { false, true } ) {
+				BackendFixture fixture;
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* connection = fixture.UseClientConnection( gc_space );
+					auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+					auto* fail = NATIVE_CALL() { THROW( "injected apply failure" ); } );
+					fixture.RegisterEvent( "transport_test", new EventHandler( gc_space, "transport_test", noop, deferred ? noop : nullptr, fail, noop ) );
+					fixture.GetGame()->AddEvent( new Event( fixture.GetGame(), Event::ES_LOCAL, 2, GSE_CALL, "transport_test", {}, "transport-order" ) );
+					bool failed = false;
+					try { fixture.ProcessEvents(); }
+					catch ( const std::runtime_error& exception ) {
+						failed = true;
+						GT_ASSERT( std::string( exception.what() ).find( "injected apply failure" ) != std::string::npos, "unexpected event processing failure" );
+					}
+					GT_ASSERT( failed != deferred, "resolution/application timing changed" );
+					GT_ASSERT( fixture.WaitingResponses() == ( deferred ? 1 : 0 ), "failed application left response bookkeeping" );
+					fixture.FlushEvents();
+					GT_ASSERT( connection->sent.size() == ( deferred ? 1 : 0 ), "failed application queued an outgoing request" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "transport ordering check failed: " + error );
+			}
+			GT_OK();
+		}
+	);
+}
+
 static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test nested event population references resolve in the destination base",
@@ -348,6 +483,7 @@ static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddEventTransportTests( task );
 	AddPopReferenceTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(

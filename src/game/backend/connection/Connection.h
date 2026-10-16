@@ -13,6 +13,10 @@ namespace gc {
 class Space;
 }
 
+namespace gse::tests {
+class BackendFixture;
+}
+
 namespace network {
 class Network;
 }
@@ -86,6 +90,7 @@ public:
 	void IfServer( std::function< void( Server* server ) > cb ); // call cb if server
 
 	void SendGameEvent( backend::event::Event* event );
+	void SendGameEvent( backend::event::Event* event, const std::string& serialized_data );
 
 	const bool IsConnected() const;
 	const bool IsServer() const;
@@ -134,6 +139,7 @@ protected:
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 
 private:
+	friend class gse::tests::BackendFixture;
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
 	struct {
 		common::mt_id_t connect = 0;

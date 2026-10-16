@@ -143,3 +143,23 @@ the cause of the previously intermittent Windows suite timeout.
 Commands, copied controls, source/log hashes and manifests are retained locally
 under `/home/jhurliman/src/glsmac-native-reset-guard-audit/`. No original assets
 or test output are committed.
+
+## Focused publication checks
+
+The publication applies this retirement source to startup coordinator publication
+`62b9423d` (including its explicit snapshot and packet-deferral dependencies).
+The narrower branch retains its existing collector implementation; it does not
+import the original integration's separate pending-object destructor repair or
+native-filter CLI. No fixture adaptation was needed for this retirement commit.
+
+On this exact stack, Clang 15.0.7 normal full CTest passes 6/6 in 25.43 seconds,
+including the complete GSE suite and all ten retirement cases (18.07 seconds).
+The actual Engine shutdown harness also passes default and single-thread modes
+with allocation tracking. The source's full 8/8 sanitizer results and focused
+tracked results above belong to its original integration ancestry, not a new
+sanitizer run on this narrower publication branch.
+
+The exact publication logs are retained as `retirement-build.log`,
+`retirement-ctest.log` and `retirement-engine-shutdown.log` under
+`/home/jhurliman/src/glsmac-unit-publication/`. No new suppression, toolchain
+policy, unrelated source prerequisite or validation bypass is introduced.

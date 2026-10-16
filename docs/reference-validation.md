@@ -125,12 +125,17 @@ correctness.
 ## Base snapshot compatibility
 
 The base-manager section of a world snapshot starts with the typed string
-`GLSMAC_BASES_V1`. It contains population definitions, facility definitions, base
+`GLSMAC_BASES_V2`. It contains population definitions, facility definitions, base
 instances, and the next base ID, in that order. Definitions must be restored
-before a base can resolve its population and facility IDs.
+before a base can resolve its population and facility IDs. Each base record now
+stores accumulated nutrients as a nonnegative signed 64-bit integer, initially
+zero. The script getter reads this authoritative value; its setter requires a
+game write scope and rejects negative or non-integer values. Population events,
+rollback, turn processing, and the base screen use this same field. Growth and
+starvation calculations are unchanged by this storage migration.
 
-Old unversioned base snapshots are unsupported. Their initial integer population
-count fails the new reader's string-type check; the new string marker likewise
+Old unversioned and V1 base snapshots are unsupported. The unversioned integer
+population count fails the new reader's string-type check; the new string marker likewise
 fails an old reader's integer-type check. Unknown version markers are rejected
 before changing base-manager state. Mixed-version peers therefore cannot join
 using these incompatible formats. This section marker does not establish a
@@ -138,6 +143,10 @@ stable save-game contract or implement top-level protocol negotiation.
 
 The native backend tests run without original assets and exercise facility
 metadata and base references through real managers and entities, plus legacy
-and unknown-format rejection. Collection-count limits, malformed snapshot
-hardening, complete authoritative state, and full save/reload validation remain
-separate M1 work.
+and unknown-format rejection. Nutrient tests cover zero, a nonzero balance, and
+the signed 64-bit maximum through the real script setter and snapshot codec;
+invalid writes and negative snapshots must leave state unchanged. The actual
+population event apply/rollback handlers also run against a real base, with
+only their game initialization services substituted. Collection-count limits,
+malformed snapshot hardening, complete authoritative state, and full save/reload
+validation remain separate M1 work.

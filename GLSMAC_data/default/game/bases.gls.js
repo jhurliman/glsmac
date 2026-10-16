@@ -15,7 +15,7 @@ const get_pending_growth = (base) => {
 
 const reset_nutrients = (game, base) => {
 	const nfg = get_nutrients_for_growth(game, base);
-	let accumulated = base.get('accumulated_nutrients');
+	let accumulated = base.get_accumulated_nutrients();
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
@@ -23,7 +23,7 @@ const reset_nutrients = (game, base) => {
 	if (updated < 0) {
 		updated = 0;
 	}
-	base.set('accumulated_nutrients', updated);
+	base.set_accumulated_nutrients(updated);
 };
 
 const get_tile_score = (base, tile) => {
@@ -66,7 +66,7 @@ const find_best_or_worst_tiles = (base, tiles, count, modifier) => { // modifier
 const process_growth = (game, base) => {
 	let grow = false;
 
-	let accumulated = base.get('accumulated_nutrients');
+	let accumulated = base.get_accumulated_nutrients();
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
@@ -99,7 +99,7 @@ const process_growth = (game, base) => {
 		});
 		return;
 	}
-	base.set('accumulated_nutrients', accumulated);
+	base.set_accumulated_nutrients(accumulated);
 	if (base.get_size() == 0) {
 		grow = true; // always grow new bases to 1
 	}

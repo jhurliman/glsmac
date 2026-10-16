@@ -24,6 +24,12 @@ Short labels below resolve to these exact source revisions:
 | `2ce03a96` | [2ce03a9697458cda3ba9f19bc44d6219f45faf71](https://github.com/jhurliman/glsmac/commit/2ce03a9697458cda3ba9f19bc44d6219f45faf71) |
 | `100971a3` | [100971a3c7b8f7a1f76e516ee626da10963c209b](https://github.com/jhurliman/glsmac/commit/100971a3c7b8f7a1f76e516ee626da10963c209b) |
 | `4de263fc` | [4de263fc548387dec7b0aa5ad04fba300cb648a4](https://github.com/jhurliman/glsmac/commit/4de263fc548387dec7b0aa5ad04fba300cb648a4) |
+| `d57fc5a3` | [d57fc5a3f74ffc107884ae22439bed0a93a85121](https://github.com/jhurliman/glsmac/commit/d57fc5a3f74ffc107884ae22439bed0a93a85121) |
+| `fa69e2d4` | [fa69e2d4c4722932b0241dd505fd66f85b8b9123](https://github.com/jhurliman/glsmac/commit/fa69e2d4c4722932b0241dd505fd66f85b8b9123) |
+
+The latter two revisions are retained on the immutable
+`codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
+above.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -88,6 +94,10 @@ below; it was not part of this interactive build.
 | `2ce03a96` | LLVM 15 correctness policy | 285 production translation units, 53.99 s, zero failures |
 | `100971a3` | Windows CTest, including focused UUID tracking | 6/6, 23.97 s; focused UUID check 1.14 s |
 | `4de263fc` | Linux CTest, including focused UUID and mesh tracking and the resource-table parser | 7/7, 32.17 s; focused checks 1.08 s and 1.05 s |
+| `d57fc5a3` | Linux / Windows CTest, including constructor registration and consuming rectangle fixes | 7/7 in 33.01 s / 27.28 s |
+| `fa69e2d4` | Linux / Windows CTest, including host-rule synchronization and checked integer arithmetic | 7/7 in 49.21 s / 28.76 s |
+| `fa69e2d4` | Linux ASan/UBSan CTest | 7/7, first pass, 44.23 s |
+| `fa69e2d4` | LLVM 15 correctness policy | 286 production translation units, 64.53 s, zero failures |
 
 CTest commands use `--output-on-failure`; analysis uses
 `python3 tools/analyze_cpp.py --all --jobs 8` after reconfiguring its database.
@@ -101,6 +111,9 @@ Linux logs are under `/home/jhurliman/src/glsmac-gc-audit/`, using prefixes
 `roster-int64-`, `yields-roster-asan-`, `yields-analysis`, `growth-endpoint-fixed-`,
 `growth-balance-`, and `parser-mesh-integrated-`. Windows logs under `out/` use
 `roster-int64-windows-`, `growth-balance-windows-`, and `mesh-uuid-windows-`.
+Later checks use `constructor-mesh-integrated-`, `host-integer-` and
+`host-integer-asan-` on Linux, `constructor-mesh-windows-` and
+`host-integer-windows-` on Windows, and `host-integer-analysis` for the scan.
 
 ## GC registration after constructor failure
 
@@ -166,8 +179,17 @@ a successful retry:
   conversion, followed by rethrows into the error handler. That debugger run
   did not reproduce the access violation; do not equate its final outcome with
   the uninstrumented run.
+- At `d57fc5a3`, including both consuming-rectangle and GC construction fixes,
+  the tracked run reported a new double-allocation at `Widget.cpp:54` and
+  exited 1 after acknowledgement of its application error dialog. First-chance
+  CDB tracing found that the attempted and stale allocations were both the
+  widget's `scene::actor::Mesh` at that line, with size `0x3c0`. The DOM owner
+  used plain deletion after tracked allocation. That debugger process was
+  deliberately stopped after capturing the first error; it supplies no
+  additional shutdown result. Logs: `out/constructor-mesh-ui-stdout.log`, its
+  stderr file, and `out/widget-memory-cdb.log`.
 
-The latest local logs are `out/mesh-memory-ui-stdout.log`, its stderr file,
+The preceding local logs are `out/mesh-memory-ui-stdout.log`, its stderr file,
 and `out/mesh-memory-cdb.log`. Earlier first-chance evidence is in
 `out/yields-memory-cdb-fast.log`. No complete interactive memory-tracked pass,
 heap-leak result, soak result, save/reload result, or multiplayer convergence

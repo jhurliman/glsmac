@@ -188,8 +188,12 @@ do not describe an unsupported analyzer invocation as coverage.
 
 ## Current status
 
-M0 and the prerequisites for M1 are in progress. No milestone is complete, and
-the implementation PRs remain unmerged. The integration checkout now exercises
+M0 and the prerequisites for M1 are in progress. No milestone is complete.
+The reviewed SDL/main-thread foundation landed in fork PR #1 at
+[`428cf01f7a9a13b70dd29ff505e9e5e7aec1f496`](https://github.com/jhurliman/glsmac/commit/428cf01f7a9a13b70dd29ff505e9e5e7aec1f496)
+as a development baseline; its interactive macOS and hardware Linux checks
+remain open. Subsequent implementation PRs are still being reviewed and
+integrated. The integration checkout now exercises
 real backend entities, event serialization, base snapshots and their script
 bindings without the original assets. On October 16, 2026, integration commit
 [`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
@@ -221,16 +225,18 @@ remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Repair demonstrated constructor-failure GC registration and consuming-mesh
-   tracking defects with negative controls, then repeat the tracked Windows
-   startup/base-screen/shutdown sequence. Do not infer success from normal
-   tests or from a later cleanup exception masking the first failure.
-2. Load the parsed SMAC resource triples once for the host, freeze them with
-   the selected ruleset, and version/validate their GlobalSettings payload.
-   Joining clients accept host values; SMAX must not read SMAC defaults.
-3. Bind world-download snapshots to the accepted immutable profile before map
+1. Finish the tracked Windows startup/base-screen/shutdown sequence. The
+   constructor-registration and consuming-mesh repairs have focused negative
+   controls and clean reviews; a later run identified stale widget-actor
+   tracking. Exercise actual widget cleanup before repeating the GUI sequence.
+2. Bind world-download snapshots to the accepted immutable profile before map
    allocation. Exercise mismatch, truncation and late-join ordering through the
-   real reader. This does not complete disk savegames.
+   real reader. Host-only loading, freezing and GlobalSettings synchronization
+   are implemented in PR #44; joining clients accept host values and SMAX
+   carries no SMAC defaults. This does not complete disk savegames.
+3. Preserve faction flags and ordered land/water base-name lists in versioned
+   snapshots, with staged record validation and real round-trip tests. Keep
+   faction identity/ownership and whole-state rollback as separate work.
 
 Live center yields follow only after the adapter can supply authoritative
 economy, facilities, terrain/bonus, faction and phase-specific event inputs.

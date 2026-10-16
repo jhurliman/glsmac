@@ -5,6 +5,8 @@
 
 #include "task/gsetests/GSETests.h"
 #include "types/mesh/Rectangle.h"
+#include "config/Config.h"
+#include "engine/Engine.h"
 
 namespace gse::tests {
 
@@ -67,12 +69,52 @@ static std::string CheckRectangleCoordinates() {
 	GT_OK();
 }
 
+static std::string CheckConsumingRectangleConversion() {
+	try {
+		const auto destroy_rectangle = []( types::mesh::Rectangle* mesh ) { DELETE( mesh ); };
+		const auto destroy_render = []( types::mesh::Render* mesh ) { DELETE( mesh ); };
+		NEWV( rectangle, types::mesh::Rectangle );
+		std::unique_ptr< types::mesh::Rectangle, decltype( destroy_rectangle ) > source( rectangle, destroy_rectangle );
+		const types::Vec3 expected_coord( 3.0f, -7.0f, 0.5f );
+		const types::Vec2< float > expected_tex( 0.25f, 0.75f );
+		source->SetVertex( 2, expected_coord, expected_tex );
+		const void* consumed_address = source.get();
+		std::unique_ptr< types::mesh::Render, decltype( destroy_render ) > converted( source->ToRenderMesh(), destroy_render );
+		source.release(); // ToRenderMesh consumes its tracked source object.
+#ifdef DEBUG
+		if ( g_engine->GetConfig()->HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
+			// Delete checks/removes metadata only; it never frees or dereferences
+			// the address. A second removal must fail. This also cleans the stale
+			// record in the negative control, without relying on allocator reuse.
+			bool removed = false;
+			try { debug::g_memory_watcher->Delete( consumed_address, __FILE__, __LINE__ ); }
+			catch ( const std::runtime_error& error ) {
+				removed = std::string( error.what() ).find( "delete on non-allocated object" ) != std::string::npos;
+			}
+			GT_ASSERT( removed, "consuming rectangle conversion left its allocation tracked" );
+		}
+#endif
+		types::Vec3 coord;
+		types::Vec2< float > tex_coord;
+		converted->GetVertexCoord( 2, &coord );
+		converted->GetVertexTexCoord( 2, &tex_coord );
+		GT_ASSERT( coord == expected_coord.InvertY() && tex_coord == expected_tex, "consuming conversion changed geometry or texture coordinates" );
+	}
+	catch ( const std::exception& error ) {
+		GT_FAIL( std::string( "consuming rectangle conversion failed: " ) + error.what() );
+	}
+	GT_OK();
+}
+
 std::string CheckMeshCoordinateOutputs() {
-	const auto mesh_error = CheckMeshCoordinates();
-	const auto rectangle_error = CheckRectangleCoordinates();
-	if ( mesh_error.empty() ) { return rectangle_error; }
-	if ( rectangle_error.empty() ) { return mesh_error; }
-	return mesh_error + "\n" + rectangle_error;
+	std::string errors;
+	for ( const auto& error : { CheckMeshCoordinates(), CheckRectangleCoordinates(), CheckConsumingRectangleConversion() } ) {
+		if ( !error.empty() ) {
+			if ( !errors.empty() ) { errors += "\n"; }
+			errors += error;
+		}
+	}
+	return errors;
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
@@ -83,6 +125,10 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test rectangle getters and render copies preserve caller-owned coordinates",
 		GT() { return CheckRectangleCoordinates(); }
+	);
+	task->AddTest(
+		"test consuming rectangle conversion removes source allocation tracking",
+		GT() { return CheckConsumingRectangleConversion(); }
 	);
 }
 

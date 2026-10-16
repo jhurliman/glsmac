@@ -249,7 +249,7 @@ Render* Rectangle::CopyAsRenderMesh() const {
 
 Render* Rectangle::ToRenderMesh() {
 	auto* render_mesh = CopyAsRenderMesh();
-	delete this;
+	DELETE( this );
 	return render_mesh;
 }
 

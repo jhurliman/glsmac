@@ -875,6 +875,31 @@ static bool RejectsSettings( const std::function< void() >& operation ) {
 }
 
 static void AddRulesetTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "decoded roster players follow State teardown allocation ownership", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* const state = fixture.GetGame()->GetState();
+			auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+			state->SetConnection( client );
+			// A null faction keeps this allocation test independent of the
+			// existing detached Faction ownership in Player::Deserialize.
+			Player source( "Decoded player", Player::PR_HOST, nullptr, "" );
+			slot::Slots slots( state );
+			slots.Resize( 1 );
+			slots.GetSlot( 0 ).SetPlayer( &source, 0, "" );
+			types::Packet packet( types::Packet::PT_PLAYERS );
+			packet.data.num = 0;
+			packet.data.str = slots.Serialize().ToString();
+			client->Receive( packet );
+			GT_ASSERT( state->m_slots->GetCount() == 1 && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Decoded player", "actual Client roster decode did not publish player" );
+			state->Reset();
+			GT_ASSERT( state->m_slots->GetCount() == 0 && !state->GetConnection(), "actual State reset did not retire decoded roster" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "decoded roster ownership check: " + error );
+		GT_OK();
+	} );
 	task->AddTest( "test production faction configure registers both rulesets", GT() {
 		using game::backend::faction::Faction;
 		BackendFixture fixture;

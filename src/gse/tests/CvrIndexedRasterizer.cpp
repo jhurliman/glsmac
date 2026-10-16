@@ -61,8 +61,8 @@ void AddCvrIndexedRasterizerTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( equal.processed_records == 2 && equal.written_samples == 2 && equal.surface.color[ 22 ] == 129 && equal.surface.color[ 33 ] == 129 &&
 			equal.surface.color[ 23 ] == 165 && equal.surface.color[ 32 ] == 165, "equal/near depth or footprint order changed" );
 		second.initial[ 2 ] = 30 * 256;
-		const auto near = CvrIndexedRasterizer::Draw( initial, Lookups(), { first, second } );
-		GT_ASSERT( near.written_samples == 6 && near.surface.color[ 22 ] == 30 && near.surface.color[ 23 ] == 30 && near.surface.color[ 32 ] == 30 && near.surface.color[ 33 ] == 30,
+		const auto nearer_result = CvrIndexedRasterizer::Draw( initial, Lookups(), { first, second } );
+		GT_ASSERT( nearer_result.written_samples == 6 && nearer_result.surface.color[ 22 ] == 30 && nearer_result.surface.color[ 23 ] == 30 && nearer_result.surface.color[ 32 ] == 30 && nearer_result.surface.color[ 33 ] == 30,
 			"later nearer component did not cover all four samples" );
 		GT_OK();
 	} );

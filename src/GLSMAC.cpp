@@ -136,6 +136,7 @@ GLSMAC::~GLSMAC() {
 }
 
 void GLSMAC::Iterate() {
+	if ( ProcessReset() ) { return; }
 	{
 		bool ticked = false;
 		while ( m_loader_dots_timer.HasTicked() ) {
@@ -147,6 +148,7 @@ void GLSMAC::Iterate() {
 		}
 		if ( ticked ) {
 			UpdateLoaderText();
+			if ( ProcessReset() ) { return; }
 		}
 	}
 	if ( m_load_thread ) {
@@ -160,29 +162,67 @@ void GLSMAC::Iterate() {
 				m_f_after_load();
 			});
 			m_f_after_load = nullptr;
+			if ( ProcessReset() ) { return; }
 		}
 	}
 	m_gse->Iterate();
+	if ( ProcessReset() ) { return; }
 	m_ui->Iterate();
+	if ( ProcessReset() ) { return; }
 	if ( m_game ) {
 		m_game->Iterate();
-	}
-	if ( m_reset_needed ) {
-		m_reset_needed = false;
-		auto* game = g_engine->GetGame();
-		const auto mt_id = game->MT_ResetController();
-		const auto& response = game->MT_WaitResponse( mt_id );
-		if ( response.result != game::backend::R_SUCCESS ) {
-			game->MT_DestroyResponse( response );
-			THROW( "failed to reset game thread" );
-		}
-		game->MT_DestroyResponse( response );
-		m_is_game_running = false;
-		RunMain();
+		if ( ProcessReset() ) { return; }
 	}
 	if ( m_console ) {
 		m_console->Iterate();
 	}
+}
+
+bool GLSMAC::ProcessReset() {
+	if ( !m_reset_needed ) { return false; }
+	if ( m_reset_phase == ResetPhase::FAILED ) { return true; }
+	auto* game = g_engine->GetGame();
+	if ( m_reset_phase == ResetPhase::IDLE ) {
+		try {
+			// Retire intent before any blocking cancellation. The caller is
+			// outside accumulation, so native work can finish independently.
+			m_reset_barrier = game->MT_BeginResetController();
+			if ( m_game ) { m_game->RetireBackendRequests(); }
+			m_reset_request = game->MT_SubmitResetController( m_reset_barrier );
+			m_reset_phase = ResetPhase::WAITING;
+		}
+		catch ( ... ) {
+			m_reset_phase = ResetPhase::FAILED;
+			if ( m_reset_barrier ) { game->MT_AbandonResetController( m_reset_barrier ); }
+			m_reset_barrier = 0;
+			m_reset_request = 0;
+			throw;
+		}
+		return true;
+	}
+	const auto response = game->MT_GetResponse( m_reset_request );
+	if ( response.result == game::backend::R_NONE ) { return true; }
+	const auto barrier = m_reset_barrier;
+	// Terminal retrieval also releases the controller admission. Do not
+	// abandon it again. Backend Stop owns any still-unconsumed MT payloads.
+	m_reset_request = 0;
+	m_reset_barrier = 0;
+	{
+		struct ResponseOwner {
+			game::backend::Game* backend;
+			const game::backend::MT_Response& response;
+			~ResponseOwner() { backend->MT_DestroyResponse( response ); }
+		} destroy_response{ game, response };
+		if ( response.op != game::backend::OP_RESET || response.world_ticket != barrier || response.result != game::backend::R_SUCCESS ) {
+			m_reset_phase = ResetPhase::FAILED;
+			THROW( "failed to reset game thread" );
+		}
+	}
+	m_reset_phase = ResetPhase::IDLE;
+	m_is_game_running = false;
+	m_reset_needed = false;
+	RunMain();
+	return true;
 }
 
 WRAPIMPL_BEGIN( GLSMAC )

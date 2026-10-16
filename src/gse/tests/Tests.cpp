@@ -2,6 +2,7 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "GSE.h"
 #include "Parser.h"
@@ -54,6 +55,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
 		task->AddTest(
 			"test UUID generation works independently of an existing account",

@@ -99,3 +99,18 @@ Retained local commands, copied controls, logs and hash manifest are under
 run lacked the Engine backend needed by `Slot::Update`; its failed log is retained
 separately and is not counted as production-defect evidence. All results above
 use the corrected fixture.
+
+### Integrated and publication validation
+
+The integration at `8f772f95` passes native Windows Clang Debug CTest 8/8
+in 55.94 seconds and Linux ASan/UBSan/LSan CTest 8/8 in 44.95 seconds.
+The actual Engine shutdown harness also passes its default and single-thread
+tracked sanitizer runs. Logs are retained as `out/map-publication-windows-*`
+and `/home/jhurliman/src/glsmac-gc-audit/map-publication-*` respectively.
+
+The narrower publication at `97aecc0f` passes its six registered CTest cases
+in 26.43 seconds, including the full GSE suite with the nine new regressions.
+Its only cherry-pick adaptation removes a duplicate `<filesystem>` include;
+production code is unchanged. The publication does not include the later native
+test-filter CLI, so its focused command above requires the source/integration
+build. These runs add no rendered restart, native Mac or original-game claim.

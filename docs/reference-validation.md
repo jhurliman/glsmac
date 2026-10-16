@@ -128,11 +128,18 @@ The base-manager section of a world snapshot starts with the typed string
 `GLSMAC_BASES_V2`. It contains population definitions, facility definitions, base
 instances, and the next base ID, in that order. Definitions must be restored
 before a base can resolve its population and facility IDs. Each base record now
-stores accumulated nutrients as a nonnegative signed 64-bit integer, initially
-zero. The script getter reads this authoritative value; its setter requires a
-game write scope and rejects negative or non-integer values. Population events,
-rollback, turn processing, and the base screen use this same field. Growth and
-starvation calculations are unchanged by this storage migration.
+stores accumulated nutrients as a signed 64-bit integer, initially zero. The
+script getter reads this authoritative value; its setter requires a game write
+scope and rejects non-integer values. Population events, rollback, turn
+processing, and the base screen use this same field. Growth and starvation
+calculations are unchanged by this storage migration.
+
+Negative balances are preserved. Research handoff `RE-SMAC-GROW-001` describes
+negative stored food participating in starvation and subsequent recovery. This
+is static-derived evidence for the identified SMAC reference, not an observed
+runtime result or a claim about SMAX. Storage accepts the full signed 64-bit
+range; tests at its limits verify representation, not original-game arithmetic
+or overflow behavior. Implementing the researched growth rules remains separate.
 
 Old unversioned and V1 base snapshots are unsupported. The unversioned integer
 population count fails the new reader's string-type check; the new string marker likewise
@@ -143,11 +150,11 @@ stable save-game contract or implement top-level protocol negotiation.
 
 The native backend tests run without original assets and exercise facility
 metadata and base references through real managers and entities, plus legacy
-and unknown-format rejection. Nutrient tests cover zero, a nonzero balance, and
-the signed 64-bit maximum through the real script setter and snapshot codec;
-invalid writes preserve the nutrient balance, and negative base records leave
-tile ownership and the next base ID unchanged. This does not establish
-transactional rollback of a malformed manager snapshot. The actual
+and unknown-format rejection. Nutrient tests cover zero, positive and negative
+balances, and both signed 64-bit limits through the real script setter and
+snapshot codec; read-only and non-integer writes preserve the nutrient balance.
+Negative balances also survive direct construction and snapshot reload. This
+does not establish transactional rollback of a malformed manager snapshot. The actual
 population event apply/rollback handlers also run against a real base, with
 only their game initialization services substituted. Collection-count limits,
 malformed snapshot hardening, complete authoritative state, and full save/reload

@@ -345,7 +345,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			using namespace game::backend::base;
 			const auto previous_next_id = Base::GetNextId();
 			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
-			for ( const int64_t nutrients : { int64_t( 0 ), int64_t( 37 ), std::numeric_limits< int64_t >::max() } ) {
+			for ( const int64_t nutrients : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 37 ), std::numeric_limits< int64_t >::max() } ) {
 				BackendFixture source, restored;
 				auto* game = source.GetGame();
 				Base base( game, 501, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Nutrient test", {}, {} );
@@ -367,11 +367,9 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 					setter->Run( GSE_CALL, { new value::Int( gc_space, nutrients ) } );
 					auto* value = static_cast< value::Callable* >( object->Get( "get_accumulated_nutrients" ) )->Run( GSE_CALL, {} );
 					GT_ASSERT( value->type == VT_INT && static_cast< value::Int* >( value )->value == nutrients, "binding did not return the current nutrient value" );
-					for ( auto* invalid : std::vector< Value* >{ new value::Int( gc_space, -1 ), new value::String( gc_space, "37" ) } ) {
-						try { setter->Run( GSE_CALL, { invalid } ); GT_FAIL( "invalid nutrient write was accepted" ); }
-						catch ( const Exception& ) {}
-						GT_ASSERT( base.GetAccumulatedNutrients() == nutrients, "rejected write changed nutrients" );
-					}
+					try { setter->Run( GSE_CALL, { new value::String( gc_space, "37" ) } ); GT_FAIL( "non-integer nutrient write was accepted" ); }
+					catch ( const Exception& ) {}
+					GT_ASSERT( base.GetAccumulatedNutrients() == nutrients, "rejected write changed nutrients" );
 					GT_OK();
 				} );
 				GT_ASSERT( write_error.empty(), "nutrient binding check failed: " + write_error );
@@ -385,29 +383,23 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 		}
 	);
 	task->AddTest(
-		"test negative nutrient snapshots fail before claiming a base tile",
+		"test negative starvation balances and signed minimum survive nutrient snapshots",
 		GT() {
 			using namespace game::backend::base;
 			const auto previous_next_id = Base::GetNextId();
 			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
-			BackendFixture fixture;
-			types::Buffer snapshot;
-			snapshot.WriteInt( previous_next_id + 100 );
-			snapshot.WriteInt( 2 );
-			snapshot.WriteString( "GAIANS" );
-			snapshot.WriteInt( 2 );
-			snapshot.WriteInt( 2 );
-			snapshot.WriteString( "Invalid nutrients" );
-			snapshot.WriteInt( 0 ); // facilities
-			snapshot.WriteInt( 0 ); // population
-			snapshot.WriteInt( 1 ); // next population ID
-			snapshot.WriteInt( -1 );
-			bool rejected = false;
-			try { std::unique_ptr< Base > unexpected( Base::Deserialize( snapshot, fixture.GetGame() ) ); }
-			catch ( const std::runtime_error& ) { rejected = true; }
-			GT_ASSERT( rejected, "negative nutrient snapshot was accepted" );
-			GT_ASSERT( fixture.GetGame()->GetMap()->GetTile( 2, 2 )->base == nullptr, "rejected snapshot claimed the tile" );
-			GT_ASSERT( Base::GetNextId() == previous_next_id, "rejected snapshot changed the next base ID" );
+			// RE-SMAC-GROW-001 identifies negative stored food as starvation
+			// state (static-derived SMAC evidence, not a runtime observation).
+			for ( const int64_t nutrients : { int64_t( -2 ), std::numeric_limits< int64_t >::min() } ) {
+				BackendFixture source, restored;
+				auto* game = source.GetGame();
+				Base base( game, 503, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Negative nutrient balance", {}, {}, 1, nutrients );
+				GT_ASSERT( base.GetAccumulatedNutrients() == nutrients, "constructor changed the signed nutrient balance" );
+				auto snapshot = Base::Serialize( &base );
+				std::unique_ptr< Base > actual( Base::Deserialize( snapshot, restored.GetGame() ) );
+				GT_ASSERT( actual->GetAccumulatedNutrients() == nutrients, "snapshot changed the negative nutrient balance" );
+				GT_ASSERT( Base::Serialize( actual.get() ).ToString() == snapshot.ToString(), "negative nutrient snapshot bytes changed" );
+			}
 			GT_OK();
 		}
 	);

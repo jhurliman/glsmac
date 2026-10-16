@@ -56,9 +56,6 @@ Base::Base(
 	, m_pops( pops )
 	, m_next_pop_id( next_pop_id )
 	, m_accumulated_nutrients( accumulated_nutrients ) {
-	if ( accumulated_nutrients < 0 ) {
-		THROW( "accumulated nutrients must be nonnegative" );
-	}
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -108,9 +105,6 @@ int64_t Base::GetAccumulatedNutrients() const {
 }
 
 void Base::SetAccumulatedNutrients( const int64_t nutrients ) {
-	if ( nutrients < 0 ) {
-		THROW( "accumulated nutrients must be nonnegative" );
-	}
 	if ( m_accumulated_nutrients != nutrients ) {
 		m_accumulated_nutrients = nutrients;
 		TriggerUpdate();
@@ -205,9 +199,6 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			m_game->CheckRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( nutrients, 0, Int );
-			if ( nutrients < 0 ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, "accumulated nutrients must be nonnegative" );
-			}
 			SetAccumulatedNutrients( nutrients );
 			return VALUE( gse::value::Undefined );
 		} )

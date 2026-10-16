@@ -360,6 +360,58 @@ static void AddEventTransportTests( task::gsetests::GSETests* task ) {
 	);
 }
 
+static void AddEventResponseTests( task::gsetests::GSETests* task ) {
+	for ( const bool deferred : { false, true } ) {
+		for ( const bool accepted : { false, true } ) {
+			task->AddTest(
+				"test " + std::string( deferred ? "deferred" : "optimistic" ) + " event response is " + ( accepted ? "accepted" : "rejected" ),
+				GT( deferred, accepted ) {
+					using namespace game::backend::event;
+					size_t applies = 0, rollbacks = 0;
+					int state = 10;
+					BackendFixture fixture;
+					const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+						auto* connection = fixture.UseClientConnection( gc_space );
+						auto* validate = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+						auto* resolve = NATIVE_CALL() { THROW( "client must not resolve its request" ); } );
+						auto* apply = NATIVE_CALL( &applies, &state, deferred ) {
+							auto* request = VALUE_DATA( value::Object, arguments.at( 0 ) );
+							const auto previous = state;
+							state += deferred ? VALUE_GET( value::Int, request->Get( "resolved" ) ) : 7;
+							++applies;
+							return VALUE( value::Int,, previous );
+						} );
+						auto* rollback = NATIVE_CALL( &rollbacks, &state ) {
+							auto* request = VALUE_DATA( value::Object, arguments.at( 0 ) );
+							state = VALUE_GET( value::Int, request->Get( "applied" ) );
+							++rollbacks;
+							return VALUE( value::Undefined );
+						} );
+						fixture.RegisterEvent( "response_test", new EventHandler( gc_space, "response_test", validate, deferred ? resolve : nullptr, apply, rollback ) );
+						fixture.GetGame()->AddEvent( new Event( fixture.GetGame(), Event::ES_LOCAL, 2, GSE_CALL, "response_test", {}, "pending-request" ) );
+						fixture.ProcessEvents();
+						GT_ASSERT( applies == ( deferred ? 0 : 1 ) && rollbacks == 0 && state == ( deferred ? 10 : 17 ), "request application timing changed" );
+						GT_ASSERT( fixture.WaitingResponses() == 1, "request was not retained for a response" );
+						fixture.FlushEvents();
+						GT_ASSERT( connection->sent.size() == 1, "request was not sent exactly once" );
+						fixture.GetGame()->AddEventResponse( "pending-request", accepted, deferred && accepted ? VALUE( value::Int,, 37 ) : nullptr );
+						fixture.GetGame()->Iterate();
+						GT_ASSERT( applies == ( deferred && !accepted ? 0 : 1 ), "response applied the request the wrong number of times" );
+						GT_ASSERT( rollbacks == ( !deferred && !accepted ? 1 : 0 ), "response rolled back the request the wrong number of times" );
+						GT_ASSERT( state == ( accepted ? ( deferred ? 47 : 17 ) : 10 ), "response did not preserve resolved or rollback data" );
+						GT_ASSERT( fixture.WaitingResponses() == 0, "completed response left the request pending" );
+						fixture.GetGame()->Iterate();
+						GT_ASSERT( applies == ( deferred && !accepted ? 0 : 1 ) && rollbacks == ( !deferred && !accepted ? 1 : 0 ), "response was processed again on the next iteration" );
+						GT_OK();
+					} );
+					GT_ASSERT( error.empty(), "event acknowledgement failed: " + error );
+					GT_OK();
+				}
+			);
+		}
+	}
+}
+
 static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test nested event population references resolve in the destination base",
@@ -478,6 +530,7 @@ static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
+	AddEventResponseTests( task );
 	AddPopReferenceTests( task );
 	task->AddTest(
 		"test backend mutation scopes restore read-only access after nested exceptions",

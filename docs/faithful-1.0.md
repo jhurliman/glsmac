@@ -231,27 +231,32 @@ remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Complete the focused scheduler review and insert its repair before the
-   affected weapon-table PR, preserving that feature's narrow diff. Eight
-   deterministic cases cover same-deadline repeat and sibling cancellation,
-   self-cancel, nested timers, stopping all timers and exception bookkeeping.
-   Separately preserve the backend RNG continuation through snapshot rebuilds:
-   validate a versioned algorithm/state header before map allocation, stage
-   state during reconstruction and install it before resumed gameplay. Ordinary
-   initialization must retain its existing RNG ordering. Turn restoration and
-   future host/client lockstep are separate contracts.
+1. Finish RNG continuation review after repairing the exception-message leak
+   exposed by its real initialization-error test. The implemented versioned
+   state is validated before map allocation and installed after reconstruction;
+   ordinary initialization retains its draw ordering. The timer repair in #69
+   now precedes the unit-table stack and passes current-head cross-platform
+   checks. Next, replace restore-time turn advancement with explicit restoration
+   and frontend status publication. Player completion, canonical faction links
+   and future host/client lockstep remain separate contracts.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
    defense, reactor, chassis and counted predefined-design parsers are queued
    in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact
    component keys, preserving row identity and rejecting ambiguous or mismatched
    ruleset references. Reactor selection, ability-bit mapping, conventional
    design state, CVR rendering and gameplay commands remain separate work.
+   The local asset inventory contains 140 CVR containers. Start with a bounded
+   reader of their observed envelope, retaining opaque owned payloads, then
+   verify geometry, model composition and presentation. The existing native
+   sprite sheet is not conventional-unit art; source model names alone do not
+   establish design-to-model mappings.
    Do not turn the current native-unit movement assumptions into standard-unit
    behavior or invent reactor/cost defaults.
-3. Connect resource requests to their actual evaluating base. Worker intake and
-   base-screen previews must pass the same canonical base and owner, preserving
-   legacy context-free calls. Exercise real work/unwork events and destination-
-   world snapshot identities with a fully specified synthetic yield fixture.
+3. Review #70's evaluating-base route. Worker intake, scoring and base-screen
+   queries now pass the canonical base and owner while preserving legacy calls.
+   Real work/unwork events and restored identities pass the regression; Windows
+   and leak-enabled Linux CTest each pass 8/8 at `bf00f411`. Interactive pixel
+   validation of this new route remains open.
    Resource bonus, nutrient, mineral and energy kernels now have original-routine
    comparisons; the energy kernel matches 3,122 direct checks. A native bridge,
    complete frozen rules profile and authoritative terrain, technology, social,

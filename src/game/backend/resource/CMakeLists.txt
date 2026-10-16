@@ -7,5 +7,6 @@ SET( SRC ${SRC}
 	${PWD}/SmacTileEnergy.cpp
 	${PWD}/SmacTileNutrients.cpp
 	${PWD}/SmacResourceBonus.cpp
+	${PWD}/SmacMineralCostFactor.cpp
 
 	PARENT_SCOPE )

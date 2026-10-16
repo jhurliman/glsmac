@@ -2,6 +2,10 @@
 
 Unofficial open-source OpenGL/SDL2 reimplementation of Sid Meier's Alpha Centauri ( + Alien Crossfire ).
 
+This fork is working toward a faithful SMAC and Alien Crossfire 1.0. See the
+[release plan and current gaps](docs/faithful-1.0.md) and
+[original-game reference workflow](docs/reference-validation.md).
+
 ![github-preview-min](https://user-images.githubusercontent.com/7736265/227072592-0acc91e6-d3b4-46d2-98f6-0ba4e430328f.png)
 
 Note: you will still need to own the original game and expansion - GLSMAC will load its resources like images or sounds.

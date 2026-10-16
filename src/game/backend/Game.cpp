@@ -45,6 +45,7 @@
 #include "game/backend/event/EventHandler.h"
 #include "gse/value/Bool.h"
 #include <limits>
+#include <algorithm>
 
 namespace game {
 namespace backend {

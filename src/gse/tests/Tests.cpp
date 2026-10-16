@@ -3,6 +3,7 @@
 #include "Backend.h"
 #include "Buffer.h"
 #include "CvrContainerReader.h"
+#include "CvrSceneReader.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -41,6 +42,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddCvrContainerReaderTests( task );
+		tests::AddCvrSceneReaderTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

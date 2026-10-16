@@ -142,3 +142,28 @@ The preceding turn-only integration at
 Its standalone retry and a full retry passed, but the cause remains unresolved.
 Logs remain under `out/turn-windows-` and `out/turn-windows-retry-` in the
 integration checkout. The V3 change does not claim to repair that timeout.
+
+## Publication and combined validation
+
+The first focused publication source
+`eb29516b15fa83c7ccca2eaf5786a03d1f514c8f` failed one native regression:
+the noncanonical Boolean byte was accepted by its older Buffer decoder
+(163 passed, one failed; CTest 4/5). The separately reviewed prerequisite
+[PR #24](https://github.com/jhurliman/glsmac/pull/24), commit
+`bac21a07116083aaab565e2eaaf78caf0d0457f9`, is now included by merge.
+No malformed-input assertion was relaxed. At
+`9f66d2a61d42fea7761a3165c94235d0c5dfa669`, all five focused publication
+CTests passed in 22.51 seconds (GSE 16.05 seconds). Both logs remain under
+`/home/jhurliman/src/glsmac-unit-publication/`, named
+`world-completion-missing-bool-ctest.log` and
+`world-completion-bool-ctest.log`.
+
+The broader integration
+`a16fa30b4f8d1a812d306cf7a719de318cbcba3a`, retained on
+`codex/validation-20261016-world-completion`, passed Windows CTest 8/8 in
+50.65 seconds (GSE 25.35 seconds) and Linux ASan/UBSan/LSan CTest 8/8 in
+48.20 seconds (GSE 33.02 seconds), with leak detection enabled. A freshly
+configured LLVM 15 database scanned all 297 production translation units in
+55.98 seconds at eight jobs, with zero failures. Windows-only network code
+remains outside that Linux analysis. Logs use `out/world-completion-windows-`
+and `/home/jhurliman/src/glsmac-gc-audit/world-completion-` prefixes.

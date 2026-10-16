@@ -18,12 +18,73 @@
 #include "util/FinallyGuard.h"
 
 #include <atomic>
+#include <stdexcept>
 #include <thread>
 
 namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+
+	for ( const bool nested : { false, true } ) {
+		task->AddTest(
+			nested ? "test if nested native exceptions restore GC accumulation" : "test if native exceptions restore GC accumulation",
+			GT( nested ) {
+				std::atomic< size_t > discarded = 0;
+				std::atomic< size_t > kept = 0;
+				class TrackedObject : public gc::Object {
+				public:
+					TrackedObject( gc::Space* space, std::atomic< size_t >& destructions )
+						: gc::Object( space ), destructions( destructions ) {}
+					~TrackedObject() override { destructions++; }
+				private:
+					std::atomic< size_t >& destructions;
+				};
+				class Root : public gc::Object {
+				public:
+					Root() : gc::Object( nullptr ) {}
+					gc::Object* child = nullptr;
+					void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+						gc::Object::GetReachableObjects( reachable_objects );
+						if ( child ) { GC_REACHABLE( child ); }
+					}
+				} root;
+				gc::Space space( &root );
+				space.SetThreadId( std::this_thread::get_id() );
+				util::FinallyGuard release_root( [ & ]() {
+					space.Accumulate( &root, [ & ]() { root.child = nullptr; } );
+				} );
+				bool caught = false;
+				try {
+					space.Accumulate( &root, [ & ]() {
+						root.child = new TrackedObject( &space, kept );
+						new TrackedObject( &space, discarded );
+						const auto fail = [ & ]() {
+							new TrackedObject( &space, discarded );
+							throw std::runtime_error( "native accumulation failure" );
+						};
+						if ( nested ) { space.Accumulate( &root, fail ); }
+						else { fail(); }
+					} );
+				}
+				catch ( const std::runtime_error& error ) {
+					caught = std::string( error.what() ) == "native accumulation failure";
+				}
+				GT_ASSERT( caught, "native exception was not preserved" );
+				GT_ASSERT( !space.IsAccumulating(), "native exception left GC accumulation active" );
+				g_engine->GetGC()->Iterate();
+				GT_ASSERT( discarded == 2 && kept == 0, "failed accumulation did not commit objects for normal collection" );
+				space.Accumulate( &root, [ & ]() {
+					new TrackedObject( &space, discarded );
+					root.child = nullptr;
+				} );
+				GT_ASSERT( !space.IsAccumulating(), "subsequent accumulation stayed active" );
+				g_engine->GetGC()->Iterate();
+				GT_ASSERT( discarded == 3 && kept == 1, "subsequent accumulation or root release was not collected" );
+				GT_OK();
+			}
+		);
+	}
 
 	task->AddTest(
 		"test if event handler return validation handles missing values",

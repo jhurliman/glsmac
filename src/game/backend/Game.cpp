@@ -666,6 +666,14 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_ruleset",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) { GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" ); }
+				return VALUE( gse::value::String,, m_state->m_settings.global.GetRulesetId() );
+			} )
+		},
+		{
 			"get_settings", // deprecated
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );

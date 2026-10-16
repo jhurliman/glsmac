@@ -113,6 +113,18 @@ The older publication base also lacks the integration's tracked fixture
 allocation repairs; the tracked/sanitizer measurements above apply to the
 named integration, not to the focused publication tree.
 
+Hosted Windows CTest on `0592d21144a2e6289379021a5d05edf8ce159bea`
+timed out at the immediate initialization-error case. That fixture throws a
+native exception from the initialize callback; the publication's older
+`Wrappable::Trigger` still released a mutex owned by a lock guard and only
+reacquired it for GSE exceptions. The unchanged reviewed PR #54 fix and its
+regressions are now included at
+`685f13768571d1528e57efbd1791948db8b41d75`, which passes focused-branch
+Linux CTest 5/5 in 22.28 seconds. Hosted Windows validation of that repair is
+separate from this local result. Later failure-cleanup/reset PRs already carried
+the same prerequisite; moving it earlier makes this admission PR independent of
+those descendants. No timeout was extended and no error-path test was removed.
+
 Five isolated source-copy negative controls each failed their targeted test:
 omitting completed-response retirement, skipping execution-time ticket checks,
 using only State pointer identity, ignoring the controller cutoff, and canceling

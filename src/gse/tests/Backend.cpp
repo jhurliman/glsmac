@@ -241,6 +241,12 @@ public:
 		return result;
 	}
 
+	void EnableTurns() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_um = new game::backend::unit::UnitManager( &m_game );
+		} );
+	}
+
 	void DestroyMapBeforeManagers() {
 		// Mirrors ResetGame: the map dies before the collector-owned managers.
 		m_map.reset();

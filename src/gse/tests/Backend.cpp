@@ -162,6 +162,20 @@ public:
 
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
 	void SetSnapshotTurn( const size_t turn ) { m_game.m_current_turn.AdvanceTurn( turn ); }
+	void EnableTurnPlayers() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			for ( const size_t id : { 0, 2 } ) {
+				NEWV( player, game::backend::Player, "Turn player", game::backend::Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
+				m_game.GetState()->AddPlayer( player );
+				m_game.GetState()->m_slots->GetSlot( id ).SetPlayer( player, 0, "" );
+			}
+			m_game.m_slot_num = 2;
+			m_game.m_slot = &m_game.GetState()->m_slots->GetSlot( 2 );
+		} );
+	}
+	const std::vector< game::FrontendRequest >& FrontendRequests() const { return m_frontend_requests; }
+	void ClearFrontendRequests() { m_frontend_requests.clear(); }
+	void CheckTurnComplete() { m_game.CheckTurnComplete(); }
 	void RestoreWorldBody( GSE_CALLABLE, const std::string& snapshot ) {
 		types::Buffer buffer( snapshot );
 		game::backend::world_snapshot::ValidateHeader( buffer, m_game.GetState()->m_settings.global );
@@ -179,6 +193,7 @@ public:
 	void ResetWorld() { m_map.release(); m_game.ResetGame(); }
 	void CancelWorldInitialization() { m_map.release(); m_game.InitFailed( "Operation aborted" ); }
 	bool HasPendingSnapshotRandom() const { return m_game.m_pending_snapshot_random.has_value(); }
+	bool HasPendingSnapshotTurn() const { return m_game.m_pending_snapshot_turn.has_value(); }
 	std::string WorldManagers() const {
 		types::Buffer result, resources, units, bases, animations;
 		m_game.GetRM()->Serialize( resources );
@@ -1749,6 +1764,158 @@ private:
 
 }
 
+static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
+	using game::backend::base::Base;
+	using game::backend::base::PopDef;
+	using namespace game::backend::turn;
+	for ( const int scenario : { 0, 1, 2 } ) {
+		task->AddTest( "world turn restore preserves simulation and publishes after registration " + std::to_string( scenario ), GT( scenario ) {
+			const auto old_unit_id = Unit::GetNextId(), old_base_id = Base::GetNextId();
+			util::FinallyGuard restore_ids( [ = ]() { Unit::SetNextId( old_unit_id ); Base::SetNextId( old_base_id ); } );
+			BackendFixture source, destination;
+			for ( auto* fixture : { &source, &destination } ) {
+				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
+				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
+				settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+			}
+			source.SetRunning( true ); source.SetSnapshotTurn( 37 );
+			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			source.AddBaseWithPop( 601, 9 )->SetAccumulatedNutrients( -123 );
+			const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				DefineSnapshotUnit( source.GetGame()->GetUM() );
+				auto* unit = SpawnSnapshotUnit( GSE_CALL, source, 71 );
+				unit->m_movement = scenario == 1 ? -0.25f : 0.375f;
+				unit->m_health = 0.625f; unit->m_moved_this_turn = true;
+				GT_OK();
+			} );
+			GT_ASSERT( source_error.empty(), "source setup: " + source_error );
+			const auto snapshot = source.WorldSnapshot();
+			const auto error = destination.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = destination.GetGame();
+				auto* local = game->GetState()->m_slots->GetSlot( 2 ).GetPlayer();
+				auto* remote = game->GetState()->m_slots->GetSlot( 0 ).GetPlayer();
+				remote->CompleteTurn(); if ( scenario == 2 ) { local->CompleteTurn(); }
+				if ( scenario == 2 ) { destination.UseClientConnection( gc_space ); }
+				size_t turns = 0, unit_turns = 0, base_turns = 0, starts = 0, statuses = 0;
+				bool start_saw_metadata = false, status_saw_instances = false;
+				game->On( GSE_CALL, "turn", NATIVE_CALL( &turns ) { ++turns; return VALUE( value::Undefined ); } ) );
+				game->GetUM()->On( GSE_CALL, "unit_turn", NATIVE_CALL( &unit_turns ) { ++unit_turns; return VALUE( value::Undefined ); } ) );
+				game->GetBM()->On( GSE_CALL, "base_turn", NATIVE_CALL( &base_turns ) { ++base_turns; return VALUE( value::Undefined ); } ) );
+				game->On( GSE_CALL, "start", NATIVE_CALL( &starts, &start_saw_metadata, game ) {
+					++starts; start_saw_metadata = game->GetTurnId() == 37; return VALUE( value::Undefined );
+				} ) );
+				game->On( GSE_CALL, "turn_status", NATIVE_CALL( &statuses, &status_saw_instances, game ) {
+					++statuses;
+					status_saw_instances = game->GetUM()->GetUnit( 71 ) && game->GetBM()->GetBase( 601 );
+					return VALUE( value::Undefined );
+				} ) );
+				destination.ClearFrontendRequests();
+				destination.RestoreWorldBody( GSE_CALL, snapshot );
+				GT_ASSERT( !turns && !unit_turns && !base_turns, "download invoked gameplay turn hooks" );
+				GT_ASSERT( remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario == 2 ), "download cleared existing player completion flags" );
+				for ( const auto& request : destination.FrontendRequests() ) {
+					GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "turn published before instance registration" );
+				}
+				destination.CompleteWorldRestore( GSE_CALL );
+				GT_ASSERT( !destination.HasPendingSnapshotTurn(), "completed restore retained pending turn publication" );
+				GT_ASSERT( starts == 1 && start_saw_metadata && statuses == 1 && status_saw_instances, "restore publication ordering changed" );
+				GT_ASSERT( !turns && !unit_turns && !base_turns, "initialization advanced gameplay turn" );
+				const auto* unit = game->GetUM()->GetUnit( 71 ); const auto* base = game->GetBM()->GetBase( 601 );
+				GT_ASSERT( unit->m_movement == ( scenario == 1 ? -0.25f : 0.375f ) && unit->m_health == 0.625f && unit->m_moved_this_turn, "restore reset movement, health, or moved state" );
+				GT_ASSERT( base->GetAccumulatedNutrients() == -123 && base->m_pops.size() == 1 && base->m_pops.count( 9 ), "restore changed nutrients or population" );
+				GT_ASSERT( remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario == 2 ), "initialization cleared player completion flags" );
+				GT_ASSERT( game->GetRandom()->GetStateString() == source.GetGame()->GetRandom()->GetStateString(), "turn restore consumed saved RNG" );
+				const auto expected_status = scenario == 2 ? TS_WAITING_FOR_PLAYERS : scenario == 1 ? TS_TURN_COMPLETE : TS_TURN_ACTIVE;
+				size_t advances = 0, updates = 0;
+				for ( const auto& request : destination.FrontendRequests() ) {
+					if ( request.type == game::FrontendRequest::FR_TURN_ADVANCE ) { ++advances; GT_ASSERT( request.data.turn_advance.turn_id == 37, "frontend turn ID differs" ); }
+					if ( request.type == game::FrontendRequest::FR_TURN_STATUS ) { ++updates; GT_ASSERT( request.data.turn_status.status == expected_status, "frontend turn status differs" ); }
+				}
+				GT_ASSERT( advances == 1 && updates == 1, "restored turn/status not published exactly once" );
+				destination.CheckTurnComplete();
+				GT_ASSERT( statuses == 1, "next iteration repeated or replaced restored status" );
+				// UI is constructed after backend start. Use the actual minimap script
+				// with the real wrapped Game, replacing only asset-dependent factories.
+				auto* wrapper = static_cast< value::Object* >( game->Wrap( GSE_CALL ) );
+				auto* get_status = static_cast< value::Callable* >( wrapper->Get( "get_turn_status" ) );
+				const auto expected_name = scenario == 2 ? "waiting_for_players" : scenario == 1 ? "turn_complete" : "active";
+				GT_ASSERT( static_cast< value::String* >( get_status->Run( GSE_CALL, {} ) )->value == expected_name, "cached script status differs" );
+				auto* factory = static_cast< value::Callable* >( destination.RunScript( GSE_CALL, "./GLSMAC_data/tests/_restored_minimap" ) );
+				auto* read_ui = static_cast< value::Callable* >( factory->Run( GSE_CALL, { wrapper } ) );
+				auto* ui = static_cast< value::Object* >( read_ui->Run( GSE_CALL, {} ) );
+				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2137", "late minimap lost restored year" );
+				GT_ASSERT( static_cast< value::String* >( ui->Get( "text" ) )->value == ( scenario == 2 ? "WAITING FOR PLAYERS" : "TURN COMPLETE" ), "late minimap lost restored status" );
+				GT_ASSERT( static_cast< value::Int* >( ui->Get( "plays" ) )->value == ( scenario == 1 ? 1 : 0 ) && static_cast< value::Int* >( ui->Get( "timers" ) )->value == ( scenario == 1 ? 1 : 0 ), "late minimap readiness presentation differs" );
+				// Ordinary advancement must still invoke real unit-turn logic and all
+				// gameplay hooks, clear completion, reset movement and publish normally.
+				auto* turns_module = static_cast< value::Object* >( destination.RunScript( GSE_CALL, "./GLSMAC_data/default/units/turns" ) );
+				static_cast< value::Callable* >( turns_module->Get( "configure" ) )->Run( GSE_CALL, { wrapper } );
+				if ( scenario == 2 ) { game->GetState()->DetachConnection(); } // ordinary host-turn positive control
+				game->AdvanceTurn( 38 );
+				GT_ASSERT( turns == 1 && unit_turns == 1 && base_turns == 1 && game->GetTurnId() == 38, "ordinary advancement hooks changed" );
+				GT_ASSERT( !local->IsTurnCompleted() && !remote->IsTurnCompleted() && !unit->m_moved_this_turn && unit->m_movement == 1.0f && unit->m_health == 0.625f, "ordinary advancement no longer resets gameplay state" );
+				ui = static_cast< value::Object* >( read_ui->Run( GSE_CALL, {} ) );
+				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2138" && static_cast< value::String* >( ui->Get( "text" ) )->value == "TURN COMPLETE" && static_cast< value::Int* >( ui->Get( "timers" ) )->value == 0, "minimap stopped processing subsequent turn/status events" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "turn restoration: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "world turn restore validates signed ID and mission year boundaries", GT() {
+		BackendFixture source; source.EnableWorldSnapshot(); source.SetSnapshotTurn( 37 );
+		auto& settings = source.GetGame()->GetState()->m_settings.global;
+		settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+		const auto snapshot = source.WorldSnapshot();
+		types::Buffer old_turn; old_turn.WriteInt( 37 );
+		const auto prefix = snapshot.substr( 0, snapshot.size() - old_turn.ToString().size() );
+		const auto maximum = static_cast< int64_t >( std::min( static_cast< uint64_t >( std::numeric_limits< size_t >::max() ), static_cast< uint64_t >( INT64_MAX ) ) - 2100 );
+		std::vector< std::pair< int64_t, std::string > > cases;
+		for ( const auto value : { int64_t( 0 ), int64_t( 1 ), maximum, maximum + 1, int64_t( -1 ), INT64_MIN, INT64_MAX } ) {
+			types::Buffer tail; tail.WriteInt( value ); cases.emplace_back( value, prefix + tail.ToString() );
+		}
+		types::Buffer wrong_type; wrong_type.WriteString( "37" );
+		cases.emplace_back( -1, prefix + wrong_type.ToString() );
+		cases.emplace_back( -1, prefix ); cases.emplace_back( -1, snapshot.substr( 0, snapshot.size() - 1 ) );
+		for ( const auto& test_case : cases ) {
+			const auto turn = test_case.first;
+			const auto& payload = test_case.second;
+			BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers(); fixture.SetSnapshotTurn( 99 );
+			auto* game = fixture.GetGame();
+			game->GetState()->m_settings.global.SelectRuleset( "smax" ); game->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				const auto before = game->GetRandom()->GetStateString();
+				size_t turns = 0, starts = 0;
+				game->On( GSE_CALL, "turn", NATIVE_CALL( &turns ) { ++turns; return VALUE( value::Undefined ); } ) );
+				game->On( GSE_CALL, "start", NATIVE_CALL( &starts, game, turn ) {
+					++starts; if ( game->GetTurnId() != static_cast< size_t >( turn ) ) { throw std::runtime_error( "start saw wrong turn" ); }
+					return VALUE( value::Undefined );
+				} ) );
+				bool rejected = false;
+				try { fixture.RestoreWorldBody( GSE_CALL, payload ); } catch ( const std::runtime_error& ) { rejected = true; }
+				const bool valid = turn >= 0 && turn <= maximum;
+				GT_ASSERT( rejected != valid && !turns, "invalid turn accepted or turn hook invoked" );
+				if ( valid ) {
+					GT_ASSERT( game->GetTurnId() == static_cast< size_t >( turn ) && fixture.HasPendingSnapshotTurn(), "valid boundary not staged" );
+					fixture.CompleteWorldRestore( GSE_CALL );
+					auto* wrapper = static_cast< value::Object* >( game->Wrap( GSE_CALL ) );
+					auto* year = static_cast< value::Callable* >( wrapper->Get( "get_year" ) )->Run( GSE_CALL, {} );
+					GT_ASSERT( starts == 1 && static_cast< value::Int* >( year )->value == turn + 2100, "mission year narrowed or overflowed" );
+				}
+				else {
+					GT_ASSERT( game->GetTurnId() == 99 && !fixture.HasPendingSnapshotTurn() && !fixture.HasPendingSnapshotRandom() && !starts, "rejection mutated turn or staged continuation" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == before && fixture.IsPreparingMap(), "rejection completed restore or changed RNG" );
+					for ( const auto& request : fixture.FrontendRequests() ) {
+						GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "rejected turn published to frontend" );
+					}
+				}
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "turn boundary " + std::to_string( turn ) + ": " + error );
+		}
+		GT_OK();
+	} );
+}
+
 static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 	using game::backend::base::Base;
 	using game::backend::base::PopDef;
@@ -1821,6 +1988,9 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 			game->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &draws, random ) { draws.push_back( random->GetUInt() ); return VALUE( value::Undefined ); } ) );
 			fixture.CompleteWorldRestore( GSE_CALL );
 			GT_ASSERT( draws.size() == 2 && draws[ 0 ] == expected.GetUInt() && draws[ 1 ] == expected.GetUInt(), "ordinary setup draw ordering changed" );
+			for ( const auto& request : fixture.FrontendRequests() ) {
+				GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "ordinary initialization published a restored turn" );
+			}
 			GT_ASSERT( !fixture.HasPendingSnapshotRandom() && random->GetStateString() == expected.GetStateString(), "ordinary initialization reset RNG" );
 			GT_OK();
 		} );
@@ -1848,6 +2018,7 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 				else {
 					fixture.RestoreWorldBody( GSE_CALL, snapshot );
 					GT_ASSERT( fixture.HasPendingSnapshotRandom(), "valid body did not stage continuation" );
+					GT_ASSERT( fixture.HasPendingSnapshotTurn(), "valid body did not stage turn publication" );
 					if ( scenario == 0 ) { fixture.ResetWorld(); }
 					if ( scenario == 1 ) { fixture.CancelWorldInitialization(); }
 					if ( scenario == 5 ) {
@@ -1869,6 +2040,10 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 					}
 				}
 				GT_ASSERT( !fixture.HasPendingSnapshotRandom() && game->GetRandom()->GetStateString() == before, "failure/reset installed or retained saved RNG" );
+				GT_ASSERT( !fixture.HasPendingSnapshotTurn(), "failure/reset retained turn publication" );
+				for ( const auto& request : fixture.FrontendRequests() ) {
+					GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "failure/reset published restored turn" );
+				}
 				if ( scenario == 0 || scenario == 1 || scenario == 3 ) { GT_ASSERT( !fixture.HasMap(), "real reset/cancel path retained map" ); }
 				GT_OK();
 			} );
@@ -2413,6 +2588,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddWorldTurnTests( task );
 	AddWorldRandomTests( task );
 	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );

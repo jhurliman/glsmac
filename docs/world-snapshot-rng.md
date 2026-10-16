@@ -36,9 +36,9 @@ This preserves one serialized backend RNG continuation. It does not establish
 future host/client lockstep: current host-only event resolution consumes draws
 that peers do not reproduce. Map-generation portability, separate menu/UUID
 randomness, a complete checkpoint format and simulation determinism remain
-separate work. Existing restore-time `AdvanceTurn` behavior is unchanged,
-including its callbacks and other side effects; this API is not a general
-arbitrary-turn checkpoint restore.
+separate work. Downloaded turn metadata is now restored without gameplay
+advancement, as described in [world-snapshot-turn.md](world-snapshot-turn.md).
+Neither change is a general arbitrary-turn checkpoint restore.
 
 ## Regression coverage
 

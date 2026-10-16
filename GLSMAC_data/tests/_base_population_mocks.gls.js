@@ -87,9 +87,8 @@ const create_fixture = () => {
 			base.add_worked_tile(tile);
 		}
 	};
-	base.create_pop = (data) => {
-		const pop = custom_properties() + {id: next_pop_id, type: data.type};
-		next_pop_id++;
+	const insert_pop = (id, variant, data) => {
+		const pop = custom_properties() + {id: id, variant: variant, type: data.type};
 		pop.get_type = () => { return pop.type; };
 		pop.get_base = () => { return base; };
 		pop.get_worked_tile = () => { return pop.get('worked_tile'); };
@@ -100,6 +99,12 @@ const create_fixture = () => {
 		}
 		return pop;
 	};
+	base.create_pop = (data) => {
+		const pop = insert_pop(next_pop_id, 0, data);
+		next_pop_id++;
+		return pop;
+	};
+	base.restore_pop = (data) => { return insert_pop(data.id, data.variant, data); };
 	base.destroy_pop = (pop) => {
 		base.set_pop_assignment(pop, pop.get_type(), #undefined);
 		let found = false;

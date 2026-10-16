@@ -44,5 +44,4 @@ return (game, base, other, target) => {
 	const recreated = old_tile.get_working_pop();
 	check(#is_defined(recreated) && recreated.get_type() == 'WORKER', 'remove rollback lost assignment');
 	check(base.get_accumulated_nutrients() == nutrients, 'remove rollback lost nutrients');
-	// Restoring the removed citizen's exact identity is a separate event defect.
 };

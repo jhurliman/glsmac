@@ -1,4 +1,5 @@
 #include <cstring>
+#include <utility>
 
 #include "Buffer.h"
 
@@ -34,15 +35,28 @@ Buffer::Buffer( const Buffer& other ) {
 	lenw = other.lenw;
 	lenr = other.lenr;
 	if ( other.data ) {
-		data_t* newptr = (data_t*)malloc( lenw );
+		data_t* newptr = (data_t*)malloc( allocated_len );
 		data = newptr;
 		memcpy( ptr( data, 0, lenw ), ptr( other.data, 0, other.lenw ), lenw );
 	}
 	else {
 		data = nullptr;
 	}
-	dw = data + lenw;
-	dr = data + lenr;
+	dw = data ? data + lenw : nullptr;
+	dr = data ? data + lenr : nullptr;
+}
+
+Buffer& Buffer::operator=( const Buffer& other ) {
+	if ( this != &other ) {
+		Buffer copy( other );
+		std::swap( data, copy.data );
+		std::swap( dw, copy.dw );
+		std::swap( dr, copy.dr );
+		std::swap( allocated_len, copy.allocated_len );
+		std::swap( lenw, copy.lenw );
+		std::swap( lenr, copy.lenr );
+	}
+	return *this;
 }
 
 void Buffer::Alloc( uint32_t size ) {

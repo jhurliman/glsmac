@@ -1,11 +1,11 @@
 # Backend RNG continuation in world downloads
 
-World-download version 2 carries the ongoing backend generator's state. After
+World-download version 3 carries the ongoing backend generator's state. After
 the existing frozen rules profile, it writes a typed string `jsf32-v1` and four
 typed integer frames containing JSF32 words `a`, `b`, `c`, `d`, in that order.
 Each word must be between zero and UINT32_MAX before conversion. Algorithm
 mismatch, wrong frame types, truncated frames and out-of-range words are
-rejected. The existing Buffer frame checks still apply. Version 1 and
+rejected. The existing Buffer frame checks still apply. Versions 2, 1 and
 unversioned downloads are rejected before map allocation; mixed versions cannot
 join through this world-download format. This does not version disk map files.
 
@@ -15,13 +15,15 @@ nor serializing those records draws from the generator. The state represents
 the continuation at that boundary. It is not a seed: all four zero words remain
 zero, preserving the existing generator's absorbing state instead of reseeding.
 
-The production download callback validates the entire profile and RNG prefix
+The production download callback validates the entire profile, RNG and
+[turn/completion prefix](world-snapshot-turn.md)
 before allocating the map. It decodes the remaining map, resources, units,
-bases, animations and turn through `DeserializeWorldSnapshotBody`. Only a
+bases and animations through `DeserializeWorldSnapshotBody`. Only a
 successful body decode stages the state. Map construction and initialization
 share the backend RNG and can consume it during reconstruction. `InitComplete`
 therefore installs the staged state after the `start` setup callback and both
-pending-instance queues complete, before normal event/turn processing resumes.
+pending-instance queues and completion-binding validation complete, before
+normal event/turn processing resumes.
 An ordinary start without staged state keeps its existing draw ordering.
 
 Reset, initialization cancellation, setup failure and configuring another
@@ -65,7 +67,8 @@ join or portable map-generation claim is involved.
 
 The focused selector is available after integrating the separate PR #57:
 `--gse-tests-native-filter 'world.*RNG|real final download chunk'`.
-Local Clang 15 / Ubuntu WSL integration validation passed all eight CTest entries
+These cases also run in the regular native suite. The initial RNG slice's local
+Clang 15 / Ubuntu WSL integration validation passed all eight CTest entries
 (36.43 seconds), all nine focused
 cases with allocation tracking, and explicit correctness analysis of Game.cpp
 and WorldSnapshotRandom.cpp. Three separately linked negative controls left the

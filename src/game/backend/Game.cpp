@@ -46,6 +46,8 @@
 #include "game/backend/event/EventHandler.h"
 #include "gse/value/Bool.h"
 
+#include <limits>
+
 namespace game {
 namespace backend {
 
@@ -574,6 +576,13 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				return VALUE( gse::value::Int,, m_current_turn.GetId() );
+			} )
+		},
+		{
+			"get_turn_status",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::String,, GetTurnStatusString() );
 			} )
 		},
 		{
@@ -1356,7 +1365,10 @@ void Game::WithRW( const std::function< void() >& f ) {
 void Game::InitComplete( GSE_CALLABLE ) {
 	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
 	// A failed setup must never leave a saved continuation for a later start.
-	util::FinallyGuard discard_snapshot_random( [ this ]() { m_pending_snapshot_random.reset(); } );
+	util::FinallyGuard discard_snapshot_state( [ this ]() {
+		m_pending_snapshot_random.reset();
+		m_pending_snapshot_turn.reset();
+	} );
 
 	try {
 		m_state->TriggerObject(
@@ -1382,6 +1394,18 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		// restore-only draws must not advance the downloaded continuation.
 		m_random->SetState( *m_pending_snapshot_random );
 		m_pending_snapshot_random.reset();
+	}
+	if ( m_pending_snapshot_turn ) {
+		// Restore presentation only after all instances are registered. This is
+		// not a new gameplay turn and must not reset units, bases or players.
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ADVANCE );
+		fr.data.turn_advance.turn_id = *m_pending_snapshot_turn;
+		m_pending_snapshot_turn.reset();
+		AddFrontendRequest( fr );
+		m_is_turn_complete = IsLocalTurnComplete();
+		SetTurnStatus( m_slot && m_slot->GetState() == slot::Slot::SS_PLAYER && m_slot->GetPlayer()->IsTurnCompleted()
+			? turn::TS_WAITING_FOR_PLAYERS
+			: m_is_turn_complete ? turn::TS_TURN_COMPLETE : turn::TS_TURN_ACTIVE );
 	}
 	if ( m_state->m_connection ) {
 		m_state->m_connection->IfServer(
@@ -1445,6 +1469,7 @@ static const std::unordered_map< backend::turn::turn_status_t, std::string > s_t
 };
 
 void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
+	m_turn_status = status;
 	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 	fr.data.turn_status.status = status;
 	AddFrontendRequest( fr );
@@ -1457,6 +1482,10 @@ void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
 			},
 		}; } );
 	});
+}
+
+const std::string& Game::GetTurnStatusString() const {
+	return s_turn_status_str.at( m_turn_status );
 }
 
 void Game::ProcessEvents() {
@@ -1938,6 +1967,7 @@ std::string Game::SerializeWorldSnapshot() const {
 
 void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	m_pending_snapshot_random.reset();
+	m_pending_snapshot_turn.reset();
 	connection->m_on_download_progress = [ this ]( const float progress ) -> void {
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 	};
@@ -1968,6 +1998,7 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 
 void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state ) {
 	m_pending_snapshot_random.reset();
+	m_pending_snapshot_turn.reset();
 	auto map_buffer = types::Buffer( map_payload );
 	const auto ec = m_map->LoadFromBuffer( map_buffer );
 	if ( ec != map::Map::EC_NONE ) {
@@ -1989,13 +2020,18 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 		auto animations = types::Buffer( body.ReadString() );
 		m_am->Deserialize( animations );
 	}
-	// Preserve the existing download turn behavior; this is not a general
-	// checkpoint turn-state restoration API.
 	const auto turn_id = body.ReadInt();
-	if ( turn_id > 0 ) {
-		MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
-		AdvanceTurn( turn_id );
+	// The wire field is signed; both the native ID and script mission year
+	// (turn + 2100) must be representable before publishing any turn state.
+	if ( turn_id < 0 || turn_id > std::numeric_limits< int64_t >::max() - 2100 ||
+		static_cast< uint64_t >( turn_id ) > std::numeric_limits< size_t >::max() - 2100 ) {
+		throw std::runtime_error( "Invalid world snapshot turn ID" );
 	}
+	MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
+	// Turn's setter only assigns the ID. Game::AdvanceTurn also runs gameplay
+	// hooks and clears completion, so it must never be used for restoration.
+	m_current_turn.AdvanceTurn( static_cast< size_t >( turn_id ) );
+	m_pending_snapshot_turn = static_cast< size_t >( turn_id );
 	m_pending_snapshot_random = random_state;
 	m_game_state = GS_INITIALIZING;
 }
@@ -2003,6 +2039,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 void Game::ResetGame() {
 
 	m_pending_snapshot_random.reset();
+	m_pending_snapshot_turn.reset();
 	ClearHandlers();
 
 	if ( m_game_state != GS_NONE ) {
@@ -2045,6 +2082,7 @@ void Game::ResetGame() {
 
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
+	m_turn_status = turn::TS_PLEASE_WAIT;
 
 	if ( m_state ) {
 		// ui thread will reset state as needed
@@ -2056,17 +2094,17 @@ void Game::ResetGame() {
 	}
 }
 
-void Game::CheckTurnComplete() {
-
-	bool is_turn_complete = true;
-
+bool Game::IsLocalTurnComplete() const {
 	for ( const auto& unit : m_um->GetUnits() ) {
 		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft() ) {
-			is_turn_complete = false;
-			break;
+			return false;
 		}
 	}
+	return true;
+}
 
+void Game::CheckTurnComplete() {
+	const bool is_turn_complete = IsLocalTurnComplete();
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
 		MTModule::Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );

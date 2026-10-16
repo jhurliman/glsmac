@@ -399,6 +399,7 @@ private:
 	Random* m_random = nullptr;
 	// Install only after map presentation and deferred instance reconstruction.
 	std::optional< util::random::state_t > m_pending_snapshot_random;
+	std::optional< size_t > m_pending_snapshot_turn;
 	State* m_state = nullptr;
 
 	map::Map* m_map = nullptr;
@@ -407,6 +408,8 @@ private:
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
+	turn::turn_status_t m_turn_status = turn::TS_PLEASE_WAIT;
+	bool IsLocalTurnComplete() const;
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
@@ -440,6 +443,7 @@ private:
 	void InitFailed( const std::string& error_text );
 
 	void SetTurnStatus( const backend::turn::turn_status_t status );
+	const std::string& GetTurnStatusString() const;
 
 	void ProcessEvents();
 

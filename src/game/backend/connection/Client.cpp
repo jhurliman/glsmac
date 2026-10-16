@@ -237,8 +237,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 								}
 								else {
 									Log( "Download completed successfully" );
-									if ( m_on_download_complete ) {
-										m_on_download_complete( m_download_state.buffer );
+									// The completion callback may clear its own installed handler.
+									const auto on_complete = m_on_download_complete;
+									if ( on_complete ) {
+										on_complete( m_download_state.buffer );
 									}
 									m_download_state.buffer.clear();
 									m_download_state.is_downloading = false;

@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "fixtures/SmacRulesSource.h"
+#include "fixtures/WorldSnapshotRules.h"
 #include "GLSMAC.h"
 
 #include "task/gsetests/GSETests.h"
@@ -14,8 +15,11 @@
 #include "gc/Space.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
-#include "game/backend/State.h"
 #include "game/backend/Player.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/animation/AnimationManager.h"
+#include "game/backend/resource/ResourceManager.h"
+#include "game/backend/State.h"
 #include "game/backend/connection/Client.h"
 #include "types/Packet.h"
 #include "game/backend/event/Event.h"
@@ -36,6 +40,7 @@
 #include <memory>
 #include <exception>
 #include <limits>
+#include <thread>
 
 namespace gse {
 namespace tests {
@@ -91,6 +96,10 @@ public:
 		m_gse = nullptr;
 		m_game.m_state = nullptr;
 		m_game.m_bm = nullptr;
+		m_game.m_um = nullptr;
+		m_game.m_tm = nullptr;
+		m_game.m_rm = nullptr;
+		m_game.m_am = nullptr;
 		m_game.m_map = nullptr;
 		m_game.m_random = nullptr;
 		m_game.m_pending_frontend_requests = nullptr;
@@ -126,6 +135,41 @@ public:
 	void SetRunning( const bool running ) {
 		m_game.m_game_state = running ? game::backend::Game::GS_RUNNING : game::backend::Game::GS_NONE;
 	}
+
+	void EnableWorldSnapshot() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_rm = new game::backend::resource::ResourceManager( &m_game );
+			m_game.m_um = new game::backend::unit::UnitManager( &m_game );
+			m_game.m_am = new game::backend::animation::AnimationManager( &m_game );
+		} );
+	}
+
+	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
+	std::string WorldManagers() const {
+		types::Buffer result, resources, units, bases, animations;
+		m_game.GetRM()->Serialize( resources );
+		m_game.GetUM()->Serialize( units );
+		m_game.GetBM()->Serialize( bases );
+		m_game.GetAM()->Serialize( animations );
+		for ( const auto* part : { &resources, &units, &bases, &animations } ) { result.WriteString( part->ToString() ); }
+		return result.ToString();
+	}
+	void PrepareWorldDownload( game::backend::connection::Client* client, const size_t size ) {
+		m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP;
+		m_game.ConfigureWorldDownload( client );
+		// Seed the final-chunk state, avoiding a request to a real socket. The
+		// packet itself still runs through Client::ProcessEvent and Game's handler.
+		client->m_download_state.is_downloading = true;
+		client->m_download_state.total_size = static_cast< int >( size );
+		client->m_download_state.downloaded_size = 0;
+		client->m_download_state.buffer.clear();
+	}
+	bool IsPreparingMap() const { return m_game.m_game_state == game::backend::Game::GS_PREPARING_MAP; }
+	bool HasMap() const { return m_game.m_map != nullptr; }
+	bool IsDownloadFinished( game::backend::connection::Client* client ) const {
+		return !client->m_download_state.is_downloading && client->m_download_state.buffer.empty();
+	}
+	void ProcessAccumulations() { m_gse->GetGCSpace()->ProcessAccumulations(); }
 
 	void WithRW( const std::function< void() >& f ) {
 		m_game.WithRW( f );
@@ -545,6 +589,7 @@ class RulesetClient : public game::backend::connection::Client {
 public:
 	using Client::Client;
 	bool HasProtocolError() const { return m_disconnect_reason == "Network protocol error"; }
+	const std::string& DisconnectReason() const { return m_disconnect_reason; }
 	void Receive( const types::Packet& packet ) {
 		network::Event event;
 		event.type = network::Event::ET_PACKET;
@@ -804,10 +849,99 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "actual world snapshot writer prefixes frozen profile without changing body layout", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			BackendFixture fixture;
+			fixture.EnableWorldSnapshot();
+			auto* game = fixture.GetGame();
+			auto& settings = game->GetState()->m_settings.global;
+			settings.SelectRuleset( id );
+			settings.InitializeHostRules( smac_rules_fixture::Source );
+			types::Buffer old_body;
+			game->GetMap()->SaveToBuffer( old_body );
+			const auto managers = fixture.WorldManagers();
+			// Append the old body frames independently of the production writer.
+			types::Buffer manager_frames( managers );
+			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
+			old_body.WriteInt( game->GetTurnId() );
+			const auto snapshot = fixture.WorldSnapshot();
+			types::Buffer input( snapshot );
+			game::backend::world_snapshot::ValidateHeader( input, settings );
+			GT_ASSERT( snapshot.substr( input.lenr ) == old_body.ToString(), "world body order or content changed" );
+			fixture.DestroyMapBeforeManagers();
+			GT_ASSERT( fixture.WorldSnapshot().empty(), "not-yet-generated map no longer returns an empty download response" );
+		}
+		GT_OK();
+	} );
+	for ( const bool queued : { false, true } ) {
+		task->AddTest( std::string( "real final download chunk rejects invalid world profile before map allocation " ) + ( queued ? "queued" : "immediate" ), GT( queued ) {
+			using namespace game::backend;
+			auto rejected = world_rules_fixture::InvalidSmacHeaders();
+			// Matching headers reach the actual body's first read, still before
+			// Map's asset-bearing constructor. Native errors there must also be
+			// caught when completion executes later on the accumulation thread.
+			rejected.emplace_back( "matching header without map frame", world_rules_fixture::Header().ToString() );
+			auto wrong_body = world_rules_fixture::Header();
+			wrong_body.WriteInt( 0 );
+			rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
+			for ( const auto& invalid : rejected ) {
+				BackendFixture fixture;
+				fixture.EnableWorldSnapshot();
+				fixture.DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
+				fixture.DestroyMapBeforeManagers();
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = fixture.GetGame();
+					auto* state = game->GetState();
+					state->m_settings.global.SelectRuleset( "smac" );
+					state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+					const auto before_settings = state->m_settings.global.Serialize().ToString();
+					const auto before_managers = fixture.WorldManagers();
+					const auto before_turn = game->GetTurnId();
+					const auto before_frontend = fixture.FrontendRequestCount();
+					auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+					state->SetConnection( client );
+					util::FinallyGuard cleanup( [ & ]() { client->ResetHandlers(); state->DetachConnection(); } );
+					types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+					packet.data.str = invalid.second;
+					packet.udata.download.offset = 0;
+					packet.udata.download.size = packet.data.str.size();
+					fixture.PrepareWorldDownload( client, packet.data.str.size() );
+					std::exception_ptr escaped;
+					std::string early_error;
+					fixture.WithoutDisconnectIO( client, [ & ]() {
+						if ( queued ) {
+							std::thread worker( [ & ]() {
+								try { client->Receive( packet ); }
+								catch ( ... ) { escaped = std::current_exception(); }
+							} );
+							worker.join();
+							early_error = client->DisconnectReason();
+							fixture.ProcessAccumulations();
+						}
+						else { client->Receive( packet ); }
+					} );
+					GT_ASSERT( !escaped, "download dispatcher threw on worker thread" );
+					GT_ASSERT( !queued || early_error.empty(), "queued validation ran before accumulation processing" );
+					GT_ASSERT( client->DisconnectReason() == "Snapshot format mismatch", "invalid profile did not safely disconnect" );
+					GT_ASSERT( fixture.IsDownloadFinished( client ) && !client->m_on_download_complete && !client->m_on_download_progress, "completion did not retire download state and callbacks" );
+					GT_ASSERT( !fixture.HasMap() && fixture.IsPreparingMap(), "invalid profile allocated or initialized a map" );
+					GT_ASSERT( state->m_settings.global.Serialize().ToString() == before_settings, "world profile changed frozen settings" );
+					GT_ASSERT( fixture.WorldManagers() == before_managers && game->GetTurnId() == before_turn && fixture.FrontendRequestCount() == before_frontend, "profile rejection changed managers, turn or frontend state" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "download rejection failed: " + invalid.first + ": " + error );
+			}
+			GT_OK();
+		} );
+	}
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
 	AddRulesetTests( task );
+	AddWorldSnapshotTests( task );
 	AddHostRulesPacketTests( task );
 	AddPopReferenceTests( task );
 	task->AddTest(

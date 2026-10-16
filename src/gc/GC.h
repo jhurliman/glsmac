@@ -13,6 +13,7 @@ namespace gse {
 class GC;
 namespace tests {
 class WidgetGraphicsFixture;
+class BackendFixture;
 }
 }
 
@@ -46,6 +47,7 @@ CLASS( GC, common::Module )
 
 private:
 	friend class gse::tests::WidgetGraphicsFixture;
+	friend class gse::tests::BackendFixture;
 	common::Mutex m_spaces_mutex;
 	std::unordered_set< Space* > m_spaces = {};
 

@@ -135,6 +135,12 @@ enum result_t {
 	R_PENDING,
 };
 
+using world_ticket_t = uint64_t;
+struct pending_initialization_t {
+	common::mt_id_t request = 0;
+	world_ticket_t ticket = 0;
+};
+
 typedef std::vector< types::mesh::Render* > data_tile_meshes_t;
 
 typedef union {
@@ -150,7 +156,12 @@ typedef union {
 
 struct MT_Request {
 	op_t op;
+	world_ticket_t world_ticket = 0;
 	union {
+		struct {
+			world_ticket_t pending_initialization;
+			bool controller;
+		} reset;
 		struct {
 			tile_query_purpose_t purpose;
 			size_t tile_x;
@@ -230,6 +241,7 @@ struct response_map_data_t {
 struct MT_Response {
 	op_t op;
 	result_t result;
+	world_ticket_t world_ticket = 0;
 	union {
 		struct {
 			size_t slot_index;
@@ -273,22 +285,31 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	common::mt_id_t MT_Ping();
 
 	// initialize map and other things
-	common::mt_id_t MT_Init( State* state );
+	pending_initialization_t MT_Init( State* state, world_ticket_t previous_world = 0 );
+	pending_initialization_t MT_LoadMap( world_ticket_t world, const std::string& path );
+	MT_Response MT_GetResponse( common::mt_id_t request );
+	MT_Response MT_WaitResponse( common::mt_id_t request );
+	void MT_Cancel( common::mt_id_t request );
 
 	// get map data for display
-	common::mt_id_t MT_GetMapData();
+	common::mt_id_t MT_GetMapData( world_ticket_t world );
 
 	// deinitialize everything
-	common::mt_id_t MT_Reset();
+	common::mt_id_t MT_Reset( world_ticket_t world, world_ticket_t pending_initialization = 0 );
+	void MT_RetireWorld( world_ticket_t world, world_ticket_t pending_initialization = 0 );
+	common::mt_id_t MT_ResetController();
+	world_ticket_t MT_BeginResetController();
+	common::mt_id_t MT_SubmitResetController( world_ticket_t barrier );
+	void MT_AbandonResetController( world_ticket_t barrier );
 
 	// saves current map into file
-	common::mt_id_t MT_SaveMap( const std::string& path );
+	common::mt_id_t MT_SaveMap( world_ticket_t world, const std::string& path );
 
 	// get all pending frontend requests (will be cleared after)
-	common::mt_id_t MT_GetFrontendRequests();
+	common::mt_id_t MT_GetFrontendRequests( world_ticket_t world );
 
 	// send backend requests for processing
-	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
+	common::mt_id_t MT_SendBackendRequests( world_ticket_t world, const std::vector< BackendRequest >& requests );
 
 #ifdef DEBUG
 
@@ -394,7 +415,32 @@ private:
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 
-	void InitGame( MT_Response& response, MT_CANCELABLE );
+	struct WorldAdmission {
+		enum Kind { INITIALIZATION, CONTROLLER_RESET };
+		WorldAdmission( world_ticket_t ticket, Kind kind, State* state, State::game_session_t binding, world_ticket_t previous = 0, std::optional< std::string > map_path = {} )
+			: ticket( ticket ), kind( kind ), state( state ), binding( std::move( binding ) ), previous( previous ), map_path( std::move( map_path ) ) {}
+		const world_ticket_t ticket;
+		const Kind kind;
+		State* const state;
+		const State::game_session_t binding;
+		const world_ticket_t previous;
+		const std::optional< std::string > map_path;
+		common::mt_id_t request = 0;
+		State::game_session_t admitted_binding;
+		bool cancelled = false;
+	};
+	mutable std::mutex m_admission_mutex;
+	std::unordered_map< world_ticket_t, std::shared_ptr< WorldAdmission > > m_admissions;
+	std::shared_ptr< WorldAdmission > m_active_admission;
+	std::shared_ptr< WorldAdmission > m_failed_admission;
+	std::string m_failed_admission_error;
+	static world_ticket_t ReserveWorldTicket();
+	pending_initialization_t EnqueueInitialization( State* state, world_ticket_t previous, std::optional< std::string > map_path = {} ); // admission mutex held
+	void CancelAdmission( const std::shared_ptr< WorldAdmission >& admission ); // admission mutex held
+	void RetireWorld( world_ticket_t world, world_ticket_t pending_initialization ); // admission mutex held
+	void ReleaseAdmissionRequest( common::mt_id_t request );
+	bool MatchesActiveAdmission( world_ticket_t ticket ) const; // admission mutex held
+	void InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE );
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state );

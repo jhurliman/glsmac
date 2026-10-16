@@ -20,6 +20,7 @@
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrFrameAssembler.h"
+#include "CvrIndexedRasterizer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -72,6 +73,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddValueTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
+		tests::AddCvrIndexedRasterizerTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

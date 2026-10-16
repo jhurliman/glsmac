@@ -23,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrFrameAssembler.cpp
+	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

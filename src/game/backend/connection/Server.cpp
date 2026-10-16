@@ -360,7 +360,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 					case types::Packet::PT_GAME_EVENT: {
 						//Log( "Got game event packet" );
-						m_state->WithGame(
+						if ( !m_state->GetGame() ) { break; }
+						m_state->GetGame()->WithWorldIngress( m_state,
 							this,
 							[ this, state = m_state, packet, event ]( Game* const game, GSE_CALLABLE ) {
 								if ( state->GetConnection() != this ) { return; }

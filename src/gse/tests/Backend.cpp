@@ -48,6 +48,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
+#include "game/backend/map/module/Module.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "util/FinallyGuard.h"
 
@@ -202,6 +203,36 @@ public:
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
 		m_game.Iterate();
 	}
+	std::string WithTransferableFrontendQueue( const std::function< std::string() >& check ) {
+		// The production request transfers this queue to the response recipient.
+		// Most fixture tests instead borrow the stack-owned m_frontend_requests.
+		auto* const previous = m_game.m_pending_frontend_requests;
+		NEW( m_game.m_pending_frontend_requests, std::vector< game::FrontendRequest > );
+		util::FinallyGuard restore( [ & ]() {
+			using Requests = common::MTModule< game::backend::MT_Request, game::backend::MT_Response >;
+			static_cast< Requests& >( m_game ).Requests::Stop();
+			DELETE( m_game.m_pending_frontend_requests );
+			m_game.m_pending_frontend_requests = previous;
+		} );
+		return check();
+	}
+	void ProcessMapProgress( game::backend::map::module::Module& module ) {
+		// Invoke the actual progress/cancellation loop without render assets.
+		auto* const map = m_game.m_map;
+		if ( !map->m_map_state ) {
+			NEW( map->m_map_state, game::backend::map::MapState );
+			map->m_map_state->dimensions = { 8, 8 };
+			const common::mt_flag_t canceled = false;
+			map->m_map_state->LinkTileStates( canceled );
+		}
+		game::backend::map::Map::module_passes_t passes{ { &module } };
+		game::backend::map::Map::tiles_t tiles{ map->GetTile( 0, 0 ) };
+		// The old progress pump can execute ResetGame and delete this Map.
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		map->ProcessTiles( passes, tiles, m_game.m_init_cancel );
+	}
+	bool IsInitializationCanceled() const { return m_game.m_init_cancel; }
 	void DrainWorldRestore() {
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
@@ -439,6 +470,155 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 	GT_OK();
 }
 
+}
+
+static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "loader progress keeps reset queued until actual map processing returns", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		auto* const game = fixture.GetGame();
+		bool processing = false, destroyed_during_processing = false;
+		size_t destructions = 0;
+		class Observer final : public Wrappable {
+		public:
+			std::function< void() > on_destroy;
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			void NotifyDependencyDestruction( const Wrappable* ) override { on_destroy(); }
+		} observer;
+		observer.on_destroy = [ & ]() { ++destructions; destroyed_during_processing |= processing; };
+		class ProgressModule final : public map::module::Module {
+		public:
+			explicit ProgressModule( map::Map* map ) : Module( map ) {}
+			std::function< void() > enqueue;
+			void GenerateTile( const map::tile::Tile*, map::tile::TileState*, map::MapState* ) override { enqueue(); }
+		} module( game->GetMap() );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* const map = game->GetMap();
+			map->Depend( &observer );
+			util::FinallyGuard detach( [ & ]() { if ( !destructions ) { map->Undepend( &observer ); } } );
+			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+				common::mt_id_t reset = 0, progress = 0, ping = 0;
+				module.enqueue = [ & ]() {
+					reset = game->MT_Reset();
+					progress = game->MT_GetFrontendRequests();
+					ping = game->MT_Ping();
+				};
+				processing = true;
+				fixture.ProcessMapProgress( module );
+				processing = false;
+				GT_ASSERT( !destroyed_during_processing && !destructions && fixture.HasMap(), "progress pump destroyed the executing Map" );
+				GT_ASSERT( fixture.IsInitializationCanceled(), "progress pump cleared cancellation before Map returned" );
+				GT_ASSERT( game->MT_GetResponse( reset ).result == R_NONE, "reset completed inside Map progress" );
+				const auto progress_response = game->MT_GetResponse( progress );
+				util::FinallyGuard release_progress( [ & ]() { game->MT_DestroyResponse( progress_response ); } );
+				GT_ASSERT( progress_response.result == R_SUCCESS, "loader progress response was blocked by queued reset" );
+				const auto* const requests = progress_response.data.get_frontend_requests.requests;
+				GT_ASSERT( requests && requests->size() == 1 && requests->at( 0 ).type == game::FrontendRequest::FR_LOADER_TEXT, "loader text was not delivered" );
+				GT_ASSERT( *requests->at( 0 ).data.loader.text == "Processing tiles (99%)", "actual Map progress text changed" );
+				GT_ASSERT( game->MT_GetResponse( progress ).result == R_NONE, "frontend response was delivered twice" );
+				GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "progress pump did not answer ping" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( destructions == 1 && !destroyed_during_processing && !fixture.HasMap(), "ordinary Iterate did not retire Map after processing" );
+				GT_ASSERT( !fixture.IsInitializationCanceled(), "ordinary reset did not clear cancellation" );
+				GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS, "ordinary Iterate did not complete queued reset" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( destructions == 1 && game->MT_GetResponse( reset ).result == R_NONE, "reset ran more than once" );
+				GT_OK();
+			} );
+		} );
+		GT_ASSERT( error.empty(), "loader progress check: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "loader progress leaves every non-progress operation queued and cancellable", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		auto* const game = fixture.GetGame();
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+				const std::vector< op_t > blocked{
+					OP_NONE, OP_INIT, OP_GET_MAP_DATA, OP_RESET, OP_SAVE_MAP, OP_SEND_BACKEND_REQUESTS, OP_ADD_EVENT,
+#ifdef DEBUG
+					OP_SAVE_DUMP, OP_LOAD_DUMP,
+#endif
+				};
+				std::vector< common::mt_id_t > ids;
+				for ( const auto op : blocked ) {
+					MT_Request request{};
+					request.op = op;
+					if ( op == OP_SAVE_MAP ) { NEW( request.data.save_map.path, std::string, "must-not-be-written.map" ); }
+					if ( op == OP_SEND_BACKEND_REQUESTS ) { NEW( request.data.send_backend_requests.requests, std::vector< game::BackendRequest > ); }
+					if ( op == OP_ADD_EVENT ) { NEW( request.data.add_event.serialized_event, std::string, "must-not-be-executed" ); }
+					ids.push_back( game->MT_CreateRequest( request ) );
+				}
+				const auto progress = game->MT_GetFrontendRequests();
+				const auto ping = game->MT_Ping();
+				game->SetLoaderText( "Still processing" );
+				for ( const auto id : ids ) {
+					GT_ASSERT( game->MT_GetResponse( id ).result == R_NONE, "progress pump claimed a non-progress operation" );
+					game->MT_Cancel( id );
+				}
+				const auto response = game->MT_GetResponse( progress );
+				util::FinallyGuard release( [ & ]() { game->MT_DestroyResponse( response ); } );
+				GT_ASSERT( response.result == R_SUCCESS && response.data.get_frontend_requests.requests, "blocked operations starved frontend polling" );
+				GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "blocked operations starved ping" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( fixture.HasMap(), "canceled reset was dispatched by normal Iterate" );
+				for ( const auto id : ids ) { GT_ASSERT( game->MT_GetResponse( id ).result == R_NONE, "canceled operation published a response" ); }
+				GT_OK();
+			} );
+		} );
+		GT_ASSERT( error.empty(), "operation filtering check: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "filtered MT extraction preserves payload ownership and unrestricted iteration", GT() {
+		struct Payload {
+			explicit Payload( size_t& destroyed ) : destroyed( destroyed ) {}
+			~Payload() { ++destroyed; }
+			size_t& destroyed;
+		};
+		struct Request { bool allowed; Payload* payload; };
+		struct Response { bool ready; Payload* payload; };
+		size_t request_destructions = 0, response_destructions = 0, executions = 0;
+		class CountingModule final : public common::MTModule< Request, Response > {
+		public:
+			const std::string GetClassName() const override { return "CountingModule"; }
+			CountingModule( size_t& executions, size_t& response_destructions )
+				: executions( executions ), response_destructions( response_destructions ) {}
+			~CountingModule() override { Stop(); }
+			void Pump() { ProcessRequests( []( const Request& request ) noexcept { return request.allowed; } ); }
+		protected:
+			const Response ProcessRequest( const Request&, MT_CANCELABLE ) override {
+				++executions;
+				return { true, new Payload( response_destructions ) };
+			}
+			void DestroyRequest( const Request& request ) override { delete request.payload; }
+			void DestroyResponse( const Response& response ) override { delete response.payload; }
+		private:
+			size_t& executions;
+			size_t& response_destructions;
+		} module( executions, response_destructions );
+		const auto blocked = module.MT_CreateRequest( { false, new Payload( request_destructions ) } );
+		const auto retrieved = module.MT_CreateRequest( { true, new Payload( request_destructions ) } );
+		module.MT_CreateRequest( { true, new Payload( request_destructions ) } );
+		module.Pump();
+		GT_ASSERT( executions == 2 && request_destructions == 0 && response_destructions == 0, "filtered dispatch changed payload ownership" );
+		module.MT_Cancel( blocked );
+		GT_ASSERT( request_destructions == 1 && !module.MT_GetResponse( blocked ).ready, "skipped request was not cancellable before execution" );
+		const auto response = module.MT_GetResponse( retrieved );
+		GT_ASSERT( response.ready && request_destructions == 2, "response retrieval did not release exactly one request" );
+		module.MT_DestroyResponse( response );
+		GT_ASSERT( response_destructions == 1 && !module.MT_GetResponse( retrieved ).ready, "response ownership was retained after delivery" );
+		module.Stop();
+		GT_ASSERT( request_destructions == 3 && response_destructions == 2, "Stop did not release the unclaimed response exactly once" );
+		module.Stop();
+		const auto normal = module.MT_CreateRequest( { false, new Payload( request_destructions ) } );
+		module.Iterate();
+		const auto normal_response = module.MT_GetResponse( normal );
+		GT_ASSERT( executions == 3 && normal_response.ready && request_destructions == 4, "normal Iterate inherited the progress filter" );
+		module.MT_DestroyResponse( normal_response );
+		GT_ASSERT( response_destructions == 3, "normal response cleanup changed" );
+		GT_OK();
+	} );
 }
 
 static void AddEventTransportTests( task::gsetests::GSETests* task ) {
@@ -3133,6 +3313,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddLoaderProgressTests( task );
 	AddWorldTurnTests( task );
 	AddWorldCompletionTests( task );
 	AddWorldRandomTests( task );

@@ -16,6 +16,8 @@
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
+#include "gc/GC.h"
+#include "engine/Engine.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
@@ -56,6 +58,8 @@
 #include <stdexcept>
 #include <set>
 #include <thread>
+#include <atomic>
+#include <new>
 
 namespace gse {
 namespace tests {
@@ -172,18 +176,20 @@ public:
 			}
 			m_game.m_slot_num = 2;
 			m_game.m_slot = &m_game.GetState()->m_slots->GetSlot( 2 );
+			m_game.m_player = m_game.m_slot->GetPlayer();
 		} );
 	}
 	const std::vector< game::FrontendRequest >& FrontendRequests() const { return m_frontend_requests; }
 	void ClearFrontendRequests() { m_frontend_requests.clear(); }
 	void CheckTurnComplete() { m_game.CheckTurnComplete(); }
 	void RestoreWorldBody( GSE_CALLABLE, const std::string& snapshot ) {
+		m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP;
 		types::Buffer buffer( snapshot );
 		game::backend::world_snapshot::ValidateHeader( buffer, m_game.GetState()->m_settings.global );
 		const auto random = game::backend::world_snapshot::ReadRandomState( buffer );
+		const auto turn = game::backend::world_snapshot::ReadTurnState( buffer, m_game.GetState()->m_slots->GetSlots() );
 		const auto map = buffer.ReadString();
-		m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP;
-		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random );
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn );
 	}
 	void CompleteWorldRestore( GSE_CALLABLE ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
@@ -191,10 +197,28 @@ public:
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
 		m_game.InitComplete( GSE_CALL );
 	}
+	void IterateWorldRestore() {
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		m_game.Iterate();
+	}
+	void DrainWorldRestore() {
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		ProcessAccumulations();
+	}
+	std::vector< value::Object* > PendingSnapshotTokens() const {
+		std::lock_guard guard( m_game.m_snapshot_turn_mutex );
+		std::vector< value::Object* > result;
+		if ( m_game.m_pending_snapshot_turn ) {
+			for ( const auto& binding : m_game.m_pending_snapshot_turn->bindings ) { result.push_back( binding.player ); }
+		}
+		return result;
+	}
 	void ResetWorld() { m_map.release(); m_game.ResetGame(); }
 	void CancelWorldInitialization() { m_map.release(); m_game.InitFailed( "Operation aborted" ); }
 	bool HasPendingSnapshotRandom() const { return m_game.m_pending_snapshot_random.has_value(); }
-	bool HasPendingSnapshotTurn() const { return m_game.m_pending_snapshot_turn.has_value(); }
+	bool HasPendingSnapshotTurn() const { std::lock_guard guard( m_game.m_snapshot_turn_mutex ); return m_game.m_pending_snapshot_turn.has_value(); }
 	std::string WorldManagers() const {
 		types::Buffer result, resources, units, bases, animations;
 		m_game.GetRM()->Serialize( resources );
@@ -289,10 +313,10 @@ public:
 	void EnableYieldFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			using namespace game::backend;
-			m_game.m_rm = new resource::ResourceManager( &m_game );
+			m_game.m_rm = new game::backend::resource::ResourceManager( &m_game );
 			m_game.m_tm = new map::tile::TileManager( &m_game );
 			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
-				m_game.m_rm->DefineResource( new resource::Resource( id, id, {} ) );
+				m_game.m_rm->DefineResource( new game::backend::resource::Resource( id, id, {} ) );
 			}
 			for ( const size_t slot : { 0, 2 } ) {
 				NEWV( player, Player, "Test player", Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
@@ -1453,7 +1477,6 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			// Append the old body frames independently of the production writer.
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
-			old_body.WriteInt( game->GetTurnId() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();
 			const auto snapshot = fixture.WorldSnapshot();
@@ -1462,6 +1485,8 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			game::backend::world_snapshot::ValidateHeader( input, settings );
 			util::random::Random captured( 1 ); captured.SetState( game::backend::world_snapshot::ReadRandomState( input ) );
 			GT_ASSERT( captured.GetStateString() == before_rng, "writer captured another RNG boundary" );
+			const auto turn = game::backend::world_snapshot::ReadTurnState( input, game->GetState()->m_slots->GetSlots() );
+			GT_ASSERT( turn.id == game->GetTurnId() && turn.players.empty(), "writer changed empty-roster turn state" );
 			GT_ASSERT( snapshot.substr( input.lenr ) == old_body.ToString(), "world body order or content changed" );
 			fixture.DestroyMapBeforeManagers();
 			GT_ASSERT( fixture.WorldSnapshot().empty(), "not-yet-generated map no longer returns an empty download response" );
@@ -1474,20 +1499,25 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			auto rejected = world_rules_fixture::InvalidSmacHeaders();
 			const auto rng_rejected = world_rules_fixture::InvalidRandomHeaders();
 			rejected.insert( rejected.end(), rng_rejected.begin(), rng_rejected.end() );
+			const auto turn_rejected = world_rules_fixture::InvalidTurnHeaders();
+			rejected.insert( rejected.end(), turn_rejected.begin(), turn_rejected.end() );
 			// Matching headers reach the actual body's first read, still before
 			// Map's asset-bearing constructor. Native errors there must also be
 			// caught when completion executes later on the accumulation thread.
-			rejected.emplace_back( "matching header without map frame", world_rules_fixture::FullHeader().ToString() );
-			auto wrong_body = world_rules_fixture::FullHeader();
+			const world_snapshot::TurnState turn{ 37, { { 0, true }, { 2, false } } };
+			rejected.emplace_back( "matching header without map frame", world_rules_fixture::WorldHeader( turn ).ToString() );
+			auto wrong_body = world_rules_fixture::WorldHeader( turn );
 			wrong_body.WriteInt( 0 );
 			rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
 			for ( const auto& invalid : rejected ) {
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();
+				fixture.EnableTurnPlayers();
 				fixture.DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
 				fixture.DestroyMapBeforeManagers();
 				auto* game = fixture.GetGame();
 				auto* state = game->GetState();
+				state->m_slots->GetSlot( 2 ).GetPlayer()->CompleteTurn();
 				RulesetClient* client = nullptr;
 				// State is a runtime root and reaches its attached Client. Keep that
 				// ownership across setup, worker dispatch, owner drain and assertions.
@@ -1547,6 +1577,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( fixture.IsDownloadFinished( client ) && !client->m_on_download_complete && !client->m_on_download_progress, "completion did not retire download state and callbacks" );
 					GT_ASSERT( !fixture.HasMap() && fixture.IsPreparingMap(), "invalid profile allocated or initialized a map" );
 					GT_ASSERT( game->GetRandom()->GetStateString() == before_rng && !fixture.HasPendingSnapshotRandom(), "rejected header changed or staged RNG" );
+					GT_ASSERT( !fixture.HasPendingSnapshotTurn() && !state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "rejected header changed or staged completion flags" );
 					GT_ASSERT( state->m_settings.global.Serialize().ToString() == before_settings, "world profile changed frozen settings" );
 					GT_ASSERT( fixture.WorldManagers() == before_managers && game->GetTurnId() == before_turn && fixture.FrontendRequestCount() == before_frontend, "profile rejection changed managers, turn or frontend state" );
 					GT_OK();
@@ -2022,6 +2053,252 @@ private:
 
 }
 
+static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
+	using namespace game::backend;
+	task->AddTest( "world completion parked failure blocks queued ordinary event work", GT() {
+		size_t applies = 0, errors = 0;
+		BackendFixture source, fixture;
+		for ( auto* current : { &source, &fixture } ) {
+			current->EnableWorldSnapshot(); current->EnableTurnPlayers();
+			current->GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); current->GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		}
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+			auto* apply = NATIVE_CALL( &applies ) { ++applies; return VALUE( value::Undefined ); } );
+			fixture.RegisterEvent( "queued_before_failure", new event::EventHandler( gc_space, "queued_before_failure", noop, nullptr, apply, noop ) );
+			fixture.GetGame()->AddEvent( new event::Event( fixture.GetGame(), event::Event::ES_LOCAL, 0, GSE_CALL, "queued_before_failure", {}, "queued-before-failure" ) );
+			fixture.GetGame()->On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) ); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "parked event setup: " + setup );
+		std::exception_ptr escaped;
+		const auto iterate = [ & ]() { try { fixture.IterateWorldRestore(); } catch ( ... ) { escaped = std::current_exception(); } };
+		// Queue real ordinary event/base work before the download enters its
+		// failure state. It must not run stale work ahead of the error callback.
+		std::thread before_download( iterate ); before_download.join();
+		GT_ASSERT( !escaped && applies == 0, "foreign ordinary work did not defer" );
+		const auto stage = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.RestoreWorldBody( GSE_CALL, source.WorldSnapshot() );
+			fixture.GetGame()->GetState()->m_slots->GetSlot( 2 ).GetPlayerAndClose(); GT_OK();
+		} );
+		GT_ASSERT( stage.empty(), "parked event restore: " + stage );
+		std::thread failure( iterate ); failure.join(); std::thread repeat( iterate ); repeat.join();
+		GT_ASSERT( !escaped && errors == 0 && applies == 0, "foreign failure ran script work" );
+		fixture.DrainWorldRestore();
+		GT_ASSERT( errors == 1 && applies == 0 && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "parked failure allowed earlier queued event work" ); GT_OK();
+	} );
+	task->AddTest( "world completion early roster rejection runs on Space owner and retires stale queued errors", GT() {
+		BackendFixture source; source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
+		source.GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); source.GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
+		const auto snapshot = source.WorldSnapshot();
+		for ( const int scenario : { 0, 1, 2, 3, 4 } ) {
+			size_t errors = 0, starts = 0; bool error_on_owner = false;
+			std::string error_message;
+			Player* detached = nullptr;
+			BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers();
+			auto* game = fixture.GetGame(); auto* state = game->GetState();
+			state->m_settings.global.SelectRuleset( "smax" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				fixture.RestoreWorldBody( GSE_CALL, snapshot );
+				const auto owner = std::this_thread::get_id();
+				game->On( GSE_CALL, "error", NATIVE_CALL( &errors, &error_on_owner, &error_message, owner ) {
+					++errors; error_on_owner = std::this_thread::get_id() == owner;
+					error_message = VALUE_GET( value::String, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "error" ) );
+					return VALUE( value::Undefined );
+				} ) );
+				game->On( GSE_CALL, "start", NATIVE_CALL( &starts ) { ++starts; return VALUE( value::Undefined ); } ) );
+				detached = state->m_slots->GetSlot( 2 ).GetPlayerAndClose(); GT_OK();
+			} );
+			GT_ASSERT( setup.empty(), "early rejection setup: " + setup );
+			GT_ASSERT( !fixture.IsAccumulating(), "early rejection must exercise real outside-accumulation Iterate" );
+			std::exception_ptr escaped;
+			const auto iterate = [ & ]() { try { fixture.IterateWorldRestore(); } catch ( ... ) { escaped = std::current_exception(); } };
+			if ( scenario == 0 ) { iterate(); }
+			else { std::thread backend( iterate ); backend.join(); }
+			if ( escaped ) { try { std::rethrow_exception( escaped ); } catch ( const std::exception& error ) { GT_FAIL( "early rejection escaped: " + std::string( error.what() ) ); } }
+			if ( scenario == 0 ) {
+				GT_ASSERT( errors == 1 && error_on_owner && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "same-owner early failure did not retire initialization" );
+				continue;
+			}
+			GT_ASSERT( errors == 0 && fixture.HasMap() && fixture.HasPendingSnapshotTurn(), "foreign Iterate executed error callback before owner drain" );
+			std::thread repeat( iterate ); repeat.join();
+			GT_ASSERT( !escaped && errors == 0, "waiting state repeated unsafe initialization" );
+			const auto before_drain = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				if ( scenario == 2 ) { fixture.ResetWorld(); }
+				if ( scenario >= 3 ) {
+					state->m_slots->GetSlot( 2 ).SetPlayer( detached, 0, "" );
+					fixture.RestoreWorldBody( GSE_CALL, snapshot );
+					if ( scenario == 4 ) { detached->SetSlot( nullptr ); }
+				}
+				GT_OK();
+			} );
+			GT_ASSERT( before_drain.empty(), "queued error reset/replacement failed: " + before_drain );
+			if ( scenario == 4 ) { std::thread replacement_failure( iterate ); replacement_failure.join(); GT_ASSERT( !escaped, "replacement failure escaped backend" ); }
+			fixture.DrainWorldRestore();
+			GT_ASSERT( errors == ( scenario == 1 || scenario == 4 ? 1u : 0u ) && starts == 0, "queued stale error affected reset/replacement or published twice" );
+			if ( scenario == 1 || scenario == 4 ) { GT_ASSERT( error_on_owner && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "foreign failure did not execute terminal cleanup on owner" ); }
+			if ( scenario == 4 ) { GT_ASSERT( error_message == "Noncanonical world snapshot Player link", "old queued generation replaced the new snapshot's failure" ); }
+			if ( scenario == 2 ) { GT_ASSERT( !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "discarded error retained world state" ); }
+			if ( scenario == 3 ) {
+				GT_ASSERT( fixture.HasMap() && fixture.HasPendingSnapshotTurn(), "stale queued error consumed replacement snapshot" );
+				const auto finish = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.CompleteWorldRestore( GSE_CALL ); GT_OK(); } );
+				GT_ASSERT( finish.empty() && fixture.IsRunning() && starts == 1 && !errors && state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted(), "replacement snapshot failed after stale error retirement" );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world completion decoder rejects malformed records without a usable turn state", GT() {
+		BackendFixture fixture; fixture.EnableTurnPlayers();
+		auto* state = fixture.GetGame()->GetState();
+		state->m_settings.global.SelectRuleset( "smac" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		for ( const auto& invalid : world_rules_fixture::InvalidTurnHeaders() ) {
+			types::Buffer input( invalid.second ); world_snapshot::ValidateHeader( input, state->m_settings.global ); world_snapshot::ReadRandomState( input );
+			bool rejected = false;
+			try { world_snapshot::ReadTurnState( input, state->m_slots->GetSlots() ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected, "completion decoder accepted " + invalid.first );
+		}
+		GT_ASSERT( !state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && !state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "malformed decode changed live flags" ); GT_OK();
+	} );
+	task->AddTest( "world completion capture owns exact occupied roster including disconnected players", GT() {
+		BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers(); fixture.SetSnapshotTurn( 37 );
+		auto* game = fixture.GetGame(); auto* state = game->GetState();
+		state->m_settings.global.SelectRuleset( "smax" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		auto* first = state->m_slots->GetSlot( 0 ).GetPlayer(); auto* last = state->m_slots->GetSlot( 2 ).GetPlayer();
+		first->CompleteTurn(); last->Connect(); last->Disconnect();
+		const auto random = game->GetRandom()->GetStateString();
+		const auto snapshot = fixture.WorldSnapshot();
+		first->UncompleteTurn(); last->CompleteTurn(); fixture.SetSnapshotTurn( 99 );
+		types::Buffer input( snapshot ); world_snapshot::ValidateHeader( input, state->m_settings.global );
+		world_snapshot::ReadRandomState( input ); const auto captured = world_snapshot::ReadTurnState( input, state->m_slots->GetSlots() );
+		GT_ASSERT( captured.id == 37 && captured.players.size() == 2 && captured.players[ 0 ].id == 0 && captured.players[ 0 ].completed && captured.players[ 1 ].id == 2 && !captured.players[ 1 ].completed, "writer used later flags or omitted disconnected player" );
+		GT_ASSERT( game->GetRandom()->GetStateString() == random, "capturing turn state consumed randomness" );
+		// Writer and reader both reject broken canonical reverse links; open and
+		// closed slots are omitted, not encoded as players with default flags.
+		state->m_slots->GetSlot( 1 ).Close();
+		world_snapshot::ValidateTurnRoster( captured, state->m_slots->GetSlots() );
+		last->SetSlot( nullptr );
+		bool writer_rejected = false, reader_rejected = false;
+		try { fixture.WorldSnapshot(); } catch ( const std::runtime_error& ) { writer_rejected = true; }
+		types::Buffer block; world_snapshot::WriteTurnState( block, captured );
+		try { world_snapshot::ReadTurnState( block, state->m_slots->GetSlots() ); } catch ( const std::runtime_error& ) { reader_rejected = true; }
+		last->SetSlot( &state->m_slots->GetSlot( 2 ) );
+		GT_ASSERT( writer_rejected && reader_rejected, "noncanonical Player reverse link was accepted" );
+		for ( const auto records : { std::vector< world_snapshot::SlotCompletion >{ { 0, true }, { 0, false } }, { { 2, true }, { 0, false } } } ) {
+			types::Buffer output; output.WriteString( "unchanged" ); const auto before = output.ToString(); bool rejected = false;
+			try { world_snapshot::WriteTurnState( output, { 37, records } ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected && output.ToString() == before, "writer published noncanonical completion records" );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "world completion pending Player tokens survive collection and are released after commit or discard", GT() {
+		class CountedValue : public value::Int {
+		public:
+			CountedValue( gc::Space* space, std::atomic< size_t >& destroyed ) : value::Int( space, 0 ), destroyed( destroyed ) {}
+			~CountedValue() override { ++destroyed; }
+		private:
+			std::atomic< size_t >& destroyed;
+		};
+		BackendFixture source; source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
+		source.GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); source.GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
+		source.GetGame()->GetState()->m_slots->GetSlot( 2 ).GetPlayer()->CompleteTurn();
+		const auto snapshot = source.WorldSnapshot();
+		for ( const bool cancel : { false, true } ) {
+			std::atomic< size_t > destroyed = 0;
+			BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers();
+			auto* game = fixture.GetGame(); game->GetState()->m_settings.global.SelectRuleset( "smax" ); game->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			const auto staged = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				fixture.RestoreWorldBody( GSE_CALL, snapshot );
+				const auto tokens = fixture.PendingSnapshotTokens(); GT_ASSERT( tokens.size() == 2, "missing pending lifetime tokens" );
+				for ( auto* token : tokens ) { token->Assign( "fixture_lifetime", new CountedValue( gc_space, destroyed ) ); }
+				GT_OK();
+			} );
+			GT_ASSERT( staged.empty(), "token staging failed: " + staged );
+			// Run the actual collector outside accumulation. No test-owned root
+			// retains these values: only Game's pending token traversal does so.
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( destroyed == 0, "collector reclaimed a pending Player lifetime token" );
+			const auto finished = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				if ( cancel ) { fixture.CancelWorldInitialization(); }
+				else {
+					fixture.CompleteWorldRestore( GSE_CALL );
+					fixture.CheckTurnComplete();
+					GT_ASSERT( game->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && game->GetState()->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "collected token prevented valid completion restore" );
+					GT_ASSERT( game->GetTurnId() == 37, "restoring all-complete flags auto-advanced the turn" );
+					for ( const auto& request : fixture.FrontendRequests() ) {
+						if ( request.type == game::FrontendRequest::FR_TURN_STATUS ) { GT_ASSERT( request.data.turn_status.status == turn::TS_WAITING_FOR_PLAYERS, "all-complete restore published active status" ); }
+					}
+				}
+				GT_ASSERT( !fixture.HasPendingSnapshotTurn(), "completion retained token roots" ); GT_OK();
+			} );
+			GT_ASSERT( finished.empty(), "token completion failed: " + finished );
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( destroyed == 2, "commit/discard retained pending Player lifetime tokens" );
+		}
+		GT_OK();
+	} );
+
+	for ( const int scenario : { 0, 1, 2, 3, 4, 5 } ) {
+		task->AddTest( "world completion rejects roster or Player replacement before installing any flags " + std::to_string( scenario ), GT( scenario ) {
+			const auto next_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next_id ); } );
+			BackendFixture source, fixture;
+			for ( auto* current : { &source, &fixture } ) {
+				current->EnableWorldSnapshot(); current->EnableTurnPlayers(); current->SetSnapshotTurn( 37 );
+				current->GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); current->GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			}
+			source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
+			source.GetGame()->GetRandom()->SetState( { 7, 8, 9, 10 } );
+			const auto snapshot = source.WorldSnapshot();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame(); auto* state = game->GetState();
+				auto* first = state->m_slots->GetSlot( 0 ).GetPlayer(); auto* current = state->m_slots->GetSlot( 2 ).GetPlayer();
+				current->CompleteTurn();
+				const auto before_random = game->GetRandom()->GetStateString();
+				fixture.RestoreWorldBody( GSE_CALL, snapshot );
+				size_t starts = 0, errors = 0, turns = 0;
+				game->On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+				game->On( GSE_CALL, "turn", NATIVE_CALL( &turns ) { ++turns; return VALUE( value::Undefined ); } ) );
+				const auto replace = [ & ]() {
+					auto& slot = state->m_slots->GetSlot( 2 ); auto* previous = slot.GetPlayerAndClose();
+					if ( scenario == 2 ) {
+						// Deterministically end and restart a Player lifetime at the exact
+						// same tracked allocation. State still owns that address; no
+						// allocator-reuse assumption or second allocation record is needed.
+						previous->~Player();
+						current = ::new ( previous ) Player( "Replacement", Player::PR_SINGLE, game->GetFaction( "GAIANS" ), "" );
+					}
+					else { NEWV( replacement, Player, "Replacement", Player::PR_SINGLE, game->GetFaction( "GAIANS" ), "" ); current = replacement; state->AddPlayer( current ); }
+					slot.SetPlayer( current, 0, "" ); current->CompleteTurn();
+				};
+				game->On( GSE_CALL, "start", NATIVE_CALL( &starts, &replace, scenario ) { ++starts; if ( scenario == 2 ) { replace(); } return VALUE( value::Undefined ); } ) );
+				if ( scenario == 0 ) { state->m_slots->GetSlot( 2 ).GetPlayerAndClose(); }
+				if ( scenario == 1 ) { replace(); }
+				if ( scenario == 3 ) {
+					DefineSnapshotUnit( game->GetUM() ); SpawnSnapshotUnit( GSE_CALL, fixture, 88 );
+					game->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &replace ) { replace(); return VALUE( value::Undefined ); } ) );
+				}
+				if ( scenario == 4 ) { current->SetSlot( nullptr ); }
+				if ( scenario == 5 ) {
+					NEWV( extra, Player, "Extra", Player::PR_SINGLE, game->GetFaction( "GAIANS" ), "" ); state->AddPlayer( extra ); state->m_slots->GetSlot( 1 ).SetPlayer( extra, 0, "" );
+				}
+				fixture.ClearFrontendRequests();
+				if ( scenario == 0 || scenario == 4 || scenario == 5 ) { fixture.IterateWorldRestore(); }
+				else { fixture.CompleteWorldRestore( GSE_CALL ); }
+				GT_ASSERT( errors == 1 && starts == ( scenario == 2 || scenario == 3 ? 1u : 0u ) && !turns, "identity rejection did not use terminal initialization failure at the correct boundary" );
+				GT_ASSERT( !first->IsTurnCompleted() && current->IsTurnCompleted(), "identity rejection partially installed completion flags" );
+				GT_ASSERT( !fixture.IsRunning() && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn() && !fixture.HasPendingSnapshotRandom(), "failed identity retained world or staged continuation" );
+				GT_ASSERT( game->GetRandom()->GetStateString() == before_random, "failed identity installed saved RNG" );
+				for ( const auto& request : fixture.FrontendRequests() ) {
+					GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "failed identity published restored turn/status" );
+				}
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "roster identity scenario " + std::to_string( scenario ) + ": " + error ); GT_OK();
+		} );
+	}
+}
+
 static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 	using game::backend::base::Base;
 	using game::backend::base::PopDef;
@@ -2037,6 +2314,8 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
 			}
 			source.SetRunning( true ); source.SetSnapshotTurn( 37 );
+			source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
+			if ( scenario == 2 ) { source.GetGame()->GetState()->m_slots->GetSlot( 2 ).GetPlayer()->CompleteTurn(); }
 			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
 			source.AddBaseWithPop( 601, 9 )->SetAccumulatedNutrients( -123 );
 			const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -2052,15 +2331,18 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				auto* game = destination.GetGame();
 				auto* local = game->GetState()->m_slots->GetSlot( 2 ).GetPlayer();
 				auto* remote = game->GetState()->m_slots->GetSlot( 0 ).GetPlayer();
-				remote->CompleteTurn(); if ( scenario == 2 ) { local->CompleteTurn(); }
+				if ( scenario != 2 ) { local->CompleteTurn(); } // Deliberately opposite earlier lobby state.
 				if ( scenario == 2 ) { destination.UseClientConnection( gc_space ); }
 				size_t turns = 0, unit_turns = 0, base_turns = 0, starts = 0, statuses = 0;
 				bool start_saw_metadata = false, status_saw_instances = false;
 				game->On( GSE_CALL, "turn", NATIVE_CALL( &turns ) { ++turns; return VALUE( value::Undefined ); } ) );
 				game->GetUM()->On( GSE_CALL, "unit_turn", NATIVE_CALL( &unit_turns ) { ++unit_turns; return VALUE( value::Undefined ); } ) );
 				game->GetBM()->On( GSE_CALL, "base_turn", NATIVE_CALL( &base_turns ) { ++base_turns; return VALUE( value::Undefined ); } ) );
-				game->On( GSE_CALL, "start", NATIVE_CALL( &starts, &start_saw_metadata, game ) {
-					++starts; start_saw_metadata = game->GetTurnId() == 37; return VALUE( value::Undefined );
+				game->On( GSE_CALL, "start", NATIVE_CALL( &starts, &start_saw_metadata, game, local, remote, scenario ) {
+					++starts; start_saw_metadata = game->GetTurnId() == 37 && !remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario != 2 );
+					// Setup changes must not replace the downloaded continuation.
+					remote->UncompleteTurn(); local->UncompleteTurn();
+					return VALUE( value::Undefined );
 				} ) );
 				game->On( GSE_CALL, "turn_status", NATIVE_CALL( &statuses, &status_saw_instances, game ) {
 					++statuses;
@@ -2070,7 +2352,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				destination.ClearFrontendRequests();
 				destination.RestoreWorldBody( GSE_CALL, snapshot );
 				GT_ASSERT( !turns && !unit_turns && !base_turns, "download invoked gameplay turn hooks" );
-				GT_ASSERT( remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario == 2 ), "download cleared existing player completion flags" );
+				GT_ASSERT( !remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario != 2 ), "download committed flags before setup" );
 				for ( const auto& request : destination.FrontendRequests() ) {
 					GT_ASSERT( request.type != game::FrontendRequest::FR_TURN_ADVANCE && request.type != game::FrontendRequest::FR_TURN_STATUS, "turn published before instance registration" );
 				}
@@ -2120,18 +2402,23 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 		} );
 	}
 	task->AddTest( "world turn restore validates signed ID and mission year boundaries", GT() {
-		BackendFixture source; source.EnableWorldSnapshot(); source.SetSnapshotTurn( 37 );
+		BackendFixture source; source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
 		auto& settings = source.GetGame()->GetState()->m_settings.global;
 		settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
 		const auto snapshot = source.WorldSnapshot();
-		types::Buffer old_turn; old_turn.WriteInt( 37 );
-		const auto prefix = snapshot.substr( 0, snapshot.size() - old_turn.ToString().size() );
+		types::Buffer input( snapshot ); game::backend::world_snapshot::ValidateHeader( input, settings );
+		game::backend::world_snapshot::ReadRandomState( input );
+		const auto prefix = snapshot.substr( 0, input.lenr );
+		game::backend::world_snapshot::ReadTurnState( input, source.GetGame()->GetState()->m_slots->GetSlots() );
+		const auto body = snapshot.substr( input.lenr );
 		const auto maximum = static_cast< int64_t >( std::min( static_cast< uint64_t >( std::numeric_limits< size_t >::max() ), static_cast< uint64_t >( INT64_MAX ) ) - 2100 );
 		std::vector< std::pair< int64_t, std::string > > cases;
 		for ( const auto value : { int64_t( 0 ), int64_t( 1 ), maximum, maximum + 1, int64_t( -1 ), INT64_MIN, INT64_MAX } ) {
-			types::Buffer tail; tail.WriteInt( value ); cases.emplace_back( value, prefix + tail.ToString() );
+			types::Buffer turn; turn.WriteString( "turn-state-v1" ); turn.WriteInt( value ); turn.WriteInt( 2 );
+			turn.WriteInt( 0 ); turn.WriteBool( false ); turn.WriteInt( 2 ); turn.WriteBool( false );
+			cases.emplace_back( value, prefix + turn.ToString() + body );
 		}
-		types::Buffer wrong_type; wrong_type.WriteString( "37" );
+		types::Buffer wrong_type; wrong_type.WriteString( "turn-state-v1" ); wrong_type.WriteString( "37" );
 		cases.emplace_back( -1, prefix + wrong_type.ToString() );
 		cases.emplace_back( -1, prefix ); cases.emplace_back( -1, snapshot.substr( 0, snapshot.size() - 1 ) );
 		for ( const auto& test_case : cases ) {
@@ -2847,6 +3134,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddWorldTurnTests( task );
+	AddWorldCompletionTests( task );
 	AddWorldRandomTests( task );
 	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );

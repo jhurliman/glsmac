@@ -14,6 +14,7 @@ using loader::txt::UnitRulesTXTLoader;
 using loader::txt::WeaponMode;
 using loader::txt::DefenseMode;
 using loader::txt::ChassisTriad;
+using loader::txt::UnitPlan;
 
 // Synthetic metadata: role selection must come from the mode, not names,
 // installed row indices, default costs, or prerequisite aliases.
@@ -26,10 +27,11 @@ std::vector< std::string > Rows() {
 }
 
 std::string Source( const std::vector< std::string >& rows, const std::string& newline = "\n", const std::string& section = "WEAPONS" ) {
-	std::string source = "#UNITS" + newline + "ignored" + newline
+	const std::string other_section = section == "UNITS" ? "WEAPONS" : "UNITS";
+	std::string source = "#" + other_section + newline + "ignored" + newline
 		+ "## translator comment" + newline + " \t#" + section + " \t" + newline;
 	for ( const auto& row : rows ) { source += " ; comment" + newline + "\t" + newline + " " + row + "\t" + newline; }
-	return source + "#END" + newline + "#UNITS" + newline + "also ignored" + newline;
+	return source + "#END" + newline + "#" + other_section + newline + "also ignored" + newline;
 }
 
 std::string Rejection( const std::string& source, const std::string& ruleset = "smac" ) {
@@ -77,6 +79,22 @@ std::string JoinRow( const std::vector< std::string >& fields ) {
 
 std::string ChassisRejection( const std::string& source, const std::string& ruleset = "smac" ) {
 	try { UnitRulesTXTLoader::ParseChassis( source, ruleset ); }
+	catch ( const std::invalid_argument& error ) { return error.what(); }
+	return "";
+}
+
+std::vector< std::string > UnitFields() {
+	return { "Survey Party", "Traveler", "Survey", "Field", "3", "5", "7", "SurveyTech", "-1", "00100" };
+}
+
+std::string UnitsSource( const std::vector< std::string >& rows, const std::string& newline = "\n" ) {
+	auto counted = rows;
+	counted.insert( counted.begin(), std::to_string( rows.size() ) + " ; record count" );
+	return Source( counted, newline, "UNITS" );
+}
+
+std::string UnitsRejection( const std::string& source, const std::string& ruleset = "smac" ) {
+	try { UnitRulesTXTLoader::ParseUnits( source, ruleset ); }
 	catch ( const std::invalid_argument& error ) { return error.what(); }
 	return "";
 }
@@ -373,6 +391,112 @@ void AddUnitRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 				const auto error = ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) );
 				GT_ASSERT( error.find( "#CHASSIS row 1 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid chassis number accepted or mislocated" );
 			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Unit design table preserves all ten fields and unresolved references", GT() {
+		for ( const auto* newline : { "\n", "\r\n" } ) {
+			for ( const auto* ruleset : { "smac", "smax" } ) {
+				const auto table = UnitRulesTXTLoader::ParseUnits( UnitsSource( {
+					JoinRow( UnitFields() ) + ", ; annotation",
+					"Settlement Party, Traveler, Settler, Field, 8, 0, 0, None, -1, 000",
+					"*Land Party, 'Traveler, Shaper, field, 9, 0, 0, Disable, 2, 0"
+				}, newline ), ruleset );
+				GT_ASSERT( table.ruleset_id == ruleset && table.units.size() == 3, "unit table identity/count changed" );
+				const auto& survey = table.units[ 0 ];
+				GT_ASSERT( survey.name == "Survey Party" && survey.chassis == "Traveler" && survey.weapon == "Survey" && survey.defense == "Field" && survey.plan == UnitPlan::Reconnaissance && survey.cost == 5 && survey.carry == 7 && survey.prerequisite == "SurveyTech" && survey.icon == -1 && survey.ability_bits == "00100", "unit fields shifted, defaulted, or resolved" );
+				const auto& colony = table.units[ 1 ];
+				GT_ASSERT( colony.weapon == "Settler" && colony.plan == UnitPlan::Colonization && colony.cost == 0 && colony.carry == 0 && colony.prerequisite == "None" && colony.ability_bits == "000", "colony metadata or automatic-value sentinels changed" );
+				const auto& former = table.units[ 2 ];
+				GT_ASSERT( former.name == "*Land Party" && former.chassis == "'Traveler" && former.weapon == "Shaper" && former.defense == "field" && former.plan == UnitPlan::Terraforming && former.prerequisite == "Disable" && former.icon == 2 && former.ability_bits == "0", "exact names/references or raw ability width were normalized" );
+			}
+		}
+		auto different = UnitFields(); different[ 1 ] = "Another Chassis";
+		const auto smac = UnitRulesTXTLoader::ParseUnits( "#UNITS\n1\n" + JoinRow( UnitFields() ), "smac" );
+		const auto smax = UnitRulesTXTLoader::ParseUnits( UnitsSource( { JoinRow( different ), JoinRow( UnitFields() ) } ), "smax" );
+		GT_ASSERT( smac.units[ 0 ].chassis == "Traveler" && smax.units[ 0 ].chassis == "Another Chassis" && smax.units[ 1 ].name == smax.units[ 0 ].name, "duplicate display names or separate ruleset-local rows were conflated" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit design table preserves signed metadata plans and raw ability strings", GT() {
+		const auto minimum = std::numeric_limits< int32_t >::min(), maximum = std::numeric_limits< int32_t >::max();
+		for ( int32_t plan = -1 ; plan <= 12 ; ++plan ) {
+			auto fields = UnitFields();
+			fields[ 4 ] = std::to_string( plan ); fields[ 5 ] = "-2147483648";
+			fields[ 6 ] = "+2147483647"; fields[ 8 ] = "-2147483648";
+			const auto table = UnitRulesTXTLoader::ParseUnits( UnitsSource( { JoinRow( fields ) } ), "smac" );
+			const auto& unit = table.units[ 0 ];
+			GT_ASSERT( static_cast< int32_t >( unit.plan ) == plan && unit.cost == minimum && unit.carry == maximum && unit.icon == minimum, "plan or signed unit metadata changed" );
+		}
+		for ( const size_t width : { 1, 24, 26, 29, 65 } ) {
+			auto fields = UnitFields();
+			fields[ 4 ] = "+0003"; fields[ 5 ] = "+2147483647";
+			fields[ 6 ] = "-2147483648"; fields[ 8 ] = "+2147483647";
+			fields[ 9 ] = std::string( width - 1, '0' ) + '1';
+			const auto table = UnitRulesTXTLoader::ParseUnits( UnitsSource( { JoinRow( fields ) } ), "smax" );
+			const auto& unit = table.units[ 0 ];
+			GT_ASSERT( unit.plan == UnitPlan::Reconnaissance && unit.cost == maximum && unit.carry == minimum && unit.icon == maximum && unit.ability_bits == fields[ 9 ], "unit endpoints or ability spelling/width was narrowed or decoded" );
+		}
+		auto fields = UnitFields(); fields[ 5 ] = "-0"; fields[ 6 ] = "+00017"; fields[ 8 ] = "-1";
+		const auto table = UnitRulesTXTLoader::ParseUnits( UnitsSource( { JoinRow( fields ) } ), "smac" );
+		GT_ASSERT( table.units[ 0 ].cost == 0 && table.units[ 0 ].carry == 17 && table.units[ 0 ].icon == -1, "signed unit metadata was treated as eligibility or calculated" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit design table requires an exact nonnegative count and explicit unique section", GT() {
+		const auto row = JoinRow( UnitFields() );
+		for ( const auto* ruleset : { "smac", "smax" } ) {
+			const auto empty = UnitRulesTXTLoader::ParseUnits( "#UNITS\n-0 ; no designs", ruleset );
+			GT_ASSERT( empty.ruleset_id == ruleset && empty.units.empty(), "zero-count catalog was rejected or given default units" );
+			GT_ASSERT( UnitRulesTXTLoader::ParseUnits( "#UNITS\n+0001\n" + row, ruleset ).units.size() == 1, "valid explicit count sign was rejected" );
+		}
+		for ( const auto& invalid : { std::string(), std::string( "#UNITS_OTHER\n0" ), std::string( "##UNITS\n0" ), std::string( "#UNITS\n; missing count\n#END\n" ), "#UNITS\n" + row, UnitsSource( { row } ) + "#UNITS\n0" } ) {
+			GT_ASSERT( !UnitsRejection( invalid ).empty(), "missing/duplicate section or missing count accepted" );
+		}
+		for ( const auto* ruleset : { "", "SMAC", "smax ", "auto" } ) {
+			GT_ASSERT( !UnitsRejection( UnitsSource( { row } ), ruleset ).empty(), "unit table accepted implicit ruleset identity" );
+		}
+		for ( const auto* count : { "-1", "1", "2147483647" } ) {
+			GT_ASSERT( !UnitsRejection( std::string( "#UNITS\n" ) + count ).empty(), "negative or unmatched count accepted" );
+		}
+		for ( const auto* count : { "0", "2" } ) {
+			const auto error = UnitsRejection( std::string( "#UNITS\n" ) + count + "\n" + row );
+			GT_ASSERT( error.find( "#UNITS row 1" ) != std::string::npos, "extra or missing unit records ignored instead of rejecting the count" );
+		}
+		for ( const auto& count : { std::string( "1," ), std::string( "1junk" ), std::string( "1.0" ), std::string( "0x1" ), std::string( "+" ), std::string( "+-1" ), std::string( "2147483648" ), std::string( "-2147483649" ), std::string( "1\0x", 3 ) } ) {
+			const auto error = UnitsRejection( "#UNITS\n" + count + "\n" + row );
+			GT_ASSERT( error.find( "#UNITS row 1 column 1" ) != std::string::npos, "malformed count accepted or mislocated" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Unit design table rejects malformed columns text numbers plans and abilities", GT() {
+		const auto original = UnitFields();
+		for ( size_t column = 0 ; column < original.size() ; ++column ) {
+			auto fields = original; fields.erase( fields.begin() + column );
+			GT_ASSERT( !UnitsRejection( UnitsSource( { JoinRow( fields ) } ) ).empty(), "missing positional unit field accepted" );
+		}
+		for ( const auto* extra : { ",extra", ",," } ) {
+			GT_ASSERT( !UnitsRejection( UnitsSource( { JoinRow( original ) + extra } ) ).empty(), "extra unit columns accepted" );
+		}
+		for ( const size_t column : { 0, 1, 2, 3, 7, 9 } ) {
+			for ( const auto& value : { std::string(), std::string( "x\0y", 3 ) } ) {
+				auto fields = original; fields[ column ] = value;
+				const auto error = UnitsRejection( UnitsSource( { JoinRow( original ), JoinRow( fields ) } ) );
+				GT_ASSERT( error.find( "#UNITS row 3 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid unit text accepted or mislocated" );
+			}
+		}
+		for ( const size_t column : { 4, 5, 6, 8 } ) {
+			for ( const auto& value : { std::string(), std::string( "*" ), std::string( "1junk" ), std::string( "1.0" ), std::string( "0x10" ), std::string( "1 2" ), std::string( "+" ), std::string( "-" ), std::string( "+-1" ), std::string( "++1" ), std::string( "--1" ), std::string( "2147483648" ), std::string( "-2147483649" ), std::string( "1\0x", 3 ) } ) {
+				auto fields = original; fields[ column ] = value;
+				const auto error = UnitsRejection( UnitsSource( { JoinRow( original ), JoinRow( fields ) } ) );
+				GT_ASSERT( error.find( "#UNITS row 3 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid unit number accepted or mislocated" );
+			}
+		}
+		for ( const auto* value : { "-2147483648", "-2", "13", "2147483647" } ) {
+			auto fields = original; fields[ 4 ] = value;
+			GT_ASSERT( UnitsRejection( UnitsSource( { JoinRow( fields ) } ) ).find( "row 2 column 5" ) != std::string::npos, "unknown unit plan narrowed into a supported value" );
+		}
+		for ( const auto* value : { "2", "0102", "0b01", "-1", "+01", "0 1", "1.0", "*" } ) {
+			auto fields = original; fields[ 9 ] = value;
+			GT_ASSERT( UnitsRejection( UnitsSource( { JoinRow( fields ) } ) ).find( "row 2 column 10" ) != std::string::npos, "nonbinary ability spelling accepted" );
 		}
 		GT_OK();
 	} );

@@ -8,6 +8,7 @@
 #include "SmacBaseSquareYield.h"
 #include "SmacResourceBonus.h"
 #include "SmacTileNutrients.h"
+#include "SmacTileMinerals.h"
 #include "SmacRulesTXTLoader.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
@@ -184,6 +185,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );
 		tests::AddSmacTileNutrientTests( task );
+		tests::AddSmacTileMineralTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );

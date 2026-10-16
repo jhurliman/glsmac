@@ -18,6 +18,7 @@
 #include "gc/Space.h"
 #include "gc/GC.h"
 #include "engine/Engine.h"
+#include "resource/ResourceManager.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
@@ -53,6 +54,7 @@
 #include "game/backend/map/module/Module.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "util/FinallyGuard.h"
+#include "util/UUID.h"
 
 #include <algorithm>
 #include <memory>
@@ -64,6 +66,7 @@
 #include <atomic>
 #include <new>
 #include <chrono>
+#include <filesystem>
 
 namespace gse {
 namespace tests {
@@ -132,6 +135,56 @@ public:
 
 	game::backend::Game* GetGame() {
 		return &m_game;
+	}
+
+	std::string CheckScriptRunEntry( const bool active, const bool reset_pending, const bool retained_prompt ) {
+		// Test mode omits the asset manager; install the real resolver locally.
+		resource::ResourceManager resources( "" );
+		auto* previous_resources = g_engine->m_resource_manager;
+		g_engine->m_resource_manager = &resources;
+		util::FinallyGuard restore_resources( [ & ]() { g_engine->m_resource_manager = previous_resources; } );
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			// An empty directory reaches the real missing-assets prompt without
+			// loading proprietary files or constructing a UI.
+			const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-run-entry-" + util::UUID::Generate() );
+			GT_ASSERT( std::filesystem::create_directory( directory ), "could not create empty path fixture" );
+			util::FinallyGuard remove_directory( [ & ]() { std::filesystem::remove( directory ); } );
+			GT_ASSERT( g_engine->GetResourceManager()->GetDetectedSMACType() == config::ST_UNKNOWN, "entry fixture requires asset-free test mode" );
+			size_t prompts = 0;
+			value::Callable* set_path = nullptr;
+			m_glsmac->On( GSE_CALL, "smacpath_prompt", NATIVE_CALL( &prompts, &set_path ) {
+				++prompts;
+				set_path = static_cast< value::Callable* >( static_cast< value::Object* >( arguments.at( 0 ) )->Get( "set_smacpath" ) );
+				return VALUE( value::Undefined );
+			} ) );
+			util::FinallyGuard restore( [ & ]() {
+				m_glsmac->Off( GSE_CALL, "smacpath_prompt", 0 );
+				m_glsmac->m_is_game_running = false;
+				m_glsmac->m_reset_needed = false;
+				m_glsmac->m_state = nullptr;
+			} );
+			if ( retained_prompt ) {
+				m_glsmac->S_Init( GSE_CALL, directory.string() );
+				GT_ASSERT( prompts == 1 && set_path, "first run did not reach the real path prompt" );
+			}
+			m_glsmac->m_state = m_state;
+			m_glsmac->m_is_game_running = active;
+			m_glsmac->m_reset_needed = reset_pending;
+			const auto previous_prompts = prompts;
+			bool rejected = false;
+			try {
+				if ( retained_prompt ) { set_path->Run( GSE_CALL, { VALUE( value::String,, directory.string() ) } ); }
+				else { m_glsmac->S_Init( GSE_CALL, directory.string() ); }
+			}
+			catch ( const Exception& error ) { rejected = error.class_name == EC.GAME_ERROR; }
+			GT_ASSERT( rejected == ( active || reset_pending ), "run entry did not enforce the active/reset boundary" );
+			GT_ASSERT( prompts == previous_prompts + ( active || reset_pending ? 0 : 1 ), "blocked run reached resource loading/prompt" );
+			GT_ASSERT( m_glsmac->m_is_game_running == active && m_glsmac->m_reset_needed == reset_pending,
+				"run rejection/path error changed lifecycle flags" );
+			GT_ASSERT( m_glsmac->m_state == m_state && m_state->GetGame() == &m_game && m_game.GetMap() == m_map.get(),
+				"run entry replaced the bound state or map" );
+			GT_OK();
+		} );
 	}
 
 	RecordingConnection* UseClientConnection( gc::Space* space ) {
@@ -3810,6 +3863,19 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	for ( const bool active : { false, true } ) {
+		for ( const bool reset_pending : { false, true } ) {
+			for ( const bool retained_prompt : { false, true } ) {
+				task->AddTest( std::string( "script run entry " ) + ( active ? "active" : "inactive" ) +
+					( reset_pending ? " reset-pending" : " no-reset" ) + ( retained_prompt ? " retained-prompt" : " direct" ), GT( active, reset_pending, retained_prompt ) {
+					BackendFixture fixture;
+					const auto error = fixture.CheckScriptRunEntry( active, reset_pending, retained_prompt );
+					GT_ASSERT( error.empty(), "run entry check: " + error );
+					GT_OK();
+				} );
+			}
+		}
+	}
 	AddLoaderProgressTests( task );
 	AddSessionCallbackTests( task );
 	AddWorldTurnTests( task );

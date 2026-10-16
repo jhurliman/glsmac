@@ -72,6 +72,7 @@ class GC;
 
 namespace gse::tests {
 class WidgetGraphicsFixture;
+class BackendFixture;
 }
 
 namespace engine {
@@ -122,6 +123,7 @@ public:
 
 private:
 	friend class gse::tests::WidgetGraphicsFixture;
+	friend class gse::tests::BackendFixture;
 
 	std::atomic< bool > m_is_shutting_down = false;
 	std::atomic< int > m_exit_code = EXIT_SUCCESS;

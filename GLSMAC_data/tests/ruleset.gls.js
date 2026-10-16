@@ -36,14 +36,14 @@ for (let button = 0; button < 2; button++) {
 		},
 		popup: {
 			show: (data) => { popup = data; },
-			hide: () => { calls :+ 'hide'; },
+			dismiss: () => { calls :+ 'dismiss'; },
 		},
 	};
 	choose(i, () => { calls :+ 'next'; });
 	test.assert(calls == [], 'showing chooser initialized gameplay before a choice');
 	const selected_button = popup.buttons[button];
 	test.assert(selected_button.onclick());
-	test.assert(calls == ['deinit', button == 0 ? 'smac' : 'smax', 'hide', 'next']);
+	test.assert(calls == ['deinit', button == 0 ? 'smac' : 'smax', 'dismiss', 'next']);
 }
 
 // Both single-player entry points must defer initialization until selection.

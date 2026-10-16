@@ -17,8 +17,18 @@ pending/not-pending reset combinations, preserve lifecycle flags and the bound
 State/Map on rejection, and retain the ordinary missing-assets prompt for an
 inactive first run. The input is an empty temporary directory; no original
 assets or UI are needed. These are entry-point tests, not rendered UI or full
-public-wrapper tests. Return-to-menu and quickstart restart need a separate
-rendered smoke check.
+public-wrapper tests.
+
+The later integration at
+[`5cd78418271231121fb9a8e1d136faa82bbc5dd0`](https://github.com/jhurliman/glsmac/commit/5cd78418271231121fb9a8e1d136faa82bbc5dd0)
+passed the rendered restart check on an Apple M2 Max Mac on October 16, 2026.
+The user confirmed map interaction, opening the base screen, advancing a turn,
+and Menu > Start New Game. User-supplied screenshots show Morgan Industries
+before restart and a different University Base world afterward; logs record
+turn 2, map reset, new map generation, turn 1 and the second minimap. The user
+reported a delay, which was not measured. The process was still running at the
+subsequent read-only check, so this does not establish clean shutdown. This is
+integration smoke evidence, not a repeat at the focused publication head.
 
 The tests against the preceding production code passed the two first-run
 controls and failed all six active/reset cases (exit 1). With the guard, all

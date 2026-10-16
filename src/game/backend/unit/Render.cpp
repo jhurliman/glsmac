@@ -24,7 +24,7 @@ void Render::Serialize( types::Buffer& buf, const Render* render ) {
 }
 
 Render* Render::Deserialize( types::Buffer& buf ) {
-	const auto render_type = (render_type_t)buf.ReadInt();
+	const auto render_type = buf.ReadInt();
 	switch ( render_type ) {
 		case RT_SPRITE:
 			return SpriteRender::Deserialize( buf );

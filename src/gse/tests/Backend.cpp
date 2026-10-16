@@ -17,6 +17,10 @@
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/StaticDef.h"
+#include "game/backend/unit/SpriteRender.h"
+#include "game/backend/unit/MoraleSet.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/State.h"
@@ -41,6 +45,7 @@
 #include <exception>
 #include <limits>
 #include <stdexcept>
+#include <set>
 #include <thread>
 
 namespace gse {
@@ -196,6 +201,12 @@ public:
 	void EnableRandom() {
 		m_random.reset( new game::backend::Random( &m_game, 123 ) );
 		m_game.m_random = m_random.get();
+	}
+
+	const std::vector< game::FrontendRequest >& PushUnitUpdates() {
+		PushBaseUpdates(); // Initializes the asset-free map's frontend coordinates.
+		m_game.GetUM()->PushUpdates();
+		return m_frontend_requests;
 	}
 
 	Value* RunScript( GSE_CALLABLE, const std::string& path ) {
@@ -973,7 +984,396 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 	}
 }
 
+namespace {
+
+using namespace game::backend::unit;
+
+void DefineSnapshotUnit( UnitManager* manager ) {
+	MoraleSet::morale_values_t values;
+	for ( size_t i = 0 ; i < 7 ; ++i ) { values.emplace_back( "Rank " + std::to_string( i ) ); }
+	manager->DefineMoraleSet( new MoraleSet( "TEST_MORALE", values ) );
+	manager->DefineUnit( new StaticDef( "TEST_UNIT", manager->GetMoraleSet( "TEST_MORALE" ), "Snapshot unit",
+		MT_LAND, 1.0f, new SpriteRender( "unused-test-asset.pcx", 2, 3, 100, 75, 53, 54, 102 ) ) );
+}
+
+struct UnitSnapshotRecord {
+	int64_t id = 71, owner = 2, x = 2, y = 2, morale = 3;
+	std::string def = "TEST_UNIT";
+	float movement = 0.375f, health = 0.625f;
+	bool moved = true;
+	types::Buffer Encode() const {
+		types::Buffer buf;
+		buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
+		buf.WriteInt( x ); buf.WriteInt( y ); buf.WriteFloat( movement );
+		buf.WriteInt( morale ); buf.WriteFloat( health ); buf.WriteBool( moved );
+		return buf;
+	}
+};
+
+Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixture, const size_t id, const size_t x = 2 ) {
+	auto* game = fixture.GetGame();
+	auto* unit = new Unit( GSE_CALL, game->GetUM(), id, game->GetUM()->GetUnitDef( "TEST_UNIT" ),
+		&game->GetState()->m_slots->GetSlot( 2 ), game->GetMap()->GetTile( x, 2 ), 0.375f, 3, 0.625f, true );
+	game->GetUM()->SpawnUnit( GSE_CALL, unit );
+	return unit;
+}
+
+class CountedUnitDef : public StaticDef {
+public:
+	CountedUnitDef( const MoraleSet* morale, size_t& destroyed )
+		: StaticDef( "COUNTED", morale, "Counted", MT_LAND, 1.0f, new SpriteRender( "unused", 0, 0, 1, 1, 0, 0, 0 ) )
+		, m_destroyed( destroyed ) {}
+	~CountedUnitDef() override { ++m_destroyed; }
+private:
+	size_t& m_destroyed;
+};
+
+}
+
+static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test unit snapshots use destination definitions and preserve state without spawn hooks", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool immediate : { false, true } ) {
+			for ( const bool client : { false, true } ) {
+				BackendFixture source, restored;
+				source.EnableTurns(); restored.EnableTurns();
+				source.SetRunning( true ); restored.SetRunning( immediate );
+				auto* source_manager = source.GetGame()->GetUM();
+				auto* manager = restored.GetGame()->GetUM();
+				size_t hook_calls = 0;
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					DefineSnapshotUnit( source_manager );
+					SpawnSnapshotUnit( GSE_CALL, source, 71 );
+					auto* second = SpawnSnapshotUnit( GSE_CALL, source, 88, 4 );
+					second->m_movement = -0.0f; second->m_morale = 6;
+					second->m_health = -0.125f; second->m_moved_this_turn = false;
+					GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "source unit setup failed: " + source_error );
+				Unit::SetNextId( 123 );
+				types::Buffer snapshot;
+				source_manager->Serialize( snapshot );
+				const auto rng = restored.GetGame()->GetRandom()->GetStateString();
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					if ( client ) { restored.UseClientConnection( gc_space ); }
+					manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &restored, &hook_calls ) {
+						++hook_calls;
+						restored.GetGame()->GetRandom()->GetUInt( 1, 100 );
+						return VALUE( value::Undefined );
+					} ) );
+					manager->Deserialize( GSE_CALL, snapshot );
+					if ( !immediate ) {
+						GT_ASSERT( manager->GetUnits().empty(), "deferred restore published units before startup" );
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 2, 2 )->units.size() == 1, "deferred restore lost its tile registration" );
+						restored.SetRunning( true );
+						manager->ProcessUnprocessed( GSE_CALL );
+						manager->ProcessUnprocessed( GSE_CALL );
+					}
+					GT_ASSERT( manager->GetUnits().size() == 2 && Unit::GetNextId() == 123, "unit count or next ID changed" );
+					for ( const auto& entry : source_manager->GetUnits() ) {
+						const auto* unit = manager->GetUnit( entry.first );
+						GT_ASSERT( unit && unit->m_def == manager->GetUnitDef( "TEST_UNIT" ), "restored unit does not borrow its manager's definition" );
+						GT_ASSERT( unit->m_def != entry.second->m_def, "restored unit borrowed the source world's definition" );
+						GT_ASSERT( unit->m_def->m_moraleset == manager->GetMoraleSet( "TEST_MORALE" ), "definition borrowed another world's morale" );
+						GT_ASSERT( unit->m_owner == &restored.GetGame()->GetState()->m_slots->GetSlot( 2 ), "unit owner resolved in another world" );
+						GT_ASSERT( unit->GetTile()->units.at( unit->m_id ) == unit, "tile lost its unit identity" );
+						GT_ASSERT( Unit::Serialize( unit ).ToString() == Unit::Serialize( entry.second ).ToString(), "unit record changed after round trip" );
+					}
+					GT_ASSERT( hook_calls == 0 && restored.GetGame()->GetRandom()->GetStateString() == rng, "restore invoked new-unit gameplay or consumed RNG" );
+					types::Buffer again; manager->Serialize( again );
+					GT_ASSERT( snapshot.lenr == snapshot.lenw && again.ToString() == snapshot.ToString(), "unit manager snapshot changed" );
+					types::Buffer retry( snapshot.ToString() );
+					bool rejected = false;
+					try { manager->Deserialize( GSE_CALL, retry ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && retry.lenr == 0 && manager->GetUnits().size() == 2 && Unit::GetNextId() == 123, "reload into populated manager changed live state" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "unit restore failed: " + error );
+				const auto& requests = restored.PushUnitUpdates();
+				std::set< size_t > spawned;
+				for ( const auto& request : requests ) {
+					if ( request.type == game::FrontendRequest::FR_TURN_STATUS ) { continue; }
+					GT_ASSERT( request.type == game::FrontendRequest::FR_UNIT_SPAWN, "restore queued an unexpected frontend operation" );
+					const auto& data = request.data.unit_spawn;
+					GT_ASSERT( spawned.insert( data.unit_id ).second, "restored unit spawned twice in the frontend" );
+					const auto* unit = manager->GetUnit( data.unit_id );
+					GT_ASSERT( unit && *data.unitdef_id == unit->m_def->m_id && data.health == unit->m_health && data.movement == unit->m_movement, "frontend spawn lost restored state" );
+				}
+				GT_ASSERT( spawned == std::set< size_t >( { 71, 88 } ), "restored units need exactly one frontend spawn each" );
+				const auto spawn_error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					restored.SetRunning( false );
+					SpawnSnapshotUnit( GSE_CALL, restored, Unit::GetNextId(), 6 );
+					GT_ASSERT( hook_calls == 0, "ordinary deferred spawn fired before startup" );
+					restored.SetRunning( true ); manager->ProcessUnprocessed( GSE_CALL );
+					GT_ASSERT( hook_calls == ( client ? 0 : 1 ), "ordinary deferred spawn lost master/client hook behavior" );
+					GT_ASSERT( ( restored.GetGame()->GetRandom()->GetStateString() != rng ) == !client, "ordinary spawn RNG behavior changed" );
+					SpawnSnapshotUnit( GSE_CALL, restored, Unit::GetNextId(), 6 );
+					GT_ASSERT( hook_calls == ( client ? 0 : 2 ), "ordinary immediate spawn lost master/client hook behavior" );
+					GT_OK();
+				} );
+				GT_ASSERT( spawn_error.empty(), "ordinary spawn after restore failed: " + spawn_error );
+			}
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test malformed unit records reject before tile registration or ID allocation", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( int scenario = 0 ; scenario < 22 ; ++scenario ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM();
+				DefineSnapshotUnit( manager );
+				UnitSnapshotRecord record;
+				switch ( scenario ) {
+					case 0: record.id = 0; break;
+					case 1: record.id = -1; break;
+					case 2: record.id = std::numeric_limits< int64_t >::max(); break;
+					case 3: record.def = "MISSING"; break;
+					case 4: record.owner = -1; break;
+					case 5: record.owner = 3; break;
+					case 6: record.x = -2; break;
+					case 7: record.x = 8; break;
+					case 8: record.y = 8; break;
+					case 9: record.x = 3; break;
+					case 10: record.morale = -1; break;
+					case 11: record.morale = 7; break;
+					case 12: record.movement = std::numeric_limits< float >::quiet_NaN(); break;
+					case 13: record.movement = std::numeric_limits< float >::infinity(); break;
+					case 14: record.health = std::numeric_limits< float >::quiet_NaN(); break;
+					case 15: record.health = -std::numeric_limits< float >::infinity(); break;
+				}
+				Unit* existing = nullptr;
+				if ( scenario >= 18 ) {
+					fixture.SetRunning( scenario < 20 );
+					existing = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+					if ( scenario & 1 ) { record.x = 4; }
+				}
+				auto bytes = record.Encode().ToString();
+				if ( scenario == 16 ) { bytes.pop_back(); }
+				if ( scenario == 17 ) { bytes += "trailing"; }
+				types::Buffer input( bytes );
+				const auto next_id = Unit::GetNextId();
+				bool rejected = false;
+				try { std::unique_ptr< Unit > unexpected( Unit::Deserialize( GSE_CALL, input, manager ) ); }
+				catch ( const std::runtime_error& ) { rejected = true; }
+				GT_ASSERT( rejected, "malformed unit record accepted: " + std::to_string( scenario ) );
+				GT_ASSERT( Unit::GetNextId() == next_id, "rejected unit consumed an ID" );
+				const auto& units = fixture.GetGame()->GetMap()->GetTile( 2, 2 )->units;
+				GT_ASSERT( units.size() == ( existing ? 1 : 0 ), "rejected unit changed tile occupancy" );
+				GT_ASSERT( !existing || units.at( 71 ) == existing, "duplicate unit displaced the original" );
+				GT_ASSERT( fixture.GetGame()->GetMap()->GetTile( 4, 2 )->units.empty(), "duplicate unit claimed a second tile" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "malformed unit validation failed: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit snapshot preserves finite signed movement and health boundaries", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const float value : { -std::numeric_limits< float >::max(), -1.0f, -0.0f, 0.0f,
+			std::numeric_limits< float >::denorm_min(), 1.0f, 2.0f, std::numeric_limits< float >::max() } ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+				UnitSnapshotRecord record; record.movement = record.health = value;
+				auto input = record.Encode();
+				auto* unit = Unit::Deserialize( GSE_CALL, input, manager );
+				manager->SpawnUnit( GSE_CALL, unit );
+				GT_ASSERT( Unit::Serialize( unit ).ToString() == input.ToString(), "finite unit state changed" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "finite boundary snapshot failed: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit manager snapshot rejects unsupported formats and malformed registries", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			for ( int scenario = 0 ; scenario < 18 ; ++scenario ) {
+				BackendFixture source, restored; source.EnableTurns(); restored.EnableTurns(); restored.SetRunning( running );
+				std::string morale_bytes, def_bytes;
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* manager = source.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+					morale_bytes = MoraleSet::Serialize( manager->GetMoraleSet( "TEST_MORALE" ) ).ToString();
+					def_bytes = Def::Serialize( manager->GetUnitDef( "TEST_UNIT" ) ).ToString();
+					GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "registry fixture failed: " + source_error );
+				types::Buffer input;
+				if ( scenario == 0 ) { input.WriteInt( 0 ); } // legacy unversioned manager
+				else if ( scenario == 1 ) { input.WriteString( "GLSMAC_UNITS_V999" ); }
+				else {
+					input.WriteString( "GLSMAC_UNITS_V1" );
+					if ( scenario == 2 || scenario == 3 ) { input.WriteInt( scenario == 2 ? -1 : std::numeric_limits< int64_t >::max() ); }
+					else {
+						input.WriteInt( scenario == 5 ? 2 : 1 );
+						input.WriteString( scenario == 4 ? "WRONG_MORALE_KEY" : "TEST_MORALE" ); input.WriteString( morale_bytes );
+						if ( scenario == 5 ) { input.WriteString( "TEST_MORALE" ); input.WriteString( morale_bytes ); }
+						input.WriteInt( scenario == 7 ? 2 : 1 );
+						input.WriteString( scenario == 6 ? "WRONG_UNIT_KEY" : "TEST_UNIT" );
+						if ( scenario == 8 || scenario == 9 || scenario >= 14 ) {
+							types::Buffer invalid;
+							invalid.WriteString( "TEST_UNIT" ); invalid.WriteString( scenario == 8 ? "MISSING" : "TEST_MORALE" );
+							invalid.WriteString( "Broken definition" ); invalid.WriteInt( scenario < 14 ? INT64_C( 4294967296 ) : DT_STATIC );
+							if ( scenario >= 14 ) {
+								invalid.WriteInt( scenario == 14 ? -1 : ( scenario == 15 ? INT64_C( 4294967296 ) : MT_LAND ) );
+								invalid.WriteFloat( scenario == 16 ? std::numeric_limits< float >::infinity() : 1.0f );
+								invalid.WriteInt( INT64_C( 4294967296 ) ); // invalid render tag must not narrow to RT_SPRITE
+							}
+							input.WriteString( invalid.ToString() );
+						}
+						else { input.WriteString( def_bytes ); }
+						if ( scenario == 7 ) { input.WriteString( "TEST_UNIT" ); input.WriteString( def_bytes ); }
+						input.WriteInt( scenario == 11 ? 2 : 1 );
+						UnitSnapshotRecord record; if ( scenario == 10 ) { record.def = "MISSING"; }
+						input.WriteString( record.Encode().ToString() );
+						if ( scenario == 11 ) { record.x = 4; input.WriteString( record.Encode().ToString() ); }
+						input.WriteInt( scenario == 12 ? 71 : 123 );
+						if ( scenario == 13 ) { input.WriteInt( 999 ); }
+					}
+				}
+				const auto next_id = Unit::GetNextId();
+				const auto rng = restored.GetGame()->GetRandom()->GetStateString();
+				size_t hooks = 0;
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* manager = restored.GetGame()->GetUM();
+					manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
+					bool rejected = false;
+					try { manager->Deserialize( GSE_CALL, input ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected, "malformed unit manager accepted: " + std::to_string( scenario ) );
+					GT_ASSERT( hooks == 0 && restored.GetGame()->GetRandom()->GetStateString() == rng, "malformed restore ran gameplay" );
+					if ( scenario < 4 ) {
+						GT_ASSERT( !manager->GetMoraleSet( "TEST_MORALE" ) && !manager->GetUnitDef( "TEST_UNIT" ) && manager->GetUnits().empty(), "unsupported header published state" );
+						GT_ASSERT( next_id == Unit::GetNextId() && restored.FrontendRequestCount() == 0, "unsupported header changed IDs or frontend" );
+					}
+					if ( scenario == 11 ) {
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 2, 2 )->units.size() == 1, "duplicate record displaced accepted unit" );
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 4, 2 )->units.empty(), "duplicate record claimed another tile" );
+					}
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "manager rejection failed: " + error );
+			}
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test deferred unit callback failure transfers ownership exactly once", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool resume : { false, true } ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+				size_t hooks = 0;
+				manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) {
+					if ( ++hooks == 1 ) { GSE_ERROR( EC.GAME_ERROR, "deferred unit hook failure" ); }
+					return VALUE( value::Undefined );
+				} ) );
+				auto* first = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+				auto* second = SpawnSnapshotUnit( GSE_CALL, fixture, 88, 4 );
+				const auto next_id = Unit::GetNextId();
+				for ( size_t phase = 0 ; phase < 2 ; ++phase ) {
+					types::Buffer output; output.WriteString( "preserve" );
+					const auto before = output.ToString();
+					bool rejected = false;
+					try { manager->Serialize( output ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && output.ToString() == before, "snapshot omitted pending units or changed output before rejecting" );
+					if ( !phase ) {
+						fixture.SetRunning( true );
+						bool threw = false;
+						try { manager->ProcessUnprocessed( GSE_CALL ); }
+						catch ( const Exception& error ) { threw = error.class_name == EC.GAME_ERROR; }
+						GT_ASSERT( threw && hooks == 1, "deferred spawn did not propagate its callback failure" );
+						GT_ASSERT( manager->GetUnits().size() == 1 && manager->GetUnit( 71 ) == first && !manager->GetUnit( 88 ), "callback failure lost ownership of registered or pending units" );
+					}
+				}
+				if ( resume ) {
+					manager->ProcessUnprocessed( GSE_CALL ); manager->ProcessUnprocessed( GSE_CALL );
+					GT_ASSERT( hooks == 2 && manager->GetUnit( 71 ) == first && manager->GetUnit( 88 ) == second, "resuming pending startup replayed an already published unit" );
+					types::Buffer completed; manager->Serialize( completed );
+				}
+				GT_ASSERT( Unit::GetNextId() == next_id, "startup registration changed IDs" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "deferred ownership failure: " + error );
+			fixture.DestroyMapBeforeManagers(); // also exercises teardown with an untouched pending entry
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit registry removal preserves live and pending borrowers", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			size_t destroyed = 0;
+			BackendFixture fixture; fixture.EnableTurns(); fixture.SetRunning( running );
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame(); auto* manager = game->GetUM(); DefineSnapshotUnit( manager );
+				auto* morale = manager->GetMoraleSet( "TEST_MORALE" );
+				auto* def = new CountedUnitDef( morale, destroyed ); manager->DefineUnit( def );
+				manager->SpawnUnit( GSE_CALL, new Unit( GSE_CALL, manager, 71, def, &game->GetState()->m_slots->GetSlot( 2 ),
+					game->GetMap()->GetTile( 2, 2 ), 1, 0, 1, false ) );
+				const auto requests = fixture.FrontendRequestCount();
+				for ( const bool remove_morale : { false, true } ) {
+					bool rejected = false;
+					try { if ( remove_morale ) { manager->UndefineMoraleSet( "TEST_MORALE" ); } else { manager->UndefineUnit( "COUNTED" ); } }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && destroyed == 0 && manager->GetUnitDef( "COUNTED" ) == def && manager->GetMoraleSet( "TEST_MORALE" ) == morale, "registry removal invalidated a borrower" );
+					GT_ASSERT( fixture.FrontendRequestCount() == requests, "rejected undefine sent a frontend change" );
+				}
+				fixture.SetRunning( true ); manager->ProcessUnprocessed( GSE_CALL );
+				manager->DespawnUnit( GSE_CALL, 71 );
+				manager->UndefineUnit( "COUNTED" );
+				GT_ASSERT( destroyed == 1 && !manager->GetUnitDef( "COUNTED" ), "unused definition was not deleted exactly once" );
+				// Reverse-order definition rollback remains valid once no units borrow it.
+				manager->UndefineUnit( "TEST_UNIT" ); manager->UndefineMoraleSet( "TEST_MORALE" );
+				GT_ASSERT( !manager->GetUnitDef( "TEST_UNIT" ) && !manager->GetMoraleSet( "TEST_MORALE" ), "unused registries could not be removed in reverse order" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "registry ownership failure: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test manager owns shared unit definitions through map-first teardown", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			size_t destroyed = 0;
+			{
+				BackendFixture fixture; fixture.EnableTurns(); fixture.SetRunning( running );
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = fixture.GetGame(); auto* manager = game->GetUM(); DefineSnapshotUnit( manager );
+					auto* def = new CountedUnitDef( manager->GetMoraleSet( "TEST_MORALE" ), destroyed ); manager->DefineUnit( def );
+					for ( size_t id : { 71, 88 } ) {
+						manager->SpawnUnit( GSE_CALL, new Unit( GSE_CALL, manager, id, def, &game->GetState()->m_slots->GetSlot( 2 ),
+							game->GetMap()->GetTile( 2, 2 ), 1, 0, 1, false ) );
+					}
+					GT_ASSERT( destroyed == 0, "live units destroyed their shared definition" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "unit ownership setup failed: " + error );
+				fixture.DestroyMapBeforeManagers();
+			}
+			GT_ASSERT( destroyed == 1, "shared unit definition was not destroyed exactly once" );
+		}
+		GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
 	AddRulesetTests( task );

@@ -30,8 +30,11 @@ Unused automatic-pattern arithmetic is not evaluated when presence is forced.
 These validation boundaries are port policy, not claims about original error
 handling or extreme-overflow behavior.
 
-The behavior comes from **RE-SMAC-RESOURCE-001**, [the semantic handoff](behavior/resource-bonus-resolution.md)
-and its [15 named cases](behavior/resource-bonus-resolution-cases.json).
+The behavior comes from **RE-SMAC-RESOURCE-001**, the locally retained semantic
+handoff `docs/behavior/resource-bonus-resolution.md` and its 15 named cases in
+`docs/behavior/resource-bonus-resolution-cases.json`. Those research files are
+not included in this change; the test-owned case fixture is
+[`src/gse/tests/fixtures/SmacResourceBonus.h`](../src/gse/tests/fixtures/SmacResourceBonus.h).
 They are original-x86 checked using synthetic map/global state, not observed
 full-game scenarios. The reference `terran.exe` SHA-256 is
 `0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01`;

@@ -186,6 +186,13 @@ tests, and deterministic gameplay regressions cover different failure modes;
 none substitutes for the others. Keep platform-specific checks visible and
 do not describe an unsupported analyzer invocation as coverage.
 
+The focused LLVM 15 correctness gate has landed on main through PR #16;
+readability and modernization checks remain disabled. The explicit single-file
+runner is under review in #55. The analyzer still honors explicit NOLINT
+directives, so those require review; there is no blanket suppression baseline.
+Shared-header changes continue to trigger a full production scan rather than
+using the single-file option to narrow the required check.
+
 ## Current status
 
 M0 and the prerequisites for M1 are in progress. No milestone is complete.
@@ -257,6 +264,11 @@ The next implementation slices are:
    completion validation/commit, MT reset can overtake queued failure handling,
    and parked failure currently dispatches ordinary MT requests too early.
    Passing sequential tests do not establish exclusion for those overlaps.
+   The separate loader repair in #78 prevents reset from deleting a Map inside
+   its progress callback. It passes Windows CTest 8/8 and focused Linux CTest
+   5/5; a 297-unit correctness scan is clean. It does not fix those concurrent
+   snapshot races. Session callback retirement and deferring network mutation
+   during native map initialization are the next prerequisites.
    See the [roster ownership plan](player-roster-ownership-plan.md) for the
    canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,

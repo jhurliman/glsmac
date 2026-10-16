@@ -49,6 +49,8 @@ Short labels below resolve to these exact source revisions:
 | `a16fa30b` | [a16fa30b4f8d1a812d306cf7a719de318cbcba3a](https://github.com/jhurliman/glsmac/commit/a16fa30b4f8d1a812d306cf7a719de318cbcba3a) |
 | `eb29516b` | [eb29516b15fa83c7ccca2eaf5786a03d1f514c8f](https://github.com/jhurliman/glsmac/commit/eb29516b15fa83c7ccca2eaf5786a03d1f514c8f) |
 | `9f66d2a6` | [9f66d2a61d42fea7761a3165c94235d0c5dfa669](https://github.com/jhurliman/glsmac/commit/9f66d2a61d42fea7761a3165c94235d0c5dfa669) |
+| `236c4dca` | [236c4dca67a8a48b26b1bc8aec28446abfb52e71](https://github.com/jhurliman/glsmac/commit/236c4dca67a8a48b26b1bc8aec28446abfb52e71) |
+| `0ce4e099` | [0ce4e0992576300dd0c408e2543acda9c5b773de](https://github.com/jhurliman/glsmac/commit/0ce4e0992576300dd0c408e2543acda9c5b773de) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -85,6 +87,9 @@ on `codex/validation-20261016-fixture-retirement` and
 `codex/validation-20261016-world-completion`, respectively. The failed and
 repaired focused completion sources `eb29516b` and `9f66d2a6` are ancestors of
 `codex/validation-20261016-completion-publication`, pinned at `9f66d2a6`.
+Loader integration `236c4dca` and focused publication `0ce4e099` are retained
+on `codex/validation-20261016-loader-progress` and
+`codex/validation-20261016-loader-publication`, respectively.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -617,3 +622,34 @@ repairs. Session-token cancellation alone cannot protect an already-executing
 callback from native teardown. The passing results remain valid for the cases
 actually run and are not a claim that this snapshot implementation is ready
 to merge.
+
+## Nested loader request dispatch
+
+At `236c4dca`, SetLoaderText admits only frontend polling and Ping while Map
+methods are on the stack. Reset and other requests stay queued and cancellable
+until ordinary iteration. An asset-free test drives the actual ProcessTiles
+loop and observes Map destruction; the old pump fails because reset deletes
+that executing Map. Two further cases exercise excluded opcodes and owned
+request/response cleanup. The test holds accumulation during native reset to
+isolate this reentrancy check from the separate collector-exclusion work.
+
+Integration Windows CTest passed 8/8 in 50.75 seconds (GSE 24.08 seconds).
+The source slice `3705812bbfa6eefa5ab5a635ccb5fc7bd1f0f231` passed Linux CTest
+8/8 in 36.51 seconds and its three focused cases passed with allocation
+tracking and ASan/UBSan/LSan. The narrower publication `0ce4e099`, based on
+fixture retirement #76 without the later snapshot stack, passed Linux CTest
+5/5 in 22.34 seconds (GSE 16.04 seconds). Fresh LLVM 15 analysis at integration
+covered 297 production translation units in 57.70 seconds with zero failures;
+the Windows-only network implementation remains outside that Linux scan.
+
+Windows logs use `out/loader-progress-windows-`; focused publication logs use
+`/home/jhurliman/src/glsmac-unit-publication/loader-progress-`; the full scan
+and its per-unit summary use
+`/home/jhurliman/src/glsmac-gc-audit/loader-progress-analysis`. Source-slice
+positive/negative logs are retained under
+`/home/jhurliman/src/glsmac-unit-weapon-parser/loader-` and its worktree's
+ignored `out/validation-loader/` directory.
+
+Submitted as #78. This does not establish generic GC exclusion, retire old
+session requests, serialize concurrent snapshot initialization, or fix nested
+network dispatch. No rendered initialization/cancellation smoke is claimed.

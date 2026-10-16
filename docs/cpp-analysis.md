@@ -14,11 +14,36 @@ cmake -S . -B build/analysis -G Ninja -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BU
 cmake --build build/analysis --target glsmac_version
 ```
 
-After initial configuration, the fast command checks local edits, including
+After initial configuration, the default command checks local edits, including
 staged and untracked C++ files:
 
 ```sh
 python3 tools/analyze_cpp.py
+```
+
+For a fast edit/check loop on one complete production translation unit:
+
+```sh
+python3 tools/analyze_cpp.py --source src/game/backend/unit/Unit.cpp
+```
+
+Repeat `--source PATH` to check several files. Paths are relative to the checkout
+root or absolute paths inside it; equivalent paths are normalized and checked
+once. Explicit selection does not query Git or expand after header changes. It
+is useful while editing, but does not replace the default branch check before
+review. `--source`, `--base`, and `--all` are mutually exclusive. Headers,
+included fragments, generated/test files, platform-excluded sources, missing
+files, and sources absent from the compilation database are rejected rather
+than silently skipped. The JSON summary reports `scope: "explicit"` and the
+normalized, deduplicated `requested_sources`.
+
+Use a separate compilation database when checking Release branches of the code
+without replacing the Debug configuration:
+
+```sh
+cmake -S . -B build/analysis-release -G Ninja -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTING=OFF
+cmake --build build/analysis-release --target glsmac_version
+python3 tools/analyze_cpp.py --build-dir build/analysis-release --source src/game/backend/unit/Unit.cpp
 ```
 
 To check a branch against the merge base with its target, including local edits:

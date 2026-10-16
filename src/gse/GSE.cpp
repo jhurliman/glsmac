@@ -30,8 +30,11 @@ GSE::GSE()
 }
 
 GSE::~GSE() {
-	{
-		Finish();
+	Finish();
+	// The space remains registered with the collector until its destructor.
+	// Clear roots and included contexts while collection is excluded, just as
+	// when those roots are created during script execution.
+	m_gc_space->Accumulate( this, [ this ]() {
 		for ( auto& it : m_include_cache ) {
 			it.second.Cleanup( this );
 		}
@@ -43,7 +46,7 @@ GSE::~GSE() {
 		m_async = nullptr;
 		m_modules.clear();
 		m_root_objects.clear();
-	}
+	} );
 	delete m_gc_space;
 }
 

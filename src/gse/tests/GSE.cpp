@@ -9,12 +9,62 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/context/GlobalContext.h"
+#include "gc/GC.h"
 #include "gc/Space.h"
+#include "engine/Engine.h"
+#include "util/FinallyGuard.h"
+
+#include <atomic>
+#include <thread>
 
 namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+
+	task->AddTest(
+		"test if GSE teardown excludes concurrent garbage collection",
+		GT() {
+			std::atomic< bool > stop = false;
+			std::atomic< size_t > collections = 0;
+			// Exercise the production collector between every lifecycle, without
+			// waiting for the normal one-second collection interval.
+			std::thread collector( [ &stop, &collections ]() {
+				while ( !stop.load() ) {
+					g_engine->GetGC()->Iterate();
+					collections++;
+					std::this_thread::yield();
+				}
+			} );
+			util::FinallyGuard join_collector( [ &stop, &collector ]() {
+				stop = true;
+				collector.join();
+			} );
+
+			for ( size_t cycle = 0 ; cycle < 32 ; cycle++ ) {
+				GSE nested;
+				auto* space = nested.GetGCSpace();
+				space->Accumulate( &nested, [ &nested, space ]() {
+					ExecutionPointer ep;
+					for ( size_t i = 0 ; i < 16 ; i++ ) {
+						auto* context = nested.CreateGlobalContext();
+						context->CreateVariable( "kept", new value::Int( space, i ), {}, ep );
+					}
+					auto* context = nested.CreateGlobalContext();
+					nested.RunScript( space, context, {}, ep, "./GLSMAC_data/tests/_gc_lifecycle" );
+				} );
+				const auto before = collections.load();
+				while ( collections.load() == before ) {
+					std::this_thread::yield();
+				}
+				// Roots, cached include results and their contexts must remain
+				// stable until an in-flight mark has finished.
+			}
+			GT_ASSERT( collections.load() >= 32, "collector did not exercise every lifecycle" );
+			GT_OK();
+		}
+	);
 
 	class Sum : public value::Callable {
 	public:

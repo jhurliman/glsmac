@@ -96,6 +96,17 @@ struct UnitTable {
 	std::vector< UnitDesignRecord > units; // source order; display names may repeat
 };
 
+struct AbilityRecord {
+	std::string name;
+	int32_t cost;
+	std::string prerequisite, abbreviation, flags, description;
+};
+
+struct AbilityTable {
+	std::string ruleset_id;
+	std::vector< AbilityRecord > abilities; // source row identity; names/abbreviations may repeat
+};
+
 class UnitRulesTXTLoader {
 public:
 	// Pure #WEAPONS decoder. The caller supplies contents and an explicit
@@ -117,6 +128,10 @@ public:
 	// ten-column records. Plans are -1..12; cost/carry/icon remain signed int32.
 	// References and ability bits are not resolved; no reactor is inferred.
 	static UnitTable ParseUnits( const std::string& source, const std::string& ruleset_id );
+	// Six columns; abbreviation may be empty and description keeps semicolons.
+	// Cost is signed int32 metadata; flags retain nonempty binary spelling.
+	// No ability index/bit mapping, prerequisite resolution or cost calculation.
+	static AbilityTable ParseAbilities( const std::string& source, const std::string& ruleset_id );
 };
 
 }

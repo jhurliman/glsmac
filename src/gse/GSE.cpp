@@ -30,6 +30,9 @@ GSE::GSE()
 }
 
 GSE::~GSE() {
+	// The original script owner must have stopped before destruction. Timers
+	// and root cleanup must execute here even when this is a different thread.
+	m_gc_space->BeginTeardown();
 	Finish();
 	// The space remains registered with the collector until its destructor.
 	// Clear roots and included contexts while collection is excluded, just as

@@ -2,6 +2,7 @@
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
+#include "gse/Async.h"
 #include "gse/value/Null.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -65,6 +66,57 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		}
 	);
+
+	for ( const bool queue_callback : { false, true } ) {
+		task->AddTest(
+			queue_callback
+				? "test if cross-thread GSE teardown releases pending callback owners"
+				: "test if cross-thread GSE teardown drains timers and clears roots",
+			GT( queue_callback ) {
+				std::atomic< size_t > destructions = 0;
+				std::atomic< size_t > executions = 0;
+				class TrackedCallable : public value::Callable {
+				public:
+					TrackedCallable( gc::Space* space, context::Context* context, std::atomic< size_t >& destructions, std::atomic< size_t >& executions )
+						: value::Callable( space, context ), destructions( destructions ), executions( executions ) {}
+					~TrackedCallable() override { destructions++; }
+					Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
+						executions++;
+						return VALUE( value::Bool, , false );
+					}
+				private:
+					std::atomic< size_t >& destructions;
+					std::atomic< size_t >& executions;
+				};
+				GSE* nested = nullptr;
+				TrackedCallable* tracked = nullptr;
+				std::thread owner( [ & ]() {
+					nested = new GSE();
+					auto* space = nested->GetGCSpace();
+					space->Accumulate( nested, [ & ]() {
+						ExecutionPointer ep;
+						auto* context = nested->CreateGlobalContext();
+						nested->RunScript( space, context, {}, ep, "./GLSMAC_data/tests/_gc_lifecycle" );
+						tracked = new TrackedCallable( space, context, destructions, executions );
+						nested->AddRootObject( tracked );
+						nested->GetAsync()->CreateTimer( 0, tracked, context, {}, ep );
+					} );
+				} );
+				owner.join(); // The original owner must stop using the space before destruction.
+				bool callback_ran = false;
+				size_t cleanups = 0;
+				if ( queue_callback ) {
+					nested->GetGCSpace()->Accumulate( tracked, [ & ]() { callback_ran = true; }, [ & ]() { cleanups++; } );
+				}
+				delete nested;
+				GT_ASSERT( executions.load() == 1, "pending timer did not run exactly once during teardown" );
+				GT_ASSERT( destructions.load() == 1, "rooted callback was not collected during teardown" );
+				GT_ASSERT( !callback_ran, "queued accumulation must not run during teardown" );
+				GT_ASSERT( cleanups == ( queue_callback ? 1 : 0 ), "queued callback cleanup did not run exactly once" );
+				GT_OK();
+			}
+		);
+	}
 
 	class Sum : public value::Callable {
 	public:

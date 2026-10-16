@@ -38,6 +38,10 @@ CLASS( Space, common::Class )
 	const bool IsAccumulating();
 
 	void SetThreadId( const std::thread::id& thread_id );
+	// Transfer ownership exclusively for final drain and destruction. The previous
+	// owner and all producers must have stopped; no concurrent Iterate/Accumulate
+	// calls are allowed. Collection may continue while teardown drains timers.
+	void BeginTeardown();
 	void ProcessAccumulations(); // scripts will actually execute here
 
 	void Remove( Object* object );

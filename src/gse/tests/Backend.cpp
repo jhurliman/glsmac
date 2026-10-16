@@ -349,6 +349,50 @@ static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddPopReferenceTests( task );
+	task->AddTest(
+		"test backend mutation scopes restore read-only access after nested exceptions",
+		GT() {
+			BackendFixture fixture;
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame();
+				const auto check_read_only = [ & ]() {
+					try { game->CheckRW( GSE_CALL ); }
+					catch ( const Exception& e ) { return e.class_name == EC.GAME_ERROR; }
+					return false;
+				};
+				GT_ASSERT( check_read_only(), "fixture starts with mutation enabled" );
+				for ( const auto kind : { 0, 1, 2 } ) {
+					const auto fail = [ & ]() {
+						if ( kind == 0 ) { throw std::runtime_error( "native callback failure" ); }
+						if ( kind == 1 ) { GSE_ERROR( EC.GAME_ERROR, "script callback failure" ); }
+						throw 42;
+					};
+					bool inner_caught = false, outer_caught = false, outer_still_writable = false;
+					try {
+						fixture.WithRW( [ & ]() {
+							game->CheckRW( GSE_CALL );
+							try {
+								fixture.WithRW( [ & ]() { game->CheckRW( GSE_CALL ); fail(); } );
+							}
+							catch ( ... ) { inner_caught = true; }
+							game->CheckRW( GSE_CALL );
+							outer_still_writable = true;
+							fail();
+						} );
+					}
+					catch ( ... ) { outer_caught = true; }
+					GT_ASSERT( inner_caught && outer_caught, "callback exception did not propagate" );
+					GT_ASSERT( outer_still_writable, "nested failure disabled its enclosing mutation scope" );
+					GT_ASSERT( check_read_only(), "callback exception left mutation enabled" );
+					fixture.WithRW( [ & ]() { game->CheckRW( GSE_CALL ); } );
+					GT_ASSERT( check_read_only(), "later successful scope left mutation enabled" );
+				}
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "mutation scope check failed: " + error );
+			GT_OK();
+		}
+	);
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate

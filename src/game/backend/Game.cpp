@@ -6,6 +6,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "util/FS.h"
+#include "util/FinallyGuard.h"
 #include "types/Buffer.h"
 #include "State.h"
 #include "game/backend/faction/Faction.h"
@@ -1337,9 +1338,9 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 }
 
 void Game::WithRW( const std::function< void() >& f ) {
+	util::FinallyGuard restore( [ this ]() { m_rw_counter--; } );
 	m_rw_counter++;
 	f();
-	m_rw_counter--;
 }
 
 void Game::InitComplete( GSE_CALLABLE ) {

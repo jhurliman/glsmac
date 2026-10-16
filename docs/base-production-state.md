@@ -104,3 +104,14 @@ under `build/owner-leaks/validation/production-*` in the managed source tree and
 `/home/jhurliman/src/glsmac-production-state-audit/`. An initial event fixture
 omitted synthetic render coordinates required by `Game::Iterate`; its failure
 logs are retained separately and are not counted as a production defect.
+
+The narrower publication branch starts with worker snapshots at
+`4bf3f7028a662466c755c5f4c3549395760828a0`, merges main at `00b1b81b` and
+event-response handling at `9a3ad3f1d31a35c555159157c6aee1c43fbef444`, then applies
+the production-state change. Its production patch is unchanged. Fixture-only
+adaptations omit an unused later unit-manager helper and explicitly include the
+Bool value type. On this exact ancestry, Clang 15 Debug full CTest passes 4/4 in
+18.25 seconds, including all six production-state cases. This parent lacks the
+later native-filter and parser lifetime fixes; these publication results do not
+claim its full-suite leak-detection baseline is clean. Build and CTest logs are
+retained in `/home/jhurliman/src/glsmac-production-state-publication/`.

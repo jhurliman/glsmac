@@ -5,6 +5,7 @@
 #include "gse/GSE.h"
 #include "gse/ExecutionPointer.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"

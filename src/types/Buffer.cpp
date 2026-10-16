@@ -15,10 +15,11 @@ Buffer::Buffer() {
 	dr = nullptr;
 }
 
-Buffer::Buffer( const std::string& val ) {
+Buffer::Buffer( const std::string& val )
+	: Buffer() {
+	if ( val.empty() ) { return; }
 	allocated_len = val.size();
 	lenw = val.size();
-	lenr = 0;
 	data = (data_t*)malloc( lenw );
 	memcpy( ptr( data, 0, lenw ), val.data(), lenw );
 	dw = data + lenw;

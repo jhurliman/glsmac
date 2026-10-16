@@ -22,7 +22,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V1";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V2";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )

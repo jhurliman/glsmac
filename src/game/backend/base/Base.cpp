@@ -43,7 +43,8 @@ Base::Base(
 	const std::string& name,
 	const facilities_t& facilities,
 	const pops_t& pops,
-	const size_t next_pop_id
+	const size_t next_pop_id,
+	const int64_t accumulated_nutrients
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
@@ -53,7 +54,11 @@ Base::Base(
 	, m_name( name )
 	, m_facilities( facilities )
 	, m_pops( pops )
-	, m_next_pop_id( next_pop_id ) {
+	, m_next_pop_id( next_pop_id )
+	, m_accumulated_nutrients( accumulated_nutrients ) {
+	if ( accumulated_nutrients < 0 ) {
+		THROW( "accumulated nutrients must be nonnegative" );
+	}
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -98,6 +103,20 @@ void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& 
 	}
 }
 
+int64_t Base::GetAccumulatedNutrients() const {
+	return m_accumulated_nutrients;
+}
+
+void Base::SetAccumulatedNutrients( const int64_t nutrients ) {
+	if ( nutrients < 0 ) {
+		THROW( "accumulated nutrients must be nonnegative" );
+	}
+	if ( m_accumulated_nutrients != nutrients ) {
+		m_accumulated_nutrients = nutrients;
+		TriggerUpdate();
+	}
+}
+
 const types::Buffer Base::Serialize( const Base* base ) {
 	types::Buffer buf;
 	buf.WriteInt( base->m_id );
@@ -116,6 +135,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 		it.second.Serialize( buf );
 	}
 	buf.WriteInt( base->m_next_pop_id );
+	buf.WriteInt( base->m_accumulated_nutrients );
 	return buf;
 }
 
@@ -151,7 +171,8 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 		pops.insert_or_assign( pop_id, pop );
 	}
 	const auto next_pop_id = buf.ReadInt();
-	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id );
+	const auto accumulated_nutrients = buf.ReadInt();
+	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients );
 }
 
 WRAPIMPL_SERIALIZE( Base )
@@ -171,6 +192,26 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	WRAPIMPL_CUSTOM_SETTERS
+	{
+		"get_accumulated_nutrients",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Int,, GetAccumulatedNutrients() );
+		} )
+	},
+	{
+		"set_accumulated_nutrients",
+		NATIVE_CALL( this ) {
+			m_game->CheckRW( GSE_CALL );
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( nutrients, 0, Int );
+			if ( nutrients < 0 ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "accumulated nutrients must be nonnegative" );
+			}
+			SetAccumulatedNutrients( nutrients );
+			return VALUE( gse::value::Undefined );
+		} )
+	},
 	{
 		"create_pop",
 		NATIVE_CALL( this ) {

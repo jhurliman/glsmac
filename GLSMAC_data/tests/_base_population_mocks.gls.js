@@ -38,7 +38,10 @@ const create_fixture = () => {
 	const tiles = [create_tile(2, 2), create_tile(4, 4), create_tile(6, 0)];
 	const owner = {id: 0};
 	let next_pop_id = 1;
+	let accumulated_nutrients = 0;
 	const base = custom_properties();
+	base.get_accumulated_nutrients = () => { return accumulated_nutrients; };
+	base.set_accumulated_nutrients = (value) => { accumulated_nutrients = value; };
 	base.get_owner = () => { return owner; };
 	base.get_tile = () => { return center; };
 	base.get_size = () => { return #sizeof(pops); };

@@ -35,6 +35,7 @@ Short labels below resolve to these exact source revisions:
 | `705cc939` | [705cc939727188be70828399733cf4740afb00e6](https://github.com/jhurliman/glsmac/commit/705cc939727188be70828399733cf4740afb00e6) |
 | `68081411` | [680814117f0423c4668c1ebf623e665e1a917227](https://github.com/jhurliman/glsmac/commit/680814117f0423c4668c1ebf623e665e1a917227) |
 | `0d98cde8` | [0d98cde8ae7416c0a2810c795ebf55de0c27c74b](https://github.com/jhurliman/glsmac/commit/0d98cde8ae7416c0a2810c795ebf55de0c27c74b) |
+| `bf00f411` | [bf00f4118f04f3f36ee8dc562a0d2cea58084b3a](https://github.com/jhurliman/glsmac/commit/bf00f4118f04f3f36ee8dc562a0d2cea58084b3a) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -52,6 +53,8 @@ switch-ownership integration at `68081411` is retained on
 `codex/validation-20261016-energy-units-switch`.
 The component resolver and timer repair at `0d98cde8` are retained on
 `codex/validation-20261016-resolution-timers`.
+The evaluating-base context at `bf00f411` is retained on
+`codex/validation-20261016-base-context`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -421,3 +424,29 @@ The focused timer publication head
 its four registered CTests in 17.41 s (full GSE 14.10 s). Its older parent does
 not contain the native-test selector or switch ownership repair, so that result
 does not claim clean full-suite leak detection for the focused parent.
+
+## Evaluating-base context
+
+At `bf00f411`, tile resource queries carry the canonical evaluating base through
+actual intake, worker scoring and base-screen widget queries. Legacy calls keep
+their original callback shape. The regression uses real work/unwork events,
+production scripts and restored manager identities, and rejects stale, foreign
+or wrong-owner contexts before invoking callbacks. The old route fails because
+the expected base context is absent.
+
+Windows CTest passed 8/8 in 43.12 s (full GSE 21.69 s). Linux
+ASan/UBSan/LSan CTest passed 8/8 in 43.65 s (full GSE 30.87 s), with leak
+detection enabled. Logs use `out/base-context-windows-` and, under the Linux
+directory above, `base-context-asan-`. No new interactive pixel comparison is
+claimed. The focused PR #70 parent separately passed its four Linux CTests in
+24.20 s; that older branch does not include all integration ownership repairs.
+
+## RNG continuation integration: retained failure
+
+The first RNG integration at `bfe276d3` passed Windows CTest 8/8 in 45.87 s.
+Linux sanitizer CTest passed 7/8 in 44.14 s: LeakSanitizer reported one 63-byte
+allocation from `gse::Exception::what()` reached by the new real initialization
+error-path test. That method allocated an unowned `strdup` on each call. The
+passing ordinary tests do not establish a leak-free revision. Logs use
+`out/rng-windows-` and the Linux directory's `rng-asan-` prefix. Repair and a
+fresh sanitizer result are required before recording this integration as clean.

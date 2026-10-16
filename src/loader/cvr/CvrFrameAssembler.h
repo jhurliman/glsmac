@@ -53,7 +53,7 @@ public:
 	// any beyond capacity. Nonnegative frames use each scene's own frame count.
 	// Flags and matrix bits are copied; only location + explicit offset is computed.
 	// Arithmetic supports nearest rounding, normal-or-zero binary32 operands and
-	// exact sums within the normal-or-zero binary32 range. Unsupported/malformed
+	// binary64 intermediate sums within the normal-or-zero binary32 range. Unsupported/malformed
 	// input throws std::invalid_argument ("CVR assembly:"); allocation errors pass
 	// through. Source creation checks counts and finite values in every frame.
 	static CvrFrameAssembly Assemble( std::shared_ptr< const CvrFrameSource > source,

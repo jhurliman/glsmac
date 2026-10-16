@@ -40,8 +40,9 @@ and first count rejection leave it untouched; later malformed records may leave
 earlier definitions or units registered, queued, or pending, and may advance the
 ID allocator. Such a world load is terminal and must be torn down, not retried
 as if the manager were empty. Whole-manager transactional restore, arbitrary
-allocation-failure recovery, movement animation state, and the existing
-despawn-event rollback defect are separate work.
+allocation-failure recovery and movement animation state are separate work.
+The despawn-event scalar restoration contract is described in
+[unit-despawn-rollback.md](unit-despawn-rollback.md).
 
 Native tests use real source/destination Game, State, UnitManager, map, slots,
 GSE event dispatch, and RNG objects, with no assets or renderer. They exercise

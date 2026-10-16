@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <filesystem>
 
 #include "Mesh.h"
 
@@ -15,21 +16,27 @@
 #include "gc/GC.h"
 #include "gse/GSE.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/Exception.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
 #include "gse/value/Int.h"
 #include "rr/Capture.h"
+#include "loader/texture/SDL2.h"
+#include "resource/ResourceManager.h"
 #include "scene/Scene.h"
+#include "scene/actor/Cache.h"
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
 #include "ui/UI.h"
 #include "ui/dom/Root.h"
 #include "ui/dom/Widget.h"
+#include "ui/dom/Surface.h"
 #include "ui/geometry/Geometry.h"
 #include "util/FinallyGuard.h"
+#include "util/UUID.h"
 
 namespace gse::tests {
 
@@ -37,15 +44,35 @@ namespace gse::tests {
 // rendering remains disabled. This fixture outlives the local UI's GC runtime.
 class WidgetGraphicsFixture {
 public:
-	WidgetGraphicsFixture() {
+	explicit WidgetGraphicsFixture( const std::string& texture_path = {} ) {
+		if ( !texture_path.empty() ) {
+			m_resources = std::make_unique< resource::ResourceManager >( texture_path );
+			m_textures = std::make_unique< loader::texture::SDL2 >();
+		}
 		// The headless GC worker also reads GetGraphics during collection.
 		std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
 		m_previous = g_engine->m_graphics;
 		g_engine->m_graphics = &m_graphics;
+		if ( m_textures ) {
+			m_previous_resources = g_engine->m_resource_manager;
+			m_previous_textures = g_engine->m_texture_loader;
+			g_engine->m_resource_manager = m_resources.get();
+			g_engine->m_texture_loader = m_textures.get();
+		}
 	}
 	~WidgetGraphicsFixture() {
 		std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
+		if ( m_textures ) {
+			g_engine->m_resource_manager = m_previous_resources;
+			g_engine->m_texture_loader = m_previous_textures;
+			m_textures.reset(); // release cached textures while the null graphics is alive
+		}
 		g_engine->m_graphics = m_previous;
+	}
+	size_t TextureUnloadCount( const types::texture::Texture* texture ) const {
+		std::lock_guard guard( m_graphics.texture_mutex );
+		const auto it = m_graphics.texture_unloads.find( texture );
+		return it == m_graphics.texture_unloads.end() ? 0 : it->second;
 	}
 private:
 	class SizedNull : public graphics::Null {
@@ -55,8 +82,18 @@ private:
 		const unsigned short GetWindowHeight() const override { return 64; }
 		const unsigned short GetViewportWidth() const override { return 64; }
 		const unsigned short GetViewportHeight() const override { return 64; }
+		void UnloadTexture( const types::texture::Texture* texture ) override {
+			std::lock_guard guard( texture_mutex );
+			++texture_unloads[ texture ];
+		}
+		mutable std::mutex texture_mutex;
+		std::unordered_map< const types::texture::Texture*, size_t > texture_unloads;
 	} m_graphics;
 	graphics::Graphics* m_previous = nullptr;
+	std::unique_ptr< resource::ResourceManager > m_resources;
+	std::unique_ptr< loader::texture::SDL2 > m_textures;
+	resource::ResourceManager* m_previous_resources = nullptr;
+	loader::texture::TextureLoader* m_previous_textures = nullptr;
 };
 
 static std::string CheckMeshCoordinates() {
@@ -468,6 +505,114 @@ static std::string CheckMinimapCaptureOwnership() {
 	return result;
 }
 
+static std::string CheckSurfaceBackgroundOwnership() {
+	std::string result;
+	try {
+		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-surface-" + util::UUID::Generate() );
+		std::filesystem::create_directory( directory );
+		const auto data_directory = directory / "default";
+		const auto image_path = data_directory / "fixture.bmp";
+		util::FinallyGuard remove_fixture( [ & ]() {
+			std::filesystem::remove( image_path );
+			std::filesystem::remove( data_directory );
+			std::filesystem::remove( directory );
+		} );
+		std::filesystem::create_directory( data_directory );
+		auto* image = SDL_CreateRGBSurfaceWithFormat( 0, 2, 2, 32, SDL_PIXELFORMAT_RGBA32 );
+		GT_ASSERT( image, "could not allocate synthetic image" );
+		{
+			util::FinallyGuard release_image( [ & ]() { SDL_FreeSurface( image ); } );
+			GT_ASSERT( SDL_FillRect( image, nullptr, SDL_MapRGBA( image->format, 32, 64, 128, 255 ) ) == 0, "could not fill synthetic image" );
+			GT_ASSERT( SDL_SaveBMP( image, image_path.string().c_str() ) == 0, "could not save synthetic image" );
+		}
+		WidgetGraphicsFixture graphics( directory.string() );
+		const types::texture::Texture* final_texture = nullptr;
+		size_t final_unloads = 0;
+		types::texture::Texture* borrowed = nullptr;
+		size_t borrowed_unloads = 0;
+		{
+			GSE runtime;
+			auto* gc_space = runtime.GetGCSpace();
+			gc_space->Accumulate( &runtime, [ & ]() {
+				auto* ctx = runtime.CreateGlobalContext();
+				const si_t si;
+				ExecutionPointer ep;
+				auto* ui = new ::ui::UI( GSE_CALL );
+				util::FinallyGuard cleanup( [ & ]() { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
+				auto* scene = ui->GetRoot()->m_cache->GetScene();
+				std::vector< scene::actor::Actor* > before;
+				scene->WithActors( [ & ]( const auto& actors ) { before = actors; } );
+				auto* root = static_cast< value::Object* >( ui->GetRoot()->Wrap( GSE_CALL ) );
+				auto* surface = static_cast< ::ui::dom::Surface* >( ::ui::dom::Object::Unwrap(
+					static_cast< value::Callable* >( root->Get( "surface" ) )->Run( GSE_CALL, {} ) ) );
+				scene::actor::Mesh* actor = nullptr;
+				scene->WithActors( [ & ]( const auto& actors ) {
+					for ( auto* candidate : actors ) {
+						if ( std::find( before.begin(), before.end(), candidate ) == before.end() ) {
+							if ( actor || candidate->GetType() != scene::actor::Actor::TYPE_MESH ) {
+								throw std::runtime_error( "surface factory did not publish one mesh actor" );
+							}
+							actor = static_cast< scene::actor::Mesh* >( candidate );
+						}
+					}
+				} );
+				if ( !actor ) { throw std::runtime_error( "surface factory did not publish its mesh actor" ); }
+				borrowed = g_engine->GetTextureLoader()->LoadCustomTexture( "fixture.bmp" );
+				borrowed_unloads = graphics.TextureUnloadCount( borrowed );
+				const auto image_color = types::Color::RGBA( 32, 64, 128, 255 );
+				const auto change = [ & ]( const char* background ) -> std::string {
+					auto* previous = actor->GetTexture();
+					const bool owned = previous && previous != borrowed;
+					const auto unloads = graphics.TextureUnloadCount( previous );
+					surface->WrapSet( "background", background ? new value::String( gc_space, background ) : nullptr, GSE_CALL );
+					const bool replaced_owned = owned && previous != actor->GetTexture();
+					const auto after = graphics.TextureUnloadCount( previous );
+					if ( replaced_owned && after == unloads ) {
+						delete previous; // clean the original overwrite regression after observing it
+					}
+					GT_ASSERT( after == unloads + ( replaced_owned ? 1 : 0 ), "background replacement did not release exactly its previous owned texture" );
+					GT_ASSERT( graphics.TextureUnloadCount( borrowed ) == borrowed_unloads && borrowed->GetPixel( 0, 0 ) == image_color,
+						"background replacement damaged the borrowed loader texture" );
+					GT_OK();
+				};
+				result = [ & ]() -> std::string {
+					for ( const auto* background : { "#123456", "fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)",
+						"fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)", "fixture.bmp", "#456789", "#abcdef" } ) {
+						const auto error = change( background );
+						if ( !error.empty() ) { return error; }
+					}
+					auto* const valid = actor->GetTexture();
+					const auto pixel = valid->GetPixel( 0, 0 );
+					const auto unloads = graphics.TextureUnloadCount( valid );
+					bool rejected = false;
+					try { surface->WrapSet( "background", new value::String( gc_space, "fixture.bmp:unknown()" ), GSE_CALL ); }
+					catch ( const Exception& error ) { rejected = error.class_name == EC.UI_ERROR; }
+					GT_ASSERT( rejected && valid != borrowed && actor->GetTexture() == valid &&
+						valid->GetPixel( 0, 0 ) == pixel && graphics.TextureUnloadCount( valid ) == unloads,
+						"invalid filter changed the native background owner or pixels" );
+					for ( const auto* background : { "fixture.bmp", "fixture.bmp:crop(0,0,0,0)", static_cast< const char* >( nullptr ) } ) {
+						const auto error = change( background );
+						if ( !error.empty() ) { return error; }
+					}
+					GT_ASSERT( !actor->GetTexture(), "unset background retained a texture" );
+					const auto error = change( "fixture.bmp:crop(1,1,1,1)" );
+					if ( !error.empty() ) { return error; }
+					final_texture = actor->GetTexture();
+					final_unloads = graphics.TextureUnloadCount( final_texture );
+					GT_ASSERT( final_texture != borrowed && final_texture->GetPixel( 0, 0 ) == image_color, "filtered background pixels changed" );
+					GT_OK();
+				}();
+			} );
+		}
+		if ( !result.empty() ) { return result; }
+		GT_ASSERT( final_texture && graphics.TextureUnloadCount( final_texture ) == final_unloads + 1, "surface destruction did not release its last owned texture" );
+		GT_ASSERT( graphics.TextureUnloadCount( borrowed ) == borrowed_unloads && borrowed->GetPixel( 0, 0 ) == types::Color::RGBA( 32, 64, 128, 255 ),
+			"surface destruction released its borrowed loader texture" );
+	}
+	catch ( const std::exception& error ) { GT_FAIL( std::string( "surface ownership check failed: " ) + error.what() ); }
+	return result;
+}
+
 std::string CheckMeshCoordinateOutputs() {
 	std::string errors;
 	// Script callbacks hold their Space accumulation lock. UI fixtures create a
@@ -483,6 +628,10 @@ std::string CheckMeshCoordinateOutputs() {
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test surface background replacement preserves texture ownership",
+		GT() { return CheckSurfaceBackgroundOwnership(); }
+	);
 	task->AddTest(
 		"test generated sprite ownership survives widget copies and exceptions",
 		GT() { return CheckGeneratedSpriteOwnership(); }

@@ -70,6 +70,10 @@ namespace gc {
 class GC;
 }
 
+namespace gse::tests {
+class BackendFixture;
+}
+
 namespace engine {
 
 class Engine {
@@ -117,6 +121,7 @@ public:
 	void RemoveLogCallback( void* const obj );
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	std::atomic< bool > m_is_shutting_down = false;
 	std::atomic< int > m_exit_code = EXIT_SUCCESS;

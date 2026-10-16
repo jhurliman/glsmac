@@ -61,15 +61,15 @@ void AddCvrBasisConverterTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	task->AddTest( "CVR basis handles signed zero subnormals and host rounding independently", GT() {
-		const Input small{ 0, 0x80000000, 1, 0x80000001, 0x007fffff, 0x807fffff, 0x00800000, 0x80800000, 0x33800000 };
-		GT_ASSERT( CvrBasisConverter::Convert( small ) == Basis{}, "small or signed-zero input acquired a nonzero result" );
+		const Input small_values{ 0, 0x80000000, 1, 0x80000001, 0x007fffff, 0x807fffff, 0x00800000, 0x80800000, 0x33800000 };
+		GT_ASSERT( CvrBasisConverter::Convert( small_values ) == Basis{}, "small or signed-zero input acquired a nonzero result" );
 		const Input halfway{ 0x3c200000, 0xbc200000, 0x3bc00000, 0xbbc00000, 0x3b000000, 0xbb000000, 0x3c200000, 0xbc200000, 0 };
 		const Basis expected{ { { 3, -3, 2 }, { -2, 1, -1 }, { 3, -3, 0 } } };
 		RoundingGuard restore;
 		for ( const int mode : { FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZERO } ) {
 			GT_ASSERT( std::fesetround( mode ) == 0, "test platform could not set rounding mode" );
 			GT_ASSERT( CvrBasisConverter::Convert( halfway ) == expected, "host rounding mode changed conversion" );
-			GT_ASSERT( CvrBasisConverter::Convert( small ) == Basis{}, "host rounding mode changed small values" );
+			GT_ASSERT( CvrBasisConverter::Convert( small_values ) == Basis{}, "host rounding mode changed small values" );
 			GT_ASSERT( std::fegetround() == mode, "converter changed caller rounding mode" );
 		}
 		GT_OK();

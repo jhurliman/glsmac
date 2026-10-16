@@ -51,7 +51,8 @@ scene::actor::Mesh* const Widget::AddMeshAndTexture( ui::dom::Widget* const widg
 		NEW( m, types::mesh::Rectangle );
 	}
 	g->AddMesh( m, keep_tex, scale, offset );
-	NEWV( actor, scene::actor::Mesh, "UI::Widget::Actor", m );
+	// DOM Object owns actors through ordinary delete in ClearActors.
+	auto* actor = new scene::actor::Mesh( "UI::Widget::Actor", m );
 	actor->SetRenderFlags( scene::actor::Actor::RF_IGNORE_LIGHTING );
 	g->AddActor( actor );
 	actor->SetTexture( t );

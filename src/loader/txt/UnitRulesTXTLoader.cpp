@@ -125,4 +125,44 @@ ReactorTable UnitRulesTXTLoader::ParseReactors( const std::string& source, const
 	return result;
 }
 
+ChassisTable UnitRulesTXTLoader::ParseChassis( const std::string& source, const std::string& ruleset_id ) {
+	const std::string section = "CHASSIS";
+	const auto rows = Rows( source, ruleset_id, section );
+	ChassisTable result{ ruleset_id, {} };
+	std::unordered_set< std::string > primary_names;
+	for ( size_t i = 0 ; i < rows.size() ; ++i ) {
+		const auto row = i + 1;
+		const auto fields = Fields( rows[ i ], section, row, 19 );
+		std::array< ChassisName, 6 > names;
+		for ( size_t pair = 0 ; pair < names.size() ; ++pair ) {
+			const size_t column = pair < 4 ? pair * 2 : 15 + ( pair - 4 ) * 2;
+			RequiredText( fields[ column ], section, row, column + 1 );
+			const auto& grammar = fields[ column + 1 ];
+			if ( grammar.size() != 2 || ( grammar[ 0 ] != 'M' && grammar[ 0 ] != 'F' && grammar[ 0 ] != 'N' ) ||
+				( grammar[ 1 ] != '1' && grammar[ 1 ] != '2' ) ) {
+				throw std::invalid_argument( Location( section, row, column + 2 ) + ": unsupported name grammar" );
+			}
+			names[ pair ] = { fields[ column ], grammar };
+		}
+		RequiredText( fields[ 14 ], section, row, 15 );
+		const auto speed = Integer( fields[ 8 ], section, row, 9 );
+		const auto triad = Integer( fields[ 9 ], section, row, 10 );
+		const auto range = Integer( fields[ 10 ], section, row, 11 );
+		const auto missile = Integer( fields[ 11 ], section, row, 12 );
+		const auto cargo = Integer( fields[ 12 ], section, row, 13 );
+		const auto cost = Integer( fields[ 13 ], section, row, 14 );
+		if ( triad < 0 || triad > 2 ) {
+			throw std::invalid_argument( Location( section, row, 10 ) + ": unsupported chassis triad" );
+		}
+		if ( missile != 0 && missile != 1 ) {
+			throw std::invalid_argument( Location( section, row, 12 ) + ": missile flag must be 0 or 1" );
+		}
+		if ( !primary_names.insert( names[ 0 ].name ).second ) {
+			throw std::invalid_argument( Location( section, row, 1 ) + ": duplicate primary chassis name" );
+		}
+		result.chassis.push_back( { names, speed, static_cast< ChassisTriad >( triad ), range, missile == 1, cargo, cost, fields[ 14 ] } );
+	}
+	return result;
+}
+
 }

@@ -45,6 +45,10 @@ Short labels below resolve to these exact source revisions:
 | `b1935890` | [b19358908b8cc49bdb82f159e0b4c6763a4187dc](https://github.com/jhurliman/glsmac/commit/b19358908b8cc49bdb82f159e0b4c6763a4187dc) |
 | `b819ecda` | [b819ecda1384a4fb3d9191618ef190bb5156c467](https://github.com/jhurliman/glsmac/commit/b819ecda1384a4fb3d9191618ef190bb5156c467) |
 | `b66d017e` | [b66d017e5fcb854ba1157f374344348bb6325946](https://github.com/jhurliman/glsmac/commit/b66d017e5fcb854ba1157f374344348bb6325946) |
+| `8c6ebef2` | [8c6ebef208e6062dd1b7730a5e63fdb11afb21dd](https://github.com/jhurliman/glsmac/commit/8c6ebef208e6062dd1b7730a5e63fdb11afb21dd) |
+| `a16fa30b` | [a16fa30b4f8d1a812d306cf7a719de318cbcba3a](https://github.com/jhurliman/glsmac/commit/a16fa30b4f8d1a812d306cf7a719de318cbcba3a) |
+| `eb29516b` | [eb29516b15fa83c7ccca2eaf5786a03d1f514c8f](https://github.com/jhurliman/glsmac/commit/eb29516b15fa83c7ccca2eaf5786a03d1f514c8f) |
+| `9f66d2a6` | [9f66d2a61d42fea7761a3165c94235d0c5dfa669](https://github.com/jhurliman/glsmac/commit/9f66d2a61d42fea7761a3165c94235d0c5dfa669) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -76,6 +80,11 @@ are retained on `codex/validation-20261016-world-turn` and
 The CVR scene integration `b819ecda` is retained on
 `codex/validation-20261016-cvr-scene`; its focused publication source
 `b66d017e` is the reviewed source of PR #75.
+Fixture retirement `8c6ebef2` and completion restoration `a16fa30b` are retained
+on `codex/validation-20261016-fixture-retirement` and
+`codex/validation-20261016-world-completion`, respectively. The failed and
+repaired focused completion sources `eb29516b` and `9f66d2a6` are ancestors of
+`codex/validation-20261016-completion-publication`, pinned at `9f66d2a6`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -560,3 +569,39 @@ The decoder accepts all 140 installed files and retains owned scene records,
 including empty and duplicate object names. Geometry and original-renderer
 equivalence remain unimplemented; these results do not activate conventional
 units.
+
+## Fixture retirement and persisted completion
+
+At `8c6ebef2`, backend fixtures unpublish their Map before destroying it under
+GC accumulation. Actual Map/Tile destruction observers verify exclusion and
+wrapper invalidation; the old helper fails that check. Windows CTest passed
+8/8 in 59.22 seconds and Linux ASan/UBSan/LSan passed 8/8 in 43.81 seconds.
+This is a fixture lifetime repair (#76), not a demonstrated cause or repair
+of the earlier Windows timeout. Details are in
+[the versioned retirement evidence](https://github.com/jhurliman/glsmac/blob/8c6ebef208e6062dd1b7730a5e63fdb11afb21dd/docs/validation/backend-fixture-map-retirement-2026-10-16.md).
+
+At `a16fa30b`, V3 world downloads preserve each occupied player's completion
+at the same boundary as turn/RNG capture. Initialization validates exact roster
+and lifetime bindings before applying any saved flag. Rejected early restores
+park ordinary backend work and queue owner-thread cleanup; generation checks
+retire obsolete errors after reset or replacement. This does not provide full
+saves, event catch-up or general session callback retirement. See
+[the versioned V3 contract](https://github.com/jhurliman/glsmac/blob/a16fa30b4f8d1a812d306cf7a719de318cbcba3a/docs/world-snapshot-turn.md).
+
+Windows CTest passed 8/8 in 50.65 seconds (GSE 25.35 seconds); Linux
+ASan/UBSan/LSan passed 8/8 in 48.20 seconds (GSE 33.02 seconds), with leak
+detection enabled. Fresh LLVM 15 analysis covered 297 production translation
+units in 55.98 seconds at eight jobs, with zero failures. The Linux scan still
+excludes the Windows-only network implementation. Logs use
+`out/world-completion-windows-` and
+`/home/jhurliman/src/glsmac-gc-audit/world-completion-` prefixes.
+
+The first focused PR #77 publication at `eb29516b` passed 163 native cases and
+failed one malformed-Boolean case (CTest 4/5 overall). Its older parent lacked
+the strict Buffer decoder already present in integration. Merging the existing
+PR #24 prerequisite produced `9f66d2a6`, which passed all five focused CTests
+in 22.51 seconds (GSE 16.05 seconds). No malformed-input assertion was relaxed.
+Both runs remain in `/home/jhurliman/src/glsmac-unit-publication/`, named
+`world-completion-missing-bool-ctest.log` and
+`world-completion-bool-ctest.log`. These checks do not establish rendered
+multiplayer-join correctness or explain the older intermittent timeout.

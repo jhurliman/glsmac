@@ -2,7 +2,7 @@ return (i, next) => {
 	const select = (id) => {
 		i.glsmac.deinit();
 		i.glsmac.select_ruleset(id);
-		i.popup.hide();
+		i.popup.dismiss();
 		next();
 		return true;
 	};

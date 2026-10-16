@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacTileMinerals.cpp
+	${PWD}/SmacTileEnergy.cpp
 	${PWD}/SmacTileNutrients.cpp
 	${PWD}/SmacResourceBonus.cpp
 	${PWD}/SmacRulesTXTLoader.cpp

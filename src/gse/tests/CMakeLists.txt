@@ -18,6 +18,7 @@ SET( SRC ${SRC}
 	${PWD}/UnitRulesTXTLoader.cpp
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/CvrContainerReader.cpp
+	${PWD}/CvrSceneReader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/GSE.cpp

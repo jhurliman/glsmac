@@ -89,8 +89,11 @@ included in the repository or required by automated tests.
 
 ## Reproduction and validation
 
-The five synthetic native groups run in the existing full `gse` CTest. To run
-only this component with a Debug build:
+The five synthetic native groups run in the existing full `gse` CTest. A
+Debug build can also run the full suite with `build/bin/GLSMAC --gse-tests`.
+The filtered command below additionally requires the native-test filter from
+[PR #57](https://github.com/jhurliman/glsmac/pull/57); on branches without that
+separate feature, omit `--gse-tests-native-filter` and its argument:
 
 ```sh
 build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^CVR container' \
@@ -108,10 +111,15 @@ files, I/O errors, or an empty inventory. For example, from the repository root:
 
 ```sh
 clang++ -std=c++17 -O2 -DNDEBUG -Isrc \
-  src/loader/cvr/CvrContainerReader.cpp tools/tests/cvr_container_probe.cpp \
+  src/loader/cvr/CvrContainerReader.cpp src/loader/cvr/CvrSceneReader.cpp \
+  tools/tests/cvr_container_probe.cpp \
   -o /tmp/cvr-container-probe
 /tmp/cvr-container-probe '/path/to/installed/Alpha Centauri'
 ```
+
+The optional `--scene` mode additionally validates and reports the
+[nested scene records](cvr-scene-records.md). The default mode retains the
+envelope-only check.
 
 Local validation on Linux/WSL with Clang 15:
 

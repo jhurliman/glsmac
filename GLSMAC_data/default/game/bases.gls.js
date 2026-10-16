@@ -180,7 +180,7 @@ return (game) => {
 		};
 
 		const f_add_tile = (tile) => {
-			const r = tile.get_resources();
+			const r = tile.get_resources(e.base.get_owner());
 			result.NUTRIENTS = result.NUTRIENTS + r.NUTRIENTS;
 			result.MINERALS = result.MINERALS + r.MINERALS;
 			result.ENERGY = result.ENERGY + r.ENERGY;

@@ -153,10 +153,13 @@ void Buffer::WriteBool( const bool val ) {
 }
 
 const bool Buffer::ReadBool() {
-	bool boolval = false;
+	uint8_t boolval = 0;
 	uint32_t sz = 0;
 	ReadImpl( T_BOOL, (char*)&boolval, &sz, sizeof( boolval ) );
-	return boolval;
+	if ( boolval > 1 ) {
+		THROW( "invalid boolean value in buffer: " + std::to_string( boolval ) );
+	}
+	return boolval != 0;
 }
 
 void Buffer::WriteInt( const long long int val ) {

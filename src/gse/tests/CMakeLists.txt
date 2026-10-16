@@ -22,6 +22,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrGeometryReader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
+	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

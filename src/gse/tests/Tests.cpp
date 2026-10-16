@@ -19,6 +19,7 @@
 #include "CvrGeometryReader.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
+#include "CvrFrameAssembler.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -70,6 +71,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddValueTests( task );
+		tests::AddCvrFrameAssemblerTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

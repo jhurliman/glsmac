@@ -332,7 +332,7 @@ void Game::Iterate() {
 					ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
 					const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
 					const auto* const event = event_data.event;
-					const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
+					const bool was_event_applied = event_data.was_applied;
 					if ( !it.is_accepted ) {
 						if ( was_event_applied ) {
 							// event was rejected, rollback
@@ -1546,6 +1546,7 @@ void Game::ProcessEvents() {
 									event->GetId(),
 									{
 										event,
+										process_now,
 										rollback_data
 									}
 								}

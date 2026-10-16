@@ -1071,7 +1071,7 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 
 const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	CHECKACCUM( m_gc_space );
-	auto* const v = EvaluateOperand( ctx, ep, (Expression*)operand );
+	auto* const v = EvaluateOperand( ctx, ep, operand );
 	auto* result = Deref( ctx, operand->m_si, ep, v );
 	if ( result->type != gse::VT_BOOL ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si, ep );

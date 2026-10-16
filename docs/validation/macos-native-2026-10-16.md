@@ -2,10 +2,12 @@
 
 The pinned revision built natively on honey and passed all eight CTest cases.
 A separate hidden-window diagnostic also created and used an Apple OpenGL 4.1
-core context. A visible GLSMAC session was subsequently launched for the user's
-manual checks. Process and initialization logs alone do not establish correct
-rendering, interaction, restart, or shutdown; those checks remain unconfirmed in
-this record.
+core context. The user subsequently confirmed the map/base/turn/new-game/close
+checklist worked and supplied before/after screenshots. Screenshots and logs
+corroborate a rendered game and successful restart into a different world.
+Clean process shutdown remains unmeasured: the process was still running at the
+follow-up despite that checklist response. This is one native interactive smoke
+run, not evidence of pixel fidelity or general race freedom.
 
 ## Revision and isolation
 
@@ -125,8 +127,59 @@ not a diagnosed renderer defect.
 The logged-in user's GUI bootstrap domain and a WindowServer connection were
 available through SSH. Passive preflight checks returned false for this helper's
 accessibility and screen-capture access. No prompt, capture or synthetic input
-was used. The game was left running for manual map/base/turn/restart/close checks;
-their results are not supplied by these automated observations.
+was used. The game was left running for manual map/base/turn/restart/close checks.
+
+## Manual results and follow-up
+
+The user reported **“All steps worked”** for the requested map display, base
+screen, turn, Start New Game and close checklist. They additionally said the new
+game took a little while but worked. This is the user's interaction report;
+the agent did not operate the game.
+
+Two user-supplied 2784x1888 screenshots were inspected:
+
+- Before restart, `codex-clipboard-6898d13d-52ba-4710-a690-3cbc6d40bb5f.png`
+  shows the `GLSMAC v0.3-5cd78418-debug` window, a rendered Morgan Industries
+  world, terrain, base/unit sprites, bottom interface and minimap. Mission Year
+  2101 is visible. SHA-256:
+  `ecc8bccd08e4578fa821c624eb50dd6bc8c04ae693681a4373f745d1116fe847`.
+- After restart, `codex-clipboard-82cd32a7-491f-4f78-a758-68df9de188c4.png`
+  shows the same revision with a different landscape, University Base, unit
+  panel and minimap, again at Mission Year 2101. SHA-256:
+  `bfd44d41c52ad790600dc7e705c35a79d998548070497e4ac66ffe97ba2f9759`.
+
+These still images support visible world replacement and interface rendering.
+They do not independently show the base-screen interaction, turn action or
+close action, and are not an original-game image comparison. The base-screen
+result therefore rests on the user's report.
+
+The retained follow-up stdout adds measured event-order evidence:
+
+| Log lines | Observed event |
+| --- | --- |
+| 866–870 | `complete_turn`, `advance_turn`, then `Turn started: 2` |
+| 875 | `Resetting map` |
+| 978, 999 | New 32x32 map generation, then map initialization |
+| 1082 | The replacement world's `Turn started: 1` |
+| 1178 | Replacement frontend received its minimap texture |
+
+No application exception or assertion appears in that output. A movement event
+was rejected because the source and destination were the same tile; subsequent
+movement, turn and restart events continued. The earlier Apple GL texture
+diagnostic remains the only stderr message and is not explained by these checks.
+
+At the process follow-up, both launcher 27144 and GLSMAC 27145 were still alive
+with reported elapsed time **06:58**, and `windowed-smac-exit-status.txt` did not
+exist. The logs contained no shutdown sequence. Thus the user-reported checklist
+success and the still-running process are recorded separately; no successful
+exit status or clean memory-tracking shutdown is claimed. No kill, relaunch or
+additional input was performed to resolve that discrepancy.
+
+Restart latency remains **untimed**. The log prefixes are relative values from
+the unsynchronized shared `last_time` in `src/common/Common.cpp`, not a pair of
+timestamped restart boundaries. Summing them would not give a dependable restart
+measurement. The observed successful restart does not establish a bound on
+latency or close the separate concurrency/lifetime investigations.
 
 ## Retained evidence
 
@@ -139,6 +192,8 @@ that earlier checkpoint; `windowed-smac-launch.json` records the later launch.
 The script writes `windowed-smac-exit-status.txt` only after GLSMAC exits.
 
 Copies and the small diagnostic sources are retained in the validating
-worktree's ignored `out/validation-honey/` directory. Original assets are not
-redistributed. Manual rendering/restart/shutdown results must be appended with
-their observer and timing before treating this as an interactive smoke pass.
+worktree's ignored `out/validation-honey/` directory. The follow-up stdout/stderr
+snapshots are preserved as `windowed-smac-manual-followup-{stdout,stderr}.log`;
+the table above refers to that stdout snapshot. The supplied screenshots remain
+in the task's attachments and are not copied into the repository. Original assets
+are not redistributed. Clean exit and final tracker totals remain open checks.

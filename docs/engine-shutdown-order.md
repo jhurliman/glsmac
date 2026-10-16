@@ -71,7 +71,8 @@ member call through destroyed State at `Game.cpp:340`, with actual
 Thread::Run/Engine::Run in the stack. This is a demonstrated lifetime defect;
 it does not attribute any previous intermittent network-download timeout to it.
 
-Final-source Clang 15 Debug validation passes both actual-runtime modes with
+Source commit `f586b523b8764152586987bb3638105f740191e9`
+passes both actual-runtime modes with Clang 15 Debug and
 memory tracking, and both also pass ASan/UBSan/LSan with leak detection enabled.
 Each runner, including compile/link and both children, takes 6.53 seconds normally
 and 8.03 seconds sanitized. Full CTest passes 8/8 in 36.45 seconds normally and
@@ -80,6 +81,26 @@ Clang 15/libc++ under ASan/UBSan. Explicit analysis of Thread.cpp and Engine.cpp
 reports zero failures in 3.92 seconds. Native Windows/macOS execution of this
 slice is not claimed. Local sanitizer linking used the retained diagnostic
 `-no-pie` setting; this is not a committed build policy.
+
+The focused publication initially passed its five ordinary CTests but the actual
+Engine runner failed before creating its State: OSSP UUID export used a library
+allocation that the application's memory tracker could not free. It now includes
+the unchanged production fix and focused tracked regression from reviewed PR #37
+(`b8e068e928` and `501702850cc02d89c047c915a776844042c86d7e`).
+Publication `e48d050cc4c372ec916ddaedbe42aedfdf89add6` passes CTest 6/6
+in 23.34 seconds, all 24 lifecycle cases under GCC ASan/UBSan, and both actual
+Engine modes with allocation tracking. This is not a full sanitizer claim for
+the older publication fixture.
+
+Combined integration `2b7ca61c39e34e56965a13edade6fd63f57e7a30`
+passes Windows CTest 8/8 in 63.50 seconds, Linux ASan/UBSan/LSan CTest 8/8 in
+51.63 seconds, and LLVM 15 analysis of all 298 eligible production translation
+units in 68.99 seconds, zero failures (Windows-only networking excluded).
+Its actual Engine harness also passes both modes with sanitizers and allocation
+tracking, and the GCC sanitizer lifecycle harness passes 24/24. The actual
+Engine runner initially refused the missing compilation database; exporting it
+and rebuilding enabled that independent check. No native macOS or rendered
+shutdown test is claimed for this integration.
 
 A copied pre-fix Engine.cpp from `b2ec36b83ee3bbd68f9bd6073eed2fcc4b35fb1b`,
 linked against the final standalone harness and current remaining objects, still

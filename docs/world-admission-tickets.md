@@ -88,7 +88,9 @@ requests preserves the newly enqueued exit reset, avoids the old-world UI tail,
 and delivers exactly one terminal completion. Only application navigation is
 replaced with a counter; no rendered game or proprietary assets are required.
 
-Local Linux validation passed all 15 focused cases with allocation tracking,
+Implementation integration
+[`a5af8fe88515846535f0244066654f68ddda270c`](https://github.com/jhurliman/glsmac/commit/a5af8fe88515846535f0244066654f68ddda270c)
+passed all 15 focused Linux cases with allocation tracking,
 then all eight CTests in 55.73 seconds. The separate ASan/UBSan build passed the
 same focused cases and all eight CTests in 46.32 seconds with leak detection
 enabled. Its linker uses the previously documented local `-no-pie` workaround
@@ -98,7 +100,7 @@ reported no failures in 11.86 seconds. These are local measurements, not hosted
 or cross-platform runtime guarantees.
 
 The focused publication at
-[`8cb32997`](https://github.com/jhurliman/glsmac/commit/8cb32997)
+[`8cb32997dbc0b05451a26f50da73244f2888dd0b`](https://github.com/jhurliman/glsmac/commit/8cb32997dbc0b05451a26f50da73244f2888dd0b)
 passes Linux CTest 5/5 in 22.28 seconds. The broader integration at
 [`8392f67aed7a331cef6c978a7e99abd6c89b580d`](https://github.com/jhurliman/glsmac/commit/8392f67aed7a331cef6c978a7e99abd6c89b580d)
 passes Windows CTest 8/8 in 50.48 seconds and a fresh full-scope LLVM 15.0.7
@@ -107,6 +109,9 @@ failures. The Windows-only network implementation is outside that analyzer
 scope. The focused publication excludes the separately held world-completion
 and map-packet-deferral changes; its test-context adaptation preserves the
 request-admission cases without importing those unrelated tests.
+The older publication base also lacks the integration's tracked fixture
+allocation repairs; the tracked/sanitizer measurements above apply to the
+named integration, not to the focused publication tree.
 
 Five isolated source-copy negative controls each failed their targeted test:
 omitting completed-response retirement, skipping execution-time ticket checks,

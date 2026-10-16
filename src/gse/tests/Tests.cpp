@@ -2,6 +2,9 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "CvrContainerReader.h"
+#include "CvrSceneReader.h"
+#include "CvrGeometryReader.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -13,6 +16,8 @@
 #include "scene/Scene.h"
 #include "scene/Light.h"
 #include "graphics/Graphics.h"
+#include "types/Color.h"
+#include "util/String.h"
 
 #include "gse/program/Program.h"
 #include "gse/program/Variable.h"
@@ -44,6 +49,9 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddCvrContainerReaderTests( task );
+		tests::AddCvrSceneReaderTests( task );
+		tests::AddCvrGeometryReaderTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -110,6 +118,32 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( destructions == before_scene_destruction, "scene destroyed a caller-owned light" );
 				survivor.reset();
 				GT_ASSERT( destructions == before_scene_destruction + 1, "surviving light was not destroyed by its owner" );
+				GT_OK();
+			}
+		);
+		task->AddTest(
+			"test if hex color parsing validates every input byte",
+			GT() {
+				types::Color color;
+				GT_ASSERT( util::String::ParseColorHex( "#1234aB", color ), "valid RGB rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGB( 0x12, 0x34, 0xab ), "RGB decoded incorrectly" );
+				GT_ASSERT( util::String::ParseColorHex( "#CdEF0180", color ), "valid RGBA rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGBA( 0xcd, 0xef, 0x01, 0x80 ), "RGBA decoded incorrectly" );
+				const auto unchanged = color.GetRGBA();
+				for ( const auto& valid : { std::string( "#123456" ), std::string( "#12345678" ) } ) {
+					for ( size_t i = 1 ; i < valid.size() ; i++ ) {
+						for ( const char invalid : { '\0', '/', ':', 'G', 'g' } ) {
+							auto input = valid;
+							input[i] = invalid;
+							GT_ASSERT( !util::String::ParseColorHex( input, color ), "invalid digit accepted" );
+							GT_ASSERT( color.GetRGBA() == unchanged, "rejected input changed the output" );
+						}
+					}
+				}
+				for ( const auto& invalid : { "", "1234567", "#12345", "#1234567", "#123456789" } ) {
+					GT_ASSERT( !util::String::ParseColorHex( invalid, color ), "invalid format accepted" );
+					GT_ASSERT( color.GetRGBA() == unchanged, "rejected format changed the output" );
+				}
 				GT_OK();
 			}
 		);

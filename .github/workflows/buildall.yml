@@ -1,6 +1,16 @@
 name: GLSMAC autobuild
 
-on: [ push, pull_request ]
+# Feature branches are checked by pull requests; integration pushes still publish.
+on:
+  push:
+    branches: [main, stable]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  # Never interrupt an integration/manual run while it may publish a release.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   prepare:

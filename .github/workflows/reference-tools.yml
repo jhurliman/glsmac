@@ -2,6 +2,7 @@ name: Reference inventory tests
 
 on:
   push:
+    branches: [main, stable]
     paths:
       - tools/reference_manifest.py
       - tools/tests/test_reference_manifest.py
@@ -12,6 +13,11 @@ on:
       - tools/tests/test_reference_manifest.py
       - .github/workflows/reference-tools.yml
   workflow_dispatch:
+
+# Retain the inventory tool's path scope and supersede only older PR checks.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

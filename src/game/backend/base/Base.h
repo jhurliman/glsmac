@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdint>
 
 #include "gse/Wrappable.h"
 #include "game/backend/MapObject.h"
@@ -52,7 +53,8 @@ public:
 		const std::string& name,
 		const facilities_t& facilities,
 		const pops_t& pops,
-		const size_t next_pop_id = 1
+		const size_t next_pop_id = 1,
+		const int64_t accumulated_nutrients = 0
 	);
 	virtual ~Base() = default;
 
@@ -61,6 +63,8 @@ public:
 	Pop* const AddPop( const Pop& pop );
 	void RemovePop( const size_t pop_id );
 	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
+	int64_t GetAccumulatedNutrients() const;
+	void SetAccumulatedNutrients( const int64_t nutrients );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -84,6 +88,7 @@ private:
 	std::unordered_set< map::tile::Tile* > m_worked_tiles = {};
 
 	size_t m_next_pop_id = 1;
+	int64_t m_accumulated_nutrients = 0;
 
 	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
 

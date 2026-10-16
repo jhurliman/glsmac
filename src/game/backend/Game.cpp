@@ -1699,22 +1699,7 @@ void Game::InitFailed( const std::string& error_text ) {
 		m_failed_admission_error = original_error;
 	}
 
-	// need to delete these here because they weren't passed to main thread
-	// initialize/configure can fail before a map or any managers exist.
-	if ( m_map ) {
-		if ( m_map->m_textures.terrain ) {
-			DELETE( m_map->m_textures.terrain );
-			m_map->m_textures.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain ) {
-			DELETE( m_map->m_meshes.terrain );
-			m_map->m_meshes.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain_data ) {
-			DELETE( m_map->m_meshes.terrain_data );
-			m_map->m_meshes.terrain_data = nullptr;
-		}
-	}
+	ClearUntransferredMapData();
 
 	ASSERT( m_state, "state not set" );
 	if ( m_state->m_connection ) {
@@ -2493,6 +2478,35 @@ std::optional< size_t > Game::ApplySnapshotTurn() {
 	return id;
 }
 
+void Game::ClearUntransferredMapData() {
+	// Until GET_MAP_DATA transfers ownership, the response envelope may
+	// alias the Map's presentation. Detach those aliases before its owning
+	// destructor runs, including a partially populated envelope.
+	if ( m_response_map_data ) {
+		if ( m_map ) {
+			if ( m_map->m_textures.terrain == m_response_map_data->terrain_texture ) { m_map->m_textures.terrain = nullptr; }
+			if ( m_map->m_meshes.terrain == m_response_map_data->terrain_mesh ) { m_map->m_meshes.terrain = nullptr; }
+			if ( m_map->m_meshes.terrain_data == m_response_map_data->terrain_data_mesh ) { m_map->m_meshes.terrain_data = nullptr; }
+		}
+		DELETE( m_response_map_data );
+		m_response_map_data = nullptr;
+	}
+	if ( m_map ) {
+		if ( m_map->m_textures.terrain ) {
+			DELETE( m_map->m_textures.terrain );
+			m_map->m_textures.terrain = nullptr;
+		}
+		if ( m_map->m_meshes.terrain ) {
+			DELETE( m_map->m_meshes.terrain );
+			m_map->m_meshes.terrain = nullptr;
+		}
+		if ( m_map->m_meshes.terrain_data ) {
+			DELETE( m_map->m_meshes.terrain_data );
+			m_map->m_meshes.terrain_data = nullptr;
+		}
+	}
+}
+
 void Game::ResetGame() {
 	{
 		std::lock_guard guard( m_admission_mutex );
@@ -2537,6 +2551,7 @@ void Game::ResetGame() {
 	m_bm = nullptr;
 	m_am = nullptr;
 
+	ClearUntransferredMapData();
 	if ( m_map ) {
 		MTModule::Log( "Resetting map" );
 		DELETE( m_map );

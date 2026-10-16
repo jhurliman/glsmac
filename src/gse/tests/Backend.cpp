@@ -724,6 +724,93 @@ public:
 		} );
 	}
 	bool HasPendingSnapshotRandom() const { return m_game.m_pending_snapshot_random.has_value(); }
+	std::string CheckStartupPayloadOwnership( const int scenario ) {
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			struct Texture final : types::texture::Texture {
+				size_t& destroyed;
+				explicit Texture( size_t& count ) : types::texture::Texture( 1, 1 ), destroyed( count ) {}
+				~Texture() override { ++destroyed; }
+			};
+			struct Render final : types::mesh::Render {
+				size_t& destroyed;
+				explicit Render( size_t& count ) : types::mesh::Render( 3, 1 ), destroyed( count ) {}
+				~Render() override { ++destroyed; }
+			};
+			struct Data final : types::mesh::Data {
+				size_t& destroyed;
+				explicit Data( size_t& count ) : types::mesh::Data( 3, 1 ), destroyed( count ) {}
+				~Data() override { ++destroyed; }
+			};
+			size_t texture_deletes = 0, render_deletes = 0, data_deletes = 0;
+			NEWV( texture, Texture, texture_deletes );
+			NEWV( render, Render, render_deletes );
+			NEWV( data, Data, data_deletes );
+			m_game.m_map->m_textures.terrain = texture;
+			m_game.m_map->m_meshes.terrain = render;
+			m_game.m_map->m_meshes.terrain_data = data;
+			const auto ticket = FixtureWorldTicket();
+			if ( scenario != 0 ) {
+				// Match the real native initialization envelope: pointers alias
+				// Map ownership until OP_GET_MAP_DATA transfers both together.
+				NEW( m_game.m_response_map_data, game::backend::response_map_data_t );
+				m_game.m_response_map_data->terrain_texture = texture;
+				if ( scenario != 5 ) {
+					m_game.m_response_map_data->terrain_mesh = render;
+					m_game.m_response_map_data->terrain_data_mesh = data;
+				}
+			}
+			util::FinallyGuard cleanup( [ & ]() {
+				if ( m_game.m_response_map_data ) {
+					m_game.m_response_map_data->terrain_texture = nullptr;
+					m_game.m_response_map_data->terrain_mesh = nullptr;
+					m_game.m_response_map_data->terrain_data_mesh = nullptr;
+					DELETE( m_game.m_response_map_data ); m_game.m_response_map_data = nullptr;
+				}
+				if ( m_game.m_map ) {
+					m_game.m_map->m_textures.terrain = nullptr;
+					m_game.m_map->m_meshes.terrain = nullptr;
+					m_game.m_map->m_meshes.terrain_data = nullptr;
+				}
+				if ( !texture_deletes ) { DELETE( texture ); }
+				if ( !render_deletes ) { DELETE( render ); }
+				if ( !data_deletes ) { DELETE( data ); }
+			} );
+			if ( scenario < 3 || scenario == 5 ) {
+				if ( scenario == 2 ) { CancelWorldInitialization(); }
+				else { ResetWorld(); }
+				GT_ASSERT( !m_game.m_response_map_data && !m_game.m_map && texture_deletes == 1 && render_deletes == 1 && data_deletes == 1,
+					"startup reset/failure retained the response envelope or untransferred presentation" );
+			}
+			else {
+				SetRunning( true );
+				const auto request = m_game.MT_GetMapData( ticket );
+				ProcessRequests();
+				GT_ASSERT( !m_game.m_response_map_data && !m_game.m_map->m_textures.terrain && !m_game.m_map->m_meshes.terrain && !m_game.m_map->m_meshes.terrain_data,
+					"map response did not relinquish backend presentation ownership" );
+				if ( scenario == 4 ) {
+					m_game.MT_Cancel( request ); // real completed response disposal owns all three assets
+					GT_ASSERT( m_game.MT_GetResponse( request ).result == game::backend::R_NONE, "completed map response was not consumed by cancellation" );
+					ResetWorld();
+				}
+				else {
+					const auto response = m_game.MT_GetResponse( request );
+					util::FinallyGuard release( [ & ]() { m_game.MT_DestroyResponse( response ); } );
+					GT_ASSERT( response.result == game::backend::R_SUCCESS && response.data.get_map_data->terrain_texture == texture &&
+						response.data.get_map_data->terrain_mesh == render && response.data.get_map_data->terrain_data_mesh == data,
+						"successful response lost the original presentation payload" );
+					ResetWorld();
+					GT_ASSERT( texture_deletes == 0 && render_deletes == 0 && data_deletes == 0, "backend reset reclaimed transferred frontend assets" );
+					// Mirror the frontend's consuming handoff before response disposal.
+					response.data.get_map_data->terrain_texture = nullptr;
+					response.data.get_map_data->terrain_mesh = nullptr;
+					response.data.get_map_data->terrain_data_mesh = nullptr;
+					DELETE( texture ); DELETE( render ); DELETE( data );
+				}
+				GT_ASSERT( texture_deletes == 1 && render_deletes == 1 && data_deletes == 1, "transferred assets were not released exactly once by their recipient" );
+			}
+			GT_OK();
+		} );
+	}
 	std::string CheckFailedOldMapOwnership( const bool stop ) {
 		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			struct RetainedMap final : game::backend::map::Map {
@@ -1956,6 +2043,14 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 		} );
 	}
 	using namespace game::backend;
+	for ( const auto& scenario : std::vector< std::pair< int, std::string > >{
+		{ 0, "reset before response envelope" }, { 1, "reset with aliased response envelope" }, { 2, "failure with aliased response envelope" },
+		{ 3, "frontend transfer survives backend reset" }, { 4, "completed response cancellation owns transferred assets" },
+		{ 5, "reset with partially populated envelope" },
+	} ) {
+		const int mode = scenario.first;
+		task->AddTest( "startup payload ownership " + scenario.second, GT( mode ) { BackendFixture fixture; return fixture.CheckStartupPayloadOwnership( mode ); } );
+	}
 	task->AddTest( "initialization failure before map and managers retains original error", GT() {
 		BackendFixture fixture; return fixture.CheckInitializationFailure( false, 0 );
 	} );

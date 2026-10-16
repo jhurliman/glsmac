@@ -32,6 +32,8 @@ Short labels below resolve to these exact source revisions:
 | `3ddccad0` | [3ddccad0c5b6579784f0065012529a463083f2a7](https://github.com/jhurliman/glsmac/commit/3ddccad0c5b6579784f0065012529a463083f2a7) |
 | `ddcf747a` | [ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a](https://github.com/jhurliman/glsmac/commit/ddcf747ad41d4035e9a2d844ed1c2da8a9dcd61a) |
 | `9d258151` | [9d2581512718470e6dadbd5131303d2bd9d2cdc3](https://github.com/jhurliman/glsmac/commit/9d2581512718470e6dadbd5131303d2bd9d2cdc3) |
+| `705cc939` | [705cc939727188be70828399733cf4740afb00e6](https://github.com/jhurliman/glsmac/commit/705cc939727188be70828399733cf4740afb00e6) |
+| `68081411` | [680814117f0423c4668c1ebf623e665e1a917227](https://github.com/jhurliman/glsmac/commit/680814117f0423c4668c1ebf623e665e1a917227) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -43,6 +45,10 @@ The later three pins are retained on immutable branches
 `codex/validation-20261016-unit-ui`, respectively.
 The renderer/native-test integration at `9d258151` is retained on
 `codex/validation-20261016-renderer-native`.
+The Surface integration at `705cc939` is retained on
+`codex/validation-20261016-surface-unit`; the energy, unit-design parser and
+switch-ownership integration at `68081411` is retained on
+`codex/validation-20261016-energy-units-switch`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -316,3 +322,69 @@ The configuration prefix is `out/renderer-native-ui-20261016`; Windows logs use
 `/home/jhurliman/src/glsmac-gc-audit/` use `renderer-native-asan-` and
 `renderer-native-analysis`. The published evidence pin contains the tested
 source, not the locally installed assets or these machine-local logs.
+
+## Surface replacement and clean tracked shutdown
+
+At `705cc939`, replacing an owned Surface background releases the previous
+texture after the replacement has been created successfully. The ninth focused
+native ownership case covers repeated replacement, borrowed/owned transitions,
+invalid replacement, unset and destruction through the real Surface factory.
+
+Windows CTest passed 8/8 in 40.31 s; Linux ASan/UBSan CTest passed 8/8 in
+41.56 s with leak detection disabled for the parser baseline recorded above.
+Explicit correctness analysis of Surface, UnitManager and UnitRulesTXTLoader
+passed all three production translation units in 3.53 s. These checks also
+include the unit-despawn rollback repair and component-table parsing.
+
+The tracked Windows run used the same disposable all-tile `-2/300/3` fixture.
+The Hive showed N `-4`, consumption `2`, surplus `-006`, M `600`, E `6`.
+Removing its worked tile changed these to N `-2`, surplus `-004`, M `300`,
+E `3`; restoring the tile restored the original totals. Starting a new game
+in the same process produced Gaia's Landing with a rendered map and minimap.
+Title-bar close exited 0 with empty stderr. MemoryWatcher reported
+`No memory/opengl leaks detected.`
+
+This is a clean tracked shutdown for that bounded sequence, not an exhaustive
+heap or graphics proof. The random worlds were not pinned. No turn advance,
+save/load, multiplayer or soak was exercised. The disposable fixture is older
+than the source and does not exercise the new despawn event; native backend
+tests cover that separately. Logs use `out/surface-unit-ui-` and
+`out/surface-unit-windows-`; Linux logs under
+`/home/jhurliman/src/glsmac-gc-audit/` use `surface-unit-asan-` and
+`surface-unit-focused-analysis`.
+
+## Switch ownership and full leak detection
+
+The earlier 201-byte / three-allocation baseline came from the ordinary switch
+parser path: Switch retained the cases while abandoning their containing Scope.
+The original `types.gls.js` alone reproduced the same three allocations (199
+bytes with its shorter filename). Switch now owns the Scope and borrows its
+ordered case pointers. A counted ownership regression and real empty, nested,
+fall-through, break and default scripts exercise destruction and semantics.
+The old-behavior negative control fails the ownership assertion and leaks its
+counted Scope; the restored implementation passes.
+
+At `68081411`, including the energy calculator and counted unit-design parser,
+native Windows CTest passed 8/8 in 53.07 s (full GSE 21.67 s). Linux
+ASan/UBSan CTest passed 8/8 in 40.92 s (full GSE 28.04 s) with
+`ASAN_OPTIONS=detect_leaks=1:halt_on_error=1` and
+`UBSAN_OPTIONS=halt_on_error=1`, without a leak report. This supersedes the
+specific parser baseline for this revision; it does not erase earlier results
+or establish cleanup of every exceptional parser path. The existing local
+non-PIE sanitizer configuration and dependency-library prefix were unchanged.
+Logs use `out/energy-units-switch-windows-` and, under the Linux directory above,
+`energy-units-switch-asan-`.
+
+The full LLVM 15 correctness policy analyzed all 292 production translation
+units in 99.34 s at eight jobs, with zero failures. The database was reconfigured
+after adding the energy source; the Windows-only network implementation remains
+explicitly outside this Linux analysis. Concurrent local builds were active, so
+this elapsed time is an observation, not a new development-loop budget. Logs
+use `energy-units-switch-analysis` under the Linux directory above.
+
+The separately reviewed weapon-table PR's older head
+`e680240238ba3c3d963dc98245d1a0f65b8b404c` hit a Windows full-GSE timeout in
+[job 116940520918](https://github.com/jhurliman/glsmac/actions/runs/38891098136/job/116940520918).
+The repeating async callback continued beyond its scheduled cancellation.
+Same-deadline timer cancellation is being investigated with a deterministic
+regression. The passing local runs above do not resolve that failure.

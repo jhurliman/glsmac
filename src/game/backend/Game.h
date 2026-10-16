@@ -445,6 +445,7 @@ private:
 	void ConfigureWorldDownload( connection::Client* connection );
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state );
 	void ResetGame();
+	void ClearUntransferredMapData();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;

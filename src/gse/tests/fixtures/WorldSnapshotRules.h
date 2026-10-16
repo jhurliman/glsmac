@@ -2,6 +2,7 @@
 
 #include "game/backend/WorldSnapshotRules.h"
 #include "game/backend/WorldSnapshotRandom.h"
+#include "game/backend/WorldSnapshotTurn.h"
 #include "types/Buffer.h"
 
 #include <array>
@@ -35,6 +36,9 @@ inline std::vector< std::pair< std::string, std::string > > InvalidSmacHeaders()
 	auto old_v1 = Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 1 );
 	old_v1.WriteString( "old map body" );
 	add( "old V1", old_v1 );
+	auto old_v2 = Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 2 );
+	game::backend::world_snapshot::WriteRandomState( old_v2, { 1, 2, 3, 4 } ); old_v2.WriteString( "old map body" );
+	add( "old V2", old_v2 );
 	add( "unknown version", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version + 1 ) );
 	add( "unknown identity", Header( "gog", false ) );
 	add( "different identity", Header( "smax", false ) );
@@ -59,6 +63,51 @@ inline types::Buffer FullHeader( const std::array< int64_t, 4 >& words = { 1, 2,
 	auto result = Header();
 	result.WriteString( algorithm );
 	for ( const auto word : words ) { result.WriteInt( word ); }
+	return result;
+}
+
+inline types::Buffer WorldHeader( const game::backend::world_snapshot::TurnState& turn = { 0, {} } ) {
+	auto result = FullHeader();
+	game::backend::world_snapshot::WriteTurnState( result, turn );
+	return result;
+}
+
+// The established session has occupied slots 0 and 2. Build malformed frames
+// directly, independently of the production writer's canonical-record checks.
+inline std::vector< std::pair< std::string, std::string > > InvalidTurnHeaders() {
+	std::vector< std::pair< std::string, std::string > > result;
+	const auto add = [ & ]( const std::string& name, const types::Buffer& turn ) { result.emplace_back( name, FullHeader().ToString() + turn.ToString() ); };
+	types::Buffer empty; add( "missing turn block", empty );
+	types::Buffer tag; tag.WriteInt( 1 ); add( "wrong turn tag type", tag );
+	types::Buffer unknown; unknown.WriteString( "turn-state-v2" ); add( "unknown turn tag", unknown );
+	for ( const int64_t id : { int64_t( -1 ), INT64_MIN, INT64_MAX } ) {
+		types::Buffer turn; turn.WriteString( "turn-state-v1" ); turn.WriteInt( id ); add( "invalid turn ID", turn );
+	}
+	const auto prefix = []() { types::Buffer turn; turn.WriteString( "turn-state-v1" ); turn.WriteInt( 37 ); return turn; };
+	add( "missing roster count", prefix() );
+	auto wrong_count = prefix(); wrong_count.WriteString( "2" ); add( "wrong roster count type", wrong_count );
+	for ( const int64_t count : { int64_t( -1 ), int64_t( 0 ), int64_t( 1 ), int64_t( 3 ), INT64_MAX } ) {
+		auto turn = prefix(); turn.WriteInt( count );
+		turn.WriteInt( 0 ); turn.WriteBool( true ); turn.WriteInt( 2 ); turn.WriteBool( false );
+		add( "mismatched roster count " + std::to_string( count ), turn );
+	}
+	for ( size_t position = 0 ; position < 2 ; ++position ) {
+		auto base = prefix(); base.WriteInt( 2 );
+		if ( position ) { base.WriteInt( 0 ); base.WriteBool( true ); }
+		add( "missing completion slot " + std::to_string( position ), base );
+		auto mistyped = base; mistyped.WriteBool( true ); add( "mistyped completion slot", mistyped );
+		for ( const int64_t id : { int64_t( -1 ), int64_t( 0 ), int64_t( 1 ), int64_t( 2 ), int64_t( 3 ), INT64_MAX } ) {
+			if ( id == static_cast< int64_t >( position * 2 ) ) { continue; }
+			auto turn = base; turn.WriteInt( id ); turn.WriteBool( true ); add( "noncanonical completion slot " + std::to_string( position ) + ":" + std::to_string( id ), turn );
+		}
+		base.WriteInt( position * 2 ); add( "missing completion flag", base );
+		auto wrong_flag = base; wrong_flag.WriteInt( 1 ); add( "wrong completion flag type", wrong_flag );
+		base.WriteBool( true ); auto noncanonical = base.ToString();
+		noncanonical[ noncanonical.size() - 2 ] = 2; noncanonical.back() = 2; // payload and XOR checksum
+		result.emplace_back( "noncanonical Bool byte", FullHeader().ToString() + noncanonical );
+	}
+	const auto complete = WorldHeader( { 37, { { 0, true }, { 2, false } } } ).ToString();
+	result.emplace_back( "truncated completion Bool", complete.substr( 0, complete.size() - 1 ) );
 	return result;
 }
 

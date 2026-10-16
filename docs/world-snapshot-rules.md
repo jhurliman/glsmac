@@ -1,7 +1,7 @@
 # World-download rules binding
 
 Multiplayer world downloads now start with a separate, typed rules header:
-integer marker `0x474c53574f524c44` (`GLSWORLD`), integer version `2`, the exact
+integer marker `0x474c53574f524c44` (`GLSWORLD`), integer version `3`, the exact
 `smac` or `smax` identity, and a Boolean indicating SMAC numeric rules. SMAC then
 includes nine signed-int32 values in Base Square, Bonus Square, Recycling Tanks
 order, with nutrients/minerals/energy inside each row. SMAX has no SMAC payload.
@@ -20,9 +20,11 @@ only in the packet dispatcher would miss deferred failures. Client completion
 holds a local copy of its callable while invoking it because the Game handler
 clears the installed callbacks as it starts.
 
-Version 2 follows the profile with the [backend RNG continuation](world-snapshot-rng.md).
-Version 1 and unversioned downloads are unsupported. After that prefix, the existing map/resource/unit/base/animation/turn frames keep
-their previous order and bytes. The header codec consumes only the header; it
+Version 3 follows the profile with the [backend RNG continuation](world-snapshot-rng.md)
+and [turn/completion block](world-snapshot-turn.md). Versions 2, 1 and unversioned
+downloads are unsupported. After that prefix, the map/resource/unit/base/animation
+frames keep their previous order and bytes; the former trailing turn field is
+now in the prefix. The header codec consumes only the header; it
 does not treat body bytes as extra header fields. This change does not version
 map files, add a complete save format, make body restoration transactional,
 implement transfer-size limits, or activate the SMAC yield calculator.
@@ -45,7 +47,7 @@ Run the normal native suite with `ctest --test-dir build/host-rules
 --output-on-failure` (or the equivalent configured build directory). See
 [host rules](smac-host-rules.md) for the earlier settings/file-source boundary.
 
-Local validation on Ubuntu/WSL with Clang 15 passed all six CTest entries
+The initial rules-header validation on Ubuntu/WSL with Clang 15 passed all six CTest entries
 (173 native/script cases) and the full `--memorydebug` suite. Focused clang-tidy
 checks passed for the four changed production translation units. Disabling
 numeric equality made the mismatch regression fail; removing the inner native

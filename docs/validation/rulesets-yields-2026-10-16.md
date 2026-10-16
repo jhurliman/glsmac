@@ -15,6 +15,19 @@ of the immutable
 [`codex/validation-20261016-followup`](https://github.com/jhurliman/glsmac/tree/codex/validation-20261016-followup)
 branch at `4de263fc548387dec7b0aa5ad04fba300cb648a4`.
 
+Short labels below resolve to these exact source revisions:
+
+| Label | Full commit |
+| --- | --- |
+| `314bdc4c` | [314bdc4c81cf8fde22cab2b855302163fa8a592f](https://github.com/jhurliman/glsmac/commit/314bdc4c81cf8fde22cab2b855302163fa8a592f) |
+| `ac7086c0` | [ac7086c07027688e50de76b715cc45bf5500cb0b](https://github.com/jhurliman/glsmac/commit/ac7086c07027688e50de76b715cc45bf5500cb0b) |
+| `2ce03a96` | [2ce03a9697458cda3ba9f19bc44d6219f45faf71](https://github.com/jhurliman/glsmac/commit/2ce03a9697458cda3ba9f19bc44d6219f45faf71) |
+| `100971a3` | [100971a3c7b8f7a1f76e516ee626da10963c209b](https://github.com/jhurliman/glsmac/commit/100971a3c7b8f7a1f76e516ee626da10963c209b) |
+| `4de263fc` | [4de263fc548387dec7b0aa5ad04fba300cb648a4](https://github.com/jhurliman/glsmac/commit/4de263fc548387dec7b0aa5ad04fba300cb648a4) |
+
+The constructor-failure experiment below has a separate pinned source and
+does not depend on a moving PR branch.
+
 Windows builds used the native Debug `x64-debug-win-clang` preset. All interactive
 runs used a 1280 × 800 window and separate configuration prefixes; quickstart
 maps were 32 × 32 with an unpinned random seed. Process exit codes were captured
@@ -88,6 +101,50 @@ Linux logs are under `/home/jhurliman/src/glsmac-gc-audit/`, using prefixes
 `roster-int64-`, `yields-roster-asan-`, `yields-analysis`, `growth-endpoint-fixed-`,
 `growth-balance-`, and `parser-mesh-integrated-`. Windows logs under `out/` use
 `roster-int64-windows-`, `growth-balance-windows-`, and `mesh-uuid-windows-`.
+
+## GC registration after constructor failure
+
+At baseline `100971a3`, a GC object registers during its base constructor.
+If a derived member or constructor body then throws, C++ destroys the base and
+frees the allocation, but the accumulation still retains that address. Publishing
+it allows a later collection to inspect freed memory.
+
+The regression and fix are pinned at
+[491381b9c532218f9ca71370b68734e4f8bdf01c](https://github.com/jhurliman/glsmac/commit/491381b9c532218f9ca71370b68734e4f8bdf01c),
+also retained on `codex/validation-20261016-gc-construction`. To reconstruct the
+negative control, check out the full `100971a3` revision above in an isolated
+worktree and apply only the `src/gse/tests/GSE.cpp` diff from that commit's
+parent to that commit. This adds four actual GC cases: member/body failure,
+each caught within a nested accumulation or escaping it. No production fix is
+included in that negative control. Build Debug with `SANITIZER=ON` and run
+`bin/GLSMAC --gse-tests --quiet --prefix <isolated-prefix>`. These are native
+GSE tests, not separate registered lifecycle CTests or a native-test CLI filter.
+The negative runs used `UBSAN_OPTIONS=halt_on_error=0:print_stacktrace=0` so
+ASan could report the heap-use-after-free after UBSan's invalid-vptr diagnostic
+at `Space.cpp:232` during collection. To reach the member failure after the
+body failure aborted first, the second negative run temporarily reversed the
+new `fail_in_member` loop order, then restored it. Stopping UBSan on its first
+error produces only its earlier diagnostic. Completed children must still be collected
+exactly once, rooted survivors retained, and subsequent accumulations usable.
+
+For the fixed focused run, a temporary `return;` immediately after
+`tests::AddGSETests(task)` in `src/gse/tests/Tests.cpp` limited registration to
+18 basic, mesh and GSE native tests. After rebuilding, the same CLI passed in
+2.07 s with leak detection enabled and ASan/UBSan stopping on first error.
+That registration edit was restored and the complete executable rebuilt;
+no filtering feature was committed. Normal CTest passed 6/6 in 28.41 s;
+ASan/UBSan CTest passed
+6/6 in 38.45 s with leak detection disabled. The full sanitizer run with default
+leak detection still reported the existing parser allocation baseline of
+201 bytes in three allocations (`parser/JS.cpp`, through `Scripts.cpp:73`).
+It is not a clean full-suite leak result. This fix covers pending construction
+registration; it does not establish out-of-memory safety or support manual
+deletion of already-published GC objects.
+
+Local logs are under `/home/jhurliman/src/glsmac-gc-constructor-unwind/`:
+`negative-address.log`, `negative-member-asan.log`, `focused-lifecycle-asan.log`,
+`fixed-normal-ctest.log`, `fixed-asan-no-leak-ctest.log`, and `fixed-asan-ctest.log`.
+This headless experiment does not identify the cause of any GUI access violation.
 
 ## Memory-tracked interactive runs remain incomplete
 

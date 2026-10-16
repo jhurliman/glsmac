@@ -85,7 +85,7 @@ public:
 	const std::vector< game::FrontendRequest >& PushBaseUpdates() {
 		// Frontend spawn messages need tile coordinates, but no rendered assets.
 		if ( !m_map->m_map_state ) {
-			m_map->m_map_state = new game::backend::map::MapState();
+			NEW( m_map->m_map_state, game::backend::map::MapState );
 			m_map->m_map_state->dimensions = { 8, 8 };
 			const common::mt_flag_t canceled = false;
 			m_map->m_map_state->LinkTileStates( canceled );

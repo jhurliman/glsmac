@@ -3,6 +3,9 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <functional>
+#include <memory>
+#include <mutex>
+#include <atomic>
 
 #include "gse/GCWrappable.h"
 
@@ -12,6 +15,7 @@
 #include "game/backend/settings/Settings.h"
 
 class GLSMAC;
+namespace gse::tests { class BackendFixture; }
 
 namespace game {
 namespace backend {
@@ -40,9 +44,15 @@ CLASS( State, gse::GCWrappable )
 
 	void SetGame( Game* game );
 	void UnsetGame();
+	void RetireGameCallbacks();
 	Game* GetGame() const;
 
 	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
+	typedef std::function< void( Game* const game, GSE_CALLABLE ) > game_func_t;
+
+	// Cancels work that has not started when its session is retired. This does
+	// not exclude concurrent teardown from an already executing callback.
+	void WithGame( gc::Object* owner, const game_func_t& f, const f_cleanup_t& cleanup = nullptr, bool need_now = false );
 
 	void WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup = nullptr, const bool need_now = false );
 
@@ -90,11 +100,19 @@ CLASS( State, gse::GCWrappable )
 	connection::Connection* m_connection = nullptr;
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	GLSMAC* m_glsmac = nullptr;
 
 	faction::FactionManager* m_fm = nullptr;
 	Game* m_game = nullptr;
+	struct GameSession {
+		explicit GameSession( Game* game ) : game( game ) {}
+		Game* const game;
+		std::atomic< bool > active{ true };
+	};
+	std::mutex m_game_session_mutex;
+	std::shared_ptr< GameSession > m_game_session;
 
 	std::unordered_set< Player* > m_players = {}; // persistent
 	std::unordered_map< network::cid_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot_num } )

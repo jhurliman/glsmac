@@ -48,6 +48,18 @@
 namespace game {
 namespace backend {
 
+namespace {
+class EventBatchRoots final : public gc::Object {
+public:
+	explicit EventBatchRoots( std::vector< event::Event* > events ) : gc::Object( nullptr ), events( std::move( events ) ) {}
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+		gc::Object::GetReachableObjects( reachable_objects );
+		for ( auto* event : events ) { GC_REACHABLE( event ); }
+	}
+	const std::vector< event::Event* > events;
+};
+}
+
 response_map_data_t::~response_map_data_t() {
 	if ( terrain_texture ) {
 		DELETE( terrain_texture );
@@ -152,6 +164,7 @@ void Game::Stop() {
 	MTModule::Log( "Stopping thread" );
 
 	if ( m_state ) {
+	   m_state->RetireGameCallbacks();
 	   m_state = nullptr;
 	}
 
@@ -283,7 +296,7 @@ void Game::Iterate() {
 
 			m_game_state = GS_STARTING;
 
-			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+			m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
 
 				if ( m_state->IsMaster() ) {
 					try {
@@ -324,7 +337,7 @@ void Game::Iterate() {
 	}
 	if ( m_state ) {
 
-		m_state->m_gc_space->Accumulate( this, [ this ]() {
+		m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
 
 			{
 				std::lock_guard guard( m_pending_event_responses_mutex );
@@ -337,8 +350,8 @@ void Game::Iterate() {
 					if ( !it.is_accepted ) {
 						if ( was_event_applied ) {
 							// event was rejected, rollback
-							m_state->WithGSE(
-								this, [ this, event_data, event ]( GSE_CALLABLE ) {
+							m_state->WithGame(
+								this, [ this, event_data, event ]( Game* const, GSE_CALLABLE ) {
 									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 									if ( event_data.rollback_data ) {
 										obj->Set( "applied", event_data.rollback_data, GSE_CALL );
@@ -367,8 +380,8 @@ void Game::Iterate() {
 					else {
 						// event was accepted (and maybe resolved)
 						if ( !was_event_applied ) {
-							m_state->WithGSE(
-								this, [ this, it, event ]( GSE_CALLABLE ) {
+							m_state->WithGame(
+								this, [ this, it, event ]( Game* const, GSE_CALLABLE ) {
 									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 									if ( it.resolved ) {
 										obj->Set( "resolved", it.resolved, GSE_CALL );
@@ -401,8 +414,8 @@ void Game::Iterate() {
 			ProcessEvents();
 		});
 
-		m_state->WithGSE(
-			this, [ this ]( GSE_CALLABLE ) {
+		m_state->WithGame(
+			this, [ this ]( Game* const, GSE_CALLABLE ) {
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -909,6 +922,9 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 		for ( const auto& event : m_pending_events ) {
 			GC_REACHABLE( event );
 		}
+		for ( const auto& batch : m_event_batch_handoffs ) {
+			GC_REACHABLE( batch.get() );
+		}
 	}
 	GC_DEBUG_END();
 
@@ -956,21 +972,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			//MTModule::Log( "Got init request" );
 
 			ASSERT( m_state, "state not set" );
-
-			m_state->WithGSE(
-				this,
-				[ this ]( GSE_CALLABLE ) {
-					m_state->TriggerObject(
-						this, "initialize", ARGS_F( this ) {
-							{
-								"game",
-								Wrap( GSE_CALL )
-							}
-						}; }
-					);
-				}
-			);
-			//m_state->SetGame( this );
 
 			InitGame( response, MT_C );
 			response.data.init.slot_index = m_slot_num;
@@ -1045,12 +1046,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
 			try {
-				auto* gc_space = GetGCSpace();
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							gc_space->Accumulate( this, [ this, &r ] () {
-								m_am->FinishAnimation( r.data.animation_finished.animation_id );
+							m_state->WithGame( this, [ this, id = r.data.animation_finished.animation_id ]( Game* const, GSE_CALLABLE ) {
+								m_am->FinishAnimation( id );
 							});
 							break;
 						}
@@ -1147,7 +1147,7 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::Message( const std::string& text ) {
-	m_state->WithGSE( this, [ this, text ]( GSE_CALLABLE ){
+	m_state->WithGame( this, [ this, text ]( Game* const, GSE_CALLABLE ){
 		m_state->TriggerObject(
 			this, "message", ARGS_F( text ) {
 				{ "text", VALUE( gse::value::String,, text ) }
@@ -1227,7 +1227,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		AddFrontendRequest( fr );
 	}
 
-	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+	m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			m_state->TriggerObject(
@@ -1296,7 +1296,7 @@ void Game::FirstTurn( GSE_CALLABLE ) {
 	m_turn_checksum = 0;
 
 	MTModule::Log( "Advancing turn ( id = " + std::to_string( m_current_turn.GetId() ) + " )" );
-	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ){
+	m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ){
 		Event( GSE_CALL, "advance_turn", {
 			{ "turn_id", VALUE( gse::value::Int,, m_current_turn.GetId() ) }
 		} );
@@ -1444,7 +1444,7 @@ void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
 	fr.data.turn_status.status = status;
 	AddFrontendRequest( fr );
 	ASSERT( s_turn_status_str.find( status ) != s_turn_status_str.end(), "unknown status: " + std::to_string( status ) );
-	m_state->WithGSE( this, [ this, status ]( GSE_CALLABLE ) {
+	m_state->WithGame( this, [ this, status ]( Game* const, GSE_CALLABLE ) {
 		m_state->TriggerObject( this, "turn_status", ARGS_F( &status ) {
 			{
 				"status",
@@ -1455,16 +1455,28 @@ void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
 }
 
 void Game::ProcessEvents() {
-	std::vector< event::Event* > events;
+	std::shared_ptr< EventBatchRoots > batch;
+	util::FinallyGuard release_handoff( [ this, &batch ]() {
+		if ( batch ) {
+			std::lock_guard guard( m_pending_events_mutex );
+			const auto it = std::find( m_event_batch_handoffs.begin(), m_event_batch_handoffs.end(), batch );
+			if ( it != m_event_batch_handoffs.end() ) { m_event_batch_handoffs.erase( it ); }
+		}
+	} );
 	{
 		std::lock_guard guard( m_pending_events_mutex );
-		events = m_pending_events;
+		if ( m_pending_events.empty() ) { return; }
+		batch = std::make_shared< EventBatchRoots >( m_pending_events );
+		m_event_batch_handoffs.push_back( batch );
 		m_pending_events.clear();
 	}
-	if ( !events.empty() ) {
-		m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
+	// Queue registration takes Space's pending mutex. Release the events mutex
+	// first: Collect takes pending before traversing Game's roots. The handoff
+	// root keeps this extracted batch reachable until the queue owns it.
+	{
+		m_state->WithGame( batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
 			const std::string* errptr = nullptr;
-			for ( const auto& event : events ) {
+			for ( const auto& event : batch->events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
 				MTModule::Log( "Event begin: " + event->ToString() );
 #endif
@@ -1610,9 +1622,26 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	ASSERT( !m_state || !m_state->m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
 	ASSERT( m_game_state == GS_NONE, "game still initializing" );
 
+	// Reset retires the old session before any new initialization work queues.
+	if ( !m_state->GetGame() ) { m_state->SetGame( this ); }
+
+	m_state->WithGame(
+		this,
+		[ this ]( Game* const, GSE_CALLABLE ) {
+			m_state->TriggerObject(
+				this, "initialize", ARGS_F( this ) {
+					{
+						"game",
+						Wrap( GSE_CALL )
+					}
+				}; }
+			);
+		}
+	);
+
 	MTModule::Log( "Initializing game" );
 
-	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+	m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
 		ASSERT( !m_tm, "tm not null" );
 		m_tm = new map::tile::TileManager( this );
 		ASSERT( !m_rm, "rm not null" );
@@ -1936,7 +1965,8 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 		connection->m_on_download_progress = nullptr;
 		MTModule::Log( "Unpacking world snapshot" );
 
-		m_state->WithGSE( this, [ this, connection, serialized_snapshot ]( GSE_CALLABLE ) {
+		m_state->WithGame( connection, [ this, connection, serialized_snapshot ]( Game* const, GSE_CALLABLE ) {
+			if ( m_state->GetConnection() != connection ) { return; }
 
 			try {
 				auto buf = types::Buffer( serialized_snapshot );
@@ -1996,6 +2026,7 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 }
 
 void Game::ResetGame() {
+	if ( m_state ) { m_state->RetireGameCallbacks(); }
 
 	ClearHandlers();
 
@@ -2011,6 +2042,10 @@ void Game::ResetGame() {
 	{
 		std::lock_guard guard( m_events_waiting_for_responses_mutex );
 		m_events_waiting_for_responses.clear();
+	}
+	{
+		std::lock_guard guard( m_pending_event_responses_mutex );
+		m_pending_event_responses.clear();
 	}
 	{
 		std::lock_guard guard( m_pending_events_mutex );

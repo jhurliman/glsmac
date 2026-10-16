@@ -79,11 +79,11 @@ void TileManager::ProcessTileLockRequests() {
 		if ( state->IsMaster() && !m_tile_lock_requests.empty() ) {
 			const auto tile_lock_requests = m_tile_lock_requests;
 			m_tile_lock_requests.clear();
-			const auto slot_num = m_game->GetSlotNum();
 			if ( !tile_lock_requests.empty() ) {
-				m_game->GetState()->WithGSE(
+				state->WithGame(
 					this,
-					[ this, &tile_lock_requests, &state, &slot_num ]( GSE_CALLABLE ) {
+					[ this, tile_lock_requests ]( Game* const game, GSE_CALLABLE ) {
+						auto* const state = game->GetState();
 						for ( const auto& req : tile_lock_requests ) {
 							const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();
 							if ( slot_state != slot::Slot::SS_PLAYER ) {

@@ -22,7 +22,9 @@ const get_roster = (ruleset) => {
 	let roster = [];
 	const count = ruleset == 'smac' ? 7 : #sizeof(factions);
 	for (let idx = 0; idx < count; idx++) {
-		roster :+factions[idx];
+		// Bind the entry value: appending an indexed expression retains its reference.
+		const faction = factions[idx];
+		roster :+faction;
 	}
 	return roster;
 };

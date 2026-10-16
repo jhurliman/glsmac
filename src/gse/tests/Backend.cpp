@@ -550,6 +550,66 @@ static bool RejectsSettings( const std::function< void() >& operation ) {
 }
 
 static void AddRulesetTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test production faction configure registers both rulesets", GT() {
+		using game::backend::faction::Faction;
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* fm = fixture.GetGame()->GetState()->GetFM();
+			auto* wrapped = static_cast< value::Object* >( fm->Wrap( GSE_CALL ) );
+			// Only asset reads are substituted. Production configure invokes the
+			// real native add callable and populates the State's FactionManager.
+			auto* imports = new value::Object( GSE_CALL, {
+				{ "add", wrapped->Get( "add" ) },
+				{ "import_colors", NATIVE_CALL() {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( filename, 0, String );
+					return new value::Object( GSE_CALL, {
+						{ "text", types::Color( 1.0f, 0.0f, 0.0f ).Wrap( GSE_CALL ) },
+						{ "text_shadow", types::Color( 0.0f, 1.0f, 0.0f ).Wrap( GSE_CALL ) },
+						{ "border", types::Color( 0.0f, 0.0f, 1.0f ).Wrap( GSE_CALL ) },
+					} );
+				} ) },
+				{ "import_base_names", NATIVE_CALL() {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( filename, 0, String );
+					return new value::Object( GSE_CALL, {
+						{ "land", VALUE( value::Array,, { VALUE( value::String,, filename ) } ) },
+						{ "water", VALUE( value::Array,, {} ) },
+					} );
+				} ) },
+			} );
+			auto* module = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/factions" ) );
+			auto* configure = static_cast< value::Callable* >( module->Get( "configure" ) );
+			const std::vector< std::string > names = {
+				"Gaians", "Hive", "University", "Morganites", "Spartans", "Believers", "Peacekeepers",
+				"Consciousness", "Pirates", "Drones", "Angels", "Planetcult", "Caretakers", "Usurpers"
+			};
+			const std::vector< std::string > files = {
+				"gaians", "hive", "univ", "morgan", "spartans", "believe", "peace",
+				"cyborg", "pirates", "drone", "angels", "fungboy", "caretake", "usurper"
+			};
+			for ( const std::string id : { "smac", "smax", "smac" } ) {
+				fm->Clear();
+				configure->Run( GSE_CALL, { imports, VALUE( value::String,, id ) } );
+				const auto factions = fm->GetAll();
+				const size_t count = id == "smac" ? 7 : 14;
+				GT_ASSERT( factions.size() == count, "production faction roster count is incorrect" );
+				for ( size_t i = 0 ; i < count ; i++ ) {
+					const auto* faction = factions.at( i );
+					GT_ASSERT( faction->m_name == names.at( i ), "production faction order/name changed" );
+					GT_ASSERT( faction->m_bases_render.file == files.at( i ) + ".pcx", "faction selected the wrong sprite file" );
+					GT_ASSERT( faction->m_base_names.land == std::vector< std::string >{ files.at( i ) + ".txt" }, "faction selected the wrong names file" );
+					const auto flags = i == 8 ? Faction::FF_NAVAL : i >= 12 ? Faction::FF_PROGENITOR : Faction::FF_NONE;
+					GT_ASSERT( faction->m_flags == flags, "production faction flags changed" );
+				}
+				GT_ASSERT( fm->Get( "GAIANS" ) == factions.front(), "faction ID was not uppercased" );
+				GT_ASSERT( !!fm->Get( "USURPERS" ) == ( id == "smax" ), "SMAX faction leaked across roster reset" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production faction registration failed: " + error );
+		GT_OK();
+	} );
 	task->AddTest( "test explicit ruleset selection and versioned settings rejection", GT() {
 		using game::backend::settings::GlobalSettings;
 		GlobalSettings settings;

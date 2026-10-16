@@ -6,6 +6,9 @@
 #include "gse/ExecutionPointer.h"
 #include "gse/value/Array.h"
 #include "gse/value/Object.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Int.h"
+#include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
 #include "game/backend/Game.h"
@@ -25,12 +28,13 @@
 
 #include <memory>
 #include <exception>
+#include <limits>
 
 namespace gse {
 namespace tests {
 
 // Real backend objects and event dispatch; no game start, renderer, connection,
-// default mod scripts, or original-game files are involved in these tests.
+// or original-game files are involved in these tests.
 class BackendFixture {
 public:
 	BackendFixture()
@@ -93,6 +97,28 @@ public:
 		m_frontend_requests.clear();
 		m_game.GetBM()->PushUpdates();
 		return m_frontend_requests;
+	}
+
+	void EnableRandom() {
+		m_random.reset( new game::backend::Random( &m_game, 123 ) );
+		m_game.m_random = m_random.get();
+	}
+
+	Value* RunScript( GSE_CALLABLE, const std::string& path ) {
+		return m_gse->RunScript( GSE_CALL, path );
+	}
+
+	std::string WithMutableScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			std::string result;
+			std::exception_ptr error;
+			m_game.WithRW( [ & ]() {
+				try { result = check( GSE_CALL ); }
+				catch ( ... ) { error = std::current_exception(); }
+			} );
+			if ( error ) { std::rethrow_exception( error ); }
+			return result;
+		} );
 	}
 
 	std::string WithScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
@@ -320,6 +346,91 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 		);
 	}
 	task->AddTest(
+		"test backend nutrient state survives snapshots and validates script writes",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			for ( const int64_t nutrients : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 37 ), std::numeric_limits< int64_t >::max() } ) {
+				BackendFixture source, restored;
+				auto* game = source.GetGame();
+				Base base( game, 501, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Nutrient test", {}, {} );
+				GT_ASSERT( base.GetAccumulatedNutrients() == 0, "new base nutrients must default to zero" );
+				const auto read_only_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* object = static_cast< value::Object* >( base.Wrap( GSE_CALL ) );
+					try {
+						static_cast< value::Callable* >( object->Get( "set_accumulated_nutrients" ) )->Run( GSE_CALL, { new value::Int( gc_space, nutrients ) } );
+						GT_FAIL( "read-only nutrient write was accepted" );
+					}
+					catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong read-only error" ); }
+					GT_ASSERT( base.GetAccumulatedNutrients() == 0, "read-only write changed nutrients" );
+					GT_OK();
+				} );
+				GT_ASSERT( read_only_error.empty(), "read-only binding check failed: " + read_only_error );
+				const auto write_error = source.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* object = static_cast< value::Object* >( base.Wrap( GSE_CALL ) );
+					auto* setter = static_cast< value::Callable* >( object->Get( "set_accumulated_nutrients" ) );
+					setter->Run( GSE_CALL, { new value::Int( gc_space, nutrients ) } );
+					auto* value = static_cast< value::Callable* >( object->Get( "get_accumulated_nutrients" ) )->Run( GSE_CALL, {} );
+					GT_ASSERT( value->type == VT_INT && static_cast< value::Int* >( value )->value == nutrients, "binding did not return the current nutrient value" );
+					try { setter->Run( GSE_CALL, { new value::String( gc_space, "37" ) } ); GT_FAIL( "non-integer nutrient write was accepted" ); }
+					catch ( const Exception& ) {}
+					GT_ASSERT( base.GetAccumulatedNutrients() == nutrients, "rejected write changed nutrients" );
+					GT_OK();
+				} );
+				GT_ASSERT( write_error.empty(), "nutrient binding check failed: " + write_error );
+				auto snapshot = Base::Serialize( &base );
+				std::unique_ptr< Base > actual( Base::Deserialize( snapshot, restored.GetGame() ) );
+				GT_ASSERT( actual->GetAccumulatedNutrients() == nutrients, "nutrients changed after reload" );
+				GT_ASSERT( snapshot.lenr == snapshot.lenw, "nutrient snapshot has unread fields" );
+				GT_ASSERT( Base::Serialize( actual.get() ).ToString() == snapshot.ToString(), "snapshot bytes changed after nutrient reload" );
+			}
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test negative starvation balances and signed minimum survive nutrient snapshots",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			// RE-SMAC-GROW-001 identifies negative stored food as starvation
+			// state (static-derived SMAC evidence, not a runtime observation).
+			for ( const int64_t nutrients : { int64_t( -2 ), std::numeric_limits< int64_t >::min() } ) {
+				BackendFixture source, restored;
+				auto* game = source.GetGame();
+				Base base( game, 503, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Negative nutrient balance", {}, {}, 1, nutrients );
+				GT_ASSERT( base.GetAccumulatedNutrients() == nutrients, "constructor changed the signed nutrient balance" );
+				auto snapshot = Base::Serialize( &base );
+				std::unique_ptr< Base > actual( Base::Deserialize( snapshot, restored.GetGame() ) );
+				GT_ASSERT( actual->GetAccumulatedNutrients() == nutrients, "snapshot changed the negative nutrient balance" );
+				GT_ASSERT( Base::Serialize( actual.get() ).ToString() == snapshot.ToString(), "negative nutrient snapshot bytes changed" );
+			}
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test population event apply and rollback preserve authoritative nutrients",
+		GT() {
+			using namespace game::backend::base;
+			const auto previous_next_id = Base::GetNextId();
+			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
+			BackendFixture fixture;
+			fixture.EnableRandom();
+			fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			auto* game = fixture.GetGame();
+			Base base( game, 502, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Nutrient events", {}, { { 1, Pop( nullptr, 1, game->GetBM()->GetPopDef( "DOCTOR" ), 0 ) } }, 2 );
+			const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* script = fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_nutrients" );
+				GT_ASSERT( script->type == VT_CALLABLE, "nutrient event test did not return a callable" );
+				static_cast< value::Callable* >( script )->Run( GSE_CALL, { base.Wrap( GSE_CALL ) } );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "nutrient event regression failed: " + error );
+			GT_OK();
+		}
+	);
+	task->AddTest(
 		"test nested script snapshots resolve tiles in the destination world",
 		GT() {
 			BackendFixture source;
@@ -425,11 +536,11 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			using namespace game::backend::base;
 			const auto previous_next_id = Base::GetNextId();
 			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
-			for ( const bool legacy : { true, false } ) {
+			for ( const std::string format : { "", "GLSMAC_BASES_V1", "GLSMAC_BASES_UNSUPPORTED" } ) {
 				BackendFixture restored;
 				types::Buffer snapshot;
-				if ( !legacy ) {
-					snapshot.WriteString( "GLSMAC_BASES_V2" );
+				if ( !format.empty() ) {
+					snapshot.WriteString( format );
 				}
 				// The complete old empty-manager format is valid under the old
 				// reader; an added format marker must reject it before changing IDs.

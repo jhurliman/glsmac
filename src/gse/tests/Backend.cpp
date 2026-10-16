@@ -17,6 +17,7 @@
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/resource/Resource.h"
 #include "game/backend/map/tile/TileManager.h"
+#include "game/frontend/resource/ResourceDisplay.h"
 #include "game/backend/State.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
@@ -797,6 +798,94 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test tile and base resource callbacks preserve signed integers", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture();
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			Value* result = nullptr;
+			auto* callback = NATIVE_CALL( &result ) { return result; } );
+			game->GetTM()->On( GSE_CALL, "get_tile_resources", callback );
+			game->GetBM()->On( GSE_CALL, "get_base_intake", callback );
+			auto* tile = game->GetMap()->GetTile( 4, 4 );
+			for ( const int64_t amount : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 8 ), int64_t( 300 ), std::numeric_limits< int64_t >::max() } ) {
+				result = new value::Object( GSE_CALL, { { "NUTRIENTS", new value::Int( gc_space, amount ) } } );
+				auto* wrapped = tile->GetResourcesAsValue( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) );
+				GT_ASSERT( static_cast< value::Int* >( wrapped->Get( "NUTRIENTS" ) )->value == amount, "script tile yield changed" );
+				const auto native = tile->GetResources( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) );
+				GT_ASSERT( native.at( "NUTRIENTS" ) == amount, "native tile yield narrowed or changed sign" );
+				GT_ASSERT( native.at( "MINERALS" ) == 0 && native.at( "ENERGY" ) == 0, "missing resources no longer default to zero" );
+				auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == amount, "base callback yield changed" );
+			}
+			const std::vector< Value* > invalid = {
+				new value::Object( GSE_CALL, { { "UNKNOWN_RESOURCE", new value::Int( gc_space, 1 ) } } ),
+				new value::Object( GSE_CALL, { { "NUTRIENTS", new value::String( gc_space, "-2" ) } } ),
+				new value::Array( gc_space ),
+			};
+			for ( auto* bad : invalid ) {
+				result = bad;
+				try { tile->GetResources( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) ); GT_FAIL( "invalid tile yield accepted" ); }
+				catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong invalid tile yield error" ); }
+				try { CallBase( GSE_CALL, base, "get_intake" ); GT_FAIL( "invalid base yield accepted" ); }
+				catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong invalid base yield error" ); }
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "signed resource callbacks: " + error ); GT_OK();
+	} );
+	task->AddTest( "test production base intake sums signed and large tile yields", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			auto* getter = NATIVE_CALL() {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				return new value::Object( GSE_CALL, { { "NUTRIENTS", new value::Int( gc_space, tile->coord.x == 4 ? -2 : 300 ) } } );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+			auto* initial = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+			GT_ASSERT( static_cast< value::Int* >( initial->Get( "NUTRIENTS" ) )->value == -2, "negative center yield was lost" );
+			base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", game->GetMap()->GetTile( 2, 4 ) );
+			auto* actual = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+			GT_ASSERT( static_cast< value::Int* >( actual->Get( "NUTRIENTS" ) )->value == 298, "production intake narrowed, clamped, or ignored signed yields" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production signed intake: " + error ); GT_OK();
+	} );
+	task->AddTest( "test exceptional resource display preserves exact numbers with bounded icons", GT() {
+		using game::frontend::resource::ResourceDisplay;
+		for ( const size_t sprites : { 0, 1, 8 } ) {
+			for ( const int64_t amount : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 1 ), int64_t( 8 ), int64_t( 9 ), int64_t( 300 ), std::numeric_limits< int64_t >::max() } ) {
+				const auto display = ResourceDisplay::For( amount, sprites );
+				GT_ASSERT( display.sprite_value <= sprites, "display would index a missing sprite" );
+				if ( !amount ) { GT_ASSERT( !display.sprite_value && display.label.empty(), "zero yield is not hidden" ); }
+				else if ( amount > 0 && static_cast< uint64_t >( amount ) <= sprites ) {
+					GT_ASSERT( display.sprite_value == amount && display.label.empty(), "ordinary icon appearance changed" );
+				}
+				else {
+					GT_ASSERT( display.sprite_value <= 1, "exceptional amount requested unbounded icons" );
+					GT_ASSERT( display.label == std::to_string( amount ), "fallback changed or truncated signed value" );
+				}
+			}
+		}
+		GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddPopReferenceTests( task );
@@ -845,6 +934,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 		}
 	);
 	AddWorkerTests( task );
+	AddResourceYieldTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate

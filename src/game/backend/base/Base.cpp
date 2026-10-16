@@ -1,6 +1,7 @@
 #include "Base.h"
 #include <limits>
 #include <set>
+#include <utility>
 
 #include "gse/context/Context.h"
 #include "gse/value/Object.h"
@@ -47,7 +48,8 @@ Base::Base(
 	const facilities_t& facilities,
 	const pops_t& pops,
 	const size_t next_pop_id,
-	const int64_t accumulated_nutrients
+	const int64_t accumulated_nutrients,
+	const std::optional< ProductionState >& production
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
@@ -58,7 +60,9 @@ Base::Base(
 	, m_facilities( facilities )
 	, m_pops( pops )
 	, m_next_pop_id( next_pop_id )
-	, m_accumulated_nutrients( accumulated_nutrients ) {
+	, m_accumulated_nutrients( accumulated_nutrients )
+	, m_production( production ) {
+	if ( m_production ) { m_production->Validate(); }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );
@@ -160,6 +164,21 @@ void Base::SetAccumulatedNutrients( const int64_t nutrients ) {
 	}
 }
 
+const std::optional< ProductionState >& Base::GetProductionState() const {
+	return m_production;
+}
+
+void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
+	m_game->CheckRW( GSE_CALL );
+	if ( production ) { production->Validate(); }
+	// Copy completely before swapping: even an allocation failure preserves the
+	// prior record. Neither switching nor baseline arithmetic belongs here.
+	if ( m_production == production ) { return; }
+	auto replacement = production;
+	m_production.swap( replacement );
+	TriggerUpdate();
+}
+
 const types::Buffer Base::Serialize( const Base* base ) {
 	types::Buffer buf;
 	buf.WriteInt( base->m_id );
@@ -179,6 +198,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	}
 	buf.WriteInt( base->m_next_pop_id );
 	buf.WriteInt( base->m_accumulated_nutrients );
+	buf.WriteString( SerializeProductionState( base->m_production ).ToString() );
 	return buf;
 }
 
@@ -221,7 +241,9 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	}
 	const auto next_pop_id = buf.ReadInt();
 	const auto accumulated_nutrients = buf.ReadInt();
-	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients );
+	types::Buffer production_buffer( buf.ReadString() );
+	const auto production = DeserializeProductionState( production_buffer );
+	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production );
 }
 
 WRAPIMPL_SERIALIZE( Base )
@@ -235,12 +257,96 @@ WRAPIMPL_DESERIALIZE( Base )
 	return base->Wrap( GSE_CALL );
 }
 
+namespace {
+
+const char* ProductionKindName( const ProductionItemKind kind ) {
+	switch ( kind ) {
+		case ProductionItemKind::Unit: return "unit";
+		case ProductionItemKind::Facility: return "facility";
+		case ProductionItemKind::Orbital: return "orbital";
+		case ProductionItemKind::Project: return "project";
+		case ProductionItemKind::Stockpile: return "stockpile";
+	}
+	THROW( "Unknown production item kind" );
+}
+
+gse::Value* ProductionItemValue( GSE_CALLABLE, const ProductionItem& item ) {
+	gse::value::object_properties_t fields = { { "kind", VALUE( gse::value::String,, ProductionKindName( item.kind ) ) } };
+	if ( item.kind != ProductionItemKind::Stockpile ) { fields.emplace( "id", VALUE( gse::value::String,, item.id ) ); }
+	return new gse::value::Object( GSE_CALL, fields );
+}
+
+ProductionItem ReadProductionItem( GSE_CALLABLE, const gse::value::object_properties_t& fields ) {
+	const auto kind_field = fields.find( "kind" );
+	if ( kind_field == fields.end() || kind_field->second->Deref()->type != gse::VT_STRING ) {
+		GSE_ERROR( gse::EC.INVALID_CALL, "Production item requires a string kind" );
+	}
+	const auto& name = static_cast< gse::value::String* >( kind_field->second->Deref() )->value;
+	ProductionItemKind kind;
+	if ( name == "unit" ) { kind = ProductionItemKind::Unit; }
+	else if ( name == "facility" ) { kind = ProductionItemKind::Facility; }
+	else if ( name == "orbital" ) { kind = ProductionItemKind::Orbital; }
+	else if ( name == "project" ) { kind = ProductionItemKind::Project; }
+	else if ( name == "stockpile" ) { kind = ProductionItemKind::Stockpile; }
+	else { GSE_ERROR( gse::EC.INVALID_CALL, "Unknown production item kind: " + name ); }
+	std::string id;
+	if ( kind == ProductionItemKind::Stockpile ) {
+		if ( fields.size() != 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Stockpile only accepts kind" ); }
+	}
+	else {
+		const auto id_field = fields.find( "id" );
+		if ( fields.size() != 2 || id_field == fields.end() || id_field->second->Deref()->type != gse::VT_STRING ) {
+			GSE_ERROR( gse::EC.INVALID_CALL, "Production item requires only kind and string id" );
+		}
+		id = static_cast< gse::value::String* >( id_field->second->Deref() )->value;
+		if ( id.empty() ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production item requires a nonempty identity" ); }
+	}
+	return { kind, std::move( id ) };
+}
+
+}
+
 WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_GET_CUSTOM( "id", Int, m_id )
 	WRAPIMPL_GET_CUSTOM( "name", String, m_name )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	WRAPIMPL_CUSTOM_SETTERS
+	{
+		"get_production_state",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			if ( !m_production ) { return VALUE( gse::value::Undefined ); }
+			return new gse::value::Object( GSE_CALL, {
+				{ "current_item", ProductionItemValue( GSE_CALL, m_production->current_item ) },
+				{ "minerals", VALUE( gse::value::Int,, m_production->minerals ) },
+				{ "baseline_item", ProductionItemValue( GSE_CALL, m_production->baseline_item ) },
+				{ "baseline_minerals", VALUE( gse::value::Int,, m_production->baseline_minerals ) },
+			} );
+		} )
+	},
+	{
+		"set_production_state",
+		NATIVE_CALL( this ) {
+			m_game->CheckRW( GSE_CALL );
+			N_EXPECT_ARGS( 1 );
+			if ( arguments.at( 0 )->Deref()->type == gse::VT_UNDEFINED ) {
+				SetProductionState( GSE_CALL, std::nullopt );
+			}
+			else {
+				N_GETVALUE( data, 0, Object );
+				if ( data.size() != 4 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production state requires exactly four fields" ); }
+				N_GETPROP( current_fields, data, "current_item", Object );
+				N_GETPROP( minerals, data, "minerals", Int );
+				N_GETPROP( baseline_fields, data, "baseline_item", Object );
+				N_GETPROP( baseline_minerals, data, "baseline_minerals", Int );
+				const auto current = ReadProductionItem( GSE_CALL, current_fields );
+				const auto baseline = ReadProductionItem( GSE_CALL, baseline_fields );
+				SetProductionState( GSE_CALL, ProductionState{ current, minerals, baseline, baseline_minerals } );
+			}
+			return VALUE( gse::value::Undefined );
+		} )
+	},
 	{
 		"get_accumulated_nutrients",
 		NATIVE_CALL( this ) {

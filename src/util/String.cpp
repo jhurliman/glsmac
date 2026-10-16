@@ -276,7 +276,7 @@ const bool String::ParseColorHex( const std::string& s, types::Color& result ) {
 		return false;
 	}
 	const auto& str = s.c_str();
-	for ( const char* c = str + 1 ; *c ; c++ ) {
+	for ( const char* c = str + 1 ; c != str + s.size() ; c++ ) {
 		if ( ( *c < '0' || *c > '9' ) && ( *c < 'a' || *c > 'f' ) && ( *c < 'A' || *c > 'F' ) ) {
 			return false;
 		}

@@ -1,0 +1,15 @@
+Checks: >-
+  -*,
+  clang-analyzer-core.*,
+  clang-analyzer-cplusplus.NewDelete,
+  clang-analyzer-unix.Malloc,
+  bugprone-sizeof-expression,
+  bugprone-suspicious-memset-usage,
+  bugprone-use-after-move
+WarningsAsErrors: >-
+  clang-analyzer-core.*,
+  clang-analyzer-cplusplus.NewDelete,
+  clang-analyzer-unix.Malloc,
+  bugprone-sizeof-expression,
+  bugprone-suspicious-memset-usage,
+  bugprone-use-after-move

@@ -101,6 +101,8 @@ private:
 	std::unordered_map< size_t, base_update_t > m_base_updates = {};
 
 	void QueueBaseUpdate( const Base* base, const base_update_op_t op );
+	// Register saved state and frontend updates without new-base gameplay hooks.
+	void RegisterBase( Base* base );
 
 private:
 	std::mutex m_updated_bases_mutex;

@@ -29,6 +29,7 @@ public:
 	void SetBase( Base* const base );
 
 	WRAPDEFS_PTR( Pop );
+	WRAPDEF_SERIALIZABLE;
 
 	Base* m_base;
 	size_t m_id;

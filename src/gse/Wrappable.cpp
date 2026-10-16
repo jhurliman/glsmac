@@ -159,7 +159,8 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 			m_callbacks_mutex.lock();
 			if ( expected_return_type.has_value() ) {
 				if ( !result || result->type != expected_return_type.value() ) {
-					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + result->GetTypeString() + ": " + result->ToString(), it2.second.ctx, it2.second.si, ep );
+					const auto returned = result ? result->GetTypeString() + ": " + result->ToString() : "no value";
+					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + returned, it2.second.ctx, it2.second.si, ep );
 				}
 			}
 			if ( result && result->type != VT_UNDEFINED ) {

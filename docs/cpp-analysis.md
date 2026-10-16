@@ -82,10 +82,13 @@ relevant runs report it in the console and `summary.json` as skipped.
 trigger a full scan just like a header. These are exact paths; other sources
 missing from the database still fail instead of being silently skipped.
 
-Diagnostics from project headers remain enabled. There is no changed-line
-filter, warning baseline, or `NOLINT` suppression. Every enabled finding fails
-the check, including findings outside the edited lines. Compiler errors,
-analyzer failures, and per-file timeouts fail too. Failed-file diagnostics print
+Diagnostics from project headers remain enabled. This policy introduces no
+changed-line filter, warning baseline, or local suppressions. Explicit `NOLINT`,
+`NOLINTNEXTLINE`, and `NOLINTBEGIN` directives remain supported by clang-tidy;
+the runner does not reject them, so additions or changes require code review.
+Every reported finding from an enabled check fails the job, including findings
+outside the edited lines. Compiler errors, analyzer failures, and per-file
+timeouts fail too. Failed-file diagnostics print
 in the job log; complete per-file output and `summary.json` are saved under
 `build/analysis/analysis-results/` and uploaded by CI. Compiler warnings outside
 the selected policy remain available in those logs.

@@ -14,6 +14,10 @@
 
 #include "types/Buffer.h"
 
+namespace gse::tests {
+class BackendFixture;
+}
+
 namespace types {
 namespace texture {
 class Texture;
@@ -134,6 +138,11 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+	friend class gse::tests::BackendFixture;
+	// Backend snapshot fixtures need only the tile grid. This constructor does
+	// not initialize render state, textures, meshes, or terrain render modules.
+	Map( Game* game, const uint32_t width, const uint32_t height );
+
 	friend class module::Finalize;
 	friend class backend::Game;
 

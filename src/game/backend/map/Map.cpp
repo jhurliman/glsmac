@@ -165,6 +165,13 @@ Map::Map( Game* game )
 
 }
 
+Map::Map( Game* game, const uint32_t width, const uint32_t height )
+	: gse::GCWrappable( nullptr )
+	, m_game( game )
+	, m_tiles( new tile::Tiles( this, width, height ) ) {
+	// No rendering or original-game assets are needed to restore backend data.
+}
+
 Map::~Map() {
 	if ( m_tiles ) {
 		DELETE( m_tiles );

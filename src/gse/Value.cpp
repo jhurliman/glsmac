@@ -596,7 +596,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
-				elements.push_back( Value::Deserialize( GSE_CALL, buf ) );
+				elements.push_back( Value::Deserialize( GSE_CALL, buf, game ) );
 			}
 			return VALUE( value::Array, , elements );
 		}
@@ -610,7 +610,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 					properties.insert(
 						{
 							k,
-							Value::Deserialize( GSE_CALL, buf )
+							Value::Deserialize( GSE_CALL, buf, game )
 						}
 					);
 				}

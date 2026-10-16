@@ -3,6 +3,8 @@
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/value/Array.h"
+#include "gse/value/Object.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
 #include "game/backend/Game.h"
@@ -62,6 +64,21 @@ public:
 
 	game::backend::Game* GetGame() {
 		return &m_game;
+	}
+
+	std::string WithScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
+		std::string result;
+		m_gse->GetGCSpace()->Accumulate( m_gse.get(), [ this, &check, &result ]() {
+			try {
+				gse::ExecutionPointer ep;
+				result = check( m_gse->GetGCSpace(), m_game.GetState()->m_ctx, {}, ep );
+			}
+			catch ( const std::exception& error ) {
+				// Report malformed values after leaving GC accumulation normally.
+				result = error.what();
+			}
+		} );
+		return result;
 	}
 
 	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
@@ -138,6 +155,57 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test nested script snapshots resolve tiles in the destination world",
+		GT() {
+			BackendFixture source;
+			BackendFixture restored;
+			for ( const bool array_first : { true, false } ) {
+				types::Buffer snapshot;
+				const auto write_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* tile = source.GetGame()->GetMap()->GetTile( 4, 4 )->Wrap( GSE_CALL );
+					Value* nested;
+					if ( array_first ) {
+						auto* object = new value::Object( GSE_CALL, { { "tile", tile } } );
+						nested = new value::Array( gc_space, { object } );
+					}
+					else {
+						auto* array = new value::Array( gc_space, { tile } );
+						nested = new value::Object( GSE_CALL, { { "tiles", array } } );
+					}
+					Value::Serialize( &snapshot, nested );
+					GT_OK();
+				} );
+				GT_ASSERT( write_error.empty(), "nested snapshot write failed: " + write_error );
+				const auto read_error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* nested = Value::Deserialize( GSE_CALL, &snapshot, restored.GetGame() );
+					Value* wrapped_tile;
+					if ( array_first ) {
+						GT_ASSERT( nested->type == VT_ARRAY, "outer array type changed" );
+						auto* object = static_cast< value::Array* >( nested )->Get( 0 );
+						GT_ASSERT( object->type == VT_OBJECT, "inner object type changed" );
+						wrapped_tile = static_cast< value::Object* >( object )->Get( "tile" );
+					}
+					else {
+						GT_ASSERT( nested->type == VT_OBJECT, "outer object type changed" );
+						auto* array = static_cast< value::Object* >( nested )->Get( "tiles" );
+						GT_ASSERT( array->type == VT_ARRAY, "inner array type changed" );
+						wrapped_tile = static_cast< value::Array* >( array )->Get( 0 );
+					}
+					auto* tile = Tile::Unwrap( wrapped_tile );
+					GT_ASSERT( tile == restored.GetGame()->GetMap()->GetTile( 4, 4 ), "tile did not resolve in the destination world" );
+					GT_ASSERT( tile != source.GetGame()->GetMap()->GetTile( 4, 4 ), "tile still points into the source world" );
+					GT_ASSERT( snapshot.lenr == snapshot.lenw, "nested snapshot has unread fields" );
+					types::Buffer repeated;
+					Value::Serialize( &repeated, nested );
+					GT_ASSERT( repeated.ToString() == snapshot.ToString(), "nested snapshot bytes changed after reload" );
+					GT_OK();
+				} );
+				GT_ASSERT( read_error.empty(), "nested snapshot read failed: " + read_error );
+			}
+			GT_OK();
+		}
+	);
 	task->AddTest(
 		"test backend base manager snapshots restore facility definitions before base instances",
 		GT() {

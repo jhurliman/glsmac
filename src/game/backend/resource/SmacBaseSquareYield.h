@@ -3,6 +3,8 @@
 #include <array>
 #include <cstdint>
 
+#include "SmacResourceBonus.h"
+
 namespace game::backend::resource::smac {
 
 // All triples are nutrients, minerals, energy. These are decoded rules values,
@@ -18,8 +20,6 @@ struct BaseSquareRules {
 	RuleTriple bonus_square;
 	RuleTriple recycling;
 };
-
-enum class ResourceBonus { None, Nutrients, Minerals, Energy };
 
 struct CenterTerrain {
 	CenterTerrain( bool land, ResourceBonus resource_bonus, ResourceFlags landmark_bonus, bool river )

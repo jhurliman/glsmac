@@ -69,6 +69,11 @@ void State::RetireGameCallbacks() {
 	if ( m_game_session ) { m_game_session->active.store( false ); }
 }
 
+void State::RetireGameCallbacks( const game_session_t& expected_session ) {
+	std::lock_guard guard( m_game_session_mutex );
+	if ( m_game_session == expected_session && m_game_session ) { m_game_session->active.store( false ); }
+}
+
 void State::UnsetGame() {
 	RetireGameCallbacks();
 	m_game = nullptr;

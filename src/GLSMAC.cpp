@@ -170,7 +170,7 @@ void GLSMAC::Iterate() {
 	if ( m_reset_needed ) {
 		m_reset_needed = false;
 		auto* game = g_engine->GetGame();
-		const auto mt_id = game->MT_Reset();
+		const auto mt_id = game->MT_ResetController();
 		const auto& response = game->MT_WaitResponse( mt_id );
 		if ( response.result != game::backend::R_SUCCESS ) {
 			game->MT_DestroyResponse( response );

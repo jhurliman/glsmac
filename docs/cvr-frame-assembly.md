@@ -66,8 +66,11 @@ suffix; the original probe establishes no equivalent malformed-input guarantee.
 
 The API requires IEEE binary32 storage, at least binary64 intermediate precision,
 and the calling thread's rounding mode to be `FE_TONEAREST`. Location and offset
-operands must be finite normal values or signed zero. Their sum must be zero or
-within the finite normal binary32 range **before** conversion. Subnormal operands
+operands must be finite normal values or signed zero. The computed binary64
+intermediate must be zero or within the finite normal binary32 range **before**
+conversion. This checks the rounded intermediate, not an infinitely precise
+mathematical sum: adding 1 to maximum finite binary32 is absorbed in binary64
+and returns maximum finite binary32. Subnormal operands
 or results, overflow, NaNs, infinities and other rounding modes are explicitly
 unsupported. These conservative boundaries avoid guessing at the original
 process's floating-point state or host flush-to-zero behavior.

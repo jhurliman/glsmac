@@ -190,6 +190,12 @@ IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE S
 				--prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-uuid-memorydebug"
 		)
 		SET_TESTS_PROPERTIES( gse_uuid_memorydebug PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 )
+		ADD_TEST( NAME gse_mesh_memorydebug
+			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet
+				--gse-tests-script "${PROJECT_SOURCE_DIR}/tools/tests/mesh-memorydebug.gls.js"
+				--prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-mesh-memorydebug"
+		)
+		SET_TESTS_PROPERTIES( gse_mesh_memorydebug PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 )
 	ENDIF ()
 
 	FOREACH ( CASE success failure missing )

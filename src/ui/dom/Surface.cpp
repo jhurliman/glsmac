@@ -1,5 +1,7 @@
 #include "Surface.h"
 
+#include <memory>
+
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Mesh.h"
 #include "ui/geometry/Rectangle.h"
@@ -39,6 +41,8 @@ Surface::Surface( DOM_ARGS_T )
 		GSE_CALL, "background", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& str = ( (gse::value::String*)v )->value;
+			// Keep the previous owned texture alive until the actor uses its replacement.
+			std::unique_ptr< types::texture::Texture > replaced_texture;
 			if ( str.empty() ) {
 				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path" );
 			}
@@ -165,6 +169,9 @@ Surface::Surface( DOM_ARGS_T )
 					}
 				}
 				const auto result = filter.GetTexture();
+				if ( m_background.is_texture_owned ) {
+					replaced_texture.reset( m_background.texture );
+				}
 				m_background.texture = result.texture;
 				m_background.is_texture_owned = result.is_owned;
 			}

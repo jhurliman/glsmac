@@ -475,6 +475,9 @@ private:
 	void InitializeConfigure( GSE_CALLABLE );
 	void PrepareInitializationBindings();
 	void AcquireInitializationMap();
+	void PrepareInitializationMap();
+	void PublishInitializationMap( map::Map*& candidate );
+	void DiscardInitializationMap( map::Map*& candidate );
 	void InitializeMap();
 	void StartInitializedWorld( GSE_CALLABLE );
 	bool DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes );

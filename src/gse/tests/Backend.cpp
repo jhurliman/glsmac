@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "GLSMAC.h"
+#include "ui/UI.h"
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -1253,6 +1254,27 @@ static void AddInitialPopulationTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test resource panel formats signed endpoint balances with bounded cells", GT() {
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* format = ::ui::UI::CreateResourceBalanceFormatter( GSE_CALL );
+			auto* check = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_resource_display" ) );
+			check->Run( GSE_CALL, { format } );
+			auto* zero = new value::Int( gc_space, 0 );
+			auto* text = new value::String( gc_space, "0" );
+			const std::vector< value::function_arguments_t > invalid = {
+				{}, { zero, zero }, { zero, zero, zero, zero },
+				{ text, zero, zero }, { zero, text, zero }, { zero, zero, text },
+				{ zero, zero, new value::Int( gc_space, -1 ) },
+			};
+			for ( const auto& args : invalid ) {
+				try { format->Run( GSE_CALL, args ); GT_FAIL( "invalid resource formatter arguments accepted" ); }
+				catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.INVALID_CALL, "wrong resource formatter validation error" ); }
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "resource balance presentation: " + error ); GT_OK();
+	} );
 	task->AddTest( "test tile and base resource callbacks preserve signed integers", GT() {
 		using namespace game::backend::base;
 		const auto next = Base::GetNextId();

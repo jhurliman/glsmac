@@ -20,6 +20,7 @@ public:
 	void SendMessage( const std::string& message ) override;
 
 	const game_state_t GetGameState() const;
+	bool HasGlobalSettings() const;
 	void RequestDownload();
 
 	void ResetHandlers() override;
@@ -30,6 +31,8 @@ protected:
 
 private:
 	bool m_are_global_settings_received = false;
+	game_state_t m_announced_game_state = GS_NONE;
+	void AnnounceGameState();
 
 	void Error( const std::string& reason );
 

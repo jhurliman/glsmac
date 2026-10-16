@@ -14,6 +14,9 @@
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/State.h"
+#include "game/backend/Player.h"
+#include "game/backend/connection/Client.h"
+#include "types/Packet.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
 #include "game/backend/connection/Connection.h"
@@ -528,9 +531,208 @@ static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 	);
 }
 
+// Expose the production packet dispatcher, without opening sockets.
+class RulesetClient : public game::backend::connection::Client {
+public:
+	using Client::Client;
+	void Receive( const types::Packet& packet ) {
+		network::Event event;
+		event.type = network::Event::ET_PACKET;
+		event.data.packet_data = packet.Serialize().ToString();
+		ProcessEvent( event );
+	}
+};
+
+static bool RejectsSettings( const std::function< void() >& operation ) {
+	try { operation(); }
+	catch ( const std::runtime_error& ) { return true; }
+	return false;
+}
+
+static void AddRulesetTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test production faction configure registers both rulesets", GT() {
+		using game::backend::faction::Faction;
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* fm = fixture.GetGame()->GetState()->GetFM();
+			auto* wrapped = static_cast< value::Object* >( fm->Wrap( GSE_CALL ) );
+			// Only asset reads are substituted. Production configure invokes the
+			// real native add callable and populates the State's FactionManager.
+			auto* imports = new value::Object( GSE_CALL, {
+				{ "add", wrapped->Get( "add" ) },
+				{ "import_colors", NATIVE_CALL() {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( filename, 0, String );
+					return new value::Object( GSE_CALL, {
+						{ "text", types::Color( 1.0f, 0.0f, 0.0f ).Wrap( GSE_CALL ) },
+						{ "text_shadow", types::Color( 0.0f, 1.0f, 0.0f ).Wrap( GSE_CALL ) },
+						{ "border", types::Color( 0.0f, 0.0f, 1.0f ).Wrap( GSE_CALL ) },
+					} );
+				} ) },
+				{ "import_base_names", NATIVE_CALL() {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( filename, 0, String );
+					return new value::Object( GSE_CALL, {
+						{ "land", VALUE( value::Array,, { VALUE( value::String,, filename ) } ) },
+						{ "water", VALUE( value::Array,, {} ) },
+					} );
+				} ) },
+			} );
+			auto* module = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/factions" ) );
+			auto* configure = static_cast< value::Callable* >( module->Get( "configure" ) );
+			const std::vector< std::string > names = {
+				"Gaians", "Hive", "University", "Morganites", "Spartans", "Believers", "Peacekeepers",
+				"Consciousness", "Pirates", "Drones", "Angels", "Planetcult", "Caretakers", "Usurpers"
+			};
+			const std::vector< std::string > files = {
+				"gaians", "hive", "univ", "morgan", "spartans", "believe", "peace",
+				"cyborg", "pirates", "drone", "angels", "fungboy", "caretake", "usurper"
+			};
+			for ( const std::string id : { "smac", "smax", "smac" } ) {
+				fm->Clear();
+				configure->Run( GSE_CALL, { imports, VALUE( value::String,, id ) } );
+				const auto factions = fm->GetAll();
+				const size_t count = id == "smac" ? 7 : 14;
+				GT_ASSERT( factions.size() == count, "production faction roster count is incorrect" );
+				for ( size_t i = 0 ; i < count ; i++ ) {
+					const auto* faction = factions.at( i );
+					GT_ASSERT( faction->m_name == names.at( i ), "production faction order/name changed" );
+					GT_ASSERT( faction->m_bases_render.file == files.at( i ) + ".pcx", "faction selected the wrong sprite file" );
+					GT_ASSERT( faction->m_base_names.land == std::vector< std::string >{ files.at( i ) + ".txt" }, "faction selected the wrong names file" );
+					const auto flags = i == 8 ? Faction::FF_NAVAL : i >= 12 ? Faction::FF_PROGENITOR : Faction::FF_NONE;
+					GT_ASSERT( faction->m_flags == flags, "production faction flags changed" );
+				}
+				GT_ASSERT( fm->Get( "GAIANS" ) == factions.front(), "faction ID was not uppercased" );
+				GT_ASSERT( !!fm->Get( "USURPERS" ) == ( id == "smax" ), "SMAX faction leaked across roster reset" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production faction registration failed: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "test explicit ruleset selection and versioned settings rejection", GT() {
+		using game::backend::settings::GlobalSettings;
+		GlobalSettings settings;
+		GT_ASSERT( settings.GetRulesetId() == "unselected", "new session silently selected a ruleset" );
+		GT_ASSERT( RejectsSettings( [ & ]() { settings.Serialize(); } ), "unset settings serialized" );
+		GT_ASSERT( RejectsSettings( [ & ]() { settings.LockRuleset(); } ), "unset settings initialized" );
+		GT_ASSERT( RejectsSettings( [ & ]() { settings.SelectRuleset( "gog" ); } ), "installer type accepted as ruleset" );
+		settings.SelectRuleset( "smac" );
+		settings.game_name = "unchanged";
+		settings.map.size_x = 86;
+		const auto before = settings.Serialize().ToString();
+		std::vector< types::Buffer > invalid( 4 );
+		invalid[ 0 ].WriteString( settings.map.Serialize().ToString() ); // legacy, string-first format
+		invalid[ 1 ].WriteInt( 2 ); // unsupported version
+		invalid[ 2 ].WriteInt( 1 );
+		invalid[ 2 ].WriteString( "unselected" );
+		invalid[ 3 ].WriteInt( 1 ); // truncated before identity
+		for ( const auto& snapshot : invalid ) {
+			GT_ASSERT( RejectsSettings( [ & ]() { settings.Deserialize( snapshot ); } ), "invalid settings accepted" );
+			GT_ASSERT( settings.Serialize().ToString() == before, "identity rejection mutated settings" );
+		}
+		settings.LockRuleset();
+		GT_ASSERT( RejectsSettings( [ & ]() { settings.SelectRuleset( "smax" ); } ), "initialized session changed ruleset" );
+		GlobalSettings changed;
+		changed.SelectRuleset( "smax" );
+		GT_ASSERT( RejectsSettings( [ & ]() { settings.Deserialize( changed.Serialize() ); } ), "host changed a locked identity" );
+		GT_ASSERT( settings.Serialize().ToString() == before, "host identity rejection mutated settings" );
+		settings.Deserialize( types::Buffer( before ) ); // same-identity lobby update is allowed
+		settings.ResetRuleset();
+		GT_ASSERT( settings.GetRulesetId() == "unselected", "new session inherited previous identity" );
+		settings.SelectRuleset( "smax" );
+		GT_ASSERT( settings.GetRulesetId() == "smax", "new session could not select another identity" );
+		GT_OK();
+	} );
+
+	task->AddTest( "test ruleset State and Packet roundtrip reaches production GSE", GT() {
+		for ( const auto& id : { "smac", "smax" } ) {
+			BackendFixture source, destination;
+			auto* state = source.GetGame()->GetState();
+			state->m_settings.global.SelectRuleset( id );
+			state->m_settings.global.game_name = "Ruleset roundtrip";
+			state->m_settings.global.map.size_x = 86;
+			types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+			packet.data.str = state->Serialize().ToString();
+			types::Packet decoded( types::Packet::PT_NONE );
+			decoded.Deserialize( packet.Serialize() );
+			auto* restored = destination.GetGame()->GetState();
+			restored->Deserialize( types::Buffer( decoded.data.str ) );
+			GT_ASSERT( restored->Serialize().ToString() == state->Serialize().ToString(), "state roundtrip changed settings or factions" );
+			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* script = destination.RunScript( GSE_CALL, "./GLSMAC_data/tests/_ruleset" );
+				static_cast< value::Callable* >( script )->Run( GSE_CALL, {
+					destination.GetGame()->Wrap( GSE_CALL ), restored->m_settings.global.Wrap( GSE_CALL ), new value::String( gc_space, id )
+				} );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "production ruleset read failed: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test joining and rejoining defer state callbacks until host ruleset arrives", GT() {
+		using namespace game::backend;
+		BackendFixture destination;
+		for ( const auto& id : { "smax", "smac" } ) {
+			for ( const auto announced : { connection::Connection::GS_LOBBY, connection::Connection::GS_RUNNING } ) {
+				BackendFixture source;
+				source.GetGame()->GetState()->m_settings.global.SelectRuleset( id );
+				types::Packet settings( types::Packet::PT_GLOBAL_SETTINGS );
+				settings.data.str = source.GetGame()->GetState()->Serialize().ToString();
+				const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* state = destination.GetGame()->GetState();
+					state->m_settings.global.ResetRuleset(); // return to menu before joining a different host
+					if ( state->m_slots->GetSlot( 0 ).GetState() != slot::Slot::SS_PLAYER ) {
+						NEWV( host, Player, "Host", Player::PR_HOST, nullptr, "Transcend" );
+						state->AddPlayer( host );
+						state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+					}
+					auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+					state->SetConnection( client );
+					util::FinallyGuard cleanup( [ & ]() {
+						client->ResetHandlers();
+						state->DetachConnection();
+					} );
+					size_t callbacks = 0;
+					std::string callback_ruleset;
+					client->m_on_game_state_change = [ & ]( const connection::Connection::game_state_t actual ) {
+						callbacks++;
+						callback_ruleset = actual == announced ? state->m_settings.global.GetRulesetId() : "wrong state";
+					};
+					size_t script_callbacks = 0;
+					std::string script_ruleset;
+					const auto listener = client->On( GSE_CALL, "game_state", NATIVE_CALL( state, &script_callbacks, &script_ruleset ) {
+						script_callbacks++;
+						auto* wrapped = static_cast< value::Object* >( state->GetGame()->Wrap( GSE_CALL ) );
+						auto* result = static_cast< value::Callable* >( wrapped->Get( "get_ruleset" ) )->Run( GSE_CALL, {} );
+						script_ruleset = VALUE_DATA( value::String, result )->value;
+						return VALUE( value::Undefined );
+					} ) );
+					util::FinallyGuard remove_listener( [ & ]() { client->Off( GSE_CALL, "game_state", listener ); } );
+					types::Packet status( types::Packet::PT_GAME_STATE );
+					status.udata.game_state.state = announced;
+					client->Receive( status );
+					GT_ASSERT( callbacks == 0 && script_callbacks == 0 && !client->HasGlobalSettings(), "state callback ran before host identity" );
+					client->Receive( settings );
+					GT_ASSERT( callbacks == 1 && client->HasGlobalSettings(), "state callback not released after settings" );
+					GT_ASSERT( callback_ruleset == id, "callback observed stale or unset ruleset" );
+					GT_ASSERT( script_callbacks == 1 && script_ruleset == id, "GSE state event observed stale or unset ruleset" );
+					client->Receive( status );
+					GT_ASSERT( callbacks == 1 && script_callbacks == 1, "duplicate state notification" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "join packet dispatch failed: " + error );
+			}
+		}
+		GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
+	AddRulesetTests( task );
 	AddPopReferenceTests( task );
 	task->AddTest(
 		"test backend mutation scopes restore read-only access after nested exceptions",

@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Tests.cpp
 	${PWD}/Backend.cpp
 	${PWD}/Buffer.cpp
+	${PWD}/Value.cpp
 	${PWD}/Faction.cpp
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp

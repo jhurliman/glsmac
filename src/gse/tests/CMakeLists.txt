@@ -3,6 +3,7 @@ SUBDIR( mocks )
 SET( SRC ${SRC}
 
 	${PWD}/Tests.cpp
+	${PWD}/Backend.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

@@ -145,7 +145,9 @@ The native backend tests run without original assets and exercise facility
 metadata and base references through real managers and entities, plus legacy
 and unknown-format rejection. Nutrient tests cover zero, a nonzero balance, and
 the signed 64-bit maximum through the real script setter and snapshot codec;
-invalid writes and negative snapshots must leave state unchanged. The actual
+invalid writes preserve the nutrient balance, and negative base records leave
+tile ownership and the next base ID unchanged. This does not establish
+transactional rollback of a malformed manager snapshot. The actual
 population event apply/rollback handlers also run against a real base, with
 only their game initialization services substituted. Collection-count limits,
 malformed snapshot hardening, complete authoritative state, and full save/reload

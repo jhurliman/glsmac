@@ -10,6 +10,7 @@
 #include "types/Buffer.h"
 #include "State.h"
 #include "WorldSnapshotRules.h"
+#include "WorldSnapshotRandom.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
 #include "Random.h"
@@ -1354,6 +1355,8 @@ void Game::WithRW( const std::function< void() >& f ) {
 
 void Game::InitComplete( GSE_CALLABLE ) {
 	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
+	// A failed setup must never leave a saved continuation for a later start.
+	util::FinallyGuard discard_snapshot_random( [ this ]() { m_pending_snapshot_random.reset(); } );
 
 	try {
 		m_state->TriggerObject(
@@ -1374,6 +1377,12 @@ void Game::InitComplete( GSE_CALLABLE ) {
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
+	if ( m_pending_snapshot_random ) {
+		// Map construction/Initialize and instance setup share this RNG. Their
+		// restore-only draws must not advance the downloaded continuation.
+		m_random->SetState( *m_pending_snapshot_random );
+		m_pending_snapshot_random.reset();
+	}
 	if ( m_state->m_connection ) {
 		m_state->m_connection->IfServer(
 			[]( connection::Server* connection ) -> void {
@@ -1882,8 +1891,12 @@ std::string Game::SerializeWorldSnapshot() const {
 		return "";
 	}
 	MTModule::Log( "Preparing snapshot for download" );
+	// Capture at the start of the existing synchronous world serialization.
+	// Reading/writing this state does not draw from the generator.
+	const auto random_state = m_random->GetState();
 	types::Buffer buf;
 	world_snapshot::WriteHeader( buf, m_state->m_settings.global );
+	world_snapshot::WriteRandomState( buf, random_state );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -1924,6 +1937,7 @@ std::string Game::SerializeWorldSnapshot() const {
 }
 
 void Game::ConfigureWorldDownload( connection::Client* connection ) {
+	m_pending_snapshot_random.reset();
 	connection->m_on_download_progress = [ this ]( const float progress ) -> void {
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
 	};
@@ -1937,51 +1951,12 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 			try {
 				auto buf = types::Buffer( serialized_snapshot );
 				world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
+				const auto random_state = world_snapshot::ReadRandomState( buf );
 
 				// map
-				auto b = types::Buffer( buf.ReadString() );
+				const auto map_payload = buf.ReadString();
 				NEW( m_map, map::Map, this );
-				const auto ec = m_map->LoadFromBuffer( b );
-				if ( ec == map::Map::EC_NONE ) {
-
-					// resources
-					{
-						auto ub = types::Buffer( buf.ReadString() );
-						m_rm->Deserialize( ub );
-					}
-
-					// units
-					{
-						auto ub = types::Buffer( buf.ReadString() );
-						m_um->Deserialize( GSE_CALL, ub );
-					}
-
-					// bases
-					{
-						auto bb = types::Buffer( buf.ReadString() );
-						m_bm->Deserialize( GSE_CALL, bb );
-					}
-
-					// animations
-					{
-						auto ab = types::Buffer( buf.ReadString() );
-						m_am->Deserialize( ab );
-					}
-
-					// get turn info
-					const auto turn_id = buf.ReadInt();
-					if ( turn_id > 0 ) {
-						MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
-						AdvanceTurn( turn_id );
-					}
-
-					m_game_state = GS_INITIALIZING;
-
-				}
-				else {
-					MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
-					connection->Disconnect( "Snapshot format mismatch" );
-				}
+				DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state );
 			}
 			catch ( const std::runtime_error& error ) {
 				MTModule::Log( std::string( "WARNING: failed to unpack world snapshot: " ) + error.what() );
@@ -1991,8 +1966,43 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	};
 }
 
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state ) {
+	m_pending_snapshot_random.reset();
+	auto map_buffer = types::Buffer( map_payload );
+	const auto ec = m_map->LoadFromBuffer( map_buffer );
+	if ( ec != map::Map::EC_NONE ) {
+		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
+	}
+	{
+		auto resources = types::Buffer( body.ReadString() );
+		m_rm->Deserialize( resources );
+	}
+	{
+		auto units = types::Buffer( body.ReadString() );
+		m_um->Deserialize( GSE_CALL, units );
+	}
+	{
+		auto bases = types::Buffer( body.ReadString() );
+		m_bm->Deserialize( GSE_CALL, bases );
+	}
+	{
+		auto animations = types::Buffer( body.ReadString() );
+		m_am->Deserialize( animations );
+	}
+	// Preserve the existing download turn behavior; this is not a general
+	// checkpoint turn-state restoration API.
+	const auto turn_id = body.ReadInt();
+	if ( turn_id > 0 ) {
+		MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
+		AdvanceTurn( turn_id );
+	}
+	m_pending_snapshot_random = random_state;
+	m_game_state = GS_INITIALIZING;
+}
+
 void Game::ResetGame() {
 
+	m_pending_snapshot_random.reset();
 	ClearHandlers();
 
 	if ( m_game_state != GS_NONE ) {

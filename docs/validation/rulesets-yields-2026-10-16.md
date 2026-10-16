@@ -455,7 +455,9 @@ follows. Logs use `out/resolution-timers-windows-` and, under the Linux director
 above, `resolution-timers-asan-` and `resolution-timers-analysis`.
 
 The focused timer publication head
-`95812c99f2be30286d3c666316808fdfc5a9da0e` separately built on Linux and passed
+[95812c99f2be30286d3c666316808fdfc5a9da0e](https://github.com/jhurliman/glsmac/commit/95812c99f2be30286d3c666316808fdfc5a9da0e),
+retained as the exact head of immutable branch
+`codex/validation-20261016-timer-publication`, separately built on Linux and passed
 its four registered CTests in 17.41 s (full GSE 14.10 s). Its older parent does
 not contain the native-test selector or switch ownership repair, so that result
 does not claim clean full-suite leak detection for the focused parent.
@@ -634,7 +636,9 @@ request/response cleanup. The test holds accumulation during native reset to
 isolate this reentrancy check from the separate collector-exclusion work.
 
 Integration Windows CTest passed 8/8 in 50.75 seconds (GSE 24.08 seconds).
-The source slice `3705812bbfa6eefa5ab5a635ccb5fc7bd1f0f231` passed Linux CTest
+The source slice [3705812bbfa6eefa5ab5a635ccb5fc7bd1f0f231](https://github.com/jhurliman/glsmac/commit/3705812bbfa6eefa5ab5a635ccb5fc7bd1f0f231),
+retained as the exact head of immutable branch
+`codex/validation-20261016-loader-source`, passed Linux CTest
 8/8 in 36.51 seconds and its three focused cases passed with allocation
 tracking and ASan/UBSan/LSan. The narrower publication `0ce4e099`, based on
 fixture retirement #76 without the later snapshot stack, passed Linux CTest
@@ -724,7 +728,9 @@ platform exclusion. Source is retained on immutable branch
 `out/cvr-geometry-windows-` and
 `/home/jhurliman/src/glsmac-gc-audit/cvr-geometry-analysis`.
 
-The focused main-based source `3090f15e395257bd3eeec4e432b78af5959e1ccf`
+The focused main-based source [3090f15e395257bd3eeec4e432b78af5959e1ccf](https://github.com/jhurliman/glsmac/commit/3090f15e395257bd3eeec4e432b78af5959e1ccf),
+retained as the exact head of immutable branch
+`codex/validation-20261016-geometry-publication`,
 passed Linux CTest 4/4 in 46.71 seconds (GSE 43.44 seconds); publication logs
 use `/home/jhurliman/src/glsmac-unit-publication/cvr-geometry-`.
 Submitted as #83. The installed Release probe accepts 438 geometry payloads,

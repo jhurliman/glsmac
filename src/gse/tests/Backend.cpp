@@ -14,6 +14,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/resource/Resource.h"
 #include "game/backend/map/tile/TileManager.h"
@@ -92,6 +93,7 @@ public:
 		m_gse = nullptr;
 		m_game.m_state = nullptr;
 		m_game.m_bm = nullptr;
+		m_game.m_um = nullptr;
 		m_game.m_tm = nullptr;
 		m_game.m_rm = nullptr;
 		m_game.m_map = nullptr;
@@ -191,6 +193,14 @@ public:
 			}
 		} );
 	}
+
+	void EnableTurns() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_um = new game::backend::unit::UnitManager( &m_game );
+		} );
+	}
+
+	const std::vector< game::backend::event::Event* >& PendingEvents() const { return m_game.m_pending_events; }
 
 	void DestroyMapBeforeManagers() {
 		// Mirrors ResetGame: the map dies before the collector-owned managers.
@@ -798,6 +808,66 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+static void AddInitialPopulationTests( task::gsetests::GSETests* task ) {
+	for ( const auto scenario : { std::pair< int64_t, bool >( -2, false ), { 0, false }, { 2, false }, { 35, false }, { -2, true } } ) {
+		task->AddTest( "test initial population with center nutrients " + std::to_string( scenario.first ) + ( scenario.second ? " preserves populated starvation" : " grows an empty base" ), GT( scenario ) {
+			using namespace game::backend::base;
+			using namespace game::backend::event;
+			const auto next = Base::GetNextId();
+			util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+			BackendFixture fixture;
+			fixture.EnableYieldFixture(); fixture.EnableTurns(); fixture.SetRunning( true );
+			fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame();
+				for ( const auto* name : { "advance_turn", "add_base_pop", "remove_base_pop" } ) {
+					auto* handlers = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
+					fixture.RegisterEvent( name, new EventHandler( gc_space, name,
+						static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+				}
+				game->GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL( scenario ) {
+					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+					N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+					return new value::Object( GSE_CALL, {
+						{ "NUTRIENTS", new value::Int( gc_space, tile->coord.x == 4 && tile->coord.y == 4 ? scenario.first : 1 ) },
+					} );
+				} ) );
+				auto* setup = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
+				setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
+				const value::object_properties_t no_args;
+				game->GetState()->TriggerObject( game, "start", ARGS( no_args ) );
+				std::map< size_t, Pop > pops;
+				if ( scenario.second ) {
+					pops.emplace( 7, Pop( nullptr, 7, game->GetBM()->GetPopDef( "DOCTOR" ), 0 ) );
+					pops.emplace( 8, Pop( nullptr, 8, game->GetBM()->GetPopDef( "DOCTOR" ), 0 ) );
+				}
+				auto* base = new Base( game, 703, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 4, 4 ), "Initial population", {}, pops, 9 );
+				game->GetBM()->SpawnBase( GSE_CALL, base );
+				game->AddEvent( new Event( game, Event::ES_LOCAL, 0, GSE_CALL, "advance_turn", { { "turn_id", new value::Int( gc_space, 1 ) } } ) );
+				fixture.ProcessEvents();
+				GT_ASSERT( fixture.PendingEvents().size() == 1, "turn must queue exactly one population event" );
+				const auto name = fixture.PendingEvents().front()->GetEventName();
+				fixture.ProcessEvents(); // Before the guard this executes remove_base_pop(null).
+				GT_ASSERT( fixture.PendingEvents().empty() && base->m_pops.size() == 1, "first turn did not leave exactly one citizen" );
+				if ( scenario.second ) {
+					GT_ASSERT( name == "remove_base_pop" && base->m_pops.count( 8 ), "populated starvation no longer removes the selected existing citizen" );
+				} else {
+					GT_ASSERT( name == "add_base_pop", "empty base did not use its existing initial-growth path" );
+					const auto& pop = base->m_pops.begin()->second;
+					GT_ASSERT( pop.m_def->m_id == "WORKER" && pop.GetWorkedTileCoords(), "initial population lost the existing worker assignment behavior" );
+					GT_ASSERT( game->GetBM()->GetWorkingPop( *pop.GetWorkedTileCoords() ) == &pop, "initial worker reverse claim missing" );
+				}
+				const auto expected = scenario.first > 10 ? scenario.first - 10 : 0;
+				GT_ASSERT( base->GetAccumulatedNutrients() == expected, "initial population nutrient reset changed" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "first-turn population processing: " + error ); GT_OK();
+		} );
+	}
+}
+
 static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test tile and base resource callbacks preserve signed integers", GT() {
 		using namespace game::backend::base;
@@ -984,6 +1054,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	);
 	AddWorkerTests( task );
 	AddResourceYieldTests( task );
+	AddInitialPopulationTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate

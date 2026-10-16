@@ -6,6 +6,14 @@ test.assert(#sizeof(smax) == 14);
 for (let idx = 0; idx < 7; idx++) { test.assert(smac[idx] == smax[idx]); }
 const pirates = smax[8];
 test.assert(pirates[0] == 'Pirates');
+// The production configure loop binds roster entries directly via for-of.
+// Indexed local assignment dereferences entries and can mask ArrayRefs here.
+let faction_count = 0;
+for (faction of smac) {
+	test.assert(#typeof(faction[0]) == 'String');
+	faction_count++;
+}
+test.assert(faction_count == 7);
 let rejected = false;
 try { factions.get_roster('unselected'); } catch { Error: (e) => { rejected = true; }, }
 test.assert(rejected, 'unselected game silently chose a faction roster');

@@ -27,6 +27,7 @@
 #include "game/backend/Player.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/Pop.h"
 #include "game/backend/unit/Unit.h"
 
 namespace gse {
@@ -53,6 +54,7 @@ static const std::string s_t_unknown = "Unknown";
     X_CUSTOM_CLASS( Player, game::backend::Player ), \
     X_CUSTOM_CLASS( Tile, game::backend::map::tile::Tile ), \
     X_CUSTOM_CLASS( Base, game::backend::base::Base ), \
+    X_CUSTOM_CLASS( Pop, game::backend::base::Pop ), \
     X_CUSTOM_CLASS( Unit, game::backend::unit::Unit )
 
 typedef std::function< void( types::Buffer* const buf, const Wrappable* const wrapobj ) > custom_serialize_func_t;
@@ -596,7 +598,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
-				elements.push_back( Value::Deserialize( GSE_CALL, buf ) );
+				elements.push_back( Value::Deserialize( GSE_CALL, buf, game ) );
 			}
 			return VALUE( value::Array, , elements );
 		}
@@ -610,7 +612,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 					properties.insert(
 						{
 							k,
-							Value::Deserialize( GSE_CALL, buf )
+							Value::Deserialize( GSE_CALL, buf, game )
 						}
 					);
 				}

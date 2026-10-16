@@ -11,7 +11,7 @@ return {
 		const base = e.data.base;
 
 		// reset nutrients
-		const old_nutrients = base.get('accumulated_nutrients');
+		const old_nutrients = base.get_accumulated_nutrients();
 		e.game.get('f_base_reset_nutrients')(e.game, base);
 
 		// spawn population
@@ -39,7 +39,7 @@ return {
 			e.game.get('f_base_pop_unwork_tile')(e.applied.base, e.applied.pop);
 		}
 		e.data.base.destroy_pop(e.applied.pop);
-		e.data.base.set('accumulated_nutrients', e.applied.old_nutrients);
+		e.data.base.set_accumulated_nutrients(e.applied.old_nutrients);
 	},
 
 };

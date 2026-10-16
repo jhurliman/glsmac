@@ -3,6 +3,7 @@
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
 #include "gse/Async.h"
+#include "gse/Wrappable.h"
 #include "gse/value/Null.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -10,6 +11,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/Exception.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/GC.h"
 #include "gc/Space.h"
@@ -17,12 +19,152 @@
 #include "util/FinallyGuard.h"
 
 #include <atomic>
+#include <exception>
+#include <memory>
+#include <stdexcept>
 #include <thread>
 
 namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test GSE exception what owns stable formatted storage across copies", GT() {
+		std::unique_ptr< Exception > copied;
+		std::exception_ptr thrown;
+		std::string expected;
+		{
+			ExecutionPointer ep;
+			const si_t outer = { "", { 7, 1 }, { 7, 2 } }, inner = { "", { 11, 2 }, { 11, 3 } };
+			ep.WithSI( outer, [ & ]() {
+				Exception original( "OwnershipError", "A sufficiently long diagnostic message to exercise allocated storage", nullptr, inner, ep );
+				expected = original.ToString();
+				copied = std::make_unique< Exception >( original );
+				try { throw original; } catch ( ... ) { thrown = std::current_exception(); }
+			} );
+		}
+		GT_ASSERT( expected.find( "OwnershipError" ) != std::string::npos && expected.find( "\tat :11:" ) != std::string::npos && expected.find( "\tat :7:" ) != std::string::npos, "fixture lost its diagnostic or captured stack" );
+		const auto check = [ & ]( const std::exception& error ) -> std::string {
+			const auto* first = error.what();
+			GT_ASSERT( first && std::string( first ) == expected, "what changed the formatted exception text" );
+			for ( size_t i = 0 ; i < 32 ; ++i ) {
+				GT_ASSERT( error.what() == first, "what allocated another unowned message" );
+				GT_ASSERT( std::string( first ) == expected, "what invalidated its earlier result" );
+			}
+			GT_OK();
+		};
+		const auto copied_error = check( *copied );
+		GT_ASSERT( copied_error.empty(), "copied exception: " + copied_error );
+		copied.reset();
+		bool caught = false;
+		try { std::rethrow_exception( thrown ); }
+		catch ( const Exception& error ) {
+			caught = true;
+			const auto result = check( error ); GT_ASSERT( result.empty(), "retained exception: " + result );
+			GT_ASSERT( error.ToString() == expected, "exception copy lost its structured diagnostic" );
+		}
+		GT_ASSERT( caught, "exception_ptr lost its concrete exception" );
+		GT_OK();
+	} );
+
+	for ( const bool nested : { false, true } ) {
+		task->AddTest(
+			nested ? "test if nested native exceptions restore GC accumulation" : "test if native exceptions restore GC accumulation",
+			GT( nested ) {
+				std::atomic< size_t > discarded = 0;
+				std::atomic< size_t > kept = 0;
+				class TrackedObject : public gc::Object {
+				public:
+					TrackedObject( gc::Space* space, std::atomic< size_t >& destructions )
+						: gc::Object( space ), destructions( destructions ) {}
+					~TrackedObject() override { destructions++; }
+				private:
+					std::atomic< size_t >& destructions;
+				};
+				class Root : public gc::Object {
+				public:
+					Root() : gc::Object( nullptr ) {}
+					gc::Object* child = nullptr;
+					void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+						gc::Object::GetReachableObjects( reachable_objects );
+						if ( child ) { GC_REACHABLE( child ); }
+					}
+				} root;
+				gc::Space space( &root );
+				space.SetThreadId( std::this_thread::get_id() );
+				util::FinallyGuard release_root( [ & ]() {
+					space.Accumulate( &root, [ & ]() { root.child = nullptr; } );
+				} );
+				bool caught = false;
+				try {
+					space.Accumulate( &root, [ & ]() {
+						root.child = new TrackedObject( &space, kept );
+						new TrackedObject( &space, discarded );
+						const auto fail = [ & ]() {
+							new TrackedObject( &space, discarded );
+							throw std::runtime_error( "native accumulation failure" );
+						};
+						if ( nested ) { space.Accumulate( &root, fail ); }
+						else { fail(); }
+					} );
+				}
+				catch ( const std::runtime_error& error ) {
+					caught = std::string( error.what() ) == "native accumulation failure";
+				}
+				GT_ASSERT( caught, "native exception was not preserved" );
+				GT_ASSERT( !space.IsAccumulating(), "native exception left GC accumulation active" );
+				g_engine->GetGC()->Iterate();
+				GT_ASSERT( discarded == 2 && kept == 0, "failed accumulation did not commit objects for normal collection" );
+				space.Accumulate( &root, [ & ]() {
+					new TrackedObject( &space, discarded );
+					root.child = nullptr;
+				} );
+				GT_ASSERT( !space.IsAccumulating(), "subsequent accumulation stayed active" );
+				g_engine->GetGC()->Iterate();
+				GT_ASSERT( discarded == 3 && kept == 1, "subsequent accumulation or root release was not collected" );
+				GT_OK();
+			}
+		);
+	}
+
+	task->AddTest(
+		"test if event handler return validation handles missing values",
+		GT() {
+			class EventSource : public Wrappable {
+				Value* const Wrap( GSE_CALLABLE ) override { return VALUE( value::Undefined ); }
+			} source;
+			auto* gc_space = gse->GetGCSpace();
+			std::string missing_error, wrong_type_error;
+			bool valid_result = false, unconstrained_result = false;
+			gc_space->Accumulate( nullptr, [ & ]() {
+				ExecutionPointer ep;
+				Value* returned = nullptr;
+				source.On( gc_space, ctx, {}, ep, "event", NATIVE_CALL( &returned ) { return returned; } ) );
+				auto* args = VALUEEXT( value::Object, gc_space, ctx, {}, ep, value::object_properties_t{} );
+				try {
+					source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL );
+				}
+				catch ( const Exception& e ) {
+					if ( e.class_name == EC.INVALID_HANDLER ) { missing_error = e.reason; }
+				}
+				auto* result = source.Trigger( gc_space, ctx, {}, ep, "event", args );
+				unconstrained_result = result->type == VT_BOOL && !( (value::Bool*)result )->value;
+				returned = VALUE( value::Int, , 7 );
+				try {
+					source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL );
+				}
+				catch ( const Exception& e ) {
+					if ( e.class_name == EC.INVALID_HANDLER ) { wrong_type_error = e.reason; }
+				}
+				returned = VALUE( value::Bool, , true );
+				valid_result = source.Trigger( gc_space, ctx, {}, ep, "event", args, VT_BOOL ) == returned;
+				source.ClearHandlers();
+			} );
+			GT_ASSERT( missing_error == "Event handler is expected to return Bool, got no value", + missing_error );
+			GT_ASSERT( wrong_type_error == "Event handler is expected to return Bool, got Int: 7", + wrong_type_error );
+			GT_ASSERT( valid_result && unconstrained_result, "valid or unconstrained handler result changed" );
+			GT_OK();
+		}
+	);
 
 	task->AddTest(
 		"test if GSE teardown excludes concurrent garbage collection",

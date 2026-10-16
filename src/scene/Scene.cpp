@@ -44,7 +44,12 @@ void Scene::WithActors( const std::function< void( const std::vector< actor::Act
 
 void Scene::SetCamera( Camera* camera ) {
 	ASSERT( m_camera == NULL || camera == NULL, "camera overlap" );
-	camera->SetScene( this );
+	if ( m_camera ) {
+		m_camera->SetScene( nullptr );
+	}
+	if ( camera ) {
+		camera->SetScene( this );
+	}
 	m_camera = camera;
 }
 
@@ -56,6 +61,10 @@ void Scene::AddLight( Light* light ) {
 	ASSERT( m_lights.find( light ) == m_lights.end(), "light overlap" );
 	ASSERT( m_lights.size() < graphics::Graphics::MAX_WORLD_LIGHTS, "maximum light count exceeded" );
 	m_lights.insert( light );
+}
+
+void Scene::RemoveLight( Light* light ) {
+	m_lights.erase( light );
 }
 
 std::unordered_set< Light* >* Scene::GetLights() {

@@ -2,6 +2,9 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "CvrContainerReader.h"
+#include "CvrSceneReader.h"
+#include "CvrGeometryReader.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -10,6 +13,11 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
+#include "scene/Scene.h"
+#include "scene/Light.h"
+#include "graphics/Graphics.h"
+#include "types/Color.h"
+#include "util/String.h"
 
 #include "gse/program/Program.h"
 #include "gse/program/Variable.h"
@@ -33,12 +41,17 @@
 #include "gse/value/Null.h"
 #include "gse/value/Range.h"
 
+#include <memory>
+
 namespace gse {
 namespace tests {
 
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddCvrContainerReaderTests( task );
+		tests::AddCvrSceneReaderTests( task );
+		tests::AddCvrGeometryReaderTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -46,6 +59,94 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		task->AddTest(
+			"test if an empty scene accepts clearing its camera",
+			GT() {
+				scene::Scene scene( "camera test", scene::SCENE_TYPE_WORLD );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "empty scene acquired a camera" );
+				scene.SetCamera( nullptr );
+				GT_ASSERT( scene.GetCamera() == nullptr, "repeated clearing changed the camera" );
+				GT_OK();
+			}
+		);
+		task->AddTest(
+			"test caller-owned scene lights can be replaced across repeated reloads",
+			GT() {
+				class CountedLight : public scene::Light {
+				public:
+					explicit CountedLight( size_t& destructions )
+						: Light( LT_AMBIENT_DIFFUSE ), m_destructions( destructions ) {}
+					~CountedLight() override { m_destructions++; }
+				private:
+					size_t& m_destructions;
+				};
+				size_t destructions = 0;
+				scene::Scene world( "retained light scene", scene::SCENE_TYPE_WORLD );
+				for ( size_t cycle = 0 ; cycle < 4 ; cycle++ ) {
+					std::vector< std::unique_ptr< CountedLight > > lights;
+					for ( size_t i = 0 ; i < graphics::Graphics::MAX_WORLD_LIGHTS ; i++ ) {
+						lights.push_back( std::make_unique< CountedLight >( destructions ) );
+						lights.back()->SetPosition( { float( cycle ), float( i ), 17.0f } );
+						world.AddLight( lights.back().get() );
+					}
+					GT_ASSERT( world.GetLights()->size() == lights.size(), "replacement lights did not fit in the retained scene" );
+					for ( size_t i = 0 ; i < lights.size() ; i++ ) {
+						auto* light = lights[ i ].get();
+						world.RemoveLight( light );
+						GT_ASSERT( world.GetLights()->count( light ) == 0, "scene retained a light scheduled for deletion" );
+						GT_ASSERT( world.GetLights()->size() == lights.size() - i - 1, "unlinking one light removed another" );
+						GT_ASSERT( destructions == cycle * lights.size() + i, "unlinking destroyed a caller-owned light" );
+						GT_ASSERT( light->GetPositionZ() == 17.0f, "unlinked light is no longer usable by its owner" );
+						world.RemoveLight( light ); // repeated removal is harmless
+						lights[ i ].reset();
+						GT_ASSERT( destructions == cycle * lights.size() + i + 1, "light was not destroyed exactly once by its owner" );
+						// Read every remaining light as the renderer does after teardown.
+						for ( const auto* remaining : *world.GetLights() ) {
+							GT_ASSERT( remaining->GetPositionZ() == 17.0f, "remaining light has invalid state" );
+						}
+					}
+					GT_ASSERT( world.GetLights()->empty(), "retained scene still contains deleted lights" );
+				}
+				// Scene destruction also leaves registered lights with their owner.
+				auto survivor = std::make_unique< CountedLight >( destructions );
+				const auto before_scene_destruction = destructions;
+				{
+					scene::Scene temporary( "non-owning light scene", scene::SCENE_TYPE_WORLD );
+					temporary.AddLight( survivor.get() );
+				}
+				GT_ASSERT( destructions == before_scene_destruction, "scene destroyed a caller-owned light" );
+				survivor.reset();
+				GT_ASSERT( destructions == before_scene_destruction + 1, "surviving light was not destroyed by its owner" );
+				GT_OK();
+			}
+		);
+		task->AddTest(
+			"test if hex color parsing validates every input byte",
+			GT() {
+				types::Color color;
+				GT_ASSERT( util::String::ParseColorHex( "#1234aB", color ), "valid RGB rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGB( 0x12, 0x34, 0xab ), "RGB decoded incorrectly" );
+				GT_ASSERT( util::String::ParseColorHex( "#CdEF0180", color ), "valid RGBA rejected" );
+				GT_ASSERT( color.GetRGBA() == types::Color::RGBA( 0xcd, 0xef, 0x01, 0x80 ), "RGBA decoded incorrectly" );
+				const auto unchanged = color.GetRGBA();
+				for ( const auto& valid : { std::string( "#123456" ), std::string( "#12345678" ) } ) {
+					for ( size_t i = 1 ; i < valid.size() ; i++ ) {
+						for ( const char invalid : { '\0', '/', ':', 'G', 'g' } ) {
+							auto input = valid;
+							input[i] = invalid;
+							GT_ASSERT( !util::String::ParseColorHex( input, color ), "invalid digit accepted" );
+							GT_ASSERT( color.GetRGBA() == unchanged, "rejected input changed the output" );
+						}
+					}
+				}
+				for ( const auto& invalid : { "", "1234567", "#12345", "#1234567", "#123456789" } ) {
+					GT_ASSERT( !util::String::ParseColorHex( invalid, color ), "invalid format accepted" );
+					GT_ASSERT( color.GetRGBA() == unchanged, "rejected format changed the output" );
+				}
+				GT_OK();
+			}
+		);
 		tests::AddParserTests( task );
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );

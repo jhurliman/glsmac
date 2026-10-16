@@ -38,6 +38,11 @@ Short labels below resolve to these exact source revisions:
 | `bf00f411` | [bf00f4118f04f3f36ee8dc562a0d2cea58084b3a](https://github.com/jhurliman/glsmac/commit/bf00f4118f04f3f36ee8dc562a0d2cea58084b3a) |
 | `82222d37` | [82222d378e7f79bc25ad5a1d4b66395ee2bdc9ed](https://github.com/jhurliman/glsmac/commit/82222d378e7f79bc25ad5a1d4b66395ee2bdc9ed) |
 | `c9aafc83` | [c9aafc83a0e55870af33e0f479c11db064079a7b](https://github.com/jhurliman/glsmac/commit/c9aafc83a0e55870af33e0f479c11db064079a7b) |
+| `bfe276d3` | [bfe276d3eab6b0f1bb2d6301693cd3a45e7990e1](https://github.com/jhurliman/glsmac/commit/bfe276d3eab6b0f1bb2d6301693cd3a45e7990e1) |
+| `8083210a` | [8083210a84247a4ab906cb4491f897babab3ad5c](https://github.com/jhurliman/glsmac/commit/8083210a84247a4ab906cb4491f897babab3ad5c) |
+| `575a5b3c` | [575a5b3c9405aac2d7d5e898cf128d07ea2eeb6d](https://github.com/jhurliman/glsmac/commit/575a5b3c9405aac2d7d5e898cf128d07ea2eeb6d) |
+| `519a0bd7` | [519a0bd7ee26db3b62cb8d2e392244c7a132eaf5](https://github.com/jhurliman/glsmac/commit/519a0bd7ee26db3b62cb8d2e392244c7a132eaf5) |
+| `b1935890` | [b19358908b8cc49bdb82f159e0b4c6763a4187dc](https://github.com/jhurliman/glsmac/commit/b19358908b8cc49bdb82f159e0b4c6763a4187dc) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -60,6 +65,12 @@ The evaluating-base context at `bf00f411` is retained on
 The RNG/exception integration at `82222d37` is retained on
 `codex/validation-20261016-rng-exception`; the CVR reader at `c9aafc83` is retained
 on `codex/validation-20261016-cvr-container`.
+The initial RNG failure at `bfe276d3` is an ancestor of the immutable
+`codex/validation-20261016-rng-exception` pin. Focused exception `8083210a`
+and CVR `575a5b3c` are retained in the merged histories of PRs #72 and #73.
+Turn restoration `519a0bd7` and its focused publication source `b1935890`
+are retained on `codex/validation-20261016-world-turn` and
+`codex/validation-20261016-world-turn-publication`, respectively.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -470,7 +481,7 @@ detection enabled and no report. This supersedes the specific failure at
 `bfe276d3`, without erasing it or claiming exhaustive exceptional-path coverage.
 Logs use `out/rng-exception-windows-` and the Linux directory's
 `rng-exception-asan-` prefix. The focused main-based exception PR separately
-passed its four Linux CTests in 16.24 s.
+passed its four Linux CTests in 16.24 s at `8083210a`.
 
 ## CVR envelope integration
 
@@ -484,7 +495,7 @@ Native Windows ran all five groups with allocation tracking, exited 0 and
 reported no tracked memory/OpenGL leaks. The process was explicitly waited;
 logs are `out/cvr-windows-verified-stdout.log` and `-stderr.log`, with the saved
 exit code in `out/cvr-windows-exit.txt`. The focused PR #73 branch separately
-passed its four Linux CTests in 17.20 s. The broader preceding integration's
+passed its four Linux CTests in 17.20 s at `575a5b3c`. The broader preceding integration's
 eight-test results are recorded above; no repeated full Windows suite is
 claimed for this isolated reader addition.
 

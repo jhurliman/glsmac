@@ -5,5 +5,6 @@ SET( SRC ${SRC}
 	${PWD}/CvrGeometryReader.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
+	${PWD}/CvrBasisConverter.cpp
 
 	PARENT_SCOPE )

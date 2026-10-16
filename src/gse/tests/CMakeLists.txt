@@ -24,6 +24,7 @@ SET( SRC ${SRC}
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
+	${PWD}/CvrBasisConverter.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

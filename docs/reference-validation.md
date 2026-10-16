@@ -41,7 +41,12 @@ artifact store. Keep only self-authored test fixtures, measured expectations,
 provenance metadata and scenario instructions in the repository.
 
 Capture manifests again after updates. Never overwrite a prior observation's
-identity with new hashes. Rules and executable fingerprints matter separately:
+identity with new hashes. The tool refuses existing output files by default;
+choose a new capture filename. Use `--overwrite` only to explicitly replace a
+disposable manifest that no evidence references. New manifests are published
+atomically using a hard link within the output directory, which requires a
+filesystem supporting hard links (such as NTFS, APFS or ext4).
+Rules and executable fingerprints matter separately:
 the same assets can accompany different gameplay patches. PRACX/DirectDraw
 compatibility indicators are useful provenance, not proof of behavioral parity.
 

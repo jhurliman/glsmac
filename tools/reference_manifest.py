@@ -152,8 +152,8 @@ def build_manifest(installation):
     }
 
 
-def _write_manifest(output, encoded):
-    """Replace the destination without modifying an existing hard-linked file.
+def _write_manifest(output, encoded, overwrite=False):
+    """Publish without clobbering an earlier capture unless explicitly requested.
 
     The new manifest uses tempfile's permissions (owner-only on POSIX), rather
     than inheriting permissions or links from any previous output file.
@@ -172,8 +172,18 @@ def _write_manifest(output, encoded):
         ) as destination:
             temporary = Path(destination.name)
             destination.write(encoded)
-        os.replace(temporary, output)
-        temporary = None
+        if overwrite:
+            os.replace(temporary, output)
+            temporary = None
+        else:
+            # Publish the complete file atomically, failing if output exists.
+            try:
+                os.link(temporary, output)
+            except FileExistsError as error:
+                raise ReferenceManifestError(
+                    f"Output already exists: {output}. Choose a new filename to "
+                    "preserve earlier observations, or use --overwrite explicitly."
+                ) from error
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
@@ -187,7 +197,13 @@ def main(argv=None):
         type=Path,
         help="Write JSON outside the installation (default: print to standard output)",
     )
+    parser.add_argument(
+        "--overwrite", action="store_true",
+        help="Explicitly replace an existing output manifest instead of preserving it",
+    )
     args = parser.parse_args(argv)
+    if args.overwrite and args.output is None:
+        parser.error("--overwrite requires --output")
 
     try:
         manifest = build_manifest(args.installation)
@@ -202,7 +218,7 @@ def main(argv=None):
                     "Output must be outside the reference installation; "
                     "use a path such as tmp/reference/manifest.json."
                 )
-            _write_manifest(output, encoded)
+            _write_manifest(output, encoded, overwrite=args.overwrite)
     except (ReferenceManifestError, OSError) as error:
         parser.error(str(error))
     return 0

@@ -123,7 +123,7 @@ class ReferenceManifestTests(unittest.TestCase):
         output = Path(self.temp.name) / "manifest.json"
         os.link(original, output)
 
-        result = self.run_cli(self.root, "--output", output)
+        result = self.run_cli(self.root, "--output", output, "--overwrite")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(original.read_bytes(), b"do not modify")
@@ -137,10 +137,32 @@ class ReferenceManifestTests(unittest.TestCase):
 
         with mock.patch.object(reference_manifest.os, "replace", side_effect=OSError("replace failed")):
             with self.assertRaisesRegex(OSError, "replace failed"):
-                reference_manifest._write_manifest(output, "{}\n")
+                reference_manifest._write_manifest(output, "{}\n", overwrite=True)
 
         self.assertEqual(output.read_text(encoding="utf-8"), "previous manifest")
         self.assertEqual(list(output.parent.iterdir()), [output])
+
+    def test_existing_capture_requires_explicit_overwrite(self):
+        self.put("alpha.txt")
+        output = Path(self.temp.name) / "manifest.json"
+        output.write_text("earlier observation", encoding="utf-8")
+
+        result = self.run_cli(self.root, "--output", output)
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--overwrite", result.stderr)
+        self.assertEqual(output.read_text(encoding="utf-8"), "earlier observation")
+        self.assertEqual(sorted(path.name for path in output.parent.iterdir()), ["game", "manifest.json"])
+
+        result = self.run_cli(self.root, "--output", output, "--overwrite")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["schema_version"], 1)
+
+    def test_overwrite_requires_an_output_path(self):
+        result = self.run_cli(self.root, "--overwrite")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--overwrite requires --output", result.stderr)
 
     def test_bad_paths_have_actionable_errors(self):
         for path in (self.root / "missing", self.put("not-a-directory.txt")):

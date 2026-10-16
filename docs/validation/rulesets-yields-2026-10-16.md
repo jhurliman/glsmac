@@ -34,6 +34,7 @@ Short labels below resolve to these exact source revisions:
 | `9d258151` | [9d2581512718470e6dadbd5131303d2bd9d2cdc3](https://github.com/jhurliman/glsmac/commit/9d2581512718470e6dadbd5131303d2bd9d2cdc3) |
 | `705cc939` | [705cc939727188be70828399733cf4740afb00e6](https://github.com/jhurliman/glsmac/commit/705cc939727188be70828399733cf4740afb00e6) |
 | `68081411` | [680814117f0423c4668c1ebf623e665e1a917227](https://github.com/jhurliman/glsmac/commit/680814117f0423c4668c1ebf623e665e1a917227) |
+| `0d98cde8` | [0d98cde8ae7416c0a2810c795ebf55de0c27c74b](https://github.com/jhurliman/glsmac/commit/0d98cde8ae7416c0a2810c795ebf55de0c27c74b) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -49,6 +50,8 @@ The Surface integration at `705cc939` is retained on
 `codex/validation-20261016-surface-unit`; the energy, unit-design parser and
 switch-ownership integration at `68081411` is retained on
 `codex/validation-20261016-energy-units-switch`.
+The component resolver and timer repair at `0d98cde8` are retained on
+`codex/validation-20261016-resolution-timers`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -386,5 +389,35 @@ The separately reviewed weapon-table PR's older head
 `e680240238ba3c3d963dc98245d1a0f65b8b404c` hit a Windows full-GSE timeout in
 [job 116940520918](https://github.com/jhurliman/glsmac/actions/runs/38891098136/job/116940520918).
 The repeating async callback continued beyond its scheduled cancellation.
-Same-deadline timer cancellation is being investigated with a deterministic
-regression. The passing local runs above do not resolve that failure.
+Same-deadline timer cancellation was subsequently reproduced without relying
+on the script's clock timing, as recorded below. The passing earlier local
+runs do not erase this timeout or identify its exact hosted interleaving.
+
+## Deterministic timer cancellation and owned unit resolution
+
+At `0d98cde8`, predefined unit component resolution returns owned metadata and
+the scheduler keeps repeating timers cancelable throughout deadline dispatch.
+On the unchanged scheduler, five of seven initial deterministic native cases
+failed promptly, including repeat cancellation, canceled sibling execution,
+self-stop batch handling and nested timer loss. The corrected implementation
+passes eight cases, including the additional exception bookkeeping control.
+The fixture sets deadlines and dispatches the actual scheduler; it does not
+sleep, replace scheduling logic or increase timeouts.
+
+| Check at `0d98cde8` | Result |
+| --- | --- |
+| Native Windows Debug CTest | 8/8, 54.33 s; full GSE 21.46 s |
+| Linux ASan/UBSan/LSan CTest | 8/8, 41.83 s; full GSE 29.01 s; leak detection enabled |
+| Explicit LLVM 15 correctness analysis | Async and UnitDesignResolver, 2 production translation units, 0.98 s, zero failures |
+
+The analysis database was reconfigured for the new resolver source. This is a
+selected-file result, not another full scan. The real async script is included
+in the full GSE runs, but no claim of exhaustive scheduler/concurrency coverage
+follows. Logs use `out/resolution-timers-windows-` and, under the Linux directory
+above, `resolution-timers-asan-` and `resolution-timers-analysis`.
+
+The focused timer publication head
+`95812c99f2be30286d3c666316808fdfc5a9da0e` separately built on Linux and passed
+its four registered CTests in 17.41 s (full GSE 14.10 s). Its older parent does
+not contain the native-test selector or switch ownership repair, so that result
+does not claim clean full-suite leak detection for the focused parent.

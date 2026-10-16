@@ -225,22 +225,28 @@ empty stderr and no tracked memory/OpenGL leaks. Earlier retained allocations
 and failures remain recorded. At `68081411`, Windows CTest passed 8/8 and Linux
 ASan/UBSan/LSan CTest passed 8/8 with leak detection enabled after repairing
 normal switch-scope ownership. These are bounded checks, not a soak or full
-save/reload result. An older PR head's async-cancellation timeout remains under
-deterministic investigation; passing retries do not resolve it.
+save/reload result. The async-cancellation defect matching an older PR head's
+Windows timeout now has a deterministic regression and a focused repair in
+PR #69. Integration `0d98cde8` passes Windows and leak-enabled Linux CTest 8/8;
+the original hosted timeout and lack of its exact interleaving remain recorded.
 Focused UUID and mesh allocation checks add approximately one second each
 locally to CTest. Full allocation-tracked suites and interactive debugging
 remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Repair the deterministic timer-cancellation ordering exposed by Windows CI.
-   A repeating callback must remain cancelable by later callbacks at the same
-   deadline; canceled callbacks must not run from a stale copied bucket. Test
-   the actual scheduler without sleep-based races, including self-cancel,
-   sibling cancellation, nested timers and stopping all timers.
+1. Complete the focused scheduler review and insert its repair before the
+   affected weapon-table PR, preserving that feature's narrow diff. Eight
+   deterministic cases cover same-deadline repeat and sibling cancellation,
+   self-cancel, nested timers, stopping all timers and exception bookkeeping.
+   Separately preserve the backend RNG continuation through snapshot rebuilds:
+   validate a versioned algorithm/state header before map allocation, stage
+   state during reconstruction and install it before resumed gameplay. Ordinary
+   initialization must retain its existing RNG ordering. Turn restoration and
+   future host/client lockstep are separate contracts.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
    defense, reactor, chassis and counted predefined-design parsers are queued
-   in PRs #59, #60, #62 and #65. The next slice creates owned metadata by exact
+   in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact
    component keys, preserving row identity and rejecting ambiguous or mismatched
    ruleset references. Reactor selection, ability-bit mapping, conventional
    design state, CVR rendering and gameplay commands remain separate work.

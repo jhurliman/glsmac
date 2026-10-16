@@ -12,6 +12,7 @@ namespace {
 
 using loader::txt::UnitRulesTXTLoader;
 using loader::txt::WeaponMode;
+using loader::txt::DefenseMode;
 
 // Synthetic metadata: role selection must come from the mode, not names,
 // installed row indices, default costs, or prerequisite aliases.
@@ -23,9 +24,9 @@ std::vector< std::string > Rows() {
 	};
 }
 
-std::string Source( const std::vector< std::string >& rows, const std::string& newline = "\n" ) {
+std::string Source( const std::vector< std::string >& rows, const std::string& newline = "\n", const std::string& section = "WEAPONS" ) {
 	std::string source = "#UNITS" + newline + "ignored" + newline
-		+ "## translator comment" + newline + " \t#WEAPONS \t" + newline;
+		+ "## translator comment" + newline + " \t#" + section + " \t" + newline;
 	for ( const auto& row : rows ) { source += " ; comment" + newline + "\t" + newline + " " + row + "\t" + newline; }
 	return source + "#END" + newline + "#UNITS" + newline + "also ignored" + newline;
 }
@@ -38,6 +39,24 @@ std::string Rejection( const std::string& source, const std::string& ruleset = "
 
 std::string RowWithField( const size_t column, const std::string& value ) {
 	std::vector< std::string > fields = { "Example", "ExampleShort", "1", "0", "1", "-1", "None" };
+	fields[ column ] = value;
+	std::string row;
+	for ( size_t i = 0 ; i < fields.size() ; ++i ) { if ( i != 0 ) { row += ','; } row += fields[ i ]; }
+	return row;
+}
+
+std::string ComponentRejection( const std::string& source, const bool reactor, const std::string& ruleset = "smac" ) {
+	try {
+		if ( reactor ) { UnitRulesTXTLoader::ParseReactors( source, ruleset ); }
+		else { UnitRulesTXTLoader::ParseDefenses( source, ruleset ); }
+	}
+	catch ( const std::invalid_argument& error ) { return error.what(); }
+	return "";
+}
+
+std::string ComponentRow( const bool reactor, const size_t column, const std::string& value ) {
+	auto fields = reactor ? std::vector< std::string >{ "Test Core", "Core", "3", "CoreTech" }
+		: std::vector< std::string >{ "Test Armor", "Armor", "3", "0", "5", "ArmorTech" };
 	fields[ column ] = value;
 	std::string row;
 	for ( size_t i = 0 ; i < fields.size() ; ++i ) { if ( i != 0 ) { row += ','; } row += fields[ i ]; }
@@ -143,6 +162,99 @@ void AddUnitRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 		for ( const auto mode : { -2147483647 - 1, -1, 3, 4, 5, 6, 15, 2147483647 } ) {
 			for ( const auto* ruleset : { "smac", "smax" } ) {
 				GT_ASSERT( !Rejection( Source( { RowWithField( 3, std::to_string( mode ) ) } ), ruleset ).empty(), "undefined mode was accepted" );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Unit defense and reactor tables preserve metadata and ruleset-local order", GT() {
+		for ( const auto* newline : { "\n", "\r\n" } ) {
+			for ( const auto* ruleset : { "smac", "smax" } ) {
+				const auto defenses = UnitRulesTXTLoader::ParseDefenses( Source( {
+					"Field Armor, Field, 3, 0, 5, ArmorTech, ; annotation",
+					"Energy Screen, Screen, 7, 1, 11, None",
+					"Psychic Defense, Psi, -1, 2, 13, PsiTech"
+				}, newline, "DEFENSES" ), ruleset );
+				GT_ASSERT( defenses.ruleset_id == ruleset && defenses.defenses.size() == 3, "defense table identity or order changed" );
+				const auto& field = defenses.defenses[ 0 ];
+				GT_ASSERT( field.name == "Field Armor" && field.short_name == "Field" && field.rating == 3 && field.mode == DefenseMode::Projectile && field.cost == 5 && field.prerequisite == "ArmorTech", "defense columns were discarded or misinterpreted" );
+				GT_ASSERT( defenses.defenses[ 1 ].mode == DefenseMode::Energy && defenses.defenses[ 2 ].mode == DefenseMode::Binary && defenses.defenses[ 2 ].rating == -1, "defense modes or psi rating changed" );
+				const auto reactors = UnitRulesTXTLoader::ParseReactors( Source( {
+					"Research Core, Core, 3, CoreTech, ; annotation",
+					"Starter Core, Start, 1, None"
+				}, newline, "REACTORS" ), ruleset );
+				GT_ASSERT( reactors.ruleset_id == ruleset && reactors.reactors.size() == 2, "reactor table identity or count changed" );
+				const auto& core = reactors.reactors[ 0 ];
+				GT_ASSERT( core.name == "Research Core" && core.short_name == "Core" && core.power == 3 && core.prerequisite == "CoreTech" && reactors.reactors[ 1 ].power == 1, "reactor short name was omitted or catalog sorted by power" );
+			}
+		}
+		const auto smac = UnitRulesTXTLoader::ParseDefenses( "#DEFENSES\nField Armor, Field, 3, 0, 5, None", "smac" );
+		const auto smax = UnitRulesTXTLoader::ParseDefenses( "#DEFENSES\nExtra Armor, Extra, 2, 1, 4, ExtraTech\nField Armor, Field, 6, 2, 8, OtherTech", "smax" );
+		GT_ASSERT( smac.defenses[ 0 ].short_name == smax.defenses[ 1 ].short_name && smac.defenses[ 0 ].rating == 3 && smax.defenses[ 1 ].rating == 6, "identically named components in distinct catalogs shared state or indices" );
+		GT_ASSERT( UnitRulesTXTLoader::ParseReactors( "#REACTORS\nLast Core, Last, 4, None", "smac" ).reactors.size() == 1, "reactor table required a final newline or terminator" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit defense and reactor metadata preserves signed int32 endpoints", GT() {
+		const auto defenses = UnitRulesTXTLoader::ParseDefenses( Source( {
+			"Low, low, -2147483648, +0002, +2147483647, None",
+			"High, high, +2147483647, -0, -2147483648, Disable",
+			"Zero, zero, -0, 1, +00017, Unresolved"
+		}, "\n", "DEFENSES" ), "smac" );
+		const auto minimum = std::numeric_limits< int32_t >::min(), maximum = std::numeric_limits< int32_t >::max();
+		GT_ASSERT( defenses.defenses[ 0 ].rating == minimum && defenses.defenses[ 0 ].mode == DefenseMode::Binary && defenses.defenses[ 0 ].cost == maximum, "defense low endpoint or mode sign changed" );
+		GT_ASSERT( defenses.defenses[ 1 ].rating == maximum && defenses.defenses[ 1 ].cost == minimum && defenses.defenses[ 2 ].rating == 0 && defenses.defenses[ 2 ].cost == 17, "defense signed metadata changed" );
+		const auto reactors = UnitRulesTXTLoader::ParseReactors( Source( {
+			"Low, low, -2147483648, None", "High, high, +2147483647, Disable",
+			"Zero, zero, -0, Unresolved", "Positive, positive, +00017, AnyTech"
+		}, "\n", "REACTORS" ), "smax" );
+		GT_ASSERT( reactors.reactors[ 0 ].power == minimum && reactors.reactors[ 1 ].power == maximum && reactors.reactors[ 2 ].power == 0 && reactors.reactors[ 3 ].power == 17, "raw reactor power was narrowed, clamped or treated as design eligibility" );
+		GT_ASSERT( reactors.reactors[ 2 ].prerequisite == "Unresolved", "reactor prerequisite was resolved or defaulted" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit defense and reactor tables require explicit identity and unique complete sections", GT() {
+		for ( const bool reactor : { false, true } ) {
+			const std::string section = reactor ? "REACTORS" : "DEFENSES";
+			const auto row = ComponentRow( reactor, 0, "Example" );
+			const auto source = Source( { row }, "\n", section );
+			for ( const auto* ruleset : { "", "SMAC", "smax ", "auto" } ) {
+				GT_ASSERT( !ComponentRejection( source, reactor, ruleset ).empty(), "component table accepted an implicit ruleset" );
+			}
+			for ( const auto& invalid : { std::string(), "#" + section + "_OTHER\n", "##" + section + "\n", "#" + section + "\n ; empty\n#END\n", source + "#" + section + "\n" } ) {
+				GT_ASSERT( !ComponentRejection( invalid, reactor ).empty(), "missing, duplicate or empty component section was accepted" );
+			}
+			for ( size_t delimiter = row.find( ',' ) ; delimiter != std::string::npos ; delimiter = row.find( ',', delimiter + 1 ) ) {
+				for ( const auto& truncated : { row.substr( 0, delimiter ), row.substr( 0, delimiter + 1 ) } ) {
+					GT_ASSERT( !ComponentRejection( Source( { truncated }, "\n", section ), reactor ).empty(), "truncated component row was accepted" );
+				}
+			}
+			for ( const auto* extra : { ",extra", ",," } ) {
+				GT_ASSERT( !ComponentRejection( Source( { row + extra }, "\n", section ), reactor ).empty(), "extra component columns were accepted" );
+			}
+			for ( const size_t column : { size_t( 0 ), size_t( 1 ), reactor ? size_t( 3 ) : size_t( 5 ) } ) {
+				for ( const auto& text : { std::string(), std::string( "x\0y", 3 ) } ) {
+					GT_ASSERT( !ComponentRejection( Source( { ComponentRow( reactor, column, text ) }, "\n", section ), reactor ).empty(), "empty or NUL component identity was accepted" );
+				}
+			}
+			const auto error = ComponentRejection( Source( { row, ComponentRow( reactor, 0, "Different full name" ) }, "\n", section ), reactor );
+			GT_ASSERT( error.find( "#" + section + " row 2 column 2" ) != std::string::npos, "duplicate short ID did not identify the later component" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Unit defense and reactor tables reject partial numeric fields and unknown defense modes", GT() {
+		const std::vector< std::string > invalid = { "", "*", "1junk", "1.0", "0x10", "1 2", "+", "-", "+-1", "++1", "--1", "2147483648", "-2147483649", std::string( "1\0x", 3 ) };
+		for ( const bool reactor : { false, true } ) {
+			const std::string section = reactor ? "REACTORS" : "DEFENSES";
+			for ( size_t column = 2 ; column <= ( reactor ? 2 : 4 ) ; ++column ) {
+				for ( const auto& field : invalid ) {
+					const auto source = Source( { ComponentRow( reactor, 1, "First" ), ComponentRow( reactor, column, field ) }, "\n", section );
+					const auto error = ComponentRejection( source, reactor );
+					GT_ASSERT( !error.empty(), "component accepted malformed numeric field: " + field );
+					GT_ASSERT( error.find( "#" + section + " row 2 column " + std::to_string( column + 1 ) ) != std::string::npos, "component numeric rejection lost section/row/column context" );
+				}
+			}
+		}
+		for ( const auto mode : { -2147483647 - 1, -1, 3, 7, 8, 9, 2147483647 } ) {
+			for ( const auto* ruleset : { "smac", "smax" } ) {
+				GT_ASSERT( !ComponentRejection( Source( { ComponentRow( false, 3, std::to_string( mode ) ) }, "\n", "DEFENSES" ), false, ruleset ).empty(), "weapon/package or unknown mode was accepted as a defense mode" );
 			}
 		}
 		GT_OK();

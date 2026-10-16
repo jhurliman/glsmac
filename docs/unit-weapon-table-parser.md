@@ -85,7 +85,8 @@ every numeric column, duplicate identities and section isolation. They need
 no original assets. A separate read-only local probe checks the installed
 21/26-row catalogs and the three component references above.
 
-The next slices can decode CHASSIS, DEFENSES and REACTORS, then resolve a
+The [defense/reactor parsers](unit-defense-reactor-tables.md) extend the same
+bounded metadata contract. CHASSIS remains a separate slice before resolving a
 `#UNITS` design against an explicitly selected catalog. `#UNITS` has no reactor
 column, so choosing its initial reactor requires separate original-loader
 evidence. Ability bitfields, technology eligibility and calculated costs also

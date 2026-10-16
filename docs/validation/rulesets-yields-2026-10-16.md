@@ -36,6 +36,8 @@ Short labels below resolve to these exact source revisions:
 | `68081411` | [680814117f0423c4668c1ebf623e665e1a917227](https://github.com/jhurliman/glsmac/commit/680814117f0423c4668c1ebf623e665e1a917227) |
 | `0d98cde8` | [0d98cde8ae7416c0a2810c795ebf55de0c27c74b](https://github.com/jhurliman/glsmac/commit/0d98cde8ae7416c0a2810c795ebf55de0c27c74b) |
 | `bf00f411` | [bf00f4118f04f3f36ee8dc562a0d2cea58084b3a](https://github.com/jhurliman/glsmac/commit/bf00f4118f04f3f36ee8dc562a0d2cea58084b3a) |
+| `82222d37` | [82222d378e7f79bc25ad5a1d4b66395ee2bdc9ed](https://github.com/jhurliman/glsmac/commit/82222d378e7f79bc25ad5a1d4b66395ee2bdc9ed) |
+| `c9aafc83` | [c9aafc83a0e55870af33e0f479c11db064079a7b](https://github.com/jhurliman/glsmac/commit/c9aafc83a0e55870af33e0f479c11db064079a7b) |
 
 The `d57fc5a3` and `fa69e2d4` revisions are retained on the immutable
 `codex/validation-20261016-host-integer` branch at the full `fa69e2d4` revision
@@ -55,6 +57,9 @@ The component resolver and timer repair at `0d98cde8` are retained on
 `codex/validation-20261016-resolution-timers`.
 The evaluating-base context at `bf00f411` is retained on
 `codex/validation-20261016-base-context`.
+The RNG/exception integration at `82222d37` is retained on
+`codex/validation-20261016-rng-exception`; the CVR reader at `c9aafc83` is retained
+on `codex/validation-20261016-cvr-container`.
 
 The constructor-failure experiment below has a separate pinned source and
 does not depend on a moving PR branch.
@@ -450,3 +455,42 @@ error-path test. That method allocated an unowned `strdup` on each call. The
 passing ordinary tests do not establish a leak-free revision. Logs use
 `out/rng-windows-` and the Linux directory's `rng-asan-` prefix. Repair and a
 fresh sanitizer result are required before recording this integration as clean.
+
+## RNG continuation after exception ownership repair
+
+At `82222d37`, GSE exceptions own their formatted diagnostic and return stable
+storage from `what()`. The regression fails against the old allocation behavior
+and checks repeated calls, independent copies and retained exception pointers
+after the original is destroyed. The separate repair is PR #72; RNG continuation
+is PR #71. The repair does not change the RNG implementation.
+
+Windows CTest passed 8/8 in 48.55 s (full GSE 22.31 s); Linux
+ASan/UBSan/LSan CTest passed 8/8 in 44.49 s (full GSE 31.55 s), with leak
+detection enabled and no report. This supersedes the specific failure at
+`bfe276d3`, without erasing it or claiming exhaustive exceptional-path coverage.
+Logs use `out/rng-exception-windows-` and the Linux directory's
+`rng-exception-asan-` prefix. The focused main-based exception PR separately
+passed its four Linux CTests in 16.24 s.
+
+## CVR envelope integration
+
+At `c9aafc83`, the pure CVR reader validates the complete observed four-chunk
+envelope before copying owned opaque payloads. An optional Release probe accepts
+all 140 installed files; no original payloads are committed. Five synthetic
+groups cover bounds, byte order, ownership and malformed envelopes. This does
+not decode geometry or establish conventional-unit model selection.
+
+Native Windows ran all five groups with allocation tracking, exited 0 and
+reported no tracked memory/OpenGL leaks. The process was explicitly waited;
+logs are `out/cvr-windows-verified-stdout.log` and `-stderr.log`, with the saved
+exit code in `out/cvr-windows-exit.txt`. The focused PR #73 branch separately
+passed its four Linux CTests in 17.20 s. The broader preceding integration's
+eight-test results are recorded above; no repeated full Windows suite is
+claimed for this isolated reader addition.
+
+The freshly configured LLVM 15 correctness database analyzed all 295 production
+translation units in 56.32 s at eight jobs, with zero failures. This includes the
+new RNG and CVR sources and exception ownership repair. The Windows-only network
+source remains explicitly excluded. Logs use `rng-cvr-analysis` under the Linux
+directory above. Focused reader sanitizer checks, Debug/Release analysis and
+three weakened-reader controls are recorded in [the component notes](../cvr-container.md).

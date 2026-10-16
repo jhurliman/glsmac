@@ -231,8 +231,9 @@ remain separate from the ordinary development loop.
 
 The next implementation slices are:
 
-1. Finish RNG continuation review after repairing the exception-message leak
-   exposed by its real initialization-error test. The implemented versioned
+1. Finish RNG continuation review in #71 alongside the exception-message repair
+   in #72. The real initialization-error test exposed the prior leak; integration
+   `82222d37` now passes Windows and leak-enabled Linux CTest 8/8. The versioned
    state is validated before map allocation and installed after reconstruction;
    ordinary initialization retains its draw ordering. The timer repair in #69
    now precedes the unit-table stack and passes current-head cross-platform
@@ -245,9 +246,9 @@ The next implementation slices are:
    component keys, preserving row identity and rejecting ambiguous or mismatched
    ruleset references. Reactor selection, ability-bit mapping, conventional
    design state, CVR rendering and gameplay commands remain separate work.
-   The local asset inventory contains 140 CVR containers. Start with a bounded
-   reader of their observed envelope, retaining opaque owned payloads, then
-   verify geometry, model composition and presentation. The existing native
+   The local asset inventory contains 140 CVR containers. PR #73 reads their
+   observed envelope into owned opaque payloads; all installed files pass the
+   reader probe. Next verify geometry, model composition and presentation. The existing native
    sprite sheet is not conventional-unit art; source model names alone do not
    establish design-to-model mappings.
    Do not turn the current native-unit movement assumptions into standard-unit
@@ -271,7 +272,7 @@ checks and Codex review. Population-removal bookkeeping, OpenGL context checks
 and boolean operand evaluation have also landed through that gate. The remaining
 stack continues through the same review and validation process.
 
-The checkpoint work still needs complete RNG state, side-effect-free turn
+The checkpoint work has a reviewed RNG-continuation candidate and still needs side-effect-free turn
 restoration, canonical player/faction links and turn checksums. The current
 world-download path is not a disk-save or deterministic replay implementation.
 Production still lacks authoritative current-item/mineral/baseline state, and

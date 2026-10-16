@@ -182,6 +182,7 @@ return {
 	},
 
 	_pad: (value) => {
+		if (value < 0) { return #to_string(value); }
 		return #pad(#to_string(value), 'left', 3, '0');
 	},
 

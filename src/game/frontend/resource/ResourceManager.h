@@ -34,7 +34,8 @@ CLASS( ResourceManager, common::Class )
 	void DefineNoResource( types::Buffer& buf );
 	void UndefineNoResource();
 
-	const sprite::InstancedSprite* const GetResourceSprite( const std::string& id, const size_t value ) const;
+	const sprite::InstancedSprite* const GetResourceSprite( const std::string& id, const int64_t value ) const;
+	size_t GetResourceSpriteCount( const std::string& id ) const;
 	const types::Vec2< size_t >& GetResourceMaxWH( const std::string& id ) const;
 
 	const sprite::InstancedSprite* const GetNoResourceSprite() const;

@@ -57,12 +57,29 @@ complete its old busy wait. Separate copied-TU controls remove entry preflight,
 post-script preflight, or frontend retirement and must fail the real assertions.
 The working source is never temporarily reverted for these controls.
 
-Local Clang 15 Debug validation on the final source passed full CTest 8/8 in
+Local Clang 15 Debug validation on source commit
+`b2ec36b83ee3bbd68f9bd6073eed2fcc4b35fb1b` passed full CTest 8/8 in
 36.45 seconds and ASan/UBSan/LSan CTest 8/8 in 42.91 seconds. The five focused
 cases passed with memory tracking in 1.07 seconds, and with `--single-thread`
 in 6.08 seconds (sanitized: 1.07 / 6.13 seconds). LSan remained enabled.
 Explicit-TU LLVM 15 analysis of `src/GLSMAC.cpp` reported no failures in
-4.63 seconds. No native Windows/macOS run is claimed for this local slice.
+4.63 seconds. The focused publication commit
+`31a37f6d405becdf9c9bfd2dc85c7372db942baf` separately passed all five available
+Linux CTests in 22.32 seconds. Its older fixture does not include every allocation
+tracking repair from the source branch; the source sanitizer results above are
+not a sanitizer claim for this publication branch.
+
+Combined integration commit `9663fcdabab888e3a77d7361dafd1bbec3ab3673`
+passed Windows CTest 8/8 in 48.83 seconds, Linux ASan/UBSan/LSan CTest 8/8 in
+111.62 seconds, and all 298 eligible production translation units under LLVM 15
+analysis in 56.86 seconds (zero failures; Windows-only networking excluded).
+Those combined checks include other pending fixes. No native macOS run of this
+reset controller change is claimed. The earlier interactive macOS evidence is
+for `5cd78418271231121fb9a8e1d136faa82bbc5dd0`.
+
+The publication stack also carries the direct `<algorithm>` include required
+by its callback-retirement prerequisite. Hosted MinGW and libstdc++ exposed that
+missing include; the local libc++ build had provided it transitively.
 
 The original copied TU hit its three-second subprocess limit; each of the
 three omitted-boundary controls exited 1 with its intended assertion. Retained
@@ -81,5 +98,6 @@ already executing owner callback from native teardown, protect native reset from
 the collector, or implement staged initialization. The fixture runs native reset
 under accumulation to isolate those independent problems. It does not prove
 rendered reload, arbitrary mod reentrancy, or full Engine shutdown in single-thread
-mode: MAIN currently stops Scheduler/GLSMAC before backend Game, and that separate
-State-lifetime concern still needs an actual Engine ordering regression.
+mode. A separate actual Engine ordering regression now confirms that MAIN stops
+Scheduler/GLSMAC before backend Game and destroys its State too soon. The focused
+shutdown fix and its validation are separate from this controller change.

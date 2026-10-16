@@ -10,6 +10,7 @@
 #include "types/Buffer.h"
 #include "State.h"
 #include "WorldSnapshotRules.h"
+#include "WorldSnapshotRandom.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
 #include "Random.h"
@@ -368,6 +369,9 @@ void Game::Stop() {
 
 void Game::Iterate() {
 	MTModule::Iterate();
+	// Keep servicing MT reset requests, but park ordinary state/manager work
+	// while a rejected download waits for owner-thread error handling.
+	if ( IsSnapshotTurnFailurePending() ) { return; }
 
 	if ( m_state ) {
 		m_state->Iterate();
@@ -376,6 +380,9 @@ void Game::Iterate() {
 	if ( m_game_state == GS_INITIALIZING ) {
 
 		ASSERT( m_state, "state is null" );
+		// State::Iterate may have delivered a roster replacement after the
+		// download. Reject it before touching cached Slot/Player pointers.
+		if ( !CheckPendingSnapshotTurn() ) { return; }
 
 		if ( !m_state->IsMaster() ) {
 			ASSERT( m_state->m_connection, "not master but no connection" );
@@ -519,6 +526,7 @@ void Game::Iterate() {
 	if ( m_state ) {
 
 		m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
+			if ( IsSnapshotTurnFailurePending() ) { return; }
 
 			{
 				std::lock_guard guard( m_pending_event_responses_mutex );
@@ -597,6 +605,7 @@ void Game::Iterate() {
 
 		m_state->WithGame(
 			this, [ this ]( Game* const, GSE_CALLABLE ) {
+				if ( IsSnapshotTurnFailurePending() ) { return; }
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -771,6 +780,13 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				return VALUE( gse::value::Int,, m_current_turn.GetId() );
+			} )
+		},
+		{
+			"get_turn_status",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::String,, GetTurnStatusString() );
 			} )
 		},
 		{
@@ -1083,6 +1099,12 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 		}
 		if ( m_active_admission ) { GC_REACHABLE( m_active_admission->state ); }
 		if ( m_failed_admission ) { GC_REACHABLE( m_failed_admission->state ); }
+	}
+	{
+		std::lock_guard guard( m_snapshot_turn_mutex );
+		if ( m_pending_snapshot_turn ) {
+			for ( const auto& binding : m_pending_snapshot_turn->bindings ) { GC_REACHABLE( binding.player ); }
+		}
 	}
 
 	if ( m_tm ) {
@@ -1609,6 +1631,12 @@ void Game::WithRW( const std::function< void() >& f ) {
 
 void Game::InitComplete( GSE_CALLABLE ) {
 	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
+	// A failed setup must never leave a saved continuation for a later start.
+	util::FinallyGuard discard_snapshot_state( [ this ]() {
+		m_pending_snapshot_random.reset();
+		DiscardSnapshotTurn();
+	} );
+	if ( !CheckPendingSnapshotTurn() ) { return; }
 
 	try {
 		m_state->TriggerObject(
@@ -1625,10 +1653,34 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		InitFailed( e.what() );
 		return;
 	}
+	if ( !CheckPendingSnapshotTurn() ) { return; }
 
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
+	std::optional< size_t > restored_turn;
+	try { restored_turn = ApplySnapshotTurn(); }
+	catch ( const std::runtime_error& error ) {
+		InitFailed( error.what() );
+		return;
+	}
+	if ( m_pending_snapshot_random ) {
+		// Map construction/Initialize and instance setup share this RNG. Their
+		// restore-only draws must not advance the downloaded continuation.
+		m_random->SetState( *m_pending_snapshot_random );
+		m_pending_snapshot_random.reset();
+	}
+	if ( restored_turn ) {
+		// Restore presentation only after all instances are registered. This is
+		// not a new gameplay turn and must not reset units, bases or players.
+		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ADVANCE );
+		fr.data.turn_advance.turn_id = *restored_turn;
+		AddFrontendRequest( fr );
+		m_is_turn_complete = IsLocalTurnComplete();
+		SetTurnStatus( m_slot && m_slot->GetState() == slot::Slot::SS_PLAYER && m_slot->GetPlayer()->IsTurnCompleted()
+			? turn::TS_WAITING_FOR_PLAYERS
+			: m_is_turn_complete ? turn::TS_TURN_COMPLETE : turn::TS_TURN_ACTIVE );
+	}
 	if ( m_state->m_connection ) {
 		m_state->m_connection->IfServer(
 			[]( connection::Server* connection ) -> void {
@@ -1701,6 +1753,7 @@ static const std::unordered_map< backend::turn::turn_status_t, std::string > s_t
 };
 
 void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
+	m_turn_status = status;
 	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 	fr.data.turn_status.status = status;
 	AddFrontendRequest( fr );
@@ -1713,6 +1766,10 @@ void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
 			},
 		}; } );
 	});
+}
+
+const std::string& Game::GetTurnStatusString() const {
+	return s_turn_status_str.at( m_turn_status );
 }
 
 void Game::ProcessEvents() {
@@ -2210,8 +2267,14 @@ std::string Game::SerializeWorldSnapshot() const {
 		return "";
 	}
 	MTModule::Log( "Preparing snapshot for download" );
+	// Capture at the start of the existing synchronous world serialization.
+	// Reading/writing this state does not draw from the generator.
+	const auto random_state = m_random->GetState();
+	const auto turn_state = world_snapshot::CaptureTurnState( m_current_turn.GetId(), m_state->m_slots->GetSlots() );
 	types::Buffer buf;
 	world_snapshot::WriteHeader( buf, m_state->m_settings.global );
+	world_snapshot::WriteRandomState( buf, random_state );
+	world_snapshot::WriteTurnState( buf, turn_state );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -2244,14 +2307,12 @@ std::string Game::SerializeWorldSnapshot() const {
 		buf.WriteString( b.ToString() );
 	}
 
-	// send turn info
-	MTModule::Log( "Sending turn ID: " + std::to_string( m_current_turn.GetId() ) );
-	buf.WriteInt( m_current_turn.GetId() );
-
 	return buf.ToString();
 }
 
 void Game::ConfigureWorldDownload( connection::Client* connection ) {
+	m_pending_snapshot_random.reset();
+	DiscardSnapshotTurn();
 	auto* const state = m_state;
 	const auto session = state->CaptureGameSession();
 	connection->m_on_download_progress = [ this, state, session, connection ]( const float progress ) -> void {
@@ -2270,51 +2331,13 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 			try {
 				auto buf = types::Buffer( serialized_snapshot );
 				world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
+				const auto random_state = world_snapshot::ReadRandomState( buf );
+				const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
 
 				// map
-				auto b = types::Buffer( buf.ReadString() );
+				const auto map_payload = buf.ReadString();
 				NEW( m_map, map::Map, this );
-				const auto ec = m_map->LoadFromBuffer( b );
-				if ( ec == map::Map::EC_NONE ) {
-
-					// resources
-					{
-						auto ub = types::Buffer( buf.ReadString() );
-						m_rm->Deserialize( ub );
-					}
-
-					// units
-					{
-						auto ub = types::Buffer( buf.ReadString() );
-						m_um->Deserialize( GSE_CALL, ub );
-					}
-
-					// bases
-					{
-						auto bb = types::Buffer( buf.ReadString() );
-						m_bm->Deserialize( GSE_CALL, bb );
-					}
-
-					// animations
-					{
-						auto ab = types::Buffer( buf.ReadString() );
-						m_am->Deserialize( ab );
-					}
-
-					// get turn info
-					const auto turn_id = buf.ReadInt();
-					if ( turn_id > 0 ) {
-						MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
-						AdvanceTurn( turn_id );
-					}
-
-					m_game_state = GS_INITIALIZING;
-
-				}
-				else {
-					MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
-					connection->Disconnect( "Snapshot format mismatch" );
-				}
+				DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state );
 			}
 			catch ( const std::runtime_error& error ) {
 				MTModule::Log( std::string( "WARNING: failed to unpack world snapshot: " ) + error.what() );
@@ -2353,6 +2376,138 @@ void Game::ClearUntransferredMapData() {
 	}
 }
 
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state ) {
+	m_pending_snapshot_random.reset();
+	DiscardSnapshotTurn();
+	auto map_buffer = types::Buffer( map_payload );
+	const auto ec = m_map->LoadFromBuffer( map_buffer );
+	if ( ec != map::Map::EC_NONE ) {
+		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
+	}
+	{
+		auto resources = types::Buffer( body.ReadString() );
+		m_rm->Deserialize( resources );
+	}
+	{
+		auto units = types::Buffer( body.ReadString() );
+		m_um->Deserialize( GSE_CALL, units );
+	}
+	{
+		auto bases = types::Buffer( body.ReadString() );
+		m_bm->Deserialize( GSE_CALL, bases );
+	}
+	{
+		auto animations = types::Buffer( body.ReadString() );
+		m_am->Deserialize( animations );
+	}
+	StageSnapshotTurn( GSE_CALL, turn_state );
+	MTModule::Log( "Received turn ID: " + std::to_string( turn_state.id ) );
+	// Turn's setter only assigns the ID. Game::AdvanceTurn also runs gameplay
+	// hooks and clears completion, so it must never be used for restoration.
+	m_current_turn.AdvanceTurn( turn_state.id );
+	m_pending_snapshot_random = random_state;
+	m_game_state = GS_INITIALIZING;
+}
+
+void Game::StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& state ) {
+	world_snapshot::ValidateTurnRoster( state, m_state->m_slots->GetSlots() );
+	PendingSnapshotTurn pending{ state, {} };
+	pending.bindings.reserve( state.players.size() );
+	for ( const auto& record : state.players ) {
+		auto& slot = m_state->m_slots->GetSlot( record.id );
+		// Existing Wrappable links invalidate these tokens on Player destruction,
+		// including deletion followed by allocation at the very same address.
+		pending.bindings.push_back( { &slot, static_cast< gse::value::Object* >( slot.GetPlayer()->Wrap( GSE_CALL ) ) } );
+	}
+	// Construct under the caller's accumulation before locking. Root traversal
+	// takes Space exclusion then this mutex; reset only drops nonowning tokens.
+	std::lock_guard guard( m_snapshot_turn_mutex );
+	++m_snapshot_turn_generation;
+	m_snapshot_turn_failure_pending = false;
+	m_pending_snapshot_turn = std::move( pending );
+}
+
+void Game::DiscardSnapshotTurn() {
+	std::lock_guard guard( m_snapshot_turn_mutex );
+	++m_snapshot_turn_generation;
+	m_snapshot_turn_failure_pending = false;
+	m_pending_snapshot_turn.reset();
+}
+
+bool Game::IsSnapshotTurnFailurePending() const {
+	std::lock_guard guard( m_snapshot_turn_mutex );
+	return m_snapshot_turn_failure_pending;
+}
+
+void Game::ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const {
+	const auto& slots = m_state->m_slots->GetSlots();
+	world_snapshot::ValidateTurnRoster( pending.state, slots );
+	if ( pending.bindings.size() != pending.state.players.size() ) { throw std::runtime_error( "Incomplete world snapshot Player bindings" ); }
+	for ( size_t i = 0 ; i < pending.bindings.size() ; ++i ) {
+		const auto& slot = slots[ pending.state.players[ i ].id ];
+		const auto& binding = pending.bindings[ i ];
+		const auto* token = binding.player;
+		if ( binding.slot != &slot || !token || token->type != gse::VT_OBJECT ||
+			token->object_class != Player::WRAP_CLASS || token->wrapobj != slot.GetPlayer() ) {
+			throw std::runtime_error( "World snapshot Player identity changed during initialization" );
+		}
+	}
+	// The game and restored owners retain Slot addresses. Do not rebind a new
+	// roster to old instances, and never dereference the captured addresses.
+	if ( ( m_slot && ( m_slot_num >= slots.size() || m_slot != &slots[ m_slot_num ] ) ) ||
+		( m_player && ( m_slot_num >= slots.size() || slots[ m_slot_num ].GetState() != slot::Slot::SS_PLAYER || m_player != slots[ m_slot_num ].GetPlayer() ) ) ) {
+		throw std::runtime_error( "World snapshot local Player identity changed during initialization" );
+	}
+}
+
+bool Game::CheckPendingSnapshotTurn() {
+	auto* const state = m_state;
+	uint64_t generation = 0;
+	try {
+		std::lock_guard guard( m_snapshot_turn_mutex );
+		generation = m_snapshot_turn_generation;
+		if ( m_pending_snapshot_turn ) { ValidateSnapshotBindings( *m_pending_snapshot_turn ); }
+	}
+	catch ( const std::runtime_error& error ) {
+		// Iterate runs on the backend thread, while InitFailed emits a script
+		// event and must run on the Space owner. Park initialization immediately
+		// so no cached Slot is touched and subsequent iterations cannot retry it.
+		{
+			std::lock_guard guard( m_snapshot_turn_mutex );
+			if ( generation != m_snapshot_turn_generation ) { return false; }
+			m_snapshot_turn_failure_pending = true;
+			m_game_state = GS_STARTING;
+		}
+		state->WithGame( state, [ this, state, generation, message = std::string( error.what() ) ]( Game* const, GSE_CALLABLE ) {
+			{
+				std::lock_guard guard( m_snapshot_turn_mutex );
+				if ( generation != m_snapshot_turn_generation || !m_pending_snapshot_turn || m_state != state || m_game_state != GS_STARTING ) { return; }
+			}
+			// State is the queued owner, not a borrowed captured lifetime. Reset
+			// and replacement downloads retire the generation before this drain.
+			InitFailed( message );
+		} );
+		return false;
+	}
+	return true;
+}
+
+std::optional< size_t > Game::ApplySnapshotTurn() {
+	std::lock_guard guard( m_snapshot_turn_mutex );
+	if ( !m_pending_snapshot_turn ) { return {}; }
+	const auto& pending = *m_pending_snapshot_turn;
+	ValidateSnapshotBindings( pending ); // Complete validation before any flag changes.
+	const auto id = pending.state.id;
+	for ( const auto& record : pending.state.players ) {
+		auto* player = m_state->m_slots->GetSlot( record.id ).GetPlayer();
+		if ( record.completed ) { player->CompleteTurn(); }
+		else { player->UncompleteTurn(); }
+	}
+	m_current_turn.AdvanceTurn( id );
+	m_pending_snapshot_turn.reset();
+	return id;
+}
+
 void Game::ResetGame() {
 	{
 		std::lock_guard guard( m_admission_mutex );
@@ -2360,6 +2515,8 @@ void Game::ResetGame() {
 	}
 	if ( m_state ) { m_state->RetireGameCallbacks(); }
 
+	m_pending_snapshot_random.reset();
+	DiscardSnapshotTurn();
 	ClearHandlers();
 
 	if ( m_game_state != GS_NONE ) {
@@ -2407,6 +2564,7 @@ void Game::ResetGame() {
 
 	m_current_turn.Reset();
 	m_is_turn_complete = false;
+	m_turn_status = turn::TS_PLEASE_WAIT;
 
 	if ( m_state ) {
 		// ui thread will reset state as needed
@@ -2418,17 +2576,17 @@ void Game::ResetGame() {
 	}
 }
 
-void Game::CheckTurnComplete() {
-
-	bool is_turn_complete = true;
-
+bool Game::IsLocalTurnComplete() const {
 	for ( const auto& unit : m_um->GetUnits() ) {
 		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft() ) {
-			is_turn_complete = false;
-			break;
+			return false;
 		}
 	}
+	return true;
+}
 
+void Game::CheckTurnComplete() {
+	const bool is_turn_complete = IsLocalTurnComplete();
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
 		MTModule::Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );

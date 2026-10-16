@@ -7,6 +7,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
+#include <mutex>
 
 #include "common/MTModule.h"
 #include "gse/GCWrappable.h"
@@ -20,6 +22,8 @@
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
 #include "State.h"
+#include "util/random/Types.h"
+#include "WorldSnapshotTurn.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -440,11 +444,29 @@ private:
 	void InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE );
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state );
 	void ResetGame();
 	void ClearUntransferredMapData();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
+	// Install only after map presentation and deferred instance reconstruction.
+	std::optional< util::random::state_t > m_pending_snapshot_random;
+	struct PendingSnapshotTurn {
+		world_snapshot::TurnState state;
+		struct Binding { slot::Slot* slot; gse::value::Object* player; };
+		std::vector< Binding > bindings;
+	};
+	mutable std::mutex m_snapshot_turn_mutex;
+	uint64_t m_snapshot_turn_generation = 0;
+	bool m_snapshot_turn_failure_pending = false;
+	std::optional< PendingSnapshotTurn > m_pending_snapshot_turn;
+	void StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& state );
+	void DiscardSnapshotTurn();
+	void ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const;
+	bool CheckPendingSnapshotTurn();
+	bool IsSnapshotTurnFailurePending() const;
+	std::optional< size_t > ApplySnapshotTurn();
 	State* m_state = nullptr;
 
 	map::Map* m_map = nullptr;
@@ -453,6 +475,8 @@ private:
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
+	turn::turn_status_t m_turn_status = turn::TS_PLEASE_WAIT;
+	bool IsLocalTurnComplete() const;
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
@@ -488,6 +512,7 @@ private:
 	void InitFailed( const std::string& error_text );
 
 	void SetTurnStatus( const backend::turn::turn_status_t status );
+	const std::string& GetTurnStatusString() const;
 
 	void ProcessEvents();
 	class EventBatchRoots;

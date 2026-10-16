@@ -17,6 +17,8 @@ SET( SRC ${SRC}
 	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
 	${PWD}/WorldSnapshotRules.cpp
+	${PWD}/WorldSnapshotRandom.cpp
+	${PWD}/WorldSnapshotTurn.cpp
 	${PWD}/Game.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp

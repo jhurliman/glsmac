@@ -7,6 +7,47 @@ namespace gse::tests {
 
 void AddBufferTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
+		"test buffer booleans preserve the canonical one-byte format",
+		GT() {
+			for ( const bool expected : { false, true } ) {
+				types::Buffer buffer;
+				buffer.WriteBool( expected );
+				const auto bytes = buffer.ToString();
+				GT_ASSERT( bytes.size() == 7, "boolean wire record size changed" );
+				const auto payload = static_cast< uint8_t >( expected ? 1 : 0 );
+				GT_ASSERT( static_cast< uint8_t >( bytes.at( 5 ) ) == payload, "boolean payload is not canonical" );
+				GT_ASSERT( static_cast< uint8_t >( bytes.at( 6 ) ) == payload, "boolean checksum changed" );
+				buffer.WriteInt( 42 );
+				GT_ASSERT( buffer.ReadBool() == expected, "canonical boolean value changed" );
+				GT_ASSERT( buffer.ReadInt() == 42, "boolean read consumed the following record" );
+			}
+			GT_OK();
+		}
+	);
+	for ( const uint8_t payload : { 2, 255 } ) {
+		task->AddTest(
+			"test buffer rejects boolean payload " + std::to_string( payload ) + " with a valid checksum",
+			GT( payload ) {
+				types::Buffer valid;
+				valid.WriteBool( false );
+				auto bytes = valid.ToString();
+				// A boolean record ends with its one-byte payload and XOR checksum.
+				// Update both so the malformed value passes transport validation.
+				bytes.at( bytes.size() - 2 ) = static_cast< char >( payload );
+				bytes.back() = static_cast< char >( payload );
+				types::Buffer invalid( bytes );
+				try {
+					invalid.ReadBool();
+				}
+				catch ( const std::runtime_error& error ) {
+					GT_ASSERT( std::string( error.what() ).find( "invalid boolean value" ) != std::string::npos, "boolean was rejected for the wrong reason" );
+					GT_OK();
+				}
+				GT_FAIL( "noncanonical boolean payload was accepted" );
+			}
+		);
+	}
+	task->AddTest(
 		"test copied buffers preserve cursors and append into owned capacity",
 		GT() {
 			types::Buffer source;

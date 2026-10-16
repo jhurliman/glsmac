@@ -33,6 +33,7 @@ class GLSMAC;
 
 namespace gse::tests {
 class BackendFixture;
+class EngineShutdownFixture;
 }
 
 namespace types {
@@ -546,6 +547,7 @@ private:
 
 private:
 	friend class ::GLSMAC;
+	friend class gse::tests::EngineShutdownFixture;
 	void SetState( State* const state );
 
 };

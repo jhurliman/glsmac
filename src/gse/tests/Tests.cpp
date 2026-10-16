@@ -1,4 +1,5 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
 #include "Buffer.h"
@@ -51,6 +52,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
 		task->AddTest(
 			"test if an empty scene accepts clearing its camera",
 			GT() {

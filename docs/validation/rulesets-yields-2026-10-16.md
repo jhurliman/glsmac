@@ -678,9 +678,20 @@ The script-entry publication `3299f7d534d5831c08f9d5ede9c514451191ff14`
 passed 5/5 in 22.34 seconds. Separate source-slice positive/negative controls
 are recorded in the session callback and script run documents.
 
-The four map/session revisions above are retained on immutable branches
-`codex/validation-20261016-map-packets`, `-map-publication`,
-`-session-identity`, and `-session-publication`, respectively. Windows logs use
+Every tested revision in this section has the following immutable retention
+path. The Slot publication is an ancestor of the map publication; the other
+five entries are the exact named branch heads.
+
+| Tested revision | Retention branch | Relationship |
+| --- | --- | --- |
+| [20a643a35ac1163a30b20604350fcc4627863d4c](https://github.com/jhurliman/glsmac/commit/20a643a35ac1163a30b20604350fcc4627863d4c) | `codex/validation-20261016-map-packets` | Exact head |
+| [7340b20122164246707f904821a5f8b4dd270db4](https://github.com/jhurliman/glsmac/commit/7340b20122164246707f904821a5f8b4dd270db4) | `codex/validation-20261016-map-publication` | Ancestor of pinned head `186ab971ef74c84c2ce100905fad267a5bcaf801` |
+| [186ab971ef74c84c2ce100905fad267a5bcaf801](https://github.com/jhurliman/glsmac/commit/186ab971ef74c84c2ce100905fad267a5bcaf801) | `codex/validation-20261016-map-publication` | Exact head |
+| [078a72fbd0265c8d709d646d5823cc842ed849d5](https://github.com/jhurliman/glsmac/commit/078a72fbd0265c8d709d646d5823cc842ed849d5) | `codex/validation-20261016-session-identity` | Exact head |
+| [ab9e5413194ab4f38c81667646836dd72fafcbfb](https://github.com/jhurliman/glsmac/commit/ab9e5413194ab4f38c81667646836dd72fafcbfb) | `codex/validation-20261016-session-publication` | Exact head |
+| [3299f7d534d5831c08f9d5ede9c514451191ff14](https://github.com/jhurliman/glsmac/commit/3299f7d534d5831c08f9d5ede9c514451191ff14) | `codex/validation-20261016-script-entry` | Exact head |
+
+Windows logs use
 `out/session-map-windows-` and `out/session-identity-windows-`; Linux combined
 logs use `/home/jhurliman/src/glsmac-gc-audit/session-identity-`; focused logs
 use `/home/jhurliman/src/glsmac-unit-publication/` with `decoded-player-`,

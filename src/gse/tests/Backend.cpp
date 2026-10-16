@@ -19,6 +19,7 @@
 #include "game/backend/resource/Resource.h"
 #include "game/backend/map/tile/TileManager.h"
 #include "game/frontend/resource/ResourceDisplay.h"
+#include "game/frontend/widget/TileResources.h"
 #include "game/backend/State.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
@@ -868,6 +869,191 @@ static void AddInitialPopulationTests( task::gsetests::GSETests* task ) {
 	}
 }
 
+
+static void AddEvaluatingBaseTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test evaluating base follows worker events and destination snapshots", GT() {
+		using namespace game::backend::base;
+		using namespace game::backend::event;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture source, restored;
+		for ( auto* fixture : { &source, &restored } ) { fixture->EnableYieldFixture(); fixture->SetRunning( true ); }
+		source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		source.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+		auto* source_base = source.AddBaseWithPop( 801, 7 );
+		types::Buffer snapshot;
+		for ( auto* fixture : { &source, &restored } ) {
+			if ( fixture == &restored ) { restored.RestoreBaseManager( snapshot ); }
+			const auto error = fixture->WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture->GetGame();
+				auto* base = game->GetBM()->GetBase( 801 );
+				auto* target = game->GetMap()->GetTile( 2, 4 );
+				GT_ASSERT( base->m_owner->GetPlayer() != game->GetPlayer(), "fixture must distinguish owner from active player" );
+				if ( fixture == &restored ) { GT_ASSERT( base != source_base, "snapshot reused source base identity" ); }
+				std::vector< Tile* > calls;
+				game->GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL( game, base, &calls ) {
+					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+					N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+					N_GETPROP_UNWRAP( player, event, "player", game::backend::Player );
+					N_GETPROP_UNWRAP( evaluating, event, "base", Base );
+					if ( evaluating != base || evaluating != game->GetBM()->GetBase( 801 ) || player != base->m_owner->GetPlayer() || tile != game->GetMap()->GetTile( tile->coord.x, tile->coord.y ) ) {
+						GSE_ERROR( EC.GAME_ERROR, "yield callback lost destination base, tile, or owner identity" );
+					}
+					calls.push_back( tile );
+					const bool center = tile == base->GetTile();
+					return new value::Object( GSE_CALL, {
+						{ "NUTRIENTS", VALUE( value::Int,, center ? -2 : 300 ) },
+						{ "MINERALS", VALUE( value::Int,, center ? 4 : -11 ) },
+						{ "ENERGY", VALUE( value::Int,, center ? 5 : 13 ) },
+					} );
+				} ) );
+				auto* setup = static_cast< value::Callable* >( fixture->RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
+				setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
+				const value::object_properties_t no_args;
+				game->GetState()->TriggerObject( game, "start", ARGS( no_args ) );
+				for ( const auto* name : { "work_base_tile", "unwork_base_tile" } ) {
+					auto* handlers = static_cast< value::Object* >( fixture->RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
+					fixture->RegisterEvent( name, new EventHandler( gc_space, name,
+						static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+				}
+				const auto check = [ & ]( bool worked ) -> std::string {
+					calls.clear();
+					auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+					GT_ASSERT( calls.size() == ( worked ? 2 : 1 ) && calls.front() == base->GetTile(), "intake did not evaluate center then worked tile" );
+					if ( worked ) { GT_ASSERT( calls.back() == target, "intake evaluated the wrong worker tile" ); }
+					GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == ( worked ? 298 : -2 ), "base context lost signed nutrients" );
+					GT_ASSERT( static_cast< value::Int* >( intake->Get( "MINERALS" ) )->value == ( worked ? -7 : 4 ), "base context lost signed minerals" );
+					GT_ASSERT( static_cast< value::Int* >( intake->Get( "ENERGY" ) )->value == ( worked ? 18 : 5 ), "base context lost energy" );
+					GT_OK();
+				};
+				GT_ASSERT( check( fixture == &restored ).empty(), "initial contextual intake differs" );
+				for ( const bool work : { false, true } ) {
+					if ( fixture == &source && !work ) { continue; }
+					game->AddEvent( new Event( game, Event::ES_LOCAL, 2, GSE_CALL, work ? "work_base_tile" : "unwork_base_tile", {
+						{ "base", base->Wrap( GSE_CALL ) }, { "tile", target->Wrap( GSE_CALL ) }, { "pop", base->m_pops.at( 7 ).Wrap( GSE_CALL ) },
+					} ) );
+					fixture->ProcessEvents();
+					const auto result = check( work ); GT_ASSERT( result.empty(), "intake: " + result );
+				}
+				if ( fixture == &source ) { game->GetBM()->Serialize( snapshot ); }
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "evaluating base event/snapshot route: " + error );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "test evaluating base preview preserves state and legacy callback shape", GT() {
+		using namespace game::backend::base;
+		using game::frontend::widget::TileResources;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 801, 7 );
+		auto* other = fixture.AddBaseWithPop( 802, 7, 0 );
+		const auto setup_error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", fixture.GetGame()->GetMap()->GetTile( 2, 4 ) ); GT_OK();
+		} );
+		GT_ASSERT( setup_error.empty(), "preview setup: " + setup_error );
+		const auto before = Base::Serialize( base ).ToString(), before_other = Base::Serialize( other ).ToString();
+		const auto rng = fixture.GetGame()->GetRandom()->GetStateString();
+		const auto requests = fixture.FrontendRequestCount();
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			auto* setup = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
+			setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
+			const value::object_properties_t no_args;
+			game->GetState()->TriggerObject( game, "start", ARGS( no_args ) );
+			size_t legacy = 0, contextual = 0, previews = 0;
+			game->GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL( base, other, &legacy, &contextual ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				N_GETPROP_UNWRAP( player, event, "player", game::backend::Player );
+				int64_t energy;
+				if ( event.count( "base" ) ) {
+					N_GETPROP_UNWRAP( evaluating, event, "base", Base );
+					if ( event.size() != 3 || ( evaluating != base && evaluating != other ) || player != evaluating->m_owner->GetPlayer() ) {
+						GSE_ERROR( EC.GAME_ERROR, "incorrect contextual callback fields or owner" );
+					}
+					++contextual;
+					energy = ( evaluating == base ) == ( tile == base->GetTile() ) ? 9 : 1;
+				} else {
+					if ( event.size() != 2 ) { GSE_ERROR( EC.GAME_ERROR, "legacy callback schema changed" ); }
+					++legacy; energy = 100 + player->GetSlot()->GetIndex();
+				}
+				return new value::Object( GSE_CALL, {
+					{ "NUTRIENTS", VALUE( value::Int,, -2 ) }, { "MINERALS", VALUE( value::Int,, 0 ) }, { "ENERGY", VALUE( value::Int,, energy ) },
+				} );
+			} ) );
+			auto* query = NATIVE_CALL( game, base, &previews ) {
+				N_EXPECT_ARGS( 1 ); N_CHECKARG( arguments.at( 0 )->Deref(), 0, Object );
+				auto* data = static_cast< value::Object* >( arguments.at( 0 )->Deref() );
+				if ( Base::Unwrap( data->Get( "base" ) ) != base ) { GSE_ERROR( EC.GAME_ERROR, "preview lost its base" ); }
+				const auto resources = TileResources::QueryResources( GSE_CALL, game, data );
+				if ( resources.at( "NUTRIENTS" ) != -2 || resources.at( "ENERGY" ) > 9 ) { GSE_ERROR( EC.GAME_ERROR, "widget used active player or changed signed yields" ); }
+				++previews; return VALUE( value::Undefined );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_yield_context" ) );
+			script->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ), other->Wrap( GSE_CALL ), game->GetMap()->GetTile( 2, 4 )->Wrap( GSE_CALL ), query } );
+			GT_ASSERT( legacy == 2 && contextual == 9 && previews == 2, "preview/scoring query coverage changed" );
+			// The widget's no-base path also retains active-player selection.
+			auto* legacy_data = new value::Object( GSE_CALL, { { "tile", base->GetTile()->Wrap( GSE_CALL ) } } );
+			GT_ASSERT( TileResources::QueryResources( GSE_CALL, game, legacy_data ).at( "ENERGY" ) == 100, "legacy widget selection changed" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "evaluating base preview: " + error );
+		GT_ASSERT( Base::Serialize( base ).ToString() == before && Base::Serialize( other ).ToString() == before_other, "preview changed assignments or authoritative base state" );
+		GT_ASSERT( fixture.GetGame()->GetRandom()->GetStateString() == rng && fixture.FrontendRequestCount() == requests, "preview consumed RNG or queued frontend updates" );
+		GT_OK();
+	} );
+	task->AddTest( "test evaluating base rejects unrelated and stale contexts before callbacks", GT() {
+		using namespace game::backend::base;
+		using game::frontend::widget::TileResources;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture, foreign;
+		for ( auto* f : { &fixture, &foreign } ) { f->EnableYieldFixture(); f->SetRunning( true ); f->DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER ); }
+		auto* base = fixture.AddBaseWithPop( 801, 7 );
+		auto* foreign_base = foreign.AddBaseWithPop( 801, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame(); auto* tile = base->GetTile();
+			size_t calls = 0;
+			game->GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL( &calls ) { ++calls; return new value::Object( GSE_CALL, {} ); } ) );
+			const auto expect_rejected = [ & ]( const std::function< void() >& query ) -> std::string {
+				try { query(); } catch ( const Exception& ) { GT_OK(); }
+				GT_FAIL( "invalid evaluating context reached resource callback" );
+			};
+			auto* tile_object = static_cast< value::Object* >( tile->Wrap( GSE_CALL ) );
+			auto* method = static_cast< value::Callable* >( tile_object->Get( "get_resources" ) );
+			auto* owner = base->m_owner->Wrap( GSE_CALL );
+			auto* wrapped_base = base->Wrap( GSE_CALL );
+			std::unique_ptr< Base > unregistered( new Base( game, 803, base->m_owner, game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 2, 2 ), "Unregistered", {}, {}, 0 ) );
+			util::FinallyGuard detach( [ & ]() { unregistered->GetTile()->base = nullptr; } );
+			for ( auto* invalid : { foreign_base, unregistered.get() } ) {
+				const auto result = expect_rejected( [ & ]() { tile->GetResources( GSE_CALL, nullptr, invalid ); } ); GT_ASSERT( result.empty(), "context validation: " + result );
+			}
+			const auto wrong_owner = expect_rejected( [ & ]() { method->Run( GSE_CALL, { game->GetPlayer()->GetSlot()->Wrap( GSE_CALL ), wrapped_base } ); } );
+			GT_ASSERT( wrong_owner.empty(), "owner validation: " + wrong_owner );
+			auto* data = new value::Object( GSE_CALL, { { "tile", tile_object }, { "base", wrapped_base } } );
+			auto* foreign_data = new value::Object( GSE_CALL, { { "tile", tile_object }, { "base", foreign_base->Wrap( GSE_CALL ) } } );
+			const auto wrong_world = expect_rejected( [ & ]() { TileResources::QueryResources( GSE_CALL, game, foreign_data ); } );
+			GT_ASSERT( wrong_world.empty(), "widget world validation: " + wrong_world );
+			game->GetBM()->DespawnBase( GSE_CALL, base->m_id );
+			GT_ASSERT( wrapped_base->type == VT_UNDEFINED, "despawn did not invalidate retained wrapper" );
+			const auto stale_script = expect_rejected( [ & ]() { method->Run( GSE_CALL, { owner, wrapped_base } ); } );
+			const auto stale_widget = expect_rejected( [ & ]() { TileResources::QueryResources( GSE_CALL, game, data ); } );
+			const auto stale_native = expect_rejected( [ & ]() { tile->GetResources( GSE_CALL, nullptr, base ); } );
+			GT_ASSERT( stale_script.empty() && stale_widget.empty() && stale_native.empty(), "stale context accepted" );
+			GT_ASSERT( calls == 0, "invalid context invoked a resource callback" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "evaluating base rejection: " + error ); GT_OK();
+	} );
+
+}
+
 static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test tile and base resource callbacks preserve signed integers", GT() {
 		using namespace game::backend::base;
@@ -1054,6 +1240,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	);
 	AddWorkerTests( task );
 	AddResourceYieldTests( task );
+	AddEvaluatingBaseTests( task );
 	AddInitialPopulationTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(

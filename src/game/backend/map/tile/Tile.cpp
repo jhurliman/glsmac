@@ -17,6 +17,7 @@
 #include "game/backend/map/tile/TileManager.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/slot/Slots.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
 
@@ -263,7 +264,7 @@ WRAPIMPL_BEGIN( Tile )
 		{
 			"get_resources",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS_MAX( 1 );
+				N_EXPECT_ARGS_MAX( 2 );
 				slot::Slot* slot;
 				if ( arguments.size() > 0 ) {
 					N_GETVALUE_UNWRAP( player, 0, Player );
@@ -272,7 +273,12 @@ WRAPIMPL_BEGIN( Tile )
 				else {
 					slot = tiles->GetMap()->GetGame()->GetPlayer()->GetSlot();
 				}
-				return GetResourcesAsValue( GSE_CALL, slot );
+				base::Base* evaluating_base = nullptr;
+				if ( arguments.size() > 1 ) {
+					N_GETVALUE_UNWRAP( base, 1, base::Base );
+					evaluating_base = base;
+				}
+				return GetResourcesAsValue( GSE_CALL, slot, evaluating_base );
 			} )
 		},
 	};
@@ -296,8 +302,8 @@ const bool Tile::IsLockedBy( const size_t initiator_slot ) const {
 	return m_is_locked && m_lock_initiator_slot == initiator_slot;
 }
 
-const Tile::resources_t Tile::GetResources( GSE_CALLABLE, slot::Slot* const slot ) {
-	auto* const result = GetResourcesAsValue( GSE_CALL, slot );
+const Tile::resources_t Tile::GetResources( GSE_CALLABLE, slot::Slot* const slot, base::Base* const evaluating_base ) {
+	auto* const result = GetResourcesAsValue( GSE_CALL, slot, evaluating_base );
 	resources_t resources = {};
 	for ( const auto& it : ((gse::value::Object*)result)->value ) {
 		resources.insert_or_assign( it.first, ((gse::value::Int*)it.second)->value );
@@ -329,19 +335,40 @@ gse::Value* const Tile::GetBonuses( GSE_CALLABLE ) const {
 	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
 }
 
-gse::value::Object* const Tile::GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot ) {
+gse::value::Object* const Tile::GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot, base::Base* const evaluating_base ) {
 	ASSERT( tiles, "tiles not set" );
 	auto* const game = tiles->GetMap()->GetGame();
-	return GetResourcesFromCallback( GSE_CALL, game->GetTM(), game->GetRM(),"get_tile_resources", ARGS_F( this, &slot ) {
-		{
-			"tile",
-			Wrap( GSE_CALL )
-		},
-		{
-			"player",
-			slot->Wrap( GSE_CALL )
-		},
-	}; } );
+	auto* evaluating_slot = slot;
+	if ( evaluating_base ) {
+		// Compare addresses before reading the supplied pointer: callers may hold
+		// a base that was removed, or belongs to another game instance.
+		bool registered = false;
+		for ( const auto& entry : game->GetBM()->GetBases() ) {
+			if ( entry.second == evaluating_base ) { registered = true; break; }
+		}
+		if ( !registered || evaluating_base->GetGame() != game || tiles->GetMap() != game->GetMap() ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Evaluating base is not registered in this tile's world" );
+		}
+		auto* const owner = evaluating_base->m_owner;
+		bool owner_registered = false;
+		for ( const auto& candidate : game->GetState()->m_slots->GetSlots() ) {
+			if ( &candidate == owner ) { owner_registered = true; break; }
+		}
+		if ( !owner_registered || owner->GetState() != slot::Slot::SS_PLAYER || !owner->GetPlayer() || ( slot && slot != owner ) ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Evaluating base requires its current owner" );
+		}
+		evaluating_slot = owner;
+	}
+	if ( !evaluating_slot ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile resources require a player or an evaluating base" );
+	}
+	return GetResourcesFromCallback( GSE_CALL, game->GetTM(), game->GetRM(), "get_tile_resources",
+		_ARGS_F( this, evaluating_slot, evaluating_base ) {
+			out_args = { { "tile", Wrap( GSE_CALL ) }, { "player", evaluating_slot->Wrap( GSE_CALL ) } };
+			// Do not add an undefined field to legacy callbacks: their schema stays exact.
+			if ( evaluating_base ) { out_args.emplace( "base", evaluating_base->Wrap( GSE_CALL ) ); }
+		}
+	);
 }
 
 }

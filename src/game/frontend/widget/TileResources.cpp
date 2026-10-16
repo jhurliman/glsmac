@@ -21,6 +21,9 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/map/tile/Tiles.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/frontend/resource/ResourceManager.h"
 
@@ -32,34 +35,62 @@ TileResources::TileResources( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_TILE_RESOURCES, "tile-resources", {
 		{ "tile", { true, gse::VT_OBJECT, ::game::backend::map::tile::Tile::WRAP_CLASS } },
+		{ "base", { false, gse::VT_OBJECT, backend::base::Base::WRAP_CLASS } },
 	}
 ) {}
+
+backend::map::tile::Tile::resources_t TileResources::QueryResources( GSE_CALLABLE, backend::Game* const game, gse::value::Object* const data ) {
+	// Widget data can outlive a wrapped base. Validate the current value on
+	// every query, before Unwrap (which assumes a live, correctly typed object).
+	if ( !data ) { GSE_ERROR( gse::EC.INVALID_CALL, "Tile resource widget requires data" ); }
+	const auto unwrap = [ & ]( const std::string& key, const std::string& cls, const bool required ) -> gse::value::Object* {
+		const auto it = data->value.find( key );
+		if ( it == data->value.end() && !required ) { return nullptr; }
+		if ( it == data->value.end() || it->second->Deref()->type != gse::VT_OBJECT ) {
+			GSE_ERROR( gse::EC.INVALID_CALL, "Tile resource widget requires a live " + key );
+		}
+		auto* object = static_cast< gse::value::Object* >( it->second->Deref() );
+		if ( object->object_class != cls || !object->wrapobj ) {
+			GSE_ERROR( gse::EC.INVALID_CALL, "Tile resource widget requires a live " + key );
+		}
+		return object;
+	};
+	auto* const tile = backend::map::tile::Tile::Unwrap( unwrap( "tile", backend::map::tile::Tile::WRAP_CLASS, true ) );
+	auto* const base_value = unwrap( "base", backend::base::Base::WRAP_CLASS, false );
+	if ( tile->tiles->GetMap() != game->GetMap() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile resource widget tile belongs to another world" );
+	}
+	return tile->GetResources( GSE_CALL, base_value ? nullptr : game->GetPlayer()->GetSlot(), base_value ? backend::base::Base::Unwrap( base_value ) : nullptr );
+}
 
 void TileResources::Register( ui::dom::Widget* const widget ) {
 	widget->OnUpdate(
 		F_WIDGET_UPDATE( this ) {
 			if ( data ) {
-				auto* const t = ::game::backend::map::tile::Tile::Unwrap( data->value.at( "tile" ) );
-				ASSERT( t, "invalid tile ptr" );
-				Update( widget, t );
+				auto* const backend = m_game->GetBackend();
+				backend::map::tile::Tile::resources_t resources;
+				backend->GetState()->WithGSE( backend, [ & ]( GSE_CALLABLE ) {
+					resources = QueryResources( GSE_CALL, backend, data );
+				}, nullptr, true );
+				DrawResources( widget, resources );
 			}
 		}
 	);
 }
 
 void TileResources::Update( ui::dom::Widget* const widget, const void* const data ) {
-	widget->Clear();
-
-	auto* const tile = (::game::backend::map::tile::Tile*)data;
-
+	auto* const tile = (backend::map::tile::Tile*)data;
 	auto* const backend = m_game->GetBackend();
+	backend::map::tile::Tile::resources_t resources;
+	backend->GetState()->WithGSE( backend, [ & ]( GSE_CALLABLE ) {
+		resources = tile->GetResources( GSE_CALL, backend->GetPlayer()->GetSlot() );
+	}, nullptr, true );
+	DrawResources( widget, resources );
+}
 
-	::game::backend::map::tile::Tile::resources_t resources = {};
-	backend->GetState()->WithGSE(
-		backend, [ &resources, &tile, &backend ]( GSE_CALLABLE ) {
-			resources = tile->GetResources( GSE_CALL, backend->GetPlayer()->GetSlot() );
-		}, nullptr, true
-	);
+void TileResources::DrawResources( ui::dom::Widget* const widget, const backend::map::tile::Tile::resources_t& resources ) {
+	widget->Clear();
+	auto* const backend = m_game->GetBackend();
 
 	size_t count = 0;
 	auto* const rm = m_game->GetRM();

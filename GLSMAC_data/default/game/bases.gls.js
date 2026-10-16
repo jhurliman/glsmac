@@ -28,7 +28,7 @@ const reset_nutrients = (game, base) => {
 };
 
 const get_tile_score = (base, tile) => {
-	const resources = tile.get_resources(base.get_owner());
+	const resources = tile.get_resources(base.get_owner(), base);
 	return resources.NUTRIENTS * 3 + resources.MINERALS * 2 + resources.ENERGY; // simple logic for now, TODO: improve based on what base needs
 };
 
@@ -182,7 +182,7 @@ return (game) => {
 		};
 
 		const f_add_tile = (tile) => {
-			const r = tile.get_resources(e.base.get_owner());
+			const r = tile.get_resources(e.base.get_owner(), e.base);
 			result.NUTRIENTS = result.NUTRIENTS + r.NUTRIENTS;
 			result.MINERALS = result.MINERALS + r.MINERALS;
 			result.ENERGY = result.ENERGY + r.ENERGY;

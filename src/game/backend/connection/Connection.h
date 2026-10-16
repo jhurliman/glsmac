@@ -104,6 +104,8 @@ public:
 	virtual void SendMessage( const std::string& message ) = 0;
 
 protected:
+	Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings, network::Network* const network );
+
 	const int DOWNLOAD_CHUNK_SIZE = 16384;
 
 	network::Network* const m_network;

@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 	${PWD}/Faction.cpp
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
+	${PWD}/SmacResourceBonus.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp

@@ -471,6 +471,7 @@ public:
 		return found != m_game.m_admissions.end() && found->second->cancelled;
 	}
 	void ReleaseMapOwnership() { m_map.release(); }
+	void ResetWorld() { m_map.release(); m_game.ResetGame(); }
 	void CancelWorldInitialization() { m_map.release(); m_game.InitFailed( "Operation aborted" ); }
 	bool HasActiveAdmission( game::backend::world_ticket_t ticket ) const {
 		std::lock_guard guard( m_game.m_admission_mutex ); return m_game.MatchesActiveAdmission( ticket );

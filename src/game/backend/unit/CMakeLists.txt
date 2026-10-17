@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/SpriteRender.cpp
 	${PWD}/CvrScoutRender.cpp
 	${PWD}/Unit.cpp
+	${PWD}/SmacConventionalStats.cpp
 	${PWD}/Morale.cpp
 	${PWD}/MoraleSet.cpp
 	${PWD}/SmacScoutCombat.cpp

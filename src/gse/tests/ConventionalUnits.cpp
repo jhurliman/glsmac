@@ -1,4 +1,5 @@
 #include "ConventionalUnits.h"
+#include "fixtures/FriendlyHQMovement.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -9,6 +10,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/FacilityDef.h"
+#include "game/backend/base/PopDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/StaticDef.h"
@@ -73,6 +75,24 @@ void Land( Game* game ) {
 			tile->Update();
 		}
 	}
+}
+
+base::Base* HQ( GSE_CALLABLE, Game* game, Unit* unit, map::tile::Tile* tile, size_t id = 31 ) {
+	auto* manager = game->GetBM();
+	if ( !manager->GetFacilityDef( "HEADQUARTERS" ) ) {
+		manager->DefineFacility( new base::FacilityDef( "HEADQUARTERS", "Fixture HQ", "Fixture", 1, { "fixture", 0, 0, 1, 1 } ) );
+	}
+	if ( !manager->GetPopDef( "HQ_WORKER" ) ) { manager->DefinePop( new base::PopDef( "HQ_WORKER", "Worker", {}, {}, base::PopDef::PF_NONE ) ); }
+	auto* result = new base::Base( game, id, unit->m_owner, game->GetFaction( "GAIANS" ), tile, "HQ",
+		{ { "HEADQUARTERS", manager->GetFacilityDef( "HEADQUARTERS" ) } }, { { 1, base::Pop( nullptr, 1, manager->GetPopDef( "HQ_WORKER" ) ) } }, 2 );
+	manager->SpawnBase( GSE_CALL, result ); return result;
+}
+
+void OriginalFeatures( map::tile::Tile* tile, int flags ) {
+	using namespace map::tile;
+	if ( flags != 0 && flags != 4 && flags != 8 && flags != 32 ) { throw std::runtime_error( "unsupported original HQ fixture feature" ); }
+	tile->features = flags == 32 ? FEATURE_XENOFUNGUS : FEATURE_NONE;
+	tile->terraforming = flags == 4 ? TERRAFORMING_ROAD : flags == 8 ? TERRAFORMING_MAG_TUBE : TERRAFORMING_NONE;
 }
 
 uint32_t SharedNext( uint32_t value ) { return static_cast< uint32_t >( UINT64_C( 1664525 ) * value + UINT64_C( 1013904223 ) ); }
@@ -155,6 +175,128 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			}
 			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
 		} );
+	} );
+	task->AddTest( "conventional friendly HQ movement matches70 original homeless outcomes", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int endpoint = 0; endpoint < 3; ++endpoint ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
+				fixture.RetainedPlanet( 0, 7 ); fixture.RetainedMorale( 0, 7 );
+				auto* unit = Spawn( GSE_CALL, fixture, Record() );
+				auto* source = game->GetMap()->GetTile( 2, 2 ); auto* destination = game->GetMap()->GetTile( 3, 3 );
+				auto* hq = endpoint ? HQ( GSE_CALL, game, unit, endpoint == 1 ? source : destination ) : nullptr;
+				for ( const auto& c : friendly_hq_fixture::CASES ) {
+					if ( c.endpoint != endpoint ) { continue; }
+					Land( game ); unit->SetTile( GSE_CALL, source ); auto record = Record(); record.spent = static_cast< uint8_t >( c.spent );
+					manager->UpdateConventionalUnit( GSE_CALL, unit, record );
+					OriginalFeatures( source, c.source_flags ); OriginalFeatures( destination, c.destination_flags );
+					fixture.GameplayRandom( { c.seed, 0xabcdef01 } ); fixture.Updates();
+					const auto base_bytes = hq ? base::Base::Serialize( hq ).ToString() : std::string{};
+					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
+					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
+					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
+						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
+						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == jsf && Unit::GetNextId() == next && source->features == sf && destination->features == df
+						&& source->terraforming == st && destination->terraforming == dt && ( !hq || base::Base::Serialize( hq ).ToString() == base_bytes ),
+						"case " + std::string( c.id ) + " changed unrelated terrain/base/ID/JSF state" );
+					const auto& updates = fixture.Updates();
+					GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == ( c.spent < 3 ? 1 : 0 ),
+						"case " + std::string( c.id ) + " presented an exhausted command or lost an admitted attempt" );
+				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional friendly HQ rejects unmeasured base and unit contexts atomically", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int scenario = 0; scenario < 22; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
+				fixture.RetainedPlanet( scenario == 2 ? 1 : 0, 0 ); fixture.RetainedMorale( scenario == 3 ? 1 : 0, 0 );
+				auto record = Record(); if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
+				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 );
+				auto* hq = HQ( GSE_CALL, game, unit, scenario == 10 ? game->GetMap()->GetTile( 6, 6 ) : source );
+				fixture.Updates(); // retire valid spawn presentation before deliberate native corruption
+				auto* original_owner = hq->m_owner; auto* original_faction = hq->m_faction;
+				util::FinallyGuard restore_base( [ & ] { hq->m_owner = original_owner; hq->m_faction = original_faction; hq->GetTile()->base = hq; } );
+				if ( scenario == 5 ) { hq->m_pops.clear(); }
+				if ( scenario == 6 ) { hq->m_facilities.clear(); }
+				if ( scenario == 7 ) { hq->m_facilities.emplace( "UNPROVED", game->GetBM()->GetFacilityDef( "HEADQUARTERS" ) ); }
+				if ( scenario == 8 ) { hq->m_owner = &game->GetState()->m_slots->GetSlot( 6 ); }
+				if ( scenario == 9 ) { hq->m_faction = nullptr; }
+				if ( scenario == 11 ) { HQ( GSE_CALL, game, unit, game->GetMap()->GetTile( 6, 6 ), 32 ); fixture.Updates(); }
+				if ( scenario == 12 ) { source->rockiness = ROCKINESS_ROLLING; }
+				if ( scenario == 13 ) { destination->rockiness = ROCKINESS_ROLLING; }
+				if ( scenario == 14 ) { source->features = FEATURE_XENOFUNGUS; }
+				if ( scenario == 15 ) { destination->features = FEATURE_RIVER; }
+				if ( scenario == 16 ) { destination->terraforming = TERRAFORMING_FOREST; }
+				if ( scenario == 17 ) { source->terraforming = TERRAFORMING_ROAD; }
+				if ( scenario == 18 ) { destination->features = FEATURE_XENOFUNGUS; destination->terraforming = TERRAFORMING_ROAD; }
+				if ( scenario == 19 ) { source->base = nullptr; }
+				if ( scenario == 20 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, game->GetMap()->GetTile( 6, 6 ) ); fixture.Updates(); }
+				base::FacilityDef unregistered( "HEADQUARTERS", "Unregistered", "Fixture", 1, { "fixture", 0, 0, 1, 1 } );
+				util::FinallyGuard restore_facility( [ & ] { if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = game->GetBM()->GetFacilityDef( "HEADQUARTERS" ); } } );
+				if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = &unregistered; }
+				fixture.GameplayRandom( { 3, 9 } ); const auto jsf = game->GetRandom()->GetStateString();
+				const auto before = unit->Conventional(); const auto members = source->units; const auto next = Unit::GetNextId();
+				std::string rejection; try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& e ) { rejection = e.what(); }
+				GT_ASSERT( !rejection.empty(), "unmeasured HQ context admitted at " + std::to_string( scenario ) );
+				fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
+				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == members && destination->units.empty()
+					&& fixture.GameplayRandom() == SmacGameplayRandomState( 3, 9 ) && game->GetRandom()->GetStateString() == jsf && Unit::GetNextId() == next,
+					"unmeasured HQ context mutated authority at " + std::to_string( scenario ) );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ), "rejected HQ move queued Unit presentation" );
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional friendly HQ actual world restore preserves canonical base and next command", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		ConventionalUnitFixture source, destination; source.Configure( true, 3, true ); destination.Configure( true, 3, true );
+		std::string snapshot, base_bytes;
+		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Land( game ); Define( game->GetUM() ); source.RetainedPlanet( 0, 9 ); source.RetainedMorale( 0, 9 );
+			auto record = Record(); record.spent = 1; auto* unit = Spawn( GSE_CALL, source, record ); auto* hq = HQ( GSE_CALL, game, unit, unit->GetTile() );
+			base_bytes = base::Base::Serialize( hq ).ToString(); source.GameplayRandom( { 0, 77 } );
+			source.MoveEvent( GSE_CALL, unit, game->GetMap()->GetTile( 3, 3 ) );
+			GT_ASSERT( unit->GetTile() == hq->GetTile() && unit->Conventional().failed_move && unit->Conventional().spent == 3, "saved HQ attempt did not fail at strict draw boundary" );
+			snapshot = source.Snapshot(); GT_OK();
+		} ); if ( !setup.empty() ) { return setup; }
+		const auto restored = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.GameplayRandom( { 99, 88 } ); destination.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable );
+			destination.Restore( GSE_CALL, snapshot ); auto* game = destination.Game(); game->GetBM()->ProcessUnprocessed( GSE_CALL );
+			auto* hq = game->GetBM()->GetBase( 31 ); auto* unit = game->GetUM()->GetUnit( 71 );
+			GT_ASSERT( hq && hq->GetTile() == unit->GetTile() && hq->GetTile()->base == hq
+				&& hq->m_facilities.at( "HEADQUARTERS" ) == game->GetBM()->GetFacilityDef( "HEADQUARTERS" )
+				&& base::Base::Serialize( hq ).ToString() == base_bytes && destination.Snapshot() == snapshot,
+				"world restore lost canonical HQ references or exact continuation" ); GT_OK();
+		} ); if ( !restored.empty() ) { return restored; }
+		std::string continued;
+		for ( auto* fixture : { &source, &destination } ) {
+			const auto error = fixture->Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture->Game(); game->AdvanceTurn( 2 ); auto* unit = game->GetUM()->GetUnit( 71 ); auto* target = game->GetMap()->GetTile( 3, 3 );
+				GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move, "upkeep lost saved HQ failure history" );
+				fixture->MoveEvent( GSE_CALL, unit, target );
+				GT_ASSERT( unit->GetTile() == target && unit->Conventional().spent == 3 && !unit->Conventional().failed_move
+					&& base::Base::Serialize( game->GetBM()->GetBase( 31 ) ).ToString() == base_bytes, "continued HQ command changed base or failure history" );
+				if ( continued.empty() ) { continued = fixture->Snapshot(); }
+				else { GT_ASSERT( fixture->Snapshot() == continued, "restored HQ command diverged from uninterrupted whole world" ); }
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
 	} );
 	task->AddTest( "conventional movement real event commits terrain road tube river and wrap edges", []( GSE*, context::Context* ) -> std::string {
 		using namespace map::tile;

@@ -5,6 +5,10 @@ a bounded local single-player campaign. This is an integer-authoritative backend
 path with a synchronous presentation update. It does not activate conventional
 starting units in the default world script.
 
+This note records the original globally base-free checkpoint. The subsequent
+[friendly HQ extension](conventional-friendly-hq-movement.md) adds one narrowly
+validated exception; its scope and validation are documented separately.
+
 ## Admitted producer inputs
 
 The existing canonical Unit, Tile, accepted simulation participant, frozen

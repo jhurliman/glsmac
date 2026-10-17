@@ -5,27 +5,29 @@
 #include "SmacScoutKeyboardAdmission.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
+#include "game/backend/Player.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/base/Base.h"
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
 
 namespace game::backend::unit {
 namespace {
-smac_edge::Tile EdgeTile( const map::tile::Tile& tile ) {
+smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitted_hq ) {
 	using namespace map::tile;
 	constexpr auto features = FEATURE_RIVER | FEATURE_XENOFUNGUS;
 	constexpr auto terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST;
-	if ( tile.is_water_tile || tile.base || tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY
+	if ( tile.is_water_tile || ( tile.base && tile.base != admitted_hq ) || tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY
 		|| ( tile.features & ~features ) != 0 || ( tile.terraforming & ~terraforming ) != 0
 		|| tile.coord.x > INT32_MAX || tile.coord.y > INT32_MAX ) {
 		throw std::runtime_error( "Conventional movement requires admitted ordinary land without base, landmark or interaction features" );
 	}
-	uint32_t flags = 0;
+	uint32_t flags = tile.base ? smac_edge::Base : 0;
 	if ( tile.features & FEATURE_RIVER ) { flags |= smac_edge::River; }
 	if ( tile.features & FEATURE_XENOFUNGUS ) { flags |= smac_edge::Fungus; }
 	if ( tile.terraforming & TERRAFORMING_ROAD ) { flags |= smac_edge::Road; }
@@ -59,11 +61,6 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	}
 	if ( simulation.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
 		throw std::runtime_error( "Conventional movement requires explicit no-project ordinary-terrain campaign admission" );
-	}
-	// This first route excludes every registered base, including remote empty ones.
-	// This is not a project-absence inference: activation must retire the capability.
-	if ( !m_game->GetBM()->GetBases().empty() ) {
-		throw std::runtime_error( "Conventional movement requires a campaign without registered bases" );
 	}
 	auto* source = unit->GetTile();
 	const auto* map = GetMap();
@@ -103,7 +100,40 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
-	const auto edge_source = EdgeTile( *source ), edge_destination = EdgeTile( *destination );
+	// The measured HQ extension is deliberately narrower than the base-free route.
+	// HEADQUARTERS is the explicit port facility identity, not an English-name or
+	// source-slot classification. The saved no-project capability remains required.
+	const base::Base* admitted_hq = nullptr;
+	const auto& bases = m_game->GetBM()->GetBases();
+	if ( !bases.empty() ) {
+		if ( bases.size() != 1 || m_units.size() != 1 || stored.design_id != 2 || stored.stored_morale != 1 || stored.damage != 0
+			|| design.chassis != 0 || stats.quantum != 3 || stats.basic_allowance != 3 || stats.full_allowance != 3
+			|| context.retained_morale != 0 || social.retained->at( 7 ) != 0 ) {
+			throw std::runtime_error( "Friendly HQ movement requires one healthy neutral design-2 Infantry Scout with quantum3" );
+		}
+		const auto& entry = *bases.begin();
+		const auto* hq = entry.second;
+		const auto* definition = m_game->GetBM()->GetFacilityDef( "HEADQUARTERS" );
+		if ( !hq || hq->m_id != entry.first || hq->GetGame() != m_game || hq->m_owner != unit->m_owner
+			|| hq->m_faction != unit->m_owner->GetPlayer()->GetFaction() || hq->m_pops.size() != 1
+			|| !definition || hq->m_facilities.size() != 1 || hq->m_facilities.begin()->first != "HEADQUARTERS"
+			|| hq->m_facilities.begin()->second != definition ) {
+			throw std::runtime_error( "Friendly HQ movement requires a canonical same-owner population1 HQ with no other facilities" );
+		}
+		const auto* center = hq->GetTile();
+		const auto* outside = center == source ? destination : source;
+		using namespace map::tile;
+		if ( ( center != source && center != destination ) || center->base != hq || outside->base
+			|| center->rockiness != ROCKINESS_FLAT || outside->rockiness != ROCKINESS_FLAT
+			|| center->features != FEATURE_NONE || center->terraforming != TERRAFORMING_NONE
+			|| ( outside->features != FEATURE_NONE && outside->features != FEATURE_XENOFUNGUS )
+			|| ( outside->terraforming != TERRAFORMING_NONE && outside->terraforming != TERRAFORMING_ROAD && outside->terraforming != TERRAFORMING_MAG_TUBE )
+			|| ( outside->features != FEATURE_NONE && outside->terraforming != TERRAFORMING_NONE ) ) {
+			throw std::runtime_error( "Friendly HQ movement requires the HQ endpoint and adjacent flat ordinary road tube or fungus land" );
+		}
+		admitted_hq = hq;
+	}
+	const auto edge_source = EdgeTile( *source, admitted_hq ), edge_destination = EdgeTile( *destination, admitted_hq );
 	const smac_edge::Query query{
 		{ design.id, static_cast< smac_edge::Chassis >( design.chassis ), static_cast< int32_t >( catalog.chassis.chassis.at( design.chassis ).triad ),
 			weapon.offense, static_cast< int32_t >( weapon.mode ), design.plan, design.abilities, stats.basic_allowance },

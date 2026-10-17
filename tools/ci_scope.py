@@ -10,7 +10,9 @@ import subprocess
 
 # Source-directory CMake files commonly contain only source/test registrations.
 # This path classifier does not inspect their contents: build-semantic edits in
-# those files require ci:full. Root configuration and platform runtime select it.
+# those files require ci:full. The mixed gameplay/runtime GLSMAC coordinator
+# also defaults to Linux; thread/lifecycle/platform changes there need ci:full.
+# Root configuration and platform runtime paths still select it automatically.
 PLATFORM_PREFIXES = (
     ".github/", "src/env/", "src/network/", "src/graphics/", "src/audio/",
     "src/input/", "src/error_handler/", "src/common/", "src/gc/",
@@ -19,7 +21,7 @@ PLATFORM_PREFIXES = (
 )
 PLATFORM_FILES = {
     "CMakeLists.txt", "CMakePresets.json", "CMakeUserPresets.json",
-    "src/main.cpp", "src/GLSMAC.cpp", "src/GLSMAC.h",
+    "src/main.cpp",
     "src/config/Config.h", "src/util/UUID.cpp", "src/util/UUID.h",
     "src/util/System.cpp", "src/util/System.h", "src/util/FS.cpp",
     "src/util/FS.h", "src/util/String.cpp", "src/util/Thread.cpp",

@@ -17,18 +17,23 @@ class ScopeTests(unittest.TestCase):
             self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": True}}, [path])[:2], (True, False), path)
 
     def test_platform_paths_expand_drafts(self):
-        for path in ("CMakeLists.txt", "CMakePresets.json", "tools/check.cmake",
+        for path in ("CMakeLists.txt", "CMakePresets.json", "tools/check.cmake", "src/main.cpp",
                      "src/network/impl/Windows.cpp", "src/env/Env.h", "src/util/UUID.cpp",
                      "src/gc/Space.cpp", "src/common/MTModule.h", "src/graphics/opengl/OpenGL.cpp",
                      ".github/workflows/regression.yml", "tools/ci_scope.py", "dependencies/SDL2/CMakeLists.txt",
                      "resource/icon/glsmac.ico", "packaging/Info.plist", "cmake/toolchain.txt", "vcpkg.json", "deps/conan.lock"):
             self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": True}}, [path])[:2], (True, True), path)
 
-    def test_threaded_runtime_selects_full_platform_coverage(self):
-        root = Path(__file__).resolve().parents[2]
+    def test_coordinator_gameplay_uses_linux_with_explicit_platform_override(self):
         for path in ("src/GLSMAC.cpp", "src/GLSMAC.h"):
-            self.assertTrue((root / path).is_file(), path)
-            self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": True}}, [path])[:2], (True, True), path)
+            for draft in (False, True):
+                event = {"pull_request": {"draft": draft}}
+                self.assertEqual(policy.select_scope("pull_request", event, [path])[:2], (True, False), path)
+                event["pull_request"]["labels"] = [{"name": "ci:full"}]
+                self.assertEqual(policy.select_scope("pull_request", event, [path])[:2], (True, True), path)
+            for event_name, event in (("push", {"ref": "refs/heads/main"}), ("merge_group", {})):
+                self.assertEqual(policy.select_scope(event_name, event, [path])[:2], (True, False), path)
+                self.assertEqual(policy.select_scope(event_name, event, [path, "src/main.cpp"])[:2], (True, True), path)
 
     def test_ready_main_and_queue_do_not_repeat_platform_matrix(self):
         paths = ["src/game/backend/base/Rule.cpp"]

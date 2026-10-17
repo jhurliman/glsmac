@@ -25,10 +25,13 @@ retain concurrency cancellation of superseded PR revisions.
 `tools/ci_scope.py` lists platform paths explicitly: toolchains, dependency
 manifests, CI, native graphics/audio/input/network/environment code, shared
 threading/GC code, and platform assets such as icons and plists. Ordinary gameplay
-headers and source-directory `CMakeLists.txt` files do not automatically force a
-platform matrix. This path-only policy does not distinguish additive source
-registrations from build-semantic changes inside those CMake files: the latter
-require `ci:full` or a manual full run. Unlisted platform risk also needs that
+headers, the mixed gameplay/runtime coordinator `src/GLSMAC.cpp` and `.h`, and
+source-directory `CMakeLists.txt` files do not automatically force a platform
+matrix. This path-only policy cannot distinguish ordinary setup/roster changes
+from coordinator thread, reset/shutdown, asynchronous loading or platform changes.
+Those changes require `ci:full` or a manual full run, as do build-semantic changes
+in source CMake files. `src/main.cpp` and the actual platform subsystem paths
+remain automatic full-coverage triggers. Unlisted platform risk also needs the
 override; update the selector when a new platform subsystem is added.
 
 Linux uses a 2 GiB ccache compiler-output cache; compiler/configuration/input

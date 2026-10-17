@@ -199,7 +199,16 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [unit-profile/screen receipt](validation/world-unit-profile-2026-10-17.md)
+The latest [live simulation receipt](validation/live-simulation-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at `39172a7d`. The actual claimed Game startup and restore paths now own explicit
+simulation faction identities and mutable technology state; callbacks receive
+copies, and world V9 preserves exact saved IDs and progress. This checkpoint
+also contains the owned Scout image producer and the original signed32
+base-center correction. Live Scout actors/previews and conventional gameplay
+remain separate work, and these integrated changes have their own PR gates.
+
+The preceding [unit-profile/screen receipt](validation/world-unit-profile-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
 at `58197e64`, plus zero failures across 313 Linux analysis translation units.
 It adds frozen predefined-unit profiles in GlobalSettings V7/world header V8,
@@ -275,8 +284,13 @@ retirement in [#115](https://github.com/jhurliman/glsmac/pull/115). The integrat
 live roster now keeps State-owned Players stable through metadata refreshes,
 resolves selected factions canonically and copies bounded notifications with
 captured epochs. Twenty real packet/notification/collector tests exercise that
-boundary. Startup/failure/MT findings holding #77 still require separate
-corrections; passing roster tests do not close them. Follow the
+boundary. The combined canonical-roster/startup correction is published in
+[#126](https://github.com/jhurliman/glsmac/pull/126), including real claimed
+Failure/Start and pending/running cancellation checks. Its refreshed publication
+passes normal and leak-enabled sanitizer suites after the separate
+[#66](https://github.com/jhurliman/glsmac/pull/66) switch-scope ownership fix.
+Those PRs still require their current-head review and CI gates; #77 and #79
+remain held individually. Follow the
 [pinned roster plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md).
 The owned value codecs landed in [#119](https://github.com/jhurliman/glsmac/pull/119);
 both live writers and decoders now switch together in the integration. Its
@@ -300,24 +314,49 @@ Twelve complete original draw/copy/cleanup cases also establish palette index 9
 as the transparency key. Independent generation now reproduces all 51,456
 first-lookup bytes, and bounded original cases establish palette decoding,
 view construction and the per-cell extended-precision matrix schedule. The
-coherent Scout image producer is being implemented; live rendering integration
-remains open.
+owned Scout image producer is implemented in
+[#133](https://github.com/jhurliman/glsmac/pull/133). Native Windows Release and
+macOS Release with UBSan each match all 19 original drawing views, including
+indexed/depth buffers, generated lighting and the baseline keyed RGBA image.
+The twentieth original case is target-culled and excluded from pixel matching.
+Live actor/cache/preview integration remains in progress, including retained
+texture and presenter callback lifetimes.
 Actual conventional-unit gameplay definitions and commands are unfinished.
 Component results do not establish visual fidelity.
 
+Owned technology state is published in
+[#131](https://github.com/jhurliman/glsmac/pull/131). Its
+[live binding](https://github.com/jhurliman/glsmac/blob/39172a7d4df8b79d46224cafb45b1d3970469859/docs/smac-live-simulation-state.md)
+is now integrated: authoritative startup allocates IDs once before create-world
+callbacks; restores preserve explicit saved IDs, ownership and progress without
+replaying grants. Canonical Player tokens, the roster epoch and Game session
+guard access. Tests cover sparse slots, permuted/non-dense saved IDs, retained
+reconnect, replacement rejection, cancellation and real Client prefix failures.
+This does not activate research upkeep or create conventional units.
+
+The base-center signed32 correction landed in
+[#134](https://github.com/jhurliman/glsmac/pull/134): wrap each original ordered
+operation before its sign checks/clamps. The Release/UBSan probe matches all
+4,167 values in 1,389 retained original scenarios; removing wrapping differs in
+422 scenarios. This calculator result does not claim reachability of synthetic
+extreme social/resource inputs or a complete base economy.
+
 ### Next three implementation slices
 
-1. Publish the validated live roster together with the admitted snapshot
-   failure/reset and MT request correction. Actual pending/running owner and
-   collector cases now pass locally; the combined publication still needs its
-   own checks and review before closing the held findings.
-2. Land the frozen predefined-unit host/world profiles with their reviewed
-   prerequisites, and finish the coherent installed-asset Scout image producer.
-   Connect rendering only after the full indexed/depth/palette result matches
-   the admitted original cases and texture ownership is explicit.
-3. Establish owned runtime faction state with explicit simulation IDs distinct
-   from transport slots, startup discoveries and faction-generated designs, then
-   connect founding to base creation. The observed first-base current SUPPORT
+1. Land the refreshed canonical-roster/startup publication with its separate
+   switch-scope prerequisite after exact-head GitHub review and CI. Then land
+   the already reviewed host/world profile chain and live simulation binding
+   without dropping shared test registrations during dependency merges.
+2. Connect the installed-asset Scout image to real Unit/GetSprite and preview
+   consumers. Retain the image and copied badge textures through preview actor
+   destruction; retire presenter callbacks safely and verify actual registration,
+   teardown and reattachment. Keep the existing native-unit path operational.
+3. Add owned faction custom-design blocks keyed by the admitted simulation IDs,
+   with persistence and exact restore rather than regeneration. Extend original
+   startup evidence across difficulty/network/owner contexts before wiring the
+   generator into ordinary quickstart. Map the port's canonical difficulty
+   identities explicitly to original indices, not its current -3..2 values.
+   Then connect founding to base creation. The observed first-base current SUPPORT
    and INDUSTRY are zero; late faction modifiers precede first upkeep and do
    not retroactively recompute starting minerals. Preserve independent target,
    stored minerals and switching baseline, then connect support/intake,
@@ -335,6 +374,15 @@ generated-world setup, rendered first-input parity or a complete campaign. The
 first base → Scout/Former/Colony → second base loop still needs real producers,
 legal commands and persistence checks. Native lifetime repairs and conventional
 rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
+
+The new conventional Scout reference covers complete battle-core returns in
+187 supplied-world cases, including 3,073 rounds and promotion draws. Combat
+uses a distinct CRT stream with ordered attacker/defender modulo draws and
+ties against the attacker; ordinary movement uses a separate shared range
+stream. Both must be persisted independently from map JSF32 state. Remaining
+movement-tail position/selection, command admission and original new-game/save
+RNG provenance are still being investigated. These are reference findings,
+not implemented combat or a claim of full live-game fidelity.
 
 ### Review and evidence discipline
 

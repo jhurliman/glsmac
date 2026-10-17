@@ -8,6 +8,9 @@
 
 #include "Types.h"
 #include "TileLock.h"
+#include "game/backend/State.h"
+
+namespace gse::tests { class BackendFixture; }
 
 namespace game {
 namespace backend {
@@ -43,6 +46,7 @@ public:
 	WRAPDEFS_PTR( TileManager )
 
 private:
+	friend class gse::tests::BackendFixture;
 	Game* m_game = nullptr;
 
 	// server-side lock tracking
@@ -52,6 +56,14 @@ private:
 		const tiles_t tile_positions;
 	};
 	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
+	struct TileLockBatch {
+		TileManager* manager;
+		State* state;
+		State::game_session_t session;
+		tile_lock_requests_t requests;
+	};
+	TileLockBatch ExtractTileLockBatch( State* state, const State::game_session_t& session );
+	static void DispatchTileLockBatch( TileLockBatch batch );
 	tile_lock_requests_t m_tile_lock_requests = {};
 	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
 	std::vector< std::pair< tiles_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback

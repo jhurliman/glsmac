@@ -3,6 +3,7 @@ SUBDIR( mocks )
 SET( SRC ${SRC}
 
 	${PWD}/Tests.cpp
+	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp

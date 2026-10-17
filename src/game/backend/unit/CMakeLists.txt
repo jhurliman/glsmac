@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacEmptyGroundMovement.cpp
 

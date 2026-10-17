@@ -61,20 +61,21 @@ return {
 			data.columns,
 			data.rows,
 			data.filled,
-			data.pending,
+			data.profit,
+			data.loss,
 			this.growth_cells,
 			'base-screen-nutrients-cell',
 			this.growth_label,
-			(progress_in) => {
+			(progress) => {
 				let progress_text = '';
-				if (data.pending > 0) {
-					progress_text = 'Growth: ' + #to_string(progress_in);
-					if (progress_in == 1) {
+				if (progress.direction > 0) {
+					progress_text = 'Growth: ' + progress.turns;
+					if (progress.turns == '1') {
 						progress_text += ' turn';
 					} else {
 						progress_text += ' turns';
 					}
-				} else if (data.pending < 0) {
+				} else if (progress.direction < 0) {
 					progress_text = 'Hunger!';
 				} else {
 					progress_text = 'Growth: -stagnant-';

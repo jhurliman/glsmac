@@ -60,6 +60,26 @@ the integer operation only guarantees that its failed mutation is not applied.
 The panel's independent endpoint tests still require exact differences through
 2^64 - 1, even when that difference cannot be used as a GSE integer.
 
+The complete base screen also uses presentation-only arithmetic for nutrient
+progress and its existing placeholder energy split. It passes intake and
+consumption separately instead of calling the gameplay growth subtraction.
+`ResourceProgress` computes the sign and exact magnitude of the difference,
+the visible stored/projected cell counts, and the ceiling of
+`(capacity - stored) / positive pending`. Turn counts are decimal strings so
+even `18446744073709551615` is preserved. Negative storage, zero pending, and
+storage above capacity retain the prior mathematical cell/ceiling behavior,
+including zero or negative turn labels. Only the number of visible cells is
+clipped to the existing grid; stored resources and exact labels are unchanged.
+
+The energy helper retains the screen's dummy 40% labs, 20% psych, and remainder
+economy. Quotient/remainder arithmetic rounds the two fifth-based shares exactly
+without a floating conversion. Each share fits signed64 even when the initial
+difference does not. This is the current placeholder display, not a new
+allocation rule or a connection to the authoritative economy. The shared
+production-cell display also uses the progress helper and keeps its existing
+dummy 8 stored / 4 pending / 30 capacity result of six turns. Neither helper
+changes the checked gameplay growth, worker scoring, intake, or event paths.
+
 These checks prevent undefined integer arithmetic; they do not implement new
 original-game economy rules. The small fixed tile
 preview fits long labels by shrinking them, so 20-digit values are not legible
@@ -132,3 +152,38 @@ OSSP UUID allocation mismatch (`UUID.cpp:59`), before these checks completed.
 That failed log is retained; the successful sanitizer run does not claim a
 `--memorydebug` pass. The UUID repair is tracked separately in PR37. No new
 rendered UI check is claimed by this arithmetic repair.
+
+## Complete-screen review repair
+
+A later review correctly found that the isolated resource panel did not cover
+the complete screen: nutrient intake `INT64_MIN` with consumption 2 failed in
+`get_pending_growth`, and the same energy inputs failed in the screen's own
+subtraction. Before changing production code, the real full-screen fixture
+rendered ordinary values successfully and then reproduced both exceptions.
+
+The regression now initializes and sets all ten actual base-screen sections,
+including the shared production-cell caller and final bottom bar. Asset/DOM
+construction and pointer-event registration are lightweight doubles; Base,
+Tile, the default intake callback and the initial nutrient-consumption cases
+are real. Twenty nutrient cases use ordinary population consumption, three
+use explicit endpoint consumption callbacks, and twelve exercise energy.
+They assert exact labels, every progress-cell class, bounded resource-cell
+counts, placeholder allocation values, final-section completion, and unchanged
+Base bytes, RNG and frontend queues. Additional tests compare 153,125 small
+signed progress cases and 625 ordinary allocation cases with the previous
+representable formulas; endpoint and invalid-call cases exercise the shared
+native UI factories.
+
+On the repaired narrow publication ancestry, full normal Linux Clang15 CTest
+passes 5/5 in 36.58 seconds. All nine focused resource groups pass with ASan,
+UBSan and LSan (`detect_leaks=1`, `halt_on_error=1`) using the same copied
+registration mechanism described above. A private copy with only the three
+production screen scripts restored from `106e64529357a4eca6d57a135cda95e80de99005`
+fails exactly the two complete-screen groups (seven pass, two fail), at the
+original nutrient and energy subtractions. The intended source is unchanged
+during that negative control. No additional allocation-tracking or rendered
+UI result is claimed here, and the long-label layout limits above still apply.
+The shared UI-header change also passed the required full LLVM15 correctness
+scan: all 296 eligible production translation units, zero failures in 115.26
+seconds. The Windows-only network implementation remains outside that Linux
+scan's declared scope.

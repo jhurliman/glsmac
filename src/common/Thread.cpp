@@ -31,6 +31,9 @@ void Thread::SetIPS( const float ips ) {
 }
 void Thread::AddModule( Module* module ) {
 	ASSERT( module, "null module added" );
+	if ( module == m_first_stop_module ) {
+		THROW( "early-stop module must be registered exactly once" );
+	}
 	m_modules.push_back( module );
 }
 

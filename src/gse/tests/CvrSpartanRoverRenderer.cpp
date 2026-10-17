@@ -62,6 +62,15 @@ Bytes DetailChain( const std::vector< uint32_t >& scalars ) {
 
 }
 
+std::string MakeSpartanRoverTestAsset( const std::string& name ) {
+	if ( name == "system.txt" ) { return "#OTHER\n1\n#VEH_LIGHT_DIR_MAP\n6, 4, 15\n#NEXT\n2\n"; }
+	if ( name == "PALETTE.PCX" ) { return Pcx( 0, 2, 2 ); }
+	if ( name == "spartans.pcx" ) { return Pcx( 245 ); }
+	if ( name == "VLIGHTS.CVR" ) { return MakeScoutTestAssetWithGeometry( DetailChain( { 0x41a00000, 0x42200000, 0x42a00000 } ) ); }
+	for ( const auto* part : CvrSpartanRoverRenderer::PartNames() ) { if ( name == part ) { return MakeScoutTestAsset( false ); } }
+	throw std::invalid_argument( "Unexpected synthetic Rover asset" );
+}
+
 void AddCvrSpartanRoverRendererTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "CVR Rover detail chain preserves owned levels and exact threshold ties", GT() {
 		auto bytes = DetailChain( { 0x3f800000, 0x40000000, 0x40800000 } ); const auto original = bytes;
@@ -188,11 +197,7 @@ void AddCvrSpartanRoverRendererTests( task::gsetests::GSETests* task ) {
 		std::vector< std::string > reads;
 		const auto renderer = CvrSpartanRoverRenderer::Load( [ & ]( const std::string& name ) {
 			reads.push_back( name );
-			if ( name == "system.txt" ) { return std::string( "#OTHER\n1\n#VEH_LIGHT_DIR_MAP\n6, 4, 15\n#NEXT\n2\n" ); }
-			if ( name == "PALETTE.PCX" ) { return Pcx( 0, 2, 2 ); }
-			if ( name == "spartans.pcx" ) { return Pcx( 245 ); }
-			if ( name == "VLIGHTS.CVR" ) { return MakeScoutTestAssetWithGeometry( DetailChain( { 0x41a00000, 0x42200000, 0x42a00000 } ) ); }
-			return MakeScoutTestAsset( false );
+			return MakeSpartanRoverTestAsset( name );
 		} );
 		GT_ASSERT( reads.size() == 13 && reads.front() == "system.txt" && reads[ 11 ] == "PALETTE.PCX" && reads[ 12 ] == "spartans.pcx", "unexpected asset reads" );
 		for ( size_t i = 0; i < 10; ++i ) { GT_ASSERT( reads[ i + 1 ] == CvrSpartanRoverRenderer::PartNames()[ i ], "composition order differs" ); }

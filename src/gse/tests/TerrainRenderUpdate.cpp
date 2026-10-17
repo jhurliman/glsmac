@@ -75,6 +75,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 		TerrainRenderFixture f;
 		auto* t = f.world.GetTile( 2, 2 ); auto* neighbor = f.world.GetTile( 4, 2 );
 		const auto before_rng = f.gameplay.GetStateString();
+		const auto paint_rng = f.gameplay.GetState();
 		const auto corner_flags = types::texture::AM_MERGE | types::texture::AM_COASTLINE_BORDER | types::texture::AM_ROUND_LEFT;
 		const auto neighbor_flags = types::texture::AM_MERGE | types::texture::AM_COASTLINE_BORDER | types::texture::AM_PERLIN_TOP | types::texture::AM_MIRROR_Y;
 		const size_t water_y = 8 * dim.y * tile::LAYER_WATER;
@@ -86,8 +87,13 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( update.patches.size() == 3 && update.added.size() == 1, "missing interior/corner/neighbor patches or Farm sprite" );
 		GT_ASSERT( t->terraforming == 0 && f.world.GetTileState( t )->sprites.empty(), "preparation published terrain or sprite authority" );
 		Texture expected( dim.x, dim.y );
-		expected.AddFrom( update.patches[ 0 ].pixels.get(), corner_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 1, nullptr, &f.coast );
-		expected.AddFrom( f.world.GetTileState( neighbor )->moisture_original, neighbor_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 0.37f, nullptr, &f.coast );
+		// Recording does not advance gameplay: each paint captured this same state.
+		// The independent direct composition resets its own RNG for each operation.
+		util::random::Random expected_rng( 1 );
+		expected_rng.SetState( paint_rng );
+		expected.AddFrom( update.patches[ 0 ].pixels.get(), corner_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 1, &expected_rng, &f.coast );
+		expected_rng.SetState( paint_rng );
+		expected.AddFrom( f.world.GetTileState( neighbor )->moisture_original, neighbor_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 0.37f, &expected_rng, &f.coast );
 		GT_ASSERT( Equal( expected, *update.patches[ 1 ].pixels ), "coastal ordered masks/corner copy differ" );
 		std::unique_ptr< game::FrontendRequest > queued;
 		{
@@ -100,10 +106,13 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( f.atlas.UpdatedCount() >= 3, "frontend patches did not report GPU dirty areas" );
 		auto second = f.world.PrepareOrdinaryTerrainUpdate( neighbor, tile::TERRAFORMING_FOREST );
 		const auto& again = f.world.GetTerrainUpdatePayload( *second );
+		GT_ASSERT( again.patches.size() == 2, "second change did not produce land and coast patches" );
 		Texture second_expected( dim.x, dim.y );
-		second_expected.AddFrom( queued->data.update_terrain.update->patches[ 0 ].pixels.get(), corner_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 1, nullptr, &f.coast );
-		second_expected.AddFrom( again.patches[ 0 ].pixels.get(), neighbor_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 0.37f, nullptr, &f.coast );
-		GT_ASSERT( again.patches.size() == 2 && Equal( second_expected, *again.patches[ 1 ].pixels ), "second coast replay lost previously committed source" );
+		expected_rng.SetState( paint_rng );
+		second_expected.AddFrom( queued->data.update_terrain.update->patches[ 0 ].pixels.get(), corner_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 1, &expected_rng, &f.coast );
+		expected_rng.SetState( paint_rng );
+		second_expected.AddFrom( again.patches[ 0 ].pixels.get(), neighbor_flags, 0, 0, dim.x - 1, dim.y - 1, 0, 0, 0, 0.37f, &expected_rng, &f.coast );
+		GT_ASSERT( Equal( second_expected, *again.patches[ 1 ].pixels ), "second coast replay lost previously committed source" );
 		GT_ASSERT( f.gameplay.GetStateString() == before_rng, "presentation changed gameplay RNG" );
 		GT_OK();
 	} );

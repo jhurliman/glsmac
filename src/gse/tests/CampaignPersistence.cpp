@@ -33,7 +33,8 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
         std::string snapshot;
         const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* tile=game->GetMap()->GetTile(4,4);
-            for(auto* corner:tile->elevation.corners){*corner=100;}tile->Update();
+            for(auto* corner:tile->elevation.corners){*corner=100;}
+            for(size_t y=0;y<game->GetMap()->GetHeight();++y){for(size_t x=y&1;x<game->GetMap()->GetWidth();x+=2){game->GetMap()->GetTile(x,y)->Update();}}
             MoraleSet::morale_values_t names;for(int i=0;i<7;++i){names.emplace_back("morale"+std::to_string(i));}
             auto* um=game->GetUM();um->DefineMoraleSet(new MoraleSet("campaign",names));
             auto* def=new StaticDef("campaign-scout",um->GetMoraleSet("campaign"),"Scout",MT_LAND,1,

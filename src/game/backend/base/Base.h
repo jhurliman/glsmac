@@ -94,10 +94,10 @@ public:
 		std::array< std::string, 7 > specialists;
 	};
 	void PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles );
-	// Ordinary local-human, governor-off recalculation from owned world inputs.
-	// Retains complete valid selections; this is not an optimize/reset command,
-	// upkeep, or the full resource/citizen calculation and manual worker handler.
-	void RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles );
+	// Local-human, governor-off recalculation from owned world inputs. Explicit
+	// phase selects resource/allocator upkeep inputs; this alone does not post
+	// resources or advance a turn. Retains complete valid selections.
+	void RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary );
 	// Ordinary local tile click. The Game event dispatcher authenticates caller;
 	// all edits and the final allocation are staged before native publication.
 	void CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile );
@@ -145,7 +145,7 @@ private:
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation ) const;
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
-	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context ) const;
+	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary ) const;
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;

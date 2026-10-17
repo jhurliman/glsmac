@@ -74,6 +74,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacLiveTerritory.cpp
 	${PWD}/SmacLiveWorkerKnowledge.cpp
 	${PWD}/SmacLiveWorkerAllocation.cpp
+	${PWD}/SmacProductionTargets.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp

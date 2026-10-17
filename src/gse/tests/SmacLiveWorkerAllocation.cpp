@@ -149,6 +149,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				base->RecalculateSmacWorkers( GSE_CALL, Roles() );
 				GT_ASSERT( Base::Serialize( base ).ToString() == before && base->GetSmacAllocation() == allocation && &base->m_pops.at( 19 ) == pop
 					&& !pop->GetWorkedTileCoords() && pop->m_def->m_smac_specialist_id == 1, "ordinary recalculation optimized a complete valid Doctor allocation" );
+				base->RecalculateSmacWorkers( GSE_CALL, Roles(), SmacBaseResourcePhase::Upkeep );
+				GT_ASSERT( Base::Serialize( base ).ToString() == before, "unmanaged upkeep changed a complete valid Doctor allocation" );
+				GT_ASSERT( Rejects( [ & ] { base->RecalculateSmacWorkers( GSE_CALL, Roles(), static_cast< SmacBaseResourcePhase >( 99 ) ); } )
+					&& Base::Serialize( base ).ToString() == before, "unknown allocation phase changed Base" );
 			}
 			GT_OK();
 		} );

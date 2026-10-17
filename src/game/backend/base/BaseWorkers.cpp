@@ -16,7 +16,7 @@ void BaseManager::RequireSmacWorkerRecalculation() const {
 	if ( !m_game->IsRunning() || m_dispatching_updates ) { THROW( "SMAC worker recalculation requires a running world outside update dispatch" ); }
 }
 
-void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles ) {
+void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles, const SmacBaseResourcePhase phase ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
 		THROW( "SMAC worker recalculation requires its running owning accumulation" );
@@ -25,10 +25,16 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 	const auto context = GetSmacResourceContext();
 	const auto allocation = GetSmacAllocation();
 	if ( !allocation ) { THROW( "SMAC worker recalculation requires complete saved allocation authority" ); }
-	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context ), roles );
+	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context, phase ), roles );
 }
 
-SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context ) const {
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase ) const {
+	Game::ResourceQueryPhase query_phase;
+	switch ( phase ) {
+		case SmacBaseResourcePhase::Ordinary: query_phase = Game::ResourceQueryPhase::Ordinary; break;
+		case SmacBaseResourcePhase::Upkeep: query_phase = Game::ResourceQueryPhase::Upkeep; break;
+		default: THROW( "Unknown SMAC worker calculation phase" );
+	}
 	GetSmacResourceContext();
 	allocation.Validate();
 	context.Validate();
@@ -70,7 +76,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 		const auto coordinates = SmacWorkedSquareCollection::Resolve( radius, index );
 		if ( !coordinates ) { return std::nullopt; }
 		const auto* tile = map->GetTile( ( *coordinates )[ 0 ], ( *coordinates )[ 1 ] );
-		const auto values = m_game->GetCanonicalTileResources( *tile, *this, Game::ResourceQueryPhase::Ordinary );
+		const auto values = m_game->GetCanonicalTileResources( *tile, *this, query_phase );
 		SmacWorkerTileYield result{ {}, tile->is_water_tile };
 		for ( size_t i = 0; i < values.size(); ++i ) {
 			if ( values[ i ] < INT32_MIN || values[ i ] > INT32_MAX ) { THROW( "Worker tile yield exceeds signed32" ); }
@@ -78,12 +84,12 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 		}
 		return result;
 	};
-	// No yield callback publishes a provisional assignment. The ordinary resource
+	// No yield callback publishes a provisional assignment. The resource
 	// subset reads the actual immutable context, not scratch intake/visited bits.
 	const auto result = SmacAutomaticWorkerAllocation::Allocate( {
 		static_cast< int32_t >( m_pops.size() ), static_cast< int32_t >( m_game->GetTurnId() ),
 		global.GetSmacResourceRules()->nutrients_per_citizen, mineral_support, production,
-		{ true, false, false, false, false, false, {} }, context.ManageCitizens(), false,
+		{ true, false, false, false, false, false, {} }, context.ManageCitizens(), phase == SmacBaseResourcePhase::Upkeep,
 		allocation.selected, availability.unavailable, prefix, allocation.specialists, catalog, std::nullopt
 	}, query );
 	// Existing publication prepares reverse assignments/Pop projections/queues

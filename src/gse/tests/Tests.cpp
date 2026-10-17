@@ -71,6 +71,7 @@
 #include "SmacLiveTerritory.h"
 #include "SmacLiveWorkerKnowledge.h"
 #include "SmacLiveWorkerAllocation.h"
+#include "SmacProductionTargets.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
 #include "SmacBaseResourceContext.h"
@@ -281,6 +282,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacLiveTerritoryTests( task );
 		tests::AddSmacLiveWorkerKnowledgeTests( task );
 		tests::AddSmacLiveWorkerAllocationTests( task );
+		tests::AddSmacProductionTargetsTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );

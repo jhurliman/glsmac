@@ -5208,15 +5208,16 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 					else {
 						production.WriteBool( scenario != 8 );
 						production.WriteInt( scenario == 1 ? 0 : scenario == 2 ? std::numeric_limits< int64_t >::max() : 1 );
-						production.WriteString( scenario == 3 ? "" : "missing-unit" ); production.WriteInt( -2 );
+						production.WriteBool( false ); production.WriteString( scenario == 3 ? "" : "missing-unit" ); production.WriteInt( -2 );
 						production.WriteInt( scenario == 4 ? -1 : scenario == 5 ? 5 : 2 );
-						production.WriteString( scenario == 6 ? "" : "missing-baseline" );
+						production.WriteBool( false ); production.WriteString( scenario == 6 ? "" : "missing-baseline" );
 						if ( scenario == 10 ) { production.WriteString( "30" ); }
 						else if ( scenario != 7 ) { production.WriteInt( 30 ); }
+						production.WriteBool( false );
 						if ( scenario == 9 ) { production.WriteInt( 99 ); }
 					}
 					types::Buffer snapshot;
-					snapshot.WriteString( "GLSMAC_BASES_V9" ); snapshot.WriteInt( 2 );
+					snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
 					for ( const auto* id : { "WORKER", "DOCTOR" } ) { snapshot.WriteString( id ); snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() ); }
 					snapshot.WriteInt( 0 ); snapshot.WriteInt( prior_record ? 2 : 1 );
 					if ( prior_record ) { snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() ); }
@@ -5463,7 +5464,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
 			GT_ASSERT( setup.empty(), "worker setup: " + setup );
 			types::Buffer snapshot;
-			snapshot.WriteString( "GLSMAC_BASES_V9" ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
 			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
 				snapshot.WriteString( id );
 				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );

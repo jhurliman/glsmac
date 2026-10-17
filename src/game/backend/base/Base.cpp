@@ -88,7 +88,7 @@ Base::Base(
 	, m_production( production )
 	, m_resource_context( resource_context )
 	, m_allocation( allocation ) {
-	if ( m_production ) { m_production->Validate(); }
+	if ( m_production ) { game->ValidateSmacProductionState( owner, *m_production ); }
 	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
@@ -213,7 +213,7 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
 	m_game->CheckRW( GSE_CALL );
-	if ( production ) { production->Validate(); }
+	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	// Copy completely before swapping: even an allocation failure preserves the
 	// prior record. Neither switching nor baseline arithmetic belongs here.
 	if ( m_production == production ) { return; }
@@ -385,6 +385,7 @@ const char* ProductionKindName( const ProductionItemKind kind ) {
 gse::Value* ProductionItemValue( GSE_CALLABLE, const ProductionItem& item ) {
 	gse::value::object_properties_t fields = { { "kind", VALUE( gse::value::String,, ProductionKindName( item.kind ) ) } };
 	if ( item.kind != ProductionItemKind::Stockpile ) { fields.emplace( "id", VALUE( gse::value::String,, item.id ) ); }
+	if ( item.smac_source_id ) { fields.emplace( "smac_source_id", VALUE( gse::value::Int,, *item.smac_source_id ) ); }
 	return new gse::value::Object( GSE_CALL, fields );
 }
 
@@ -402,18 +403,27 @@ ProductionItem ReadProductionItem( GSE_CALLABLE, const gse::value::object_proper
 	else if ( name == "stockpile" ) { kind = ProductionItemKind::Stockpile; }
 	else { GSE_ERROR( gse::EC.INVALID_CALL, "Unknown production item kind: " + name ); }
 	std::string id;
+	std::optional< int32_t > source;
+	if ( const auto found = fields.find( "smac_source_id" ); found != fields.end() ) {
+		const auto* value = found->second->Deref();
+		if ( value->type != gse::VT_INT ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production source identity requires an integer" ); }
+		const auto number = static_cast< const gse::value::Int* >( value )->value;
+		if ( number < 0 || number >= 512 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production source identity is out of range" ); }
+		source = static_cast< int32_t >( number );
+	}
 	if ( kind == ProductionItemKind::Stockpile ) {
-		if ( fields.size() != 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Stockpile only accepts kind" ); }
+		if ( fields.size() != ( source ? 2u : 1u ) ) { GSE_ERROR( gse::EC.INVALID_CALL, "Stockpile only accepts kind and optional source identity" ); }
 	}
 	else {
 		const auto id_field = fields.find( "id" );
-		if ( fields.size() != 2 || id_field == fields.end() || id_field->second->Deref()->type != gse::VT_STRING ) {
+		if ( fields.size() != ( source ? 3u : 2u ) || id_field == fields.end() || id_field->second->Deref()->type != gse::VT_STRING ) {
 			GSE_ERROR( gse::EC.INVALID_CALL, "Production item requires only kind and string id" );
 		}
 		id = static_cast< gse::value::String* >( id_field->second->Deref() )->value;
 		if ( id.empty() ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production item requires a nonempty identity" ); }
 	}
-	return { kind, std::move( id ) };
+	ProductionItem result{ kind, std::move( id ), source };
+	result.Validate(); return result;
 }
 
 }
@@ -483,12 +493,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
 			if ( !m_production ) { return VALUE( gse::value::Undefined ); }
-			return new gse::value::Object( GSE_CALL, {
+			gse::value::object_properties_t fields{
 				{ "current_item", ProductionItemValue( GSE_CALL, m_production->current_item ) },
 				{ "minerals", VALUE( gse::value::Int,, m_production->minerals ) },
 				{ "baseline_item", ProductionItemValue( GSE_CALL, m_production->baseline_item ) },
 				{ "baseline_minerals", VALUE( gse::value::Int,, m_production->baseline_minerals ) },
-			} );
+			};
+			if ( m_production->queue ) {
+				gse::value::array_elements_t queue;
+				for ( const auto& item : *m_production->queue ) { queue.push_back( ProductionItemValue( GSE_CALL, item ) ); }
+				fields.emplace( "queue", VALUE( gse::value::Array,, queue ) );
+			}
+			return new gse::value::Object( GSE_CALL, fields );
 		} )
 	},
 	{
@@ -501,14 +517,28 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			}
 			else {
 				N_GETVALUE( data, 0, Object );
-				if ( data.size() != 4 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production state requires exactly four fields" ); }
+				const auto queue_field = data.find( "queue" );
+				if ( data.size() != ( queue_field == data.end() ? 4u : 5u ) ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production state requires four fields and optional queue" ); }
 				N_GETPROP( current_fields, data, "current_item", Object );
 				N_GETPROP( minerals, data, "minerals", Int );
 				N_GETPROP( baseline_fields, data, "baseline_item", Object );
 				N_GETPROP( baseline_minerals, data, "baseline_minerals", Int );
 				const auto current = ReadProductionItem( GSE_CALL, current_fields );
 				const auto baseline = ReadProductionItem( GSE_CALL, baseline_fields );
-				SetProductionState( GSE_CALL, ProductionState{ current, minerals, baseline, baseline_minerals } );
+				std::optional< std::vector< ProductionItem > > queue;
+				if ( queue_field != data.end() ) {
+					const auto* value = queue_field->second->Deref();
+					if ( value->type != gse::VT_ARRAY ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production queue requires an array" ); }
+					const auto& items = static_cast< const gse::value::Array* >( value )->value;
+					if ( items.size() > ProductionState::MAX_QUEUE_ITEMS ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production queue exceeds port budget" ); }
+					queue.emplace(); queue->reserve( items.size() );
+					for ( auto* candidate : items ) {
+						const auto* entry = candidate->Deref();
+						if ( entry->type != gse::VT_OBJECT ) { GSE_ERROR( gse::EC.INVALID_CALL, "Production queue entry requires an object" ); }
+						queue->push_back( ReadProductionItem( GSE_CALL, static_cast< const gse::value::Object* >( entry )->value ) );
+					}
+				}
+				SetProductionState( GSE_CALL, ProductionState{ current, minerals, baseline, baseline_minerals, std::move( queue ) } );
 			}
 			return VALUE( gse::value::Undefined );
 		} )

@@ -30,6 +30,7 @@
 #include "map/GlsmacTerritoryTopology.h"
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
+#include "base/ProductionState.h"
 #include "State.h"
 
 // TODO: remove those
@@ -388,6 +389,12 @@ public:
 	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
+	// Positional source identity is explicit; opaque IDs are never parsed.
+	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
+	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;
+	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const;
+	// Only the ordinary prerequisite query, not active/role/coastal buildability.
+	bool HasSmacProductionPrerequisite( const slot::Slot* owner, const base::ProductionItem& item ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
 	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );
@@ -533,6 +540,7 @@ private:
 	unit::ConventionalUnitState PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const;
 	unit::ConventionalUnitContext ResolveConventionalIdentity( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
 	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
+	const faction::SmacSimulationParticipant& RequireSmacProductionOwner( const slot::Slot* owner ) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;

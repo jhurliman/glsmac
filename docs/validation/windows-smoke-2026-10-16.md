@@ -3,7 +3,10 @@
 This is a GLSMAC integration observation, not an original-game comparison or a
 claim of SMAC/SMAX fidelity.
 
-- Checkout: combined local commit `69e72f069b5f4161c36eadf4468fdd291f844c19`.
+- Checkout: combined commit
+  [`69e72f06`](https://github.com/jhurliman/glsmac/commit/69e72f069b5f4161c36eadf4468fdd291f844c19),
+  published as an ancestor of the immutable evidence branch
+  [`codex/validation-20261016`](https://github.com/jhurliman/glsmac/tree/codex/validation-20261016).
 - Build: native Windows Debug, `x64-debug-win-clang` CMake preset.
 - Assets: installed GOG Planetary Pack on aleph0, using `--smactype gog`.
 - Window: 1280 × 800; quickstart world: 32 × 32; random seed was not pinned.
@@ -43,6 +46,34 @@ with the combined camera/light lifetime fixes. It does not validate numeric
 yields against the original, worker reassignment, save/reload, network play,
 audio, performance, or sustained stability. The optional allocation tracker was
 not enabled for this interactive run.
+
+## Headless checks
+
+The following separate runs on October 16, 2026 used combined commit
+[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5),
+the tip of the evidence branch above. This adds the framed-buffer read fix to
+the interactive smoke checkout. The published commit makes the complete tested
+source tree, including the camera/light changes, available for reconstruction;
+the supporting logs remain local.
+
+| Check | Command after build | Observed result |
+| --- | --- | --- |
+| Linux Debug, WSL Ubuntu 22.04 | `ctest --test-dir build --output-on-failure` | 4/4 passed, 18.48 s |
+| Native Windows Debug | `ctest --test-dir out/build/x64-debug-win-clang --output-on-failure` | 4/4 passed, 20.51 s |
+| Selected correctness policy, LLVM 15.0.7 | `python3 tools/analyze_cpp.py --all --jobs 8` | 284 production translation units, 52.75 s, zero failures; Windows-only network implementation explicitly skipped |
+| Linux ASan/UBSan | `ctest --test-dir <asan-build> --output-on-failure` | Three exit probes passed; the main suite process exited with a segfault before output at 0.03 s |
+| Targeted sanitizer retry | `ctest --test-dir <asan-build> -R '^gse$' --output-on-failure` | Main native/script suite passed, 18.04 s |
+
+The sanitizer environment used `ASAN_OPTIONS=detect_leaks=0:halt_on_error=1`
+and `UBSAN_OPTIONS=halt_on_error=1`. The initial empty-output failure resembles
+the separately encountered sanitizer startup issue, but this run did not
+capture its stack. Retain both attempts; this is not a clean first-pass 4/4
+sanitizer result or a leak-check result.
+
+Local evidence files use the `buffer-integrated-` prefix under
+`/home/jhurliman/src/glsmac-gc-audit/` (Linux build, CTest, analysis, sanitizer
+CTest and targeted retry) and `out/` (Windows build and CTest). Later integration
+commits require their own relevant validation.
 
 ## Follow-ups
 

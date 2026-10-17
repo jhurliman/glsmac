@@ -9,6 +9,7 @@
 #include "util/FinallyGuard.h"
 #include "types/Buffer.h"
 #include "State.h"
+#include "WorldSnapshotRules.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
 #include "Random.h"
@@ -663,6 +664,14 @@ WRAPIMPL_BEGIN( Game )
 				AdvanceTurn( turn_id );
 
 				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"get_ruleset",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) { GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" ); }
+				return VALUE( gse::value::String,, m_state->m_settings.global.GetRulesetId() );
 			} )
 		},
 		{
@@ -1685,51 +1694,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					m_tm->ReleaseTileLocks( slot_num );
 				};*/
 
-				connection->m_on_download_request = [ this ]() -> const std::string {
-					if ( !m_map ) {
-						// map not generated yet
-						return "";
-					}
-					MTModule::Log( "Preparing snapshot for download" );
-					types::Buffer buf;
-
-					// map
-					m_map->SaveToBuffer( buf );
-
-					// resources
-					{
-						types::Buffer b;
-						m_rm->Serialize( b );
-						buf.WriteString( b.ToString() );
-					}
-
-					// units
-					{
-						types::Buffer b;
-						m_um->Serialize( b );
-						buf.WriteString( b.ToString() );
-					}
-
-					// bases
-					{
-						types::Buffer b;
-						m_bm->Serialize( b );
-						buf.WriteString( b.ToString() );
-					}
-
-					// animations
-					{
-						types::Buffer b;
-						m_am->Serialize( b );
-						buf.WriteString( b.ToString() );
-					}
-
-					// send turn info
-					MTModule::Log( "Sending turn ID: " + std::to_string( m_current_turn.GetId() ) );
-					buf.WriteInt( m_current_turn.GetId() );
-
-					return buf.ToString();
-				};
+				connection->m_on_download_request = [ this ]() { return SerializeWorldSnapshot(); };
 
 				connection->SetGameState( connection::Connection::GS_INITIALIZING );
 			}
@@ -1880,64 +1845,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 					SetLoaderText( "Downloading world snapshot" );
 
-					connection->m_on_download_progress = [ this ]( const float progress ) -> void {
-						SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
-					};
-					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
-						connection->m_on_download_complete = nullptr;
-						connection->m_on_download_progress = nullptr;
-						MTModule::Log( "Unpacking world snapshot" );
-
-						m_state->WithGSE( this, [ this, connection, serialized_snapshot ]( GSE_CALLABLE ) {
-
-							auto buf = types::Buffer( serialized_snapshot );
-
-							// map
-							auto b = types::Buffer( buf.ReadString() );
-							NEW( m_map, map::Map, this );
-							const auto ec = m_map->LoadFromBuffer( b );
-							if ( ec == map::Map::EC_NONE ) {
-
-								// resources
-								{
-									auto ub = types::Buffer( buf.ReadString() );
-									m_rm->Deserialize( ub );
-								}
-
-								// units
-								{
-									auto ub = types::Buffer( buf.ReadString() );
-									m_um->Deserialize( GSE_CALL, ub );
-								}
-
-								// bases
-								{
-									auto bb = types::Buffer( buf.ReadString() );
-									m_bm->Deserialize( GSE_CALL, bb );
-								}
-
-								// animations
-								{
-									auto ab = types::Buffer( buf.ReadString() );
-									m_am->Deserialize( ab );
-								}
-
-								// get turn info
-								const auto turn_id = buf.ReadInt();
-								if ( turn_id > 0 ) {
-									MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
-									AdvanceTurn( turn_id );
-								}
-
-								m_game_state = GS_INITIALIZING;
-
-							}
-							else {
-								MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
-								connection->Disconnect( "Snapshot format mismatch" );
-							}
-						});
-					};
+					ConfigureWorldDownload( connection );
 					connection->RequestDownload();
 				};
 				if ( connection->GetGameState() == connection::Connection::GS_RUNNING ) {
@@ -1966,6 +1874,121 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		);
 	}
+}
+
+std::string Game::SerializeWorldSnapshot() const {
+	if ( !m_map ) {
+		// map not generated yet
+		return "";
+	}
+	MTModule::Log( "Preparing snapshot for download" );
+	types::Buffer buf;
+	world_snapshot::WriteHeader( buf, m_state->m_settings.global );
+
+	// map
+	m_map->SaveToBuffer( buf );
+
+	// resources
+	{
+		types::Buffer b;
+		m_rm->Serialize( b );
+		buf.WriteString( b.ToString() );
+	}
+
+	// units
+	{
+		types::Buffer b;
+		m_um->Serialize( b );
+		buf.WriteString( b.ToString() );
+	}
+
+	// bases
+	{
+		types::Buffer b;
+		m_bm->Serialize( b );
+		buf.WriteString( b.ToString() );
+	}
+
+	// animations
+	{
+		types::Buffer b;
+		m_am->Serialize( b );
+		buf.WriteString( b.ToString() );
+	}
+
+	// send turn info
+	MTModule::Log( "Sending turn ID: " + std::to_string( m_current_turn.GetId() ) );
+	buf.WriteInt( m_current_turn.GetId() );
+
+	return buf.ToString();
+}
+
+void Game::ConfigureWorldDownload( connection::Client* connection ) {
+	connection->m_on_download_progress = [ this ]( const float progress ) -> void {
+		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
+	};
+	connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
+		connection->m_on_download_complete = nullptr;
+		connection->m_on_download_progress = nullptr;
+		MTModule::Log( "Unpacking world snapshot" );
+
+		m_state->WithGSE( this, [ this, connection, serialized_snapshot ]( GSE_CALLABLE ) {
+
+			try {
+				auto buf = types::Buffer( serialized_snapshot );
+				world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
+
+				// map
+				auto b = types::Buffer( buf.ReadString() );
+				NEW( m_map, map::Map, this );
+				const auto ec = m_map->LoadFromBuffer( b );
+				if ( ec == map::Map::EC_NONE ) {
+
+					// resources
+					{
+						auto ub = types::Buffer( buf.ReadString() );
+						m_rm->Deserialize( ub );
+					}
+
+					// units
+					{
+						auto ub = types::Buffer( buf.ReadString() );
+						m_um->Deserialize( GSE_CALL, ub );
+					}
+
+					// bases
+					{
+						auto bb = types::Buffer( buf.ReadString() );
+						m_bm->Deserialize( GSE_CALL, bb );
+					}
+
+					// animations
+					{
+						auto ab = types::Buffer( buf.ReadString() );
+						m_am->Deserialize( ab );
+					}
+
+					// get turn info
+					const auto turn_id = buf.ReadInt();
+					if ( turn_id > 0 ) {
+						MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
+						AdvanceTurn( turn_id );
+					}
+
+					m_game_state = GS_INITIALIZING;
+
+				}
+				else {
+					MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
+					connection->Disconnect( "Snapshot format mismatch" );
+				}
+			}
+			catch ( const std::runtime_error& error ) {
+				MTModule::Log( std::string( "WARNING: failed to unpack world snapshot: " ) + error.what() );
+				connection->Disconnect( "Snapshot format mismatch" );
+			}
+		});
+	};
 }
 
 void Game::ResetGame() {

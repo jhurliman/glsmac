@@ -80,6 +80,16 @@ void Space::Add( Object* object ) {
 	//GC_LOG( "Adding object: " + std::to_string( (unsigned long long)object ) );
 	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " already exists" );
 	m_accumulated_objects.insert( object );
+	object->m_pending_space = this;
+}
+
+void Space::CancelPending( Object* object ) noexcept {
+	// Called only while the owner is accumulating, including constructor unwind.
+	// AccumulateImpl already excludes collection and other accumulations here.
+	// Published objects have no pending token, so normal GC destruction never
+	// changes a set being iterated by Collect or reacquires its locks.
+	m_accumulated_objects.erase( object );
+	object->m_pending_space = nullptr;
 }
 
 void Space::Accumulate( gc::Object* const owner, const f_accum_t& f, const f_accum_t& f_cleanup, const bool need_now ) {
@@ -165,6 +175,7 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 				std::lock_guard guard( m_objects_mutex );
 				GC_LOG( "Accumulated " + std::to_string( m_accumulated_objects.size() ) + " objects" );
 				m_objects.insert( m_accumulated_objects.begin(), m_accumulated_objects.end() );
+				for ( auto* object : m_accumulated_objects ) { object->m_pending_space = nullptr; }
 				m_accumulated_objects.clear();
 			}
 		};

@@ -88,6 +88,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 	for ( const auto length : { size_t( 0 ), size_t( 1 ), bytes.size() - 1 } ) { add( "truncated predefined payload", bytes.substr( 0, length ) ); }
 	add( "extra predefined fields", bytes + wrong.ToString() );
 	add( "oversized predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ) );
+	add( "oversized downloaded predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES * 4, 'x' ) );
 	types::Buffer bad_version; bad_version.WriteInt( 2 );
 	add( "unknown predefined version", bad_version.ToString() + bytes.substr( bad_version.lenw ) );
 	for ( const auto value : { int64_t( 1 ), INT64_MAX } ) {

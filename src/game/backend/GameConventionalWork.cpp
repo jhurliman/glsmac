@@ -5,6 +5,9 @@
 #include "map/Map.h"
 #include "map/tile/Tile.h"
 #include "gse/value/Int.h"
+#include <algorithm>
+#include <limits>
+#include <set>
 
 namespace game::backend {
 
@@ -23,6 +26,53 @@ std::optional<map::SmacWorkerKnowledge> Game::PrepareConventionalWorkMemory(cons
     }
     memory.at(index)=map::SmacWorkerKnowledge::Improvements{tile->features,terraforming,tile->base!=nullptr,!tile->units.empty()};
     return map::SmacWorkerKnowledge::Create(data);
+}
+
+std::optional<size_t> Game::SelectLocalConventionalUnit(size_t turn_id,std::optional<size_t> current,
+    std::optional<size_t> reference,types::Vec2<size_t> focus,bool retain_current) const {
+    if(!IsRunning() || !m_um || !m_map || !m_state || !m_slot || turn_id!=GetTurnId()
+        || m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) {return {};}
+    RequireSmacLocalHumanOwner(m_slot);
+    RequireConventionalSightWorld();
+    const auto width=m_map->GetWidth(),height=m_map->GetHeight();
+    if(!m_map->GetSmacWorkerKnowledge() || width>INT32_MAX || height>INT32_MAX
+        || focus.x>=width || focus.y>=height) {throw std::runtime_error("Unit selection requires actual map focus and geometry");}
+    const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
+    const auto valid=[&](const unit::Unit* actor){
+        const auto* tile=actor?actor->GetTile():nullptr;
+        return tile && tile->coord.x<width && tile->coord.y<height && !((tile->coord.x^tile->coord.y)&1)
+            && m_map->GetTile(tile->coord.x,tile->coord.y)==tile;
+    };
+    auto origin=focus;
+    if(reference) {
+        const auto* actor=m_um->GetUnit(*reference);
+        if(actor && actor->m_owner==m_slot && valid(actor)) {origin=actor->GetTile()->coord;}
+    }
+    std::optional<size_t> selected; int64_t best=std::numeric_limits<int64_t>::max();
+    std::set<size_t> seen;
+    for(const auto id:m_um->GetUnitRecordOrder()) {
+        const auto* actor=m_um->GetUnit(id);
+        if(!actor || !seen.insert(id).second) {throw std::runtime_error("Unit selection record order differs from registry");}
+        if(actor->m_owner!=m_slot || !valid(actor)) {continue;}
+        if(!actor->IsConventional()) {throw std::runtime_error("Native local selection requires ordinary conventional units");}
+        actor->RequireConventionalReady();
+        // A persisted selected work order holds controller identity between
+        // turns even after dispatch exhausts it. This is separate from the
+        // nearest-unit helper, whose eligibility still requires allowance.
+        if(retain_current && current==id && actor->Conventional().work_order!=unit::ConventionalUnitState::WorkOrder::None) {return id;}
+        if(!actor->HasMovesLeft()) {continue;}
+        // The enclosing human controller keeps an eligible selection without
+        // invoking the nearest-candidate scan. The scan itself only breaks ties.
+        if(retain_current && current==id) {return id;}
+        const auto position=actor->GetTile()->coord;
+        int64_t dx=std::abs(int64_t(position.x)-int64_t(origin.x));
+        const int64_t dy=std::abs(int64_t(position.y)-int64_t(origin.y));
+        if(knowledge.horizontal_wrap) {dx=std::min(dx,int64_t(width)-dx);}
+        const auto distance=std::max(dx,dy)-(((dx+dy)/2-std::min(dx,dy)+1)/2);
+        if(!selected || distance<best || (distance==best && current==id)) {selected=id;best=distance;}
+    }
+    if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Unit selection omitted a registered record");}
+    return selected;
 }
 
 bool Game::QueueSelectedConventionalWork(GSE_CALLABLE,size_t unit_id,size_t turn_id) {

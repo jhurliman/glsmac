@@ -2208,6 +2208,51 @@ public:
 		return check();
 	}
 
+	std::string CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) {
+		auto* ui = new ::ui::UI( GSE_CALL ); m_gse->AddRootObject( ui );
+		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
+		game::frontend::Game frontend( m_glsmac.get(), m_state, ui, {}, {} );
+		frontend.m_is_initialized = true; frontend.m_is_turn_active = true; frontend.m_turn_id = m_game.GetTurnId();
+		util::FinallyGuard clean_frontend( [ & ] { frontend.m_is_initialized = false; } );
+		scene::Scene controller_scene( "Selected work fixture", scene::SCENE_TYPE_WORLD );
+		game::frontend::sprite::InstancedSpriteManager sprites( &controller_scene );
+		frontend.m_ism = &sprites;
+		util::FinallyGuard detach_sprites( [ & ] { frontend.m_ism = nullptr; } );
+		game::frontend::unit::UnitManager controller( &frontend );
+		const auto focus = actor->GetTile()->coord;
+		for ( int visit = 1; visit <= 4; ++visit ) {
+			if ( visit > 1 ) {
+				m_game.Event( GSE_CALL, "complete_turn", {} ); ProcessEvents();
+				frontend.m_turn_id = m_game.GetTurnId();
+				GT_ASSERT( scout->HasMovesLeft(), "upkeep did not make the competing Scout ready" );
+				GT_ASSERT( m_game.SelectLocalConventionalUnit(m_game.GetTurnId(),{},{},focus,false) == actor->m_id,
+					"selection used numeric IDs instead of the saved creation record order" );
+			}
+			controller.QueueAutomaticSelectionAt( focus );
+			const auto request = controller.m_selection_visit;
+			GT_ASSERT( request && request->ready.load() && request->selected == actor->m_id,
+				"automatic native selection did not retain the working Former" );
+			controller.m_controller_selection = request->selected;
+			controller.m_selection_visit.reset();
+			controller.PumpSelectedWork( request->selected ); ProcessEvents();
+			GT_ASSERT( actor->Conventional().spent == 3 && actor->Conventional().work_progress == ( visit == 4 ? 0 : 2*visit ),
+				"selected Former did not follow original controller progress" );
+			// Preserve the held work identity even immediately after dispatch when
+			// a competing Scout is ready. Completion releases that held selection.
+			controller.QueueAutomaticSelectionAt( focus );
+			GT_ASSERT( controller.m_selection_visit->ready.load() && controller.m_selection_visit->selected == (visit < 4 ? actor->m_id : scout->m_id),
+				"post-work selection lost the held Former or retained a completed order" );
+			controller.m_selection_visit.reset();
+			if ( visit == 1 ) {
+				GT_ASSERT( !m_game.SelectLocalConventionalUnit(m_game.GetTurnId(),actor->m_id,actor->m_id,focus,false),
+					"standalone nearest scan admitted exhausted units" );
+			}
+		}
+		GT_ASSERT( actor->GetTile()->terraforming & game::backend::map::tile::TERRAFORMING_FARM,
+			"retained controller sequence did not complete the Farm" );
+		GT_OK();
+	}
+
 	std::string CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) {
 		auto* ui = new ::ui::UI( GSE_CALL ); m_gse->AddRootObject( ui );
 		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
@@ -4883,6 +4928,7 @@ void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( GSE_CALL, actor ); }
+std::string ConventionalUnitFixture::CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) { return fixture->CheckRetainedWorkSelection( GSE_CALL, actor, scout ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }
 std::string ConventionalUnitFixture::CheckEarlyStartup( int scenario ) { return fixture->CheckEarlyConventionalStartup( scenario ); }

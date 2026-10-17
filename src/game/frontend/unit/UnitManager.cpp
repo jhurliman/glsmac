@@ -1,6 +1,7 @@
 #include "UnitManager.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "Unit.h"
 #include "UnitDef.h"
@@ -29,6 +30,7 @@ UnitManager::UnitManager( Game* game )
 
 UnitManager::~UnitManager() {
 	m_work_visit.reset();
+	m_selection_visit.reset();
 	for ( const auto& it : m_units ) {
 		delete it.second;
 	}
@@ -42,6 +44,7 @@ UnitManager::~UnitManager() {
 }
 
 void UnitManager::Iterate() {
+	ReceiveAutomaticSelection();
 	if ( m_selected_unit ) {
 		m_selected_unit->Iterate();
 	}
@@ -67,6 +70,69 @@ void UnitManager::Iterate() {
 		else {
 			it++;
 		}
+	}
+}
+
+void UnitManager::QueueAutomaticSelectionAt( types::Vec2<size_t> focus ) {
+	const auto turn = m_game->m_turn_id;
+	if ( m_selection_visit && m_selection_visit->turn_id == turn && m_selection_visit->current == m_controller_selection
+		&& m_selection_visit->focus == focus ) { return; }
+	auto visit = std::make_shared<SelectionVisit>();
+	visit->turn_id = turn; visit->current = m_controller_selection; visit->focus = focus;
+	m_selection_visit = visit;
+	const std::weak_ptr<SelectionVisit> weak = visit;
+	auto* state = m_game->m_state;
+	state->WithGameSession( state->CaptureGameSession(), state, [ weak ]( backend::Game* const game, GSE_CALLABLE ) {
+		if ( const auto request = weak.lock() ) {
+			request->selected = game->SelectLocalConventionalUnit( request->turn_id, request->current, request->current, request->focus, true );
+			request->ready.store( true, std::memory_order_release );
+		}
+	} );
+}
+
+bool UnitManager::QueueAutomaticSelection() {
+	const bool canonical = std::any_of( m_units.begin(), m_units.end(), []( const auto& entry ) {
+		return entry.second->IsOwned() && entry.second->IsConventional();
+	} );
+	if ( !canonical ) { return false; }
+	// Camera-to-tile projection is the port's view-focus input. Native selection
+	// owns the original integer distance and record-order semantics.
+	const auto width = m_game->m_map_data.width, height = m_game->m_map_data.height;
+	if ( !width || !height ) { return false; }
+	const auto& camera = m_game->m_camera_position;
+	const auto& view = m_game->m_viewport;
+	if ( camera.z <= 0 || view.window_aspect_ratio <= 0 || view.ratio.y <= 0 ) { return false; }
+	const double x = 1.0 - m_game->m_map_data.range.percent_to_absolute.x.Unclamp( camera.x / camera.z / view.window_aspect_ratio );
+	const double y = 1.0 - m_game->m_map_data.range.percent_to_absolute.y.Unclamp( camera.y / camera.z / view.ratio.y / 0.707f );
+	if ( !std::isfinite(x) || !std::isfinite(y) ) { return false; }
+	const auto cy = static_cast<size_t>(std::clamp(y,0.0,1.0)*double(height-1));
+	auto cx = static_cast<size_t>(std::clamp(x,0.0,1.0)*double(width-1));
+	if ( (cx^cy)&1 ) { cx = cx+1<width ? cx+1 : cx-1; }
+	QueueAutomaticSelectionAt( {cx,cy} );
+	return true;
+}
+
+void UnitManager::ReceiveAutomaticSelection() {
+	if ( !m_selection_visit ) { return; }
+	if ( !m_game->IsTurnActive() || m_game->m_world_retired || m_selection_visit->turn_id != m_game->m_turn_id ) {
+		m_selection_visit.reset(); return;
+	}
+	if ( !m_selection_visit->ready.load(std::memory_order_acquire) ) { return; }
+	const auto selected = m_selection_visit->selected;
+	if ( selected ) {
+		auto* unit = GetUnitById(*selected);
+		// Backend updates may precede their frontend records. Keep this result
+		// until the corresponding ready presentation arrives; never choose by FR order.
+		if ( !unit || !unit->IsActive() ) { return; }
+		m_selection_visit.reset();
+		SelectUnit( unit, true );
+		m_game->ScrollToTile( unit->GetTile(), true );
+	} else {
+		m_selection_visit.reset();
+		const auto retained = m_controller_selection;
+		m_game->SelectUnitOrSelectedTile( m_selected_unit );
+		m_selected_unit = nullptr;
+		m_controller_selection = retained;
 	}
 }
 
@@ -187,6 +253,9 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 	m_units.erase( it );
 
+	if ( m_controller_selection == unit_id ) { m_controller_selection.reset(); }
+	const bool pending_selection = m_selection_visit != nullptr;
+	m_selection_visit.reset();
 	const bool was_selected = m_selected_unit == unit;
 	m_selectable_units.erase( std::remove( m_selectable_units.begin(), m_selectable_units.end(), unit ), m_selectable_units.end() );
 	if ( was_selected ) { DeselectUnit(); }
@@ -198,12 +267,14 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	m_game->Trigger( m_game->GetGame(), "unit_despawn", ARGS_F( unit_id ) {
 		{ "unit_id", VALUE( gse::value::Int,, unit_id ) },
 	}; } );
-	if ( was_selected ) { SelectNextUnitOrSwitchToTileSelection(); }
+	if ( was_selected || pending_selection ) { SelectNextUnitOrSwitchToTileSelection(); }
 	m_game->RefreshSelectedTile( m_selected_unit );
 
 }
 
 void UnitManager::RefreshUnit( Unit* unit ) {
+	const bool pending_selection = m_selection_visit != nullptr;
+	m_selection_visit.reset();
 	if ( m_work_visit && m_work_visit->unit_id == unit->GetId() ) { m_work_visit.reset(); }
 	const auto was_active = unit->IsActive();
 	UpdateSelectable( unit );
@@ -217,6 +288,7 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 		}
 	}
 	m_game->UpdateRelatedWidgets( ui::WT_UNIT_PREVIEW, unit->GetId(), unit );
+	if ( pending_selection ) { SelectNextUnitMaybe( true ); }
 }
 
 void UnitManager::RelocateConventionalUnit( Unit* unit, tile::Tile* dst_tile ) {
@@ -275,6 +347,8 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		m_game->SetSelectedTile( m_selected_unit->GetTile() );
 		m_game->RefreshSelectedTile( m_selected_unit );
 	}
+	m_controller_selection = unit->GetId();
+	m_selection_visit.reset();
 	if ( actually_select_unit && m_selected_unit->IsActive() && m_game->IsTurnActive() ) {
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();
 		if ( most_important_unit && m_selected_unit != most_important_unit ) {
@@ -306,6 +380,8 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 
 void UnitManager::DeselectUnit() {
 	m_work_visit.reset();
+	m_selection_visit.reset();
+	m_controller_selection.reset();
 	m_previously_deselected_unit = m_selected_unit;
 	if ( m_selected_unit ) {
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();
@@ -349,7 +425,7 @@ void UnitManager::AddSelectable( Unit* unit ) {
 		const bool was_empty = m_selectable_units.empty();
 		m_selectable_units.push_back( unit );
 		if ( was_empty ) {
-			SelectNextUnitMaybe();
+			SelectNextUnitMaybe( true );
 		}
 	}
 }
@@ -440,10 +516,11 @@ Unit* UnitManager::GetNextSelectable() {
 	return nullptr;
 }
 
-const bool UnitManager::SelectNextUnitMaybe() {
+const bool UnitManager::SelectNextUnitMaybe( bool automatic ) {
 	if ( !m_game->IsTurnActive() ) {
 		return false;
 	}
+	if ( automatic && QueueAutomaticSelection() ) { return true; }
 	auto* selected_unit = GetNextSelectable();
 	if ( selected_unit ) {
 		SelectUnit( selected_unit, true );
@@ -457,7 +534,7 @@ const bool UnitManager::SelectNextUnitMaybe() {
 }
 
 void UnitManager::SelectNextUnitOrSwitchToTileSelection() {
-	if ( !SelectNextUnitMaybe() ) {
+	if ( !SelectNextUnitMaybe( true ) ) {
 		m_game->SelectUnitOrSelectedTile( m_selected_unit );
 		m_selected_unit = nullptr;
 	}

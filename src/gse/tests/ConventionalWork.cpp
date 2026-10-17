@@ -8,6 +8,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
+#include "game/backend/map/tile/Tiles.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/resource/Resource.h"
@@ -43,7 +44,8 @@ std::string Source(const std::string& name) {
         result+=line+"\n";
     }return result;
 }
-Unit* Populate(GSE_CALLABLE,ConventionalUnitFixture& fixture,size_t helpers=0,bool with_base=false) {
+Unit* Populate(GSE_CALLABLE,ConventionalUnitFixture& fixture,size_t helpers=0,bool with_base=false,
+    const std::vector<types::Vec2<size_t>>& positions={}) {
     auto* game=fixture.Game();auto* map=game->GetMap();auto* um=game->GetUM();
     for(size_t y=0;y<map->GetHeight();++y){for(size_t x=y&1;x<map->GetWidth();x+=2){
         auto* tile=map->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}
@@ -52,10 +54,10 @@ Unit* Populate(GSE_CALLABLE,ConventionalUnitFixture& fixture,size_t helpers=0,bo
     MoraleSet::morale_values_t names;for(int i=0;i<7;++i){names.emplace_back("level"+std::to_string(i));}
     um->DefineMoraleSet(new MoraleSet("work-morale",names));
     auto* def=new StaticDef("work-former",um->GetMoraleSet("work-morale"),"Former",MT_LAND,1,new FormerMarkerRender());um->DefineUnit(def);
-    auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* tile=map->GetTile(16,16);
+    auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* tile=positions.empty()?map->GetTile(16,16):map->GetTile(positions[0].x,positions[0].y);
     ConventionalUnitState record{1,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
     auto* actor=um->SpawnConventionalUnit(GSE_CALL,71,def,owner,tile,record);
-    for(size_t i=0;i<helpers;++i){um->SpawnConventionalUnit(GSE_CALL,72+i,def,owner,tile,record);}
+    for(size_t i=0;i<helpers;++i){auto* position=positions.empty()?tile:map->GetTile(positions[i+1].x,positions[i+1].y);um->SpawnConventionalUnit(GSE_CALL,72+i,def,owner,position,record);}
     std::array<std::string,8> roles;roles[0]="work-worker";
     game->GetBM()->DefinePop(new base::PopDef(roles[0],"Worker",{},{},base::PopDef::PF_TILE_WORKER));
     for(uint8_t i=0;i<7;++i){roles[i+1]="work-specialist"+std::to_string(i);game->GetBM()->DefinePop(new base::PopDef(roles[i+1],"Specialist",{},{},base::PopDef::PF_NONE,i));}
@@ -83,6 +85,45 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Conventional native selection uses original wrap ties and current record order",GT(){
+        // Literal positions/answers from LOCAL-UNIT-SELECTION: distance_tie_first,
+        // distance_tie_current, reference_unit_origin, wrapped_nearest and equal_metric_different_axes.
+        const std::vector<std::vector<types::Vec2<size_t>>> positions{ {{16,16},{18,16},{14,16}}, {{16,16},{62,16},{6,16}}, {{16,16},{20,16},{19,19}} };
+        for(size_t scenario=0;scenario<positions.size();++scenario){
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
+                auto* game=fixture.Game();game->GetState()->m_settings.global.SelectSmacCustomSize(64,32);
+                auto* tiles=game->GetMap()->GetTilesPtr();tiles->Resize(64,32);tiles->Clear();
+                auto* first=Populate(GSE_CALL,fixture,2,false,positions[scenario]);
+                auto state=first->Conventional();state.spent=3;game->GetUM()->UpdateConventionalUnit(GSE_CALL,first,state);
+                const types::Vec2<size_t> focus{scenario==1?0u:16u,16};
+                const auto select=[&](std::optional<size_t> current={},std::optional<size_t> reference={}){
+                    return game->SelectLocalConventionalUnit(game->GetTurnId(),current,reference,focus,false);
+                };
+                GT_ASSERT(select()==72,"literal original distance/order selection differs");
+                if(scenario==0){
+                    GT_ASSERT(select(73)==73&&select(73,72)==72,"current tie or independent reference origin differs");
+                    auto partial=game->GetUM()->GetUnit(72)->Conventional();partial.spent=1;game->GetUM()->UpdateConventionalUnit(GSE_CALL,game->GetUM()->GetUnit(72),partial);
+                    GT_ASSERT(select()==72,"partial movement was ineligible");
+                }
+                GT_OK();
+            });if(!error.empty()){return error;}
+        }GT_OK();
+    });
+    task->AddTest("Conventional native selection retains working Former when Scout resets ready",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* um=game->GetUM();
+            auto* def=new StaticDef("selection-scout",um->GetMoraleSet("work-morale"),"Scout",MT_LAND,1,
+                new CvrScoutRender(2,0,1,1,{1,1},{0,0},CvrScoutRender::Composition::InitializedScout));um->DefineUnit(def);
+            auto state=actor->Conventional();state.design_id=2;state.spent=3;
+            auto* scout=um->SpawnConventionalUnit(GSE_CALL,7,def,actor->m_owner,actor->GetTile(),state);
+            Event(GSE_CALL,fixture,actor,Order::Farm);
+            return fixture.CheckRetainedWorkSelection(GSE_CALL,actor,scout);
+        });
+        });
+    });
     task->AddTest("Former selected controller latches actual work and retires queued visits",GT(){
         return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");

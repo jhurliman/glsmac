@@ -38,13 +38,23 @@ visits. Every `continue_unit_work` event carries its captured `turn_id`, checked
 again before wrapper access at dispatch. Old events cannot consume a later turn's
 refilled allowance. There is no new Continue key or work loop in faction upkeep.
 
-The `former-human-controller` receipt establishes selected work continuation;
-GLSMAC's current active-world/turn flag and existing nearest/selectable selection
-policy still supply controller admission and selection. The newer
-`local-unit-selection` receipt additionally proves a different distance/tie rule
-and retention of the selected Former across subsequent upkeeps. Those selection
-policy changes are not included here: the current frontend can choose a different
-ready unit after exhaustion. No complete original outer-loop/modal policy is claimed.
+The `former-human-controller` and `local-unit-selection` receipts now feed the
+native automatic selection query. It uses current saved Unit record order,
+integer wrapped-X distance, and current-selected identity to break equal-distance
+ties. The enclosing controller retains an eligible current Unit before scanning. It
+also holds a current persisted work order after dispatch exhausts allowance, even
+while another Scout is ready. Cancellation/completion releases this held order.
+That logical selection survives upkeep, keeping the working Former current when
+both Units refill. Copied IDs
+and a session-bound weak result cross the backend/frontend boundary; presentation
+updates retire and reissue pending requests. The frontend waits for the selected
+Unit's ready presentation rather than choosing according to request arrival order.
+
+This route admits the existing local conventional runtime states. It does not
+invent Sentry, convoy or skip-marker/button state. Camera-to-tile focus conversion
+and manual Tab cycling remain explicit GLSMAC input policies; the native query
+accepts the reference/focus coordinates separately. Full original outer-loop,
+modal and multiplayer selection policies remain outside this change.
 
 ## Evidence and focused checks
 
@@ -75,3 +85,15 @@ supplies selected identity to the same private pump used by frontend Iterate; it
 does not assert the existing renderer/selection policy. Four affected production
 and fixture translation units pass syntax checks. Runtime execution of these new
 groups is reserved for the shared cached integration build.
+
+The selection follow-up adds two groups. Reduced literal controls from the
+20-control selection receipt distinguish distance ties, current-reference origin,
+wrapped-X distance, partial allowance and the integer axis metric. The live
+record-order check creates a later Scout with a smaller numeric ID. Four actual
+Former work visits span three real upkeeps without re-exhausting the competing
+Scout; each immediate post-work query checks held identity and final completion
+checks its release. The asset-free fixture exercises the frontend's request helper and native
+result, then supplies accepted identity to the existing work pump; it does not
+claim rendered selection acceptance. Four affected translation units pass syntax
+checks. These two groups await the shared cached integration run; no full build
+or platform run was performed for this follow-up.

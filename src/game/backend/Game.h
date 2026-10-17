@@ -353,6 +353,8 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
 	// Passive human-controller poll; never retains a frontend or Unit pointer.
 	bool QueueSelectedConventionalWork( GSE_CALLABLE, size_t unit_id, size_t turn_id );
+	std::optional<size_t> SelectLocalConventionalUnit(size_t turn_id, std::optional<size_t> current,
+		std::optional<size_t> reference, types::Vec2<size_t> focus, bool retain_current) const;
 	void AddEvent( event::Event* const event );
 	void AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved );
 

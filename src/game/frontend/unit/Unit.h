@@ -66,6 +66,7 @@ public:
 
 	const size_t GetId() const;
 	const bool IsOwned() const;
+	bool IsConventional() const { return m_conventional; }
 	const bool IsActive() const;
 	tile::Tile* GetTile() const;
 

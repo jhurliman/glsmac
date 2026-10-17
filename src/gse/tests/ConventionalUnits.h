@@ -58,6 +58,7 @@ public:
 	void DrainEvents();
 	static std::string WithControllerViewport( const std::function<std::string()>& check );
 	std::string CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor );
+	std::string CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout );
 	void RetainedMorale( int32_t retained, int32_t current );
 	void Early();
 	std::string CheckEarlyStartup( int scenario );

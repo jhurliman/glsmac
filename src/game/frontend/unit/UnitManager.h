@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <optional>
+#include <atomic>
 
 #include "common/Common.h"
 
@@ -73,7 +74,7 @@ CLASS( UnitManager, common::Class )
 	void SelectUnit( Unit* unit, const bool actually_select_unit );
 	void DeselectUnit();
 	Unit* GetPreviouslyDeselectedUnit() const;
-	const bool SelectNextUnitMaybe();
+	const bool SelectNextUnitMaybe( bool automatic = false );
 	void SelectNextUnitOrSwitchToTileSelection();
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
@@ -107,6 +108,18 @@ private:
 	struct WorkVisit { size_t unit_id; size_t turn_id; };
 	std::shared_ptr< const WorkVisit > m_work_visit;
 	void PumpSelectedWork( std::optional< size_t > selected );
+	struct SelectionVisit {
+		size_t turn_id;
+		std::optional<size_t> current;
+		types::Vec2<size_t> focus;
+		std::optional<size_t> selected;
+		std::atomic<bool> ready{false};
+	};
+	std::shared_ptr<SelectionVisit> m_selection_visit;
+	std::optional<size_t> m_controller_selection;
+	bool QueueAutomaticSelection();
+	void ReceiveAutomaticSelection();
+	void QueueAutomaticSelectionAt( types::Vec2<size_t> focus );
 
 	void AddSelectable( Unit* unit );
 	void RemoveSelectable( Unit* unit );

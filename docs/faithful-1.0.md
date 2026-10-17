@@ -411,8 +411,10 @@ extreme social/resource inputs or a complete base economy.
    persistent world inputs. Original startup and expansion compositions now cover
    the 21-square reveal, Scout movement, Colony placement, overlapping second-base
    founding and native visibility without a later explored/owned overlay. The
-   next reference priority is the minimum saved worker-consumer frame needed to
-   reproduce those observed states. Keep the declared
+   saved worker-consumer frame and full Base allocation authority now have
+   checked lossless codecs. The next reference priorities are ordinary sight and
+   visibility lifetime, followed by territorial rebuilding; the user's separate
+   base-yield investigation takes precedence when directed. Keep the declared
    GLSMAC map policy distinct from original map-generator equivalence.
 3. Complete support, production posting/completion/queues and research, retaining
    independent stored minerals and switching baseline. Add legal persistent
@@ -420,13 +422,24 @@ extreme social/resource inputs or a complete base economy.
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
 
+The [worker-authority checkpoint](validation/worker-authority-2026-10-17.md) at
+`dacac744` passes all eight tests on Windows, Linux Debug, Linux sanitizers and
+native macOS, with the same 154 affected allocation-tracked groups on Windows and
+both Linux builds. Targeted analysis of both new production units has zero
+failures in 1.82 seconds. Lossless Base storage preserves 49 captured records and
+six original allocator continuations; the owned worker frame matches 343 Base
+queries. These values are detached. Optional live Base authority, atomic
+population publication and actual entity-bound map knowledge are next in the
+[live integration plan](smac-live-worker-integration-plan.md).
+
 The [complete detached allocator checkpoint](validation/automatic-worker-2026-10-17.md)
 at `df61f015` passes all eight tests on Windows, Linux Debug, Linux sanitizers and
 native macOS, with the same 144 affected allocation-tracked groups on Windows and
 both Linux builds. The full 350-unit correctness scan has zero failures. The
 allocator matches 51 complete original returns; availability matches 736 masks.
-Saved worker knowledge, lossless Base allocation state and atomic live publication
-are the next dependencies. This does not activate a default canonical campaign.
+The later worker-authority checkpoint supplies the detached storage values;
+live knowledge and allocation publication remain pending. This does not activate
+a default canonical campaign.
 
 The [live-intake and worker-stage checkpoint](validation/worker-intake-2026-10-17.md)
 at `ce47b2b1` passes all eight tests on Windows, Linux sanitizer and native macOS,

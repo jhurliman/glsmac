@@ -70,3 +70,48 @@ for this source branch.
 
 Receipts are retained outside Git at
 `/home/jhurliman/src/glsmac-unit-weapon-parser/world-units-*`.
+
+## Predefined frame allocation boundary
+
+Review of publication `9a51bf3d764c0bab11a42c8a1276e6f4289695f9` found that the
+outer predefined-profile string was read without a limit before the nested
+codec checked its 24 KiB budget. The world reader now passes
+`SmacPredefinedUnitRules::MAX_WIRE_BYTES` to the existing bounded `ReadString`
+API. That API checks the declared frame length before allocating or copying the
+payload, scanning its checksum, or advancing the payload cursor. This avoids
+the extra oversized profile allocation; it does not add an aggregate world
+download limit or change the other header profiles.
+
+Two focused native regressions distinguish this boundary from eventual codec
+rejection. Complete 24 KiB + 1 and 96 KiB frames, with valid and corrupt
+checksums, must report the frame-limit error and retain the exact payload-start
+cursor. Valid-checksum frames are then read independently to prove they were
+complete and their following body remained intact. A separate valid profile
+padded only through admitted display metadata reaches exactly 24 KiB, passes the
+actual semantic codec, and passes the bounded string read without consuming its
+following body. Thus the limit is inclusive and is independent of malformed
+codec-content rejection.
+
+The existing real Client immediate/queued rejection matrix includes both
+oversized lengths. It still requires safe disconnect, retired download
+callbacks, unchanged previous map/settings/managers/RNG/turn/frontend state and
+no startup callbacks. A copied production TU using the old unbounded read fails
+the frame-admission assertion while the exact-cap codec case passes. No huge
+allocation failure, allocator reuse or out-of-memory condition is needed to
+expose the regression; the intended source remains unchanged during the control.
+
+On that publication ancestry, the fixed Linux/Clang15 application passes all
+eight registered CTests in 75.28 seconds. Six focused groups (the two boundary
+groups and four real Client groups) pass with allocation tracking in 4.16
+seconds and with ASan/UBSan/LSan plus tracking in 15.66 seconds. Explicit
+`WorldSnapshotRules.cpp` correctness analysis has zero failures. An optimized
+Release production-TU baseline passes both boundary groups; the copied old TU
+passes the exact-cap group and fails the bounded-admission group with exit 1.
+These are focused sanitizer receipts, not another full sanitizer-suite run.
+The established local non-PIE sanitizer link workaround is unchanged.
+
+The focused native-filter expression is
+`^(world rules header bounds predefined|world predefined profile exact|real final download chunk rejects invalid world profile before map allocation )`.
+Commands, copied control sources, logs and hashes are retained under
+`/home/jhurliman/src/glsmac-predefined-world-frame-bound/`. Hosted and platform
+checks after publication remain separate.

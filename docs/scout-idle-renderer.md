@@ -203,3 +203,22 @@ the unaltered PNG remain outside Git under
 `/home/jhurliman/src/glsmac-resource-callback-audit` and the owned checkout's
 ignored `out/` directory. No Windows or macOS build result is claimed by this
 source receipt.
+
+## Main-based publication receipt
+
+The publication branch is based on pinned main
+`658d4bd5b27a01b44309e10329a88e1ad7994d64`. Its source commit
+`d5cd6861012d42c3136611c302afe23adce2c64d` preserves the renderer, native tests,
+fixtures and tools from reviewed source
+`8365d135f3f25daaac8bfa40b94d114e1ec499cb` byte-for-byte. The sole cherry-pick
+conflict was the test call's location: one Scout registration was added while
+main's existing mineral-factor registration remained in place.
+
+On that exact publication source, normal CTest passed 8/8 in 46.05 seconds and
+all 18 Scout/indexed native groups passed with allocation tracking. The required
+full-scope LLVM 15 analysis checked 306 production translation units with zero
+failures in 118.33 seconds. A newly compiled Release/UBSan probe again matched
+all 19 original drawing views, all 20 anchors, the full generated lighting
+table and baseline keyed RGBA. This is separate from the larger source branch's
+sanitizer and 319-unit analysis receipts above. Publication logs are retained
+under the same audit directory with the `scout-publication-` prefix.

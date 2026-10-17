@@ -39,6 +39,9 @@
 #include "game/backend/connection/Client.h"
 #include "game/backend/connection/Server.h"
 #include "types/Packet.h"
+#include "types/texture/Texture.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
 #include "game/backend/connection/Connection.h"
@@ -437,6 +440,120 @@ public:
 		map->ProcessTiles( passes, tiles, m_game.m_init_cancel );
 	}
 	bool IsInitializationCanceled() const { return m_game.m_init_cancel; }
+	std::string CheckInitializationFailure( const bool with_map, const int hook_failure, const bool retire_in_hook = false ) {
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			// Exercise the real helper under owner accumulation; native reset's
+			// independent collector-exclusion gap is outside this regression.
+			struct Texture final : types::texture::Texture {
+				size_t& destroyed;
+				explicit Texture( size_t& count ) : types::texture::Texture( 1, 1 ), destroyed( count ) {}
+				~Texture() override { ++destroyed; }
+			};
+			struct Render final : types::mesh::Render {
+				size_t& destroyed;
+				explicit Render( size_t& count ) : types::mesh::Render( 3, 1 ), destroyed( count ) {}
+				~Render() override { ++destroyed; }
+			};
+			struct Data final : types::mesh::Data {
+				size_t& destroyed;
+				explicit Data( size_t& count ) : types::mesh::Data( 3, 1 ), destroyed( count ) {}
+				~Data() override { ++destroyed; }
+			};
+			size_t destroyed = 0;
+			if ( with_map ) {
+				NEW( m_game.m_map->m_textures.terrain, Texture, destroyed );
+				NEW( m_game.m_map->m_meshes.terrain, Render, destroyed );
+				NEW( m_game.m_map->m_meshes.terrain_data, Data, destroyed );
+			}
+			else {
+				DestroyMapBeforeManagers();
+				m_game.m_bm = nullptr;
+			}
+			const auto ticket = FixtureWorldTicket();
+			const auto binding = m_state->CaptureGameSession();
+			m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP;
+			const std::string original = "original initialization failure";
+			std::string input = original, received;
+			size_t calls = 0;
+			bool live_context = false, assets_released = false;
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( this, &calls, &received, &input, &live_context, &assets_released, &destroyed, with_map, hook_failure, retire_in_hook, ticket ) {
+				++calls;
+				received = VALUE_GET( value::String, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "error" ) );
+				live_context = m_game.GetState() == m_state && m_state->GetGame() == &m_game && bool( m_game.m_map ) == with_map;
+				assets_released = destroyed == ( with_map ? 3u : 0u );
+				input = "handler changed caller-owned message";
+				if ( retire_in_hook ) { m_game.MT_RetireWorld( ticket ); }
+				if ( hook_failure == 1 ) { GSE_ERROR( EC.GAME_ERROR, "secondary script error hook failure" ); }
+				if ( hook_failure == 2 ) { throw std::runtime_error( "secondary native error hook failure" ); }
+				return VALUE( value::Undefined );
+			} ) );
+			m_map.release();
+			util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+			std::exception_ptr escaped;
+			try { m_game.InitFailed( input ); } catch ( ... ) { escaped = std::current_exception(); }
+			GT_ASSERT( !escaped, "error hook escaped initialization failure cleanup" );
+			GT_ASSERT( calls == 1 && received == original && live_context && assets_released, "failure notification lost original error, context, or presentation cleanup order" );
+			GT_ASSERT( !m_game.m_map && !m_game.m_state && !m_state->GetGame() && !m_state->IsGameSessionActive( binding ) &&
+				!m_game.m_tm && !m_game.m_rm && !m_game.m_um && !m_game.m_bm && !m_game.m_am &&
+				m_game.m_game_state == game::backend::Game::GS_NONE && !m_game.HasHandlers( "error" ), "failure retained world state, managers, session, or handlers" );
+			GT_ASSERT( m_game.m_initialization_error == original, "secondary hook failure or caller mutation replaced the original initialization error" );
+			GT_ASSERT( m_frontend_requests.size() == 1 && m_frontend_requests.front().type == game::FrontendRequest::FR_LOADER_HIDE,
+				"loader hide was cleared by failure cleanup" );
+			const auto own = m_game.MT_GetMapData( ticket );
+			const auto unrelated = m_game.MT_GetMapData( ticket + 1 );
+			ProcessRequests();
+			const auto response = m_game.MT_GetResponse( own );
+			util::FinallyGuard release_response( [ & ]() { m_game.MT_DestroyResponse( response ); } );
+			GT_ASSERT( retire_in_hook ? response.result == game::backend::R_ABORTED :
+				response.result == game::backend::R_ERROR && response.data.error.error_text && *response.data.error.error_text == original,
+				"failure was not bound to its ticket or hook retirement revived the failed attempt" );
+			GT_ASSERT( m_game.MT_GetResponse( unrelated ).result == game::backend::R_ABORTED, "unrelated ticket received the failure" );
+			const auto reset = m_game.MT_Reset( ticket );
+			const auto late = m_game.MT_GetMapData( ticket );
+			ProcessRequests();
+			GT_ASSERT( m_game.MT_GetResponse( reset ).result == game::backend::R_SUCCESS && m_game.MT_GetResponse( late ).result == game::backend::R_ABORTED,
+				"reset retained the failed ticket error" );
+			GT_OK();
+		} );
+	}
+	std::string CheckFailedOldMapOwnership( const bool stop ) {
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			struct RetainedMap final : game::backend::map::Map {
+				size_t& destroyed;
+				RetainedMap( game::backend::Game* game, size_t& count ) : Map( game, 2, 2 ), destroyed( count ) {}
+				~RetainedMap() override { ++destroyed; }
+			};
+			size_t destroyed = 0;
+			NEWV( old_map, RetainedMap, &m_game, destroyed );
+			m_game.m_old_map = old_map;
+			m_map.release();
+			util::FinallyGuard cleanup( [ & ]() {
+				if ( m_game.m_old_map && m_game.m_old_map != m_game.m_map ) { DELETE( m_game.m_old_map ); }
+				m_game.m_old_map = nullptr;
+				if ( m_game.m_map ) { DELETE( m_game.m_map ); m_game.m_map = nullptr; }
+			} );
+			m_game.InitFailed( "old map ownership fixture" );
+			GT_ASSERT( m_game.m_map == old_map && !m_game.m_old_map && destroyed == 0,
+				"failed initialization duplicated or destroyed retained map ownership" );
+			if ( stop ) {
+				// Stop owns these allocations in production; this fixture normally
+				// supplies a stack queue and a separately owned Random instead.
+				m_random.reset();
+				NEW( m_game.m_random, game::backend::Random, &m_game, 12345 );
+				NEW( m_game.m_pending_frontend_requests, std::vector< game::FrontendRequest > );
+				util::FinallyGuard restore( [ & ]() {
+					if ( m_game.m_random ) { DELETE( m_game.m_random ); m_game.m_random = nullptr; }
+					if ( m_game.m_pending_frontend_requests ) { DELETE( m_game.m_pending_frontend_requests ); }
+					m_game.m_pending_frontend_requests = &m_frontend_requests;
+				} );
+				m_game.Stop();
+			}
+			else { m_game.ResetGame(); m_game.ResetGame(); }
+			GT_ASSERT( destroyed == 1 && !m_game.m_map && !m_game.m_old_map,
+				"reset/stop did not release the transferred map exactly once" );
+			GT_OK();
+		} );
+	}
 	std::string WorldManagers() const {
 		types::Buffer result, resources, units, bases, animations;
 		m_game.GetRM()->Serialize( resources );
@@ -1089,6 +1206,27 @@ public:
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 	using namespace game::backend;
+	task->AddTest( "initialization failure before map and managers retains original error", GT() {
+		BackendFixture fixture; return fixture.CheckInitializationFailure( false, 0 );
+	} );
+	task->AddTest( "initialization failure releases unpublished map presentation and retains loader hide", GT() {
+		BackendFixture fixture; return fixture.CheckInitializationFailure( true, 0 );
+	} );
+	task->AddTest( "initialization failure survives a throwing script error hook", GT() {
+		BackendFixture fixture; return fixture.CheckInitializationFailure( true, 1 );
+	} );
+	task->AddTest( "initialization failure before map survives a throwing native error hook", GT() {
+		BackendFixture fixture; return fixture.CheckInitializationFailure( false, 2 );
+	} );
+	task->AddTest( "initialization failure cannot revive a ticket retired by its error hook", GT() {
+		BackendFixture fixture; return fixture.CheckInitializationFailure( true, 1, true );
+	} );
+	task->AddTest( "initialization failure transfers retained map ownership through repeated reset", GT() {
+		BackendFixture fixture; return fixture.CheckFailedOldMapOwnership( false );
+	} );
+	task->AddTest( "initialization failure transfers retained map ownership through stop", GT() {
+		BackendFixture fixture; return fixture.CheckFailedOldMapOwnership( true );
+	} );
 	task->AddTest( "world admission frontend quit retains its newly enqueued exit reset", GT() { return BackendFixture::CheckFrontendQuitAdmission(); } );
 	const auto prepare = []( BackendFixture& fixture, gc::Space* space ) {
 		fixture.EnableTurnPlayers();

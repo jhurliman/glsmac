@@ -45,6 +45,8 @@
 #include "game/backend/event/EventHandler.h"
 #include "gse/value/Bool.h"
 #include <limits>
+#include <exception>
+#include <utility>
 #include <algorithm>
 
 namespace game {
@@ -1637,52 +1639,72 @@ void Game::InitComplete( GSE_CALLABLE ) {
 }
 
 void Game::InitFailed( const std::string& error_text ) {
-	HideLoader();
+	// The caller's string and the error hook may both belong to the world
+	// being retired. Own the primary error before invoking any handler.
+	const std::string original_error = error_text;
+	{
+		std::lock_guard guard( m_admission_mutex );
+		m_failed_admission = m_active_admission;
+		m_failed_admission_error = original_error;
+	}
+
 	// need to delete these here because they weren't passed to main thread
-	if ( m_map->m_textures.terrain ) {
-		DELETE( m_map->m_textures.terrain );
-		m_map->m_textures.terrain = nullptr;
-	}
-	if ( m_map->m_meshes.terrain ) {
-		DELETE( m_map->m_meshes.terrain );
-		m_map->m_meshes.terrain = nullptr;
-	}
-	if ( m_map->m_meshes.terrain_data ) {
-		DELETE( m_map->m_meshes.terrain_data );
-		m_map->m_meshes.terrain_data = nullptr;
+	// initialize/configure can fail before a map or any managers exist.
+	if ( m_map ) {
+		if ( m_map->m_textures.terrain ) {
+			DELETE( m_map->m_textures.terrain );
+			m_map->m_textures.terrain = nullptr;
+		}
+		if ( m_map->m_meshes.terrain ) {
+			DELETE( m_map->m_meshes.terrain );
+			m_map->m_meshes.terrain = nullptr;
+		}
+		if ( m_map->m_meshes.terrain_data ) {
+			DELETE( m_map->m_meshes.terrain_data );
+			m_map->m_meshes.terrain_data = nullptr;
+		}
 	}
 
 	ASSERT( m_state, "state not set" );
 	if ( m_state->m_connection ) {
 		m_state->m_connection->Disconnect( "Failed to initialize game" );
 	}
-	m_state->TriggerObject(
-		this, "error", ARGS_F( this, &error_text ) {
-			{
-				"game",
-				Wrap( GSE_CALL )
-			},
-			{
-				"error",
-				VALUE( gse::value::String, , error_text ),
-			},
-		}; }
-	);
-
-	{
-		std::lock_guard guard( m_admission_mutex );
-		m_failed_admission = m_active_admission;
-		m_failed_admission_error = error_text;
+	std::exception_ptr handler_error;
+	try {
+		m_state->TriggerObject(
+			this, "error", ARGS_F( this, &original_error ) {
+				{
+					"game",
+					Wrap( GSE_CALL )
+				},
+				{
+					"error",
+					VALUE( gse::value::String, , original_error ),
+				},
+			}; }
+		);
 	}
+	catch ( ... ) { handler_error = std::current_exception(); }
+
 	ResetGame();
 	m_state = nullptr;
-
-	m_initialization_error = error_text;
+	m_initialization_error = original_error;
+	HideLoader(); // ResetGame clears the old world's frontend queue.
 
 	if ( m_old_map ) {
 		MTModule::Log( "Restoring old map state" );
-		DELETE( m_map );
-		m_map = m_old_map; // restore old state // TODO: test
+		// Transfer ownership only. Restoring the old lifecycle remains TODO.
+		m_map = std::exchange( m_old_map, nullptr );
+	}
+	if ( handler_error ) {
+		try { std::rethrow_exception( handler_error ); }
+		catch ( const gse::Exception& error ) {
+			MTModule::Log( "Initialization error handler failed: " + error.ToString() );
+		}
+		catch ( const std::exception& error ) {
+			MTModule::Log( std::string( "Initialization error handler failed: " ) + error.what() );
+		}
+		catch ( ... ) { MTModule::Log( "Initialization error handler failed with an unknown native exception" ); }
 	}
 }
 

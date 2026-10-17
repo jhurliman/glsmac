@@ -24,7 +24,7 @@ Tiles::~Tiles() {
 }
 
 void Tiles::Resize( const uint32_t width, const uint32_t height ) {
-	if ( m_map ) { m_map->GetGame()->RequireWorkerKnowledgeMutation(); }
+	if ( m_map && m_map->GetGame() ) { m_map->GetGame()->RequireWorkerKnowledgeMutation(); }
 	ASSERT( width > 0, "can't resize to zero width" );
 	ASSERT( height > 0, "can't resize to zero height" );
 	ASSERT( !( width & 1 ), "can't resize to non-even width" );
@@ -174,7 +174,7 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 }
 
 void Tiles::Clear() {
-	if ( m_map ) { m_map->GetGame()->RequireWorkerKnowledgeMutation(); }
+	if ( m_map && m_map->GetGame() ) { m_map->GetGame()->RequireWorkerKnowledgeMutation(); }
 	ASSERT( !m_data.empty(), "tiles not initialized" );
 
 	for ( auto y = 0 ; y < m_height ; y++ ) {

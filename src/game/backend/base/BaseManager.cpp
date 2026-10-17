@@ -25,7 +25,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V5";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V6";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -219,16 +219,16 @@ FacilityDef* BaseManager::GetFacilityDef( const std::string& id ) const {
 }
 
 void BaseManager::DefineFacility( FacilityDef* facility_def ) {
+	if ( !facility_def ) { THROW( "Missing facility definition" ); }
+	ValidateSmacFacilityDef( facility_def );
 	Log( "Defining base facility ('" + facility_def->m_id + "')" );
 
-	ASSERT( m_base_popdefs.find( facility_def->m_id ) == m_base_popdefs.end(), "Base facility def '" + facility_def->m_id + "' already exists" );
-
-	m_base_facilitydefs.insert(
-		{
-			facility_def->m_id,
-			facility_def
+	if ( facility_def->m_smac_source_id ) {
+		for ( const auto& entry : m_base_facilitydefs ) {
+			if ( entry.second->m_smac_source_id == facility_def->m_smac_source_id ) { THROW( "SMAC facility catalog position is already bound" ); }
 		}
-	);
+	}
+	if ( !m_base_facilitydefs.emplace( facility_def->m_id, facility_def ).second ) { THROW( "Facility ID is already defined" ); }
 
 	// TODO
 	/*auto fr = FrontendRequest( FrontendRequest::FR_BASE_FACILITY_DEFINE );
@@ -236,12 +236,30 @@ void BaseManager::DefineFacility( FacilityDef* facility_def ) {
 	m_game->AddFrontendRequest( fr );*/
 }
 
+void BaseManager::ValidateSmacFacilityDef( const FacilityDef* def ) const {
+	if ( !def || !def->m_smac_source_id ) { return; }
+	const auto& global = m_game->GetState()->m_settings.global;
+	const auto& rules = global.GetSmacProductionRules();
+	if ( global.GetRulesetId() != "smac" || !global.IsRulesetLocked() || !rules
+		|| *def->m_smac_source_id < 1 || *def->m_smac_source_id > 71 ) {
+		THROW( "SMAC facility identity requires the frozen production catalog" );
+	}
+	rules->Validate();
+	if ( rules->facilities.at( *def->m_smac_source_id - 1 ).source_id != *def->m_smac_source_id ) { THROW( "Mismatched SMAC facility catalog identity" ); }
+}
+
 void BaseManager::UndefineFacility( const std::string& id ) {
 	Log( "Undefining base facility ('" + id + "')" );
 
-	ASSERT( m_base_facilitydefs.find( id ) != m_base_facilitydefs.end(), "Base facility def '" + id + "' does not exist" );
-
-	m_base_facilitydefs.erase( id );
+	const auto found = m_base_facilitydefs.find( id );
+	if ( found == m_base_facilitydefs.end() ) { THROW( "Unknown facility definition" ); }
+	for ( const auto& entry : m_bases ) {
+		for ( const auto& installed : entry.second->m_facilities ) {
+			if ( installed.second == found->second ) { THROW( "Cannot undefine an installed facility" ); }
+		}
+	}
+	delete found->second;
+	m_base_facilitydefs.erase( found );
 
 	/* TODO
 	auto fr = FrontendRequest( FrontendRequest::FR_BASE_FACILITY_UNDEFINE );
@@ -560,7 +578,14 @@ WRAPIMPL_BEGIN( BaseManager )
 					GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite facilities are supported for now" );
 				}
 
-				DefineFacility( new FacilityDef( id, name, description, cost, r ) );
+				std::optional< int32_t > source;
+				if ( def.count( "smac_source_id" ) ) {
+					N_GETPROP( source_id, def, "smac_source_id", Int );
+					if ( source_id < 1 || source_id > 71 ) { GSE_ERROR( gse::EC.GAME_ERROR, "Facility source ID must be a FACILITIES position 1..71" ); }
+					source = static_cast< int32_t >( source_id );
+				}
+				auto candidate = std::make_unique< FacilityDef >( id, name, description, cost, r, source );
+				DefineFacility( candidate.get() ); candidate.release();
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -739,7 +764,8 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	Log( "Unserializing " + std::to_string( sz ) + " base facility defs" );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		DefineFacility( FacilityDef::Deserialize( b ) );
+		auto definition = std::unique_ptr< FacilityDef >( FacilityDef::Deserialize( b ) );
+		DefineFacility( definition.get() ); definition.release();
 	}
 
 	sz = buf.ReadInt();

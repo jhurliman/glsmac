@@ -1,4 +1,5 @@
 #include "FacilityDef.h"
+#include <stdexcept>
 
 namespace game {
 namespace backend {
@@ -9,14 +10,18 @@ FacilityDef::FacilityDef(
 	const std::string& name,
 	const std::string& description,
 	const size_t cost,
-	const RenderInfo& render_info
+	const RenderInfo& render_info,
+	const std::optional< int32_t > smac_source_id
 )
 	: m_id( id )
 	, m_name( name )
 	, m_description( description )
 	, m_cost( cost )
-	, m_render_info( render_info ) {
-	//
+	, m_render_info( render_info )
+	, m_smac_source_id( smac_source_id ) {
+	if ( m_smac_source_id && ( *m_smac_source_id < 1 || *m_smac_source_id > 71 ) ) {
+		throw std::runtime_error( "SMAC facility identity must be a FACILITIES position 1..71" );
+	}
 }
 
 const std::string FacilityDef::ToString( const std::string& prefix ) const {
@@ -39,6 +44,8 @@ const types::Buffer FacilityDef::Serialize( const FacilityDef* def ) {
 	buf.WriteString( def->m_description );
 	buf.WriteInt( def->m_cost );
 	def->m_render_info.Write( buf );
+	buf.WriteBool( def->m_smac_source_id.has_value() );
+	if ( def->m_smac_source_id ) { buf.WriteInt( *def->m_smac_source_id ); }
 	return buf;
 }
 
@@ -53,7 +60,14 @@ FacilityDef* FacilityDef::Deserialize( types::Buffer& buf ) {
 	r.y = buf.ReadInt();
 	r.width = buf.ReadInt();
 	r.height = buf.ReadInt();
-	return new FacilityDef( id, name, description, cost, r );
+	std::optional< int32_t > source;
+	if ( buf.ReadBool() ) {
+		const auto value = buf.ReadInt();
+		if ( value < 1 || value > 71 ) { throw std::runtime_error( "Invalid SMAC facility catalog position" ); }
+		source = static_cast< int32_t >( value );
+	}
+	if ( buf.lenr != buf.lenw ) { throw std::runtime_error( "Trailing facility definition" ); }
+	return new FacilityDef( id, name, description, cost, r, source );
 }
 
 }

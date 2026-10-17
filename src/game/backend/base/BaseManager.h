@@ -58,6 +58,7 @@ public:
 	FacilityDef* GetFacilityDef( const std::string& id ) const;
 	void DefineFacility( FacilityDef* facility_def );
 	void UndefineFacility( const std::string& id );
+	void ValidateSmacFacilityDef( const FacilityDef* def ) const;
 
 	Base* GetBase( const size_t id ) const;
 	Pop* GetWorkingPop( const map::tile::coords_t& coord ) const;

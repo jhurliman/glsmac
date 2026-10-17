@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include "RenderInfo.h"
 #include "types/Buffer.h"
@@ -18,7 +19,8 @@ public:
 		const std::string& name,
 		const std::string& description,
 		const size_t cost,
-		const RenderInfo& render_info
+		const RenderInfo& render_info,
+		const std::optional< int32_t > smac_source_id = std::nullopt
 	);
 	virtual ~FacilityDef() = default;
 
@@ -27,6 +29,9 @@ public:
 	const std::string m_description;
 	const size_t m_cost;
 	const RenderInfo m_render_info;
+	// Positional identity in the frozen FACILITIES catalog, never a name lookup.
+	// Does not imply build eligibility, project ownership or orbital counts.
+	const std::optional< int32_t > m_smac_source_id;
 
 	const std::string ToString( const std::string& prefix = "" ) const;
 

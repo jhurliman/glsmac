@@ -12,6 +12,7 @@ return (base) => {
 	// Only initialization services are substituted. Nutrient access, population
 	// creation/destruction, and the production event handlers remain real.
 	const game = {
+		get_ruleset: () => { return 'smac'; },
 		get_bm: () => { return { on: (name, callback) => {} }; },
 		get_tm: () => { return { get_map_width: () => { return 8; }, get_map_height: () => { return 8; } }; },
 		event: (name, data) => {},

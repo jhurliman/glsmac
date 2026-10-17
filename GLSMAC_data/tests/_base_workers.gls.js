@@ -4,6 +4,7 @@ return (bm, tm, get_resources) => {
 	let start = null;
 	const helpers = {};
 	const game = {
+		get_ruleset: () => { return 'smac'; },
 		get_bm: () => { return bm; },
 		get_tm: () => { return tm; },
 		event: (name, data) => {},

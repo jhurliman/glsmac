@@ -25,6 +25,7 @@
 #include "SmacResourceRules.h"
 #include "SmacSpecialistRules.h"
 #include "GlsmacResourceMapPolicy.h"
+#include "SmacFacilityIdentity.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -258,6 +259,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacResourceRulesTests( task );
 		tests::AddSmacSpecialistRulesTests( task );
 	AddGlsmacResourceMapPolicyTests( task );
+		tests::AddSmacFacilityIdentityTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );

@@ -130,6 +130,7 @@ const create_fixture = () => {
 		get_map_height: () => { return 20; },
 	};
 	const game = custom_properties() + {
+		get_ruleset: () => { return 'smac'; },
 		get_bm: () => { return bm; },
 		get_tm: () => { return tm; },
 		on: (name, handler) => { game_handlers[name] = handler; },

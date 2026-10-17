@@ -3,6 +3,7 @@
 const initialize_bases = #include('../default/game/bases');
 return (game) => {
 	initialize_bases({
+		get_ruleset: game.get_ruleset,
 		get_bm: game.get_bm,
 		get_tm: game.get_tm,
 		on: game.on,

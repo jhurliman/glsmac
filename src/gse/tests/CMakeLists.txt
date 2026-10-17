@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 	${PWD}/RosterRecords.cpp
 	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/SmacScoutCombat.cpp
+	${PWD}/SmacEmptyGroundMovement.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Mesh.cpp
@@ -17,6 +18,7 @@ SET( SRC ${SRC}
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
+	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp

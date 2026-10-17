@@ -55,6 +55,7 @@ return {
 			ui: p.ui,
 			menu: parent,
 			maybe_quit: p.maybe_quit,
+			save_campaign: () => { p.modules.popup.show('save_campaign'); },
 			create: (entries) => {
 
 				let top = 0;

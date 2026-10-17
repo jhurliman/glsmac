@@ -4,6 +4,7 @@ return {
 		'turn_confirmation',
 		'please_dont_go',
 		'base_screen',
+		'save_campaign',
 	],
 
 	no_sliding: false, // disable sliding until more optimizations

@@ -25,7 +25,7 @@ return (i) => {
 				i.steps.notimpl(i);
 			}],
 			['Load Game', () => {
-				i.steps.notimpl(i);
+				i.steps.load_campaign(i);
 			}],
 			['Multiplayer', () => {
 				i.settings.local.game_mode = 'multi';

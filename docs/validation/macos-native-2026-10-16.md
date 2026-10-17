@@ -171,8 +171,8 @@ diagnostic remains the only stderr message and is not explained by these checks.
 At the initial process follow-up, both launcher 27144 and GLSMAC 27145 were still alive
 with reported elapsed time **06:58**, and `windowed-smac-exit-status.txt` did not
 exist. The logs contained no shutdown sequence. Thus the user-reported checklist
-success and the still-running process are recorded separately; no successful
-exit status or clean memory-tracking shutdown is claimed. No kill, relaunch or
+success and the still-running process were recorded separately; no successful
+exit status or clean memory-tracking shutdown was established then. No kill, relaunch or
 additional input was performed to resolve that discrepancy.
 
 At approximately **2026-10-17 05:40 UTC**, a read-only follow-up found that

@@ -104,16 +104,18 @@ int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) co
 		const auto& state = unit->Conventional();
 		// This validates actual owner/design/home/presentation metadata, including
 		// unsupported packages/abilities, rather than inferring them from Def names.
-		ResolveConventionalUnit( state, unit->m_owner );
+		const auto resolved = ResolveConventionalUnit( state, unit->m_owner );
 		const auto design = ResolveConventionalDesign( state, *m_simulation );
 		const auto* tile = unit->GetTile();
 		if ( !tile || !m_map || tile->tiles != m_map->GetTilesPtr() || tile->units.find( item.first ) == tile->units.end()
 			|| tile->units.at( item.first ) != unit ) { throw std::runtime_error( "Canonical support unit membership is invalid" ); }
 		const auto home = !state.home_base_id ? base::SmacSupportHome::None
 			: *state.home_base_id == evaluating_base.m_id ? base::SmacSupportHome::EvaluatingBase : base::SmacSupportHome::OtherBase;
-		// All admitted designs are ordinary projectile Combat, without Clean or
-		// psi. The terrain-native exemption therefore cannot apply in this domain.
-		units.push_back( { unit->m_id, state.owner_simulation_id == context.owner_simulation_id, home, base::SmacSupportPackage::Combat,
+		// Ordinary Formers consume support too. Neither admitted package has
+		// Clean or psi; the terrain-native exemption cannot apply here.
+		const auto package = resolved.package == unit::ConventionalUnitContext::Package::Former
+			? base::SmacSupportPackage::Former : base::SmacSupportPackage::Combat;
+		units.push_back( { unit->m_id, state.owner_simulation_id == context.owner_simulation_id, home, package,
 			false, design.id < 64 ? base::SmacSupportDesign::BuiltIn : base::SmacSupportDesign::PlayerDesigned,
 			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,
 			tile->is_water_tile ? base::SmacSupportTerrain::DeepOcean : base::SmacSupportTerrain::Land } );

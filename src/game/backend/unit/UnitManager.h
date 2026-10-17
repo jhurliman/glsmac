@@ -10,6 +10,7 @@
 #include "game/backend/map/SmacWorkerKnowledge.h"
 
 #include <deque>
+#include <memory>
 
 namespace game {
 namespace backend {
@@ -47,6 +48,23 @@ public:
 	void DefineUnit( Def* def );
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
+	// Same owning accumulation: no callbacks, yields or world mutations between
+	// preparation and commit. Destruction before commit publishes nothing.
+	class PreparedConventionalUnit {
+	public:
+		~PreparedConventionalUnit();
+		PreparedConventionalUnit( PreparedConventionalUnit&& ) noexcept;
+		PreparedConventionalUnit& operator=( PreparedConventionalUnit&& ) noexcept;
+		Unit* Commit() noexcept;
+		void Notify( GSE_CALLABLE ); // after all caller-owned authority is committed
+	private:
+		friend class UnitManager;
+		struct Data;
+		explicit PreparedConventionalUnit( std::unique_ptr< Data > data );
+		std::unique_ptr< Data > m_data;
+	};
+	PreparedConventionalUnit PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
+	PreparedConventionalUnit PrepareManufacturedConventionalUnit( GSE_CALLABLE, base::Base& home, int32_t design_id, Def* def, SmacMoraleMode mode );
 	Unit* SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
 	Unit* SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode );
 	bool HasPendingConventionalUnits() const;

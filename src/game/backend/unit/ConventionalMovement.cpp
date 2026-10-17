@@ -88,11 +88,23 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		throw std::runtime_error( "Conventional movement requires an unlocked adjacent empty destination and no animation" );
 	}
 	const auto membership = source->units.find( unit->m_id );
-	if ( source->units.size() != 1 || membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact unstacked source membership" ); }
+	if ( membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact source membership" ); }
+	for ( const auto& entry : source->units ) {
+		const auto* other = entry.second;
+		if ( !other || GetUnit( entry.first ) != other || other->m_id != entry.first || other->GetTile() != source
+			|| !other->IsConventional() || other->m_owner != unit->m_owner || other->Conventional().owner_simulation_id != stored.owner_simulation_id ) {
+			throw std::runtime_error( "Conventional departure requires a canonical same-owner stack" );
+		}
+		other->QueryStats( other->Conventional().render_morale_mode );
+	}
 	const auto design = m_game->ResolveConventionalDesign( stored, *m_game->m_simulation );
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
+	if ( context.package == ConventionalUnitContext::Package::Former
+		&& ( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
+		throw std::runtime_error( "Former runtime fungus encounter admission is not established" );
+	}
 	// Owned Bases impose no extra ordinary nonfungus terrain or population rule.
 	// Fungus still uses the narrower, independently admitted endpoint-HQ path.
 	const base::Base* admitted_hq = nullptr;
@@ -100,7 +112,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const base::Base* admitted_destination_base = nullptr;
 	const auto& bases = m_game->GetBM()->GetBases();
 	if ( !bases.empty() ) {
-		const bool infantry = stored.design_id == 2 && design.chassis == 0 && stats.basic_allowance == 3;
+		const bool infantry = design.chassis == 0 && stats.basic_allowance == 3;
 		// This context is produced only after resolving the canonical Spartan
 		// participant and its actual selected owned design, never slot arithmetic.
 		const bool selected_rover = context.presentation == ConventionalUnitContext::Presentation::SelectedSpartanRover

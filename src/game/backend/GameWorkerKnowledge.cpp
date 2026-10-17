@@ -151,6 +151,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 		}
 	}
 	if ( !foreign ) { return {}; }
+	if ( ResolveConventionalUnit( actor.Conventional(), actor.m_owner ).package != unit::ConventionalUnitContext::Package::Combat ) {
+		throw std::runtime_error("Foreign ZOC for noncombat movement is not established");
+	}
 	if ( !m_map->m_worker_knowledge || !m_map->m_worker_knowledge_ready ) { throw std::runtime_error("Foreign ZOC requires authenticated saved knowledge and directed Pact state"); }
 	auto data = m_map->m_worker_knowledge->CopyData();
 	if ( !data.observers[owner] || !data.observers[owner]->pact_with ) { throw std::runtime_error("Directed Pact state is unavailable for ZOC"); }
@@ -169,6 +172,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 		for ( const auto& entry : neighbour->units ) {
 			const auto* other = entry.second;
 			if ( other->Conventional().owner_simulation_id == owner ) { continue; }
+			if ( ResolveConventionalUnit( other->Conventional(), other->m_owner ).package != unit::ConventionalUnitContext::Package::Combat ) {
+				throw std::runtime_error("Foreign noncombat ZOC influence is not established");
+			}
 			ordinary(neighbour);
 			if ( neighbour->units.size()!=1 ) { throw std::runtime_error("Foreign ZOC mixed or multiple stacks are not admitted"); }
 		}
@@ -220,7 +226,13 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 		|| m_map->GetTile(destination->coord.x,destination->coord.y) != destination || destination->is_water_tile ) {
 		throw std::runtime_error("Ordinary sight requires a canonical land position and supplied observer");
 	}
-	if ( !source && !destination->units.empty() ) { throw std::runtime_error("Ordinary sight placement requires an empty tile"); }
+	if ( !source ) { for ( const auto& entry : destination->units ) {
+		const auto* other = entry.second;
+		if ( !other || m_um->GetUnit(entry.first) != other || other->m_id != entry.first || other->GetTile() != destination
+			|| !other->IsConventional() || other->Conventional().owner_simulation_id != owner ) {
+			throw std::runtime_error("Ordinary sight placement requires a canonical same-owner stack");
+		}
+	} }
 	map::smac_exploration::Input input{data.width,data.height,data.horizontal_wrap,
 		{static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},owner,{},{}};
 	input.sea.reserve(data.tiles.size()); input.explored.reserve(data.tiles.size());

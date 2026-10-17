@@ -23,6 +23,12 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def*
 			const auto* def = (backend::unit::StaticDef*)unitdef;
 
 			switch ( def->m_render->m_type ) {
+				case backend::unit::Render::RT_PORT_FORMER_MARKER:
+					m_former_marker = true;
+					static_.movement_type = def->m_movement_type;
+					static_.movement_per_turn = def->m_movement_per_turn;
+					static_.render.is_sprite = true;
+					break;
 				case backend::unit::Render::RT_CVR_SCOUT:
 				case backend::unit::Render::RT_CVR_SPARTAN_ROVER:
 				case backend::unit::Render::RT_CVR_INITIALIZED_SCOUT: {
@@ -69,6 +75,10 @@ const bool UnitDef::IsArtillery() const {
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
+	if ( m_former_marker ) {
+		if ( !static_.render.sprite.instanced_sprite ) { static_.render.sprite.instanced_sprite = m_ism->GetFormerMarkerSprite( "Unit_" + m_id ); }
+		return &static_.render.sprite;
+	}
 	if ( m_scout_render ) {
 		if ( !static_.render.sprite.instanced_sprite ) {
 			static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, *m_scout_render );

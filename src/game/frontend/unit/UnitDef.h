@@ -50,6 +50,7 @@ private:
 
 	backend::unit::sprite_render_info_t m_render = {};
 	std::optional< backend::unit::CvrScoutRender > m_scout_render;
+	bool m_former_marker = false;
 
 	std::string m_id;
 	std::string m_name;

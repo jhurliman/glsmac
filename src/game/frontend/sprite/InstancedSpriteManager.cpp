@@ -33,6 +33,33 @@ InstancedSpriteManager::~InstancedSpriteManager() {
 	}
 }
 
+InstancedSprite* InstancedSpriteManager::GetFormerMarkerSprite( const std::string& name ) {
+	const auto key = "PortFormerMarker:" + name;
+	const auto existing = m_instanced_sprites.find( key );
+	if ( existing != m_instanced_sprites.end() ) { return &existing->second; }
+	// Deliberately distinct amber F marker. No original asset/model fidelity is
+	// implied; ownership and preview lifetime use the ordinary owned sprite path.
+	auto texture = std::make_shared< types::texture::Texture >( "GLSMAC Former marker", 64, 64 );
+	texture->Clear();
+	texture->Fill( 8, 12, 55, 51, types::Color( 0.15f, 0.12f, 0.04f, 1.0f ) );
+	const types::Color amber( 1.0f, 0.72f, 0.12f, 1.0f );
+	texture->Fill( 18, 18, 25, 45, amber ); texture->Fill( 18, 18, 45, 25, amber ); texture->Fill( 18, 30, 39, 36, amber );
+	texture->FullUpdate();
+	const auto delete_sprite = []( scene::actor::Sprite* value ) { DELETE( value ); };
+	const auto delete_actor = []( scene::actor::Instanced* value ) { DELETE( value ); };
+	NEWV( sprite, scene::actor::Sprite, name, { 0.8f, 0.8f }, texture.get(), { { 0, 0 }, { 1, 1 } }, { 0, 0 } );
+	std::unique_ptr< scene::actor::Sprite, decltype( delete_sprite ) > sprite_owner( sprite, delete_sprite );
+	NEWV( actor, scene::actor::Instanced, sprite );
+	sprite_owner.release();
+	std::unique_ptr< scene::actor::Instanced, decltype( delete_actor ) > actor_owner( actor, delete_actor );
+	actor->SetZIndex( s_zlevel_map.at( ZL_UNITS ) );
+	auto inserted = m_instanced_sprites.emplace( key, InstancedSprite{ key, name, { 0, 0 }, { 64, 64 }, { 32, 32 }, actor, texture } ).first;
+	try { m_scene->AddActor( actor ); }
+	catch ( ... ) { m_scene->RemoveActor( actor ); m_instanced_sprites.erase( inserted ); throw; }
+	actor_owner.release();
+	return &inserted->second;
+}
+
 InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor ) {
 	const auto key = "Scout:" + std::to_string( name.size() ) + ":" + name + ":" + descriptor.PlacementKey();
 	const auto existing = m_instanced_sprites.find( key );

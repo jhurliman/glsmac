@@ -17,12 +17,13 @@ void ValidateTile( const Tile& tile, int32_t width, int32_t height ) {
 
 void Validate( const Query& q ) {
 	const auto& d = q.design;
+	const bool combat = d.weapon_offense > 0 && d.weapon_mode == 0 && d.plan >= 0 && d.plan <= 3;
+	const bool former = d.chassis == Chassis::Infantry && d.weapon_offense == 0 && d.weapon_mode == 9 && d.plan == 9;
 	if ( q.quantum < 1 || q.quantum > 100 || q.faction < 1 || q.faction > 7 ||
 		q.width < 2 || ( q.width & 1 ) != 0 || q.height < 1 ||
 		d.id < 0 || d.id == 8 || d.id == 9 ||
 		( d.chassis != Chassis::Infantry && d.chassis != Chassis::Speeder ) ||
-		d.domain != 0 || d.weapon_offense <= 0 || d.weapon_mode != 0 ||
-		d.plan < 0 || d.plan > 3 || d.abilities != 0 ||
+		d.domain != 0 || ( !combat && !former ) || d.abilities != 0 ||
 		d.basic_allowance < q.quantum || int64_t( d.basic_allowance ) > int64_t( q.quantum ) * 99 ||
 		d.basic_allowance % q.quantum != 0 ) {
 		throw std::invalid_argument( "SMAC ground edge cost requires an admitted ordinary design and bounded query" );
@@ -52,7 +53,7 @@ int32_t QueryGroundEdgeCost( const Query& q ) {
 		if ( destination & Forest ) { cost += q.quantum; }
 	}
 	if ( destination & Fungus ) {
-		if ( q.retained_planet > 0 ) { cost = std::max( cost, int64_t( q.design.basic_allowance ) ); }
+		if ( q.design.plan == 9 || q.retained_planet > 0 ) { cost = std::max( cost, int64_t( q.design.basic_allowance ) ); }
 		else { cost += int64_t( q.quantum ) * 2; }
 	}
 	// The admitted domain bounds this to max(5Q,99Q), at most 9900.

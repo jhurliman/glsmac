@@ -74,6 +74,7 @@
 #include "SmacProductionTargets.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
+#include "ManufacturedConventionalUnits.h"
 #include "SmacBaseResourceContext.h"
 #include "SmacSpecialists.h"
 
@@ -140,6 +141,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );
 		tests::AddConventionalUnitTests( task );
+		tests::AddManufacturedConventionalUnitTests( task );
 		tests::AddSmacBaseResourceContextTests( task );
 		tests::AddSmacSpecialistTests( task );
 		task->AddTest(

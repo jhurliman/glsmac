@@ -11,9 +11,13 @@
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/State.h"
 #include "game/backend/Bindings.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/FacilityDef.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/SpriteRender.h"
 #include "game/backend/unit/CvrScoutRender.h"
+#include "FormerMarkerRender.h"
 #include "game/backend/Player.h"
 
 #include "gse/context/Context.h"
@@ -186,33 +190,109 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 			|| ( render->m_type == Render::RT_CVR_INITIALIZED_SCOUT && render->composition == CvrScoutRender::Composition::InitializedScout ) );
 	const bool rover = context.chassis == Ground::Speeder && context.presentation == Profile::SelectedSpartanRover && render
 		&& render->m_type == Render::RT_CVR_SPARTAN_ROVER && render->composition == CvrScoutRender::Composition::SpartanRover;
-	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover ) ) {
-		THROW( "Conventional design has no compatible explicit Scout or selected Spartan Rover presentation" );
+	const bool former = context.chassis == Ground::Infantry && context.presentation == Profile::FormerMarker
+		&& presentation->m_render->m_type == Render::RT_PORT_FORMER_MARKER
+		&& dynamic_cast< const FormerMarkerRender* >( presentation->m_render );
+	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover && !former ) ) {
+		THROW( "Conventional design has no compatible explicit presentation" );
 	}
+}
+
+
+struct UnitManager::PreparedConventionalUnit::Data {
+	UnitManager* manager;
+	map::tile::Tile* tile;
+	std::unique_ptr< Unit > candidate;
+	std::map< size_t, Unit* > units, occupants;
+	std::unordered_map< size_t, unit_update_t > updates;
+	std::optional< map::SmacWorkerKnowledge > sight;
+	std::pair< SmacMovementHistory*, size_t > history;
+	Unit* published = nullptr;
+	size_t id = 0;
+	bool notified = false;
+};
+UnitManager::PreparedConventionalUnit::PreparedConventionalUnit( std::unique_ptr< Data > data ) : m_data( std::move( data ) ) {}
+UnitManager::PreparedConventionalUnit::~PreparedConventionalUnit() = default;
+UnitManager::PreparedConventionalUnit::PreparedConventionalUnit( PreparedConventionalUnit&& ) noexcept = default;
+UnitManager::PreparedConventionalUnit& UnitManager::PreparedConventionalUnit::operator=( PreparedConventionalUnit&& ) noexcept = default;
+Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
+	if ( !m_data || !m_data->candidate ) { return nullptr; }
+	auto& data = *m_data;
+	data.published = data.candidate.release();
+	data.manager->m_units.swap( data.units ); data.manager->m_unit_updates.swap( data.updates ); data.tile->units.swap( data.occupants );
+	data.published->CommitInitialPlacement( data.tile );
+	if ( data.history.first ) { data.history.first->MarkPlaced( data.history.second ); }
+	data.manager->m_game->CommitConventionalSight( data.sight );
+	return data.published;
+}
+void UnitManager::PreparedConventionalUnit::Notify( GSE_CALLABLE ) {
+	if ( !m_data || !m_data->published || m_data->notified ) { THROW( "Unit creation notification is not pending" ); }
+	auto& data = *m_data;
+	data.manager->m_game->CheckRW( GSE_CALL );
+	if ( data.manager->GetUnit( data.id ) != data.published ) { THROW( "Prepared unit no longer belongs to its manager" ); }
+	data.notified = true;
+	data.manager->TriggerSpawnHook( GSE_CALL, data.published );
+}
+
+UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner,
+	map::tile::Tile* tile, const ConventionalUnitState& state ) {
+	m_game->CheckRW( GSE_CALL );
+	if ( !m_game->IsRunning() || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
+		THROW( "Prepared unit creation requires its running owning accumulation" );
+	}
+	RequireConventionalUnitsReady();
+	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) { return ResolveConventional( value, slot ); };
+	ValidateConventionalCreation( id, def, owner, tile, state, resolver );
+	auto data = std::make_unique< PreparedConventionalUnit::Data >();
+	data->manager = this; data->tile = tile; data->id = id;
+	data->sight = m_game->PrepareConventionalSight( id, state.owner_simulation_id, tile, nullptr );
+	data->candidate.reset( new Unit( Unit::Unplaced{}, this, id, def, owner, state ) );
+	data->history = PreparePlacementHistory( *data->candidate, tile );
+	data->units = m_units; data->updates = m_unit_updates; data->occupants = tile->units;
+	if ( !data->units.emplace( id, data->candidate.get() ).second || !data->occupants.emplace( id, data->candidate.get() ).second
+		|| !data->updates.emplace( id, unit_update_t{ UUO_SPAWN, data->candidate.get() } ).second ) {
+		THROW( "Prepared unit creation has conflicting identity publication" );
+	}
+	return PreparedConventionalUnit( std::move( data ) );
+}
+
+UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConventionalUnit( GSE_CALLABLE, base::Base& home,
+	int32_t design_id, Def* def, SmacMoraleMode mode ) {
+	m_game->CheckRW( GSE_CALL );
+	if ( home.GetGame() != m_game || m_game->GetBM()->GetBase( home.m_id ) != &home || m_units.size() >= 2048 ) {
+		THROW( "Manufacturing requires a registered home and an available unit slot" );
+	}
+	const auto context = home.GetSmacResourceContext();
+	for ( const auto& entry : home.GetTile()->units ) {
+		const auto* occupant = entry.second;
+		if ( !occupant || GetUnit(entry.first) != occupant || occupant->m_id != entry.first || occupant->GetTile() != home.GetTile()
+			|| !occupant->IsConventional() || occupant->m_owner != home.m_owner
+			|| occupant->Conventional().owner_simulation_id != context.owner_simulation_id ) {
+			THROW( "Manufacturing requires a canonical same-owner stack" );
+		}
+	}
+	if ( !m_game->m_simulation || m_game->m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
+		THROW( "Ordinary manufacturing requires the admitted no-project campaign" );
+	}
+	for ( const auto& entry : home.m_facilities ) {
+		if ( !entry.second || m_game->GetBM()->GetFacilityDef( entry.first ) != entry.second ) { THROW( "Unregistered manufacturing facility" ); }
+		m_game->GetBM()->ValidateSmacFacilityDef( entry.second );
+		if ( entry.second->m_smac_source_id != 1 ) { THROW( "Manufacturing currently admits the ordinary HQ-only training context" ); }
+	}
+	const ConventionalUnitState state{ design_id, context.owner_simulation_id, 1, 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	return PrepareConventionalUnit( GSE_CALL, Unit::GetNextId(), def, home.m_owner, home.GetTile(), state );
 }
 
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->CheckRW( GSE_CALL );
+	if ( m_game->IsRunning() ) {
+		auto prepared = PrepareConventionalUnit( GSE_CALL, id, def, owner, tile, state );
+		auto* unit = prepared.Commit(); prepared.Notify( GSE_CALL ); return unit;
+	}
 	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) { return ResolveConventional( value, slot ); };
 	ValidateConventionalCreation( id, def, owner, tile, state, resolver );
-	if ( GetMap()->GetSmacWorkerKnowledge() ) {
-		if ( !m_game->IsRunning() || gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW("Sight placement requires its running owning accumulation"); }
-		auto sight=m_game->PrepareConventionalSight(id,state.owner_simulation_id,tile,nullptr);
-		auto unit=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,id,def,owner,state));
-		const auto history=PreparePlacementHistory(*unit,tile);
-		auto units=m_units; auto updates=m_unit_updates; auto occupants=tile->units;
-		if ( !units.emplace(id,unit.get()).second || !occupants.emplace(id,unit.get()).second || updates.count(id) ) { THROW("Sight placement has conflicting identity publication"); }
-		updates.emplace(id,unit_update_t{UUO_SPAWN,unit.get()});
-		// All validation/allocation precedes identity, membership, history and sight.
-		auto* published=unit.release(); m_units.swap(units); m_unit_updates.swap(updates); tile->units.swap(occupants);
-		published->CommitInitialPlacement(tile);
-		if ( history.first ) { history.first->MarkPlaced(history.second); }
-		m_game->CommitConventionalSight(sight);
-		TriggerSpawnHook(GSE_CALL,published); return published;
-	}
 	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state );
-	SpawnUnit( GSE_CALL, unit );
-	return unit;
+	SpawnUnit( GSE_CALL, unit ); return unit;
 }
 
 Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode ) {
@@ -226,6 +306,20 @@ Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::
 	};
 	const auto id = Unit::GetNextId();
 	ValidateConventionalCreation( id, def, owner, tile, state, resolver, true );
+	if ( GetMap()->GetSmacWorkerKnowledge() ) {
+		// Only this exact claimed startup API can stage a raw pending Unit. The
+		// generic prepared path continues to require complete derived readiness.
+		auto data = std::make_unique< PreparedConventionalUnit::Data >();
+		data->manager=this; data->tile=tile; data->id=id;
+		data->sight=m_game->PrepareConventionalSight(id,state.owner_simulation_id,tile,nullptr,true);
+		data->candidate.reset(new Unit(Unit::Unplaced{},this,id,def,owner,state));
+		data->candidate->m_early_startup=true;
+		data->history=PreparePlacementHistory(*data->candidate,tile);
+		data->units=m_units; data->updates=m_unit_updates; data->occupants=tile->units;
+		if(!data->units.emplace(id,data->candidate.get()).second||!data->occupants.emplace(id,data->candidate.get()).second
+			||!data->updates.emplace(id,unit_update_t{UUO_SPAWN,data->candidate.get()}).second){THROW("Starting unit identity publication conflicts");}
+		PreparedConventionalUnit prepared(std::move(data)); auto* unit=prepared.Commit(); prepared.Notify(GSE_CALL); return unit;
+	}
 	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state, true );
 	SpawnUnit( GSE_CALL, unit );
 	return unit;
@@ -603,6 +697,13 @@ WRAPIMPL_BEGIN( UnitManager )
 						DefineUnit( def );
 
 						return VALUE( gse::value::Undefined );
+					}
+					else if ( render_type == "port_former_marker" ) {
+						const auto* moraleset = GetMoraleSet( morale );
+						if ( !moraleset ) { GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined" ); }
+						auto render = std::make_unique< unit::FormerMarkerRender >();
+						auto* def = new unit::StaticDef( id, moraleset, name, movement_type, movement_per_turn, render.get() );
+						render.release(); DefineUnit( def ); return VALUE( gse::value::Undefined );
 					}
 					else if ( render_type == "cvr_scout" || render_type == "cvr_spartan_rover" || render_type == "cvr_initialized_scout" ) {
 						N_GETPROP( facing, render_def, "facing", Int );

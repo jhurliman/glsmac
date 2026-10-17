@@ -35,9 +35,11 @@ struct ConventionalUnitContext {
 	uint8_t reactor;
 	// Checked against the bound participant and owned selection; never inferred
 	// from the presentation Def or a transport slot number.
-	enum class Presentation { Scout, SelectedSpartanRover };
+	enum class Presentation { Scout, SelectedSpartanRover, FormerMarker };
 	Presentation presentation = Presentation::Scout;
 	std::optional< SmacMoraleHome > home;
+	enum class Package { Combat, Former };
+	Package package = Package::Combat;
 };
 
 using ConventionalUnitResolver = std::function< ConventionalUnitContext( const ConventionalUnitState&, const slot::Slot* ) >;

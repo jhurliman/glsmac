@@ -77,6 +77,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionTargets.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
+	${PWD}/ManufacturedConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacSpecialists.cpp
 

@@ -324,17 +324,19 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	const auto& catalog = units->catalog;
 	simulation.value.designs.Validate( catalog );
 	const auto design = ResolveConventionalDesign( state, simulation );
-	if ( !design.active || design.chassis > 1 || design.weapon != 0 || design.defense != 0 || design.reactor != 1
-		|| design.abilities != 0 || design.faction_exclusion != 0 || design.plan != 3
-		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.empty()
+	if ( !design.active || design.chassis > 1 || design.defense != 0 || design.reactor != 1
+		|| design.abilities != 0 || design.faction_exclusion != 0
+		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.size() <= design.weapon
 		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {
-		throw std::runtime_error( "Unsupported conventional Scout or Rover design" );
+		throw std::runtime_error( "Unsupported conventional ground design" );
 	}
 	using namespace loader::txt;
 	const auto& chassis = catalog.chassis.chassis[ design.chassis ];
-	const auto& weapon = catalog.weapons.weapons[ 0 ]; const auto& defense = catalog.defenses.defenses[ 0 ];
+	const auto& weapon = catalog.weapons.weapons[ design.weapon ]; const auto& defense = catalog.defenses.defenses[ 0 ];
+	const bool combat = weapon.mode == WeaponMode::Projectile && weapon.offense == 1 && design.plan == 3;
+	const bool former = design.chassis == 0 && weapon.mode == WeaponMode::Terraformer && weapon.offense == 0 && design.plan == 9;
 	if ( chassis.triad != ChassisTriad::Land || chassis.missile || chassis.range != 0 || chassis.cargo != 1
-		|| weapon.mode != WeaponMode::Projectile || weapon.offense != 1 || defense.mode != DefenseMode::Projectile
+		|| ( !combat && !former ) || defense.mode != DefenseMode::Projectile
 		|| defense.rating != 1 || catalog.reactors.reactors[ 0 ].power != 1 ) {
 		throw std::runtime_error( "Unsupported conventional component semantics" );
 	}
@@ -342,6 +344,10 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
 	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),
 		std::nullopt, design.reactor };
+	if ( former ) {
+		result.package = unit::ConventionalUnitContext::Package::Former;
+		result.presentation = unit::ConventionalUnitContext::Presentation::FormerMarker;
+	}
 	if ( ground == Ground::Speeder ) {
 		const auto* selected = simulation.value.designs.Find( state.owner_simulation_id );
 		// This renderer has fixed Spartan source material. An arbitrary Speeder,

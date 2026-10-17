@@ -25,5 +25,6 @@ of Ascetic Virtues and Cloning Vats. Unresolved facilities or project rows rejec
 Three focused native groups use actual Bases and parsed source profiles: current
 versus retained GROWTH, Creche/Golden Age, Morgan housing, repeated scalar values,
 changed frozen housing limits and rejection without publication. The getter and
-test TU pass cached syntax checks. Linked execution is pending the root's combined
+test TU pass cached syntax checks; targeted LLVM15 analysis of the getter reports
+zero failures (one TU, 2.11s). Linked execution is pending the root's combined
 population/first-Base/production build; no full-suite or platform run is claimed.

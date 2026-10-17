@@ -145,6 +145,23 @@ empty batches, invalid late records/draws and allocation/count limits.
 Logs, private requests/outputs and comparison results are retained under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/` in `raster-*` directories/logs;
 focused variants are under each build's `raster-validation/` directory.
+
+GitHub review found that the comparison consumer still used the report's
+lowercase filename directly, despite the original probe's corrected lookup.
+The consumer now requires exactly one case-insensitive regular-file match
+before checking the retained asset hash. It rejects missing and ambiguous
+matches, including collisions where one filename is an exact match.
+
+On October 17, a Linux case-sensitive directory containing mixed-case symlinks
+to the two installed assets reproduced `FileNotFoundError` with the previous
+consumer (exit 1). The corrected consumer matched all 42 retained cases,
+21,231 records and 11,414 writes using a freshly compiled Release production
+probe. Three asset-free filesystem tests also passed, including the collision
+case. This compares the existing pinned report; it does not rerun original
+executable code. Evidence is under
+`/home/jhurliman/src/glsmac-pr95-case-lookup/`; the fixed comparison JSON SHA-256
+is `feda6e49b9193fa5a0ad1712ffbd08c9740e2cf62ddd53207bcd97c05a99de77`.
+
 The next reference boundary is original supplied-matrix-to-integer-basis
 conversion, followed by the connection to actual header/frame/scalar/camera and
 lighting/RGB-table preparation.

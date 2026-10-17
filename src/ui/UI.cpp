@@ -1,4 +1,6 @@
 #include "UI.h"
+#include "ResourceBalance.h"
+#include "BaseResourcePresentation.h"
 
 #include <algorithm>
 
@@ -126,9 +128,58 @@ void UI::Iterate() {
 	}
 }
 
+gse::value::Callable* UI::CreateResourceBalanceFormatter( GSE_CALLABLE ) {
+	return NATIVE_CALL() {
+		N_EXPECT_ARGS( 3 );
+		N_GETVALUE( profit, 0, Int );
+		N_GETVALUE( loss, 1, Int );
+		N_GETVALUE( total_cells, 2, Int );
+		if ( total_cells < 0 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Resource cell count must be nonnegative" ); }
+		const auto balance = ResourceBalance::Format( profit, loss, total_cells );
+		return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+			{ "intake_consumption", VALUE( gse::value::String,, balance.intake_consumption ) },
+			{ "surplus", VALUE( gse::value::String,, balance.surplus ) },
+			{ "loss_cells", VALUE( gse::value::Int,, balance.loss_cells ) },
+			{ "profit_cells", VALUE( gse::value::Int,, balance.profit_cells ) },
+		} );
+	} );
+}
+
+gse::value::Callable* UI::CreateResourceProgressFormatter( GSE_CALLABLE ) {
+	return NATIVE_CALL() {
+		N_EXPECT_ARGS( 4 );
+		N_GETVALUE( profit, 0, Int ); N_GETVALUE( loss, 1, Int );
+		N_GETVALUE( filled, 2, Int ); N_GETVALUE( total_cells, 3, Int );
+		if ( total_cells < 0 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Resource cell count must be nonnegative" ); }
+		const auto progress = ResourceProgress::Format( profit, loss, filled, total_cells );
+		return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+			{ "direction", VALUE( gse::value::Int,, progress.direction ) },
+			{ "filled_cells", VALUE( gse::value::Int,, progress.filled_cells ) },
+			{ "end_cells", VALUE( gse::value::Int,, progress.end_cells ) },
+			{ "turns", VALUE( gse::value::String,, progress.turns ) },
+		} );
+	} );
+}
+
+gse::value::Callable* UI::CreatePlaceholderEnergyFormatter( GSE_CALLABLE ) {
+	return NATIVE_CALL() {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( profit, 0, Int ); N_GETVALUE( loss, 1, Int );
+		const auto energy = PlaceholderEnergyAllocation::Format( profit, loss );
+		return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+			{ "labs", VALUE( gse::value::Int,, energy.labs ) },
+			{ "psych", VALUE( gse::value::Int,, energy.psych ) },
+			{ "economy", VALUE( gse::value::Int,, energy.economy ) },
+		} );
+	} );
+}
+
 WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
+			{ "format_resource_balance", CreateResourceBalanceFormatter( GSE_CALL ) },
+			{ "format_resource_progress", CreateResourceProgressFormatter( GSE_CALL ) },
+			{ "format_placeholder_energy", CreatePlaceholderEnergyFormatter( GSE_CALL ) },
 			{
 				"root",
 				m_root->Wrap( GSE_CALL )

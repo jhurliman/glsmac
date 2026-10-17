@@ -635,8 +635,12 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "tiles" );
-	for ( auto& t : *m_tiles->GetTilesPtr() ) {
-		t.GetReachableObjects( reachable_objects );
+	// A rejected owner-thread download can leave an empty map rooted until
+	// the next Failure checkpoint. It has no tile children to traverse.
+	if ( m_tiles ) {
+		for ( auto& t : *m_tiles->GetTilesPtr() ) {
+			t.GetReachableObjects( reachable_objects );
+		}
 	}
 	GC_DEBUG_END();
 }

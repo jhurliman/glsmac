@@ -62,6 +62,7 @@
 #include "SmacAutomaticWorkerAllocation.h"
 #include "SmacBaseAllocationState.h"
 #include "SmacWorkerAvailability.h"
+#include "SmacWorkerMapFrame.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
 #include "SmacBaseResourceContext.h"
@@ -263,6 +264,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacAutomaticWorkerAllocationTests( task );
 		tests::AddSmacBaseAllocationStateTests( task );
 		tests::AddSmacWorkerAvailabilityTests( task );
+		tests::AddSmacWorkerMapFrameTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );

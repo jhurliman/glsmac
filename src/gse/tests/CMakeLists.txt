@@ -65,6 +65,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacAutomaticWorkerAllocation.cpp
 	${PWD}/SmacBaseAllocationState.cpp
 	${PWD}/SmacWorkerAvailability.cpp
+	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp

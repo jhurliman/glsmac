@@ -335,7 +335,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			// The generic participant fixture starts at Citizen. Set the actual
 			// owner to Librarian while the global cost difficulty is easiest.
 			// Manual retooling must still charge the owner's 30-to-20 penalty.
-			game->GetPlayer()->SetDifficultyLevel( "Librarian" );
+			base->m_owner->GetPlayer()->SetDifficultyLevel( "Librarian" );
 			game->GetState()->m_settings.global.difficulty_level = -3; // port encoding of Citizen
 			fixture.ResourceState( []( auto& state ) { state.designs.global_difficulty = 0; } );
 			GT_ASSERT( unit::SmacStartupDesignState::OriginalDifficulty( base->m_owner->GetPlayer()->GetDifficultyLevel() ) == 3,

@@ -133,3 +133,22 @@ comparison or Windows/macOS execution is claimed for this source checkpoint.
 This patch does not claim arbitrary roster synchronization,
 allocation-failure transactionality, manager-wide atomic malformed restore,
 rendered map reload, or default playable conventional startup.
+
+## Focused main publication
+
+Publication on main `a386cbc9` keeps that parent's existing legacy
+despawn/rollback implementation and adds only the conventional rejection guards.
+It does not import the separate historical `restore_unit` implementation or its
+absent legacy rollback tests from the source integration ancestry. The new
+conventional spawn, tagged record, resolver, restore path and dedicated tests
+are unchanged. The other conflict resolutions only place the new method beside
+main's methods and deduplicate an existing `State.h` include.
+
+The first publication build identified a missing complete `Map` type include
+that the source ancestry already supplied; the explicit `Map.h` include is the
+only additional compile dependency. That failed build log is retained. Exact
+publication code `151f2b24` then passed all eight normal CTests (73.45 s) and all
+seven focused allocation-tracked groups. The subsequent receipt is documentation
+only. Publication logs are separate under
+`/home/jhurliman/src/glsmac-conventional-unit-publication/`; source sanitizer and
+negative-control results above are not relabeled as publication reruns.

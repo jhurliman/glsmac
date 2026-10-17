@@ -12,5 +12,6 @@ SET( SRC ${SRC}
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp
 	${PWD}/Scripts.cpp
+	${PWD}/SmacProductionSwitch.cpp
 
 	PARENT_SCOPE )

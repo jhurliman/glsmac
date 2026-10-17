@@ -190,3 +190,19 @@ unchanged, alongside settings, managers, RNG, turn/completion state and callback
 counts. This proves rejection before body mutation, not rollback after a
 malformed body. Local receipts are retained outside the checkout under
 `/home/jhurliman/src/glsmac-world-technology-audit`.
+
+The focused V5 publication base is
+`e9b18fce759d64a6c8dd681a88bbb618b000cde8`, retaining both #112 at
+`96513ced9dcb281540dcbeb925dc01679e992826` and technology catalog #114 at
+`714bb937f8c7a4e47a5b0bd687ea38aee20483ef`. The merge required no source
+adaptation. Applying V5 preserved both prior validation notes at their prose
+conflict; production code, pure tests and header fixtures remain byte-identical
+to the integrated V5 source. The real Client regression delta also applied
+unchanged to the combined existing backend fixture.
+
+The exact publication implementation `8a9b4c7a5f780b11aa7103a99d7096da9943203b`
+passed all six registered CTests in 31.16 seconds. Correctness analysis of the
+changed production translation unit passed with zero findings in 1.33 seconds.
+These are the smaller publication branch's results; the preceding eight-entry
+sanitizer and full-analysis receipts apply to the integrated source. Publication
+receipts remain under `/home/jhurliman/src/glsmac-world-technology-publication`.

@@ -3085,10 +3085,14 @@ public:
 				for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y % 2; x < 10; x += 2 ) {
 					auto* tile = m_game.GetMap()->GetTile( x, y );
 					tile->Update(); tile->moisture=MOISTURE_ARID; tile->bonus=BONUS_NONE;
-					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0;
-					// Deliberately unsuitable centers must survive unchanged and never be selected.
-					if ( y == 0 ) { tile->features = FEATURE_XENOFUNGUS; }
-					if ( y == 7 ) { tile->features = FEATURE_MONOLITH; }
+					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = TERRAFORMING_ROAD;
+					// One clear fixture center keeps both real random-picker runs on
+					// the same barren worker radius. Roads add no resource yield.
+					if ( x == 4 && y == 4 ) { tile->terraforming = 0; }
+					// Preserve unsuitable centers outside that radius: Gaia's fungus
+					// and the monolith would otherwise invalidate the zero-food input.
+					if ( x == 0 && y == 0 ) { tile->features = FEATURE_XENOFUNGUS; }
+					if ( x == 9 && y == 7 ) { tile->features = FEATURE_MONOLITH; }
 				} }
 				for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 				for ( const auto* name : { "define_moraleset", "define_unit", "define_base_pop", "define_base_facility" } ) {
@@ -3239,8 +3243,10 @@ public:
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
 				auto* base=origin->base; const auto first=*base->GetProductionState();
 				const auto initial=m_game.GetSmacProductionCost(base->m_owner,first.current_item)/2;
+				GT_ASSERT(origin==m_game.GetMap()->GetTile(4,4) && base->GetSmacAllocation()->selected==1
+					&& base->GetSmacAllocation()->specialists.total_count==1,"default fixture did not retain its barren center and specialist");
 				GT_ASSERT(first.minerals==initial+1 && first.baseline_minerals==first.minerals && base->GetAccumulatedNutrients()==0,
-					"real default first upkeep or legacy growth posted incorrect stores");
+					"real default first upkeep or legacy growth posted incorrect stores: minerals="+std::to_string(first.minerals)+", initial="+std::to_string(initial)+", food="+std::to_string(base->GetAccumulatedNutrients()));
 				const auto next_base=base::Base::GetNextId(),next_unit=Unit::GetNextId();
 				for(const auto* name:{"spawn_starting_smac_base","spawn_starting_conventional_unit"}) {
 					bool rejected=false;try{m_game.Event(GSE_CALL,name,{{"owner",unit->m_owner->GetPlayer()->Wrap(GSE_CALL)},{"tile",origin->Wrap(GSE_CALL)}});}catch(const std::exception&){rejected=true;}
@@ -3280,8 +3286,8 @@ public:
 					"default command could not continue through actual next-turn handler" );
 				GT_ASSERT(base->GetProductionState()->minerals==initial+2 && base->GetAccumulatedNutrients()==0,
 					"real default second upkeep skipped or double-posted legacy economy");
-				for ( size_t x = 0; x < 10; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" ); }
-				for ( size_t x = 1; x < 10; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" ); }
+				GT_ASSERT( m_game.GetMap()->GetTile( 0, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" );
+				GT_ASSERT( m_game.GetMap()->GetTile( 9, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" );
 			}
 			saved = WorldSnapshot();
 			for ( const auto id : identities ) { saved_units.push_back( Unit::Serialize( m_game.GetUM()->GetUnit( id ) ).ToString() ); }
@@ -3418,7 +3424,9 @@ public:
 				const auto bytes=Base::Serialize(base).ToString();GT_ASSERT(!bytes.empty() && base->GetProductionState()->queue->empty(),"first Base cannot save complete state");
 				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+1
 					&& base->GetProductionState()->baseline_minerals==base->GetProductionState()->minerals,"first upkeep did not post exactly one mineral and baseline");
-				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?3:0),"first upkeep nutrient posting differs from actual configured tile intake");
+				// Gaia owns Tech6, not the fixture's nutrient unlock Tech0: rainy
+				// Farm3 is capped to2, plus center2 minus population demand2.
+				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?2:0),"first upkeep nutrient posting differs from actual configured tile intake: "+std::to_string(base->GetAccumulatedNutrients()));
 			}
 			const auto pair=m_game.m_simulation->value.gameplay_random;
 			const auto jsf=m_game.GetRandom()->GetStateString();
@@ -3457,7 +3465,7 @@ public:
 				const auto* base=m_game.GetBM()->GetBase(id);
 				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+2
 					&& base->GetProductionState()->baseline_minerals==base->GetProductionState()->minerals,"second turn did not post exactly once across the human roster");
-				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?6:0),"second turn nutrient posting was skipped or repeated");
+				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?4:0),"second turn nutrient posting was skipped or repeated");
 			}
 			GT_ASSERT(m_game.m_simulation->value.gameplay_random==pair && m_game.GetRandom()->GetStateString()==jsf,"ordinary upkeep changed random streams");
 			GT_OK();

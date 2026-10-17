@@ -26,7 +26,8 @@ removal and later-turn mineral deficit are surfaced by the real upkeep stage.
 AI, multiplayer and their controller sequencing remain outside this local policy.
 
 The actual claimed-Start fixture now checks the initial +1 mineral and matching
-baseline, zero arid nutrient posting, and a configured productive tile's +3 food.
+baseline, zero arid nutrient posting, and a configured productive tile's +2 food
+(rainy Farm yield capped at two because its nutrient technology is unowned).
 It continues through two queued end-turn requests, checking exactly one second
 posting across both human owners and unchanged RNG pairs. A later Base with an
 unsupported facility target tests committed-prefix failure, blocked save/retry and

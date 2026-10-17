@@ -131,6 +131,7 @@ const create_fixture = () => {
 	};
 	const game = custom_properties() + {
 		get_ruleset: () => { return 'smac'; },
+		configure_smac_base_presentations: (roles) => {}, // definitions are substituted
 		get_bm: () => { return bm; },
 		get_tm: () => { return tm; },
 		on: (name, handler) => { game_handlers[name] = handler; },

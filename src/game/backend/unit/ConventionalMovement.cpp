@@ -104,7 +104,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
-	// The measured HQ extension is deliberately narrower than the base-free route.
+	// The measured Base-containing routes are narrower than the base-free route.
 	// HEADQUARTERS is the explicit port facility identity, not an English-name or
 	// source-slot classification. The saved no-project capability remains required.
 	const base::Base* admitted_hq = nullptr;
@@ -117,37 +117,57 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			&& design.chassis == 1 && stats.basic_allowance == 6;
 		if ( stored.stored_morale != 1 || stored.damage != 0
 			|| stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
-			throw std::runtime_error( "Friendly HQ movement requires a healthy measured Infantry or selected Spartan Rover with quantum3" );
+			throw std::runtime_error( "Movement with Bases requires a healthy measured Infantry or selected Spartan Rover with quantum3" );
 		}
-		// Select by endpoint identity, not global count or first record. Locate
-		// the borrowed pointer in the canonical manager before dereferencing it.
-		const auto* endpoint_base = source->base ? source->base : destination->base;
-		const auto found = std::find_if( bases.begin(), bases.end(), [ & ]( const auto& entry ) { return entry.second == endpoint_base; } );
-		if ( !endpoint_base || found == bases.end() ) { throw std::runtime_error( "Friendly HQ movement requires a registered endpoint HQ" ); }
-		const auto& entry = *found;
-		const auto* hq = entry.second;
-		const auto* definition = m_game->GetBM()->GetFacilityDef( "HEADQUARTERS" );
-		if ( !hq || hq->m_id != entry.first || hq->GetGame() != m_game || hq->m_owner != unit->m_owner
-			|| hq->m_faction != unit->m_owner->GetPlayer()->GetFaction() || hq->m_pops.size() != 1
-			|| !definition || hq->m_facilities.size() != 1 || hq->m_facilities.begin()->first != "HEADQUARTERS"
-			|| hq->m_facilities.begin()->second != definition ) {
-			throw std::runtime_error( "Friendly HQ movement requires a canonical same-owner population1 HQ with no other facilities" );
+		if ( !source->base && !destination->base ) {
+			using namespace map::tile;
+			// Ordinary remote-world requests prove only these three exact pairs.
+			// Do not inherit the broader edge kernel's river/forest/rocky domain.
+			if ( source->rockiness != ROCKINESS_FLAT || destination->rockiness != ROCKINESS_FLAT
+				|| source->features != FEATURE_NONE || destination->features != FEATURE_NONE
+				|| source->terraforming != destination->terraforming
+				|| ( source->terraforming != TERRAFORMING_NONE && source->terraforming != TERRAFORMING_ROAD && source->terraforming != TERRAFORMING_MAG_TUBE ) ) {
+				throw std::runtime_error( "Remote ordinary movement requires flat clear endpoints with matching none road or tube terrain" );
+			}
+			for ( const auto& entry : bases ) {
+				const auto* center = entry.second ? entry.second->GetTile() : nullptr;
+				// A broken Tile::base link must not bypass endpoint-HQ validation.
+				// Adjacent Bases are outside this remote-only admission receipt.
+				if ( !center || center == source || center == destination || source->IsAdjactentTo( center ) || destination->IsAdjactentTo( center ) ) {
+					throw std::runtime_error( "Remote ordinary movement requires Bases outside both endpoint neighborhoods" );
+				}
+			}
+		} else {
+			// Select by endpoint identity, not global count or first record. Locate
+			// the borrowed pointer in the canonical manager before dereferencing it.
+			const auto* endpoint_base = source->base ? source->base : destination->base;
+			const auto found = std::find_if( bases.begin(), bases.end(), [ & ]( const auto& entry ) { return entry.second == endpoint_base; } );
+			if ( !endpoint_base || found == bases.end() ) { throw std::runtime_error( "Friendly HQ movement requires a registered endpoint HQ" ); }
+			const auto& entry = *found;
+			const auto* hq = entry.second;
+			const auto* definition = m_game->GetBM()->GetFacilityDef( "HEADQUARTERS" );
+			if ( !hq || hq->m_id != entry.first || hq->GetGame() != m_game || hq->m_owner != unit->m_owner
+				|| hq->m_faction != unit->m_owner->GetPlayer()->GetFaction() || hq->m_pops.size() != 1
+				|| !definition || hq->m_facilities.size() != 1 || hq->m_facilities.begin()->first != "HEADQUARTERS"
+				|| hq->m_facilities.begin()->second != definition ) {
+				throw std::runtime_error( "Friendly HQ movement requires a canonical same-owner population1 HQ with no other facilities" );
+			}
+			const auto* center = hq->GetTile();
+			const auto* outside = center == source ? destination : source;
+			using namespace map::tile;
+			if ( ( center != source && center != destination ) || center->base != hq || outside->base
+				|| center->rockiness != ROCKINESS_FLAT || outside->rockiness != ROCKINESS_FLAT
+				|| center->features != FEATURE_NONE || center->terraforming != TERRAFORMING_NONE
+				|| ( outside->features != FEATURE_NONE && outside->features != FEATURE_XENOFUNGUS )
+				|| ( outside->terraforming != TERRAFORMING_NONE && outside->terraforming != TERRAFORMING_ROAD && outside->terraforming != TERRAFORMING_MAG_TUBE )
+				|| ( outside->features != FEATURE_NONE && outside->terraforming != TERRAFORMING_NONE ) ) {
+				throw std::runtime_error( "Friendly HQ movement requires the HQ endpoint and adjacent flat ordinary road tube or fungus land" );
+			}
+			// An endpoint HQ is at distance0/1 from this edge. The original fungus
+			// branch consumes nearest-any-base distance <=1, not the chosen base ID;
+			// another base winning an equal-distance tie cannot invalidate it.
+			admitted_hq = hq;
 		}
-		const auto* center = hq->GetTile();
-		const auto* outside = center == source ? destination : source;
-		using namespace map::tile;
-		if ( ( center != source && center != destination ) || center->base != hq || outside->base
-			|| center->rockiness != ROCKINESS_FLAT || outside->rockiness != ROCKINESS_FLAT
-			|| center->features != FEATURE_NONE || center->terraforming != TERRAFORMING_NONE
-			|| ( outside->features != FEATURE_NONE && outside->features != FEATURE_XENOFUNGUS )
-			|| ( outside->terraforming != TERRAFORMING_NONE && outside->terraforming != TERRAFORMING_ROAD && outside->terraforming != TERRAFORMING_MAG_TUBE )
-			|| ( outside->features != FEATURE_NONE && outside->terraforming != TERRAFORMING_NONE ) ) {
-			throw std::runtime_error( "Friendly HQ movement requires the HQ endpoint and adjacent flat ordinary road tube or fungus land" );
-		}
-		// An endpoint HQ is at distance0/1 from this edge. The original fungus
-		// branch consumes nearest-any-base distance <=1, not the chosen base ID;
-		// another base winning an equal-distance tie cannot invalidate it.
-		admitted_hq = hq;
 	}
 	// Without an endpoint HQ the original nearest-base result may retain prior state,
 	// and destination fungus can enter the unsupported native-life/CRT encounter path.

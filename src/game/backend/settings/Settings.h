@@ -88,6 +88,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void InitializeHostRules( const RulesSource& read_source );
 	const std::optional< resource::smac::BaseSquareRules >& GetSmacBaseSquareRules() const;
 	void LockRuleset();
+	bool IsRulesetLocked() const;
 	void ResetRuleset();
 
 	MapSettings map = {};

@@ -105,8 +105,8 @@ semicolon. Intended source files were never replaced for these controls.
 The initial native-test macro compile error and the installed annotation
 quote rejection were corrected before these final receipts.
 
-The focused publication applies only source commit 3497c7cc to pinned main
-386cbc9, without conflicts or fixture changes; all eight feature files
+The focused publication applies only source commit `3497c7cc` to pinned main
+`a386cbc9`, without conflicts or fixture changes; all eight feature files
 were identical before this receipt paragraph. That exact production/test
 stack passed 8/8 CTests in 77.68 seconds, the six tracked RESOURCEINFO groups,
 and one-TU LLVM 15 analysis with zero failures in 2.51 seconds. Its separately

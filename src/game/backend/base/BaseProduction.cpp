@@ -104,7 +104,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			// Paid markings belong to the latest resource pass, not to the newly
 			// produced roster. Growth's internal pass can make the newborn paid.
 			const auto* map = m_game->GetMap();
-			const auto* knowledge = map->GetSmacWorkerKnowledge();
+			const auto& knowledge = map->GetSmacWorkerKnowledge();
 			if ( !knowledge ) { THROW( "Support loss requires the current map geometry" ); }
 			const bool wraps = knowledge->CopyData().horizontal_wrap;
 			auto demand = support.mineral_support;

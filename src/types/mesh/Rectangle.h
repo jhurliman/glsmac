@@ -28,6 +28,7 @@ CLASS( Rectangle, Render )
 	void GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const;
 
 	Render* CopyAsRenderMesh() const;
+	// Consumes a heap rectangle allocated with NEW/NEWV.
 	Render* ToRenderMesh();
 
 private:

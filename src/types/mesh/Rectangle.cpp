@@ -216,9 +216,9 @@ void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t 
 void Rectangle::GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
-	memcpy( ptr( coord, 0, sizeof( Vec3 ) ), ptr( m_vertex_data, offset, sizeof( Vec3 ) ), sizeof( Vec3 ) );
+	memcpy( coord, ptr( m_vertex_data, offset, sizeof( Vec3 ) ), sizeof( Vec3 ) );
 	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
-	memcpy( ptr( tex_coord, 0, sizeof( Vec2< coord_t > ) ), ptr( m_vertex_data, offset, sizeof( Vec2< coord_t > ) ), sizeof( Vec2< coord_t > ) );
+	memcpy( tex_coord, ptr( m_vertex_data, offset, sizeof( Vec2< coord_t > ) ), sizeof( Vec2< coord_t > ) );
 }
 
 Render* Rectangle::CopyAsRenderMesh() const {
@@ -249,7 +249,7 @@ Render* Rectangle::CopyAsRenderMesh() const {
 
 Render* Rectangle::ToRenderMesh() {
 	auto* render_mesh = CopyAsRenderMesh();
-	delete this;
+	DELETE( this );
 	return render_mesh;
 }
 

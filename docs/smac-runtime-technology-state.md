@@ -140,3 +140,22 @@ Source validation on the dedicated branch:
 Receipts are retained outside Git under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/technology-state-*`. Original
 files, reports and proprietary data are not included in the repository.
+
+## Focused publication receipt
+
+The publication is based on frozen faction host PR123 at
+`ad6f765355e6a4f3186ce4c0b1320563ea0b3ea3`, not the integration branch. The
+technology-state production, native tests and comparison tools are byte-identical
+to source commit `0a1de2d5db7859433c8df021113d744a964462fd`; only registration
+placement differs. The actual publication code commit is
+`8bf692ac02bdfdce35188cb1606dda47a3e408c5`.
+
+On this narrower ancestry, all six registered CTests passed in35.70s. The
+publication Release probe again matched107/107 original projections and107
+codec roundtrips. One-TU correctness analysis passed with zero failures in2.00s.
+A copied publication TU that replayed startup after decode failed the intended
+restore assertion (369 native/script tests passed, one failed, exit1).
+The8-test sanitizer/tracking receipt above belongs to the source tree; it is
+not relabeled as a publication run. The canonical live-roster and later
+startup-retirement integration discussed in the binding plan remain separate
+prerequisites, not hidden additions to this PR.

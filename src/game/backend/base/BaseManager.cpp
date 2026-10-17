@@ -18,6 +18,7 @@
 #include "gse/value/Bool.h"
 #include "gse/value/Array.h"
 #include <memory>
+#include "util/FinallyGuard.h"
 
 namespace game {
 namespace backend {
@@ -25,7 +26,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V6";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V7";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -389,6 +390,7 @@ void BaseManager::PushUpdates() {
 			const auto base_id = it.first;
 			const auto& bu = it.second;
 			const auto& base = bu.base;
+			if ( !( bu.ops & BUO_DESPAWN ) ) { base->ValidateSmacAllocation(); }
 			if ( bu.ops & BUO_SPAWN ) {
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SPAWN );
 				fr.data.base_spawn.base_id = base->m_id;
@@ -700,6 +702,8 @@ UNWRAPIMPL_PTR( BaseManager )
 
 void BaseManager::TriggerUpdates( GSE_CALLABLE ) {
 	std::lock_guard guard( m_updated_bases_mutex );
+	m_dispatching_updates = true;
+	util::FinallyGuard dispatch( [ this ] { m_dispatching_updates = false; } );
 	for ( const auto& base : m_updated_bases ) {
 		m_game->Trigger( GSE_CALL, "update_base", ARGS_F( base ) {
 			{

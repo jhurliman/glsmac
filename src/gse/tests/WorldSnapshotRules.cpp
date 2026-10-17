@@ -189,7 +189,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 19 && wire.ReadString() == id, "writer omitted the V19 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 20 && wire.ReadString() == id, "writer omitted the V20 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { wire.ReadString(); }

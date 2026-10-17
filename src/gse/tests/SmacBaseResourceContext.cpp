@@ -163,9 +163,10 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 			// The real Base reader reaches its final bounded nested frame after all
 			// earlier fields. Neither a valid-sized bad owner nor cap+1 may construct.
 			types::Buffer envelope; envelope.WriteString( SerializeSmacBaseResourceContext( Record() ).ToString() );
-			const auto prefix = saved.substr( 0, saved.size() - envelope.lenw );
+			types::Buffer allocation_absent; allocation_absent.WriteBool( false );
+			const auto prefix = saved.substr( 0, saved.size() - envelope.lenw - allocation_absent.lenw );
 			for ( const auto& payload : { Frame( 1, 8, 0, 0, 0 ).ToString(), SerializeSmacBaseResourceContext( Record() ).ToString() + "x" } ) {
-				types::Buffer body( prefix ); body.WriteString( payload );
+				types::Buffer body( prefix ); body.WriteString( payload ); body.WriteBool( false );
 				GT_ASSERT( Rejects( [ & ] { std::unique_ptr< Base > rejected( Base::Deserialize( body, game ) ); } ) && !bm->GetBase( base_id )
 					&& !game->GetMap()->GetTile( 2, 2 )->base && Base::GetNextId() == after, "late malformed body published a Base" );
 				if ( payload.size() > SmacBaseResourceContext::MAX_WIRE_BYTES ) { GT_ASSERT( body.lenr == prefix.size(), "outer cap failure consumed the context frame" ); }

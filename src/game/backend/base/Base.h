@@ -14,6 +14,7 @@
 #include "ProductionState.h"
 #include "SmacBaseResourceContext.h"
 #include "SmacSpecialists.h"
+#include "SmacBaseAllocationState.h"
 
 namespace gse::value {
 class Object;
@@ -59,7 +60,8 @@ public:
 		const size_t next_pop_id = 1,
 		const int64_t accumulated_nutrients = 0,
 		const std::optional< ProductionState >& production = std::nullopt,
-		const std::optional< SmacBaseResourceContext >& resource_context = std::nullopt
+		const std::optional< SmacBaseResourceContext >& resource_context = std::nullopt,
+		const std::optional< SmacBaseAllocationState >& allocation = std::nullopt
 	);
 	virtual ~Base() = default;
 
@@ -81,6 +83,18 @@ public:
 	// and bound owner. They do not run or mutate the manual worker handler.
 	SmacSpecialistMenu GetSmacSpecialistMenu( std::optional< size_t > pop_id = std::nullopt ) const;
 	uint8_t SelectAutomaticSmacSpecialist() const;
+	// Explicit native publication only, in the owning writable GSE scope. No
+	// allocation calculation or founding/adoption policy is implied. Existing
+	// Pop nodes/IDs/variants survive; ascending IDs receive ascending worker
+	// radius positions, followed by the ordered active specialist slots.
+	struct SmacAllocationRoles {
+		std::string worker;
+		std::array< std::string, 7 > specialists;
+	};
+	void PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles );
+	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
+	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
+	void ValidateSmacAllocation() const;
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -105,6 +119,10 @@ private:
 	int64_t m_accumulated_nutrients = 0;
 	std::optional< ProductionState > m_production;
 	std::optional< SmacBaseResourceContext > m_resource_context;
+	std::optional< SmacBaseAllocationState > m_allocation;
+	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation ) const;
+	void ValidateAllocationProjection( bool registered ) const;
+	void RequireGenericPopulationMutation() const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

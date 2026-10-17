@@ -29,6 +29,7 @@ Pop::Pop( Base* const base, const size_t id, const PopDef* def, const uint8_t va
 void Pop::Serialize( types::Buffer& buf ) const {
 	ASSERT( m_base, "pop base is null" );
 	ASSERT( m_def, "pop def is null" );
+	m_base->ValidateSmacAllocation();
 
 	buf.WriteInt( m_id );
 	buf.WriteString( m_def->m_id );
@@ -70,6 +71,7 @@ const Pop::worked_tile_t& Pop::GetWorkedTileCoords() const {
 }
 
 map::tile::Tile* Pop::GetWorkedTile() const {
+	if ( m_base ) { m_base->ValidateSmacAllocation(); }
 	return m_worked_tile ? m_base->GetGame()->GetMap()->GetTile( m_worked_tile->x, m_worked_tile->y ) : nullptr;
 }
 
@@ -82,6 +84,7 @@ WRAPIMPL_SERIALIZE( Pop )
 	if ( !obj || !obj->m_base ) {
 		THROW( "can't serialize pop reference - population has no base" );
 	}
+	obj->m_base->ValidateSmacAllocation();
 	const auto member = obj->m_base->m_pops.find( obj->m_id );
 	if ( member == obj->m_base->m_pops.end() || &member->second != obj ) {
 		THROW( "can't serialize pop reference - population is not a member of its base" );
@@ -125,6 +128,7 @@ WRAPIMPL_BEGIN( Pop )
 		{
 			"get_type",
 			NATIVE_CALL( this ) {
+				if ( m_base ) { m_base->ValidateSmacAllocation(); }
 				N_EXPECT_ARGS( 0 );
 				return VALUE( gse::value::String, , m_def->m_id );
 			} )

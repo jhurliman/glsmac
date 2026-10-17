@@ -50,7 +50,8 @@ Base::Base(
 	const size_t next_pop_id,
 	const int64_t accumulated_nutrients,
 	const std::optional< ProductionState >& production,
-	const std::optional< SmacBaseResourceContext >& resource_context
+	const std::optional< SmacBaseResourceContext >& resource_context,
+	const std::optional< SmacBaseAllocationState >& allocation
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
@@ -63,12 +64,17 @@ Base::Base(
 	, m_next_pop_id( next_pop_id )
 	, m_accumulated_nutrients( accumulated_nutrients )
 	, m_production( production )
-	, m_resource_context( resource_context ) {
+	, m_resource_context( resource_context )
+	, m_allocation( allocation ) {
 	if ( m_production ) { m_production->Validate(); }
 	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );
+	}
+	const auto* center_claim = game->GetBM()->GetWorkingPop( tile->coord );
+	if ( center_claim && center_claim->m_base && center_claim->m_base->m_allocation ) {
+		THROW( "Base center conflicts with an existing canonical worker allocation" );
 	}
 	std::set< std::pair< size_t, size_t > > assigned;
 	for ( const auto& entry : m_pops ) {
@@ -87,6 +93,7 @@ Base::Base(
 	if ( !m_pops.empty() && m_next_pop_id <= m_pops.rbegin()->first ) {
 		THROW( "next population ID must follow existing IDs" );
 	}
+	ValidateAllocationProjection( false );
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -103,6 +110,7 @@ const Game* const Base::GetGame() const {
 }
 
 Pop* const Base::AddPop( const Pop& pop ) {
+	RequireGenericPopulationMutation();
 	if ( m_resource_context ) { GetSmacResourceContext(); }
 	if ( m_pops.find( pop.m_id ) != m_pops.end() ) { THROW( "population ID already exists" ); }
 	if ( pop.m_base != this ) { THROW( "population belongs to another base" ); }
@@ -120,6 +128,7 @@ Pop* const Base::AddPop( const Pop& pop ) {
 }
 
 void Base::RemovePop( const size_t pop_id ) {
+	RequireGenericPopulationMutation();
 	if ( m_resource_context ) { GetSmacResourceContext(); }
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id not found" );
 	m_game->GetBM()->ChangeAssignment( m_id, pop_id, m_pops.at( pop_id ).m_worked_tile, {} );
@@ -129,6 +138,7 @@ void Base::RemovePop( const size_t pop_id ) {
 }
 
 void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id ) {
+	RequireGenericPopulationMutation();
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id " + std::to_string( pop_id ) + " not found" );
 	auto& pop = m_pops.at( pop_id );
 	const auto* def = GetPopDef( GSE_CALL, def_id );
@@ -136,6 +146,7 @@ void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& 
 }
 
 void Base::SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, map::tile::Tile* tile ) {
+	RequireGenericPopulationMutation();
 	m_game->CheckRW( GSE_CALL );
 	const auto member = pop ? m_pops.find( pop->m_id ) : m_pops.end();
 	if ( member == m_pops.end() || &member->second != pop || pop->m_base != this ) {
@@ -196,6 +207,7 @@ SmacBaseResourceContext Base::GetSmacResourceContext() const {
 		THROW( "SMAC resource context requires a registered canonical Base" );
 	}
 	m_game->GetBM()->ValidateSmacResourceContext( *m_resource_context, m_owner, m_faction );
+	ValidateAllocationProjection( true );
 	return *m_resource_context;
 }
 
@@ -245,6 +257,8 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteInt( base->m_accumulated_nutrients );
 	buf.WriteString( SerializeProductionState( base->m_production ).ToString() );
 	buf.WriteString( SerializeSmacBaseResourceContext( base->m_resource_context ).ToString() );
+	buf.WriteBool( base->m_allocation.has_value() );
+	if ( base->m_allocation ) { buf.WriteString( base->m_allocation->Serialize().ToString() ); }
 	return buf;
 }
 
@@ -290,8 +304,10 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	types::Buffer production_buffer( buf.ReadString() );
 	const auto production = DeserializeProductionState( production_buffer );
 	const auto resource_context = DeserializeSmacBaseResourceContext( types::Buffer( buf.ReadString( SmacBaseResourceContext::MAX_WIRE_BYTES ) ) );
+	std::optional< SmacBaseAllocationState > allocation;
+	if ( buf.ReadBool() ) { allocation = SmacBaseAllocationState::Deserialize( types::Buffer( buf.ReadString( SmacBaseAllocationState::WIRE_BYTES ) ) ); }
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
-	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context );
+	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
 }
 
 WRAPIMPL_SERIALIZE( Base )
@@ -450,6 +466,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"create_pop",
 		NATIVE_CALL( this ) {
+			RequireGenericPopulationMutation();
 
 			m_game->CheckRW( GSE_CALL );
 
@@ -564,6 +581,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"is_tile_worked",
 		NATIVE_CALL( this ) {
+			ValidateSmacAllocation();
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			auto* pop = tile->tiles->GetMap() == m_game->GetMap() ? m_game->GetBM()->GetWorkingPop( tile->coord ) : nullptr;
@@ -573,6 +591,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_pops",
 		NATIVE_CALL( this ) {
+			ValidateSmacAllocation();
 			N_EXPECT_ARGS( 0 );
 
 			gse::value::array_elements_t elements = {};
@@ -615,6 +634,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_size",
 		NATIVE_CALL( this ) {
+			ValidateSmacAllocation();
 			N_EXPECT_ARGS( 0 );
 			return VALUE( gse::value::Int,, m_pops.size() );
 		} ),
@@ -705,6 +725,7 @@ gse::value::Array* const Base::GetWorkableTiles( GSE_CALLABLE ) {
 }
 
 gse::value::Array* const Base::GetWorkedTiles( GSE_CALLABLE ) {
+	ValidateSmacAllocation();
 	gse::value::array_elements_t result = {};
 	for ( const auto& pop : m_pops ) {
 		if ( auto* tile = pop.second.GetWorkedTile() ) {
@@ -715,6 +736,7 @@ gse::value::Array* const Base::GetWorkedTiles( GSE_CALLABLE ) {
 }
 
 gse::value::Array* const Base::GetUnworkedTiles( GSE_CALLABLE ) {
+	ValidateSmacAllocation();
 	gse::value::array_elements_t result = {};
 	const auto* workable_tiles_v = GetWorkableTiles( GSE_CALL );
 	for ( const auto& v : workable_tiles_v->value ) {

@@ -11,10 +11,11 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V19 requires Simulation V7, including optional owned movement caller history.
+// V20 requires Base manager V7, including optional lossless Base allocation.
+// Simulation V7 and its optional movement caller history remain unchanged.
 // The World18 optional map-resource policy remains before the map body.
-// V1..V18 downloads are unsupported.
-inline constexpr int64_t rules_version = 19;
+// V1..V19 downloads are unsupported.
+inline constexpr int64_t rules_version = 20;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

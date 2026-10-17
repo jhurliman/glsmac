@@ -15,6 +15,8 @@
 #include "Pop.h"
 #include "SmacBaseResourceContext.h"
 
+namespace gse::tests { class BaseAllocationFixture; }
+
 namespace game {
 namespace backend {
 
@@ -89,6 +91,7 @@ public:
 
 private:
 	friend class Base;
+	friend class gse::tests::BaseAllocationFixture;
 	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;
 	using tile_key_t = std::pair< size_t, size_t >;
 	using pop_key_t = std::pair< size_t, size_t >;
@@ -125,6 +128,9 @@ private:
 private:
 	std::mutex m_updated_bases_mutex;
 	std::unordered_set< Base* > m_updated_bases = {};
+	// The existing callback loop holds the set mutex. Native allocation
+	// publication must reject reentry rather than recursively taking that lock.
+	bool m_dispatching_updates = false;
 
 };
 

@@ -120,7 +120,7 @@ void AddSmacFacilityIdentityTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 2 ) { bytes += 'x'; }
 				if ( scenario == 3 ) { bytes.pop_back(); }
 				if ( scenario == 4 ) { FacilityDef duplicate( "first", "Different name", "Description", 40, render ); bytes = FacilityDef::Serialize( &duplicate ).ToString(); }
-				types::Buffer input; input.WriteString( "GLSMAC_BASES_V6" ); input.WriteInt( 0 ); input.WriteInt( 2 );
+				types::Buffer input; input.WriteString( "GLSMAC_BASES_V7" ); input.WriteInt( 0 ); input.WriteInt( 2 );
 				input.WriteString( FacilityDef::Serialize( &first ).ToString() ); input.WriteString( bytes ); input.WriteInt( 0 ); input.WriteInt( 1 );
 				auto* manager = fixture.Game()->GetBM();
 				GT_ASSERT( Rejects( [ & ] { manager->Deserialize( GSE_CALL, input ); } ), "malformed or duplicate later facility accepted" );

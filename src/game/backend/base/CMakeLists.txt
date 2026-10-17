@@ -3,6 +3,7 @@ SET( SRC ${SRC}
 	${PWD}/RenderInfo.cpp
 	${PWD}/BaseManager.cpp
 	${PWD}/Base.cpp
+	${PWD}/BaseAllocation.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacSpecialists.cpp

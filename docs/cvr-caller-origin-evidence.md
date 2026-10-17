@@ -7,10 +7,10 @@ two original fragments with a deliberate gap: **A stops before lighting; B is
 started separately using the actual matrix and location bytes captured from A.**
 It does not execute a complete renderer or produce a Scout image.
 
-The retained run passes **25 paired cases, 13 pre-execution domain rejections
-and 14 negative controls**, executing 20,998 original instructions. Every case
+The current retained run passes **29 paired cases, 17 pre-execution domain rejections
+and 15 negative controls**, executing 24,351 original instructions. Every case
 checks intermediate binary32 stores, all nine basis results and all three
-initial-position results. Of those 25, 21 also satisfy the separately checked
+initial-position results. Of those 29, 25 also satisfy the separately checked
 raster arithmetic domain. No surface, clip bounds or palette is supplied or
 validated by that classification.
 
@@ -87,6 +87,12 @@ scratch values, two cleared scratch words, all nine signed64 helper results
 and their ordered writes with the independent oracle.
 
 The tested footprint argument is one when `s*k <= 0.5`, otherwise zero.
+Here `k` is the exact value of the binary32 bytes supplied to the guest. The
+probe serializes the requested Python scale once, then uses those bytes for both
+domain validation and the footprint oracle. For example, `0.50000001` becomes
+exactly `0.5`; with scalar one the original argument is one. The positive value
+`1e-100` becomes zero and is rejected before execution. The report retains both
+the requested scale and the supplied four bytes.
 Varying `k` across that boundary changes this argument while leaving `P`, `M`
 and the basis unchanged. This is an argument/dataflow observation, not execution
 of the footprint's eventual pixel-writing behavior. An out-of-bounds supplied
@@ -166,24 +172,28 @@ and two-second emulator timeout.
 
 ## Cases, controls and separate raster admissibility
 
-The 25 cases cover five installed frames, three noncommuting synthetic frames,
+The 29 cases cover five installed frames, three noncommuting synthetic frames,
 four scalar values, three header vectors including signed16 endpoints, four
-translations, one large depth-basis case, four admission/footprint scales and
+translations, one large depth-basis case, eight admission/footprint scales and
 one explicitly supplied attachment case. The controls independently reverse
 matrix multiplication, transpose the matrix and omit scalar, translation or
 header-vector contribution. All five fail at a stage-byte assertion. Both phases
 also independently deny code, reads, writes and instruction budget; each fails
 at the intended boundary. The final control leaves the admitted original-caller
-branch through its real admission predicate.
+branch through its real admission predicate. Four scale cases straddle the
+binary32 rounding boundary around `0.5` with scalar one, including requested
+values on both sides that serialize to exactly `0.5`. A fifteenth control uses
+the unrounded requested scale for the oracle and fails specifically at the
+actual renderer-argument comparison.
 
-Thirteen malformed/unsupported requests reject before original execution. The
+Seventeen malformed/unsupported requests reject before original execution. The
 report retains the precise reason for each. No control is counted merely for
 throwing an arbitrary exception.
 
 Signed-width conversion validity is checked first. The separate raster policy
 then computes all 26 direction steps, checks signed32 sums and shifted depth,
 and walks the selected installed stream's 1,385 nonterminal records in order.
-It classifies 21 cases as arithmetically admissible. Two more fail the initial
+It classifies 25 cases as arithmetically admissible. Two more fail the initial
 shifted-depth bound, one fails a cumulative depth bound and one fails a shifted
 step bound. This classification executes **no original raster code** and checks
 no surface extent, color/lighting lookup or draw footprint. Even its admitted
@@ -200,7 +210,8 @@ python tools/reference/probe_cvr_caller_origin.py `
   --report out/validation-cvr-caller-origin/caller-origin-report.json
 ```
 
-The ignored report is retained in the `unit-weapon-table-parser` managed tree:
+The original 25-case report remains retained in the `unit-weapon-table-parser`
+managed tree:
 
 | Artifact | SHA-256 |
 | --- | --- |
@@ -210,11 +221,19 @@ The ignored report is retained in the `unit-weapon-table-parser` managed tree:
 | Imported geometry-stream helper | `dee511e774ffa42cce36c8e63c4ff4820b42b3b2cc2831dc5bbf80d8de55c167` |
 | Imported basis oracle | `fae91916c120d3518dcb2ce6d776d04e7d29833695a871b5efc887845fd6a46a` |
 
-A second complete run reproduced the exact report bytes in 2.37 seconds.
-Python bytecode compilation and `git diff --check` pass. Independent read-only
-review found no actionable issue in the arithmetic, bounds or evidence claims;
-that review did not independently execute the original binary. No application
-build or rendered-game smoke is claimed for this evidence-only change.
+A second complete run reproduced those original report bytes in 2.37 seconds.
+GitHub review then identified the pre-serialization scale error described above.
+The corrected run and expanded boundary/control cases are retained separately in
+the `camera-review-fix` managed tree:
+
+| Current artifact | SHA-256 |
+| --- | --- |
+| Probe source | `a0a9e485b90a8b2229d86a59f88bfbf8c80204899be764db6c0a08b73f21c163` |
+| `out/validation-cvr-caller-origin-scale/caller-origin-report.json` (3,631,414 bytes) | `a431e72dce2b475b90b0c715685774e7e6c53e39e8c8323909d88cd0fbc7f822` |
+
+Imported helper fingerprints are unchanged. Python bytecode compilation and
+`git diff --check` pass. No application build or rendered-game smoke is claimed
+for this evidence-only change.
 
 The next supported implementation boundary is an explicit-input composition
 and origin calculator preserving these staged binary32 stores and checked

@@ -17,9 +17,10 @@ namespace backend {
 namespace connection {
 
 Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings )
-	: Connection( gc_space, network::CM_CLIENT, settings ) {
-	//
-}
+	: Client( gc_space, settings, g_engine->GetNetwork() ) {}
+
+Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings, network::Network* const network )
+	: Connection( gc_space, network::CM_CLIENT, settings, network ) {}
 
 void Client::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
@@ -43,53 +44,36 @@ void Client::ProcessEvent( const network::Event& event ) {
 							m_network->MT_SendPacket( &p );
 							break;
 						}
-						case types::Packet::PT_PLAYERS: {
-							Log( "Got players list from server" );
-							if ( packet.data.num ) {
-								// initial players list
-								m_slot = packet.data.num;
-								g_engine->GetGame()->SetSlotNum( m_slot );
-							}
-							else {
-								// players list update (i.e. after resolving random players )
-								m_state->m_slots->Clear();
-							}
-							m_state->m_slots->Deserialize( packet.data.str );
-							const auto c = m_state->m_slots->GetCount();
-							for ( auto i = 0 ; i < c ; i++ ) {
-								const auto& slot = m_state->m_slots->GetSlot( i );
-								if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
-									const auto& player = slot.GetPlayer();
-									m_state->AddPlayer( player );
-									if ( i == m_slot ) {
-										m_player = player;
-									}
-
-									auto* player_copy = new Player( player );
-									WTrigger(
-										"player_join", ARGS_F( player_copy ) {
-											{
-												"player", player_copy->Wrap( GSE_CALL )
-											}
-										}; },
-										[ player_copy ]() {
-											delete player_copy;
-										}
-									);
-								}
-							}
-							if ( m_on_players_list_update ) {
-								m_on_players_list_update( m_slot );
-							}
-							break;
-						}
+                        case types::Packet::PT_PLAYERS: {
+                            auto* const state=m_state; const auto epoch=state->CaptureRosterEpoch();
+                            auto record = roster::DecodeRoster(packet.data.str, State::ROSTER_LIMITS);
+                            if (packet.data.num) {
+                                if (m_roster_published || m_initial_roster) { throw std::runtime_error("Duplicate initial roster"); }
+                                if (packet.data.num >= record.slots.size() || packet.data.num >= State::ROSTER_LIMITS.max_slots) { throw std::runtime_error("Invalid initial client slot"); }
+                                if (!record.slots[packet.data.num].player || record.slots[packet.data.num].linked_gsid != m_settings->account.GetGSID()) { throw std::runtime_error("Assigned client Slot has another GSID"); }
+                                m_initial_roster = std::move(record); m_initial_slot = packet.data.num;
+                                m_initial_roster_epoch = epoch;
+                            } else {
+                                if (!m_roster_published) { throw std::runtime_error("Roster refresh before initial publication"); }
+                                state->ApplyRosterRefresh(record, this, epoch);
+                                if (!epoch || !epoch->active || m_state!=state || state->GetConnection()!=this) { break; }
+                                const auto on_players=m_on_players_list_update;
+                                if (on_players) { on_players(m_slot); }
+                            }
+                            break;
+                        }
 						case types::Packet::PT_GLOBAL_SETTINGS: {
 							Log( "Got global settings update from server" );
-							const auto& host_slot = m_state->m_slots->GetSlot( 0 );
+                            auto* const roster_state=m_state;
+                            const auto roster_epoch=m_state->CaptureRosterEpoch();
+                            const auto current=[&]() { return roster_epoch && roster_epoch->active && m_state==roster_state && roster_state->GetConnection()==this; };
+							if (!m_roster_published && (!m_initial_roster || m_initial_roster->slots.empty()
+                                || !m_initial_roster->slots[0].player || m_initial_roster_epoch != roster_epoch)) { throw std::runtime_error("Settings arrived without a current initial roster"); }
+                            const bool host_ready = m_roster_published ? m_state->m_slots->GetSlot(0).HasPlayerFlag(slot::PF_READY) : (m_initial_roster->slots[0].flags & slot::PF_READY) != 0;
 							bool ok = true;
 							switch ( m_game_state ) {
 								case Connection::GS_LOBBY: {
-									if ( host_slot.HasPlayerFlag( slot::PF_READY ) ) {
+									if ( host_ready ) {
 										Error( "host updated settings while ready" );
 										ok = false;
 									}
@@ -112,64 +96,44 @@ void Client::ProcessEvent( const network::Event& event ) {
 								break; // something went wrong
 							}
 							//m_state->m_settings.global.Deserialize( types::Buffer( packet.data.str ) );
-							m_state->Deserialize( types::Buffer( packet.data.str ) );
-							if ( m_on_global_settings_update ) {
-								m_on_global_settings_update();
-							}
-							m_are_global_settings_received = true;
-							OnOpen();
+							m_state->DeserializeRosterSettings(types::Buffer(packet.data.str), this, m_roster_published ? roster_epoch : m_initial_roster_epoch);
+                            if (!m_roster_published) {
+                                m_state->ApplyInitialRoster(*m_initial_roster, this, m_initial_roster_epoch, m_initial_slot, [this]() {
+                                    m_roster_published = true; m_initial_roster.reset(); m_initial_roster_epoch.reset();
+                                    if (m_state->GetGame()) { m_state->GetGame()->SetSlotNum(m_slot); }
+                                });
+                                if (!current()) { break; }
+                                const auto on_players=m_on_players_list_update;
+                                if (on_players) { on_players(m_slot); }
+                            }
+                            if (!current()) { break; }
+                            m_are_global_settings_received = true;
+                            const auto on_settings=m_on_global_settings_update;
+                            if (on_settings) { on_settings(); }
+                            if (!current()) { break; }
+                            OnOpen();
+                            if (current()) { AnnounceGameState(); }
 							break;
 						}
-						case types::Packet::PT_SLOT_UPDATE:
-						case types::Packet::PT_FLAGS_UPDATE: {
-							const bool only_flags = packet.type == types::Packet::PT_FLAGS_UPDATE;
-							const size_t slot_num = only_flags
-								? packet.udata.flags.slot_num
-								: packet.data.num;
-							if ( slot_num >= m_state->m_slots->GetSlots().size() ) {
-								Error( "slot index mismatch" );
-								return;
-							}
-							auto& slot = m_state->m_slots->GetSlot( slot_num );
-							const auto old_flags = slot.GetState() == slot::Slot::SS_PLAYER
-								? slot.GetPlayerFlags()
-								: 0;
-							if ( only_flags ) {
-								Log( "Got flags update from server (slot: " + std::to_string( slot_num ) + ")" );
-								slot.SetPlayerFlags( packet.udata.flags.flags );
-							}
-							else {
-								Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
-								const bool wasReady = slot.GetState() == slot::Slot::SS_PLAYER
-									? slot.HasPlayerFlag( slot::PF_READY ) // check readyness of player
-									: m_state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY ) // check readyness of host
-								;
-								slot.Deserialize( packet.data.str );
-								if ( m_game_state == GS_LOBBY ) {
-									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
-										if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
-											Error( "player updated slot while ready" );
-											break;
-										}
-									}
-									else {
-										if ( wasReady ) {
-											Error( "host updated slot while ready" );
-											break;
-										}
-									}
-								}
-							}
-							if ( !only_flags ) {
-								if ( m_on_slot_update ) {
-									m_on_slot_update( slot_num, &slot );
-								}
-							}
-							if ( m_on_flags_update ) {
-								m_on_flags_update( slot_num, &slot, old_flags, slot.GetPlayerFlags() );
-							}
-							break;
-						}
+                        case types::Packet::PT_SLOT_UPDATE:
+                        case types::Packet::PT_FLAGS_UPDATE: {
+                            if (!m_roster_published) { throw std::runtime_error("Slot update before roster publication"); }
+                            auto* const state=m_state; const auto epoch=state->CaptureRosterEpoch();
+                            const auto current=[&]() {return epoch && epoch->active && m_state==state && state->GetConnection()==this;};
+                            const bool flags_only = packet.type == types::Packet::PT_FLAGS_UPDATE;
+                            const auto index = flags_only ? packet.udata.flags.slot_num : packet.data.num;
+                            const auto old = m_state->ExportSlot(index);
+                            if (flags_only) { m_state->ApplyFlagsUpdate(index, packet.udata.flags.flags, this, epoch); }
+                            else { m_state->ApplySlotUpdate(index, roster::DecodeSlot(packet.data.str, State::ROSTER_LIMITS), this, epoch); }
+                            if (!current()) { break; }
+                            auto& slot = state->m_slots->GetSlot(index);
+                            const auto on_slot=m_on_slot_update;
+                            if (!flags_only && on_slot) { on_slot(index, &slot); }
+                            if (!current()) { break; }
+                            const auto on_flags=m_on_flags_update;
+                            if (on_flags) { on_flags(index, &slot, old.flags, slot.GetState()==slot::Slot::SS_PLAYER ? slot.GetPlayerFlags() : 0); }
+                            break;
+                        }
 						case types::Packet::PT_KICK: {
 							Disconnect( packet.data.str );
 							break;
@@ -185,16 +149,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							Log( "Got game state: " + std::to_string( packet.udata.game_state.state ) );
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
-								if ( m_on_game_state_change ) {
-									m_on_game_state_change( m_game_state );
-								}
-								WTrigger(
-									"game_state", ARGS_F( this ) {
-										{
-											"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
-										}
-									}; }
-								);
+								AnnounceGameState();
 							}
 							break;
 						}
@@ -245,8 +200,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 								}
 								else {
 									Log( "Download completed successfully" );
-									if ( m_on_download_complete ) {
-										m_on_download_complete( m_download_state.buffer );
+									// The completion callback may clear its own installed handler.
+									const auto on_complete = m_on_download_complete;
+									if ( on_complete ) {
+										on_complete( m_download_state.buffer );
 									}
 									m_download_state.buffer.clear();
 									m_download_state.is_downloading = false;
@@ -256,11 +213,12 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_EVENT: {
 							//Log( "Got game event packet" );
-							m_state->WithGSE(
+							if ( !m_state->GetGame() ) { break; }
+							m_state->GetGame()->WithWorldIngress( m_state,
 								this,
-								[ packet ]( GSE_CALLABLE ) {
+								[ this, state = m_state, packet ]( Game* const game, GSE_CALLABLE ) {
+									if ( state->GetConnection() != this ) { return; }
 									auto buf = types::Buffer( packet.data.str );
-									auto* const game = g_engine->GetGame();
 									game->AddEvent( event::Event::Deserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 								}
 							);
@@ -268,15 +226,17 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_EVENT_RESPONSE: {
 							//Log( "Got game event response packet" );
-							m_state->WithGSE(
+							if ( !m_state->GetGame() ) { break; }
+							m_state->GetGame()->WithWorldIngress( m_state,
 								this,
-								[ packet ]( GSE_CALLABLE ) {
+								[ this, state = m_state, packet ]( Game* const game, GSE_CALLABLE ) {
+									if ( state->GetConnection() != this ) { return; }
 									gse::Value* resolved = nullptr;
 									if ( !packet.data.str2.empty() ) {
 										auto buf = types::Buffer( packet.data.str2 );
-										resolved = gse::Value::Deserialize( GSE_CALL, &buf, g_engine->GetGame() );
+										resolved = gse::Value::Deserialize( GSE_CALL, &buf, game );
 									}
-									g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
+									game->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
 								}
 							);
 							break;
@@ -287,7 +247,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 					}
 				}
 			}
-			catch ( std::runtime_error& err ) {
+			catch ( const std::invalid_argument& err ) {
+                Error( err.what() );
+            }
+            catch ( std::runtime_error& err ) {
 				Error( err.what() );
 			}
 			break;
@@ -329,7 +292,7 @@ void Client::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool onl
 		Log( "Sending slot update" );
 		types::Packet p( types::Packet::PT_UPDATE_SLOT );
 		// not sending slot num because server knows it anyway
-		p.data.str = slot->Serialize().ToString();
+		p.data.str = roster::EncodeSlot(m_state->ExportSlot(slot_num), State::ROSTER_LIMITS);
 		m_network->MT_SendPacket( &p );
 	}
 }
@@ -343,6 +306,25 @@ void Client::SendMessage( const std::string& message ) {
 
 const Connection::game_state_t Client::GetGameState() const {
 	return m_game_state;
+}
+
+bool Client::HasGlobalSettings() const {
+	return m_are_global_settings_received;
+}
+
+void Client::AnnounceGameState() {
+	// The server sends game state before settings, including when rejoining a
+	// running match. Never start profile-dependent scripts using local defaults.
+	if ( !m_are_global_settings_received || m_announced_game_state == m_game_state ) { return; }
+	m_announced_game_state = m_game_state;
+	auto* const state=m_state;
+    const auto epoch=state->CaptureRosterEpoch();
+    const auto on_change=m_on_game_state_change;
+    if (on_change) { on_change(m_game_state); }
+    if (!epoch || !epoch->active || m_state!=state || state->GetConnection()!=this) { return; }
+	WTrigger( "game_state", ARGS_F( this ) {
+		{ "state", VALUE( gse::value::String,, GetGameStateStr( m_game_state ) ) }
+	}; } );
 }
 
 void Client::RequestDownload() {

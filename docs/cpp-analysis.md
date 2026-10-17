@@ -4,6 +4,16 @@ Run analysis when preparing a C++ change for review. It is separate from the
 normal edit/build/test loop and does not require the original game assets.
 The `C++ correctness` pull-request workflow runs the same command as local use.
 
+Pull requests that change only Markdown skip the engine build, regression and
+thread lifecycle workflows. Any non-Markdown change still triggers those checks,
+including scripts, data, fixtures and workflow edits. Pushes to `main`/`stable`
+and manual runs keep their existing full coverage. The correctness and reference
+inventory workflows retain their own path filters. This avoids rebuilding the
+engine for evidence receipts while preserving checks for executable changes.
+If these workflows become required branch checks, use an always-reporting gate
+before enabling that protection; a workflow skipped by a path filter does not
+produce a successful check.
+
 ## Local use
 
 Install clang-tidy **15** and the usual Linux build dependencies. On Ubuntu:
@@ -14,11 +24,36 @@ cmake -S . -B build/analysis -G Ninja -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BU
 cmake --build build/analysis --target glsmac_version
 ```
 
-After initial configuration, the fast command checks local edits, including
+After initial configuration, the default command checks local edits, including
 staged and untracked C++ files:
 
 ```sh
 python3 tools/analyze_cpp.py
+```
+
+For a fast edit/check loop on one complete production translation unit:
+
+```sh
+python3 tools/analyze_cpp.py --source src/game/backend/unit/Unit.cpp
+```
+
+Repeat `--source PATH` to check several files. Paths are relative to the checkout
+root or absolute paths inside it; equivalent paths are normalized and checked
+once. Explicit selection does not query Git or expand after header changes. It
+is useful while editing, but does not replace the default branch check before
+review. `--source`, `--base`, and `--all` are mutually exclusive. Headers,
+included fragments, generated/test files, platform-excluded sources, missing
+files, and sources absent from the compilation database are rejected rather
+than silently skipped. The JSON summary reports `scope: "explicit"` and the
+normalized, deduplicated `requested_sources`.
+
+Use a separate compilation database when checking Release branches of the code
+without replacing the Debug configuration:
+
+```sh
+cmake -S . -B build/analysis-release -G Ninja -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTING=OFF
+cmake --build build/analysis-release --target glsmac_version
+python3 tools/analyze_cpp.py --build-dir build/analysis-release --source src/game/backend/unit/Unit.cpp
 ```
 
 To check a branch against the merge base with its target, including local edits:
@@ -27,8 +62,11 @@ To check a branch against the merge base with its target, including local edits:
 python3 tools/analyze_cpp.py --base origin/main
 ```
 
-Use `--all` for a complete scan and `--jobs N` to set parallelism. The manually
-dispatched GitHub workflow always runs a full scan. `--clang-tidy PATH` supports
+Use `--all` to scan every production translation unit in the compilation database
+and `--jobs N` to set parallelism. This mode does not require Git, so it cannot
+detect newly added sources omitted from a stale database; reconfigure first.
+The manually dispatched GitHub workflow always configures a fresh database and
+runs a full scan. `--clang-tidy PATH` supports
 version 15 installed under another name. The runner rejects other versions so
 an unreviewed toolchain upgrade cannot silently change the blocking rules.
 Reconfigure CMake after adding source files or changing build settings.
@@ -47,10 +85,20 @@ the scan. This avoids incomplete include-dependency guesses; source deletion
 alone needs no analysis. A changed source missing from the compilation database
 fails with a reconfiguration request.
 
-Diagnostics from project headers remain enabled. There is no changed-line
-filter, warning baseline, or `NOLINT` suppression. Every enabled finding fails
-the check, including findings outside the edited lines. Compiler errors,
-analyzer failures, and per-file timeouts fail too. Failed-file diagnostics print
+Two known `.cpp` files are not independent Linux translation units.
+`src/network/impl/Windows.cpp` is explicitly excluded from this Linux check;
+relevant runs report it in the console and `summary.json` as skipped.
+`src/ui/dom/Object.colormap.cpp` is included by `Object.cpp`, so its changes
+trigger a full scan just like a header. These are exact paths; other sources
+missing from the database still fail instead of being silently skipped.
+
+Diagnostics from project headers remain enabled. This policy introduces no
+changed-line filter, warning baseline, or local suppressions. Explicit `NOLINT`,
+`NOLINTNEXTLINE`, and `NOLINTBEGIN` directives remain supported by clang-tidy;
+the runner does not reject them, so additions or changes require code review.
+Every reported finding from an enabled check fails the job, including findings
+outside the edited lines. Compiler errors, analyzer failures, and per-file
+timeouts fail too. Failed-file diagnostics print
 in the job log; complete per-file output and `summary.json` are saved under
 `build/analysis/analysis-results/` and uploaded by CI. Compiler warnings outside
 the selected policy remain available in those logs.
@@ -88,6 +136,13 @@ findings, at eight jobs. These are local
 measurements with clang-tidy 15.0.7 on WSL Ubuntu 22.04, 32 logical CPUs, and
 sources on the mounted Windows filesystem; they are not hosted CI estimates.
 CI uses four jobs, and dependency installation/configuration adds time.
+
+The [hosted PR #16 run](https://github.com/jhurliman/glsmac/actions/runs/38867153319/job/116862507393)
+at commit `e635bbc1` on October 16, 2026 scanned all 284 production translation
+units in **151.05 seconds** at four jobs, with zero failures. The Ubuntu 24.04
+job took about **3 minutes 26 seconds** including installation, all 14 runner
+tests, configuration, and artifact upload. This is an observed run, not a CI
+latency guarantee; queue time is excluded.
 
 The initial findings produced separate fixes and regression tests for missing
 native event-handler returns, clearing a scene camera, and embedded NUL bytes

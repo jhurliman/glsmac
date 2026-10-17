@@ -11,6 +11,10 @@
 
 namespace gse {
 
+namespace tests {
+class AsyncFixture;
+}
+
 namespace value {
 class Callable;
 }
@@ -36,6 +40,8 @@ CLASS( Async, gc::Object )
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+
+	friend class tests::AsyncFixture;
 
 	gc::Space* const m_gc_space = nullptr;
 	std::atomic< bool > m_is_stopping = false;

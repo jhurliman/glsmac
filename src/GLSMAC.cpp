@@ -136,6 +136,7 @@ GLSMAC::~GLSMAC() {
 }
 
 void GLSMAC::Iterate() {
+	if ( ProcessReset() ) { return; }
 	{
 		bool ticked = false;
 		while ( m_loader_dots_timer.HasTicked() ) {
@@ -147,6 +148,7 @@ void GLSMAC::Iterate() {
 		}
 		if ( ticked ) {
 			UpdateLoaderText();
+			if ( ProcessReset() ) { return; }
 		}
 	}
 	if ( m_load_thread ) {
@@ -160,25 +162,67 @@ void GLSMAC::Iterate() {
 				m_f_after_load();
 			});
 			m_f_after_load = nullptr;
+			if ( ProcessReset() ) { return; }
 		}
 	}
 	m_gse->Iterate();
+	if ( ProcessReset() ) { return; }
 	m_ui->Iterate();
+	if ( ProcessReset() ) { return; }
 	if ( m_game ) {
 		m_game->Iterate();
-	}
-	if ( m_reset_needed ) {
-		m_reset_needed = false;
-		auto* game = g_engine->GetGame();
-		const auto mt_id = game->MT_Reset();
-		const auto& response = game->MT_WaitResponse( mt_id );
-		ASSERT( response.result == game::backend::R_SUCCESS, "failed to reset game thread" );
-		game->MT_DestroyResponse( response );
-		RunMain();
+		if ( ProcessReset() ) { return; }
 	}
 	if ( m_console ) {
 		m_console->Iterate();
 	}
+}
+
+bool GLSMAC::ProcessReset() {
+	if ( !m_reset_needed ) { return false; }
+	if ( m_reset_phase == ResetPhase::FAILED ) { return true; }
+	auto* game = g_engine->GetGame();
+	if ( m_reset_phase == ResetPhase::IDLE ) {
+		try {
+			// Retire intent before any blocking cancellation. The caller is
+			// outside accumulation, so native work can finish independently.
+			m_reset_barrier = game->MT_BeginResetController();
+			if ( m_game ) { m_game->RetireBackendRequests(); }
+			m_reset_request = game->MT_SubmitResetController( m_reset_barrier );
+			m_reset_phase = ResetPhase::WAITING;
+		}
+		catch ( ... ) {
+			m_reset_phase = ResetPhase::FAILED;
+			if ( m_reset_barrier ) { game->MT_AbandonResetController( m_reset_barrier ); }
+			m_reset_barrier = 0;
+			m_reset_request = 0;
+			throw;
+		}
+		return true;
+	}
+	const auto response = game->MT_GetResponse( m_reset_request );
+	if ( response.result == game::backend::R_NONE ) { return true; }
+	const auto barrier = m_reset_barrier;
+	// Terminal retrieval also releases the controller admission. Do not
+	// abandon it again. Backend Stop owns any still-unconsumed MT payloads.
+	m_reset_request = 0;
+	m_reset_barrier = 0;
+	{
+		struct ResponseOwner {
+			game::backend::Game* backend;
+			const game::backend::MT_Response& response;
+			~ResponseOwner() { backend->MT_DestroyResponse( response ); }
+		} destroy_response{ game, response };
+		if ( response.op != game::backend::OP_RESET || response.world_ticket != barrier || response.result != game::backend::R_SUCCESS ) {
+			m_reset_phase = ResetPhase::FAILED;
+			THROW( "failed to reset game thread" );
+		}
+	}
+	m_reset_phase = ResetPhase::IDLE;
+	m_is_game_running = false;
+	m_reset_needed = false;
+	RunMain();
+	return true;
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
@@ -221,6 +265,19 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				DeinitGameState( GSE_CALL );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"select_ruleset",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+				if ( !m_state || m_is_game_running || m_state->m_connection ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Select the gameplay ruleset before initializing a session" );
+				}
+				try { m_state->m_settings.global.SelectRuleset( id ); }
+				catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -399,6 +456,9 @@ void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& 
 }
 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
+	if ( m_is_game_running || m_reset_needed ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Cannot run while a game or reset is active" );
+	}
 	const auto& c = g_engine->GetConfig();
 	auto* r = g_engine->GetResourceManager();
 	if ( !m_state || r->GetDetectedSMACType() == config::ST_UNKNOWN ) {
@@ -484,15 +544,26 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 	const auto& c = g_engine->GetConfig();
 
 	HideLoader();
-	m_is_game_running = false;
 
 	if ( m_game ) {
 		m_game->Stop();
 	}
 
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		InitGameState( GSE_CALL );
+		DeinitGameState( GSE_CALL );
 		m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+		m_state->m_settings.local.network_role = game::backend::settings::LocalSettings::NR_NONE;
+		m_state->m_settings.global.SelectRuleset( c->GetRuleset() );
+		InitGameState( GSE_CALL );
+		if ( c->GetRuleset() == "smac" ) {
+			try {
+				if ( c->GetQuickstartWorldSize() >= 0 ) { m_state->m_settings.global.SelectSmacWorldSize( c->GetQuickstartWorldSize() ); }
+				else {
+					const auto size = c->GetQuickstartMapSize();
+					m_state->m_settings.global.SelectSmacCustomSize( size.x, size.y );
+				}
+			} catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+		}
 		m_state->m_settings.global.Initialize();
 		game::backend::faction::Faction* faction = nullptr;
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
@@ -528,6 +599,7 @@ void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
 		}
 		m_state->Reset();
+		m_state->m_settings.global.ResetRuleset();
 	}
 }
 
@@ -535,17 +607,33 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
+	const bool joining = m_state->m_settings.local.network_role == game::backend::settings::LocalSettings::NR_CLIENT;
+	try {
+		m_state->m_settings.PrepareRuleset( []( const std::string& filename ) {
+			return util::FS::ReadTextFile( g_engine->GetResourceManager()->GetCustomPath( filename ) );
+		} );
+	}
+	catch ( const std::exception& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	auto* game = g_engine->GetGame();
 	m_state->Reset();
 	m_state->SetGame( game );
 	game->SetState( m_state );
+	m_state->GetFM()->Clear();
+	// Joining clients receive their faction definitions with the host's settings.
+	if ( joining ) { return; }
 	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		TriggerObject( this, "configure_state", ARGS_F( this ) {
 			{
 				"fm",
 				m_state->GetFM()->Wrap( GSE_CALL ),
+			}, {
+				"ruleset", VALUE( gse::value::String,, m_state->m_settings.global.GetRulesetId() )
 			}
 		}; } );
+		// Configure-state supplies the faction metadata. Validate the complete
+		// settings packet before making this host setup available to the lobby.
+		try { m_state->Serialize(); }
+		catch ( const std::exception& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 	});
 }
 
@@ -559,25 +647,22 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 }
 
 void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
-	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-	const auto& rules = m_state->m_settings.global.rules;
-	m_state->m_settings.local.player_name = "Player";
-	NEWV( player, ::game::backend::Player,
-		m_state->m_settings.local.player_name,
-		::game::backend::Player::PR_SINGLE,
-		faction,
-		rules.GetDefaultDifficultyLevel() // TODO: make configurable
-	);
-	m_state->AddPlayer( player );
-	size_t slot_num = 0; // player always has slot 0
-	m_state->AddCIDSlot( 0, slot_num ); // for consistency
-	auto& slot = m_state->m_slots->GetSlot( slot_num );
-	slot.SetPlayer( player, 0, "" );
-	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
-	slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
+    const auto& rules = m_state->m_settings.global.rules;
+    m_state->m_settings.local.player_name = "Player";
+    m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, game::backend::roster::Role::Single,
+        faction ? std::optional<std::string>(faction->m_id) : std::nullopt, rules.GetDefaultDifficultyLevel()},
+        m_state->m_settings.local.account.GetGSID(), 0, "", false);
+    m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
+
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {
+	if ( m_state->m_connection && m_state->m_connection->IsClient()
+		&& !m_state->m_connection->AsClient()->HasGlobalSettings() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Waiting for the host's gameplay settings" );
+	}
+	try { m_state->m_settings.global.LockRuleset(); m_state->m_settings.global.LockWorldSize(); }
+	catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	// real state belongs to game task now
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu

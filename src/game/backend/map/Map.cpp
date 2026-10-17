@@ -167,9 +167,9 @@ Map::Map( Game* game )
 
 Map::Map( Game* game, const uint32_t width, const uint32_t height )
 	: gse::GCWrappable( nullptr )
-	, m_game( game )
-	, m_tiles( new tile::Tiles( this, width, height ) ) {
+	, m_game( game ) {
 	// No rendering or original-game assets are needed to restore backend data.
+	NEW( m_tiles, tile::Tiles, this, width, height );
 }
 
 Map::~Map() {
@@ -635,8 +635,12 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "tiles" );
-	for ( auto& t : *m_tiles->GetTilesPtr() ) {
-		t.GetReachableObjects( reachable_objects );
+	// A rejected owner-thread download can leave an empty map rooted until
+	// the next Failure checkpoint. It has no tile children to traverse.
+	if ( m_tiles ) {
+		for ( auto& t : *m_tiles->GetTilesPtr() ) {
+			t.GetReachableObjects( reachable_objects );
+		}
 	}
 	GC_DEBUG_END();
 }
@@ -650,7 +654,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 #endif
 	const auto* c = g_engine->GetConfig();
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) ) {
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) && m_game->GetState()->m_settings.global.GetRulesetId() != "smac" ) {
 			const auto size = c->GetQuickstartMapSize();
 			map_settings->size_x = size.x;
 			map_settings->size_y = size.y;
@@ -668,6 +672,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 			? c->GetQuickstartMapCloudCover()
 			: random->GetFloat( 0.2, 0.8f );
 	}
+	m_game->GetState()->m_settings.global.ValidateWorldSize();
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles, this, map_settings->size_x, map_settings->size_y );
@@ -828,8 +833,6 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 
 	uint8_t percent = 0, last_percent = 0;
 
-	size_t state_iterate_eta = ITERATE_STATE_EVERY_N_TILES;
-
 	for ( auto& module_pass : module_passes ) {
 		for ( const auto& tile : tiles ) {
 			m_current_tile = tile;
@@ -855,11 +858,6 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 				MT_RETIF();
 			}
 
-			if ( !--state_iterate_eta ) {
-				// keep processing state (i.e. network events) while loading
-				m_game->GetState()->Iterate();
-				state_iterate_eta = ITERATE_STATE_EVERY_N_TILES;
-			}
 		}
 	}
 }

@@ -247,6 +247,7 @@ return {
 		minimap.listen(p.game, 'turn_status', (e) => {
 			f_set_status(e.status);
 		});
+		f_set_status(p.game.get_turn_status());
 
 		btn_turn_complete.on('click', (e) => {
 			switch (turn_status) {

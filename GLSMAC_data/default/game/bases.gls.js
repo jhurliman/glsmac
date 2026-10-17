@@ -19,9 +19,10 @@ const reset_nutrients = (game, base) => {
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
-	let updated = accumulated - nfg;
-	if (updated < 0) {
-		updated = 0;
+	let updated = 0;
+	// Compare first: subtracting growth cost from a signed deficit can underflow.
+	if (accumulated > nfg) {
+		updated = accumulated - nfg;
 	}
 	base.set_accumulated_nutrients(updated);
 };
@@ -71,11 +72,12 @@ const process_growth = (game, base) => {
 		accumulated = 0;
 	}
 	accumulated += get_pending_growth(base);
-	if (accumulated < 0) {
+	// Empty bases must reach their initial-population branch below.
+	if (accumulated < 0 && base.get_size() > 0) {
 		let pop = null;
 		// try to remove non-worker pop first
 		for (p of base.get_pops()) {
-			if (!p.has('worked_tile')) {
+			if (!#is_defined(p.get_worked_tile())) {
 				pop = p;
 				break;
 			}
@@ -83,7 +85,7 @@ const process_growth = (game, base) => {
 		if (pop == null) {
 			const worst_tile = (find_best_or_worst_tiles(base, base.get_worked_tiles(), 1, 0 - 1))[0];
 			if (#is_defined(worst_tile)) {
-				const p = worst_tile.get('working_pop');
+				const p = worst_tile.get_working_pop();
 				if (#is_defined(p)) {
 					pop = p;
 				} else {
@@ -158,22 +160,13 @@ const calculate_growth_base = (game) => {
 };
 
 const pop_work_tile = (base, pop, tile) => {
-	pop_unwork(base, pop);
-	pop.set_type('WORKER');
-	pop.set('worked_tile', tile);
-	tile.set('working_pop', pop);
-	base.add_worked_tile(tile);
+	base.set_pop_assignment(pop, 'WORKER', tile);
 };
 
 const pop_unwork = (base, pop, new_type) => {
-	const tile = pop.get('worked_tile');
+	const tile = pop.get_worked_tile();
 	if (#is_defined(tile)) {
-		tile.unset('working_pop');
-		pop.unset('worked_tile');
-		base.remove_worked_tile(tile);
-		if (#is_defined(new_type)) {
-			pop.set_type(new_type);
-		}
+		base.set_pop_assignment(pop, #is_defined(new_type) ? new_type : pop.get_type(), #undefined);
 	}
 };
 
@@ -189,7 +182,7 @@ return (game) => {
 		};
 
 		const f_add_tile = (tile) => {
-			const r = tile.get_resources();
+			const r = tile.get_resources(e.base.get_owner());
 			result.NUTRIENTS = result.NUTRIENTS + r.NUTRIENTS;
 			result.MINERALS = result.MINERALS + r.MINERALS;
 			result.ENERGY = result.ENERGY + r.ENERGY;

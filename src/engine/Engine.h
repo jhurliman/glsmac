@@ -71,6 +71,7 @@ class GC;
 }
 
 namespace gse::tests {
+class BackendFixture;
 class WidgetGraphicsFixture;
 }
 
@@ -121,6 +122,7 @@ public:
 	void RemoveLogCallback( void* const obj );
 
 private:
+	friend class gse::tests::BackendFixture;
 	friend class gse::tests::WidgetGraphicsFixture;
 
 	std::atomic< bool > m_is_shutting_down = false;

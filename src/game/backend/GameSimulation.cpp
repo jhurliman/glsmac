@@ -94,6 +94,7 @@ void Game::PrepareNewSimulation() {
 	}
 	try {
 		value.technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		value.social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 		value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ) );
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
@@ -114,6 +115,7 @@ void Game::ValidateCurrentSimulation() const {
 	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
 		if ( !m_simulation ) { throw std::runtime_error( "SMAC simulation has not been admitted" ); }
 		ValidateSimulation( *m_simulation );
+		m_simulation->value.social.ValidateTurn( m_current_turn.GetId() );
 	}
 	else if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "Unexpected simulation state for non-SMAC world" ); }
 }
@@ -129,7 +131,7 @@ void Game::WriteSimulationState( types::Buffer& buffer ) const {
 	if ( wire ) { buffer.WriteString( *wire ); }
 }
 
-std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer& buffer ) const {
+std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer& buffer, const size_t turn ) const {
 	const auto& settings = m_state->m_settings.global;
 	const bool expected = settings.GetRulesetId() == "smac";
 	if ( buffer.ReadBool() != expected ) { throw std::runtime_error( "World simulation presence differs from selected ruleset" ); }
@@ -139,7 +141,25 @@ std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer&
 	}
 	// The nested reader bounds the framed payload before allocating records.
 	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
+	value.social.ValidateTurn( turn );
 	return BindSimulation( std::move( value ) );
+}
+
+void Game::RefreshSimulationForTurn( const size_t turn ) {
+	if ( m_state->m_settings.global.GetRulesetId() != "smac" ) { return; }
+	ValidateCurrentSimulation();
+	const auto& settings = m_state->m_settings.global;
+	try {
+		m_simulation->value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
+		auto staged = m_simulation->value.social;
+		if ( m_current_turn.GetId() == 0 ) {
+			if ( turn != 1 ) { throw std::runtime_error( "SMAC early social state requires the first turn transition" ); }
+			staged.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		}
+		staged.ValidateTurn( turn );
+		m_simulation->value.social = std::move( staged );
+	}
+	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
 }
 
 const faction::SmacSimulationParticipant& Game::RequireSimulationParticipant( const Player* requested ) const {
@@ -172,6 +192,27 @@ gse::Value* Game::CopyTechnologyState( GSE_CALLABLE, const Player* player ) cons
 		{ "labs", VALUE( gse::value::Int,, state.labs ) },
 		{ "target", optional( state.target ) },
 		{ "cached_threshold", optional( state.cached_threshold ) },
+	} ) );
+}
+
+gse::Value* Game::CopySocialState( GSE_CALLABLE, const Player* player ) const {
+	const auto& participant = RequireSimulationParticipant( player );
+	const auto& state = *m_simulation->value.social.Find( participant.simulation_id );
+	const auto array = [ & ]( const auto& values ) -> gse::Value* {
+		gse::value::array_elements_t result;
+		for ( const auto value : values ) { result.push_back( VALUE( gse::value::Int,, value ) ); }
+		return VALUE( gse::value::Array,, result );
+	};
+	const auto optional = [ & ]( const std::optional< faction::SmacSocialRatings >& values ) -> gse::Value* {
+		if ( values ) { return array( *values ); }
+		return VALUE( gse::value::Undefined );
+	};
+	return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+		{ "simulation_id", VALUE( gse::value::Int,, participant.simulation_id ) },
+		{ "faction_id", VALUE( gse::value::String,, participant.faction_id ) },
+		{ "phase", VALUE( gse::value::String,, state.phase == faction::SmacFactionSocialState::Phase::Early ? "early" : "refreshed" ) },
+		{ "selected_models", array( state.selected ) }, { "pending_models", array( state.pending ) },
+		{ "current", array( state.current ) }, { "intrinsic", optional( state.intrinsic ) }, { "retained", optional( state.retained ) }
 	} ) );
 }
 

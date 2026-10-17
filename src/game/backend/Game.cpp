@@ -682,6 +682,15 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_social_state",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return CopySocialState( GSE_CALL, player ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
 			"get_startup_designs",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
@@ -1414,6 +1423,9 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
+	// Stage the first-command social refresh before publishing the new turn or
+	// invoking any upkeep consumer. A malformed context leaves both unchanged.
+	RefreshSimulationForTurn( turn_id );
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
 	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
@@ -2657,7 +2669,7 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 		world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
 		const auto random_state = world_snapshot::ReadRandomState( buf );
 		const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
-		auto simulation = ReadSimulationState( buf );
+		auto simulation = ReadSimulationState( buf, turn_state.id );
 
 		// map
 		const auto map_payload = buf.ReadString();

@@ -140,6 +140,8 @@ inline std::vector< std::pair< std::string, std::string > > InvalidMovementHeade
 	};
 	result.emplace_back( "old V11", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
 		game::backend::world_snapshot::rules_marker, 11 ).ToString() );
+	result.emplace_back( "old V12 without social continuation", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+		game::backend::world_snapshot::rules_marker, 12 ).ToString() );
 	if ( id == "smax" ) { result.emplace_back( "unexpected movement profile", header( true ) ); return result; }
 	result.emplace_back( "absent movement profile", header( false ) );
 	types::Buffer absent, present, wrong; absent.WriteBool( false ); present.WriteBool( true ); wrong.WriteInt( 1 );

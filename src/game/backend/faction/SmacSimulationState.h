@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SmacTechnologyState.h"
+#include "SmacSocialState.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "game/backend/RosterRecords.h"
 
@@ -22,6 +23,7 @@ struct SmacSimulationState {
 	static constexpr size_t MAX_TEXT_BYTES = 32 * 1024;
 	std::vector< SmacSimulationParticipant > roster;
 	SmacTechnologyState technology;
+	SmacSocialState social;
 	unit::SmacStartupDesignState designs;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;

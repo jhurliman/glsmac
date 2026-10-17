@@ -501,9 +501,11 @@ private:
 	void PublishPendingSimulation();
 	void ValidateCurrentSimulation() const;
 	void WriteSimulationState( types::Buffer& buffer ) const;
-	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer ) const;
+	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
+	void RefreshSimulationForTurn( size_t turn );
 	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
+	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation );
 	void ResetGame();

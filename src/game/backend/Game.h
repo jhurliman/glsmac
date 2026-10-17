@@ -409,6 +409,7 @@ private:
 
 	struct event_waiting_for_response_t {
 		event::Event* event;
+		bool was_applied;
 		gse::Value* rollback_data;
 	};
 	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};

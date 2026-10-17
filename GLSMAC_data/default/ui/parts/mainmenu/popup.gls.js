@@ -125,6 +125,11 @@ return (m) => {
 			});
 		},
 
+		dismiss: () => {
+			remove_active_menublock();
+			this.manager.discard();
+		},
+
 		hide: () => {
 			remove_active_menublock();
 			this.manager.close(m);

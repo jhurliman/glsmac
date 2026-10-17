@@ -245,10 +245,21 @@ GitHub review then identified the pre-serialization scale error described above.
 The corrected run and expanded boundary/control cases are retained separately in
 the `camera-review-fix` managed tree:
 
-| Scale-correction artifact | SHA-256 |
+| Historical scale-correction artifact | SHA-256 |
 | --- | --- |
 | Probe source | `a0a9e485b90a8b2229d86a59f88bfbf8c80204899be764db6c0a08b73f21c163` |
 | `out/validation-cvr-caller-origin-scale/caller-origin-report.json` (3,631,414 bytes) | `a431e72dce2b475b90b0c715685774e7e6c53e39e8c8323909d88cd0fbc7f822` |
+
+After the dependency refresh, the complete 29-case publication probe was rerun
+with the current geometry-stream helper, whose SHA-256 is
+`502db5ce7cdd9e1538d1920992f31cab1293cb77beb8dbf2a872ba809209e750`.
+It passed all 29 paired cases, 17 domain rejections and 15 negative controls
+(24,351 original instructions). The other helper hashes and probe source are
+unchanged. The new 3,631,414-byte report is retained in this same managed tree at
+`out/validation-cvr-caller-origin-current/caller-origin-report.json`, SHA-256
+`84f50774da8c57ed5ec2380ee2e1e9e60ab8229149369aeed9ccecb1147c7b21`.
+The earlier report used the earlier helper and remains historical evidence;
+its hash is not presented as the output of the current source stack.
 
 The rounded-store extension and complete combined run are retained in the
 `unit-weapon-table-parser` managed tree:

@@ -128,3 +128,23 @@ stand in for a complete valid rendered download. Positive asset-free body
 restoration asserts byte-for-byte equality of the complete reserialized world
 snapshot for both rulesets. These checks do not establish rendered Client
 startup, disk save compatibility, or future multiplayer lockstep.
+
+For focused publication, the dependency base retains both reviewed branch
+histories: startup/snapshot prerequisite #97 at
+`62b9423d71822cebb81450874518014db207e1ca` and production-profile prerequisite #111
+at `f54d5f4e10343236fe13da0e64f3376adc9461fb`. Their merged base is
+`6893ec5e465103ca15ce66c4321064d67dcffbed`; test conflicts retain both sets of
+registrations and helpers, with guarded map retirement and tracked runtime
+ownership. Two backend resource type qualifications resolve the combined
+fixture's namespace ambiguity. No new production adaptation was needed.
+
+The V4 publication implementation at
+`ecf8afc051fc9af8bb5d9b79998c78e8812e58e1` has byte-identical production code and
+pure header fixtures to the integrated-source delta. Its actual registered
+CTest suite passed all six entries in 25.90 seconds, including the V4 header,
+immediate/queued Client rejection and complete body-restoration tests. The
+publication ancestry has fewer test registrations than the integrated source;
+these are separate results, not an eight-entry rerun. Explicit production-TU
+correctness analysis passed with zero findings in 0.87 seconds. The preceding
+sanitizer receipt applies to the integrated-source run; the merged publication
+head was not separately rerun under sanitizers.

@@ -400,17 +400,19 @@ extreme social/resource inputs or a complete base economy.
    nearest-base distance and did not establish general encounter behavior.
 2. Canonical tile/Base gross intake, the separate nutrient-demand scalar and
    actual-owner specialist eligibility now consume the integrated profiles and
-   contexts. Automatic priority/scoring/ranking and worker add/swap stages are
-   implemented as detached calculations. Complete existing collection, repair,
-   specialist competition/final fill and their live publication before activating
-   manual worker commands; gross intake alone cannot substitute for the handler's
-   full forced calculation. Preserve valid allocations through the measured early
-   exit, including shortages, and keep recalculation separate from turn posting.
+   contexts. The detached automatic allocator now composes existing collection,
+   repair, scoring, tile add/swap and specialist competition/final fill. A separate
+   unavailable-square builder consumes explicit map and relationship knowledge.
+   Connect their saved inputs and atomic live publication before activating manual
+   worker commands; gross intake alone cannot substitute for the handler's full
+   forced calculation. Preserve valid allocations through the measured early exit,
+   including shortages, and keep recalculation separate from turn posting.
    Initial exploration, territorial recognition and unit visibility still need
-   persistent world inputs. The new original startup composition executes the
-   21-square reveal before founding, territory rebuilding and native visibility
-   without a later explored/owned overlay. Subsequent Scout sight and second-base
-   territory transitions are the next reference priorities. Keep the declared
+   persistent world inputs. Original startup and expansion compositions now cover
+   the 21-square reveal, Scout movement, Colony placement, overlapping second-base
+   founding and native visibility without a later explored/owned overlay. The
+   next reference priority is the minimum saved worker-consumer frame needed to
+   reproduce those observed states. Keep the declared
    GLSMAC map policy distinct from original map-generator equivalence.
 3. Complete support, production posting/completion/queues and research, retaining
    independent stored minerals and switching baseline. Add legal persistent

@@ -59,6 +59,7 @@
 #include "SmacWorkedSquareCollection.h"
 #include "SmacSpecialistAllocation.h"
 #include "SmacAutomaticWorkerControls.h"
+#include "SmacAutomaticWorkerAllocation.h"
 #include "SmacWorkerAvailability.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
@@ -258,6 +259,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacSpecialistAllocationTests( task );
 		tests::AddSmacAutomaticWorkerControlTests( task );
+		tests::AddSmacAutomaticWorkerAllocationTests( task );
 		tests::AddSmacWorkerAvailabilityTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );

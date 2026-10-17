@@ -1,3 +1,4 @@
+#include "SmacTerritoryRules.h"
 #include "Tests.h"
 #include "Async.h"
 
@@ -89,6 +90,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
+		tests::AddSmacTerritoryRulesTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );

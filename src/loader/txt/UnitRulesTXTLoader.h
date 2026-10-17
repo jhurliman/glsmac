@@ -25,6 +25,32 @@ struct WeaponTable {
 	std::vector< WeaponComponent > weapons; // source order; index is local to this table
 };
 
+enum class DefenseMode : int32_t { Projectile = 0, Energy = 1, Binary = 2 };
+
+struct DefenseComponent {
+	std::string name, short_name;
+	int32_t rating;
+	DefenseMode mode;
+	int32_t cost;
+	std::string prerequisite;
+};
+
+struct DefenseTable {
+	std::string ruleset_id;
+	std::vector< DefenseComponent > defenses;
+};
+
+struct ReactorComponent {
+	std::string name, short_name;
+	int32_t power;
+	std::string prerequisite;
+};
+
+struct ReactorTable {
+	std::string ruleset_id;
+	std::vector< ReactorComponent > reactors;
+};
+
 class UnitRulesTXTLoader {
 public:
 	// Pure #WEAPONS decoder. The caller supplies contents and an explicit
@@ -34,6 +60,11 @@ public:
 	// Missing/duplicate sections, invalid fields and duplicate exact short names
 	// throw std::invalid_argument. No partial table escapes on rejection.
 	static WeaponTable ParseWeapons( const std::string& source, const std::string& ruleset_id );
+	// Same ownership, identity, row-order and strict field policy as weapons.
+	// Defense modes are 0..2. Signed rating/cost/power are metadata only:
+	// these decoders do not select a reactor or validate a playable design.
+	static DefenseTable ParseDefenses( const std::string& source, const std::string& ruleset_id );
+	static ReactorTable ParseReactors( const std::string& source, const std::string& ruleset_id );
 };
 
 }

@@ -1,4 +1,5 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
 #include "Buffer.h"
@@ -10,6 +11,8 @@
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -59,6 +62,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -66,6 +71,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
 		task->AddTest(
 			"test if an empty scene accepts clearing its camera",
 			GT() {

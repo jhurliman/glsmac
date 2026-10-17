@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <functional>
+#include <array>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -378,6 +379,11 @@ public:
 
 	map::tile::TileManager* GetTM() const;
 	resource::ResourceManager* GetRM() const;
+	// Explicit native SMAC query: no mutation, RNG draw, event maintenance or
+	// fallback to legacy callback inputs. Tile's UI/intake caller uses Ordinary.
+	enum class ResourceQueryPhase { Ordinary, Upkeep };
+	std::array< int64_t, 3 > GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& base, ResourceQueryPhase phase ) const;
+	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;

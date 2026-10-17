@@ -23,6 +23,9 @@ public:
 	void ConfigureMovementCampaign( bool selected_rover = true );
 	void ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules );
 	void SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned );
+	void ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
+	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
+	void ResourcePolicy( bool present );
 	void SelectStartup( int32_t simulation, int32_t design );
 	void CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation = 2 );
 	game::backend::SmacGameplayRandomState GameplayRandom() const;

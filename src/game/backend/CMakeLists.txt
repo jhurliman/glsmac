@@ -23,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/WorldSnapshotTurn.cpp
 	${PWD}/Game.cpp
 	${PWD}/GameSimulation.cpp
+	${PWD}/GameTileResources.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp

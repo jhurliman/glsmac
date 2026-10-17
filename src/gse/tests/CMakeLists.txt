@@ -28,6 +28,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacResourceRules.cpp
 	${PWD}/SmacSpecialistRules.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp
+	${PWD}/CanonicalResourceIntake.cpp
 	${PWD}/SmacFacilityIdentity.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp

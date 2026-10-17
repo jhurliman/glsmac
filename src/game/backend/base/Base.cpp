@@ -648,6 +648,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} ),
 	},
 	{
+		"get_smac_nutrient_demand",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Int,, m_game->GetCanonicalNutrientDemand( *this ) );
+		} ),
+	},
+	{
 		"get_consumption",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
@@ -721,6 +728,7 @@ gse::value::Array* const Base::GetUnworkedTiles( GSE_CALLABLE ) {
 }
 
 gse::value::Object* const Base::GetIntake( GSE_CALLABLE ) {
+	if ( m_resource_context ) { GetSmacResourceContext(); } // validate before exposing the owner's wrapper
 	return GetResourcesFromCallback( GSE_CALL, m_game->GetBM(), m_game->GetRM(), "get_base_intake", ARGS_F( this ) {
 		{
 			"base",
@@ -734,6 +742,10 @@ gse::value::Object* const Base::GetIntake( GSE_CALLABLE ) {
 }
 
 gse::value::Object* const Base::GetConsumption( GSE_CALLABLE ) {
+	if ( m_resource_context ) {
+		GetSmacResourceContext();
+		GSE_ERROR( gse::EC.GAME_ERROR, "Canonical total consumption requires supported unit support and facility maintenance; use get_smac_nutrient_demand for nutrient demand only" );
+	}
 	return GetResourcesFromCallback( GSE_CALL, m_game->GetBM(), m_game->GetRM(), "get_base_consumption", ARGS_F( this ) {
 		{
 			"base",

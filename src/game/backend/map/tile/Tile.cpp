@@ -362,6 +362,10 @@ gse::value::Object* const Tile::GetResourcesAsValue( GSE_CALLABLE, slot::Slot* c
 	if ( !evaluating_slot ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Tile resources require a player or an evaluating base" );
 	}
+	if ( evaluating_base && evaluating_base->HasSmacResourceContext() ) {
+		const auto values = game->GetCanonicalTileResources( *this, *evaluating_base, Game::ResourceQueryPhase::Ordinary );
+		return GetSmacResourceValues( GSE_CALL, game->GetRM(), values );
+	}
 	return GetResourcesFromCallback( GSE_CALL, game->GetTM(), game->GetRM(), "get_tile_resources",
 		_ARGS_F( this, evaluating_slot, evaluating_base ) {
 			out_args = { { "tile", Wrap( GSE_CALL ) }, { "player", evaluating_slot->Wrap( GSE_CALL ) } };

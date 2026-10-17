@@ -215,13 +215,14 @@ public:
 	}
 
 	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false,
-		const game::backend::settings::SmacSpecialistRules* specialists = nullptr ) {
+		const game::backend::settings::SmacSpecialistRules* specialists = nullptr,
+		const std::function< std::string( const std::string& ) >& source_override = {}, const std::string& resource_faction = {} ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
 			settings.SelectRuleset( "smac" );
 			settings.InitializeHostRules( [ & ]( const std::string& filename ) {
-				auto source = smac_startup_fixture::Source( filename );
+				auto source = source_override ? source_override( filename ) : smac_startup_fixture::Source( filename );
 				if ( filename == "alpha.txt" ) {
 					const auto start = source.find( "#RULES\n" ) + 7;
 					source.replace( start, source.find( ',', start ) - start, std::to_string( road_rate ) );
@@ -243,6 +244,10 @@ public:
 			smac_rules_fixture::AcceptWorldSize( settings );
 			EnableSimulationParticipants( movement_campaign ? std::vector< size_t >{ 0, 1, 2, 3, 4, 5, 6 } : single ? std::vector< size_t >{ 0 } : selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
 			if ( ( single || movement_campaign ) && selected_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
+			if ( !resource_faction.empty() ) {
+				if ( !m_state->GetFM()->Get( resource_faction ) ) { m_state->GetFM()->Add( new game::backend::faction::Faction( resource_faction, "Resource fixture faction" ) ); }
+				m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( resource_faction ) );
+			}
 			if ( movement_campaign ) {
 				settings.SelectSmacCustomSize( 128, 64 );
 				auto* tiles = m_game.GetMap()->GetTilesPtr();
@@ -257,6 +262,14 @@ public:
 			GT_OK();
 		} );
 		if ( !error.empty() ) { throw std::runtime_error( error ); }
+	}
+	void ResourcePolicy( const bool present ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			m_game.m_map->m_resource_policy = present ? std::optional( game::backend::map::GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
+		} );
+	}
+	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
 	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
@@ -4263,6 +4276,11 @@ void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool sing
 void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }
 void ConventionalUnitFixture::ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules ) { fixture->ConfigureConventional( true, 3, false, false, false, &rules ); }
 void ConventionalUnitFixture::SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned ) { fixture->SpecialistKnowledge( simulation, owned ); }
+void ConventionalUnitFixture::ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
+	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
+}
+void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }

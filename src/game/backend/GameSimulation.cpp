@@ -1,0 +1,162 @@
+#include "Game.h"
+
+#include <stdexcept>
+#include <utility>
+
+#include "Player.h"
+#include "slot/Slot.h"
+#include "slot/Slots.h"
+#include "gse/value/Array.h"
+#include "gse/value/Bool.h"
+
+namespace game::backend {
+
+Game::BoundSimulation Game::BindSimulation( faction::SmacSimulationState value ) const {
+	const auto& settings = m_state->m_settings.global;
+	if ( settings.GetRulesetId() != "smac" || !settings.IsRulesetLocked()
+		|| !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) {
+		throw std::runtime_error( "SMAC simulation requires frozen source profiles" );
+	}
+	try { value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ); }
+	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
+	BoundSimulation result{ std::move( value ), m_state->CaptureRosterEpoch(), m_state->CaptureGameSession(), {} };
+	m_state->RequireRoster( result.epoch );
+	const auto& slots = m_state->m_slots->GetSlots();
+	if ( slots.size() != 7 ) { throw std::runtime_error( "SMAC simulation requires the accepted seven-slot controller roster" ); }
+	result.players.reserve( result.value.roster.size() );
+	for ( const auto& participant : result.value.roster ) {
+		const auto& slot = slots[ participant.slot ];
+		if ( slot.GetState() != slot::Slot::SS_PLAYER ) { throw std::runtime_error( "SMAC simulation controller is not occupied" ); }
+		result.players.push_back( slot.GetPlayer()->GetIdentity() );
+	}
+	ValidateSimulation( result );
+	return result;
+}
+
+void Game::ValidateSimulation( const BoundSimulation& simulation ) const {
+	if ( !m_state || !simulation.epoch || !simulation.epoch->active || m_state->CaptureRosterEpoch() != simulation.epoch
+		|| !m_state->IsGameSessionActive( simulation.session ) ) {
+		throw std::runtime_error( "SMAC simulation controller roster was retired" );
+	}
+	m_state->RequireRoster( simulation.epoch );
+	const auto& slots = m_state->m_slots->GetSlots();
+	if ( slots.size() != 7 || simulation.players.size() != simulation.value.roster.size() ) { throw std::runtime_error( "SMAC simulation controller roster changed" ); }
+	size_t occupied = 0;
+	for ( const auto& slot : slots ) { if ( slot.GetState() == slot::Slot::SS_PLAYER ) { ++occupied; } }
+	if ( occupied != simulation.value.roster.size() ) { throw std::runtime_error( "SMAC simulation participant count changed" ); }
+	for ( size_t i = 0; i < simulation.value.roster.size(); ++i ) {
+		const auto& saved = simulation.value.roster[ i ];
+		const auto& identity = simulation.players[ i ];
+		const auto& slot = slots[ saved.slot ];
+		if ( !identity || !identity->active || slot.GetState() != slot::Slot::SS_PLAYER || slot.GetPlayer()->GetIdentity() != identity ) {
+			throw std::runtime_error( "SMAC simulation controller identity changed" );
+		}
+		const auto record = slot.GetPlayer()->GetRecord();
+		if ( slot.GetLinkedGSID() != saved.gsid || record.role != saved.role || record.faction_id != saved.faction_id ) {
+			throw std::runtime_error( "SMAC simulation controller metadata changed" );
+		}
+	}
+}
+
+void Game::PrepareNewSimulation() {
+	if ( m_state->m_settings.global.GetRulesetId() != "smac" ) {
+		if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "Unexpected simulation state for non-SMAC world" ); }
+		return;
+	}
+	if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "New-world simulation was already admitted" ); }
+	const auto& settings = m_state->m_settings.global;
+	if ( !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) { throw std::runtime_error( "Missing SMAC simulation profiles" ); }
+	faction::SmacSimulationState value;
+	std::vector< faction::SmacSimulationAdmission > admissions;
+	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+		if ( slot.GetState() != slot::Slot::SS_PLAYER ) { continue; }
+		const auto record = slot.GetPlayer()->GetRecord();
+		if ( !record.faction_id ) { throw std::runtime_error( "SMAC simulation participant has no selected source faction" ); }
+		// GLSMAC new-world policy only: dense IDs in ascending occupied-slot
+		// order. Restores use the explicit saved IDs and never call this path.
+		const auto id = static_cast< int32_t >( admissions.size() + 1 );
+		if ( slot.GetIndex() > 6 ) { throw std::runtime_error( "SMAC simulation slot exceeds supported roster" ); }
+		value.roster.push_back( { id, static_cast< int32_t >( slot.GetIndex() ), slot.GetLinkedGSID(), record.role, *record.faction_id } );
+		admissions.push_back( { id, *record.faction_id } );
+	}
+	try { value.technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ); }
+	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
+	m_simulation = BindSimulation( std::move( value ) );
+}
+
+void Game::PublishPendingSimulation() {
+	if ( m_pending_simulation ) {
+		if ( m_simulation ) { throw std::runtime_error( "Cannot replace an admitted SMAC simulation" ); }
+		ValidateSimulation( *m_pending_simulation );
+		m_simulation = std::move( m_pending_simulation );
+		m_pending_simulation.reset();
+	}
+	ValidateCurrentSimulation();
+}
+
+void Game::ValidateCurrentSimulation() const {
+	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
+		if ( !m_simulation ) { throw std::runtime_error( "SMAC simulation has not been admitted" ); }
+		ValidateSimulation( *m_simulation );
+	}
+	else if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "Unexpected simulation state for non-SMAC world" ); }
+}
+
+void Game::WriteSimulationState( types::Buffer& buffer ) const {
+	ValidateCurrentSimulation();
+	std::optional< std::string > wire;
+	if ( m_simulation ) {
+		const auto& settings = m_state->m_settings.global;
+		wire = m_simulation->value.Serialize( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ).ToString();
+	}
+	buffer.WriteBool( wire.has_value() );
+	if ( wire ) { buffer.WriteString( *wire ); }
+}
+
+std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer& buffer ) const {
+	const auto& settings = m_state->m_settings.global;
+	const bool expected = settings.GetRulesetId() == "smac";
+	if ( buffer.ReadBool() != expected ) { throw std::runtime_error( "World simulation presence differs from selected ruleset" ); }
+	if ( !expected ) { return {}; }
+	if ( !settings.IsRulesetLocked() || !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) {
+		throw std::runtime_error( "SMAC simulation requires frozen source profiles" );
+	}
+	// The nested reader bounds the framed payload before allocating records.
+	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+	return BindSimulation( std::move( value ) );
+}
+
+const faction::SmacSimulationParticipant& Game::RequireSimulationParticipant( const Player* requested ) const {
+	ValidateCurrentSimulation();
+	if ( !m_simulation ) { throw std::runtime_error( "SMAC simulation state is unavailable for this ruleset" ); }
+	const auto& slots = m_state->m_slots->GetSlots();
+	for ( const auto& participant : m_simulation->value.roster ) {
+		if ( slots[ participant.slot ].GetPlayer() == requested ) { return participant; }
+	}
+	throw std::runtime_error( "Player is not an admitted simulation participant" );
+}
+
+gse::Value* Game::CopyTechnologyState( GSE_CALLABLE, const Player* player ) const {
+	const auto& participant = RequireSimulationParticipant( player );
+	const auto& state = *m_simulation->value.technology.Find( participant.simulation_id );
+	gse::value::array_elements_t owned;
+	owned.reserve( state.owned.size() );
+	for ( const auto flag : state.owned ) { owned.push_back( VALUE( gse::value::Bool,, flag ) ); }
+	const auto optional = [ & ]( const std::optional< int32_t >& value ) -> gse::Value* {
+		if ( value ) { return VALUE( gse::value::Int,, *value ); }
+		return VALUE( gse::value::Undefined );
+	};
+	// Every field is a fresh scalar/array value. No Ptr/native mutator escapes.
+	return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+		{ "simulation_id", VALUE( gse::value::Int,, participant.simulation_id ) },
+		{ "faction_id", VALUE( gse::value::String,, participant.faction_id ) },
+		{ "owned_technologies", VALUE( gse::value::Array,, owned ) },
+		{ "score", VALUE( gse::value::Int,, state.score ) },
+		{ "future_count", VALUE( gse::value::Int,, state.future_count ) },
+		{ "labs", VALUE( gse::value::Int,, state.labs ) },
+		{ "target", optional( state.target ) },
+		{ "cached_threshold", optional( state.cached_threshold ) },
+	} ) );
+}
+
+}

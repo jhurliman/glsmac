@@ -17,15 +17,16 @@
 #include "SmacProductionRules.h"
 #include "SmacMovementRules.h"
 #include "SmacTechnologyRules.h"
+#include "SmacTechnologyState.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
 #include "SmacPredefinedUnitRules.h"
 #include "SmacFactionStartupRules.h"
-#include "SmacTechnologyState.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "SmacSimulationState.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
 #include "CvrBasisConverter.h"
@@ -226,11 +227,12 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacTechnologyStateTests( task );
+		tests::AddSmacSimulationStateTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
-		tests::AddSmacTechnologyStateTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}

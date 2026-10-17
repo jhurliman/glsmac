@@ -24,6 +24,7 @@ void Connection::SetState( State* state ) {
 }
 
 void Connection::ResetHandlers() {
+	DrainEventRequest();
 	if ( m_f_on_open ) {
 		Unpersist( m_f_on_open );
 		m_f_on_open = nullptr;
@@ -38,6 +39,9 @@ void Connection::ResetHandlers() {
 	m_on_global_settings_update = nullptr;
 	m_on_game_event_validate = nullptr;
 	m_on_game_event_apply = nullptr;
+}
+
+void Connection::DrainEventRequest() {
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;

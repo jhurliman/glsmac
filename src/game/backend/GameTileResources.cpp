@@ -85,6 +85,9 @@ void RequireResourceDefinitions( const resource::ResourceManager& manager ) {
 }
 
 int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) const {
+	return CalculateCanonicalMineralSupport( evaluating_base, evaluating_base.m_pops.size(), nullptr );
+}
+int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_base, const size_t population, const unit::Unit* prepared_unit ) const {
 	ValidateCurrentSimulation();
 	const auto context = evaluating_base.GetSmacResourceContext();
 	if ( evaluating_base.GetGame() != this || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_simulation ) {
@@ -94,21 +97,26 @@ int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) co
 	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
 		throw std::runtime_error( "Canonical support requires retained SUPPORT" );
 	}
-	if ( evaluating_base.m_pops.size() > 127 ) { throw std::runtime_error( "Canonical support population exceeds 127" ); }
+	if ( population > 127 ) { throw std::runtime_error( "Canonical support population exceeds 127" ); }
 	m_um->RequireConventionalUnitsReady();
 	std::vector< base::SmacSupportUnit > units;
-	units.reserve( m_um->GetUnits().size() );
-	for ( const auto& item : m_um->GetUnits() ) {
-		const auto* unit = item.second;
-		if ( !unit || unit->m_id != item.first || !unit->IsConventional() ) { throw std::runtime_error( "Canonical support requires conventional unit authority" ); }
+	units.reserve( m_um->GetUnits().size() + ( prepared_unit ? 1 : 0 ) );
+	const auto append = [ & ]( const unit::Unit* unit, bool prepared ) {
+		if ( !unit || !unit->IsConventional() ) { throw std::runtime_error( "Canonical support requires conventional unit authority" ); }
 		const auto& state = unit->Conventional();
 		// This validates actual owner/design/home/presentation metadata, including
 		// unsupported packages/abilities, rather than inferring them from Def names.
 		const auto resolved = ResolveConventionalUnit( state, unit->m_owner );
 		const auto design = ResolveConventionalDesign( state, *m_simulation );
-		const auto* tile = unit->GetTile();
-		if ( !tile || !m_map || tile->tiles != m_map->GetTilesPtr() || tile->units.find( item.first ) == tile->units.end()
-			|| tile->units.at( item.first ) != unit ) { throw std::runtime_error( "Canonical support unit membership is invalid" ); }
+		const auto* tile = prepared ? evaluating_base.GetTile() : unit->GetTile();
+		if ( prepared ) {
+			if ( unit->GetTile() || m_um->GetUnits().count( unit->m_id ) || state.home_base_id != evaluating_base.m_id
+				|| unit->m_owner != evaluating_base.m_owner || state.owner_simulation_id != context.owner_simulation_id ) {
+				throw std::runtime_error( "Staged support requires the unplaced owned factory candidate" );
+			}
+		}
+		else if ( !tile || !m_map || tile->tiles != m_map->GetTilesPtr() || tile->units.find( unit->m_id ) == tile->units.end()
+			|| tile->units.at( unit->m_id ) != unit ) { throw std::runtime_error( "Canonical support unit membership is invalid" ); }
 		const auto home = !state.home_base_id ? base::SmacSupportHome::None
 			: *state.home_base_id == evaluating_base.m_id ? base::SmacSupportHome::EvaluatingBase : base::SmacSupportHome::OtherBase;
 		// Ordinary Formers consume support too. Neither admitted package has
@@ -119,13 +127,21 @@ int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) co
 			false, design.id < 64 ? base::SmacSupportDesign::BuiltIn : base::SmacSupportDesign::PlayerDesigned,
 			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,
 			tile->is_water_tile ? base::SmacSupportTerrain::DeepOcean : base::SmacSupportTerrain::Land } );
+	};
+	for ( const auto& item : m_um->GetUnits() ) {
+		if ( !item.second || item.second->m_id != item.first ) { throw std::runtime_error( "Invalid support Unit registry" ); }
+		append( item.second, false );
 	}
+	if ( prepared_unit ) { append( prepared_unit, true ); }
 	// Map order is only a traversal choice. The aggregate is invariant to order;
 	// do not expose or persist the helper's per-unit free/paid classifications.
-	return base::SmacUnitSupport::Recalculate( social->retained->at( 2 ), static_cast< int32_t >( evaluating_base.m_pops.size() ), units ).mineral_support;
+	return base::SmacUnitSupport::Recalculate( social->retained->at( 2 ), static_cast< int32_t >( population ), units ).mineral_support;
 }
 
 std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& evaluating_base ) const {
+	return CalculateCanonicalOrbitalIntake( evaluating_base, evaluating_base.m_pops.size() );
+}
+std::array< int32_t, 3 > Game::CalculateCanonicalOrbitalIntake( const base::Base& evaluating_base, const size_t population ) const {
 	ValidateCurrentSimulation();
 	const auto found = m_bm->GetBases().find( evaluating_base.m_id );
 	if ( evaluating_base.GetGame() != this || found == m_bm->GetBases().end() || found->second != &evaluating_base ) {
@@ -144,8 +160,8 @@ std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& eval
 	// No Space Elevator follows from the saved campaign admission, not from
 	// missing project metadata. Registered project/orbital facility rows reject.
 	evaluating_base.ValidateSmacAllocation();
-	if ( evaluating_base.m_pops.size() > 127 ) { throw std::runtime_error( "Orbital intake population outside 0..127" ); }
-	return m_simulation->value.GetSatelliteCounts( context.owner_simulation_id ).Intake( static_cast< int32_t >( evaluating_base.m_pops.size() ), aerospace, false );
+	if ( population > 127 ) { throw std::runtime_error( "Orbital intake population outside 0..127" ); }
+	return m_simulation->value.GetSatelliteCounts( context.owner_simulation_id ).Intake( static_cast< int32_t >( population ), aerospace, false );
 }
 
 std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase ) const {
@@ -281,6 +297,9 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 }
 
 int64_t Game::GetCanonicalNutrientDemand( const base::Base& base ) const {
+	return CalculateCanonicalNutrientDemand( base, base.m_pops.size() );
+}
+int64_t Game::CalculateCanonicalNutrientDemand( const base::Base& base, const size_t population ) const {
 	(void)base.GetSmacResourceContext();
 	ValidateCurrentSimulation();
 	const auto& rules = m_state->m_settings.global.GetSmacResourceRules();
@@ -288,10 +307,10 @@ int64_t Game::GetCanonicalNutrientDemand( const base::Base& base ) const {
 	const int64_t rate = rules->nutrients_per_citizen;
 	if ( !rate ) { return 0; }
 	const uint64_t magnitude = rate < 0 ? static_cast< uint64_t >( -rate ) : static_cast< uint64_t >( rate );
-	if ( magnitude && base.m_pops.size() > static_cast< uint64_t >( INT64_MAX ) / magnitude ) {
+	if ( magnitude && population > static_cast< uint64_t >( INT64_MAX ) / magnitude ) {
 		throw std::overflow_error( "Canonical nutrient demand exceeds signed64" );
 	}
-	return rate * static_cast< int64_t >( base.m_pops.size() );
+	return rate * static_cast< int64_t >( population );
 }
 
 }

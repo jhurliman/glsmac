@@ -13,7 +13,7 @@
 
 namespace game::backend::base {
 
-std::vector< map::tile::coords_t > Base::AllocationCoordinates( const SmacBaseAllocationState& allocation ) const {
+std::vector< map::tile::coords_t > Base::AllocationCoordinates( const SmacBaseAllocationState& allocation, std::optional< size_t > population ) const {
 	allocation.Validate();
 	if ( !m_resource_context || allocation.specialists.total_count > 16 ) {
 		THROW( "Live SMAC allocation requires canonical context and at most sixteen specialists" );
@@ -40,7 +40,7 @@ std::vector< map::tile::coords_t > Base::AllocationCoordinates( const SmacBaseAl
 		coordinates.emplace_back( ( *resolved )[ 0 ], ( *resolved )[ 1 ] );
 	}
 	// Center and high bits remain exact storage, not additional Pop positions.
-	if ( coordinates.size() + static_cast< size_t >( allocation.specialists.total_count ) != m_pops.size() ) {
+	if ( coordinates.size() + static_cast< size_t >( allocation.specialists.total_count ) != population.value_or( m_pops.size() ) ) {
 		THROW( "SMAC allocation projection does not match the existing population" );
 	}
 	return coordinates;
@@ -103,6 +103,11 @@ struct Base::PreparedSmacWorkerState::Data {
 	BaseManager* manager;
 	struct Projection { Pop* pop; const PopDef* def; Pop::worked_tile_t coordinates; };
 	std::vector< Projection > projection;
+	pops_t additions;
+	std::vector< size_t > removals;
+	std::vector< pops_t::node_type > retired;
+	size_t next_pop_id;
+	bool committed = false;
 	std::map< BaseManager::tile_key_t, BaseManager::pop_key_t > assignments;
 	std::unordered_map< size_t, BaseManager::base_update_t > updates;
 	std::unordered_set< Base* > triggers;
@@ -116,9 +121,12 @@ Base::PreparedSmacWorkerState::PreparedSmacWorkerState( std::unique_ptr< Data > 
 Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
 Base::PreparedSmacWorkerState::PreparedSmacWorkerState( PreparedSmacWorkerState&& ) noexcept = default;
 void Base::PreparedSmacWorkerState::Commit() noexcept {
-	if ( !m_data ) { return; }
+	if ( !m_data || m_data->committed ) { return; }
 	auto& data = *m_data;
 	for ( const auto& next : data.projection ) { next.pop->m_def = next.def; next.pop->m_worked_tile = next.coordinates; }
+	while ( !data.additions.empty() ) { data.base->m_pops.insert( data.additions.extract( data.additions.begin() ) ); }
+	for ( const auto id : data.removals ) { data.retired.push_back( data.base->m_pops.extract( id ) ); }
+	data.base->m_next_pop_id = data.next_pop_id;
 	data.base->m_allocation.swap( data.allocation );
 	data.base->m_resource_context.swap( data.context );
 	data.base->m_production.swap( data.production );
@@ -126,17 +134,24 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	data.manager->m_work_assignments.swap( data.assignments );
 	data.manager->m_base_updates.swap( data.updates );
 	data.manager->m_updated_bases.swap( data.triggers );
-	m_data.reset(); // release the trigger lock before any later script notification
+	data.committed = true;
+}
+void Base::PreparedSmacWorkerState::Finish() {
+	if ( !m_data || !m_data->committed ) { THROW( "Prepared Base state has not committed" ); }
+	m_data->lock.unlock();
+	m_data.reset(); // removed Pop wrappers retire only after all authority is coherent
 }
 
 void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context ) {
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, m_production, m_accumulated_nutrients );
-	prepared.Commit();
+	prepared.Commit(); prepared.Finish();
 }
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population ) {
+	const auto population = candidate_population.value_or( m_pops.size() );
+	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "SMAC allocation publication requires its owning accumulation" ); }
 	auto* bm = m_game->GetBM();
@@ -149,7 +164,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		THROW( "SMAC worker publication may only clear citizen management in Base context" );
 	}
 	ValidateAllocationProjection( true );
-	const auto coordinates = AllocationCoordinates( allocation );
+	const auto coordinates = AllocationCoordinates( allocation, population );
 	std::array< const PopDef*, 7 > specialists{};
 	const auto* worker = bm->GetPopDef( roles.worker );
 	if ( !worker || !( worker->m_flags & PopDef::PF_TILE_WORKER ) || worker->m_smac_specialist_id ) { THROW( "SMAC allocation requires an explicit registered worker role" ); }
@@ -161,7 +176,16 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		bm->ValidateSmacPopDef( specialists[ i ] );
 	}
 	std::vector< PreparedSmacWorkerState::Data::Projection > projection;
-	projection.reserve( m_pops.size() );
+	projection.reserve( population );
+	pops_t additions; std::vector< size_t > removals;
+	auto next_pop_id = m_next_pop_id;
+	if ( population > m_pops.size() ) {
+		if ( ( !m_pops.empty() && next_pop_id <= m_pops.rbegin()->first ) || next_pop_id > INT64_MAX - ( population - m_pops.size() ) ) { THROW( "Canonical growth Pop IDs are unavailable" ); }
+		for ( size_t i = m_pops.size(); i < population; ++i ) {
+			// Variant zero is an explicit GLSMAC presentation policy for a fresh Pop.
+			additions.emplace( std::piecewise_construct, std::forward_as_tuple( next_pop_id ), std::forward_as_tuple( this, next_pop_id, worker, 0 ) ); ++next_pop_id;
+		}
+	}
 	auto assignments = bm->m_work_assignments;
 	// Validate the existing derived index even during explicit first adoption.
 	for ( auto it = assignments.begin(); it != assignments.end(); ) {
@@ -173,14 +197,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		it = assignments.erase( it );
 	}
 	size_t position = 0;
-	for ( auto& item : m_pops ) {
-		auto& pop = item.second;
-		if ( pop.m_base != this || pop.m_id != item.first ) { THROW( "Existing population identity is invalid" ); }
-		ValidatePopulationRole( pop.m_def, pop.m_worked_tile );
-		if ( pop.m_worked_tile ) {
-			const auto claim = bm->m_work_assignments.find( { pop.m_worked_tile->x, pop.m_worked_tile->y } );
-			if ( claim == bm->m_work_assignments.end() || claim->second != BaseManager::pop_key_t( m_id, pop.m_id ) ) { THROW( "Existing population reverse assignment is incomplete" ); }
-		}
+	const auto append = [ & ]( Pop& pop ) {
 		if ( position < coordinates.size() ) {
 			const auto& coord = coordinates[ position ];
 			if ( !assignments.emplace( BaseManager::tile_key_t( coord.x, coord.y ), BaseManager::pop_key_t( m_id, pop.m_id ) ).second ) {
@@ -190,7 +207,18 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		}
 		else { projection.push_back( { &pop, specialists[ allocation.specialists.types[ position - coordinates.size() ] ], {} } ); }
 		++position;
+	};
+	for ( auto& item : m_pops ) {
+		auto& pop = item.second;
+		if ( pop.m_base != this || pop.m_id != item.first ) { THROW( "Existing population identity is invalid" ); }
+		ValidatePopulationRole( pop.m_def, pop.m_worked_tile );
+		if ( pop.m_worked_tile ) {
+			const auto claim = bm->m_work_assignments.find( { pop.m_worked_tile->x, pop.m_worked_tile->y } );
+			if ( claim == bm->m_work_assignments.end() || claim->second != BaseManager::pop_key_t( m_id, pop.m_id ) ) { THROW( "Existing population reverse assignment is incomplete" ); }
+		}
+		if ( position < population ) { append( pop ); } else { removals.push_back( pop.m_id ); }
 	}
+	for ( auto& item : additions ) { append( item.second ); }
 	// Prepare both native queues before publishing any authority or Pop fields.
 	// No script, yield query, queue dispatch, or allocator callback runs here.
 	auto updates = bm->m_base_updates;
@@ -211,7 +239,8 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	auto data = std::make_unique< PreparedSmacWorkerState::Data >();
 	data->base = this; data->manager = bm;
-	data->projection = std::move( projection ); data->assignments = std::move( assignments );
+	data->projection = std::move( projection ); data->additions = std::move( additions ); data->removals = std::move( removals );
+	data->retired.reserve( data->removals.size() ); data->next_pop_id = next_pop_id; data->assignments = std::move( assignments );
 	data->updates = std::move( updates ); data->triggers = std::move( triggers ); data->lock = std::move( lock );
 	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
 	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );

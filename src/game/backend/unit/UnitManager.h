@@ -55,6 +55,7 @@ public:
 		~PreparedConventionalUnit();
 		PreparedConventionalUnit( PreparedConventionalUnit&& ) noexcept;
 		PreparedConventionalUnit& operator=( PreparedConventionalUnit&& ) noexcept;
+		const Unit& Candidate() const; // prepared immutable record, before Commit only
 		Unit* Commit() noexcept;
 		void Notify( GSE_CALLABLE ); // after all caller-owned authority is committed
 	private:

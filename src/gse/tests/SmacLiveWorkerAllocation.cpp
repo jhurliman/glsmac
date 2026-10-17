@@ -61,6 +61,18 @@ std::string Source( const std::string& filename ) {
 	}
 	return result;
 }
+std::string UpkeepSource( const std::string& filename ) {
+	auto source = Source( filename ); if ( filename != "alpha.txt" ) { return source; }
+	std::istringstream input( source ); std::string line, section, output; size_t row = 0;
+	while ( std::getline( input, line ) ) {
+		if ( !line.empty() && line[ 0 ] == '#' ) { section = line; row = 0; }
+		else { ++row; if ( section == "#RULES" && ( row == 6 || row == 13 || row == 14 ) ) {
+			line.replace( 0, line.find( ',' ), row == 6 ? "10" : row == 13 ? "7" : "14" );
+		} }
+		output += line + '\n';
+	}
+	return output;
+}
 Base::SmacAllocationRoles Roles() {
 	Base::SmacAllocationRoles result{ "live-worker", {} };
 	for ( size_t i = 0; i < 7; ++i ) { result.specialists[ i ] = "live-role-" + std::to_string( i ); } return result;
@@ -118,6 +130,92 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC live upkeep stages growth starvation and stable Pop lifetime", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, 0, scout, 0, std::vector< ProductionItem >{} } );
+			base->SetAccumulatedNutrients( 20 ); auto* survivor = &base->m_pops.at( 19 );
+			auto* wrapper = static_cast< value::Object* >( survivor->Wrap( GSE_CALL ) );
+			const auto resolver = [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); };
+			const auto grown = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( grown.final_calculation && base->m_pops.size() == 2 && &base->m_pops.at( 19 ) == survivor && Pop::Unwrap( wrapper ) == survivor,
+				"growth replaced surviving Pop identity" );
+			GT_ASSERT( base->GetAccumulatedNutrients() == -2 && grown.final_calculation->nutrients.surplus == -1,
+				"growth did not normalize zero against actual new-population deficit before collection" );
+			auto* retired = static_cast< value::Object* >( base->m_pops.at( 41 ).Wrap( GSE_CALL ) );
+			const auto starved = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( starved.final_calculation && base->m_pops.size() == 1 && &base->m_pops.at( 19 ) == survivor && !retired->wrapobj
+				&& base->GetAccumulatedNutrients() == starved.final_calculation->nutrients.normalized_stored,
+				"starvation failed to retire only the removed Pop or skipped forced resource pass" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC live upkeep includes newborn support without reposting and restores continuation", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" ); std::string saved;
+		const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 ); const auto cost = game->GetSmacProductionCost( base->m_owner, scout );
+			const auto resolver = [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); };
+			for ( int i = 0; i < 2; ++i ) {
+				base->SetProductionState( GSE_CALL, ProductionState{ scout, cost - 3, scout, 0, std::vector< ProductionItem >{} } );
+				GT_ASSERT( base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 ).completed_unit, "existing homed setup failed" );
+			}
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, cost - 3, scout, 0, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( 0 );
+			const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( result.completed_unit && result.first_calculation.minerals.demand == 0 && result.final_calculation->minerals.demand == 1
+				&& result.final_calculation->minerals.surplus == 2 && base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0
+				&& base->GetAccumulatedNutrients() == 1, "second pass missed newborn support or posted/collected twice" );
+			saved = fixture.Snapshot(); GT_OK();
+		} ); GT_ASSERT( error.empty(), "source upkeep: " + error );
+		ConventionalUnitFixture destination; destination.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			destination.Restore( GSE_CALL, saved, true ); auto* game = destination.Game(); auto* base = game->GetBM()->GetBase( 701 );
+			const auto pair = destination.GameplayRandom(); const auto jsf = game->GetRandom()->GetStateString();
+			const auto next = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); }, SmacMoraleMode::Mode0 );
+			GT_ASSERT( !next.completed_unit && game->GetUM()->GetUnits().size() == 4 && base->GetProductionState()->minerals == 2
+				&& base->GetProductionState()->baseline_minerals == 2 && base->GetAccumulatedNutrients() == 2
+				&& destination.GameplayRandom() == pair && game->GetRandom()->GetStateString() == jsf, "restored next upkeep changed posting/home/food/RNG" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC live upkeep rejects pending size-one removal without partial production", []( GSE*, context::Context* ) -> std::string {
+		const auto source = []( const std::string& filename ) { auto text = UpkeepSource( filename );
+			if ( filename == "alpha.txt" ) { const auto at = text.find( "#RULES\n" ); const auto end = text.find( '\n', at + 7 ); const auto next = end + 1; text.replace( next, text.find( ',', next ) - next, "3" ); } return text; };
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, 999, scout, 0, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( -1 );
+			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
+			GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); }, SmacMoraleMode::Mode0 ); } )
+				&& fixture.Snapshot() == before && Unit::GetNextId() == id, "pending starvation removal partially published upkeep" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC live upkeep rejects pending mineral deficit without partial completion", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); game->AdvanceTurn( 2 );
+			auto* base = Populate( GSE_CALL, fixture, true, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 ); const auto cost = game->GetSmacProductionCost( base->m_owner, scout );
+			const auto resolver = [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); };
+			for ( int i = 0; i < 3; ++i ) {
+				base->SetProductionState( GSE_CALL, ProductionState{ scout, cost, scout, 0, std::vector< ProductionItem >{} } );
+				GT_ASSERT( base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 ).completed_unit, "homed deficit setup did not complete" );
+			}
+			GT_ASSERT( base->PrepareSmacResourceCalculation( SmacBaseResourcePhase::Upkeep ).minerals.surplus == -1, "actual home support did not produce deficit" );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, cost, scout, 0, std::vector< ProductionItem >{} } );
+			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
+			GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 ); } )
+				&& fixture.Snapshot() == before && Unit::GetNextId() == id, "unsupported deficit partially completed or posted upkeep" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "SMAC live production commits actual Scout Former queue home and second-pass support", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( Source, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

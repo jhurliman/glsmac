@@ -31,7 +31,7 @@ class Game;
 namespace slot {
 class Slot;
 }
-namespace unit { class Def; enum class SmacMoraleMode : uint8_t; }
+namespace unit { class Unit; class Def; enum class SmacMoraleMode : uint8_t; }
 namespace faction {
 class Faction;
 }
@@ -111,8 +111,11 @@ public:
 		SmacBaseResourceCalculation first_calculation;
 		std::optional< size_t > completed_unit;
 		bool queue_advanced = false;
+		std::optional< SmacBaseResourceCalculation > final_calculation;
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
+		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
+	SmacProductionResult ProcessSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
@@ -157,16 +160,20 @@ private:
 	std::optional< ProductionState > m_production;
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	std::optional< SmacBaseAllocationState > m_allocation;
-	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation ) const;
+	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation, std::optional< size_t > population = {} ) const;
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
-	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary ) const;
+	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary, std::optional< size_t > population = {},
+		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr ) const;
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
+	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
+		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step );
 	class PreparedSmacWorkerState {
 	public:
 		~PreparedSmacWorkerState();
 		PreparedSmacWorkerState( PreparedSmacWorkerState&& ) noexcept;
 		void Commit() noexcept;
+		void Finish(); // release lock and retire removed wrappers after authority commit
 	private:
 		friend class Base;
 		struct Data;
@@ -175,9 +182,10 @@ private:
 	};
 	PreparedSmacWorkerState PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 		const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-		const std::optional< ProductionState >& production, int64_t nutrients );
+		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {} );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
-		const SmacBaseAllocationState* allocation ) const;
+		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
+		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

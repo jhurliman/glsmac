@@ -215,6 +215,10 @@ UnitManager::PreparedConventionalUnit::PreparedConventionalUnit( std::unique_ptr
 UnitManager::PreparedConventionalUnit::~PreparedConventionalUnit() = default;
 UnitManager::PreparedConventionalUnit::PreparedConventionalUnit( PreparedConventionalUnit&& ) noexcept = default;
 UnitManager::PreparedConventionalUnit& UnitManager::PreparedConventionalUnit::operator=( PreparedConventionalUnit&& ) noexcept = default;
+const Unit& UnitManager::PreparedConventionalUnit::Candidate() const {
+	if ( !m_data || !m_data->candidate ) { THROW( "Prepared unit candidate is unavailable" ); }
+	return *m_data->candidate;
+}
 Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	if ( !m_data || !m_data->candidate ) { return nullptr; }
 	auto& data = *m_data;

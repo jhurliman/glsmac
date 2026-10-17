@@ -28,7 +28,8 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
     return CalculateSmacResourceCalculation( phase, nullptr );
 }
 
-SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation ) const {
+SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit ) const {
+    const auto population = candidate_population.value_or( m_pops.size() );
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
     switch ( phase ) {
@@ -41,11 +42,11 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     // campaign and every installed local facility, including remote Bases.
     // Thus Singularity, Bulk Matter and Space Elevator are absent authorities,
     // not defaults inferred from a missing field or an English facility name.
-    const auto orbital = m_game->GetCanonicalOrbitalIntake( *this );
-    // The support query authenticates every actual Unit as an admitted Combat
+    const auto orbital = m_game->CalculateCanonicalOrbitalIntake( *this, population );
+    // The support query authenticates every actual Unit as an admitted Combat/Former
     // design with its saved owner/home. There is no Supply/convoy package in
     // this live domain; incoming/outgoing convoy effects are therefore absent.
-    const auto support = m_game->GetCanonicalMineralSupport( *this );
+    const auto support = m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
     SmacBaseResourceCalculation result{};
     for ( size_t i = 0; i < orbital.size(); ++i ) { result.raw_intake[ i ] = orbital[ i ]; }
     const auto add = [ & ]( const map::tile::Tile& tile ) {
@@ -54,15 +55,15 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     };
     add( *m_tile );
     if ( allocation ) {
-        for ( const auto& coordinate : AllocationCoordinates( *allocation ) ) { add( *m_game->GetMap()->GetTile( coordinate.x, coordinate.y ) ); }
+        for ( const auto& coordinate : AllocationCoordinates( *allocation, population ) ) { add( *m_game->GetMap()->GetTile( coordinate.x, coordinate.y ) ); }
     }
     else { for ( const auto& entry : m_pops ) { if ( auto* tile = entry.second.GetWorkedTile() ) { add( *tile ); } } }
 
     auto& n = result.nutrients;
     n.intake = Checked( result.raw_intake[ 0 ] );
-    n.demand = Checked( m_game->GetCanonicalNutrientDemand( *this ) );
+    n.demand = Checked( m_game->CalculateCanonicalNutrientDemand( *this, population ) );
     n.surplus = Checked( int64_t( n.intake ) - n.demand );
-    n.stored_before = n.normalized_stored = m_accumulated_nutrients;
+    n.stored_before = n.normalized_stored = stored.value_or( m_accumulated_nutrients );
     if ( n.surplus < 0 && n.stored_before == 0 ) { n.normalized_stored = -1; }
     else if ( n.surplus >= 0 && n.stored_before < 0 ) { n.normalized_stored = 0; }
 

@@ -672,6 +672,9 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
+	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
+	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
+	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 

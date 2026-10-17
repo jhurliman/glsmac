@@ -1,6 +1,7 @@
 #include "Base.h"
 
 #include "BaseManager.h"
+#include "SmacPopulationStep.h"
 #include "game/backend/Game.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
@@ -18,6 +19,14 @@ int32_t Checked( int64_t value ) {
 
 Base::SmacProductionResult Base::ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode ) {
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, mode, false );
+}
+Base::SmacProductionResult Base::ProcessSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
+	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode ) {
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, mode, true );
+}
+Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
+	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, const bool population_step ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "Production requires its owning accumulation" ); }
 	m_game->GetBM()->RequireSmacWorkerRecalculation();
@@ -30,7 +39,7 @@ Base::SmacProductionResult Base::ProcessSmacProduction( GSE_CALLABLE, const Smac
 		THROW( "Production completion for this target kind is not yet connected" );
 	}
 	Checked( production.minerals ); Checked( production.baseline_minerals ); Checked( m_accumulated_nutrients );
-	const auto allocation = CalculateSmacWorkers( *m_allocation, context, SmacBaseResourcePhase::Upkeep );
+	auto allocation = CalculateSmacWorkers( *m_allocation, context, SmacBaseResourcePhase::Upkeep );
 	SmacProductionResult result{ CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation ), {}, false };
 	const auto& resources = result.first_calculation;
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
@@ -61,10 +70,41 @@ Base::SmacProductionResult Base::ProcessSmacProduction( GSE_CALLABLE, const Smac
 	// Ordinary unmanaged human secondary production leaves the selected target.
 	production.baseline_item = production.current_item;
 	production.baseline_minerals = production.minerals;
-	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, resources.nutrients.normalized_stored );
+	auto food = resources.nutrients.normalized_stored;
+	auto population = m_pops.size();
+	if ( population_step ) {
+		const auto map_type = m_game->GetState()->m_settings.global.map.type;
+		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
+			THROW( "Canonical upkeep admits ordinary generated maps, not scenario/mapfile objectives" );
+		}
+		// The current generated local campaign has no objective producer. This
+		// is explicit GLSMAC non-scenario policy, not an inferred original flag.
+		const auto plan = SmacPopulationStep::Prepare( m_game->GetCanonicalPopulationRules( *this ),
+			static_cast< int32_t >( population ), food, resources.nutrients.surplus, false );
+		if ( !plan.stored_nutrients ) { THROW( "Size-one starvation awaits canonical Base removal and home reassignment" ); }
+		population = plan.population; food = *plan.stored_nutrients;
+		const auto* newborn = unit ? &unit->Candidate() : nullptr;
+		auto mineral_surplus = resources.minerals.surplus;
+		if ( plan.NeedsRecalculation() ) {
+			allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production );
+			const auto internal = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn );
+			food = plan.Finish( internal.nutrients.surplus );
+			mineral_surplus = internal.minerals.surplus;
+		}
+		if ( m_game->GetTurnId() > 1 && mineral_surplus < 0 ) {
+			THROW( "Mineral deficit awaits canonical supported-unit loss processing" );
+		}
+		// The outer forced pass always uses the resulting population and newborn
+		// home support. It normalizes food but never posts minerals or collects
+		// food again. Surviving Pop nodes are still untouched during these reads.
+		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production );
+		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn );
+		food = result.final_calculation->nutrients.normalized_stored;
+	}
+	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population );
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
-	prepared.Commit();
+	prepared.Commit(); prepared.Finish();
 	if ( unit ) { unit->Notify( GSE_CALL ); }
 	return result;
 }

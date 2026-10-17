@@ -28,7 +28,9 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context, phase ), roles );
 }
 
-SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase ) const {
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production ) const {
+	const auto population = candidate_population.value_or( m_pops.size() );
+	if ( !candidate_production && m_production ) { candidate_production = &*m_production; }
 	Game::ResourceQueryPhase query_phase;
 	switch ( phase ) {
 		case SmacBaseResourcePhase::Ordinary: query_phase = Game::ResourceQueryPhase::Ordinary; break;
@@ -41,15 +43,15 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	auto* state = m_game->GetState();
 	m_game->RequireSmacLocalHumanOwner( m_owner );
 	if ( context.GovernorActive() ) { THROW( "SMAC worker recalculation requires inactive governor" ); }
-	if ( m_pops.size() > 127 || m_game->GetTurnId() > INT32_MAX ) {
+	if ( population > 127 || m_game->GetTurnId() > INT32_MAX ) {
 		THROW( "SMAC worker recalculation population/turn exceeds its signed domain" );
 	}
-	if ( !m_production ) { THROW( "SMAC worker recalculation requires an explicit production category" ); }
-	m_production->Validate();
+	if ( !candidate_production ) { THROW( "SMAC worker recalculation requires an explicit production category" ); }
+	candidate_production->Validate();
 	SmacWorkerProduction production;
 	// Scoring consumes only this saved semantic category, never a cost, design
 	// lookup or eligibility. This does not validate target buildability/completion.
-	switch ( m_production->current_item.kind ) {
+	switch ( candidate_production->current_item.kind ) {
 		case ProductionItemKind::Unit: production = SmacWorkerProduction::Unit; break;
 		case ProductionItemKind::Facility: production = SmacWorkerProduction::Facility; break;
 		case ProductionItemKind::Stockpile: production = SmacWorkerProduction::Stockpile; break;
@@ -58,14 +60,14 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	// This query authenticates the complete current Unit/Base/map projection.
 	// It retains raw selected32 on Base; only availability is taken from the frame.
 	const auto availability = m_game->GetSmacWorkerAvailability( *this );
-	const int32_t mineral_support = m_game->GetCanonicalMineralSupport( *this );
+	const int32_t mineral_support = m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
 	const auto& global = state->m_settings.global;
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() || !global.GetSmacTechnologyRules() ) {
 		THROW( "SMAC worker recalculation requires frozen resource/specialist/technology rules" );
 	}
 	const auto catalog = ResolveSmacSpecialistAllocationCatalog( *global.GetSmacSpecialistRules(), *global.GetSmacTechnologyRules(),
 		m_game->GetBM()->GetSmacSpecialistKnowledge( *this ) );
-	const auto prefix = m_game->GetCanonicalOrbitalIntake( *this );
+	const auto prefix = m_game->CalculateCanonicalOrbitalIntake( *this, population );
 	const auto* map = m_game->GetMap();
 	if ( map->GetWidth() > INT32_MAX || map->GetHeight() > INT32_MAX ) { THROW( "Unsupported worker radius geometry" ); }
 	const SmacWorkerRadiusMap radius{ { static_cast< int32_t >( m_tile->coord.x ), static_cast< int32_t >( m_tile->coord.y ) },
@@ -85,7 +87,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	// No yield callback publishes a provisional assignment. The resource
 	// subset reads the actual immutable context, not scratch intake/visited bits.
 	const auto result = SmacAutomaticWorkerAllocation::Allocate( {
-		static_cast< int32_t >( m_pops.size() ), static_cast< int32_t >( m_game->GetTurnId() ),
+		static_cast< int32_t >( population ), static_cast< int32_t >( m_game->GetTurnId() ),
 		global.GetSmacResourceRules()->nutrients_per_citizen, mineral_support, production,
 		{ true, false, false, false, false, false, {} }, context.ManageCitizens(), phase == SmacBaseResourcePhase::Upkeep,
 		allocation.selected, availability.unavailable, prefix, allocation.specialists, catalog, std::nullopt

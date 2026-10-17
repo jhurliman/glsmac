@@ -210,9 +210,13 @@ restart now pass on the pinned integration described in the
 hardware Linux checks remain open. Subsequent implementation PRs are still being reviewed and
 integrated. The integration checkout now exercises
 real backend entities, event serialization, base snapshots and their script
-bindings without the original assets. Linux and Windows CTest pass; selected
-correctness analysis scans the complete production codebase without findings.
-These checks establish infrastructure behavior, not gameplay fidelity.
+bindings without the original assets. On October 16, 2026, integration commit
+[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
+passed Linux and Windows CTest, and the selected correctness scan of all 284
+production translation units reported zero failures. Commands, timings and the
+separate sanitizer retry are in the [validation record](validation/windows-smoke-2026-10-16.md#headless-checks).
+These dated checks establish infrastructure behavior at that commit, not
+gameplay fidelity or the status of later changes.
 
 The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
 rendered two quickstart worlds in one process, opened a base screen, advanced a
@@ -298,10 +302,15 @@ The next implementation slices are:
    keeping transport waits and presentation destruction outside its new guard.
    Both have tested narrow publication stacks as well as combined validation.
    They remain pending GitHub review; #77's findings are not marked resolved.
-   Native map construction publication and roster/settings mutation still need
-   separate lifetime fixes; queued cancellation alone is insufficient.
+   PR #102 now keeps map acquisition private until complete publication and
+   makes rooted empty-map traversal safe. PR #106 excludes collection during
+   native faction replacement. Both have controlled overlap regressions;
+   Player/Slot/Connection mutation and canonical roster ownership remain open.
+   Queued cancellation alone is insufficient.
    The script-entry guard in #82 has user-confirmed rendered restart evidence
-   on the pinned Mac integration; this does not establish clean shutdown.
+   on the pinned Mac integration. A later read-only follow-up confirmed exit 0
+   and a clean tracked shutdown for that process; see the
+   [native Mac receipt](validation/macos-native-2026-10-16.md).
    See the [pinned roster ownership plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md) for the
    canonical-faction work's native lifetime prerequisites.
 2. Resolve conventional-unit content from explicit component tables. Weapon,
@@ -332,8 +341,10 @@ The next implementation slices are:
    rasterizer matches 42 original cases, including 21,231 geometry records and
    11,414 successful samples. Supplied basis, origin and lookup tables remain
    explicit. Original basis conversion (#96) and its integer-only implementation
-   (#100) match 41 cases and 369 outputs. Camera/frame/scalar composition,
-   initial sample position and lighting/RGB preparation remain separate evidence
+   (#100) match 41 cases and 369 outputs. PR #101 supplies bounded original
+   caller/origin evidence; #104's checked dyadic calculation matches its 25
+   cases, 375 binary32 words and 300 integer outputs. Explicit camera/frame/scalar
+   inputs still require real callers. Lighting/RGB preparation remains separate evidence
    work; none of these helpers is a live conventional-unit rendering path.
    Do not turn the current native-unit movement assumptions into standard-unit
    behavior or invent reactor/cost defaults.
@@ -349,10 +360,12 @@ The next implementation slices are:
    capability and phase-specific event producers precede normal-game activation.
    Independent PR #98 calculates mineral cost factors from explicit resolved
    inputs and matches 2,021 retained original factor outputs; it does not compute
-   ranking/dominance or schedule construction. The next production slice stores
-   current item/minerals and independent retool baseline item/minerals in Base
-   snapshots. Initial target selection, posting, retooling, completion, ordered
-   queues and UI activation follow as separate validated changes.
+   ranking/dominance or schedule construction. PR #103 now stores optional
+   current item/minerals and independent retool baseline item/minerals in V4
+   Base snapshots, with detached script access and optimistic rollback tests.
+   It is integrated but still awaiting the GitHub review gate. Production
+   switching is the next arithmetic slice; initial target selection, posting,
+   completion, ordered queues and UI activation follow as validated changes.
 
 World downloads are now bound to the frozen host profile before map allocation,
 and faction snapshots preserve flags and ordered land/water names. Those
@@ -367,8 +380,9 @@ The checkpoint work has reviewed RNG-continuation and side-effect-free turn
 restoration candidates, with persisted completion now submitted in #77.
 Canonical player/faction links and turn checksums remain. The current
 world-download path is not a disk-save or deterministic replay implementation.
-Production still lacks authoritative current-item/mineral/baseline state, and
-its interface contains placeholder progress. Complete these dependencies in
+Production now has authoritative current-item/mineral/baseline storage in the
+integration; ordinary bases remain unconfigured and the interface still contains
+placeholder progress. Complete the producers, execution and command integration in
 small slices alongside conventional units and founding before claiming the M2
 conquest loop.
 
@@ -384,7 +398,15 @@ keep its evidence level distinct from full-game observations. See each PR's
 reviewed commit and checks for current validation, rather than treating this
 plan as proof that queued work has landed.
 
-GitHub Codex review reported quota failures on #85, #87 and #88 on October 16.
+The [October 17 integration receipt](validation/faction-transform-2026-10-17.md)
+records Linux sanitizer 8/8 and unchanged Windows follow-up 8/8 at `e52da37f`.
+It retains the earlier Windows native-filter child timeout as an unresolved
+intermittent failure. The corrected aggregate test allowance is a distinct
+change (#105), not a fix for that child timeout. No M0/M1 completion or playable
+conquest match is claimed by these results.
+
+GitHub Codex review reported quota failures on #85, #87, #88 and later new
+PRs through #106 on October 16.
 PR #86 did receive a clean receipt for its older `43a14890bb` head; that does
 not review its replacement head after prerequisites were merged forward.
 The new #81, #82, #86 and #87 heads still require their own completed reviews.

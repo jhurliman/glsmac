@@ -4,6 +4,17 @@
 
 namespace game::backend::base {
 
+uint32_t SmacBaseResourceContext::NewGameGovernorOptions( int32_t difficulty ) {
+	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error("Unknown startup governor difficulty"); }
+	return 0x00dfbe41u | ( difficulty == 0 ? GOVERNOR_ACTIVE | STARTUP_AUTOMATION : 0u );
+}
+
+SmacWorkerPriorityContext SmacBaseResourceContext::WorkerPriorities( const std::array<int32_t,5>& faction ) const {
+	return { true, GovernorActive(), bool(governor_options & 0x01000000u), bool(governor_options & 0x02000000u),
+		bool(governor_options & 0x04000000u), bool(governor_options & 0x08000000u),
+		{ faction[0], faction[1], faction[2], faction[3], faction[4] } };
+}
+
 void SmacBaseResourceContext::Validate() const {
 	if ( owner_simulation_id < 1 || owner_simulation_id > 7 || resource_events > 63 ) {
 		throw std::runtime_error( "Invalid SMAC base resource context" );

@@ -3347,6 +3347,7 @@ public:
 		std::vector< size_t > identities;
 		std::vector< std::string > order;
 		size_t errors = 0, spawn_hooks = 0, base_hooks = 0, turns = 0;
+		int64_t initial_minerals = -1;
 		bool partial_seal = false, raw_valid = true; std::string startup_error;
 		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
 		const SmacGameplayRandomState expected_random( 11, 29 ); size_t entropy = 0;
@@ -3391,9 +3392,15 @@ public:
 					RegisterEvent( name, new event::EventHandler( gc_space, name, static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
 						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
 				}
-				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, require ) {
+				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, &initial_minerals, require ) {
 					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( base, event, "base", base::Base );
 					require( m_game.GetTurnId() == 0 && base->HasSmacResourceContext() && base->GetSmacAllocation().has_value(), "default startup omitted canonical economy or reordered HQ" );
+					const auto& production = *base->GetProductionState();
+					// Founding credit uses Early INDUSTRY0. Recomputing its cost after
+					// first-turn refresh changes Sparta's half-cost rounding.
+					initial_minerals = m_game.GetSmacProductionCost( base->m_owner, production.current_item ) / 2;
+					require( production.minerals == initial_minerals && production.baseline_minerals == initial_minerals
+						&& production.baseline_item == production.current_item, "default founding credit/baseline did not use its Early cost" );
 					order.push_back( "hq" ); return VALUE( value::Undefined );
 				} ) );
 				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, call ) {
@@ -3602,7 +3609,7 @@ public:
 			if ( default_world ) {
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
 				auto* base=origin->base; const auto first=*base->GetProductionState();
-				const auto initial=m_game.GetSmacProductionCost(base->m_owner,first.current_item)/2;
+				const auto initial=initial_minerals;
 				GT_ASSERT(origin==m_game.GetMap()->GetTile(4,4) && base->GetSmacAllocation()->selected==1
 					&& base->GetSmacAllocation()->specialists.total_count==1,"default fixture did not retain its barren center and specialist");
 				GT_ASSERT(first.minerals==initial+1 && first.baseline_minerals==first.minerals && base->GetAccumulatedNutrients()==0,
@@ -3677,7 +3684,7 @@ public:
 	}
 
 
-	std::string CheckCanonicalFirstBase( int scenario, bool queued ) {
+	std::string CheckCanonicalFirstBase( int scenario, bool queued, int32_t original_difficulty = 3 ) {
 		using namespace game::backend;
 		using namespace game::backend::base;
 		const bool multiple=scenario>=9;
@@ -3746,10 +3753,13 @@ public:
 			else {require(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1,"arid first-worker literal changed");}
 			for(size_t i=1;i<16;++i) {require(allocation.specialists.types[i]==0,"fresh packed padding was fabricated from active type");}
 			const auto production=*base->GetProductionState();
-			const auto expected=scenario>=2 && scenario!=3 && !multiple?2:1;const auto credit=expected==1?8:4; // explicit tiny-world factor8
+			const auto expected=scenario>=2 && scenario!=3 && !multiple ? (original_difficulty<=1 ? 0 : 2) : 1;
+			const auto credit=m_game.GetSmacProductionCost(owner,m_game.MakeSmacProductionItem(owner,ProductionItemKind::Unit,expected))/2;
 			require(production.current_item.smac_source_id==expected && production.baseline_item==production.current_item
 				&& production.minerals==credit && production.baseline_minerals==credit && production.queue && production.queue->empty(),"initial target/credit/queue differs from turn-zero producer");
 			require(base->GetAccumulatedNutrients()==0,"initial nondeficit food was posted");
+			require(base->GetSmacResourceContext().governor_options==(original_difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u),"first Base did not copy global-difficulty governor defaults");
+			require(unit::SmacStartupDesignState::OriginalDifficulty(owner->GetPlayer()->GetDifficultyLevel())==original_difficulty,"stored human startup difficulty differs from selection");
 
 			if(multiple) {
 				using namespace game::backend::unit;
@@ -3768,7 +3778,7 @@ public:
 			require(m_game.m_simulation->value.gameplay_random==rng && m_game.GetRandom()->GetStateString()==jsf,"first Base consumed a random stream");
 		};
 		const char* faction=scenario==2?"SPARTANS":scenario==4?"HIVE":scenario==5?"UNIVERSITY":scenario==6?"MORGANITES":scenario==7?"BELIEVERS":scenario==8?"PEACEKEEPERS":"GAIANS";
-		const auto result=CheckSimulationStartup(queued,0,!multiple,false,0,false,0,false,false,create,source,multiple?"":faction,definitions);
+		const auto result=CheckSimulationStartup(queued,0,!multiple,false,original_difficulty-3,false,0,false,false,create,source,multiple?"":faction,definitions,true);
 		GT_ASSERT(result.empty(),"canonical first Base actual Start: "+result);
 		GT_ASSERT(callbacks==created.size() && callbacks==(multiple?2u:1u),"first Base callback replay/loss");
 		return WithScriptValues([&](GSE_CALLABLE)->std::string {
@@ -3832,7 +3842,7 @@ public:
 		});
 	}
 
-	std::string CheckStartingBaseContext( const bool queued, const bool wrong_difficulty ) {
+	std::string CheckStartingBaseContext( const bool queued, const int32_t difficulty ) {
 		using namespace game::backend;
 		size_t produced = 0;
 		const auto create = [ & ]( GSE_CALLABLE ) {
@@ -3842,16 +3852,10 @@ public:
 				return static_cast< value::Callable* >( wrapper->Get( "spawn_base" ) )->Run( GSE_CALL, {
 					m_state->m_slots->GetSlot( slot ).GetPlayer()->Wrap( GSE_CALL ), m_game.GetMap()->GetTile( x, 2 )->Wrap( GSE_CALL ), info } );
 			};
-			if ( wrong_difficulty ) {
-				const auto id = base::Base::GetNextId(); bool rejected = false;
-				try { spawn( 0, 0 ); } catch ( const std::exception& ) { rejected = true; }
-				if ( !rejected || base::Base::GetNextId() != id || !bm->GetBases().empty() || m_game.GetMap()->GetTile( 0, 2 )->base ) { throw std::runtime_error( "unsupported difficulty created a Base" ); }
-				return;
-			}
 			for ( size_t slot : { 0u, 2u, 6u } ) {
 				auto* value = spawn( slot, slot ); auto* base = base::Base::Unwrap( value ); const auto state = base->GetSmacResourceContext();
-				if ( m_game.GetTurnId() != 0 || state.golden_age || state.resource_events || state.resource_event_timer || state.governor_options != 0x00dfbe41u
-					|| state.GovernorActive() || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->retained ) {
+				if ( m_game.GetTurnId() != 0 || state.golden_age || state.resource_events || state.resource_event_timer || state.governor_options != (difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
+					|| state.GovernorActive() != (difficulty==0) || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->retained ) {
 					throw std::runtime_error( "first-base context producer or Early event position differs" );
 				}
 				++produced;
@@ -3860,14 +3864,14 @@ public:
 			try { spawn( 0, 4 ); } catch ( const std::exception& ) { rejected = true; }
 			if ( !rejected || base::Base::GetNextId() != id || bm->GetBases().size() != 3 || m_game.GetMap()->GetTile( 4, 2 )->base ) { throw std::runtime_error( "repeated first-base producer created effects" ); }
 		};
-		const auto result = CheckSimulationStartup( queued, 0, false, false, wrong_difficulty ? -3 : 0, false, 0, false, false, create );
+		const auto result = CheckSimulationStartup( queued, 0, false, false, difficulty-3, false, 0, false, false, create );
 		GT_ASSERT( result.empty(), "Base actual claimed Start: " + result );
-		GT_ASSERT( produced == ( wrong_difficulty ? 0u : 3u ), "first-base event lost or duplicated" );
+		GT_ASSERT( produced == 3u, "first-base event lost or duplicated" );
 		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			std::vector< size_t > retired;
 			for ( const auto& entry : m_game.GetBM()->GetBases() ) {
 				const auto context = entry.second->GetSmacResourceContext();
-				GT_ASSERT( !context.golden_age && !context.resource_events && context.resource_event_timer == 0 && context.governor_options == 0x00dfbe41u, "first turn reset or recomputed resource context" );
+				GT_ASSERT( !context.golden_age && !context.resource_events && context.resource_event_timer == 0 && context.governor_options == (difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u), "first turn reset or recomputed resource context" );
 				retired.push_back( entry.first );
 			}
 			// Isolate the claimed-Start guard from the independent first-Base gate.
@@ -3880,7 +3884,7 @@ public:
 	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false,
 		const std::function< void( GSE_CALLABLE ) >& create_base = {},
 		const std::function< std::string(const std::string&) >& startup_source = {}, const std::string& first_faction = {},
-		const std::function< void( GSE_CALLABLE ) >& before_create_event = {} ) {
+		const std::function< void( GSE_CALLABLE ) >& before_create_event = {}, const bool copy_human_difficulty = false ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
@@ -3903,6 +3907,9 @@ public:
 			m_state->m_slots->GetSlot(0).GetPlayer()->SetFaction(m_state->GetFM()->Get(first_faction));
 		}
 		settings.difficulty_level = failure == 1 ? INT64_MAX : failure == 2 ? INT64_MIN : failure == 3 ? 3 : difficulty;
+		if (copy_human_difficulty) {
+			for (auto* player:m_state->m_players) {player->SetDifficultyLevel(settings.rules.m_difficulty_levels.GetVK().at(static_cast<int>(difficulty)));}
+		}
 		size_t entropy_calls = 0, random_observations = 0; bool random_valid = true;
 		const SmacGameplayRandomState expected_random( 0, zero_random ? 0 : UINT32_MAX );
 		auto original_source = m_game.m_gameplay_entropy_word_source;
@@ -3998,6 +4005,32 @@ public:
 			GT_ASSERT( rejected.empty(), "failed admission consumer boundary: " + rejected );
 			GT_ASSERT( entropy_calls == ( failure == 6 ? 1u : failure == 7 || failure == 4 ? 2u : 0u ) && m_game.GetRandom()->GetStateString() == before_rng,
 				"failed admission sampled entropy at the wrong boundary or changed JSF" ); GT_OK();
+		}
+		// Canonical Base upkeep can pause for the first real research target.
+		// Answer the offered request before expecting the final turn notification;
+		// never bypass the continuation by assigning technology state directly.
+		if ( m_game.m_research_request ) {
+			const auto answered = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				size_t answers = 0;
+				while ( m_game.m_research_request ) {
+					GT_ASSERT( m_game.m_simulation && ++answers <= m_game.m_simulation->value.roster.size()
+						&& m_game.GetTurnId() == 1 && m_game.m_canonical_continuation && social_turns == 0,
+						"first research choice lost its suspended startup or repeated an owner" );
+					const auto request = *m_game.m_research_request;
+					GT_ASSERT( !request.bonus && !request.choices.empty(), "startup did not offer an ordinary research target" );
+					const auto& continuation = *m_game.m_canonical_continuation;
+					auto* base = m_game.GetBM()->GetBase( continuation.owners.at( continuation.owner_index ).second.at( continuation.base_index ) );
+					const auto minerals = base->GetProductionState()->minerals;
+					const auto food = base->GetAccumulatedNutrients();
+					m_game.Event( GSE_CALL, "choose_research", { { "request_id", VALUE( value::Int,, request.id ) },
+						{ "technology_id", VALUE( value::Int,, request.choices.front() ) } } );
+					m_game.ProcessEvents();
+					GT_ASSERT( base->GetProductionState()->minerals == minerals && base->GetAccumulatedNutrients() == food,
+						"research answer replayed the already posted Base resources" );
+				}
+				GT_ASSERT( !m_game.m_canonical_continuation, "research answers left the first turn suspended" ); GT_OK();
+			} );
+			GT_ASSERT( answered.empty(), "startup research continuation: " + answered );
 		}
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
@@ -4985,10 +5018,10 @@ private:
 	std::unique_ptr< GLSMAC > m_glsmac;
 };
 
-std::string CheckSmacFirstBaseFixture(int scenario,bool queued) { BackendFixture fixture; return fixture.CheckCanonicalFirstBase(scenario,queued); }
+std::string CheckSmacFirstBaseFixture(int scenario,bool queued,int32_t difficulty) { BackendFixture fixture; return fixture.CheckCanonicalFirstBase(scenario,queued,difficulty); }
 
-std::string CheckSmacBaseStartupFixture( const bool queued, const bool wrong_difficulty ) {
-	BackendFixture fixture; return fixture.CheckStartingBaseContext( queued, wrong_difficulty );
+std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t difficulty ) {
+	BackendFixture fixture; return fixture.CheckStartingBaseContext( queued, difficulty );
 }
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
@@ -7293,7 +7326,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "test single-player setup selects a configured faction before roster publication", GT() {
 		using namespace game::backend;
-		for ( const auto& selected : { std::optional< std::string >{}, std::optional< std::string >{ "SPARTANS" } } ) {
+		for (int difficulty=-3;difficulty<=2;++difficulty) for ( const auto& selected : { std::optional< std::string >{}, std::optional< std::string >{ "SPARTANS" } } ) {
 			BackendFixture fixture;
 			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* state = fixture.GetGame()->GetState();
@@ -7302,6 +7335,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				state->m_settings.local.network_role = settings::LocalSettings::NR_NONE;
 				state->GetFM()->Add( new faction::Faction( "SPARTANS", "Translated faction label" ) );
 				const auto name = state->m_settings.local.player_name;
+				state->m_settings.global.difficulty_level=difficulty;
 				GT_ASSERT( RejectsSettings( [ & ] { fixture.SelectSinglePlayerFaction( "UNKNOWN" ); } ), "unknown faction reached local roster" );
 				GT_ASSERT( state->m_slots->GetSlots().empty() && state->m_settings.local.player_name == name, "rejected faction changed setup" );
 				state->m_settings.local.network_role = settings::LocalSettings::NR_SERVER;
@@ -7310,6 +7344,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				fixture.SelectSinglePlayerFaction( selected );
 				auto* player = state->m_slots->GetSlot( 0 ).GetPlayer();
 				GT_ASSERT( player->GetRole() == Player::PR_SINGLE, "local roster did not use single-player role" );
+				GT_ASSERT(player->GetDifficultyLevel()==state->m_settings.global.rules.m_difficulty_levels.GetVK().at(difficulty),"selected difficulty did not reach stored human owner");
 				GT_ASSERT( player->GetFaction() == ( selected ? state->GetFM()->Get( *selected ) : nullptr ), "chosen faction ID was lost or Random was preselected" );
 				GT_ASSERT( RejectsSettings( [ & ] { fixture.SelectSinglePlayerFaction( "GAIANS" ); } ) && state->m_slots->GetSlot( 0 ).GetPlayer() == player, "second choice replaced an existing roster" );
 				GT_OK();

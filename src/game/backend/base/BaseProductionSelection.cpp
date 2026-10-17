@@ -134,12 +134,19 @@ void Base::SelectSmacProduction( GSE_CALLABLE, const int32_t source_id, const st
     const auto result = PrepareSmacProductionSelection( source_id, confirm );
     if ( result.penalty_cancelled || result.state == *m_production ) { return; }
     std::optional< ProductionState > replacement = result.state;
+    auto context = GetSmacResourceContext();
+    if (!(result.state.current_item == m_production->current_item) && (context.governor_options & SmacBaseResourceContext::STARTUP_AUTOMATION)) {
+        context.governor_options &= ~(SmacBaseResourceContext::GOVERNOR_ACTIVE | SmacBaseResourceContext::STARTUP_AUTOMATION);
+    }
     auto updates = bm->m_base_updates;
     BaseManager::QueueBaseUpdateInto( updates, this, BaseManager::BUO_REFRESH );
     std::unique_lock lock( bm->m_updated_bases_mutex );
     auto triggers = bm->m_updated_bases; triggers.insert( this );
     static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
-    m_production.swap( replacement ); bm->m_base_updates.swap( updates ); bm->m_updated_bases.swap( triggers );
+    // GetSmacResourceContext authenticated the engaged record before staging.
+    // Assign that record directly; libc++ does not annotate optional assignment noexcept.
+    static_assert( std::is_nothrow_copy_assignable_v< decltype(context) > );
+    m_production.swap( replacement ); *m_resource_context = context; bm->m_base_updates.swap( updates ); bm->m_updated_bases.swap( triggers );
 }
 }
 }

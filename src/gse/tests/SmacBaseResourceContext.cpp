@@ -242,8 +242,12 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	for ( bool queued : { false, true } ) {
-		task->AddTest( std::string( "SMAC Base first resource producer uses actual claimed " ) + ( queued ? "queued" : "immediate" ) + " Start", [ queued ]( GSE*, context::Context* ) -> std::string { return CheckSmacBaseStartupFixture( queued, false ); } );
+		task->AddTest( std::string( "SMAC Base first resource producer uses actual claimed " ) + ( queued ? "queued" : "immediate" ) + " Start", [ queued ]( GSE*, context::Context* ) -> std::string { return CheckSmacBaseStartupFixture( queued, 3 ); } );
 	}
-	task->AddTest( "SMAC Base first resource producer rejects unproved difficulty before identity effects", []( GSE*, context::Context* ) -> std::string { return CheckSmacBaseStartupFixture( false, true ); } );
+	task->AddTest( "SMAC Base first resource producer copies global governor defaults at all six difficulties", []( GSE*, context::Context* ) -> std::string {
+		for(int32_t difficulty=0;difficulty<6;++difficulty) {
+			const auto result=CheckSmacBaseStartupFixture(false,difficulty);if(!result.empty()){return result;}
+		} GT_OK();
+	} );
 }
 }

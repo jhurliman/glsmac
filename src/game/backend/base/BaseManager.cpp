@@ -181,7 +181,6 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 	// population, production, facility or citizen-allocation package.
 	m_game->RequireConventionalStartupClaim();
 	m_game->ValidateCurrentSimulation();
-	if ( m_game->m_simulation->value.designs.global_difficulty != 3 ) { THROW( "Starting base governor producer is admitted only at original difficulty 3" ); }
 	for ( const auto& item : m_bases ) {
 		if ( item.second->m_owner == owner ) { THROW( "Starting base resource producer requires the participant's first Base" ); }
 	}
@@ -189,7 +188,7 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 		if ( &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner ) {
 			// Drone riots begin false by explicit GLSMAC new-campaign policy.
 			// Later citizen calculation owns changes; restore never replays this.
-			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, 0x00dfbe41u, false };
+			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, SmacBaseResourceContext::NewGameGovernorOptions(m_game->m_simulation->value.designs.global_difficulty), false };
 			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
 			return result;
 		}

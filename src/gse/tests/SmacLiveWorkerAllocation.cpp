@@ -259,7 +259,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 const auto& rows=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog.units;
                 const auto row=std::find_if(rows.begin(),rows.end(),[](const auto& value){return value.source_id==2;});
                 GT_ASSERT(row!=rows.end(),"fixture lacks actual Scout source");
+                const int32_t difficulty=support==-2 ? 0 : 5;
+                game->GetState()->m_settings.global.difficulty_level=difficulty-3;
                 fixture.ResourceState([&](auto& state){
+                    state.designs.global_difficulty=difficulty;
                     state.social.factions.front().retained->at(2)=support;
                     state.social.factions.front().current[2]=support==-2 ? 3 : -4;
                     // Explicit owner1 custom ID64, identical score to actual source2.
@@ -276,7 +279,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 auto* founded=site->base;
                 GT_ASSERT(founded && founded->GetProductionState()->current_item.smac_source_id==64
                     && founded->GetProductionState()->minerals==(support==-2 ? 0 : game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption),
-                    "founding hardcoded Scout or substituted current SUPPORT for retained credit"); GT_OK();
+                    "founding hardcoded Scout or substituted current SUPPORT for retained credit");
+                GT_ASSERT(founded->GetSmacResourceContext().governor_options==(difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
+                    && base->GetSmacResourceContext().governor_options==0x40u,"later founding copied another Base override instead of the initial faction default"); GT_OK();
             });GT_ASSERT(error.empty(),"founding selection: "+error);
         } GT_OK();
     });
@@ -303,6 +308,75 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(despawns==1,"existing Unit did not emit one despawn"); GT_OK();
         });
     });
+
+	task->AddTest( "SMAC startup governor marker changes only on an accepted different production event", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,false); SelectionPresentations(fixture);
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+			const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+			const ProductionState original{scout,0,scout,0,std::vector<ProductionItem>{scout}};
+			const auto allocation=*base->GetSmacAllocation();const auto pair=fixture.GameplayRandom();
+			// Exact eight original prelude configurations. The port event commits
+			// the accepted item and marker together; modal cancellation is separate.
+			for(uint32_t flags:{0xc0dfbe41u,0x00dfbe41u,0x80dfbe41u,0x40dfbe41u}) {
+				for(bool change:{false,true}) {
+					base->SetProductionState(GSE_CALL,original);
+					auto context=base->GetSmacResourceContext();context.governor_options=flags;base->SetSmacResourceContext(GSE_CALL,context);
+					const auto before=fixture.Snapshot();const auto target=change?1:2;
+					std::optional<int64_t> shown;
+					auto* choices=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_choices"));
+					for(auto* entry:static_cast<value::Array*>(choices->Get("choices"))->value) {
+						auto* choice=static_cast<value::Object*>(entry);
+						if(static_cast<value::Int*>(choice->Get("source_id"))->value==target) {shown=static_cast<value::Int*>(choice->Get("minerals"))->value;}
+					}
+					GT_ASSERT(shown.has_value(),"supported production choice is absent");
+					GT_ASSERT(fixture.Snapshot()==before,"production preview cleared startup automation");
+					const auto expected=SerializeProductionState(base->GetProductionState()).ToString();
+					game->Event(GSE_CALL,"select_smac_production",{{"base",base->Wrap(GSE_CALL)},
+						{"source_id",VALUE(value::Int,,target)},{"expected_state",VALUE(value::String,,expected)},
+						{"expected_minerals",VALUE(value::Int,,*shown)},{"confirm",VALUE(value::Bool,,true)}});
+					fixture.DrainEvents();
+					const auto after=base->GetSmacResourceContext();
+					context.governor_options=change && (flags&0x40000000u)?flags&0x3fffffffu:flags;
+					GT_ASSERT(after==context && base->GetSmacAllocation()==allocation && fixture.GameplayRandom()==pair,
+						"production event changed permissions, allocation or RNG, or lost marker semantics");
+					GT_ASSERT(base->GetProductionState()->current_item.smac_source_id==target
+						&& base->GetProductionState()->queue==original.queue && base->GetProductionState()->baseline_item==scout,
+						"governor override changed queue or baseline");
+					GT_ASSERT(DeserializeSmacBaseResourceContext(SerializeSmacBaseResourceContext(after))==std::optional<SmacBaseResourceContext>(after),
+						"restore recomputed saved governor state");
+				}
+			} GT_OK();
+		});
+	});
+	task->AddTest( "SMAC active governor uses saved management and current phase in live allocation", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"GAIANS");
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true));
+			auto context=base->GetSmacResourceContext();context.governor_options=0xc0dfbe41u;base->SetSmacResourceContext(GSE_CALL,context);
+			const auto before=*base->GetSmacAllocation();const auto pair=fixture.GameplayRandom();auto* pop=&base->m_pops.at(19);
+			base->RecalculateSmacWorkers(GSE_CALL,Roles());
+			GT_ASSERT(base->GetSmacAllocation()==before,"ordinary active-governor query discarded a valid Doctor");
+			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+			GT_ASSERT(base->GetSmacAllocation()==before && &base->m_pops.at(19)==pop && !pop->GetWorkedTile(),
+				"managed upkeep discarded a retained Doctor");
+			// Managed upkeep skips old worker collection, not the retained Doctor
+			// budget. Use a complete worker allocation to distinguish the phases.
+			auto worker=before;worker.selected=3;worker.specialists.total_count=0;
+			base->PublishSmacAllocation(GSE_CALL,worker,Roles());
+			base->RecalculateSmacWorkers(GSE_CALL,Roles());
+			GT_ASSERT(base->GetSmacAllocation()==worker && &base->m_pops.at(19)==pop
+				&& pop->GetWorkedTile()==game->GetMap()->GetTile(3,1),"ordinary managed allocation replaced its complete worker");
+			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+			GT_ASSERT(base->GetSmacAllocation()->selected==5 && base->GetSmacAllocation()->specialists.total_count==0
+				&& &base->m_pops.at(19)==pop && pop->GetWorkedTile()==game->GetMap()->GetTile(4,2),
+				"managed upkeep did not choose the actual productive square");
+			GT_ASSERT(base->GetSmacResourceContext()==context && fixture.GameplayRandom()==pair,"worker allocation cleared governor bits or spent RNG");
+			GT_OK();
+		});
+	});
 	task->AddTest( "SMAC production picker selects Former and Colony through real events and upkeep", []( GSE*, context::Context* ) -> std::string {
 		for ( const int target_id : { 1, 0 } ) {
 			ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
@@ -800,9 +874,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue() );
-			for ( int scenario = 0; scenario < 6; ++scenario ) {
+			for ( int scenario = 1; scenario < 6; ++scenario ) {
 				auto roles = Roles(); auto context = base->GetSmacResourceContext(); auto* candidate = game->GetMap()->GetTile( 4, 2 );
-				if ( scenario == 0 ) { context.governor_options |= SmacBaseResourceContext::GOVERNOR_ACTIVE; base->SetSmacResourceContext( GSE_CALL, context ); }
 				if ( scenario == 1 ) { base->SetProductionState( GSE_CALL, std::nullopt ); }
 				if ( scenario == 2 ) { base->SetProductionState( GSE_CALL, Production( ProductionItemKind::Project ) ); }
 				if ( scenario == 3 ) { base->SetProductionState( GSE_CALL, Production( ProductionItemKind::Orbital ) ); }

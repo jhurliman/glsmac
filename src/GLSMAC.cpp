@@ -650,9 +650,12 @@ void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id
 		THROW( "Unknown faction for the configured ruleset: " + *faction_id );
 	}
     const auto& rules = m_state->m_settings.global.rules;
+    if (m_state->m_settings.global.difficulty_level < INT32_MIN || m_state->m_settings.global.difficulty_level > INT32_MAX) { THROW("Unknown single-player difficulty"); }
+    const auto difficulty = rules.m_difficulty_levels.GetVK().find( static_cast<int>(m_state->m_settings.global.difficulty_level) );
+    if (difficulty == rules.m_difficulty_levels.GetVK().end()) { THROW("Unknown single-player difficulty"); }
     m_state->m_settings.local.player_name = "Player";
     m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, game::backend::roster::Role::Single,
-        faction_id, rules.GetDefaultDifficultyLevel()},
+        faction_id, difficulty->second},
         m_state->m_settings.local.account.GetGSID(), 0, "", false);
     m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
 

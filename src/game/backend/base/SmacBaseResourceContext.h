@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include "types/Buffer.h"
+#include "SmacWorkerAllocationRules.h"
 
 namespace game::backend::base {
 
@@ -12,6 +13,7 @@ struct SmacBaseResourceContext {
 	static constexpr uint32_t MAX_WIRE_BYTES = 5 * 14 + 3 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
+	static constexpr uint32_t STARTUP_AUTOMATION = 0x40000000u;
 	enum Event : uint8_t {
 		BumperCrop = 1, Famine = 2, IndustrialBoom = 4,
 		IndustrialBust = 8, HeatWave = 16, CloudCover = 32,
@@ -25,6 +27,11 @@ struct SmacBaseResourceContext {
 	bool drone_riots; // saved actual status; queries never derive it from population
 
 	void Validate() const;
+	// Global startup difficulty precedes stored owner difficulty in the original.
+	// The current port has no governor-preference editor: new Bases copy this
+	// unchanged default; saved Base options are never reset from it.
+	static uint32_t NewGameGovernorOptions( int32_t global_difficulty );
+	SmacWorkerPriorityContext WorkerPriorities( const std::array<int32_t,5>& faction ) const;
 	bool GovernorActive() const { return ( governor_options & GOVERNOR_ACTIVE ) != 0; }
 	bool ManageCitizens() const { return ( governor_options & MANAGE_CITIZENS ) != 0; }
 	bool HasEvent( Event event ) const { return ( resource_events & event ) != 0; }

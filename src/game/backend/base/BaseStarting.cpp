@@ -68,7 +68,8 @@ Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::
     }
     auto target=m_game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,1);
     if (!m_game->HasSmacProductionPrerequisite(owner,target)) {
-        target=m_game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,2);
+        const auto difficulty=unit::SmacStartupDesignState::OriginalDifficulty(owner->GetPlayer()->GetDifficultyLevel());
+        target=m_game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,difficulty<=1 ? 0 : 2);
     }
     const int64_t credit=m_game->GetSmacProductionCost(owner,target)/2;
     const ProductionState production{target,credit,target,credit,std::vector<ProductionItem>{}};
@@ -102,7 +103,7 @@ Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::
     // Actual creator seed: selected/count zero. Unused packed slots are fresh
     // zero storage in GLSMAC, not a claim about reused original Base records.
     const auto result=SmacAutomaticWorkerAllocation::Allocate({1,0,global.GetSmacResourceRules()->nutrients_per_citizen,0,
-        SmacWorkerProduction::Unit,{true,false,false,false,false,false,{}},context.ManageCitizens(),false,
+        SmacWorkerProduction::Unit,context.WorkerPriorities(profile->worker_priorities),context.ManageCitizens(),false,
         0,knowledge.unavailable,prefix,{{},0},catalog,std::nullopt},query);
     candidate->m_allocation=SmacBaseAllocationState{result.workers.visited,result.specialists};
     const auto coordinates=candidate->AllocationCoordinates(*candidate->m_allocation);

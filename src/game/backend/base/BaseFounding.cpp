@@ -31,9 +31,8 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
     }
     const auto& global=m_game->GetState()->m_settings.global;
     if ((global.map.type!=settings::MapSettings::MT_RANDOM && global.map.type!=settings::MapSettings::MT_CUSTOM)
-        || m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain
-        || m_game->m_simulation->value.designs.global_difficulty!=3) {
-        THROW("Running founding currently admits the ordinary generated difficulty-3 no-project campaign");
+        || m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
+        THROW("Running founding currently admits the ordinary generated no-project campaign");
     }
     auto* tile=colony.GetTile();
     if (!tile || tile->tiles!=m_game->GetMap()->GetTilesPtr() || tile->base || tile->is_water_tile || tile->IsLocked()
@@ -67,7 +66,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     const auto* technology=m_game->m_simulation->value.technology.Find(simulation_id);
     const auto* social=m_game->m_simulation->value.social.Find(simulation_id);
     if (!profile || !technology || !social || !social->retained) {THROW("Founding requires actual retained owner inputs");}
-    SmacBaseResourceContext context{simulation_id,false,0,0,0x00dfbe41u,false};
+    SmacBaseResourceContext context{simulation_id,false,0,0,SmacBaseResourceContext::NewGameGovernorOptions(m_game->m_simulation->value.designs.global_difficulty),false};
     ValidateSmacResourceContext(context,owner,owner->GetPlayer()->GetFaction());
     const auto* worker=GetPopDef(roles[0]);
     if (!worker || !(worker->m_flags & PopDef::PF_TILE_WORKER) || worker->m_smac_specialist_id) {THROW("Founding worker role is invalid");}
@@ -126,7 +125,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     // its old home until this one transaction removes it.
     const auto result=SmacAutomaticWorkerAllocation::Allocate({1,static_cast<int32_t>(m_game->GetTurnId()),
         global.GetSmacResourceRules()->nutrients_per_citizen,0,SmacWorkerProduction::Unit,
-        {true,false,false,false,false,false,{}},context.ManageCitizens(),false,0,unavailable,prefix,{{},0},catalog,std::nullopt},query);
+        context.WorkerPriorities(profile->worker_priorities),context.ManageCitizens(),false,0,unavailable,prefix,{{},0},catalog,std::nullopt},query);
     candidate->m_allocation=SmacBaseAllocationState{result.workers.visited,result.specialists};
     const auto coordinates=candidate->AllocationCoordinates(*candidate->m_allocation);
     candidate->m_pops.at(1)=coordinates.empty() ? Pop(nullptr,1,specialists.at(result.specialists.types[0]),0)

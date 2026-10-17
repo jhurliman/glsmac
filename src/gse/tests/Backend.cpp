@@ -3259,7 +3259,16 @@ public:
 	std::string CheckCanonicalFirstBase( int scenario, bool queued ) {
 		using namespace game::backend;
 		using namespace game::backend::base;
-		const auto source=[](const std::string& filename) {
+		if (scenario==9) {
+			// This scenario exercises actual Scout sight, whose admitted minimum
+			// width is ten. Keep the owned map and accepted preset consistent.
+			m_gse->GetGCSpace()->Accumulate(m_gse,[&]() {
+				NEWV(map,map::Map,&m_game,10,8); m_map.reset(map); m_game.m_map=map;
+				map->GetTilesPtr()->Clear();
+				for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<10;x+=2) {map->GetTile(x,y)->Update();}}
+			});
+		}
+		const auto source=[scenario](const std::string& filename) {
 			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
 			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
 			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
@@ -3270,6 +3279,7 @@ public:
 					const auto value=row==0?"3":row==1?"2":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":nullptr;
 					if(value) {line.replace(0,line.find(','),value);}
 				}
+				if(scenario==9 && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
 				if(section=="#RESOURCEINFO" && row<9) {line="Owned row";for(auto value:yields[row]) {line+=","+std::to_string(value);}}
 				if(section=="#CITIZENS" && row<7) {
 					line="Role,Roles,"+std::string(row<2?"None":"Tech80")+",Disable";
@@ -3590,7 +3600,7 @@ public:
 			if ( cancellation == 2 ) { m_game.Iterate(); }
 			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_simulation && !m_game.m_pending_simulation, "reset retained admitted or staged simulation state" );
 		}
-		else { GT_ASSERT( m_game.IsRunning() && m_game.GetTurnId() == 1 && m_game.m_simulation, "admitted simulation did not reach real first turn" ); }
+		else { GT_ASSERT( m_game.IsRunning() && m_game.GetTurnId() == 1 && m_game.m_simulation, "admitted simulation did not reach real first turn: " + m_game.m_initialization_error ); }
 		GT_ASSERT( social_hook_valid && social_turns == ( cancellation == 1 ? 0u : 1u ), "first authoritative turn hook missed staged social state or ran twice" );
 		GT_ASSERT( unit_turns == ( consumers ? 1u : 0u ) && base_turns == ( consumers ? 1u : 0u ), "actual entity upkeep missed first social transition" );
 		GT_OK();

@@ -11,9 +11,9 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V8 also binds the frozen predefined unit sources and derived records.
-// V1..V7 downloads are unsupported. JSF32, turn and body codecs are unchanged.
-inline constexpr int64_t rules_version = 8;
+// V9 adds explicit simulation admission and mutable technology state after
+// the existing RNG/turn prefix. V1..V8 downloads are unsupported.
+inline constexpr int64_t rules_version = 9;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

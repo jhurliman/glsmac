@@ -93,6 +93,19 @@ protected:
 	}
 };
 
+// Private transport for the simulation fixtures: real MT queues, no sockets.
+class SimulationTransport final : public network::Network {
+public:
+	~SimulationTransport() override { Stop(); }
+protected:
+	network::MT_Response ListenStart() override { return Success(); }
+	network::MT_Response ListenStop() override { return Success(); }
+	network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+	network::MT_Response Disconnect() override { return Success(); }
+	network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+	void ProcessEvents() override { GetEvents(); }
+};
+
 // Real backend objects and event dispatch; no game start, renderer, network
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
@@ -899,7 +912,7 @@ public:
 			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
 			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
 			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
-			bytes.WriteString( bad_tiles.ToString() );
+			bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
 			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
 			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
 		} );
@@ -2390,6 +2403,317 @@ public:
 			m_game.m_am = new game::backend::animation::AnimationManager( &m_game );
 		} );
 	}
+
+	// Explicit accepted participants for simulation tests. This uses the live
+	// State producer, unlike older decoder fixtures' synthetic Slot pointers.
+	void EnableSimulationParticipants( const std::vector< size_t >& ids = { 0, 2, 6 }, const size_t local = 0 ) {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			using namespace game::backend;
+			m_state->m_settings.global.Initialize();
+			m_state->RetireRosterEpoch();
+			for ( auto* player : m_state->m_players ) { DELETE( player ); }
+			m_state->m_players.clear(); m_state->m_slots->Clear(); m_state->m_cid_slots.clear(); m_state->EnsureRosterEpoch();
+			for ( const auto* id : { "UNIVERSITY", "HIVE" } ) {
+				if ( !m_state->GetFM()->Get( id ) ) { m_state->GetFM()->Add( new faction::Faction( id, id ) ); }
+			}
+			for ( const auto id : ids ) {
+				const auto role = id == 0 ? ( m_state->GetConnection() ? roster::Role::Host : roster::Role::Single ) : roster::Role::Player;
+				m_state->CreatePlayerSlot( id, { "Participant", role, id == 2 ? "UNIVERSITY" : "GAIANS", "Citizen" },
+					( id == 2 ? m_state->m_settings.local.account.GetGSID() : "simulation-controller-" + std::to_string( id ) ), id + 1, "fixture", true );
+			}
+			m_game.m_slot_num = local; m_game.m_slot = &m_state->m_slots->GetSlot( local ); m_game.m_player = m_game.m_slot->GetPlayer();
+		} );
+	}
+	void AdmitSimulationForSnapshotFixture() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() { m_game.PrepareNewSimulation(); } );
+	}
+	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false ) {
+		using namespace game::backend;
+		EnableWorldSnapshot();
+		auto& settings = m_state->m_settings.global;
+		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+		if ( host ) {
+			class Server final : public connection::Server {
+			public:
+				Server( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Server( space, settings, network ) {}
+			};
+			m_simulation_transport = std::make_unique< SimulationTransport >();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() { m_state->SetConnection( new Server( m_gse->GetGCSpace(), &m_state->m_settings.local, m_simulation_transport.get() ) ); } );
+		}
+		EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 } );
+		Value* observed = nullptr;
+		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
+		const auto before_rng = m_game.GetRandom()->GetStateString();
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_game.m_tm = new map::tile::TileManager( &m_game );
+			const auto helper = static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/tests/_simulation_state" ) );
+			observed = helper->Run( GSE_CALL, { m_game.Wrap( GSE_CALL ) } ); m_gse->AddRootObject( observed );
+			auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/advance_turn" ) );
+			RegisterEvent( "advance_turn", new event::EventHandler( gc_space, "advance_turn", static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+				static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+			ticket = FixtureWorldTicket(); m_game.m_active_admission->connection = m_state->GetConnection(); m_game.m_active_admission->stage = Game::StartupStage::Start; m_game.m_game_state = Game::GS_STARTING;
+			if ( cancellation == 2 ) {
+				m_game.On( GSE_CALL, "start", NATIVE_CALL( this, &reset, ticket ) {
+					std::thread worker( [ & ]() { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); } ); worker.join();
+					return VALUE( value::Undefined );
+				} ) );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "simulation setup: " + setup );
+		util::FinallyGuard roots( [ & ]() { m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { m_gse->RemoveRootObject( observed ); } ); } );
+		m_map.release(); util::FinallyGuard recover( [ & ]() { m_map.reset( m_game.m_map ); } );
+		if ( queued ) {
+			std::exception_ptr error; std::thread worker( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } ); worker.join();
+			if ( error ) { std::rethrow_exception( error ); }
+			GT_ASSERT( !m_game.m_simulation && m_game.OwnerBlocksNative(), "pending Start published simulation before owner claim" );
+			if ( cancellation == 1 ) { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); }
+			ProcessAccumulations();
+		}
+		else { m_game.Iterate(); }
+		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
+			GT_ASSERT( records->value.size() == ( cancellation == 1 ? 0u : 2u ), "actual create/start consumers did not observe one admitted simulation" );
+			for ( size_t phase = 0; phase < records->value.size(); ++phase ) {
+				const auto record = static_cast< value::Object* >( records->value[ phase ] );
+				GT_ASSERT( static_cast< value::String* >( record->Get( "phase" ) )->value == ( phase ? "start" : "create" )
+					&& static_cast< value::Int* >( record->Get( "turn" ) )->value == 0, "simulation was initialized after founding/first turn" );
+				const auto participants = static_cast< value::Array* >( record->Get( "participants" ) );
+				GT_ASSERT( participants->value.size() == ( single ? 1u : 3u ), "unoccupied factions were admitted" );
+				for ( size_t i = 0; i < participants->value.size(); ++i ) {
+					const auto participant = static_cast< value::Object* >( participants->value[ i ] );
+					GT_ASSERT( static_cast< value::Int* >( participant->Get( "id" ) )->value == static_cast< int64_t >( i + 1 ), "dense policy inferred simulation ID from transport index" );
+					for ( const auto* key : { "before", "after" } ) {
+						const auto state = static_cast< value::Object* >( participant->Get( key ) );
+						GT_ASSERT( static_cast< value::Int* >( state->Get( "labs" ) )->value == 0 && static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value.size() == 89,
+							"script copy changed authoritative research state" );
+						GT_ASSERT( static_cast< value::Bool* >( static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value[ 2 ] )->value, "startup grant missing or script copy mutated ownership" );
+					}
+				}
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( check.empty(), "simulation consumer: " + check );
+		GT_ASSERT( m_game.GetRandom()->GetStateString() == before_rng, "simulation admission consumed RNG" );
+		if ( cancellation ) {
+			if ( cancellation == 2 ) { m_game.Iterate(); }
+			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_simulation && !m_game.m_pending_simulation, "reset retained admitted or staged simulation state" );
+		}
+		else { GT_ASSERT( m_game.IsRunning() && m_game.GetTurnId() == 1 && m_game.m_simulation, "admitted simulation did not reach real first turn" ); }
+		GT_OK();
+	}
+
+	std::string CheckSimulationRestore( const bool queued, const int failure ) {
+		using namespace game::backend;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void Receive( const types::Packet& packet ) { network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event ); }
+			const std::string& ErrorReason() const { return m_disconnect_reason; }
+		};
+		BackendFixture source;
+		source.EnableWorldSnapshot(); EnableWorldSnapshot();
+		const auto prepared = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			source.m_state->SetConnection( new RecordingConnection( gc_space ) );
+			auto& settings = source.m_state->m_settings.global;
+			settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			source.EnableSimulationParticipants(); source.m_game.PrepareNewSimulation();
+			auto& value = source.m_game.m_simulation->value;
+			const int32_t ids[] = { 7, 2, 5 };
+			for ( size_t i = 0; i < value.roster.size(); ++i ) {
+				value.roster[ i ].simulation_id = ids[ i ];
+				auto& tech = value.technology.factions[ i ]; tech.admission.simulation_id = ids[ i ];
+				tech.owned.fill( false ); tech.owned[ 88 - i ] = true;
+				tech.labs = -123 - static_cast< int32_t >( i ); tech.score = INT32_MAX; tech.future_count = 4;
+				tech.target = 88; tech.cached_threshold = INT32_MIN;
+			}
+			source.SetSnapshotTurn( 37 ); source.m_state->m_slots->GetSlot( 6 ).GetPlayer()->CompleteTurn();
+			GT_OK();
+		} );
+		GT_ASSERT( prepared.empty(), "simulation source: " + prepared );
+		const auto expected = source.m_game.m_simulation->value;
+		const auto snapshot = source.WorldSnapshot(); const auto random = source.m_game.GetRandom()->GetStateString();
+		Client* client = nullptr; Value* observations = nullptr; size_t errors = 0;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			// Real canonical join order: roster then phase then frozen settings.
+			m_state->m_slots->Clear();
+			m_simulation_transport = std::make_unique< SimulationTransport >();
+			client = new Client( gc_space, &m_state->m_settings.local, m_simulation_transport.get() ); m_state->SetConnection( client );
+			types::Packet players( types::Packet::PT_PLAYERS ); players.data.num = 2;
+			players.data.str = roster::EncodeRoster( source.m_state->ExportRoster(), State::ROSTER_LIMITS ); client->Receive( players );
+			types::Packet phase( types::Packet::PT_GAME_STATE ); phase.udata.game_state.state = connection::Connection::GS_RUNNING; client->Receive( phase );
+			types::Packet settings( types::Packet::PT_GLOBAL_SETTINGS ); settings.data.str = source.m_state->Serialize().ToString(); client->Receive( settings );
+			GT_ASSERT( client->HasGlobalSettings() && client->ErrorReason().empty(), "real canonical join failed" );
+			m_game.m_slot_num = 2; m_game.m_slot = &m_state->m_slots->GetSlot( 2 ); m_game.m_player = m_game.m_slot->GetPlayer();
+			RestoreWorldBody( GSE_CALL, snapshot );
+			GT_ASSERT( !m_game.m_simulation && m_game.m_pending_simulation && m_game.m_pending_simulation->value == expected, "decode published or changed staged simulation" );
+			m_game.GetRandom()->GetUInt(); // reconstruction-only draw must be retired
+			const auto helper = static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/tests/_simulation_state" ) );
+			observations = helper->Run( GSE_CALL, { m_game.Wrap( GSE_CALL ) } ); m_gse->AddRootObject( observations );
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+			const auto ticket = FixtureWorldTicket();
+			m_game.m_active_admission->connection = client; m_game.m_active_admission->slot = 2; m_game.m_active_admission->stage = Game::StartupStage::Start;
+			m_game.m_game_state = Game::GS_STARTING;
+			if ( failure == 1 ) { m_state->m_slots->GetSlot( 6 ).GetPlayer()->ClearFaction(); }
+			if ( failure == 2 ) {
+				m_game.On( GSE_CALL, "start", NATIVE_CALL( this ) { m_state->m_slots->GetSlot( 6 ).GetPlayer()->ClearFaction(); return VALUE( value::Undefined ); } ) );
+			}
+			if ( failure == 4 ) {
+				const auto record = m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetRecord();
+				const auto gsid = m_state->m_slots->GetSlot( 6 ).GetLinkedGSID();
+				m_state->RetirePlayerSlot( 6, client, false, []() {} );
+				m_state->CreatePlayerSlot( 6, record, gsid, 91, "replacement", false );
+			}
+			if ( failure == 3 ) { m_game.MT_Reset( ticket ); }
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "simulation restore setup: " + setup );
+		util::FinallyGuard roots( [ & ]() { m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { if ( observations ) { m_gse->RemoveRootObject( observations ); } } ); } );
+		m_map.release(); util::FinallyGuard recover( [ & ]() { m_map.reset( m_game.m_map ); } );
+		WithoutDisconnectIO( client, [ & ]() {
+			if ( queued ) {
+				std::exception_ptr error; std::thread worker( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } ); worker.join();
+				if ( error ) { std::rethrow_exception( error ); }
+				ProcessAccumulations();
+			} else { m_game.Iterate(); }
+		} );
+		if ( failure ) {
+			GT_ASSERT( !m_game.m_simulation && !m_game.m_pending_simulation && !m_game.m_map, "failed or canceled restore retained paired runtime state" );
+			GT_ASSERT( errors == ( failure == 3 ? 0u : 1u ), "late simulation mismatch did not take terminal startup failure" );
+			GT_OK();
+		}
+		GT_ASSERT( m_game.IsRunning() && !m_game.m_pending_simulation && m_game.m_simulation->value == expected && m_game.GetRandom()->GetStateString() == random,
+			"claimed Start replayed grants, reallocated IDs, or lost exact continuation" );
+		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			const auto phases = static_cast< value::Array* >( static_cast< value::Callable* >( observations )->Run( GSE_CALL, {} ) );
+			GT_ASSERT( phases->value.size() == 1, "restore ran create_world or omitted start" );
+			const auto phase = static_cast< value::Object* >( phases->value[ 0 ] );
+			GT_ASSERT( static_cast< value::String* >( phase->Get( "phase" ) )->value == "start" && static_cast< value::Int* >( phase->Get( "turn" ) )->value == 37, "start did not see restored turn metadata" );
+			const auto participants = static_cast< value::Array* >( phase->Get( "participants" ) );
+			for ( size_t i = 0; i < expected.roster.size(); ++i ) {
+				const auto participant = static_cast< value::Object* >( participants->value[ i ] );
+				GT_ASSERT( static_cast< value::Int* >( participant->Get( "id" ) )->value == expected.roster[ i ].simulation_id, "start inferred an ID from its slot" );
+				const auto after = static_cast< value::Object* >( participant->Get( "after" ) );
+				GT_ASSERT( static_cast< value::Int* >( after->Get( "labs" ) )->value == expected.technology.factions[ i ].labs, "start script copy mutated saved labs" );
+			}
+			GT_ASSERT( WorldSnapshot() == snapshot, "complete world serialization changed after restore" );
+			// Real refresh packet preserves the accepted Player lifetime, despite
+			// copied wire records and flags. Retain/reconnect uses the real State path.
+			const auto identity = m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity();
+			types::Packet refresh( types::Packet::PT_PLAYERS ); refresh.data.num = 0; refresh.data.str = roster::EncodeRoster( m_state->ExportRoster(), State::ROSTER_LIMITS );
+			client->Receive( refresh );
+			GT_ASSERT( client->ErrorReason().empty() && m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity, "same-occupant refresh replaced the Player" );
+			m_state->m_slots->GetSlot( 6 ).GetPlayer()->Connect(); // downloaded remote was initially disconnected
+			m_state->RetirePlayerSlot( 6, client, true, []() {} ); m_state->ReconnectPlayerSlot( 6, 90, "rejoined" );
+			GT_ASSERT( m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity && WorldSnapshot() == snapshot,
+				"retained reconnect rederived or lost simulation state" );
+			GT_OK();
+		} );
+		GT_ASSERT( check.empty(), "simulation restored consumer/continuity: " + check );
+		GT_OK();
+	}
+
+	std::string CheckSimulationRejectedDownload( const bool queued ) {
+		using namespace game::backend;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void Receive( const types::Packet& packet ) { network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event ); }
+			const std::string& ErrorReason() const { return m_disconnect_reason; }
+		};
+		EnableWorldSnapshot();
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_state->SetConnection( new RecordingConnection( gc_space ) );
+			auto& settings = m_state->m_settings.global; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			EnableSimulationParticipants(); m_game.PrepareNewSimulation(); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
+		const auto expected = m_game.m_simulation->value;
+		const auto& settings = m_state->m_settings.global;
+		for ( int scenario = 0; scenario < 17; ++scenario ) {
+			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
+			size_t callbacks = 0;
+			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* state = destination.m_state; state->m_slots->Clear();
+				destination.m_simulation_transport = std::make_unique< SimulationTransport >();
+				client = new Client( gc_space, &state->m_settings.local, destination.m_simulation_transport.get() ); state->SetConnection( client );
+				types::Packet roster( types::Packet::PT_PLAYERS ); roster.data.num = 2; roster.data.str = game::backend::roster::EncodeRoster( m_state->ExportRoster(), State::ROSTER_LIMITS ); client->Receive( roster );
+				types::Packet phase( types::Packet::PT_GAME_STATE ); phase.udata.game_state.state = connection::Connection::GS_RUNNING; client->Receive( phase );
+				types::Packet global( types::Packet::PT_GLOBAL_SETTINGS ); global.data.str = m_state->Serialize().ToString(); client->Receive( global );
+				GT_ASSERT( client->HasGlobalSettings() && client->ErrorReason().empty(), "invalid runtime test failed before actual download" );
+				destination.m_game.m_slot_num = 2; destination.m_game.m_slot = &state->m_slots->GetSlot( 2 ); destination.m_game.m_player = destination.m_game.m_slot->GetPlayer();
+				for ( const auto* name : { "start", "create_world", "turn" } ) { destination.m_game.On( GSE_CALL, name, NATIVE_CALL( &callbacks ) { ++callbacks; return VALUE( value::Undefined ); } ) ); }
+				GT_OK();
+			} );
+			GT_ASSERT( configured.empty(), "invalid runtime configure: " + configured );
+			auto value = expected;
+			if ( scenario == 0 ) { value.roster[ 2 ].simulation_id = 1; }
+			if ( scenario == 1 ) { value.roster[ 2 ].slot = 2; }
+			if ( scenario == 2 ) { value.roster[ 2 ].gsid = "another-controller"; }
+			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
+			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
+			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 2 : 1 ); raw.WriteInt( value.roster.size() );
+			for ( const auto& participant : value.roster ) {
+				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
+				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
+			}
+			raw.WriteString( value.technology.Serialize( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ).ToString() );
+			types::Buffer bytes;
+			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 8 ); }
+			else { world_snapshot::WriteHeader( bytes, settings ); }
+			world_snapshot::WriteRandomState( bytes, m_game.GetRandom()->GetState() );
+			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, m_state->m_slots->GetSlots() ) );
+			bytes.WriteBool( scenario != 7 );
+			if ( scenario != 7 ) {
+				auto wire = raw.ToString();
+				if ( scenario == 8 ) { wire.assign( faction::SmacSimulationState::MAX_WIRE_BYTES + 1, 'x' ); }
+				if ( scenario == 9 ) { wire.pop_back(); }
+				bytes.WriteString( wire );
+			}
+			// Assert the precise production prefix boundary separately, so a later
+			// missing map frame cannot hide a broken identity/codec check.
+			const auto prefix_check = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				bool rejected = false;
+				try {
+					types::Buffer input( bytes ); world_snapshot::ValidateHeader( input, destination.m_state->m_settings.global );
+					world_snapshot::ReadRandomState( input ); world_snapshot::ReadTurnState( input, destination.m_state->m_slots->GetSlots() );
+					destination.m_game.ReadSimulationState( input );
+				} catch ( const std::runtime_error& ) { rejected = true; }
+				GT_ASSERT( rejected == ( scenario < 11 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
+			} );
+			GT_ASSERT( prefix_check.empty(), "runtime prefix: " + prefix_check );
+			// The remaining cases have a valid runtime and reach the actual map
+			// frame/accepted-dimensions checks, still before Map construction.
+			if ( scenario == 12 ) { bytes.WriteInt( 0 ); }
+			if ( scenario >= 13 ) {
+				types::Buffer map; map.WriteInt( scenario == 13 ? 10 : scenario == 15 ? -1 : scenario == 16 ? INT64_MAX : 8 );
+				map.WriteInt( scenario == 14 ? 9 : 8 ); bytes.WriteString( map.ToString() );
+			}
+			types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE ); packet.data.str = bytes.ToString();
+			packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
+			const auto ready = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { destination.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK(); } );
+			GT_ASSERT( ready.empty(), "runtime download prepare failed: " + ready );
+			auto* prior_map = destination.m_game.m_map; types::Buffer prior_tiles; prior_map->SaveToBuffer( prior_tiles );
+			const auto prior_rng = destination.m_game.GetRandom()->GetStateString(); const auto prior_turn = destination.m_game.GetTurnId();
+			const auto prior_managers = destination.WorldManagers(); const auto prior_frontend = destination.m_frontend_requests.size();
+			std::exception_ptr escaped;
+			destination.WithoutDisconnectIO( client, [ & ]() {
+				if ( queued ) { std::thread worker( [ & ]() { try { client->Receive( packet ); } catch ( ... ) { escaped = std::current_exception(); } } ); worker.join(); destination.ProcessAccumulations(); }
+				else { client->Receive( packet ); }
+			} );
+			if ( escaped ) { std::rethrow_exception( escaped ); }
+			types::Buffer after_tiles; destination.m_game.m_map->SaveToBuffer( after_tiles );
+			GT_ASSERT( client->ErrorReason() == "Snapshot format mismatch" && destination.m_game.m_map == prior_map && after_tiles.ToString() == prior_tiles.ToString(), "runtime rejection reached map construction or escaped safe disconnect" );
+			GT_ASSERT( !callbacks && !destination.m_game.m_simulation && !destination.m_game.m_pending_simulation
+				&& !destination.HasPendingSnapshotTurn() && !destination.HasPendingSnapshotRandom() && destination.m_game.GetRandom()->GetStateString() == prior_rng
+				&& destination.m_game.GetTurnId() == prior_turn && destination.WorldManagers() == prior_managers && destination.m_frontend_requests.size() == prior_frontend,
+				"rejected runtime changed world, callbacks or continuation" );
+		}
+		GT_OK();
+	}
+
+	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input ); }
 	void EnableTurnPlayers() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			for ( const size_t id : { 0, 2 } ) {
@@ -2420,8 +2744,9 @@ public:
 		game::backend::world_snapshot::ValidateHeader( buffer, m_game.GetState()->m_settings.global );
 		const auto random = game::backend::world_snapshot::ReadRandomState( buffer );
 		const auto turn = game::backend::world_snapshot::ReadTurnState( buffer, m_game.GetState()->m_slots->GetSlots() );
+		auto simulation = m_game.ReadSimulationState( buffer );
 		const auto map = buffer.ReadString();
-		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn );
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ) );
 	}
 	void CompleteWorldRestore( GSE_CALLABLE, const bool dispatch_native_failure = false ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
@@ -2885,6 +3210,7 @@ private:
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
 	std::unique_ptr< game::backend::map::Map, MapDeleter > m_map;
+	std::unique_ptr< SimulationTransport > m_simulation_transport; // outlives runtime/Connection teardown
 	std::unique_ptr< game::backend::Random > m_random;
 	GSE* m_gse; // owned by m_glsmac
 	game::backend::State* m_state = nullptr; // retained by the runtime even after InitFailed clears Game's pointer
@@ -4891,6 +5217,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			auto& settings = game->GetState()->m_settings.global;
 			settings.SelectRuleset( id );
 			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			if ( std::string( id ) == "smac" ) { fixture.EnableSimulationParticipants(); fixture.AdmitSimulationForSnapshotFixture(); }
 			types::Buffer old_body;
 			game->GetMap()->SaveToBuffer( old_body );
 			const auto managers = fixture.WorldManagers();
@@ -4906,7 +5233,8 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			util::random::Random captured( 1 ); captured.SetState( game::backend::world_snapshot::ReadRandomState( input ) );
 			GT_ASSERT( captured.GetStateString() == before_rng, "writer captured another RNG boundary" );
 			const auto turn = game::backend::world_snapshot::ReadTurnState( input, game->GetState()->m_slots->GetSlots() );
-			GT_ASSERT( turn.id == game->GetTurnId() && turn.players.empty(), "writer changed empty-roster turn state" );
+			GT_ASSERT( turn.id == game->GetTurnId() && turn.players.size() == ( std::string( id ) == "smac" ? 3u : 0u ), "writer changed captured turn roster" );
+			fixture.ReadSimulationPrefix( input );
 			GT_ASSERT( snapshot.substr( input.lenr ) == old_body.ToString(), "world body order or content changed" );
 			fixture.DestroyMapBeforeManagers();
 			GT_ASSERT( fixture.WorldSnapshot().empty(), "not-yet-generated map no longer returns an empty download response" );
@@ -4932,19 +5260,15 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				rejected.insert( rejected.end(), rng_rejected.begin(), rng_rejected.end() );
 				const auto turn_rejected = world_rules_fixture::InvalidTurnHeaders();
 				rejected.insert( rejected.end(), turn_rejected.begin(), turn_rejected.end() );
-				// Matching headers reach the actual body's first read, still before
-				// Map's asset-bearing constructor. Native errors there must also be
-				// caught when completion executes later on the accumulation thread.
-				const world_snapshot::TurnState turn{ 37, { { 0, true }, { 2, false } } };
-				rejected.emplace_back( "matching header without map frame", world_rules_fixture::WorldHeader( turn ).ToString() );
-				auto wrong_body = world_rules_fixture::WorldHeader( turn );
-				wrong_body.WriteInt( 0 );
-				rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
-				for ( const auto xy : { std::pair< int64_t, int64_t >{ 10, 8 }, { 8, 9 }, { -1, 8 }, { INT64_MAX, 8 } } ) {
-					auto wrong_map = world_rules_fixture::WorldHeader( turn ); types::Buffer map;
-					map.WriteInt( xy.first ); map.WriteInt( xy.second ); wrong_map.WriteString( map.ToString() );
-					rejected.emplace_back( "world-size: mismatched actual tile prefix", wrong_map.ToString() );
-				}
+				// Valid-runtime map-frame and dimension failures are exercised by
+				// CheckSimulationRejectedDownload with real canonical participants.
+			}
+			if ( std::string( ruleset ) == "smax" ) {
+				auto unexpected = world_rules_fixture::Header( "smax", false );
+				world_snapshot::WriteRandomState( unexpected, { 1, 2, 3, 4 } );
+				world_snapshot::WriteTurnState( unexpected, { 37, { { 0, true }, { 2, false } } } );
+				unexpected.WriteBool( true ); // rejected before any runtime string/map read
+				rejected.emplace_back( "unexpected SMAX runtime", unexpected.ToString() );
 			}
 			for ( const auto& invalid : rejected ) {
 				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0;
@@ -5264,7 +5588,9 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
 				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
 				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+				if ( scenario == 3 ) { fixture->EnableSimulationParticipants( { 0, 2 }, 2 ); }
 			}
+			if ( scenario == 3 ) { source.AdmitSimulationForSnapshotFixture(); }
 			source.SetRunning( true ); source.SetSnapshotTurn( 37 );
 			source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
 			if ( scenario == 2 ) { source.GetGame()->GetState()->m_slots->GetSlot( 2 ).GetPlayer()->CompleteTurn(); }
@@ -5427,7 +5753,9 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 					fixture->EnableWorldSnapshot();
 					auto& settings = fixture->GetGame()->GetState()->m_settings.global;
 					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+					if ( std::string( ruleset ) == "smac" ) { fixture->EnableSimulationParticipants(); }
 				}
+				if ( std::string( ruleset ) == "smac" ) { source.AdmitSimulationForSnapshotFixture(); }
 				source.SetRunning( true ); source.SetSnapshotTurn( 37 );
 				source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
 				source.AddBaseWithPop( 601, 9 );
@@ -6926,6 +7254,38 @@ static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC simulation actual single participant Start admission", GT() {
+		BackendFixture fixture; return fixture.CheckSimulationStartup( false, 0, true );
+	} );
+	task->AddTest( "SMAC simulation actual host Start admission", GT() {
+		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, true );
+	} );
+
+	for ( const bool queued : { false, true } ) {
+		task->AddTest( std::string( "SMAC simulation actual Client rejects runtime before Map " ) + std::to_string( queued ), GT( queued ) {
+			BackendFixture fixture; return fixture.CheckSimulationRejectedDownload( queued );
+		} );
+	}
+
+	for ( const bool queued : { false, true } ) {
+		for ( const int failure : { 0, 1, 2, 3, 4 } ) {
+			task->AddTest( std::string( "SMAC simulation actual serialized restore continuation " ) + std::to_string( queued ) + " failure " + std::to_string( failure ), GT( queued, failure ) {
+				BackendFixture fixture; return fixture.CheckSimulationRestore( queued, failure );
+			} );
+		}
+	}
+
+	for ( const bool queued : { false, true } ) {
+		task->AddTest( std::string( "SMAC simulation actual Start admission and copied script consumers " ) + ( queued ? "queued" : "immediate" ), GT( queued ) {
+			BackendFixture fixture; return fixture.CheckSimulationStartup( queued, 0 );
+		} );
+	}
+	for ( const int cancellation : { 1, 2 } ) {
+		task->AddTest( std::string( "SMAC simulation canceled startup retires paired state " ) + std::to_string( cancellation ), GT( cancellation ) {
+			BackendFixture fixture; return fixture.CheckSimulationStartup( true, cancellation );
+		} );
+	}
+
 	for ( const bool active : { false, true } ) {
 		for ( const bool reset_pending : { false, true } ) {
 			for ( const bool retained_prompt : { false, true } ) {

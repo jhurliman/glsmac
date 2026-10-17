@@ -18,6 +18,7 @@
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "SmacSimulationState.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
 #include "SmacPredefinedUnitCatalog.h"
@@ -219,6 +220,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
 		tests::AddSmacProductionSwitchTests( task );
+		tests::AddSmacSimulationStateTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );
 	}

@@ -52,8 +52,10 @@ on the original resource selectors' individual side effects. Exceptions leave
 the supplied input unchanged. Candidate scans, additions and rollback are
 distinct fresh calls, so a caller must not substitute cached scan yields.
 
-The companion tests project 31 named full-routine outcomes from the original
-intake, cleanup, finalization and priority reports. Only recorded outputs are
+The companion tests project 51 named full-routine outcomes from the original
+intake, cleanup, finalization, priority and complete-orchestration reports. They
+also check 27 observed pre-fill counter pairs, 26 ordered candidate query states
+and eight missing-center query states. Only recorded outputs are
 asserted as original observations; short reported type prefixes do not imply
 that all unused packed positions were observed. Separate adapter tests check
 callback timing, fresh queries, sea participation, clipping, repair and failure

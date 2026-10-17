@@ -47,6 +47,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkedSquareCollection.cpp
 	${PWD}/SmacSpecialistAllocation.cpp
 	${PWD}/SmacAutomaticWorkerControls.cpp
+	${PWD}/SmacAutomaticWorkerAllocation.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 	${PWD}/SmacConventionalStats.cpp
 

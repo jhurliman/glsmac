@@ -8,10 +8,20 @@
 #include "Player.h"
 #include "GLSMAC.h"
 #include "gc/Space.h"
+#include "network/Network.h"
+#include "types/Packet.h"
 
 namespace game {
 namespace backend {
 namespace {
+
+void ValidateSettingsEnvelope( const types::Buffer& state ) {
+	types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+	packet.data.str = state.ToString();
+	if ( packet.Serialize().lenw > network::Network::MAX_PACKET_BYTES ) {
+		throw std::runtime_error( "Global settings and faction metadata exceed the network packet budget" );
+	}
+}
 
 // This native owner is retained by the queued callable, not registered with
 // the collector. The pending queue traverses it while holding its own lock.
@@ -124,16 +134,20 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
-			if ( m_connection ) {
-				m_connection->SetState( nullptr );
-				m_connection = nullptr;
-			}
-			for ( auto& player : m_players ) {
-				DELETE( player );
-			}
-			m_players.clear();
-			m_slots->Clear();
-			m_cid_slots.clear();
+			// Polling and callbacks above can queue work; only the native
+			// terminal ownership cleanup may share collection exclusion.
+			m_gc_space->WithNativeMutation( [ & ]() {
+				if ( m_connection ) {
+					m_connection->SetState( nullptr );
+					m_connection = nullptr;
+				}
+				for ( auto& player : m_players ) {
+					DELETE( player );
+				}
+				m_players.clear();
+				m_slots->Clear();
+				m_cid_slots.clear();
+			} );
 		}
 	}
 }
@@ -264,13 +278,20 @@ const types::Buffer State::Serialize() const {
 
 	buf.WriteString( m_settings.global.Serialize().ToString() );
 	buf.WriteString( m_fm->Serialize().ToString() );
+	ValidateSettingsEnvelope( buf );
 
 	return buf;
 }
 
 void State::Deserialize( types::Buffer buf ) {
-	m_settings.global.Deserialize( buf.ReadString() );
-	m_fm->Deserialize( buf.ReadString() );
+	ValidateSettingsEnvelope( buf );
+	// Native packet dispatch can replace linked Factions while GC is active.
+	// Keep queueing, notifications and transport in the caller, outside this
+	// synchronous native-only mutation scope.
+	m_gc_space->WithNativeMutation( [ & ]() {
+		m_settings.global.Deserialize( buf.ReadString() );
+		m_fm->Deserialize( buf.ReadString() );
+	} );
 }
 
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

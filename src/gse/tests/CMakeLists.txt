@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Tests.cpp
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
+	${PWD}/RosterRecords.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
@@ -20,6 +21,12 @@ SET( SRC ${SRC}
 	${PWD}/CvrGeometryReader.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
+	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacPredefinedUnitRules.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
+	${PWD}/UnitDesignResolver.cpp
+	${PWD}/CvrBasisConverter.cpp
+	${PWD}/CvrTransformCalculator.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

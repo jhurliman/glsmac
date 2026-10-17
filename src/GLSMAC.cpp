@@ -630,6 +630,10 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 				"ruleset", VALUE( gse::value::String,, m_state->m_settings.global.GetRulesetId() )
 			}
 		}; } );
+		// Configure-state supplies the faction metadata. Validate the complete
+		// settings packet before making this host setup available to the lobby.
+		try { m_state->Serialize(); }
+		catch ( const std::exception& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 	});
 }
 

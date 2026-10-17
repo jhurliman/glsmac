@@ -20,6 +20,8 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 		throw std::runtime_error( "World snapshot ruleset and numeric rules do not match" );
 	}
 	if ( ( id == "smac" ) != settings.GetSmacWorldSizeRules().has_value() ) { throw std::runtime_error( "World snapshot world-size profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacFactionStartupRules().has_value() ) { throw std::runtime_error( "World snapshot faction startup profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacPredefinedUnitRules().has_value() ) { throw std::runtime_error( "World snapshot predefined unit profile does not match ruleset" ); }
 	settings.ValidateWorldSize();
 }
 
@@ -35,6 +37,10 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto& sizes = settings.GetSmacWorldSizeRules();
 	const auto size_bytes = sizes ? sizes->Serialize().ToString() : std::string{};
 	const auto selection_bytes = sizes ? settings.map.GetSmacWorldSize()->Serialize().ToString() : std::string{};
+	const auto& factions = settings.GetSmacFactionStartupRules();
+	const auto faction_bytes = factions ? factions->Serialize( *technologies ).ToString() : std::string{};
+	const auto& units = settings.GetSmacPredefinedUnitRules();
+	const auto unit_bytes = units ? units->Serialize( *technologies ).ToString() : std::string{};
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -51,6 +57,10 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	if ( technologies ) { buffer.WriteString( technology_bytes ); }
 	buffer.WriteBool( sizes.has_value() );
 	if ( sizes ) { buffer.WriteString( size_bytes ); buffer.WriteString( selection_bytes ); }
+	buffer.WriteBool( factions.has_value() );
+	if ( factions ) { buffer.WriteString( faction_bytes ); }
+	buffer.WriteBool( units.has_value() );
+	if ( units ) { buffer.WriteString( unit_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -106,6 +116,18 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		const auto selection = settings::SmacWorldSizeSelection::Deserialize( types::Buffer( buffer.ReadString() ) );
 		incoming.ValidateSelection( selection );
 		if ( !( incoming == *sizes ) || !( selection == *settings.map.GetSmacWorldSize() ) ) { throw std::runtime_error( "World snapshot world-size profile or selection differs from the session" ); }
+	}
+	const auto& factions = settings.GetSmacFactionStartupRules();
+	if ( buffer.ReadBool() != factions.has_value() ) { throw std::runtime_error( "World snapshot faction startup presence differs from the session" ); }
+	if ( factions ) {
+		const auto incoming = settings::SmacFactionStartupRules::Deserialize( types::Buffer( buffer.ReadString() ), *technologies );
+		if ( !( incoming == *factions ) ) { throw std::runtime_error( "World snapshot faction startup profile differs from the session" ); }
+	}
+	const auto& units = settings.GetSmacPredefinedUnitRules();
+	if ( buffer.ReadBool() != units.has_value() ) { throw std::runtime_error( "World snapshot predefined unit presence differs from the session" ); }
+	if ( units ) {
+		const auto incoming = settings::SmacPredefinedUnitRules::Deserialize( buffer.ReadString(), *technologies );
+		if ( !( incoming == *units ) ) { throw std::runtime_error( "World snapshot predefined unit profile differs from the session" ); }
 	}
 }
 

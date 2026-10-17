@@ -3271,6 +3271,17 @@ public:
 			}
 			return result;
 		};
+		const auto definitions=[&](GSE_CALLABLE) {
+			for(const auto* name:{"define_base_pop","define_base_facility"}) {
+				auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
+				RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
+					static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));
+			}
+			for(const auto* name:{"pops","facilities"}) {
+				auto* module=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/")+name));
+				static_cast<value::Callable*>(module->Get("define"))->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)});
+			}
+		};
 		std::vector<size_t> created;size_t callbacks=0;
 		const auto create=[&](GSE_CALLABLE) {
 			auto* bm=m_game.GetBM();auto* map=m_game.GetMap();
@@ -3284,15 +3295,6 @@ public:
 			}}
 			if(scenario==1) {map->GetTile(6,4)->moisture=map::tile::MOISTURE_RAINY;map->GetTile(6,4)->terraforming=map::tile::TERRAFORMING_FARM;}
 			for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
-			for(const auto* name:{"define_base_pop","define_base_facility"}) {
-				auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
-				RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
-					static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));
-			}
-			for(const auto* name:{"pops","facilities"}) {
-				auto* module=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/")+name));
-				static_cast<value::Callable*>(module->Get("define"))->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)});
-			}
 			const std::array<std::string,7> roles{{"TECHNICIAN","DOCTOR","LIBRARIAN","ENGINEER","EMPATH","THINKER","TRANSCEND"}};
 			const auto require=[](bool ok,const char* why) {if(!ok) {throw std::runtime_error(why);}};
 			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require) {
@@ -3344,7 +3346,7 @@ public:
 			require(m_game.m_simulation->value.gameplay_random==rng && m_game.GetRandom()->GetStateString()==jsf,"first Base consumed a random stream");
 		};
 		const char* faction=scenario==2?"SPARTANS":scenario==4?"HIVE":scenario==5?"UNIVERSITY":scenario==6?"MORGANITES":scenario==7?"BELIEVERS":scenario==8?"PEACEKEEPERS":"GAIANS";
-		const auto result=CheckSimulationStartup(queued,0,scenario!=9,false,0,false,0,false,false,create,source,scenario==9?"":faction);
+		const auto result=CheckSimulationStartup(queued,0,scenario!=9,false,0,false,0,false,false,create,source,scenario==9?"":faction,definitions);
 		GT_ASSERT(result.empty(),"canonical first Base actual Start: "+result);
 		GT_ASSERT(callbacks==created.size() && callbacks==(scenario==9?2u:1u),"first Base callback replay/loss");
 		return WithScriptValues([&](GSE_CALLABLE)->std::string {
@@ -3407,7 +3409,8 @@ public:
 
 	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false,
 		const std::function< void( GSE_CALLABLE ) >& create_base = {},
-		const std::function< std::string(const std::string&) >& startup_source = {}, const std::string& first_faction = {} ) {
+		const std::function< std::string(const std::string&) >& startup_source = {}, const std::string& first_faction = {},
+		const std::function< void( GSE_CALLABLE ) >& before_create_event = {} ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
@@ -3457,7 +3460,10 @@ public:
 				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
 				auto* create = NATIVE_CALL( create_base ) { create_base( GSE_CALL ); return VALUE( value::Undefined ); } );
 				RegisterEvent( "fixture_first_base", new event::EventHandler( gc_space, "fixture_first_base", noop, nullptr, create, noop ) );
-				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this ) { m_game.Event( GSE_CALL, "fixture_first_base", {} ); return VALUE( value::Undefined ); } ) );
+				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, before_create_event ) {
+					if (before_create_event) {before_create_event(GSE_CALL);}
+					m_game.Event( GSE_CALL, "fixture_first_base", {} ); return VALUE( value::Undefined );
+				} ) );
 				PushBaseUpdates(); // real Base FR uses the fixture's synthetic coordinates
 			}
 			m_game.On( GSE_CALL, "turn", NATIVE_CALL( this, &social_turns, &social_hook_valid ) {

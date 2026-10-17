@@ -3,32 +3,38 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
+#include "SmacScoutCombat.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
-#include "WorldSnapshotRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
+#include "SmacPredefinedUnitCatalog.h"
+#include "SmacPredefinedUnitRules.h"
 #include "SmacFactionStartupRules.h"
+#include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
-#include "SmacPredefinedUnitCatalog.h"
-#include "SmacPredefinedUnitRules.h"
-#include "UnitRulesTXTLoader.h"
-#include "UnitDesignResolver.h"
 #include "CvrBasisConverter.h"
 #include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
+#include "SmacConventionalStats.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -70,48 +76,31 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
+		tests::AddSmacScoutCombatTests( task );
+		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
-		tests::AddUnitRulesTXTLoaderTests( task );
-		tests::AddUnitDesignResolverTests( task );
+		tests::AddSmacConventionalStatsTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
 		tests::AddAsyncTests( task );
-		task->AddTest(
-			"test UUID generation works independently of an existing account",
-			GT() {
-				// Always exercise export, even when a prior run saved accounts.yml.
-				// With --memorydebug, freeing an untracked library allocation throws.
-				try {
-					for ( size_t iteration = 0 ; iteration < 32 ; iteration++ ) {
-						const auto id = util::UUID::Generate();
-						GT_ASSERT( id.size() == 36, "UUID text has the wrong length" );
-						for ( size_t i = 0 ; i < id.size() ; i++ ) {
-							const bool separator = i == 8 || i == 13 || i == 18 || i == 23;
-							GT_ASSERT( separator ? id[ i ] == '-' : std::string( "0123456789abcdef" ).find( id[ i ] ) != std::string::npos, "UUID text has an invalid character or separator" );
-						}
-						GT_ASSERT( id[ 14 ] == '4', "default UUID generation changed version" );
-						GT_ASSERT( std::string( "89ab" ).find( id[ 19 ] ) != std::string::npos, "UUID has an invalid variant" );
-					}
-				}
-				catch ( const std::exception& error ) {
-					GT_FAIL( std::string( "UUID generation failed: " ) + error.what() );
-				}
-				GT_OK();
-			}
-		);
 		task->AddTest(
 			"test UUID generation works independently of an existing account",
 			GT() {
@@ -230,16 +219,18 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
-		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
-		tests::AddSmacFactionStartupRulesTests( task );
-		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
+		tests::AddWorldSnapshotRulesTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
-	tests::AddScriptsTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		tests::AddScriptsTests( task );
+	}
 
 }
 

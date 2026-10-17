@@ -190,7 +190,37 @@ IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE S
 				--prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-uuid-memorydebug"
 		)
 		SET_TESTS_PROPERTIES( gse_uuid_memorydebug PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 )
+		STRING( JOIN "|" MESH_NATIVE_TEST_NAMES
+			"test mesh coordinates can be read into caller-owned stack storage"
+			"test rectangle getters and render copies preserve caller-owned coordinates"
+			"test consuming rectangle conversion removes source allocation tracking"
+			"test widget clear releases its actor, mesh and texture ownership"
+			"test detached UI destruction releases actors and widget textures"
+			"test attached widget deinit observes resources before cleanup"
+			"test generated sprite ownership survives widget copies and exceptions"
+			"test minimap capture ownership survives redraws and exceptions"
+			"CVR Scout descriptor strict codec and explicit placement"
+			"CVR Scout installed resolver cache bounds and failed replacement ownership"
+			"CVR Scout real definition unit preview and retained texture teardown"
+		)
+		ADD_TEST( NAME gse_mesh_memorydebug
+			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet
+				--gse-tests-native-filter "^(${MESH_NATIVE_TEST_NAMES})$"
+				--prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-mesh-memorydebug"
+		)
+		SET_TESTS_PROPERTIES( gse_mesh_memorydebug PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 )
 	ENDIF ()
+
+	ADD_TEST( NAME gse_native_filter_cli
+		COMMAND ${CMAKE_COMMAND}
+			"-DGLSMAC_EXECUTABLE=$<TARGET_FILE:${PROJECT_NAME}>"
+			"-DGLSMAC_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+			"-DGLSMAC_TEST_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/test-data-native-filter"
+			-P "${PROJECT_SOURCE_DIR}/tools/tests/check-gse-native-filter.cmake"
+	)
+	# Eight sequential subprocesses retain their individual 10-second limits.
+	# Let the wrapper report a slow/failing case before CTest kills the batch.
+	SET_TESTS_PROPERTIES( gse_native_filter_cli PROPERTIES TIMEOUT 90 )
 
 	FOREACH ( CASE success failure missing )
 		ADD_TEST( NAME gse_exit_${CASE}

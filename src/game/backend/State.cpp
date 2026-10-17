@@ -47,6 +47,7 @@ State::State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMA
 	, m_glsmac( glsmac )
 	, m_slots( new slot::Slots( this ) ) {
 	NEW( m_fm, faction::FactionManager );
+ EnsureRosterEpoch();
 }
 
 State::~State() {
@@ -141,6 +142,7 @@ void State::Iterate() {
 					m_connection->SetState( nullptr );
 					m_connection = nullptr;
 				}
+				RetireRosterEpoch();
 				for ( auto& player : m_players ) {
 					DELETE( player );
 				}
@@ -163,6 +165,7 @@ bool State::IsSlave() {
 }
 
 void State::AddPlayer( Player* player ) {
+ EnsureRosterEpoch(); player->BindRoster(this, m_roster_epoch);
 	Log( "adding player: " + player->GetPlayerName() );
 	ASSERT( m_players.find( player ) == m_players.end(), "duplicate player add" );
 	m_players.insert( player );
@@ -208,8 +211,7 @@ void State::SetConnection( connection::Connection* connection ) {
 	//std::lock_guard guard( m_connection_mutex );
 	ASSERT( !m_connection, "state connection already set" );
 	ASSERT( connection, "connection is null" );
-	connection->SetState( this );
-	m_connection = connection;
+	m_gc_space->WithNativeMutation([&]() { EnsureRosterEpoch(); connection->SetState(this); m_connection=connection; });
 }
 
 connection::Connection* State::GetConnection() {
@@ -219,6 +221,7 @@ connection::Connection* State::GetConnection() {
 
 void State::Reset() {
 	RetireGameCallbacks();
+ RetireRosterEpoch();
 	{
 		//std::lock_guard guard( m_connection_mutex );
 		if ( m_connection ) {
@@ -294,8 +297,19 @@ void State::Deserialize( types::Buffer buf ) {
 	} );
 }
 
+void State::DeserializeRosterSettings(types::Buffer buf, connection::Connection* expected, const roster_epoch_t& epoch) {
+ ValidateSettingsEnvelope(buf);
+ m_gc_space->WithNativeMutation([&]() {
+  if (!expected || m_connection != expected) { throw std::runtime_error("Settings belong to another connection"); }
+  RequireRoster(epoch);
+  m_settings.global.Deserialize(buf.ReadString());
+  m_fm->Deserialize(buf.ReadString());
+ });
+}
+
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
+ GetRosterRoots(reachable_objects);
 
 	GC_DEBUG_BEGIN( "State" );
 

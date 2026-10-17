@@ -14,6 +14,7 @@ SUBDIR( turn )
 SET( SRC ${SRC}
 
 	${PWD}/Random.cpp
+	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
 	${PWD}/WorldSnapshotRules.cpp
@@ -23,6 +24,7 @@ SET( SRC ${SRC}
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/StateRoster.cpp
 	${PWD}/MapObject.cpp
 	${PWD}/ResourceRelated.cpp
 

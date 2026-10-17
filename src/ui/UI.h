@@ -24,6 +24,10 @@ namespace input {
 class Event;
 }
 
+namespace gse::value {
+class Callable;
+}
+
 namespace gse::context {
 class Context;
 }
@@ -62,6 +66,11 @@ CLASS( UI, gse::GCWrappable )
 	void Iterate();
 
 	WRAPDEFS_PTR( UI );
+
+	// Shared by the real UI binding and headless presentation regressions.
+	static gse::value::Callable* CreateResourceBalanceFormatter( GSE_CALLABLE );
+	static gse::value::Callable* CreateResourceProgressFormatter( GSE_CALLABLE );
+	static gse::value::Callable* CreatePlaceholderEnergyFormatter( GSE_CALLABLE );
 
 	gc::Space* const m_gc_space = nullptr;
 	gse::context::Context* const m_ctx = nullptr;

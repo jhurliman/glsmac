@@ -89,7 +89,7 @@ void AddSmacRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "SMAC RESOURCEINFO rejects truncated, duplicated, or reordered layout", GT() {
+	task->AddTest( "SMAC RESOURCEINFO rejects missing or additional positional rows", GT() {
 		for ( size_t i = 0 ; i < Rows().size() ; ++i ) {
 			auto rows = Rows();
 			rows.erase( rows.begin() + i );
@@ -97,16 +97,46 @@ void AddSmacRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 			rows = Rows();
 			rows.insert( rows.begin() + i, rows[ i ] );
 			GT_ASSERT( !Rejection( Source( rows ) ).empty(), "additional table row was accepted" );
-			rows = Rows();
-			rows[ i ] = rows[ ( i + 1 ) % rows.size() ];
-			GT_ASSERT( !Rejection( Source( rows ) ).empty(), "duplicated label was accepted" );
-			rows = Rows();
-			std::swap( rows[ i ], rows[ ( i + 1 ) % rows.size() ] );
-			GT_ASSERT( !Rejection( Source( rows ) ).empty(), "reordered rows were silently remapped" );
+			for ( const auto* label : { "", " \t " } ) {
+				rows = Rows();
+				rows[ i ] = label + rows[ i ].substr( rows[ i ].find( ',' ) );
+				GT_ASSERT( !Rejection( Source( rows ) ).empty(), "empty positional row label was accepted" );
+			}
 		}
 		auto source = Source( Rows() );
 		source.insert( source.find( "Forest Square" ), "#END\n" );
 		GT_ASSERT( !Rejection( source ).empty(), "parser read required rows past section end" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC RESOURCEINFO row labels do not select rule identity", GT() {
+		const auto expected = SmacRulesTXTLoader::ParseBaseSquareRules( Source( Rows() ) );
+		for ( const bool duplicate_labels : { false, true } ) {
+			auto rows = Rows();
+			for ( size_t i = 0 ; i < rows.size() ; ++i ) {
+				rows[ i ] = ( duplicate_labels ? "Repeated label" : "Resource " + std::to_string( i ) ) + rows[ i ].substr( rows[ i ].find( ',' ) );
+			}
+			GT_ASSERT( Rejection( Source( rows ) ).empty(), "positional rows with renamed or repeated labels were rejected" );
+			const auto actual = SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) );
+			GT_ASSERT( actual.base_square == expected.base_square && actual.bonus_square == expected.bonus_square && actual.recycling == expected.recycling,
+				"display labels changed positional resource rules" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC RESOURCEINFO moving complete rows changes their positional meaning", GT() {
+		auto rows = Rows();
+		std::swap( rows[ 1 ], rows[ 4 ] );
+		GT_ASSERT( Rejection( Source( rows ) ).empty(), "complete moved rows were rejected by their labels" );
+		const auto rules = SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) );
+		const RuleTriple base = { 7, 8, 9 }, bonus = { 4, 5, 6 }, recycling = { 17, -3, 0 };
+		GT_ASSERT( rules.base_square == base && rules.bonus_square == bonus && rules.recycling == recycling, "moved rows were rejected or remapped by label" );
+		const BaseSquareInputs inputs(
+			CenterTerrain( true, ResourceBonus::Nutrients, { false, false, false }, false ),
+			CenterFacilities( false, true, false ),
+			CenterFaction( 0, false, 1, false, false ),
+			CenterEvents( { false, false, false }, { false, false, false }, false, false )
+		);
+		const Yield expected = { 31, 5, 9 };
+		GT_ASSERT( CalculateBaseSquareYield( rules, inputs ) == expected, "center nutrient multiplier used a label-selected Base row" );
 		GT_OK();
 	} );
 	task->AddTest( "SMAC RESOURCEINFO requires all three numeric columns in every selected row", GT() {

@@ -80,6 +80,7 @@ class ResourceManager;
 
 namespace unit {
 class UnitManager;
+class Def;
 }
 
 namespace base {
@@ -400,6 +401,9 @@ public:
 	bool IsSmacUnitProductionEligible( const base::Base& base, const base::ProductionItem& item ) const;
 	// Explicit local human-controlled port roster. No AI controller is inferred.
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
+	// Explicit session presentation roles; saved Unit/Def records remain authority.
+	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,3>& roles );
+	unit::Def* ResolveSmacProductionPresentation( const slot::Slot* owner, int32_t design_id ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
 	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );
@@ -417,6 +421,7 @@ public:
 
 private:
 	friend class gse::tests::BackendFixture;
+	std::optional<std::array<std::string,3>> m_smac_presentations;
 	bool HandleCanonicalStartupTurnEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void RequireCanonicalStartupTurn( size_t turn_id ) const;
 

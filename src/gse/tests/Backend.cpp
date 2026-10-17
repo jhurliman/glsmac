@@ -3201,6 +3201,15 @@ public:
 			for ( const auto& fr : updates ) { if ( fr.type == game::FrontendRequest::FR_UNIT_SPAWN ) { ++spawns; GT_ASSERT( fr.data.unit_spawn.conventional && fr.data.unit_spawn.has_moves, "sealed spawn was not actionable" ); } }
 			if ( default_world ) {
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
+				GT_ASSERT(m_game.ResolveSmacProductionPresentation(unit->m_owner,unit->Conventional().design_id)==unit->m_def,"explicit presentation did not resolve actual selected owner/design");
+				const auto* former=static_cast<const StaticDef*>(m_game.ResolveSmacProductionPresentation(unit->m_owner,1));
+				GT_ASSERT(former->m_render->m_type==Render::RT_PORT_FORMER_MARKER && former!=unit->m_def,"Former reused combat presentation");
+				const auto bindings=*m_game.m_smac_presentations;
+				m_game.m_smac_presentations->at(2)=bindings[0];
+				bool mismatched=false;try{m_game.ResolveSmacProductionPresentation(unit->m_owner,1);}catch(const std::exception&){mismatched=true;}
+				m_game.m_smac_presentations=bindings;
+				bool rebound=false;try{m_game.ConfigureSmacPresentations(GSE_CALL,bindings);}catch(const std::exception&){rebound=true;}
+				GT_ASSERT(mismatched && rebound,"presentation accepted a mismatched role or late configuration");
 				const auto* def = static_cast< StaticDef* >( unit->m_def );
 				GT_ASSERT( def->m_render->m_type == ( local_rover ? Render::RT_CVR_SPARTAN_ROVER : Render::RT_CVR_INITIALIZED_SCOUT )
 					&& unit->Conventional().design_id == ( local_rover ? 64 : 2 ) && unit->Conventional().owner_simulation_id == 1,

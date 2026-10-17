@@ -814,6 +814,23 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"configure_smac_unit_presentations",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(1); N_GETVALUE(roles,0,Object);
+				N_GETPROP(scout,roles,"scout",String); N_GETPROP(rover,roles,"selected_spartan_rover",String); N_GETPROP(former,roles,"former",String);
+				ConfigureSmacPresentations(GSE_CALL,{scout,rover,former});
+				return VALUE(gse::value::Undefined);
+			})
+		},
+		{
+			"resolve_smac_unit_presentation",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(2); N_GETVALUE_UNWRAP(owner,0,Player); N_GETVALUE(design,1,Int);
+				if (design<0 || design>INT32_MAX) { GSE_ERROR(gse::EC.INVALID_CALL,"Invalid conventional design ID"); }
+				return VALUE(gse::value::String,,ResolveSmacProductionPresentation(owner->GetSlot(),static_cast<int32_t>(design))->m_id);
+			})
+		},
+		{
 			"get_ruleset",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -2946,6 +2963,7 @@ void Game::ResetGame() {
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
 		m_pending_simulation.reset(); m_simulation.reset();
+		m_smac_presentations.reset();
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

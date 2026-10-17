@@ -8,6 +8,19 @@ the existing Single/Player human roster roles. The existing initial resource
 context producer retains its first-owner-Base and global-difficulty-3 boundary.
 This entry does not replace the default world script yet.
 
+The default unit definitions also register an explicit Former marker and bind
+the three presentation roles (initialized Scout, selected Spartan Rover,
+Former). Bindings contain definition IDs, not object pointers, and are session
+configuration recreated on startup rather than new saved gameplay fields.
+They can be configured only by the owning initialization before entities.
+The native read-only resolver authenticates the owner and actual frozen design,
+selects its existing checked presentation profile, and validates the currently
+registered definition/morale/render pair. The prepared manufacturing factory
+still validates the full design/home/presentation transaction. Existing default
+Scout/Rover startup tests check the actual bindings, distinct Former marker,
+mismatched-profile rejection and late-reconfiguration rejection. The marker is
+temporary port art; it makes no installed Former rendering claim.
+
 The knowledge-present first transition is intercepted natively before script
 event handlers: only local claimed Start, current turn zero and requested turn
 one are accepted, and the complete startup entity projection is checked again

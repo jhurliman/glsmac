@@ -74,6 +74,13 @@ const result = {
 			]});
 			game.event('define_unit', conventional('ConventionalScout', 'Scout Patrol', 'cvr_initialized_scout'));
 			game.event('define_unit', conventional('ConventionalSpartanRover', 'Scout Rover', 'cvr_spartan_rover'));
+			// Explicit temporary GLSMAC marker until the installed Former recipe
+			// is connected. It never borrows Scout/Rover artwork.
+			game.event('define_unit', {id: 'ConventionalFormer', data: {
+				name: 'Formers', morale: 'CONVENTIONAL', type: 'static', movement_type: 'land',
+				movement_per_turn: 0, render: {type: 'port_former_marker'},
+			}});
+			game.configure_smac_unit_presentations({scout: 'ConventionalScout', selected_spartan_rover: 'ConventionalSpartanRover', former: 'ConventionalFormer'});
 		}
 
 	},

@@ -51,7 +51,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 11 && wire.ReadString() == id, "writer omitted the V11 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 12 && wire.ReadString() == id, "writer omitted the V12 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
@@ -72,6 +72,8 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacFactionStartupRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "faction startup metadata changed" ); }
 			GT_ASSERT( wire.ReadBool() == smac, "predefined unit presence changed" );
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacPredefinedUnitRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "predefined source/derived metadata changed" ); }
+			GT_ASSERT( wire.ReadBool() == smac, "movement presence changed" );
+			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacMovementRules()->Serialize().ToString(), "raw movement rule changed" ); }
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );
@@ -224,7 +226,20 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( settings.Serialize().ToString() == before, "unit rejection changed frozen settings" );
 				// Missing/mistyped fields can consume a replacement body frame while
 				// rejecting its type. Complete framed mismatches stop at the prefix.
-				if ( invalid.first.find( "different valid" ) == 0 ) { GT_ASSERT( input.lenr == end, "profile mismatch consumed world body" ); }
+				if ( invalid.first.find( "different valid" ) == 0 ) { GT_ASSERT( input.lenr <= end, "profile mismatch consumed world body" ); }
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header binds raw movement rule and rejects malformed profiles before body", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& invalid : world_rules_fixture::InvalidMovementHeaders( id ) ) {
+				types::Buffer input( invalid.second ); const auto end = input.lenw; input.WriteString( "unread body" );
+				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				GT_ASSERT( settings.Serialize().ToString() == before, "movement rejection changed settings" );
+				if ( invalid.first.find( "different movement" ) == 0 ) { GT_ASSERT( input.lenr == end, "movement mismatch consumed body" ); }
 			}
 		}
 		GT_OK();

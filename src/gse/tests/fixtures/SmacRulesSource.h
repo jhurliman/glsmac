@@ -55,11 +55,13 @@ inline game::backend::settings::SmacProductionRules Production() {
 	return result;
 }
 
+inline game::backend::settings::SmacMovementRules Movement() { return game::backend::settings::SmacMovementRules( -1 ); }
+
 inline std::string ProductionSource() {
 	const auto rules = Production();
 	std::string source = "#RULES\n";
 	for ( size_t row = 1 ; row <= 70 ; ++row ) {
-		const auto value = row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
+		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
 			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : 0;
 		source += std::to_string( value ) + ", ; synthetic annotation\n";
 	}
@@ -155,7 +157,8 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies()
 		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes()
 		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions()
-		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits();
+		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits()
+		&& settings.GetSmacMovementRules() && *settings.GetSmacMovementRules() == Movement();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
@@ -164,9 +167,11 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& technologies = std::nullopt,
 	const std::optional< std::string >& sizes = std::nullopt,
 	const std::optional< std::string >& factions = std::nullopt,
-	const std::optional< std::string >& units = std::nullopt ) {
+	const std::optional< std::string >& units = std::nullopt,
+	const std::optional< std::string >& movement = std::nullopt,
+	const std::optional< bool > movement_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 8 );
+	result.WriteInt( 9 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -189,6 +194,9 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 		if ( technologies ) { try { catalog = game::backend::settings::SmacTechnologyRules::Deserialize( types::Buffer( *technologies ) ); } catch ( const std::runtime_error& ) {} }
 		result.WriteString( units ? *units : PredefinedUnits( catalog ).Serialize( catalog ).ToString() );
 	}
+	const auto has_movement = movement_present.value_or( present );
+	result.WriteBool( has_movement );
+	if ( has_movement ) { result.WriteString( movement ? *movement : Movement().Serialize().ToString() ); }
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;
 	result.WriteString( map.Serialize().ToString() );

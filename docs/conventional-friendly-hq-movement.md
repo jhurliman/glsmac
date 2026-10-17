@@ -111,3 +111,7 @@ Source checks on parent `4fa1514d` plus this change:
 
 Logs and a final hash manifest are retained under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/friendly-hq-*` outside Git.
+
+A subsequent [selected Rover extension](conventional-selected-rover-hq-movement.md)
+admits its separately measured startup-selected Spartan context. The Infantry
+receipt and restrictions documented here remain unchanged.

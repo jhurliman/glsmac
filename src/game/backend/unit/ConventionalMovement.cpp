@@ -107,10 +107,15 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const base::Base* admitted_hq = nullptr;
 	const auto& bases = m_game->GetBM()->GetBases();
 	if ( !bases.empty() ) {
-		if ( bases.size() != 1 || m_units.size() != 1 || stored.design_id != 2 || stored.stored_morale != 1 || stored.damage != 0
-			|| design.chassis != 0 || stats.quantum != 3 || stats.basic_allowance != 3 || stats.full_allowance != 3
-			|| context.retained_morale != 0 || social.retained->at( 7 ) != 0 ) {
-			throw std::runtime_error( "Friendly HQ movement requires one healthy neutral design-2 Infantry Scout with quantum3" );
+		const bool infantry = stored.design_id == 2 && design.chassis == 0 && stats.basic_allowance == 3
+			&& stats.full_allowance == 3 && context.retained_morale == 0;
+		// This context is produced only after resolving the canonical Spartan
+		// participant and its actual selected owned design, never slot arithmetic.
+		const bool selected_rover = context.presentation == ConventionalUnitContext::Presentation::SelectedSpartanRover
+			&& design.chassis == 1 && stats.basic_allowance == 6 && stats.full_allowance == 6 && context.retained_morale == 2;
+		if ( bases.size() != 1 || m_units.size() != 1 || stored.stored_morale != 1 || stored.damage != 0
+			|| stats.quantum != 3 || social.retained->at( 7 ) != 0 || ( !infantry && !selected_rover ) ) {
+			throw std::runtime_error( "Friendly HQ movement requires one healthy measured Infantry or selected Spartan Rover with quantum3" );
 		}
 		const auto& entry = *bases.begin();
 		const auto* hq = entry.second;

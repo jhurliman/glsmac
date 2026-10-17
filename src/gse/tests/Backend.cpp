@@ -144,7 +144,6 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 class BackendFixture {
 public:
 	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false ) {
-		if ( single && selected_rover ) { throw std::invalid_argument( "Fixture roster modes must be selected separately" ); }
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -159,6 +158,7 @@ public:
 			} );
 			smac_rules_fixture::AcceptWorldSize( settings );
 			EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
+			if ( single && selected_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
 			m_game.PrepareNewSimulation();
 			if ( refreshed ) {
 				m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
@@ -197,8 +197,10 @@ public:
 		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.starting_scout = design; return; } }
 		throw std::runtime_error( "missing fixture design owner" );
 	}
-	void ConventionalCopyRoverDesign( int32_t simulation, int32_t design ) {
-		auto copy = m_game.m_simulation->value.designs.Find( 2 )->designs.front();
+	void ConventionalCopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) {
+		const auto* source = m_game.m_simulation->value.designs.Find( source_simulation );
+		if ( !source || source->designs.empty() ) { throw std::runtime_error( "missing fixture copy source" ); }
+		auto copy = source->designs.front();
 		copy.id = design;
 		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.designs.push_back( copy ); return; } }
 		throw std::runtime_error( "missing fixture design owner" );
@@ -4026,7 +4028,7 @@ ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< 
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
-void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design ) { fixture->ConventionalCopyRoverDesign( simulation, design ); }
+void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }
 void ConventionalUnitFixture::GameplayRandom( game::backend::SmacGameplayRandomState value ) { fixture->ConventionalRandom( value ); }
 void ConventionalUnitFixture::RetainedPlanet( int32_t retained, int32_t current ) { fixture->ConventionalPlanet( retained, current ); }

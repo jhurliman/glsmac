@@ -1,5 +1,6 @@
 #include "ConventionalUnits.h"
 #include "fixtures/FriendlyHQMovement.h"
+#include "fixtures/SpartanHQMovement.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -83,7 +84,7 @@ base::Base* HQ( GSE_CALLABLE, Game* game, Unit* unit, map::tile::Tile* tile, siz
 		manager->DefineFacility( new base::FacilityDef( "HEADQUARTERS", "Fixture HQ", "Fixture", 1, { "fixture", 0, 0, 1, 1 } ) );
 	}
 	if ( !manager->GetPopDef( "HQ_WORKER" ) ) { manager->DefinePop( new base::PopDef( "HQ_WORKER", "Worker", {}, {}, base::PopDef::PF_NONE ) ); }
-	auto* result = new base::Base( game, id, unit->m_owner, game->GetFaction( "GAIANS" ), tile, "HQ",
+	auto* result = new base::Base( game, id, unit->m_owner, unit->m_owner->GetPlayer()->GetFaction(), tile, "HQ",
 		{ { "HEADQUARTERS", manager->GetFacilityDef( "HEADQUARTERS" ) } }, { { 1, base::Pop( nullptr, 1, manager->GetPopDef( "HQ_WORKER" ) ) } }, 2 );
 	manager->SpawnBase( GSE_CALL, result ); return result;
 }
@@ -189,6 +190,47 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
 		} );
 	} );
+	task->AddTest( "conventional selected Rover HQ movement matches21 original startup outcomes", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int endpoint = 1; endpoint < 3; ++endpoint ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager, true );
+				fixture.RetainedPlanet( 0, 7 ); // deliberately disagreeing current value must not replace retained
+				auto* view = Call( GSE_CALL, static_cast< value::Object* >( game->Wrap( GSE_CALL ) ), "get_startup_designs", { game->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->Wrap( GSE_CALL ) } );
+				auto initial = Record(); initial.design_id = static_cast< int32_t >( Int( view, "starting_scout" ) );
+				auto* unit = Spawn( GSE_CALL, fixture, initial, 71, 0, "EXPLICIT_ROVER" );
+				const auto stats = unit->QueryStats( SmacMoraleMode::Mode0 );
+				GT_ASSERT( initial.design_id == 64 && stats.effective_morale == 2 && stats.basic_allowance == 6 && stats.full_allowance == 6, "real selected Rover producer or refreshed context differs" );
+				auto* source = game->GetMap()->GetTile( 2, 2 ); auto* destination = game->GetMap()->GetTile( 3, 3 );
+				auto* hq = endpoint ? HQ( GSE_CALL, game, unit, endpoint == 1 ? source : destination ) : nullptr;
+				for ( const auto& c : spartan_hq_fixture::CASES ) {
+					if ( c.endpoint != endpoint ) { continue; }
+					Land( game ); unit->SetTile( GSE_CALL, source ); auto record = initial; record.spent = static_cast< uint8_t >( c.spent );
+					manager->UpdateConventionalUnit( GSE_CALL, unit, record );
+					OriginalFeatures( source, c.source_flags ); OriginalFeatures( destination, c.destination_flags );
+					fixture.GameplayRandom( { c.seed, 0xabcdef01 } ); fixture.Updates();
+					const auto base_bytes = hq ? base::Base::Serialize( hq ).ToString() : std::string{};
+					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
+					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
+					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
+						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
+						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == jsf && Unit::GetNextId() == next && source->features == sf && destination->features == df
+						&& source->terraforming == st && destination->terraforming == dt && ( !hq || base::Base::Serialize( hq ).ToString() == base_bytes ),
+						"case " + std::string( c.id ) + " changed unrelated terrain/base/ID/JSF state" );
+					const auto& updates = fixture.Updates();
+					GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == ( c.spent < 6 ? 1 : 0 ),
+						"case " + std::string( c.id ) + " presented an exhausted command or lost an admitted attempt" );
+				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
 	task->AddTest( "conventional friendly HQ movement matches70 original homeless outcomes", []( GSE*, context::Context* ) -> std::string {
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
@@ -221,6 +263,39 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == ( c.spent < 3 ? 1 : 0 ),
 						"case " + std::string( c.id ) + " presented an exhausted command or lost an admitted attempt" );
 				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional selected Rover HQ rejects unmeasured or no-longer-selected contexts", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int scenario = 0; scenario < 8; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager, true );
+				auto record = Record(); record.design_id = 64;
+				if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
+				auto* unit = Spawn( GSE_CALL, fixture, record, 71, 0, "EXPLICIT_ROVER" );
+				auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 ); auto* hq = HQ( GSE_CALL, game, unit, source );
+				fixture.Updates();
+				if ( scenario == 2 ) { fixture.RetainedPlanet( 1, 0 ); }
+				if ( scenario == 3 ) { fixture.RetainedMorale( 0, 2 ); }
+				if ( scenario == 5 ) { fixture.SelectStartup( 1, 2 ); }
+				if ( scenario == 6 ) { fixture.CopyRoverDesign( 1, 65, 1 ); fixture.SelectStartup( 1, 65 ); }
+				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72, 0, "EXPLICIT_ROVER" ); other->SetTile( GSE_CALL, game->GetMap()->GetTile( 6, 6 ) ); fixture.Updates(); }
+				const auto base_bytes = base::Base::Serialize( hq ).ToString();
+				fixture.GameplayRandom( { 0, 77 } ); const auto jsf = game->GetRandom()->GetStateString(); const auto members = source->units;
+				const auto before = unit->Conventional(); const auto next = Unit::GetNextId(); bool rejected = false;
+				try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& ) { rejected = true; }
+				GT_ASSERT( rejected, "unsupported Rover HQ context admitted at " + std::to_string( scenario ) );
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == members && destination->units.empty()
+					&& fixture.GameplayRandom() == SmacGameplayRandomState( 0, 77 ) && game->GetRandom()->GetStateString() == jsf
+					&& Unit::GetNextId() == next && base::Base::Serialize( hq ).ToString() == base_bytes, "rejected Rover HQ command changed authority" );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ), "rejected Rover HQ command published unit movement" );
 				GT_OK();
 			} ); if ( !error.empty() ) { return error; }
 		}
@@ -269,6 +344,43 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					"unmeasured HQ context mutated authority at " + std::to_string( scenario ) );
 				const auto& updates = fixture.Updates();
 				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ), "rejected HQ move queued Unit presentation" );
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional selected Rover HQ actual restore preserves failure and next command", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		ConventionalUnitFixture source, destination; source.Configure( true, 3, true, true ); destination.Configure( true, 3, true, true );
+		std::string snapshot, base_bytes;
+		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Land( game ); Define( game->GetUM(), true ); source.RetainedPlanet( 0, 9 );
+			auto record = Record(); record.design_id = 64; record.spent = 5; auto* unit = Spawn( GSE_CALL, source, record, 71, 0, "EXPLICIT_ROVER" ); auto* hq = HQ( GSE_CALL, game, unit, unit->GetTile() );
+			base_bytes = base::Base::Serialize( hq ).ToString(); source.GameplayRandom( { 0, 77 } );
+			source.MoveEvent( GSE_CALL, unit, game->GetMap()->GetTile( 3, 3 ) );
+			GT_ASSERT( unit->GetTile() == hq->GetTile() && unit->Conventional().failed_move && unit->Conventional().spent == 6, "saved HQ attempt did not fail at strict draw boundary" );
+			snapshot = source.Snapshot(); GT_OK();
+		} ); if ( !setup.empty() ) { return setup; }
+		const auto restored = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.GameplayRandom( { 99, 88 } ); destination.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable );
+			destination.Restore( GSE_CALL, snapshot ); auto* game = destination.Game(); game->GetBM()->ProcessUnprocessed( GSE_CALL );
+			auto* hq = game->GetBM()->GetBase( 31 ); auto* unit = game->GetUM()->GetUnit( 71 );
+			GT_ASSERT( hq && hq->GetTile() == unit->GetTile() && hq->GetTile()->base == hq
+				&& hq->m_facilities.at( "HEADQUARTERS" ) == game->GetBM()->GetFacilityDef( "HEADQUARTERS" )
+				&& base::Base::Serialize( hq ).ToString() == base_bytes && destination.Snapshot() == snapshot,
+				"world restore lost canonical HQ references or exact continuation" ); GT_OK();
+		} ); if ( !restored.empty() ) { return restored; }
+		std::string continued;
+		for ( auto* fixture : { &source, &destination } ) {
+			const auto error = fixture->Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture->Game(); game->AdvanceTurn( 2 ); auto* unit = game->GetUM()->GetUnit( 71 ); auto* target = game->GetMap()->GetTile( 3, 3 );
+				GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move, "upkeep lost saved HQ failure history" );
+				fixture->MoveEvent( GSE_CALL, unit, target );
+				GT_ASSERT( unit->GetTile() == target && unit->Conventional().spent == 3 && !unit->Conventional().failed_move
+					&& base::Base::Serialize( game->GetBM()->GetBase( 31 ) ).ToString() == base_bytes, "continued HQ command changed base or failure history" );
+				if ( continued.empty() ) { continued = fixture->Snapshot(); }
+				else { GT_ASSERT( fixture->Snapshot() == continued, "restored HQ command diverged from uninterrupted whole world" ); }
 				GT_OK();
 			} ); if ( !error.empty() ) { return error; }
 		}

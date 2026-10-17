@@ -7,6 +7,8 @@ SET( SRC ${SRC}
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
 	${PWD}/SmacGameplayRandomState.cpp
+	${PWD}/SmacScoutCombat.cpp
+	${PWD}/SmacEmptyGroundMovement.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Mesh.cpp
@@ -16,6 +18,7 @@ SET( SRC ${SRC}
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
+	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
@@ -36,5 +39,6 @@ SET( SRC ${SRC}
 	${PWD}/Scripts.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacMineralCostFactor.cpp
+	${PWD}/SmacConventionalStats.cpp
 
 	PARENT_SCOPE )

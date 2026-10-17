@@ -46,14 +46,14 @@ Owned continuation is a GLSMAC reproducibility contract. The original
 RE-SMAC-RNG-SEAMS-001 establishes independent setter/draw replay, not the
 new-world seed chain. RE-SMAC-RNG-SAVE-LOAD-001 observed ordinary original file
 bodies preserving the current words rather than restoring their saved values;
-Iron Man has a separate CRT clock policy. The first RE-SMAC-FULL-RULES-001
-runs observed unchanged words through complete 1,071-numeric-read rules loads
-only with a fresh parser and mostly zero global state. Later investigation
-using the complete constructor table, clock seeds and initialized PCX/graphics
-state reaches a shared draw during faction graphics/palette setup inside the
-loader. The earlier fixture does not establish that rules loading universally
-preserves either continuation. Final setup-to-command seed/draw origins remain
-open. This change makes no original file-format, exact startup-seed, multiplayer
+Iron Man has a separate CRT clock policy. RE-SMAC-FULL-RULES-001 distinguishes
+the loader argument: complete `loader(0)` runs preserve both words, including
+a run after all 402 global constructors. A nonzero loader argument enables
+faction setup and shared palette-ID draws. The normal top-level caller supplies
+`[0, 1]` and forwards that second argument; an earlier development setup omitted
+it and therefore did not establish the normal path. Constructor initialization
+alone is not the reason for the loader difference. Final setup-to-command
+seed/draw origins remain open. This change makes no original file-format, exact startup-seed, multiplayer
 lockstep, movement, combat or live command-consumption claim.
 
 ## Validation boundaries

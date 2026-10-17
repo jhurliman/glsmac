@@ -6,6 +6,8 @@
 
 #include "Types.h"
 
+#include <deque>
+
 namespace game {
 namespace backend {
 
@@ -69,7 +71,15 @@ private:
 	std::unordered_map< std::string, MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, Def* > m_unit_defs = {};
 	std::map< size_t, Unit* > m_units = {};
-	std::vector< Unit* > m_unprocessed_units = {};
+	struct pending_unit_t {
+		Unit* unit;
+		bool is_new;
+	};
+	std::deque< pending_unit_t > m_unprocessed_units = {};
+	// Restored units need the same frontend publication, without new-unit hooks.
+	void RegisterUnit( Unit* unit );
+	void TriggerSpawnHook( GSE_CALLABLE, Unit* unit );
+	bool HasUnitId( const size_t id ) const;
 
 	enum unit_update_op_t : uint8_t {
 		UUO_NONE = 0,

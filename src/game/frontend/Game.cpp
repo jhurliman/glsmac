@@ -1058,7 +1058,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* unitdef = backend::unit::Def::Deserialize( buf );
+			const auto* unitdef = backend::unit::Def::Deserialize( buf, g_engine->GetGame()->GetUM() );
 			m_um->DefineUnit( unitdef );
 			delete unitdef;
 			break;
@@ -1791,6 +1791,11 @@ void Game::Deinitialize() {
 		DELETE( it.second );
 	}
 	m_actors_map.clear();
+
+	// The world scene survives map reloads; unlink before destroying its camera and lights.
+	m_world_scene->SetCamera( nullptr );
+	m_world_scene->RemoveLight( m_light_a );
+	m_world_scene->RemoveLight( m_light_b );
 
 #define x( _obj ) \
     if ( _obj ) { \

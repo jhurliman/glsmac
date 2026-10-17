@@ -51,13 +51,15 @@ const std::string UUID::Generate( unsigned int mode ) {
 	if ( ( rc = uuid_make( s_uuid_state.ctx, mode ) ) != UUID_RC_OK ) {
 		THROW( "failed to generate UUID (error code: " + std::to_string( rc ) + " )" );
 	}
-	char* str = NULL;
-	if ( ( rc = uuid_export( s_uuid_state.ctx, UUID_FMT_STR, (void**)&str, NULL ) ) != UUID_RC_OK ) {
+	// Use caller-owned storage so OSSP's internal allocation is never passed
+	// to the application's tracked free(). UUID_LEN_STR excludes the terminator.
+	char buffer[ UUID_LEN_STR + 1 ] = {};
+	char* str = buffer;
+	size_t length = sizeof( buffer );
+	if ( ( rc = uuid_export( s_uuid_state.ctx, UUID_FMT_STR, &str, &length ) ) != UUID_RC_OK ) {
 		THROW( "failed to format UUID (error code: " + std::to_string( rc ) + " )" );
 	}
-	std::string result( str );
-	free( str );
-	return result;
+	return std::string( buffer );
 #else
 	// this algorithm is bad, used here only until ossp-uuid build is fixed
 	std::stringstream ss;

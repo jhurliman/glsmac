@@ -210,7 +210,11 @@ real event to Unit/tile/RNG authority and exact continuation. Its source passes
 full normal and leak-enabled sanitizer suites. The subsequent
 [combined movement receipt](validation/conventional-movement-2026-10-17.md)
 records Windows and Linux CTest 8/8 and 18 tracked groups at `5bc62766`.
-Friendly-HQ movement and default conventional startup remain follow-ups.
+The subsequent [startup/HQ checkpoint](validation/startup-hq-2026-10-17.md)
+at `5ed286fd` adds the restricted Infantry/HQ route and actual raw-startup
+readiness lifecycle. Windows, leak-enabled Linux and native macOS pass CTest
+8/8; 50 tracked groups pass and the full 337-unit analysis has zero failures.
+Default conventional startup remains a follow-up.
 
 The preceding [social and movement receipt](validation/social-movement-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
@@ -376,24 +380,25 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Finish the real conventional movement consumer: commit Unit bytes, tile
-   membership and the owned shared/CRT pair together; preserve retry markers
-   through upkeep and continuation. Keep the initial no-base local campaign
-   boundary explicit. Follow with the measured friendly-HQ entry/exit cases,
-   including infrastructure endpoints, exhausted units and the fungus lottery.
-   Rover and unmeasured distant-base contexts require their own evidence.
-2. Create the actual selected starting conventional unit in the original order:
-   first base under early social state, raw Unit creation, late social refresh,
-   then upkeep and first-command publication. Do not invent retained-zero
-   morale or delay actual allocation merely to satisfy the current resolver.
-   Complete initialized Infantry faction materials and retain the measured
-   Spartan Rover composition. Activate only an explicitly admitted startup
-   branch after real startup, reset and continuation tests pass.
-3. Connect human base-square/manual-worker intake to the measured economy,
-   then support, posting, completion and production queues. Preserve independent
-   target, stored minerals and switching baseline. Connect colony founding and
-   conventional combat as legal commands with their own persistence cases;
-   the complete first-base to second-base loop remains the acceptance target.
+1. Extend the integrated conventional command/HQ route with the measured
+   startup-selected Spartan Rover and Gaian rating composition. Remove global
+   unit/base-count fences only where caller provenance and remote-record
+   controls establish independence. Preserve actual endpoint, occupancy and
+   ownership checks; distant fungus, repair and hostile interactions remain
+   separate consumers. Keep exact Unit/tile/RNG continuation.
+2. Complete initialized Infantry presentation from the fresh original capture:
+   VI/reactor scene shades, Infantry scale and attachment, initialized light,
+   and the separately initialized main palette. Preserve prior Scout/Rover
+   profiles. The actual Early-to-ready lifecycle is integrated; connect an
+   explicitly admitted default startup branch only when presentation and
+   commands support its real roster and terrain.
+3. Retain all nine resource rows, mine rules, demand and configured yield-tech
+   identities in the owned host/world profile, then connect the existing
+   canonical evaluating-base query to real worker intake. Preserve the measured
+   manual-handler calculation and rejection order. Follow with support,
+   posting, completion and queues, retaining independent stored minerals and
+   switching baseline. Founding and combat still need legal persistent commands
+   to complete the first-base to second-base loop.
 
 The host/world profile and startup-design foundations are implemented; focused
 publication and review remain separate from integration. Review quota delays

@@ -15,8 +15,9 @@
 
 namespace game::backend {
 
-map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base ) const {
+map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base, bool startup ) const {
 	using Frame = map::SmacWorkerMapFrame;
+	if ( startup ) { RequireConventionalStartupClaim(); }
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !m_map || !m_bm || !m_um || m_state->m_settings.global.GetRulesetId() != "smac" ) {
 		throw std::runtime_error( "Worker knowledge requires a current canonical SMAC world" );
@@ -52,9 +53,13 @@ map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerK
 	for ( const auto& entry : m_um->GetUnits() ) {
 		const auto* unit = entry.second;
 		if ( !unit || unit->m_id != entry.first || !unit->IsConventional() ) { throw std::runtime_error( "Worker knowledge requires canonical live units" ); }
-		unit->RequireConventionalReady();
 		const auto& state = unit->Conventional();
-		ResolveConventionalUnit( state, unit->m_owner );
+		if ( startup ) {
+			if ( !unit->IsConventionalPending() || state.home_base_id || state.home != unit::ConventionalUnitState::Home::None ) {
+				throw std::runtime_error( "Startup knowledge requires actual Early homeless units" );
+			}
+			ResolveConventionalIdentity( state, unit->m_owner, *m_simulation );
+		} else { unit->RequireConventionalReady(); ResolveConventionalUnit( state, unit->m_owner ); }
 		const auto position = coordinate( unit->GetTile() );
 		const auto member = unit->GetTile()->units.find( entry.first );
 		if ( member == unit->GetTile()->units.end() || member->second != unit ) { throw std::runtime_error( "Worker unit is missing current tile membership" ); }
@@ -199,9 +204,16 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 }
 
 std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64_t id, int32_t owner,
-	const map::tile::Tile* destination, const map::tile::Tile* source ) const {
+	const map::tile::Tile* destination, const map::tile::Tile* source, bool startup ) const {
 	if ( !m_map || !m_map->m_worker_knowledge ) { return {}; }
-	RequireConventionalSightWorld();
+	if ( startup ) {
+		RequireConventionalStartupClaim();
+		if ( source || !m_map->m_worker_knowledge_ready ) { throw std::runtime_error("Startup sight requires initial placement and bound knowledge"); }
+		const auto prior = m_map->m_worker_knowledge->CopyData();
+		for ( int32_t observer = 1; observer <= 7; ++observer ) {
+			if ( prior.observers[observer] ) { (void)ProjectSmacWorkerKnowledge(*m_map->m_worker_knowledge,observer,nullptr,true); }
+		}
+	} else { RequireConventionalSightWorld(); }
 	auto data = m_map->m_worker_knowledge->CopyData();
 	if ( owner < 1 || owner > 7 || !data.observers[owner] || !destination || destination->tiles != m_map->GetTilesPtr()
 		|| destination->coord.x >= m_map->GetWidth() || destination->coord.y >= m_map->GetHeight()

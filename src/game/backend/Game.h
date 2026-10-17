@@ -537,14 +537,14 @@ private:
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge, std::optional< map::GlsmacTerritoryTopology > territory = std::nullopt );
-	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base = nullptr ) const;
+	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base = nullptr, bool startup = false ) const;
 	std::optional< map::SmacWorkerKnowledge > PrepareBaseTerritory( const base::Base* added, const base::Base* removed, bool attached ) const;
 	void CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
 	void ValidateSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge ) const;
 	void CompleteSmacWorkerKnowledgeRestore();
 	void RequireConventionalSightWorld() const;
 	std::optional< map::SmacWorkerKnowledge > PrepareConventionalZoc( const unit::Unit& unit, const map::tile::Tile* destination ) const;
-	std::optional< map::SmacWorkerKnowledge > PrepareConventionalSight( uint64_t id, int32_t owner, const map::tile::Tile* destination, const map::tile::Tile* source ) const;
+	std::optional< map::SmacWorkerKnowledge > PrepareConventionalSight( uint64_t id, int32_t owner, const map::tile::Tile* destination, const map::tile::Tile* source, bool startup = false ) const;
 	void CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
 	bool HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void ResetGame();

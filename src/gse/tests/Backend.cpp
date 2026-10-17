@@ -5315,6 +5315,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			}
 			for ( const auto& invalid : world_rules_fixture::InvalidWorldSizeHeaders( ruleset ) ) { rejected.emplace_back( "world-size: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidFactionHeaders( ruleset ) ) { rejected.emplace_back( "faction: " + invalid.first, invalid.second ); }
+			for ( const auto& invalid : world_rules_fixture::InvalidPredefinedHeaders( ruleset ) ) { rejected.emplace_back( "predefined: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
@@ -5337,7 +5338,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				}
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();

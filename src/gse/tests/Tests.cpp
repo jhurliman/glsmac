@@ -3,6 +3,7 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Value.h"
@@ -82,6 +83,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );

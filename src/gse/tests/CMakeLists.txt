@@ -22,6 +22,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacPredefinedUnitRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/SmacTechnologyState.cpp
 	${PWD}/WorldSnapshotRules.cpp

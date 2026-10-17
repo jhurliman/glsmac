@@ -9,13 +9,17 @@
 #include "game/backend/Player.h"
 #include "game/backend/faction/FactionManager.h"
 #include "game/backend/event/Event.h"
+#include "gc/Space.h"
 
 namespace game {
 namespace backend {
 namespace connection {
 
 Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settings )
-	: Connection( gc_space, network::CM_SERVER, settings ) {}
+	: Server( gc_space, settings, g_engine->GetNetwork() ) {}
+
+Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settings, network::Network* const network )
+	: Connection( gc_space, network::CM_SERVER, settings, network ) {}
 
 void Server::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
@@ -125,13 +129,16 @@ void Server::ProcessEvent( const network::Event& event ) {
 							"player", player_copy->Wrap( GSE_CALL )
 						}
 					}; },
-					[ player_copy ]() {
-						DELETE( player_copy );
+					[ space = GetGCSpace(), player_copy ]() {
+						// Cleanup may run after the notification's accumulation ends.
+						space->WithNativeMutation( [ player_copy ]() { delete player_copy; } );
 					}
 				);
 
 				if ( m_game_state == GS_LOBBY ) {
-					DELETE( player );
+					// Broadcast and callback scheduling above must stay outside this
+					// collection exclusion; only retire the native wrapper target here.
+					GetGCSpace()->WithNativeMutation( [ player ]() { DELETE( player ); } );
 				}
 			}
 			break;

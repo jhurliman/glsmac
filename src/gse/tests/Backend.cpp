@@ -144,6 +144,193 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+	std::string CheckServerPlayerRetirement( const bool native_poll, const bool running, const bool close_slot, const bool nested_owner = true ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait( const std::chrono::milliseconds timeout = std::chrono::seconds( 2 ) ) {
+				std::unique_lock lock( mutex ); return cv.wait_for( lock, timeout, [ & ]() { return entered; } );
+			}
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} destruction_gate, collection_gate;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			size_t retired = 0;
+			std::function< void() > on_retire;
+			void NotifyDependencyDestruction( const Wrappable* ) override { ++retired; if ( on_retire ) { on_retire(); } }
+		} player_observer, copy_observer;
+		class PlayerProbe final : public Player {
+		public:
+			PlayerProbe( Gate& gate, std::atomic< bool >& pause )
+				: Player( "Leaving player", Player::PR_PLAYER, nullptr, "" ), gate( gate ), pause( pause ) {}
+			~PlayerProbe() override { if ( pause ) { gate.Enter(); } }
+		private:
+			Gate& gate; std::atomic< bool >& pause;
+		};
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		class Transport final : public network::Network {
+		public:
+			~Transport() override { Stop(); }
+			void DisconnectEvent( network::cid_t cid ) { network::Event event; event.type = network::Event::ET_CLIENT_DISCONNECT; event.cid = cid; AddEvent( event ); }
+			network::events_t sent;
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { const auto events = GetEvents(); sent.insert( sent.end(), events.begin(), events.end() ); }
+		} transport;
+		class Server final : public connection::Server {
+		public:
+			Server( gc::Space* space, settings::LocalSettings* settings, network::Network* transport ) : connection::Server( space, settings, transport ) {}
+			void Phase( bool running ) { m_game_state = running ? GS_RUNNING : GS_LOBBY; }
+		};
+		std::atomic< bool > pause_destruction{ native_poll && !running };
+		PlayerProbe* player = nullptr;
+		Value* player_wrapper = nullptr; Value* copy_wrapper = nullptr;
+		Server* server = nullptr;
+		size_t leave_calls = 0; bool copy_fields_ok = false, rooted = false, observing = false;
+		std::thread producer, collector;
+		std::exception_ptr producer_error, collector_error;
+		std::mutex thread_mutex; std::thread::id collector_thread;
+		std::promise< void > collect_started;
+		bool collection_crossed_retirement = false;
+		bool collection_attempt_started = true;
+		util::FinallyGuard cleanup( [ & ]() {
+			pause_destruction = false;
+			destruction_gate.Release(); collection_gate.Release();
+			if ( producer.joinable() ) { producer.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			ProcessAccumulations();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( observing && !player_observer.retired ) { player->Undepend( &player_observer ); }
+				if ( server ) { server->ResetHandlers(); }
+				// This fixture owns all remaining native Players. Retire them before
+				// the local derived destructor's gate and observers leave scope.
+				m_state->Reset();
+				transport.Iterate();
+				if ( server ) { server->IterateAndMaybeDelete( false ); }
+			} );
+			g_engine->GetGC()->Iterate(); // retire the Server while its transport lives
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collector_thread != std::this_thread::get_id() ) { return; } }
+			collection_gate.Enter();
+		};
+		if ( !native_poll && !nested_owner ) {
+			// An immediate owner's WTrigger cleanup runs after its internal
+			// accumulation. Observe the real copy destructor at that boundary.
+			copy_observer.on_retire = [ & ]() {
+				collector = std::thread( [ & ]() {
+					{ std::lock_guard lock( thread_mutex ); collector_thread = std::this_thread::get_id(); }
+					collect_started.set_value();
+					try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collector_error = std::current_exception(); }
+				} );
+				collection_attempt_started = collect_started.get_future().wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready;
+				collection_crossed_retirement = collection_gate.Wait( std::chrono::milliseconds( 100 ) );
+				collection_gate.Release();
+				if ( collection_crossed_retirement ) { collector.join(); }
+			};
+		}
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEW( player, PlayerProbe, destruction_gate, pause_destruction );
+			m_state->AddPlayer( player );
+			auto& slot = m_state->m_slots->GetSlot( 1 ); slot.SetPlayer( player, 17, "fixture" ); slot.SetLinkedGSID( "leaving-gsid" ); player->Connect();
+			m_state->AddCIDSlot( 17, 1 ); if ( close_slot ) { slot.SetCloseAfterClear(); }
+			NEWV( survivor, Player, "Remaining player", Player::PR_PLAYER, nullptr, "" );
+			m_state->AddPlayer( survivor ); m_state->m_slots->GetSlot( 2 ).SetPlayer( survivor, 23, "fixture" ); survivor->Connect(); m_state->AddCIDSlot( 23, 2 );
+			player_wrapper = player->Wrap( GSE_CALL ); ctx->CreateConst( "server_leaving_player", player_wrapper, si, ep );
+			player->Depend( &player_observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			server = new Server( gc_space, &m_state->m_settings.local, &transport ); m_state->SetConnection( server );
+			server->On( GSE_CALL, "player_leave", NATIVE_CALL( &leave_calls, &copy_fields_ok, &copy_wrapper, &copy_observer, running, player ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( copy, event, "player", Player );
+				++leave_calls;
+				copy_fields_ok = copy != player && copy->GetPlayerName() == "Leaving player" && copy->GetRole() == Player::PR_PLAYER &&
+					( running ? copy->GetSlot() != nullptr && !copy->IsConnected() : copy->GetSlot() == nullptr );
+				copy_wrapper = copy->Wrap( GSE_CALL ); ctx->CreateConst( "server_leave_copy", copy_wrapper, si, ep ); copy->Depend( &copy_observer );
+				return VALUE( value::Undefined );
+			} ) );
+			server->Connect(); transport.Iterate(); m_state->Iterate(); // real connect request/result
+			server->Phase( running );
+			m_state->Iterate(); // enqueue actual GETEVENTS
+			transport.DisconnectEvent( 17 ); transport.Iterate(); // publish actual successful MT event response
+			GT_ASSERT( !leave_calls && !player_observer.retired && m_state->GetCidSlots().count( 17 ), "pending response changed the roster" );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "server disconnect setup: " + setup );
+		if ( native_poll ) {
+			producer = std::thread( [ & ]() { try { m_state->Iterate(); } catch ( ... ) { producer_error = std::current_exception(); } } );
+			if ( !running ) {
+				GT_ASSERT( destruction_gate.Wait(), "real Server event did not reach final Player destruction" );
+				GT_ASSERT( leave_calls == 0 && !player_observer.retired, "notification ran early or Player base destructor was entered" );
+				// The real event has already queued player_leave. Pausing the test
+				// derived destructor keeps the base Player/wrappers alive in the old
+				// code control while testing the actual final retirement boundary.
+				collector = std::thread( [ & ]() {
+					{ std::lock_guard lock( thread_mutex ); collector_thread = std::this_thread::get_id(); }
+					collect_started.set_value();
+					try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collector_error = std::current_exception(); }
+				} );
+				GT_ASSERT( collect_started.get_future().wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready, "collector did not start" );
+				collection_crossed_retirement = collection_gate.Wait( std::chrono::milliseconds( 100 ) );
+				collection_gate.Release();
+				if ( collection_crossed_retirement ) { collector.join(); } // old-code control: finish Collect while Player is still alive
+				destruction_gate.Release();
+			}
+			producer.join(); if ( collector.joinable() ) { collector.join(); }
+			if ( producer_error ) { std::rethrow_exception( producer_error ); }
+			if ( collector_error ) { std::rethrow_exception( collector_error ); }
+			GT_ASSERT( leave_calls == 0, "foreign dispatch executed script notification inline" );
+			ProcessAccumulations();
+		}
+		else if ( nested_owner ) {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				m_state->Iterate(); GT_ASSERT( gc_space->IsAccumulating(), "nested disconnect lost owner accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested disconnect: " + nested );
+		}
+		else {
+			m_state->Iterate();
+			if ( collector.joinable() ) { collector.join(); }
+			if ( collector_error ) { std::rethrow_exception( collector_error ); }
+		}
+		GT_ASSERT( leave_calls == 1 && copy_fields_ok && copy_observer.retired == 1 && copy_wrapper && copy_wrapper->type == VT_UNDEFINED,
+			"leave copy notification/retirement did not complete exactly once" );
+		GT_ASSERT( !m_state->GetCidSlots().count( 17 ) && m_state->GetCidSlots().at( 23 ) == 2, "disconnect damaged CID ownership" );
+		const auto& slot = m_state->m_slots->GetSlot( 1 );
+		if ( running ) {
+			GT_ASSERT( !player_observer.retired && player_wrapper->type == VT_OBJECT && m_state->m_players.count( player ) && m_state->m_players.size() == 2 &&
+				slot.GetState() == slot::Slot::SS_PLAYER && slot.GetPlayer() == player && player->GetSlot() == &slot && !player->IsConnected() && slot.GetLinkedGSID() == "leaving-gsid",
+				"running disconnect retired the reconnectable Player" );
+		}
+		else {
+			GT_ASSERT( player_observer.retired == 1 && player_wrapper->type == VT_UNDEFINED && !m_state->m_players.count( player ) && m_state->m_players.size() == 1 &&
+				slot.GetState() == ( close_slot ? slot::Slot::SS_CLOSED : slot::Slot::SS_OPEN ) && slot.GetLinkedGSID().empty(),
+				"lobby retirement left Player/Slot ownership or a live wrapper" );
+		}
+		transport.Iterate(); // consume the real queued broadcast request
+		size_t updates = 0;
+		for ( const auto& sent : transport.sent ) {
+			if ( sent.type != network::Event::ET_PACKET ) { continue; }
+			types::Packet packet( types::Packet::PT_NONE ); packet.Deserialize( types::Buffer( sent.data.packet_data ) );
+			if ( packet.type == types::Packet::PT_SLOT_UPDATE && packet.data.num == 1 && sent.cid == 23 ) { ++updates; }
+		}
+		GT_ASSERT( updates == 1, "disconnect did not broadcast its one slot update" );
+		m_state->Iterate(); transport.Iterate(); m_state->Iterate(); ProcessAccumulations();
+		GT_ASSERT( leave_calls == 1 && copy_observer.retired == 1 && player_observer.retired == ( running ? 0u : 1u ), "repeat polling repeated Player retirement" );
+		GT_ASSERT( collection_attempt_started, "copy retirement collector did not start" );
+		GT_ASSERT( !collection_crossed_retirement, "collection entered during final Server Player retirement" );
+		GT_OK();
+	}
+
 	std::string CheckTerminalConnectionRetirement( const bool native_poll, const bool detached ) {
 		using namespace game::backend;
 		struct Gate {
@@ -3642,6 +3829,17 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "server Player retirement immediate-owner copy cleanup", GT() {
+		BackendFixture fixture; return fixture.CheckServerPlayerRetirement( false, false, false, false );
+	} );
+	for ( const bool native : { false, true } ) {
+		for ( const int mode : { 0, 1, 2 } ) {
+			task->AddTest( "server Player retirement native " + std::to_string( native ) + " mode " + std::to_string( mode ), GT( native, mode ) {
+				BackendFixture fixture; return fixture.CheckServerPlayerRetirement( native, mode == 2, mode == 1 );
+			} );
+		}
+	}
+
 	for ( const bool native : { false, true } ) {
 		for ( const bool detached : { false, true } ) {
 			task->AddTest( "terminal connection cleanup native " + std::to_string( native ) + " detached " + std::to_string( detached ), GT( native, detached ) {

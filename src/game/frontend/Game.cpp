@@ -2475,7 +2475,7 @@ void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
 	// Delivery may run later on the script thread. Retain the session and ID,
 	// never a frontend pointer, local reference, or retired backend wrapper.
 	state->WithGame( state, [ id ]( backend::Game* game, GSE_CALLABLE ) {
-		if ( !game->IsRunning() || !game->GetMap() || !game->GetUM() ) { return; }
+		if ( !game->GetMap() || !game->GetUM() ) { return; }
 		auto* current = id ? game->GetUM()->GetUnit( *id ) : nullptr;
 		game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( current ) {
 			{ "unit", current ? current->Wrap( GSE_CALL ) : VALUE( gse::value::Null ) },

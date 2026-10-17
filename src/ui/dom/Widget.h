@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
+#include <memory>
 
 #include "Area.h"
 
@@ -27,14 +29,18 @@ class Widget : public Area {
 public:
 
 	Widget( DOM_ARGS );
+	~Widget() override;
 
 	void Show() override;
 	void Hide() override;
 	void Destroy( GSE_CALLABLE ) override;
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
-	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
+	// Takes ownership. Fixed-size textures retain their pixels when the widget resizes.
+	void SetTexture( types::texture::Texture* const texture, const size_t index = 0, const bool resize_with_widget = true );
 	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
+	// Retain a generated source texture through this widget's borrowed actors.
+	void RetainTexture( const std::shared_ptr< types::texture::Texture >& texture );
 	void Clear();
 
 	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
@@ -64,7 +70,9 @@ private:
 	bool m_data_update_needed = false;
 
 	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
+	std::unordered_set< size_t > m_fixed_size_textures;
 	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
+	std::vector< std::shared_ptr< types::texture::Texture > > m_retained_textures;
 
 	f_widget_update_t m_on_widget_update = nullptr;
 	f_widget_remove_t m_on_widget_remove = nullptr;

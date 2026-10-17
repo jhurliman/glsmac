@@ -67,6 +67,7 @@ CLASS( Config, common::Module )
 		DF_NOPINGS = 1 << 6,
 		DF_VERBOSE_GC = 1 << 7,
 		DF_NO_GC = 1 << 8,
+		DF_GSE_TESTS_NATIVE_FILTER = 1 << 12,
 #ifdef DEBUG
 		DF_MAPDUMP = 1 << 9,
 		DF_MEMORYDEBUG = 1 << 10,
@@ -95,6 +96,7 @@ CLASS( Config, common::Module )
 	const util::random::state_t& GetQuickstartSeed() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
+	int GetQuickstartWorldSize() const;
 	const float GetQuickstartMapOceanCoverage() const;
 	const float GetQuickstartMapErosiveForces() const;
 	const float GetQuickstartMapNativeLifeforms() const;
@@ -111,6 +113,7 @@ CLASS( Config, common::Module )
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetGSETestsScript() const;
+	const std::string& GetGSETestsNativeFilter() const;
 
 #endif
 
@@ -143,6 +146,7 @@ private:
 	util::random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
+	int m_quickstart_world_size = -1;
 	float m_quickstart_map_ocean_coverage = 0.4f;
 	float m_quickstart_map_erosive_forces = 0.75f;
 	float m_quickstart_map_native_lifeforms = 0.5f;
@@ -160,6 +164,7 @@ private:
 	std::string m_quickstart_mapdump = "";
 
 	std::string m_gse_tests_script = "";
+	std::string m_gse_tests_native_filter = "";
 
 #endif
 

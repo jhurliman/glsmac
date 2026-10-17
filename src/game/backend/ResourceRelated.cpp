@@ -21,10 +21,6 @@ gse::value::Object* const ResourceRelated::GetResourcesFromCallback( GSE_CALLABL
 		if ( it.second->type != gse::VT_INT ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, event + " returned invalid value for resource " + it.first + ", expected: Int, got " + it.second->GetTypeString() + ": " + it.second->ToString() );
 		}
-		const auto& value = ( (gse::value::Int*)it.second )->value;
-		if ( value < 0 || value > 255 ) {
-			GSE_ERROR( gse::EC.GAME_ERROR, event + " returned invalid value for resource " + it.first + ", must be between 0 and 255, got: " + std::to_string( value ) );
-		}
 	}
 	for ( const auto& it : defined_resources ) {
 		if ( v.find( it.first ) == v.end() ) {

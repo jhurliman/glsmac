@@ -50,11 +50,13 @@ for (let button = 0; button < 2; button++) {
 for (let entry_index = 0; entry_index < 2; entry_index++) {
 	let entries = [];
 	let next = null;
+	let size_selected = null;
 	let initialized = false;
 	let continued = false;
 	const i = {
 		settings: {local: {game_mode: 'multi', network_role: 'client'}},
 		glsmac: {
+			game: {get_ruleset: () => { return 'smac'; }},
 			deinit: () => {},
 			init: () => { initialized = true; },
 			start_game: () => { continued = initialized; },
@@ -62,6 +64,7 @@ for (let entry_index = 0; entry_index < 2; entry_index++) {
 		sliding: {show: (data) => { entries = data.entries; }},
 		steps: {
 			select_ruleset: (unused, callback) => { next = callback; },
+			select_mapsize: (unused, callback) => { size_selected = callback; },
 			start_game: (unused) => { continued = initialized; },
 		},
 		randomize_map: () => {},
@@ -72,5 +75,9 @@ for (let entry_index = 0; entry_index < 2; entry_index++) {
 	test.assert(!initialized && !continued);
 	test.assert(i.settings.local.game_mode == 'single' && i.settings.local.network_role == 'none');
 	next();
+	if (entry_index == 1) {
+		test.assert(initialized && !continued, 'SMAC quickstart bypassed explicit size selection');
+		size_selected();
+	}
 	test.assert(initialized && continued);
 }

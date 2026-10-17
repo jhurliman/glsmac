@@ -5,10 +5,12 @@ on:
   push:
     branches: [main, stable]
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   # Never interrupt an integration/manual run while it may publish a release.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
@@ -35,9 +37,9 @@ jobs:
   scanbuild_ubuntu:
     runs-on: ubuntu-latest
     outputs:
-      bugs_found: ${{ steps.pack.bugs_found }}
+      bugs_found: ${{ steps.pack.outputs.bugs_found }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: install_dependencies
         run: |
           sudo apt-get update -qq
@@ -93,7 +95,7 @@ jobs:
         uses: "ncipollo/release-action@v1"
         with:
           makeLatest: true
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          token: "${{ secrets.GITHUB_TOKEN }}"
           artifacts: "scanbuild-report/*,glsmac-ubuntu64/*,glsmac-win64/*"
           tag: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
           name: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
@@ -110,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/stable' || github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: install_dependencies
         run: |
           sudo apt-get update -qq
@@ -144,7 +146,7 @@ jobs:
     needs: [ prepare ]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: install_dependencies
         run: |
           choco install ninja

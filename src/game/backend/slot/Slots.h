@@ -25,6 +25,7 @@ CLASS( Slots, types::Serializable )
 	void Deserialize( types::Buffer buf ) override;
 
 private:
+	friend class game::backend::State;
 	State* m_state;
 
 	std::vector< Slot > m_slots = {};

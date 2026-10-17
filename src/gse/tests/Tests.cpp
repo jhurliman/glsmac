@@ -1,23 +1,58 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
+#include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
+#include "SmacScoutCombat.h"
+#include "SmacEmptyGroundMovement.h"
+#include "SmacGroundEdgeCost.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
 #include "Faction.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
+#include "SmacProductionRules.h"
+#include "SmacMovementRules.h"
+#include "SmacTechnologyRules.h"
+#include "SmacTechnologyState.h"
+#include "SmacSocialState.h"
+#include "SmacWorldSizeRules.h"
+#include "SmacPredefinedUnitCatalog.h"
+#include "SmacPredefinedUnitRules.h"
+#include "SmacFactionStartupRules.h"
 #include "WorldSnapshotRules.h"
+#include "CvrContainerReader.h"
+#include "CvrSceneReader.h"
+#include "CvrGeometryReader.h"
+#include "SmacSimulationState.h"
+#include "SmacStartupDesignState.h"
+#include "CvrFrameAssembler.h"
+#include "CvrIndexedRasterizer.h"
+#include "CvrBasisConverter.h"
+#include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacProductionSwitch.h"
+#include "SmacMineralCostFactor.h"
+#include "SmacConventionalStats.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "task/gsetests/GSETests.h"
 #include "scene/Scene.h"
+#include "scene/Light.h"
+#include "graphics/Graphics.h"
 #include "types/Color.h"
 #include "util/String.h"
+#include "util/UUID.h"
 
 #include "gse/program/Program.h"
 #include "gse/program/Variable.h"
@@ -41,19 +76,64 @@
 #include "gse/value/Null.h"
 #include "gse/value/Range.h"
 
+#include <memory>
+
 namespace gse {
 namespace tests {
 
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
+		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
+		tests::AddSmacScoutCombatTests( task );
+		tests::AddSmacEmptyGroundMovementTests( task );
+		tests::AddSmacGroundEdgeCostTests( task );
+		tests::AddLiveRosterTests( task );
+		tests::AddCvrContainerReaderTests( task );
+		tests::AddCvrSceneReaderTests( task );
+		tests::AddCvrGeometryReaderTests( task );
+		tests::AddCvrFrameAssemblerTests( task );
+		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
+		tests::AddCvrBasisConverterTests( task );
+		tests::AddCvrTransformCalculatorTests( task );
+		tests::AddSmacMineralCostFactorTests( task );
+		tests::AddSmacConventionalStatsTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
+		task->AddTest(
+			"test UUID generation works independently of an existing account",
+			GT() {
+				// Always exercise export, even when a prior run saved accounts.yml.
+				// With --memorydebug, freeing an untracked library allocation throws.
+				try {
+					for ( size_t iteration = 0 ; iteration < 32 ; iteration++ ) {
+						const auto id = util::UUID::Generate();
+						GT_ASSERT( id.size() == 36, "UUID text has the wrong length" );
+						for ( size_t i = 0 ; i < id.size() ; i++ ) {
+							const bool separator = i == 8 || i == 13 || i == 18 || i == 23;
+							GT_ASSERT( separator ? id[ i ] == '-' : std::string( "0123456789abcdef" ).find( id[ i ] ) != std::string::npos, "UUID text has an invalid character or separator" );
+						}
+						GT_ASSERT( id[ 14 ] == '4', "default UUID generation changed version" );
+						GT_ASSERT( std::string( "89ab" ).find( id[ 19 ] ) != std::string::npos, "UUID has an invalid variant" );
+					}
+				}
+				catch ( const std::exception& error ) {
+					GT_FAIL( std::string( "UUID generation failed: " ) + error.what() );
+				}
+				GT_OK();
+			}
+		);
 		task->AddTest(
 			"test if an empty scene accepts clearing its camera",
 			GT() {
@@ -62,6 +142,57 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( scene.GetCamera() == nullptr, "empty scene acquired a camera" );
 				scene.SetCamera( nullptr );
 				GT_ASSERT( scene.GetCamera() == nullptr, "repeated clearing changed the camera" );
+				GT_OK();
+			}
+		);
+		task->AddTest(
+			"test caller-owned scene lights can be replaced across repeated reloads",
+			GT() {
+				class CountedLight : public scene::Light {
+				public:
+					explicit CountedLight( size_t& destructions )
+						: Light( LT_AMBIENT_DIFFUSE ), m_destructions( destructions ) {}
+					~CountedLight() override { m_destructions++; }
+				private:
+					size_t& m_destructions;
+				};
+				size_t destructions = 0;
+				scene::Scene world( "retained light scene", scene::SCENE_TYPE_WORLD );
+				for ( size_t cycle = 0 ; cycle < 4 ; cycle++ ) {
+					std::vector< std::unique_ptr< CountedLight > > lights;
+					for ( size_t i = 0 ; i < graphics::Graphics::MAX_WORLD_LIGHTS ; i++ ) {
+						lights.push_back( std::make_unique< CountedLight >( destructions ) );
+						lights.back()->SetPosition( { float( cycle ), float( i ), 17.0f } );
+						world.AddLight( lights.back().get() );
+					}
+					GT_ASSERT( world.GetLights()->size() == lights.size(), "replacement lights did not fit in the retained scene" );
+					for ( size_t i = 0 ; i < lights.size() ; i++ ) {
+						auto* light = lights[ i ].get();
+						world.RemoveLight( light );
+						GT_ASSERT( world.GetLights()->count( light ) == 0, "scene retained a light scheduled for deletion" );
+						GT_ASSERT( world.GetLights()->size() == lights.size() - i - 1, "unlinking one light removed another" );
+						GT_ASSERT( destructions == cycle * lights.size() + i, "unlinking destroyed a caller-owned light" );
+						GT_ASSERT( light->GetPositionZ() == 17.0f, "unlinked light is no longer usable by its owner" );
+						world.RemoveLight( light ); // repeated removal is harmless
+						lights[ i ].reset();
+						GT_ASSERT( destructions == cycle * lights.size() + i + 1, "light was not destroyed exactly once by its owner" );
+						// Read every remaining light as the renderer does after teardown.
+						for ( const auto* remaining : *world.GetLights() ) {
+							GT_ASSERT( remaining->GetPositionZ() == 17.0f, "remaining light has invalid state" );
+						}
+					}
+					GT_ASSERT( world.GetLights()->empty(), "retained scene still contains deleted lights" );
+				}
+				// Scene destruction also leaves registered lights with their owner.
+				auto survivor = std::make_unique< CountedLight >( destructions );
+				const auto before_scene_destruction = destructions;
+				{
+					scene::Scene temporary( "non-owning light scene", scene::SCENE_TYPE_WORLD );
+					temporary.AddLight( survivor.get() );
+				}
+				GT_ASSERT( destructions == before_scene_destruction, "scene destroyed a caller-owned light" );
+				survivor.reset();
+				GT_ASSERT( destructions == before_scene_destruction + 1, "surviving light was not destroyed by its owner" );
 				GT_OK();
 			}
 		);
@@ -99,9 +230,23 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
+		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacMovementRulesTests( task );
+		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacTechnologyStateTests( task );
+		tests::AddSmacSocialStateTests( task );
+		tests::AddSmacSimulationStateTests( task );
+		tests::AddSmacStartupDesignStateTests( task );
+		tests::AddSmacWorldSizeRulesTests( task );
+		tests::AddSmacPredefinedUnitCatalogTests( task );
+		tests::AddSmacPredefinedUnitRulesTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
-	tests::AddScriptsTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		tests::AddScriptsTests( task );
+	}
 
 }
 

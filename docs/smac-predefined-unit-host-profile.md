@@ -130,3 +130,31 @@ Retained evidence is outside Git under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/predefined-host-*` and
 `predefined-envelope-stock.log`; no installed assets or private original reports
 are committed.
+
+## Focused publication
+
+The publication dependency branch joins exact reviewed histories #124
+`a6cf3cf3214e5ce057c6e4cd47fbcad0a0aca17c`, #125
+`4645d16029bccf9bcb224c9a8f309e78c4a606c3`, and #115
+`8b7914261ffd2679d9a923ff99bdbd71e10be1f8`. The latter supplies the real Server
+transport injection used by the packet-boundary regression, plus its native
+retirement prerequisites. The joined base is
+`fcc379546ff9e338e2656e25adb7151125245264`; this does not import the integration
+branch or the later canonical roster implementation.
+
+The actual publication application at `ed2e415a1dad043a8b434abbfbdf1a27101dd519`
+passed all six registered CTests in 43.99 seconds. Its four changed production
+translation units passed explicit correctness analysis with zero failures in
+4.08 seconds. The unchanged codec, Settings, State admission, GLSMAC producer,
+Network cap and dedicated profile tests match the source implementation. Only
+shared test/source registration placement follows this ancestry. Source-branch
+eight-test sanitizer and shared-header receipts above are not publication-head
+sanitizer claims.
+
+Canonical roster integration has a distinct `DeserializeRosterSettings` entry;
+it must retain this same full-envelope preflight before that entry publishes
+settings. That integration follow-up is outside this pre-canonical PR.
+
+The publication framing negative uses this ancestry's full native/script suite
+(no native-filter CLI). With only aggregate envelope admission disabled, it
+reports 456 passing tests and one intended packet-boundary failure, exit 1.

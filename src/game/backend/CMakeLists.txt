@@ -23,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/StateRoster.cpp
 	${PWD}/MapObject.cpp
 	${PWD}/ResourceRelated.cpp
 

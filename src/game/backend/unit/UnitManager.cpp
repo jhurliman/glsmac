@@ -6,6 +6,7 @@
 #include "Unit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/State.h"
 #include "game/backend/Bindings.h"

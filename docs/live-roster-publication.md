@@ -169,6 +169,32 @@ callback/collector teardown fixes and initialization coordinator. Publication
 onto an older branch must include those prerequisites and run its actual tests;
 source-branch results do not validate an adapted publication automatically.
 
+## Focused publication
+
+The publication starts from the refreshed retirement stack at
+`8b7914261ffd2679d9a923ff99bdbd71e10be1f8` and carries the unchanged
+[PR38 empty-buffer fix](https://github.com/jhurliman/glsmac/pull/38) as its explicit
+prerequisite (`ca77d201`, from source `06664076`). The roster source is
+`86e35fd002ae87d01ed28ccf8c63415659077dee`; its publication at `fe9c95e0`
+changes only the surrounding test registration context. All changed production
+files and the dedicated LiveRoster tests are byte-identical to the source.
+
+At that publication head, normal CTest passes 6/6 in 28.47 seconds and the full
+native/script suite with `--memorydebug` passes in 21.33 seconds with no tracked
+leaks. All twenty live-roster groups run in both. This ancestry does not have the
+native-filter CLI option shown in the source command above: use `--gse-tests`
+without a filter for its complete suite. No filter implementation was imported
+just for validation.
+
+The initial publication without PR38 passed normal CTest 6/6, but tracking
+rejected the old Buffer constructor's zero-byte allocation while decoding real
+empty settings records. That failed run is retained under `publication/`;
+the corrected checks are under `publication-buffer-prerequisite/` in the same
+local evidence directory. The fix is the existing reviewed Buffer change,
+not an altered handshake fixture. Publication still depends on the startup and
+retirement stack; its held PR77 findings remain open and are not waived by these
+roster results.
+
 This does not synchronize arbitrary gameplay or lobby readers, make all native
 roster methods safe from unrelated concurrent callers, redesign authentication,
 make generic Connection callbacks cancellation-safe, permit live-world occupant

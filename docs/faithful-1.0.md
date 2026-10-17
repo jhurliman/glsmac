@@ -204,8 +204,12 @@ records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
 `d6afde1a`, plus zero failures across 336 production analysis units. Conventional
 Unit state and paired gameplay RNG are owned and restored with checked context;
 fixed Rover presentation reaches real unit previews, and resource text follows
-measured physical-row semantics. Live conventional movement and default startup
-activation remain the next consumers.
+measured physical-row semantics. The subsequent movement implementation in
+[the bounded command receipt](conventional-empty-ground-movement.md) connects the
+real event to Unit/tile/RNG authority and exact continuation. Its source passes
+full normal and leak-enabled sanitizer suites. Integration with selected Rover
+presentation is undergoing separate combined validation; friendly-HQ movement
+and default conventional startup remain follow-ups.
 
 The preceding [social and movement receipt](validation/social-movement-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
@@ -371,22 +375,28 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Finish landing the refreshed host/world profile chain, live simulation and
-   owned startup designs. Preserve the shared regression registrations during
-   dependency merges and address each current GitHub review finding before merge.
-2. Supply live conventional units from one authoritative Unit record: design and
-   simulation-owner identity, stored morale, damage, spent movement and home.
-   Bind Q to the original first road-rate rule and chassis Moves; derive full
-   allowance and effective morale. Preserve unknown or supplied retained social
-   state through early reset, then refresh before first-command unit/base hooks.
-   Spartan Recon rendering requires its actual Speeder composition and scale.
-3. Connect measured empty-tile movement and combat to legal commands and paired
-   RNG state, then implement the measured base-versus-Colony-Pod startup choice.
-   Connect founding to base creation. The observed first-base current SUPPORT
-   and INDUSTRY are zero; late faction modifiers precede first upkeep and do
-   not retroactively recompute starting minerals. Preserve independent target,
-   stored minerals and switching baseline, then connect support/intake,
-   posting, completion and queues in their evidenced order.
+1. Finish the real conventional movement consumer: commit Unit bytes, tile
+   membership and the owned shared/CRT pair together; preserve retry markers
+   through upkeep and continuation. Keep the initial no-base local campaign
+   boundary explicit. Follow with the measured friendly-HQ entry/exit cases,
+   including infrastructure endpoints, exhausted units and the fungus lottery.
+   Rover and unmeasured distant-base contexts require their own evidence.
+2. Create the actual selected starting conventional unit in the original order:
+   first base under early social state, raw Unit creation, late social refresh,
+   then upkeep and first-command publication. Do not invent retained-zero
+   morale or delay actual allocation merely to satisfy the current resolver.
+   Complete initialized Infantry faction materials and retain the measured
+   Spartan Rover composition. Activate only an explicitly admitted startup
+   branch after real startup, reset and continuation tests pass.
+3. Connect human base-square/manual-worker intake to the measured economy,
+   then support, posting, completion and production queues. Preserve independent
+   target, stored minerals and switching baseline. Connect colony founding and
+   conventional combat as legal commands with their own persistence cases;
+   the complete first-base to second-base loop remains the acceptance target.
+
+The host/world profile and startup-design foundations are implemented; focused
+publication and review remain separate from integration. Review quota delays
+must not broaden PRs or turn old reviewed heads into approval for new commits.
 
 Reverse engineering is prioritized around those consumers. Bounded original
 compositions now cover all seven human factions through first-base creation,
@@ -400,6 +410,13 @@ generated-world setup, rendered first-input parity or a complete campaign. The
 first base → Scout/Former/Colony → second base loop still needs real producers,
 legal commands and persistence checks. Native lifetime repairs and conventional
 rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
+
+The fresh original data-setup receipt now covers constructors, software palette
+initialization, 107 model loads and data setup through normal return. Its one
+supplied clock/cache fixture records seven shared draws after reseeding; later
+cache time reads do not reseed. Palette-ID retries prevent treating seven as a
+universal count. Complete first-command and successive-game RNG origins remain
+open, so the port retains its explicit new-world entropy policy.
 
 The pure Scout combat implementation in
 [#142](https://github.com/jhurliman/glsmac/pull/142) matches 187 supplied original

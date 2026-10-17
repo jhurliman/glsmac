@@ -298,6 +298,7 @@ void State::Deserialize( types::Buffer buf ) {
 }
 
 void State::DeserializeRosterSettings(types::Buffer buf, connection::Connection* expected, const roster_epoch_t& epoch) {
+ ValidateSettingsEnvelope(buf);
  m_gc_space->WithNativeMutation([&]() {
   if (!expected || m_connection != expected) { throw std::runtime_error("Settings belong to another connection"); }
   RequireRoster(epoch);

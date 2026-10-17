@@ -26,6 +26,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
+	${PWD}/SmacTechnologyState.cpp
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacPredefinedUnitRules.cpp

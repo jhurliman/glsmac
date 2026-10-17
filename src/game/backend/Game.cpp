@@ -1759,6 +1759,8 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 		handoff->state->WithGameSession( handoff->session, batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
 			const std::string* errptr = nullptr;
 			for ( const auto& event : batch->events ) {
+				// Also fence commands queued before explicit knowledge admission.
+				RequireWorkerKnowledgeMutation();
 #if defined(DEBUG) || defined(FASTDEBUG)
 				MTModule::Log( "Event begin: " + event->ToString() );
 #endif

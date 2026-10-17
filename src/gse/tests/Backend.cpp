@@ -13,6 +13,10 @@
 #include "gc/Space.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
+#include "game/backend/Player.h"
+#include "game/backend/resource/ResourceManager.h"
+#include "game/backend/resource/Resource.h"
+#include "game/backend/map/tile/TileManager.h"
 #include "game/backend/State.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
@@ -54,7 +58,7 @@ class BackendFixture {
 public:
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
-		, m_gse( new GSE() )
+		, m_gse( CreateRuntime() )
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
@@ -87,6 +91,8 @@ public:
 		m_gse = nullptr;
 		m_game.m_state = nullptr;
 		m_game.m_bm = nullptr;
+		m_game.m_tm = nullptr;
+		m_game.m_rm = nullptr;
 		m_game.m_map = nullptr;
 		m_game.m_random = nullptr;
 		m_game.m_pending_frontend_requests = nullptr;
@@ -122,7 +128,7 @@ public:
 	const std::vector< game::FrontendRequest >& PushBaseUpdates() {
 		// Frontend spawn messages need tile coordinates, but no rendered assets.
 		if ( !m_map->m_map_state ) {
-			m_map->m_map_state = new game::backend::map::MapState();
+			NEW( m_map->m_map_state, game::backend::map::MapState );
 			m_map->m_map_state->dimensions = { 8, 8 };
 			const common::mt_flag_t canceled = false;
 			m_map->m_map_state->LinkTileStates( canceled );
@@ -169,6 +175,30 @@ public:
 		return result;
 	}
 
+	void EnableYieldFixture() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			using namespace game::backend;
+			m_game.m_rm = new resource::ResourceManager( &m_game );
+			m_game.m_tm = new map::tile::TileManager( &m_game );
+			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
+				m_game.m_rm->DefineResource( new resource::Resource( id, id, {} ) );
+			}
+			for ( const size_t slot : { 0, 2 } ) {
+				NEWV( player, Player, "Test player", Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
+				m_game.GetState()->AddPlayer( player );
+				m_game.GetState()->m_slots->GetSlot( slot ).SetPlayer( player, 0, "" );
+			}
+		} );
+	}
+
+	void DestroyMapBeforeManagers() {
+		// Mirrors ResetGame: the map dies before the collector-owned managers.
+		m_map.reset();
+		m_game.m_map = nullptr;
+	}
+
+	size_t FrontendRequestCount() const { return m_frontend_requests.size(); }
+
 	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &id, &name, flags ]() {
 			m_game.GetBM()->DefinePop( new game::backend::base::PopDef( id, name, {}, {}, flags ) );
@@ -213,6 +243,12 @@ public:
 	}
 
 private:
+	static GSE* CreateRuntime() {
+		// GLSMAC owns this runtime and destroys it through tracked DELETE.
+		NEWV( runtime, GSE );
+		return runtime;
+	}
+
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;
 	std::unique_ptr< game::backend::map::Map > m_map;
@@ -528,6 +564,297 @@ static void AddPopReferenceTests( task::gsetests::GSETests* task ) {
 	);
 }
 
+namespace {
+
+Value* InitializeWorkers( GSE_CALLABLE, BackendFixture& fixture ) {
+	fixture.SetRunning( true );
+	auto* game = fixture.GetGame();
+	auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+	return script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ) } );
+}
+
+Value* CallBase( GSE_CALLABLE, game::backend::base::Base* base, const std::string& method ) {
+	auto* object = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+	return static_cast< value::Callable* >( object->Get( method ) )->Run( GSE_CALL, {} );
+}
+
+void AddWorkerBases( GSE_CALLABLE, BackendFixture& fixture ) {
+	using namespace game::backend::base;
+	auto* game = fixture.GetGame();
+	auto* bm = game->GetBM();
+	auto* map = game->GetMap();
+	auto* base = new Base( game, 601, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), map->GetTile( 4, 4 ), "Workers", {}, {
+		{ 7, Pop( nullptr, 7, bm->GetPopDef( "WORKER" ), 1, map->GetTile( 2, 4 ) ) },
+		{ 8, Pop( nullptr, 8, bm->GetPopDef( "WORKER" ), 2, map->GetTile( 6, 4 ) ) },
+		{ 9, Pop( nullptr, 9, bm->GetPopDef( "DOCTOR" ), 0 ) },
+	}, 20, 37 );
+	bm->SpawnBase( GSE_CALL, base );
+	auto* other = new Base( game, 602, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), map->GetTile( 0, 4 ), "Other workers", {}, {
+		{ 7, Pop( nullptr, 7, bm->GetPopDef( "WORKER" ), 3, map->GetTile( 1, 1 ) ) },
+	}, 10 );
+	bm->SpawnBase( GSE_CALL, other );
+}
+
+struct SavedWorker {
+	int64_t key, id;
+	std::string type;
+	bool assigned;
+	int64_t x = 0, y = 0;
+};
+
+types::Buffer WorkerRecord( const std::vector< SavedWorker >& pops, const int64_t next_pop_id = 20, const int64_t base_id = 603 ) {
+	types::Buffer buf;
+	buf.WriteInt( base_id ); buf.WriteInt( 2 ); buf.WriteString( "GAIANS" );
+	buf.WriteInt( 2 ); buf.WriteInt( 2 ); buf.WriteString( "Invalid workers" );
+	buf.WriteInt( 0 ); buf.WriteInt( pops.size() );
+	for ( const auto& pop : pops ) {
+		buf.WriteInt( pop.key ); buf.WriteInt( pop.id ); buf.WriteString( pop.type ); buf.WriteInt( 0 );
+		buf.WriteBool( pop.assigned );
+		if ( pop.assigned ) { buf.WriteInt( pop.x ); buf.WriteInt( pop.y ); }
+	}
+	buf.WriteInt( next_pop_id ); buf.WriteInt( 37 );
+	return buf;
+}
+
+}
+
+static void AddWorkerTests( task::gsetests::GSETests* task ) {
+	for ( const bool immediate : { true, false } ) {
+		task->AddTest( immediate ? "test immediate worker snapshot preserves assignments and intake" : "test deferred worker snapshot preserves assignments and intake",
+		[ immediate ]( GSE* gse, context::Context* ctx ) -> std::string {
+			using namespace game::backend::base;
+			const auto next = Base::GetNextId();
+			util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+			BackendFixture source, restored;
+			source.EnableYieldFixture(); restored.EnableYieldFixture();
+			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			source.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
+			GT_ASSERT( setup.empty(), "worker setup: " + setup );
+			types::Buffer snapshot;
+			source.GetGame()->GetBM()->Serialize( snapshot );
+			restored.SetRunning( immediate ); restored.RestoreBaseManager( snapshot );
+			if ( !immediate ) {
+				GT_ASSERT( !restored.GetGame()->GetBM()->GetWorkingPop( { 2, 4 } ), "deferred assignment published early" );
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { restored.GetGame()->GetBM()->ProcessUnprocessed( GSE_CALL ); GT_OK(); } );
+				GT_ASSERT( error.empty(), "worker check: " + error );
+			}
+			std::vector< size_t > unworked_counts;
+			for ( auto* fixture : { &source, &restored } ) {
+				const auto error = fixture->WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					InitializeWorkers( GSE_CALL, *fixture );
+					auto* bm = fixture->GetGame()->GetBM();
+					auto* base = bm->GetBase( 601 );
+					auto* other = bm->GetBase( 602 );
+					GT_ASSERT( bm->GetWorkingPop( { 2, 4 } ) == &base->m_pops.at( 7 ), "first reverse claim missing" );
+					GT_ASSERT( bm->GetWorkingPop( { 6, 4 } ) == &base->m_pops.at( 8 ), "second reverse claim missing" );
+					GT_ASSERT( bm->GetWorkingPop( { 1, 1 } ) == &other->m_pops.at( 7 ), "base-local IDs collided" );
+					GT_ASSERT( !base->m_pops.at( 9 ).GetWorkedTileCoords(), "specialist acquired a tile" );
+					GT_ASSERT( static_cast< value::Array* >( CallBase( GSE_CALL, base, "get_worked_tiles" ) )->value.size() == 2, "worked tile set changed" );
+					unworked_counts.push_back( static_cast< value::Array* >( CallBase( GSE_CALL, base, "get_unworked_tiles" ) )->value.size() );
+					auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+					GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == 15, "intake lost worker tiles or double-counted center" );
+					GT_ASSERT( static_cast< value::Int* >( intake->Get( "MINERALS" ) )->value == 3, "intake tile count changed" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "worker check: " + error );
+			}
+			GT_ASSERT( unworked_counts[ 0 ] == unworked_counts[ 1 ], "unworked tiles changed after restore" );
+			for ( const size_t id : { 601, 602 } ) {
+				GT_ASSERT( Base::Serialize( source.GetGame()->GetBM()->GetBase( id ) ).ToString() == Base::Serialize( restored.GetGame()->GetBM()->GetBase( id ) ).ToString(), "population IDs, variants, or assignments changed" );
+			}
+			GT_OK();
+		} );
+	}
+	for ( const bool immediate : { true, false } ) {
+		task->AddTest( immediate ? "test immediate restore rejects competing worker claims" : "test deferred restore rejects competing worker claims",
+		[ immediate ]( GSE* gse, context::Context* ctx ) -> std::string {
+			using namespace game::backend::base;
+			const auto next = Base::GetNextId();
+			util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+			BackendFixture source, restored;
+			source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			source.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
+			GT_ASSERT( setup.empty(), "worker setup: " + setup );
+			types::Buffer snapshot;
+			snapshot.WriteString( "GLSMAC_BASES_V3" ); snapshot.WriteInt( 2 );
+			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
+				snapshot.WriteString( id );
+				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );
+			}
+			snapshot.WriteInt( 0 ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() );
+			snapshot.WriteString( WorkerRecord( { { 7, 7, "WORKER", true, 2, 4 } } ).ToString() );
+			snapshot.WriteInt( 604 );
+			restored.SetRunning( immediate );
+			bool rejected = false;
+			if ( immediate ) {
+				try { restored.RestoreBaseManager( snapshot ); }
+				catch ( const std::runtime_error& ) { rejected = true; }
+			}
+			else {
+				restored.RestoreBaseManager( snapshot );
+				restored.SetRunning( true );
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					try { restored.GetGame()->GetBM()->ProcessUnprocessed( GSE_CALL ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "deferred worker check: " + error );
+			}
+			GT_ASSERT( rejected, "competing snapshot claims accepted" );
+			auto* bm = restored.GetGame()->GetBM();
+			GT_ASSERT( bm->GetBases().size() == 1 && bm->GetBase( 601 ), "earlier valid record was not retained" );
+			GT_ASSERT( !restored.GetGame()->GetMap()->GetTile( 2, 2 )->base, "invalid record claimed its center" );
+			GT_ASSERT( bm->GetWorkingPop( { 2, 4 } ) == &bm->GetBase( 601 )->m_pops.at( 7 ), "competing claim stole existing worker" );
+			const auto& updates = restored.PushBaseUpdates();
+			GT_ASSERT( updates.size() == 2, "invalid record queued frontend updates" );
+			// A failed manager load is terminal. Reusing its partially restored
+			// definitions/records is not the snapshot loader's current contract.
+			GT_OK();
+		} );
+	}
+	task->AddTest( "test worker mutation and production event rollback preserve assignments", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture, foreign;
+		fixture.EnableYieldFixture();
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			AddWorkerBases( GSE_CALL, fixture );
+			auto* game = fixture.GetGame(); auto* bm = game->GetBM();
+			auto* base = bm->GetBase( 601 ); auto* other = bm->GetBase( 602 );
+			auto* pop = &base->m_pops.at( 7 ); auto* tile = game->GetMap()->GetTile( 2, 4 );
+			const auto before = Base::Serialize( base ).ToString();
+			const auto rng = game->GetRandom()->GetStateString();
+			try { base->AddPop( *pop ); GT_FAIL( "duplicate population replaced its original" ); }
+			catch ( const std::runtime_error& ) {}
+			try { bm->SpawnBase( GSE_CALL, base ); GT_FAIL( "duplicate base registration accepted" ); }
+			catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong duplicate base error" ); }
+			GT_ASSERT( Base::Serialize( base ).ToString() == before && bm->GetWorkingPop( { 2, 4 } ) == pop, "duplicate ID changed its original record" );
+			types::Buffer assigned, unassigned;
+			pop->Serialize( assigned );
+			unassigned.WriteInt( 7 ); unassigned.WriteString( "WORKER" ); unassigned.WriteInt( 1 ); unassigned.WriteBool( false );
+			Pop staged;
+			staged.Deserialize( assigned, game );
+			GT_ASSERT( staged.GetWorkedTileCoords().has_value(), "assigned record was not decoded" );
+			staged.Deserialize( unassigned, game );
+			GT_ASSERT( !staged.GetWorkedTileCoords(), "unassigned record retained a prior decoded coordinate" );
+			for ( size_t invalid = 0; invalid < 5; invalid++ ) {
+				try {
+					base->SetPopAssignment( GSE_CALL, invalid == 0 ? &other->m_pops.at( 7 ) : pop, invalid == 1 ? "DOCTOR" : "WORKER",
+						invalid == 2 ? game->GetMap()->GetTile( 6, 4 ) : invalid == 3 ? base->GetTile() : invalid == 4 ? foreign.GetGame()->GetMap()->GetTile( 2, 4 ) : tile );
+					GT_FAIL( "invalid assignment accepted" );
+				} catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong assignment error" ); }
+				GT_ASSERT( Base::Serialize( base ).ToString() == before && bm->GetWorkingPop( { 2, 4 } ) == pop, "failed assignment mutated state" );
+			}
+			auto* wrapped = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+			try {
+				static_cast< value::Callable* >( wrapped->Get( "create_pop" ) )->Run( GSE_CALL, {
+					new value::Object( GSE_CALL, { { "type", new value::String( gc_space, "WORKER" ) }, { "worked_tile", tile->Wrap( GSE_CALL ) } } )
+				} );
+				GT_FAIL( "new population stole an occupied tile" );
+			} catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong new-pop assignment error" ); }
+			base->SetPopAssignment( GSE_CALL, pop, "WORKER", tile );
+			GT_ASSERT( Base::Serialize( base ).ToString() == before, "failed creation or idempotent assignment changed state" );
+			base->ChangePopType( GSE_CALL, 7, "DOCTOR" );
+			GT_ASSERT( !bm->GetWorkingPop( { 2, 4 } ) && !pop->GetWorkedTileCoords(), "specialist transition retained tile" );
+			base->SetPopAssignment( GSE_CALL, pop, "WORKER", tile );
+			GT_ASSERT( game->GetRandom()->GetStateString() == rng, "assignment consumed RNG" );
+			auto* facade = InitializeWorkers( GSE_CALL, fixture );
+			auto* events = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_worker_events" ) );
+			events->Run( GSE_CALL, { facade, base->Wrap( GSE_CALL ), other->Wrap( GSE_CALL ), game->GetMap()->GetTile( 6, 2 )->Wrap( GSE_CALL ) } );
+			// Removal and despawn free numeric claims; reused local IDs cannot resolve stale claims.
+			other->RemovePop( 7 ); GT_ASSERT( !bm->GetWorkingPop( { 1, 1 } ), "removed population kept claim" );
+			base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 8 ), "WORKER", game->GetMap()->GetTile( 1, 1 ) );
+			bm->DespawnBase( GSE_CALL, 601 );
+			GT_ASSERT( !bm->GetWorkingPop( { 1, 1 } ) && !bm->GetWorkingPop( { 2, 4 } ), "despawn kept worker claims" );
+			bm->Clear(); GT_ASSERT( !bm->GetWorkingPop( { 6, 4 } ), "clear kept worker claims" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "worker check: " + error ); GT_OK();
+	} );
+	task->AddTest( "test worker writes require a mutable game scope", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 601, 7 );
+		const auto before = Base::Serialize( base ).ToString();
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* object = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+			try {
+				static_cast< value::Callable* >( object->Get( "set_pop_assignment" ) )->Run( GSE_CALL, {
+					base->m_pops.at( 7 ).Wrap( GSE_CALL ), new value::String( gc_space, "WORKER" ), fixture.GetGame()->GetMap()->GetTile( 2, 4 )->Wrap( GSE_CALL )
+				} );
+				GT_FAIL( "read-only worker write accepted" );
+			} catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong read-only worker error" ); }
+			GT_ASSERT( Base::Serialize( base ).ToString() == before, "read-only write changed assignment" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "worker read-only check: " + error ); GT_OK();
+	} );
+	task->AddTest( "test malformed worker records reject before publishing base state", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			AddWorkerBases( GSE_CALL, fixture );
+			auto* game = fixture.GetGame(); auto* bm = game->GetBM();
+			fixture.PushBaseUpdates();
+			const auto id = Base::GetNextId(), requests = fixture.FrontendRequestCount();
+			const std::vector< std::vector< SavedWorker > > records = {
+				{ { 7, 7, "WORKER", true, -2, 2 } }, { { 7, 7, "WORKER", true, 8, 2 } },
+				{ { 7, 7, "WORKER", true, 2, 3 } }, { { 7, 7, "DOCTOR", true, 4, 2 } },
+				{ { 7, 8, "WORKER", true, 4, 2 } }, { { 7, 7, "MISSING", false } },
+				{ { 7, 7, "WORKER", true, 2, 2 } }, { { 7, 7, "WORKER", true, 2, 4 } },
+				{ { 7, 7, "WORKER", true, 4, 2 }, { 8, 8, "WORKER", true, 4, 2 } },
+				{ { 7, 7, "WORKER", false }, { 7, 7, "WORKER", false } },
+			};
+			std::vector< types::Buffer > malformed;
+			for ( const auto& pops : records ) { malformed.push_back( WorkerRecord( pops ) ); }
+			malformed.push_back( WorkerRecord( { { 7, 7, "WORKER", false } }, 7 ) );
+			malformed.push_back( WorkerRecord( { { 7, 7, "WORKER", false } }, 20, 601 ) );
+			for ( auto& bytes : malformed ) {
+				bool rejected = false;
+				try { std::unique_ptr< Base > invalid( Base::Deserialize( bytes, game ) ); }
+				catch ( const std::runtime_error& ) { rejected = true; }
+				GT_ASSERT( rejected, "malformed worker record accepted" );
+				GT_ASSERT( !game->GetMap()->GetTile( 2, 2 )->base && Base::GetNextId() == id, "failed restore claimed center or advanced ID" );
+				GT_ASSERT( bm->GetBases().size() == 2 && !bm->GetWorkingPop( { 4, 2 } ), "failed restore published assignments" );
+				GT_ASSERT( bm->GetWorkingPop( { 2, 4 } ) == &bm->GetBase( 601 )->m_pops.at( 7 ), "failed restore stole existing claim" );
+				GT_ASSERT( fixture.FrontendRequestCount() == requests, "failed restore emitted frontend messages" );
+			}
+			GT_ASSERT( fixture.PushBaseUpdates().empty(), "failed restore queued base updates" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "worker check: " + error ); GT_OK();
+	} );
+	task->AddTest( "test worker teardown tolerates map destruction before collected managers", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			AddWorkerBases( GSE_CALL, fixture );
+			auto* base = fixture.GetGame()->GetBM()->GetBase( 601 );
+			ctx->CreateVariable( "retained_workers", new value::Array( gc_space, { base->Wrap( GSE_CALL ), base->m_pops.at( 7 ).Wrap( GSE_CALL ), base->m_pops.at( 7 ).GetWorkedTile()->Wrap( GSE_CALL ) } ), si, ep );
+			fixture.DestroyMapBeforeManagers();
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "worker check: " + error ); GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
@@ -576,6 +903,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		}
 	);
+	AddWorkerTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate
@@ -894,7 +1222,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			using namespace game::backend::base;
 			const auto previous_next_id = Base::GetNextId();
 			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
-			for ( const std::string format : { "", "GLSMAC_BASES_V1", "GLSMAC_BASES_UNSUPPORTED" } ) {
+			for ( const std::string format : { "", "GLSMAC_BASES_V1", "GLSMAC_BASES_V2", "GLSMAC_BASES_UNSUPPORTED" } ) {
 				BackendFixture restored;
 				types::Buffer snapshot;
 				if ( !format.empty() ) {

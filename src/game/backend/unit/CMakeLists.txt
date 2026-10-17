@@ -1,6 +1,7 @@
 SET( SRC ${SRC}
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacStartupDesignState.cpp
+	${PWD}/SmacEmptyGroundMovement.cpp
 
 	${PWD}/UnitManager.cpp
 	${PWD}/Def.cpp

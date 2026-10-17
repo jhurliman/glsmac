@@ -394,14 +394,15 @@ void Game::Stop() {
 
 void Game::Iterate() {
 	if ( OwnerBlocksNative() ) { return; }
+	// A completed native/ingress checkpoint may already have rejected this
+	// world. Publish its owner failure before extracting any further requests.
+	// A canceled admission is excluded here so its real MT reset can progress.
+	if ( PublishInitializationFailure() ) { return; }
 	MTModule::Iterate();
 	{
 		std::lock_guard guard( m_admission_mutex );
 		if ( m_active_admission && m_active_admission->cancelled ) { return; }
 	}
-	// Keep servicing MT reset requests, but park ordinary state/manager work
-	// while a rejected download waits for owner-thread error handling.
-	if ( IsSnapshotTurnFailurePending() ) { return; }
 
 	if ( m_state ) {
 		m_state->Iterate();
@@ -412,7 +413,7 @@ void Game::Iterate() {
 	if ( m_state ) {
 
 		m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
-			if ( IsSnapshotTurnFailurePending() ) { return; }
+			if ( HasInitializationFailure() ) { return; }
 
 			{
 				std::lock_guard guard( m_pending_event_responses_mutex );
@@ -491,7 +492,7 @@ void Game::Iterate() {
 
 		m_state->WithGame(
 			this, [ this ]( Game* const, GSE_CALLABLE ) {
-				if ( IsSnapshotTurnFailurePending() ) { return; }
+				if ( HasInitializationFailure() ) { return; }
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -1532,7 +1533,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
 	} );
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	try {
 		m_state->TriggerObject(
@@ -1549,7 +1550,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		InitFailed( e.what() );
 		return;
 	}
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
@@ -1851,6 +1852,24 @@ bool Game::OwnerBlocksNative() const {
 	return m_owner_transition && ( m_owner_transition->phase == OwnerTransition::Pending || m_owner_transition->phase == OwnerTransition::Running );
 }
 
+bool Game::HasInitializationFailure() const {
+	std::lock_guard guard( m_admission_mutex );
+	return m_active_admission && m_active_admission->stage == StartupStage::Failure;
+}
+
+bool Game::PublishInitializationFailure() {
+	std::shared_ptr< WorldAdmission > admission;
+	{
+		std::lock_guard guard( m_admission_mutex );
+		admission = m_active_admission;
+		if ( !admission || admission->cancelled || admission->stage != StartupStage::Failure ) { return false; }
+	}
+	// Claim/cancel is rechecked under the admission mutex by publication and
+	// execution. Never hold that mutex while registering work with Space.
+	PublishOwnerTransition( admission, StartupStage::Failure );
+	return true;
+}
+
 void Game::WithWorldIngress( State* state, gc::Object* owner, const State::game_func_t& callback ) {
 	const auto session = state->CaptureGameSession();
 	{
@@ -2029,7 +2048,7 @@ void Game::InitializeMap() {
 	ASSERT( m_state, "state is null" );
 	// State::Iterate may have delivered a roster replacement after the
 	// download. Reject it before touching cached Slot/Player pointers.
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	if ( !m_state->IsMaster() ) {
 		ASSERT( m_state->m_connection, "not master but no connection" );
@@ -2668,21 +2687,12 @@ void Game::StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& sta
 	// Construct under the caller's accumulation before locking. Root traversal
 	// takes Space exclusion then this mutex; reset only drops nonowning tokens.
 	std::lock_guard guard( m_snapshot_turn_mutex );
-	++m_snapshot_turn_generation;
-	m_snapshot_turn_failure_pending = false;
 	m_pending_snapshot_turn = std::move( pending );
 }
 
 void Game::DiscardSnapshotTurn() {
 	std::lock_guard guard( m_snapshot_turn_mutex );
-	++m_snapshot_turn_generation;
-	m_snapshot_turn_failure_pending = false;
 	m_pending_snapshot_turn.reset();
-}
-
-bool Game::IsSnapshotTurnFailurePending() const {
-	std::lock_guard guard( m_snapshot_turn_mutex );
-	return m_snapshot_turn_failure_pending;
 }
 
 void Game::ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const {
@@ -2706,56 +2716,33 @@ void Game::ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const 
 	}
 }
 
-bool Game::CheckPendingSnapshotTurn() {
-	auto* const state = m_state;
-	uint64_t generation = 0;
-	try {
+void Game::ValidatePendingSnapshotTurn() {
+	// Native validation shares exclusion with canonical roster commits and
+	// retirement. Failure has no side effects here: the admitted coordinator
+	// owns its later Failure checkpoint, including reset/cancellation ordering.
+	m_world_space->WithNativeMutation( [ & ]() {
 		std::lock_guard guard( m_snapshot_turn_mutex );
-		generation = m_snapshot_turn_generation;
 		if ( m_pending_snapshot_turn ) { ValidateSnapshotBindings( *m_pending_snapshot_turn ); }
-	}
-	catch ( const std::runtime_error& error ) {
-		{
-			std::lock_guard guard( m_admission_mutex );
-			if ( m_active_admission && m_active_admission->stage != StartupStage::Complete ) { throw; }
-		}
-		// Iterate runs on the backend thread, while InitFailed emits a script
-		// event and must run on the Space owner. Park initialization immediately
-		// so no cached Slot is touched and subsequent iterations cannot retry it.
-		{
-			std::lock_guard guard( m_snapshot_turn_mutex );
-			if ( generation != m_snapshot_turn_generation ) { return false; }
-			m_snapshot_turn_failure_pending = true;
-			m_game_state = GS_STARTING;
-		}
-		state->WithGame( state, [ this, state, generation, message = std::string( error.what() ) ]( Game* const, GSE_CALLABLE ) {
-			{
-				std::lock_guard guard( m_snapshot_turn_mutex );
-				if ( generation != m_snapshot_turn_generation || !m_pending_snapshot_turn || m_state != state || m_game_state != GS_STARTING ) { return; }
-			}
-			// State is the queued owner, not a borrowed captured lifetime. Reset
-			// and replacement downloads retire the generation before this drain.
-			InitFailed( message );
-		} );
-		return false;
-	}
-	return true;
+	} );
 }
 
 std::optional< size_t > Game::ApplySnapshotTurn() {
-	std::lock_guard guard( m_snapshot_turn_mutex );
-	if ( !m_pending_snapshot_turn ) { return {}; }
-	const auto& pending = *m_pending_snapshot_turn;
-	ValidateSnapshotBindings( pending ); // Complete validation before any flag changes.
-	const auto id = pending.state.id;
-	for ( const auto& record : pending.state.players ) {
-		auto* player = m_state->m_slots->GetSlot( record.id ).GetPlayer();
-		if ( record.completed ) { player->CompleteTurn(); }
-		else { player->UncompleteTurn(); }
-	}
-	m_current_turn.AdvanceTurn( id );
-	m_pending_snapshot_turn.reset();
-	return id;
+	std::optional< size_t > restored;
+	m_world_space->WithNativeMutation( [ & ]() {
+		std::lock_guard guard( m_snapshot_turn_mutex );
+		if ( !m_pending_snapshot_turn ) { return; }
+		const auto& pending = *m_pending_snapshot_turn;
+		ValidateSnapshotBindings( pending ); // Validate and commit under the same roster exclusion.
+		restored = pending.state.id;
+		for ( const auto& record : pending.state.players ) {
+			auto* player = m_state->m_slots->GetSlot( record.id ).GetPlayer();
+			if ( record.completed ) { player->CompleteTurn(); }
+			else { player->UncompleteTurn(); }
+		}
+		m_current_turn.AdvanceTurn( *restored );
+		m_pending_snapshot_turn.reset();
+	} );
+	return restored;
 }
 
 void Game::WithNativeRetirement( const std::function< void() >& f ) {

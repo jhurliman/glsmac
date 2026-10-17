@@ -19,7 +19,10 @@ owner is still finishing startup.
 | Failure | Owner: retain the original error on the exact ticket, notify and clean up through `InitFailed`, including failures before a map exists. |
 
 `Game::Iterate` finishes its entire MT response batch and `State::Iterate` packet
-batch before publishing an owner operation. It returns after publication even
+batch before publishing an owner operation. If a previous completed checkpoint
+has already recorded Failure, it publishes that Failure before starting another
+MT batch; canceled admissions still let reset proceed. The
+[snapshot follow-up](snapshot-owner-checkpoints.md) documents this correction. It returns after publication even
 when owner execution happens immediately on the calling thread. This prevents a
 single-thread execution from falling through into another native stage.
 

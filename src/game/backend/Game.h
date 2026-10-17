@@ -466,6 +466,8 @@ private:
 	bool MatchesActiveAdmission( world_ticket_t ticket ) const; // admission mutex held
 	void InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE );
 	bool OwnerBlocksNative() const;
+	bool HasInitializationFailure() const;
+	bool PublishInitializationFailure();
 	bool AdvanceInitialization();
 	void PublishOwnerTransition( const std::shared_ptr< WorldAdmission >& admission, StartupStage stage );
 	void RunOwnerTransition( GSE_CALLABLE, const std::shared_ptr< OwnerTransition >& transition );
@@ -502,14 +504,11 @@ private:
 		std::vector< Binding > bindings;
 	};
 	mutable std::mutex m_snapshot_turn_mutex;
-	uint64_t m_snapshot_turn_generation = 0;
-	bool m_snapshot_turn_failure_pending = false;
 	std::optional< PendingSnapshotTurn > m_pending_snapshot_turn;
 	void StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& state );
 	void DiscardSnapshotTurn();
 	void ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const;
-	bool CheckPendingSnapshotTurn();
-	bool IsSnapshotTurnFailurePending() const;
+	void ValidatePendingSnapshotTurn();
 	std::optional< size_t > ApplySnapshotTurn();
 	State* m_state = nullptr;
 	// Borrowed until Stop has invalidated every native wrapper, even when an

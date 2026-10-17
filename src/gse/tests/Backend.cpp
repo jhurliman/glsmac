@@ -1572,6 +1572,261 @@ public:
 	}
 	void ProcessRequests() { m_game.MTModule::Iterate(); }
 	void RequireInitializationReset() { m_game.m_game_state = game::backend::Game::GS_PREPARING_MAP; }
+	void InstallCheckpointMap() {
+		using namespace game::backend;
+		// The coordinator checkpoints below use the existing asset-free Map
+		// fixture instead of terrain generation/render initialization.
+		NEWV( map, map::Map, &m_game, 8, 8 );
+		m_map.reset( map ); m_game.m_map = map;
+		map->GetTilesPtr()->Clear();
+		for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y & 1; x < 8; x += 2 ) { map->GetTile( x, y )->Update(); } }
+	}
+	std::string CheckSnapshotFailureCheckpoint( const int mode ) {
+		using namespace game::backend;
+		EnableTurnPlayers();
+		pending_initialization_t pending{};
+		common::mt_id_t reset = 0;
+		size_t errors = 0;
+		bool on_owner = false, reset_parked = false;
+		std::string message;
+		std::thread resetting;
+		std::exception_ptr reset_error;
+		std::promise< void > reset_done;
+		auto reset_future = reset_done.get_future();
+		util::FinallyGuard join( [ & ]() { if ( resetting.joinable() ) { resetting.join(); } } );
+		const auto owner = std::this_thread::get_id();
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			ResetRequest(); m_state->SetGame( &m_game );
+			pending = m_game.MT_Init( m_state ); ProcessRequests();
+			GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS, "snapshot failure admission failed" );
+			m_game.Iterate(); // actual initialize/configure owner phase
+			m_game.Iterate(); // actual native binding phase
+			InstallCheckpointMap();
+			m_game.StageSnapshotTurn( GSE_CALL, { 37, { { 0, true }, { 2, false } } } );
+			// Deliberately invalidate the staged reverse link before the actual
+			// native map checkpoint; no unsupported running packet is invented.
+			m_state->m_slots->GetSlot( 2 ).GetPlayer()->SetSlot( nullptr );
+			m_game.SetStartupStage( m_game.m_active_admission, Game::StartupStage::InitializeMap );
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( this, &pending, &errors, &on_owner, &message, &reset, &resetting, &reset_error, &reset_done, &reset_future, &reset_parked, owner, mode ) {
+				++errors; on_owner = std::this_thread::get_id() == owner;
+				message = VALUE_GET( value::String, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "error" ) );
+				if ( mode == 2 ) {
+					const auto session = m_state->CaptureGameSession();
+					resetting = std::thread( [ &, session ]() {
+						try {
+							reset = m_game.MT_Reset( pending.ticket );
+							// A broken claim/cancel control must fail before deliberately
+							// running native teardown concurrently with its error hook.
+							if ( session->IsActive() && m_game.OwnerBlocksNative() ) {
+								m_game.Iterate();
+								reset_parked = m_game.MT_GetResponse( reset ).result == R_NONE && session->IsActive();
+							}
+						} catch ( ... ) { reset_error = std::current_exception(); }
+						reset_done.set_value();
+					} );
+					if ( reset_future.wait_for( std::chrono::seconds( 2 ) ) != std::future_status::ready ) { throw std::runtime_error( "native reset did not return while owner Failure was running" ); }
+				}
+				return VALUE( value::Undefined );
+			} ) );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "snapshot failure setup: " + setup );
+		m_map.release();
+		util::FinallyGuard recover( [ & ]() { if ( resetting.joinable() ) { resetting.join(); } m_map.reset( m_game.m_map ); } );
+		const auto backend = [ & ]() {
+			std::exception_ptr error;
+			std::thread worker( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } );
+			worker.join(); if ( error ) { std::rethrow_exception( error ); }
+		};
+		backend();
+		GT_ASSERT( m_game.HasInitializationFailure() && !m_game.OwnerBlocksNative() && !errors,
+			"native validation did not record a later admitted Failure checkpoint" );
+		const auto save = m_game.MT_SaveMap( pending.ticket, "must-not-save-rejected-world" );
+		game::BackendRequest animation( game::BackendRequest::BR_ANIMATION_FINISHED ); animation.data.animation_finished.animation_id = 123;
+		const auto animate = m_game.MT_SendBackendRequests( pending.ticket, { animation } );
+		const auto ping = m_game.MT_Ping();
+		backend();
+		GT_ASSERT( m_game.OwnerBlocksNative() && !errors, "Failure was not queued on the owner" );
+		const bool untouched = m_game.MT_GetResponse( save ).result == R_NONE && m_game.MT_GetResponse( animate ).result == R_NONE
+			&& m_game.MT_GetResponse( ping ).result == R_NONE;
+		if ( mode == 1 ) {
+			reset = m_game.MT_Reset( pending.ticket ); backend();
+			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_map && !m_state->GetGame(),
+				"canceling Pending Failure required owner drain before real reset" );
+		}
+		ProcessAccumulations();
+		if ( resetting.joinable() ) { resetting.join(); }
+		if ( reset_error ) { std::rethrow_exception( reset_error ); }
+		GT_ASSERT( errors == ( mode == 1 ? 0u : 1u ) && !m_game.OwnerBlocksNative(), "Failure executed twice, after cancellation, or retained parking" );
+		if ( mode != 1 ) {
+			GT_ASSERT( on_owner && message == "Noncanonical world snapshot Player link" && !m_game.m_map && !HasPendingSnapshotTurn(),
+				"claimed Failure lost its original error or world retirement" );
+			backend();
+			if ( mode == 2 ) { GT_ASSERT( reset_parked && m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Running Failure did not defer and then complete actual reset" ); }
+			const auto request = m_game.MT_GetMapData( pending.ticket ); ProcessRequests();
+			const auto response = m_game.MT_GetResponse( request );
+			util::FinallyGuard release( [ & ]() { m_game.MT_DestroyResponse( response ); } );
+			if ( mode == 0 ) { GT_ASSERT( response.result == R_ERROR && *response.data.error.error_text == message, "Failure lost its terminal ticket-bound error" ); }
+		}
+		GT_ASSERT( untouched, "known Failure consumed ordinary MT requests before owner parking" );
+		GT_OK();
+	}
+	std::string CheckSnapshotStartRetirement() {
+		using namespace game::backend;
+		class Transport final : public network::Network {
+		public: ~Transport() override { Stop(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		} transport;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void ServerReady() { m_game_state = GS_RUNNING; }
+		};
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		Client* client = nullptr;
+		Value* wrapper = nullptr;
+		bool rooted = false, parked = false, collected_complete = false;
+		size_t starts = 0, disconnects = 0;
+		std::thread collector, native;
+		std::exception_ptr collect_error, native_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::promise< void > native_done, collect_started;
+		auto native_future = native_done.get_future();
+		auto collect_future = collect_started.get_future();
+		util::FinallyGuard cleanup( [ & ]() {
+			if ( native.joinable() ) { native.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			ProcessAccumulations();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( client ) { client->ResetHandlers(); }
+				m_state->DetachConnection();
+				m_game.m_active_admission.reset();
+				m_game.m_admissions.clear();
+			} );
+			g_engine->GetGC()->Iterate(); // retire Client while transport still exists
+			if ( m_map.get() != m_game.m_map ) { m_map.reset( m_game.m_map ); }
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			collected_complete = m_game.GetTurnId() == 37 && !HasPendingSnapshotTurn() && wrapper->type == VT_OBJECT &&
+				m_state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() &&
+				!m_state->m_slots->GetSlot( 1 ).GetPlayer()->IsTurnCompleted() &&
+				m_state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted();
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			ResetRequest(); m_state->SetGame( &m_game );
+			m_state->m_settings.local.remote_address = "fixture";
+			client = new Client( gc_space, &m_state->m_settings.local, &transport );
+			m_state->SetConnection( client ); client->Connect(); transport.Iterate(); m_state->Iterate(); PublishClientRoster( client ); client->ServerReady();
+			const auto pending = m_game.MT_Init( m_state ); ProcessRequests();
+			GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS, "Start retirement admission failed" );
+			m_game.Iterate(); m_game.Iterate(); // real InitializeConfigure and native bindings
+			InstallCheckpointMap();
+			m_game.StageSnapshotTurn( GSE_CALL, { 37, { { 0, true }, { 1, false }, { 2, true } } } );
+			wrapper = m_state->m_slots->GetSlot( 1 ).GetPlayer()->Wrap( GSE_CALL ); ctx->CreateConst( "start_retirement_player", wrapper, si, ep );
+			m_gse->AddRootObject( &root ); rooted = true;
+			const auto disconnect = client->m_on_disconnect;
+			client->m_on_disconnect = [ &, disconnect ]() { ++disconnects; return disconnect(); };
+			m_game.On( GSE_CALL, "start", NATIVE_CALL( this, &client, &transport, &starts, &disconnects, &wrapper, &parked, &collector, &native, &collect_error, &native_error, &native_done, &native_future, &collect_started, &collect_future, &thread_mutex, &collect_thread ) {
+				++starts;
+				client->Disconnect(); transport.Iterate(); // actual completed MT disconnect response
+				const auto session = m_state->CaptureGameSession();
+				native = std::thread( [ &, session ]() {
+					try {
+						// If claim exclusion is broken, report it without deliberately
+						// deleting the Player while this owner hook still uses it.
+						if ( session->IsActive() && m_game.OwnerBlocksNative() ) {
+							m_game.Iterate();
+							parked = disconnects == 0 && wrapper->type == VT_OBJECT && client->m_mt_ids.disconnect != 0;
+						}
+					} catch ( ... ) { native_error = std::current_exception(); }
+					native_done.set_value();
+				} );
+				if ( native_future.wait_for( std::chrono::seconds( 2 ) ) != std::future_status::ready ) { throw std::runtime_error( "native poll did not return while Start was claimed" ); }
+				collector = std::thread( [ & ]() {
+					{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+					collect_started.set_value();
+					try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+				} );
+				if ( collect_future.wait_for( std::chrono::seconds( 2 ) ) != std::future_status::ready ) { throw std::runtime_error( "collector worker did not start" ); }
+				// Never join a collector while its required owner exclusion is held.
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.m_game_state = Game::GS_STARTING;
+			m_game.SetStartupStage( m_game.m_active_admission, Game::StartupStage::Start );
+			GT_OK();
+		} );
+		m_map.release();
+		GT_ASSERT( setup.empty(), "Start retirement setup: " + setup );
+		m_game.Iterate(); // actual claimed full StartInitializedWorld/InitComplete
+		if ( native.joinable() ) { native.join(); }
+		if ( collector.joinable() ) { collector.join(); }
+		if ( native_error ) { std::rethrow_exception( native_error ); }
+		if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		GT_ASSERT( starts == 1 && parked && collected_complete && m_game.IsRunning() && !m_game.OwnerBlocksNative(),
+			"full Start did not exclude terminal roster retirement and publish complete saved flags" );
+		std::thread poll( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { native_error = std::current_exception(); } } ); poll.join();
+		if ( native_error ) { std::rethrow_exception( native_error ); }
+		GT_ASSERT( disconnects == 1 && wrapper->type == VT_UNDEFINED && m_state->m_players.empty() && !m_state->m_slots->GetCount(),
+			"terminal response failed to retire the actual Player after Start released ownership" );
+		GT_OK();
+	}
+	std::string CheckSnapshotCommitExclusion() {
+		using namespace game::backend;
+		EnableTurnPlayers();
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} gate;
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		root.visit = [ & ]() { { std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } } gate.Enter(); };
+		std::thread collector, native;
+		std::exception_ptr collect_error, commit_error;
+		std::promise< void > entered, committed;
+		auto committed_future = committed.get_future();
+		std::optional< size_t > restored;
+		bool rooted = false;
+		util::FinallyGuard cleanup( [ & ]() {
+			gate.Release(); if ( native.joinable() ) { native.join(); } if ( collector.joinable() ) { collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { if ( rooted ) { m_gse->RemoveRootObject( &root ); } } );
+		} );
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_state->m_slots->GetSlot( 2 ).GetPlayer()->CompleteTurn();
+			m_game.StageSnapshotTurn( GSE_CALL, { 37, { { 0, true }, { 2, false } } } );
+			m_gse->AddRootObject( &root ); rooted = true; GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "snapshot exclusion setup: " + setup );
+		collector = std::thread( [ & ]() { { std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+			try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); } } );
+		GT_ASSERT( gate.Wait(), "actual collector did not enter snapshot root traversal" );
+		native = std::thread( [ & ]() { entered.set_value(); try { restored = m_game.ApplySnapshotTurn(); } catch ( ... ) { commit_error = std::current_exception(); } committed.set_value(); } );
+		GT_ASSERT( entered.get_future().wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready, "native commit worker did not start" );
+		const bool crossed = committed_future.wait_for( std::chrono::milliseconds( 100 ) ) == std::future_status::ready;
+		gate.Release(); native.join(); collector.join();
+		if ( collect_error ) { std::rethrow_exception( collect_error ); } if ( commit_error ) { std::rethrow_exception( commit_error ); }
+		GT_ASSERT( !crossed, "snapshot flag commit crossed actual collector exclusion" );
+		GT_ASSERT( restored == 37 && m_game.GetTurnId() == 37 && !HasPendingSnapshotTurn()
+			&& m_state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && !m_state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "snapshot commit did not install the complete saved flags" );
+		GT_OK();
+	}
 	std::string CheckStartupCoordinator( const int mode ) {
 		using namespace game::backend;
 		EnableTurnPlayers();
@@ -2160,11 +2415,17 @@ public:
 		const auto map = buffer.ReadString();
 		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn );
 	}
-	void CompleteWorldRestore( GSE_CALLABLE ) {
+	void CompleteWorldRestore( GSE_CALLABLE, const bool dispatch_native_failure = false ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
-		m_game.InitComplete( GSE_CALL );
+		// Decoder-layer fixtures call completion synchronously under owner
+		// accumulation; only the coordinator tests claim production scheduling.
+		try { m_game.InitComplete( GSE_CALL ); }
+		catch ( const std::runtime_error& error ) {
+			if ( !dispatch_native_failure ) { throw; }
+			m_game.InitFailed( error.what() );
+		}
 	}
 	void IterateWorldRestore() {
 		m_map.release();
@@ -2172,12 +2433,13 @@ public:
 		m_game.Iterate();
 	}
 	void ValidateSnapshotBeforeMapInitialization() {
-		// These decoder fixtures deliberately bypass admission and asset-bearing
-		// map initialization. Exercise its real validation helper directly; the
-		// coordinator tests separately cover production Iterate admission.
+		// These synchronous decoder-layer fixtures own accumulation. Failure
+		// dispatch is explicit here; the native helper never queues an unclaimed
+		// callback. Separate admitted tests exercise production scheduling.
 		m_map.release();
 		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
-		m_game.CheckPendingSnapshotTurn();
+		try { m_game.ValidatePendingSnapshotTurn(); }
+		catch ( const std::runtime_error& error ) { m_game.InitFailed( error.what() ); }
 	}
 	std::string WithTransferableFrontendQueue( const std::function< std::string() >& check ) {
 		// The production request transfers this queue to the response recipient.
@@ -6179,97 +6441,16 @@ private:
 
 static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 	using namespace game::backend;
-	task->AddTest( "world completion parked failure blocks queued ordinary event work", GT() {
-		size_t applies = 0, errors = 0;
-		BackendFixture source, fixture;
-		for ( auto* current : { &source, &fixture } ) {
-			current->EnableWorldSnapshot(); current->EnableTurnPlayers();
-			current->GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); current->GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
-		}
-		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
-			auto* apply = NATIVE_CALL( &applies ) { ++applies; return VALUE( value::Undefined ); } );
-			fixture.RegisterEvent( "queued_before_failure", new event::EventHandler( gc_space, "queued_before_failure", noop, nullptr, apply, noop ) );
-			fixture.GetGame()->AddEvent( new event::Event( fixture.GetGame(), event::Event::ES_LOCAL, 0, GSE_CALL, "queued_before_failure", {}, "queued-before-failure" ) );
-			fixture.GetGame()->On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) ); GT_OK();
+	for ( const int mode : { 0, 1, 2 } ) {
+		task->AddTest( "world completion admitted Failure parks MT and owns reset " + std::to_string( mode ), GT( mode ) {
+			BackendFixture fixture; return fixture.CheckSnapshotFailureCheckpoint( mode );
 		} );
-		GT_ASSERT( setup.empty(), "parked event setup: " + setup );
-		std::exception_ptr escaped;
-		const auto iterate = [ & ]() { try { fixture.ValidateSnapshotBeforeMapInitialization(); } catch ( ... ) { escaped = std::current_exception(); } };
-		// Queue real ordinary event/base work before the download enters its
-		// failure state. It must not run stale work ahead of the error callback.
-		std::thread before_download( iterate ); before_download.join();
-		GT_ASSERT( !escaped && applies == 0, "foreign ordinary work did not defer" );
-		const auto stage = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-			fixture.RestoreWorldBody( GSE_CALL, source.WorldSnapshot() );
-			fixture.GetGame()->GetState()->m_slots->GetSlot( 2 ).GetPlayerAndClose(); GT_OK();
-		} );
-		GT_ASSERT( stage.empty(), "parked event restore: " + stage );
-		std::thread failure( iterate ); failure.join(); std::thread repeat( iterate ); repeat.join();
-		GT_ASSERT( !escaped && errors == 0 && applies == 0, "foreign failure ran script work" );
-		fixture.DrainWorldRestore();
-		GT_ASSERT( errors == 1 && applies == 0 && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "parked failure allowed earlier queued event work" ); GT_OK();
+	}
+	task->AddTest( "world completion full Start parks real terminal roster retirement", GT() {
+		BackendFixture fixture; return fixture.CheckSnapshotStartRetirement();
 	} );
-	task->AddTest( "world completion early roster rejection runs on Space owner and retires stale queued errors", GT() {
-		BackendFixture source; source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
-		source.GetGame()->GetState()->m_settings.global.SelectRuleset( "smax" ); source.GetGame()->GetState()->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
-		source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
-		const auto snapshot = source.WorldSnapshot();
-		for ( const int scenario : { 0, 1, 2, 3, 4 } ) {
-			size_t errors = 0, starts = 0; bool error_on_owner = false;
-			std::string error_message;
-			Player* detached = nullptr;
-			BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers();
-			auto* game = fixture.GetGame(); auto* state = game->GetState();
-			state->m_settings.global.SelectRuleset( "smax" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( state->m_settings.global );
-			const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-				fixture.RestoreWorldBody( GSE_CALL, snapshot );
-				const auto owner = std::this_thread::get_id();
-				game->On( GSE_CALL, "error", NATIVE_CALL( &errors, &error_on_owner, &error_message, owner ) {
-					++errors; error_on_owner = std::this_thread::get_id() == owner;
-					error_message = VALUE_GET( value::String, VALUE_DATA( value::Object, arguments.at( 0 ) )->Get( "error" ) );
-					return VALUE( value::Undefined );
-				} ) );
-				game->On( GSE_CALL, "start", NATIVE_CALL( &starts ) { ++starts; return VALUE( value::Undefined ); } ) );
-				detached = state->m_slots->GetSlot( 2 ).GetPlayerAndClose(); GT_OK();
-			} );
-			GT_ASSERT( setup.empty(), "early rejection setup: " + setup );
-			GT_ASSERT( !fixture.IsAccumulating(), "early rejection must exercise real outside-accumulation Iterate" );
-			std::exception_ptr escaped;
-			const auto iterate = [ & ]() { try { fixture.ValidateSnapshotBeforeMapInitialization(); } catch ( ... ) { escaped = std::current_exception(); } };
-			if ( scenario == 0 ) { iterate(); }
-			else { std::thread backend( iterate ); backend.join(); }
-			if ( escaped ) { try { std::rethrow_exception( escaped ); } catch ( const std::exception& error ) { GT_FAIL( "early rejection escaped: " + std::string( error.what() ) ); } }
-			if ( scenario == 0 ) {
-				GT_ASSERT( errors == 1 && error_on_owner && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "same-owner early failure did not retire initialization" );
-				continue;
-			}
-			GT_ASSERT( errors == 0 && fixture.HasMap() && fixture.HasPendingSnapshotTurn(), "foreign Iterate executed error callback before owner drain" );
-			std::thread repeat( iterate ); repeat.join();
-			GT_ASSERT( !escaped && errors == 0, "waiting state repeated unsafe initialization" );
-			const auto before_drain = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-				if ( scenario == 2 ) { fixture.ResetWorld(); }
-				if ( scenario >= 3 ) {
-					state->m_slots->GetSlot( 2 ).SetPlayer( detached, 0, "" );
-					fixture.RestoreWorldBody( GSE_CALL, snapshot );
-					if ( scenario == 4 ) { detached->SetSlot( nullptr ); }
-				}
-				GT_OK();
-			} );
-			GT_ASSERT( before_drain.empty(), "queued error reset/replacement failed: " + before_drain );
-			if ( scenario == 4 ) { std::thread replacement_failure( iterate ); replacement_failure.join(); GT_ASSERT( !escaped, "replacement failure escaped backend" ); }
-			fixture.DrainWorldRestore();
-			GT_ASSERT( errors == ( scenario == 1 || scenario == 4 ? 1u : 0u ) && starts == 0, "queued stale error affected reset/replacement or published twice" );
-			if ( scenario == 1 || scenario == 4 ) { GT_ASSERT( error_on_owner && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "foreign failure did not execute terminal cleanup on owner" ); }
-			if ( scenario == 4 ) { GT_ASSERT( error_message == "Noncanonical world snapshot Player link", "old queued generation replaced the new snapshot's failure" ); }
-			if ( scenario == 2 ) { GT_ASSERT( !fixture.HasMap() && !fixture.HasPendingSnapshotTurn(), "discarded error retained world state" ); }
-			if ( scenario == 3 ) {
-				GT_ASSERT( fixture.HasMap() && fixture.HasPendingSnapshotTurn(), "stale queued error consumed replacement snapshot" );
-				const auto finish = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.CompleteWorldRestore( GSE_CALL ); GT_OK(); } );
-				GT_ASSERT( finish.empty() && fixture.IsRunning() && starts == 1 && !errors && state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted(), "replacement snapshot failed after stale error retirement" );
-			}
-		}
-		GT_OK();
+	task->AddTest( "world completion saved flags share actual collector exclusion", GT() {
+		BackendFixture fixture; return fixture.CheckSnapshotCommitExclusion();
 	} );
 	task->AddTest( "world completion decoder rejects malformed records without a usable turn state", GT() {
 		BackendFixture fixture; fixture.EnableTurnPlayers();
@@ -6408,7 +6589,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 				}
 				fixture.ClearFrontendRequests();
 				if ( scenario == 0 || scenario == 4 || scenario == 5 ) { fixture.ValidateSnapshotBeforeMapInitialization(); }
-				else { fixture.CompleteWorldRestore( GSE_CALL ); }
+				else { fixture.CompleteWorldRestore( GSE_CALL, true ); }
 				GT_ASSERT( errors == 1 && starts == ( scenario == 2 || scenario == 3 ? 1u : 0u ) && !turns, "identity rejection did not use terminal initialization failure at the correct boundary" );
 				GT_ASSERT( !first->IsTurnCompleted() && current->IsTurnCompleted(), "identity rejection partially installed completion flags" );
 				GT_ASSERT( !fixture.IsRunning() && !fixture.HasMap() && !fixture.HasPendingSnapshotTurn() && !fixture.HasPendingSnapshotRandom(), "failed identity retained world or staged continuation" );

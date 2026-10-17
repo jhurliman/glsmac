@@ -189,3 +189,21 @@ commit `b813c18ac988695ba2f7965f6d6bd77ca91c614c` passed:
 The publication parent lacks later tracking/sanitizer repairs, so the integrated
 source sanitizer receipt above is kept separate; this paragraph makes no full
 publication LSan or allocation-tracking claim.
+
+The original publication head `d6f311b36efc31e4fa427edad1467b2be5d7b2a3`
+hit the macOS GSE test's 300-second timeout (run 39014033949, job
+117342310091); the retained log ends in the repeating async test. Its ancestry
+lacked the separately fixed same-deadline timer cancellation defect. This is
+retained as a failure receipt, not relabeled as a successful run or a faction
+parser failure. No timeout was increased.
+
+The refreshed publication explicitly depends on PR #69 at
+`a5c3198d030a13fb5de6691c5f85386f804ca416` and PR #114 at the head above,
+combined in `codex/smac-faction-startup-profile-base`. Only test-registration
+unions required merge resolution; the faction implementation and tests are
+unchanged. The refreshed source tree at `f649f93e7212a98d3e5609435f4cb1660e0a5979`
+passed the actual Linux publication CTest suite 5/5 in 24.56 seconds, including
+the real timer regression suite. Its two affected production units passed
+focused LLVM 15 analysis with zero failures in 1.95 seconds. The subsequent
+base-ancestry merge preserves that exact source tree. These local checks do not
+replace the new hosted macOS result.

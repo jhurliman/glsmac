@@ -1,6 +1,8 @@
 #pragma once
 
 #include "types/Buffer.h"
+#include <optional>
+#include "game/backend/map/tile/Types.h"
 
 #include "gse/Wrappable.h"
 
@@ -20,6 +22,7 @@ class PopDef;
 
 class Pop : public gse::Wrappable {
 public:
+	using worked_tile_t = std::optional< map::tile::coords_t >;
 
 	Pop( Base* base = nullptr, const size_t id = 0, const PopDef* def = nullptr, const uint8_t variant = 0, map::tile::Tile* const worked_tile = nullptr );
 
@@ -27,6 +30,8 @@ public:
 	void Deserialize( types::Buffer& buf, Game* game );
 
 	void SetBase( Base* const base );
+	const worked_tile_t& GetWorkedTileCoords() const;
+	map::tile::Tile* GetWorkedTile() const;
 
 	WRAPDEFS_PTR( Pop );
 	WRAPDEF_SERIALIZABLE;
@@ -35,6 +40,10 @@ public:
 	size_t m_id;
 	const PopDef* m_def;
 	uint8_t m_variant = 0;
+
+private:
+	friend class Base;
+	worked_tile_t m_worked_tile;
 
 };
 

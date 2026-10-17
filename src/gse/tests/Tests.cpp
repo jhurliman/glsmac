@@ -2,6 +2,7 @@
 #include "Async.h"
 
 #include "Backend.h"
+#include "RosterRecords.h"
 #include "Buffer.h"
 #include "Value.h"
 #include "Faction.h"
@@ -73,6 +74,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddRosterRecordTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddCvrContainerReaderTests( task );

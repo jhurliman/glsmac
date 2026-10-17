@@ -5,6 +5,7 @@ const result = {
 		const um = game.get_um();
 
 		um.on('unit_turn', (e) => {
+			if (e.unit.is_conventional) { return; }
 			const def = e.unit.get_def();
 			if (!e.unit.moved_this_turn) {
 				if (e.unit.health < def.health_max) {

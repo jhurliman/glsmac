@@ -59,7 +59,8 @@ public:
 		const backend::unit::movement_t movement,
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const backend::unit::health_t health
+		const backend::unit::health_t health,
+		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0
 	);
 	~Unit();
 
@@ -100,6 +101,8 @@ public:
 
 	void SetMovement( const backend::unit::movement_t movement );
 	void SetHealth( const backend::unit::health_t health );
+	void SetMorale( backend::unit::morale_t morale, const std::string& text );
+	void SetActionability( bool conventional, bool has_moves, backend::unit::movement_t full_movement = 0 );
 	const bool CanMove() const;
 
 	void SetTile( tile::Tile* dst_tile );
@@ -157,6 +160,8 @@ private:
 	backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
 	backend::unit::health_t m_health = 0;
+	bool m_conventional = false, m_has_moves = false;
+	backend::unit::movement_t m_full_movement = 0;
 
 	bool m_need_refresh = true;
 	uint8_t m_fake_badge_offset = 0;

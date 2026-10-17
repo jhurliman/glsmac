@@ -1,11 +1,13 @@
 #pragma once
 
 #include <string>
+#include <variant>
 
 #include "gse/Wrappable.h"
 #include "game/backend/MapObject.h"
 
 #include "Types.h"
+#include "ConventionalUnitState.h"
 
 #include "types/Buffer.h"
 
@@ -48,10 +50,14 @@ public:
 	Def* m_def;
 	slot::Slot* m_owner;
 
-	movement_t m_movement;
-	morale_t m_morale;
-	health_t m_health;
-	bool m_moved_this_turn;
+	struct LegacyState { movement_t movement; morale_t morale; health_t health; bool moved_this_turn; };
+	struct Presentation { movement_t movement; morale_t morale; health_t health; movement_t full_movement = 0; };
+	bool IsConventional() const;
+	LegacyState& Legacy();
+	const LegacyState& Legacy() const;
+	const ConventionalUnitState& Conventional() const;
+	ConventionalUnitStats QueryStats( SmacMoraleMode mode ) const;
+	Presentation GetPresentation() const;
 
 	size_t m_animation_id = 0;
 
@@ -64,13 +70,17 @@ public:
 	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um );
+	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver = {} );
 
 	WRAPDEFS_DYNAMIC( Unit );
 
 	WRAPDEF_SERIALIZABLE;
 
 private:
+	friend class UnitManager;
+	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state );
+	void Publish( GSE_CALLABLE, map::tile::Tile* tile );
+	std::variant< LegacyState, ConventionalUnitState > m_state;
 	UnitManager* const m_um;
 
 };

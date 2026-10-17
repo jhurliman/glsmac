@@ -6,6 +6,7 @@
 #include "Unit.h"
 
 #include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/State.h"
 #include "game/backend/Bindings.h"
@@ -27,7 +28,7 @@ namespace game {
 namespace backend {
 namespace unit {
 
-static const std::string s_snapshot_format = "GLSMAC_UNITS_V1";
+static const std::string s_snapshot_format = "GLSMAC_UNITS_V2";
 
 static size_t ReadSnapshotCount( types::Buffer& buf ) {
 	const auto count = buf.ReadInt();
@@ -141,6 +142,52 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 	TriggerSpawnHook( GSE_CALL, unit );
 }
 
+ConventionalUnitContext UnitManager::ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const {
+	return m_game->ResolveConventionalUnit( state, owner );
+}
+
+void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
+	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver ) const {
+	if ( !resolver || id == 0 || id >= static_cast< uint64_t >( INT64_MAX ) || id >= std::numeric_limits< size_t >::max()
+		|| HasUnitId( id ) || !tile || tile->units.count( id ) || !GetMap()
+		|| tile->coord.x >= GetMap()->GetWidth() || tile->coord.y >= GetMap()->GetHeight()
+		|| ( tile->coord.x & 1 ) != ( tile->coord.y & 1 ) || GetMap()->GetTile( tile->coord.x, tile->coord.y ) != tile ) {
+		THROW( "Invalid conventional unit ID, world tile or restore context" );
+	}
+	bool canonical = false;
+	for ( const auto& entry : m_unit_defs ) { if ( entry.second == def ) { canonical = true; break; } }
+	if ( !canonical || def->m_type != DT_STATIC || !def->m_moraleset || def->m_moraleset != GetMoraleSet( def->m_moraleset->m_id ) ) {
+		THROW( "Conventional presentation definition is not canonical" );
+	}
+	const auto context = resolver( state, owner );
+	QueryConventionalUnit( state, context, state.render_morale_mode );
+	const auto* presentation = static_cast< const StaticDef* >( def );
+	if ( context.chassis != settings::SmacMovementRules::GroundChassis::Infantry || context.reactor != 1
+		|| presentation->m_movement_type != MT_LAND || !presentation->m_render || presentation->m_render->m_type != Render::RT_CVR_SCOUT ) {
+		THROW( "Conventional design has no compatible explicit presentation; Rover is not Infantry" );
+	}
+}
+
+Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
+	m_game->CheckRW( GSE_CALL );
+	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) { return ResolveConventional( value, slot ); };
+	ValidateConventionalCreation( id, def, owner, tile, state, resolver );
+	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state );
+	SpawnUnit( GSE_CALL, unit );
+	return unit;
+}
+
+void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state ) {
+	m_game->CheckRW( GSE_CALL );
+	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
+	const auto& prior = unit->Conventional();
+	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home
+		|| state.render_morale_mode != prior.render_morale_mode ) { THROW( "Conventional update cannot replace identity or presentation policy" ); }
+	QueryConventionalUnit( state, ResolveConventional( state, unit->m_owner ), state.render_morale_mode );
+	unit->m_state = state;
+	RefreshUnit( GSE_CALL, unit );
+}
+
 void UnitManager::TriggerSpawnHook( GSE_CALLABLE, Unit* unit ) {
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -251,6 +298,7 @@ void UnitManager::PushUpdates() {
 			const auto& uu = it.second;
 			const auto& unit = uu.unit;
 			if ( uu.ops & UUO_SPAWN ) {
+				const auto presentation = unit->GetPresentation();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;
 				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
@@ -267,17 +315,26 @@ void UnitManager::PushUpdates() {
 					c.z
 				};
 
-				fr.data.unit_spawn.movement = unit->m_movement;
-				fr.data.unit_spawn.morale = unit->m_morale;
+				fr.data.unit_spawn.movement = presentation.movement;
+				fr.data.unit_spawn.morale = presentation.morale;
 				NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
-				fr.data.unit_spawn.health = unit->m_health;
+				fr.data.unit_spawn.health = presentation.health;
+				fr.data.unit_spawn.conventional = unit->IsConventional();
+				fr.data.unit_spawn.full_movement = presentation.full_movement;
+				fr.data.unit_spawn.has_moves = unit->HasMovesLeft();
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
+				const auto presentation = unit->GetPresentation();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
 				fr.data.unit_update.unit_id = unit->m_id;
-				fr.data.unit_update.movement = unit->m_movement;
-				fr.data.unit_update.health = unit->m_health;
+				fr.data.unit_update.movement = presentation.movement;
+				fr.data.unit_update.health = presentation.health;
+				fr.data.unit_update.morale = presentation.morale;
+				NEW( fr.data.unit_update.morale_string, std::string, unit->GetMoraleString() );
+				fr.data.unit_update.conventional = unit->IsConventional();
+				fr.data.unit_update.full_movement = presentation.full_movement;
+				fr.data.unit_update.has_moves = unit->HasMovesLeft();
 				const auto* tile = unit->GetTile();
 				fr.data.unit_update.tile_coords = {
 					tile->coord.x,
@@ -563,6 +620,23 @@ WRAPIMPL_BEGIN( UnitManager )
 			})
 		},
 		{
+			"spawn_conventional_unit", NATIVE_CALL( this ) {
+				m_game->CheckRW( GSE_CALL ); N_EXPECT_ARGS( 1 ); N_GETVALUE( obj, 0, Object );
+				N_GETPROP( id, obj, "id", Int ); N_GETPROP( def_id, obj, "def", String );
+				N_GETPROP_UNWRAP( owner, obj, "owner", Player ); N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
+				N_GETPROP( design, obj, "design_id", Int ); N_GETPROP( simulation, obj, "owner_simulation_id", Int );
+				N_GETPROP( morale, obj, "stored_morale", Int ); N_GETPROP( damage, obj, "damage", Int ); N_GETPROP( spent, obj, "spent", Int );
+				N_GETPROP( failed, obj, "failed_move", Bool ); N_GETPROP( home, obj, "home", String ); N_GETPROP( mode, obj, "render_morale_mode", Int );
+				if ( id < 0 || static_cast< uint64_t >( id ) >= std::numeric_limits< size_t >::max() || design < 0 || design >= 512
+					|| simulation < 1 || simulation > 7 || morale < 0 || morale > 255 || damage < 0 || damage > 255 || spent < 0 || spent > 255
+					|| home != "none" || mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Invalid explicit conventional unit record" ); }
+				const ConventionalUnitState state{ static_cast< int32_t >( design ), static_cast< int32_t >( simulation ), static_cast< uint8_t >( morale ),
+					static_cast< uint8_t >( damage ), static_cast< uint8_t >( spent ), failed, ConventionalUnitState::Home::None, static_cast< SmacMoraleMode >( mode ) };
+				auto* unit = SpawnConventionalUnit( GSE_CALL, id ? static_cast< size_t >( id ) : Unit::GetNextId(), GetUnitDef( def_id ), owner->GetSlot(), tile, state );
+				return unit->Wrap( GSE_CALL );
+			} )
+		},
+		{
 			"despawn_unit",
 			NATIVE_CALL( this ) {
 
@@ -614,6 +688,10 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 }
 
 void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
+	Deserialize( GSE_CALL, buf, [ this ]( const auto& state, const auto* owner ) { return ResolveConventional( state, owner ); } );
+}
+
+void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver ) {
 	if ( !m_unit_moralesets.empty() || !m_unit_defs.empty() || !m_units.empty() || !m_unprocessed_units.empty() ) {
 		THROW( "unit snapshot requires an empty manager" );
 	}
@@ -653,7 +731,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	size_t highest_id = 0;
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		auto* unit = Unit::Deserialize( GSE_CALL, b, this );
+		auto* unit = Unit::Deserialize( GSE_CALL, b, this, resolver );
 		highest_id = std::max( highest_id, unit->m_id );
 		if ( m_game->IsRunning() ) { RegisterUnit( unit ); }
 		else { m_unprocessed_units.push_back( { unit, false } ); }
@@ -723,6 +801,7 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 }
 
 const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
+	if ( unit->IsConventional() ) { return new std::string( "Conventional movement is not activated" ); }
 
 	auto* tm = m_game->GetTM();
 	auto* am = m_game->GetAM();
@@ -774,6 +853,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 }
 
 const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
+	if ( attacker->IsConventional() || defender->IsConventional() ) { return new std::string( "Conventional combat is not activated" ); }
 	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
@@ -796,6 +876,7 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 }
 
 gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
+	if ( attacker->IsConventional() || defender->IsConventional() ) { GSE_ERROR( gse::EC.GAME_ERROR, "Conventional combat is not activated" ); }
 	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
@@ -809,6 +890,7 @@ gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, 
 }
 
 void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
+	if ( attacker->IsConventional() || defender->IsConventional() ) { GSE_ERROR( gse::EC.GAME_ERROR, "Conventional combat is not activated" ); }
 	auto* state = m_game->GetState();
 	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &attacker, &defender, &resolutions ) {
 		{

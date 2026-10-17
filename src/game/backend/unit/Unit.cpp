@@ -44,36 +44,67 @@ Unit::Unit(
 	const bool moved_this_turn
 )
 	: MapObject( um->GetMap(), nullptr )
-	, m_um( um )
 	, m_id( id )
 	, m_def( def )
 	, m_owner( owner )
-	, m_movement( movement )
-	, m_morale( morale )
-	, m_health( health )
-	, m_moved_this_turn( moved_this_turn ) {
-	if ( id == 0 || id >= static_cast< uint64_t >( std::numeric_limits< int64_t >::max() ) ||
-		id >= std::numeric_limits< size_t >::max() || um->HasUnitId( id ) || !tile || tile->units.count( id ) ) {
+	, m_state( LegacyState{ movement, morale, health, moved_this_turn } )
+	, m_um( um ) {
+	Publish( GSE_CALL, tile );
+}
+
+Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state )
+	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ) {
+	// The manager has already resolved all context and presentation admission.
+	Publish( GSE_CALL, tile );
+}
+
+void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile ) {
+	if ( m_id == 0 || m_id >= static_cast< uint64_t >( std::numeric_limits< int64_t >::max() ) ||
+		m_id >= std::numeric_limits< size_t >::max() || m_um->HasUnitId( m_id ) || !tile || tile->units.count( m_id ) ) {
 		THROW( "invalid or duplicate unit ID" );
 	}
-	if ( !def || def != um->GetUnitDef( def->m_id ) ) {
+	if ( !m_def || m_def != m_um->GetUnitDef( m_def->m_id ) ) {
 		THROW( "unit definition is not owned by its manager" );
 	}
 	SetTile( GSE_CALL, tile );
-	if ( next_id <= id ) {
-		next_id = id + 1;
+	if ( next_id <= m_id ) {
+		next_id = m_id + 1;
 	}
+}
+
+bool Unit::IsConventional() const { return std::holds_alternative< ConventionalUnitState >( m_state ); }
+Unit::LegacyState& Unit::Legacy() {
+	if ( IsConventional() ) { THROW( "Conventional units do not have mutable legacy float state" ); }
+	return std::get< LegacyState >( m_state );
+}
+const Unit::LegacyState& Unit::Legacy() const {
+	if ( IsConventional() ) { THROW( "Conventional units do not have legacy float state" ); }
+	return std::get< LegacyState >( m_state );
+}
+const ConventionalUnitState& Unit::Conventional() const {
+	if ( !IsConventional() ) { THROW( "Unit is not conventional" ); }
+	return std::get< ConventionalUnitState >( m_state );
+}
+ConventionalUnitStats Unit::QueryStats( const SmacMoraleMode mode ) const {
+	const auto& state = Conventional();
+	return QueryConventionalUnit( state, m_um->ResolveConventional( state, m_owner ), mode );
+}
+Unit::Presentation Unit::GetPresentation() const {
+	if ( !IsConventional() ) { const auto& state = Legacy(); return { state.movement, state.morale, state.health }; }
+	const auto stats = QueryStats( Conventional().render_morale_mode );
+	return { static_cast< float >( stats.remaining_allowance ) / stats.quantum, stats.effective_morale,
+		static_cast< float >( stats.hit_points ) / stats.maximum_hit_points, static_cast< float >( stats.full_allowance ) / stats.quantum };
 }
 
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;
 const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.025f;
 
 const bool Unit::HasMovesLeft() const {
-	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
+	return IsConventional() ? QueryStats( SmacMoraleMode::Mode1 ).remaining_allowance > 0 : Legacy().movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
 const std::string& Unit::GetMoraleString() const {
-	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
+	return m_def->m_moraleset->m_morale_values.at( GetPresentation().morale ).m_name;
 }
 
 void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
@@ -91,30 +122,41 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
+	if ( unit->IsConventional() ) { unit->QueryStats( unit->Conventional().render_morale_mode ); }
 	types::Buffer buf;
+	buf.WriteInt( 2 );
+	buf.WriteInt( unit->IsConventional() ? 1 : 0 );
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( unit->m_def->m_id );
 	buf.WriteInt( unit->m_owner->GetIndex() );
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
-	buf.WriteFloat( unit->m_movement );
-	buf.WriteInt( unit->m_morale );
-	buf.WriteFloat( unit->m_health );
-	buf.WriteBool( unit->m_moved_this_turn );
+	if ( unit->IsConventional() ) { unit->Conventional().Serialize( buf ); }
+	else {
+		const auto& state = unit->Legacy();
+		buf.WriteFloat( state.movement ); buf.WriteInt( state.morale );
+		buf.WriteFloat( state.health ); buf.WriteBool( state.moved_this_turn );
+	}
 	return buf;
 }
 
-Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
+Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver ) {
 	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
+	if ( buf.ReadInt() != 2 ) { THROW( "unsupported unit record version" ); }
+	const auto kind = buf.ReadInt();
+	if ( kind != 0 && kind != 1 ) { THROW( "unsupported unit record kind" ); }
 	const auto id = buf.ReadInt();
 	const auto def_id = buf.ReadString();
 	const auto owner = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	const auto movement = (movement_t)buf.ReadFloat();
-	const auto morale = (morale_t)buf.ReadInt();
-	const auto health = (health_t)buf.ReadFloat();
-	const auto moved_this_turn = buf.ReadBool();
+	std::optional< ConventionalUnitState > conventional;
+	LegacyState legacy{};
+	if ( kind == 1 ) { conventional = ConventionalUnitState::Deserialize( buf ); }
+	else {
+		legacy.movement = static_cast< movement_t >( buf.ReadFloat() ); legacy.morale = buf.ReadInt();
+		legacy.health = static_cast< health_t >( buf.ReadFloat() ); legacy.moved_this_turn = buf.ReadBool();
+	}
 	// Decode and validate the entire record before claiming a tile or advancing
 	// the ID allocator. Finite signed values are intentional: current setters
 	// permit them, and combat can leave negative health until its death callback.
@@ -130,11 +172,16 @@ Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
 		static_cast< uint64_t >( pos_y ) >= um->GetMap()->GetHeight() || ( pos_x & 1 ) != ( pos_y & 1 ) ) {
 		THROW( "invalid unit coordinates" );
 	}
-	if ( morale < MORALE_MIN || morale > MORALE_MAX || !std::isfinite( movement ) || !std::isfinite( health ) ) {
+	auto* slot = um->GetSlot( owner ); auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
+	if ( conventional ) {
+		um->ValidateConventionalCreation( static_cast< size_t >( id ), def, slot, tile, *conventional, resolver );
+		return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile, *conventional );
+	}
+	if ( legacy.morale < MORALE_MIN || legacy.morale > MORALE_MAX || !std::isfinite( legacy.movement ) || !std::isfinite( legacy.health ) ) {
 		THROW( "invalid unit morale, movement or health" );
 	}
-	return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, um->GetSlot( owner ),
-		um->GetMap()->GetTile( pos_x, pos_y ), movement, morale, health, moved_this_turn );
+	return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile,
+		legacy.movement, legacy.morale, legacy.health, legacy.moved_this_turn );
 }
 
 WRAPIMPL_SERIALIZE( Unit )
@@ -149,6 +196,7 @@ WRAPIMPL_DESERIALIZE( Unit )
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )
+	WRAPIMPL_GET_CUSTOM( "is_conventional", Bool, IsConventional() )
 	WRAPIMPL_GET_CUSTOM( "id", Int, m_id )
 	WRAPIMPL_GET_CUSTOM( "def", String, m_def->m_id )
 	WRAPIMPL_GET_CUSTOM( "owner", Int, m_owner->GetIndex() )
@@ -156,10 +204,32 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		{ "x", VALUE( gse::value::Int,, m_tile->coord.x ) },
 		{ "y", VALUE( gse::value::Int,, m_tile->coord.y ) },
 	} )
-	WRAPIMPL_GET_PTR( "movement", m_movement )
-	WRAPIMPL_GET_PTR( "morale", m_morale )
-	WRAPIMPL_GET_PTR( "health", m_health )
-	WRAPIMPL_GET_PTR( "moved_this_turn", m_moved_this_turn )
+	// Legacy Ptr behavior is unchanged. Conventional callers must request a
+	// fresh copied query; retaining a wrapper must not cache derived floats.
+	{ "movement", IsConventional() ? static_cast< gse::Value* >( VALUE( gse::value::Undefined ) ) : VALUE( gse::value::Ptr,, Legacy().movement ) },
+	{ "morale", IsConventional() ? static_cast< gse::Value* >( VALUE( gse::value::Undefined ) ) : VALUE( gse::value::Ptr,, Legacy().morale ) },
+	{ "health", IsConventional() ? static_cast< gse::Value* >( VALUE( gse::value::Undefined ) ) : VALUE( gse::value::Ptr,, Legacy().health ) },
+	{ "moved_this_turn", IsConventional() ? static_cast< gse::Value* >( VALUE( gse::value::Undefined ) ) : VALUE( gse::value::Ptr,, Legacy().moved_this_turn ) },
+	{ "get_conventional_state", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 0 ); const auto& state = Conventional();
+		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+			{ "design_id", VALUE( gse::value::Int,, state.design_id ) }, { "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
+			{ "stored_morale", VALUE( gse::value::Int,, state.stored_morale ) }, { "damage", VALUE( gse::value::Int,, state.damage ) },
+			{ "spent", VALUE( gse::value::Int,, state.spent ) }, { "failed_move", VALUE( gse::value::Bool,, state.failed_move ) },
+			{ "home", VALUE( gse::value::String,, "none" ) }, { "render_morale_mode", VALUE( gse::value::Int,, static_cast< int32_t >( state.render_morale_mode ) ) }
+		} ) );
+	} ) },
+	{ "query_conventional_stats", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 ); N_GETVALUE( mode, 0, Int );
+		if ( mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Conventional morale mode must be explicit 0 or 1" ); }
+		const auto stats = QueryStats( static_cast< SmacMoraleMode >( mode ) );
+		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+			{ "effective_morale", VALUE( gse::value::Int,, stats.effective_morale ) }, { "allowance_morale", VALUE( gse::value::Int,, stats.allowance_morale ) },
+			{ "quantum", VALUE( gse::value::Int,, stats.quantum ) }, { "basic_allowance", VALUE( gse::value::Int,, stats.basic_allowance ) },
+			{ "full_allowance", VALUE( gse::value::Int,, stats.full_allowance ) }, { "remaining_allowance", VALUE( gse::value::Int,, stats.remaining_allowance ) },
+			{ "hit_points", VALUE( gse::value::Int,, stats.hit_points ) }, { "maximum_hit_points", VALUE( gse::value::Int,, stats.maximum_hit_points ) }
+		} ) );
+	} ) },
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )
 	WRAPIMPL_GET_CUSTOM( "is_land", Bool, m_def->GetMovementType() == MT_LAND )
 	WRAPIMPL_GET_CUSTOM( "is_water", Bool, m_def->GetMovementType() == MT_WATER )
@@ -172,6 +242,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		NATIVE_CALL( this ) {
 
 			m_um->m_game->CheckRW( GSE_CALL );
+			if ( IsConventional() ) { GSE_ERROR( gse::EC.GAME_ERROR, "Conventional movement is not activated" ); }
 
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
@@ -191,10 +262,11 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		} )
 	},
 WRAPIMPL_DYNAMIC_SETTERS( Unit )
-	WRAPIMPL_SET_PTR( "movement", Float, m_movement )
-	WRAPIMPL_SET_PTR( "morale", Float, m_morale )
-	WRAPIMPL_SET_PTR( "health", Float, m_health )
-	WRAPIMPL_SET_PTR( "moved_this_turn", Bool, m_moved_this_turn )
+	if ( obj->IsConventional() ) { GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Conventional unit fields are read-only; float state is not authoritative" ); }
+	WRAPIMPL_SET_PTR( "movement", Float, Legacy().movement )
+	WRAPIMPL_SET_PTR( "morale", Float, Legacy().morale )
+	WRAPIMPL_SET_PTR( "health", Float, Legacy().health )
+	WRAPIMPL_SET_PTR( "moved_this_turn", Bool, Legacy().moved_this_turn )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )
 	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
 	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around

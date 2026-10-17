@@ -30,6 +30,7 @@ const get_unit_defence_power = (unit) => {
 return {
 
 	validate: (e) => {
+		if (e.data.attacker.is_conventional || e.data.defender.is_conventional) { return 'Conventional combat is not activated'; }
 		if (e.data.attacker.owner != e.caller) {
 			return 'Unit can only be ordered to attack by it\'s owner';
 		}
@@ -78,6 +79,7 @@ return {
 	},
 
 	resolve: (e) => {
+		if (e.data.attacker.is_conventional || e.data.defender.is_conventional) { throw Error('Conventional combat is not activated'); }
 		const attacker = e.data.attacker;
 		const defender = e.data.defender;
 
@@ -110,6 +112,7 @@ return {
 	},
 
 	apply: (e) => {
+		if (e.data.attacker.is_conventional || e.data.defender.is_conventional) { throw Error('Conventional combat is not activated'); }
 		const attacker = e.data.attacker;
 		const defender = e.data.defender;
 		let attacker_tile = attacker.get_tile();
@@ -175,6 +178,7 @@ return {
 	},
 
 	rollback: (e) => {
+		if ((#is_defined(e.data.attacker) && e.data.attacker.is_conventional) || (#is_defined(e.data.defender) && e.data.defender.is_conventional)) { throw Error('Conventional combat is not activated'); }
 		// TODO: test in multiplayer
 		const a = e.applied;
 		e.game.am.stop_animations(a.animations_id);

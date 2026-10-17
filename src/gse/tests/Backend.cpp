@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "ConventionalUnits.h"
 #include "CvrScoutRenderer.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/unit/Unit.h"
@@ -7,6 +8,7 @@
 #include "game/frontend/unit/BadgeDefs.h"
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/Slot.h"
+#include "game/frontend/tile/TileManager.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/sprite/InstancedSprite.h"
 #include "game/frontend/widget/UnitPreview.h"
@@ -137,6 +139,48 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
+	void ConfigureConventional( bool refreshed, int32_t road_rate ) {
+		EnableWorldSnapshot();
+		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto& settings = m_state->m_settings.global;
+			settings.SelectRuleset( "smac" );
+			settings.InitializeHostRules( [ & ]( const std::string& filename ) {
+				auto source = smac_startup_fixture::Source( filename );
+				if ( filename == "alpha.txt" ) {
+					const auto start = source.find( "#RULES\n" ) + 7;
+					source.replace( start, source.find( ',', start ) - start, std::to_string( road_rate ) );
+				}
+				return source;
+			} );
+			smac_rules_fixture::AcceptWorldSize( settings );
+			EnableSimulationParticipants( { 0, 6 }, 0 );
+			m_game.PrepareNewSimulation();
+			if ( refreshed ) {
+				m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+				SetSnapshotTurn( 1 );
+			}
+			SetRunning( true );
+			GT_OK();
+		} );
+		if ( !error.empty() ) { throw std::runtime_error( error ); }
+	}
+	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
+		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
+	}
+	void ConventionalEarly() {
+		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.phase = game::backend::faction::SmacFactionSocialState::Phase::Early; owner.retained.reset(); }
+		SetSnapshotTurn( 0 );
+	}
+	void RestoreConventional( GSE_CALLABLE, const std::string& snapshot ) {
+		m_game.GetUM()->Clear();
+		// Keep a deliberately different current simulation during the real body
+		// decode. The unit decoder must use its private downloaded context.
+		RestoreWorldBody( GSE_CALL, snapshot );
+		m_game.m_simulation.reset();
+		m_game.PublishPendingSimulation();
+		SetRunning( true );
+		m_game.GetUM()->ProcessUnprocessed( GSE_CALL );
+	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
 		, m_gse( CreateRuntime() )
@@ -1618,6 +1662,9 @@ public:
 			util::FinallyGuard cleanup( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
 			widget->GetGeometry()->SetWidth( 32 ); widget->GetGeometry()->SetHeight( 32 );
 			game::frontend::Game frontend( fixture.m_glsmac.get(), fixture.m_state, ui, {}, {} );
+			game::frontend::tile::TileManager tile_manager( &frontend );
+			frontend.m_tm = &tile_manager;
+			util::FinallyGuard detach_tiles( [ & ] { frontend.m_tm = nullptr; } );
 			scene::Scene scene( "Scout unit test", scene::SCENE_TYPE_WORLD );
 			auto ism = std::make_unique< game::frontend::sprite::InstancedSpriteManager >( &scene );
 			frontend.m_ism = ism.get();
@@ -1649,6 +1696,18 @@ public:
 				actor->GetDstOffsets() == types::Vec2< float >( 0.5f, -1 ), "actual Unit/GetSprite placement or instance missing" );
 			GT_ASSERT( actor->NormalizePosition( { 3, 5, 0 } ) == types::Vec3( 3.5f, 4, 0 ), "actual Sprite offset sign differs from image-center mapping" );
 			const auto baseline = std::string( reinterpret_cast< char* >( actor->GetTexture()->GetBitmap() ), actor->GetTexture()->GetBitmapSize() );
+			// Exercise the actual frontend's exact conventional actionability and
+			// morale refresh, then return this shared preview fixture to legacy mode.
+			unit->SetMovement( 0.01f ); unit->SetActionability( true, true, 2 );
+			GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2", "frontend discarded integer actionability or fresh full allowance" );
+			unit->SetActionability( true, false );
+			GT_ASSERT( !unit->CanMove(), "frontend ignored exact conventional exhaustion" );
+			unit->SetActionability( false, true );
+			GT_ASSERT( !unit->CanMove(), "legacy frontend threshold changed" );
+			unit->SetMovement( 1 ); unit->SetMorale( 6, "Elite refreshed" );
+			GT_ASSERT( unit->GetMoraleString() == "Elite refreshed" && unit->GetSprite()->instanced_sprite->actor->HasInstance( 2 ),
+				"frontend did not refresh morale text and rendered actor" );
+			unit->SetMorale( 0, "Rank" );
 			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
 			frontend.m_widgets.UnitPreview = presenter.get();
 			auto* backend_unit = new Unit( GSE_CALL, manager, 1, manager->GetUnitDef( "SCOUT_TEST" ),
@@ -3632,6 +3691,18 @@ private:
 	game::backend::State* m_state = nullptr; // retained by the runtime even after InitFailed clears Game's pointer
 	std::unique_ptr< GLSMAC > m_glsmac;
 };
+
+ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
+ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate ) { fixture->ConfigureConventional( refreshed, rate ); }
+game::backend::Game* ConventionalUnitFixture::Game() const { return fixture->GetGame(); }
+std::string ConventionalUnitFixture::Run( const std::function< std::string( GSE_CALLABLE ) >& check ) { return fixture->WithEngineGameScriptValues( check ); }
+Value* ConventionalUnitFixture::Script( GSE_CALLABLE, const std::string& path ) { return fixture->RunScript( GSE_CALL, path ); }
+const std::vector< game::FrontendRequest >& ConventionalUnitFixture::Updates() { return fixture->PushUnitUpdates(); }
+std::string ConventionalUnitFixture::Snapshot() const { return fixture->WorldSnapshot(); }
+void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot ) { fixture->RestoreConventional( GSE_CALL, snapshot ); }
+void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
+void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }
 
 namespace {
 
@@ -6856,7 +6927,7 @@ struct UnitSnapshotRecord {
 	bool moved = true;
 	types::Buffer Encode() const {
 		types::Buffer buf;
-		buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
+		buf.WriteInt( 2 ); buf.WriteInt( 0 ); buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
 		buf.WriteInt( x ); buf.WriteInt( y ); buf.WriteFloat( movement );
 		buf.WriteInt( morale ); buf.WriteFloat( health ); buf.WriteBool( moved );
 		return buf;
@@ -7072,8 +7143,8 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 			const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				DefineSnapshotUnit( source.GetGame()->GetUM() );
 				auto* unit = SpawnSnapshotUnit( GSE_CALL, source, 71 );
-				unit->m_movement = scenario == 1 ? -0.25f : 0.375f;
-				unit->m_health = 0.625f; unit->m_moved_this_turn = true;
+				unit->Legacy().movement = scenario == 1 ? -0.25f : 0.375f;
+				unit->Legacy().health = 0.625f; unit->Legacy().moved_this_turn = true;
 				GT_OK();
 			} );
 			GT_ASSERT( source_error.empty(), "source setup: " + source_error );
@@ -7112,7 +7183,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( starts == 1 && start_saw_metadata && statuses == 1 && status_saw_instances, "restore publication ordering changed" );
 				GT_ASSERT( !turns && !unit_turns && !base_turns, "initialization advanced gameplay turn" );
 				const auto* unit = game->GetUM()->GetUnit( 71 ); const auto* base = game->GetBM()->GetBase( 601 );
-				GT_ASSERT( unit->m_movement == ( scenario == 1 ? -0.25f : 0.375f ) && unit->m_health == 0.625f && unit->m_moved_this_turn, "restore reset movement, health, or moved state" );
+				GT_ASSERT( unit->Legacy().movement == ( scenario == 1 ? -0.25f : 0.375f ) && unit->Legacy().health == 0.625f && unit->Legacy().moved_this_turn, "restore reset movement, health, or moved state" );
 				GT_ASSERT( base->GetAccumulatedNutrients() == -123 && base->m_pops.size() == 1 && base->m_pops.count( 9 ), "restore changed nutrients or population" );
 				GT_ASSERT( remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario == 2 ), "initialization cleared player completion flags" );
 				GT_ASSERT( game->GetRandom()->GetStateString() == source.GetGame()->GetRandom()->GetStateString(), "turn restore consumed saved RNG" );
@@ -7145,7 +7216,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 2 ) { game->GetState()->DetachConnection(); } // ordinary host-turn positive control
 				game->AdvanceTurn( 38 );
 				GT_ASSERT( turns == 1 && unit_turns == 1 && base_turns == 1 && game->GetTurnId() == 38, "ordinary advancement hooks changed" );
-				GT_ASSERT( !local->IsTurnCompleted() && !remote->IsTurnCompleted() && !unit->m_moved_this_turn && unit->m_movement == 1.0f && unit->m_health == 0.625f, "ordinary advancement no longer resets gameplay state" );
+				GT_ASSERT( !local->IsTurnCompleted() && !remote->IsTurnCompleted() && !unit->Legacy().moved_this_turn && unit->Legacy().movement == 1.0f && unit->Legacy().health == 0.625f, "ordinary advancement no longer resets gameplay state" );
 				ui = static_cast< value::Object* >( read_ui->Run( GSE_CALL, {} ) );
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2138" && static_cast< value::String* >( ui->Get( "text" ) )->value == "TURN COMPLETE" && static_cast< value::Int* >( ui->Get( "timers" ) )->value == 0, "minimap stopped processing subsequent turn/status events" );
 				GT_OK();
@@ -7261,7 +7332,7 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( starts == 1 && setup_spawns == 1, "setup sequence or restored-unit hook suppression changed" );
 					GT_ASSERT( !destination.HasPendingSnapshotRandom() && destination.IsRunning() && game->GetTurnId() == 37, "restore did not complete" );
 					const auto* unit = game->GetUM()->GetUnit( 71 ); const auto* base = game->GetBM()->GetBase( 601 );
-					GT_ASSERT( unit && unit->m_def == game->GetUM()->GetUnitDef( "TEST_UNIT" ) && unit->m_moved_this_turn && unit->m_movement == 0.375f, "actual unit reconstruction changed state or definition ownership" );
+					GT_ASSERT( unit && unit->m_def == game->GetUM()->GetUnitDef( "TEST_UNIT" ) && unit->Legacy().moved_this_turn && unit->Legacy().movement == 0.375f, "actual unit reconstruction changed state or definition ownership" );
 					GT_ASSERT( base && base->m_pops.size() == 1 && base->m_pops.count( 9 ), "actual base/pop reconstruction failed" );
 					GT_ASSERT( random->GetStateString() == source.GetGame()->GetRandom()->GetStateString(), "setup draws changed saved continuation" );
 					for ( size_t i = 0 ; i < 24 ; ++i ) {
@@ -7368,8 +7439,8 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 					DefineSnapshotUnit( source_manager );
 					SpawnSnapshotUnit( GSE_CALL, source, 71 );
 					auto* second = SpawnSnapshotUnit( GSE_CALL, source, 88, 4 );
-					second->m_movement = -0.0f; second->m_morale = 6;
-					second->m_health = -0.125f; second->m_moved_this_turn = false;
+					second->Legacy().movement = -0.0f; second->Legacy().morale = 6;
+					second->Legacy().health = -0.125f; second->Legacy().moved_this_turn = false;
 					GT_OK();
 				} );
 				GT_ASSERT( source_error.empty(), "source unit setup failed: " + source_error );
@@ -7421,7 +7492,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 					const auto& data = request.data.unit_spawn;
 					GT_ASSERT( spawned.insert( data.unit_id ).second, "restored unit spawned twice in the frontend" );
 					const auto* unit = manager->GetUnit( data.unit_id );
-					GT_ASSERT( unit && *data.unitdef_id == unit->m_def->m_id && data.health == unit->m_health && data.movement == unit->m_movement, "frontend spawn lost restored state" );
+					GT_ASSERT( unit && *data.unitdef_id == unit->m_def->m_id && data.health == unit->Legacy().health && data.movement == unit->Legacy().movement, "frontend spawn lost restored state" );
 				}
 				GT_ASSERT( spawned == std::set< size_t >( { 71, 88 } ), "restored units need exactly one frontend spawn each" );
 				const auto spawn_error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -7533,7 +7604,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 0 ) { input.WriteInt( 0 ); } // legacy unversioned manager
 				else if ( scenario == 1 ) { input.WriteString( "GLSMAC_UNITS_V999" ); }
 				else {
-					input.WriteString( "GLSMAC_UNITS_V1" );
+					input.WriteString( "GLSMAC_UNITS_V2" );
 					if ( scenario == 2 || scenario == 3 ) { input.WriteInt( scenario == 2 ? -1 : std::numeric_limits< int64_t >::max() ); }
 					else {
 						input.WriteInt( scenario == 5 ? 2 : 1 );

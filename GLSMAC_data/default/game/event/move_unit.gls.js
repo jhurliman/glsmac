@@ -37,6 +37,7 @@ const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 return {
 
 	validate: (e) => {
+		if (e.data.unit.is_conventional) { return 'Conventional movement is not activated'; }
 
 		if (e.data.unit.owner != e.caller) {
 			return 'Unit can only be moved by it\'s owner';
@@ -89,6 +90,7 @@ return {
 	},
 
 	resolve: (e) => {
+		if (e.data.unit.is_conventional) { throw Error('Conventional movement is not activated'); }
 
 		const movement = e.data.unit.movement;
 
@@ -106,6 +108,7 @@ return {
 	},
 
 	apply: (e) => {
+		if (e.data.unit.is_conventional) { throw Error('Conventional movement is not activated'); }
 
 		const unit = e.data.unit;
 		const src_tile = unit.get_tile();
@@ -143,6 +146,7 @@ return {
 	},
 
 	rollback: (e) => {
+		if (e.data.unit.is_conventional) { throw Error('Conventional movement is not activated'); }
 
 		const unit = e.data.unit;
 		const orig = e.applied.orig;

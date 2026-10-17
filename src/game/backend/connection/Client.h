@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Connection.h"
+#include "game/backend/RosterRecords.h"
+#include "game/backend/RosterIdentity.h"
 
 namespace game {
 namespace backend {
@@ -34,6 +36,10 @@ protected:
 private:
 	friend class gse::tests::BackendFixture;
 	bool m_are_global_settings_received = false;
+ std::optional<roster::RosterRecord> m_initial_roster;
+ roster_epoch_t m_initial_roster_epoch;
+ size_t m_initial_slot = 0;
+ bool m_roster_published = false;
 	game_state_t m_announced_game_state = GS_NONE;
 	void AnnounceGameState();
 

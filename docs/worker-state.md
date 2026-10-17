@@ -23,8 +23,9 @@ event cannot authorize a foreign citizen by supplying another base. Automatic
 tile scoring, workable-area generation, resource yield, and nutrient/growth
 arithmetic are unchanged.
 
-The base-manager snapshot marker is GLSMAC_BASES_V3. V2 did not store worker
-coordinates; V1, V2, unversioned, and unknown formats are rejected. Each restored
+Worker coordinates were introduced in GLSMAC_BASES_V3; the current marker is
+GLSMAC_BASES_V4, which also stores [production state](base-production-state.md).
+Earlier, unversioned, and unknown formats are rejected. Each restored
 base validates all its citizen records before claiming its center or advancing
 the base ID: unknown types, duplicate population IDs, mismatched population map
 keys, colliding next-population IDs, invalid coordinates, specialist claims,

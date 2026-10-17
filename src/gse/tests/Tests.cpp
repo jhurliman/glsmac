@@ -1,20 +1,32 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
+#include "RosterRecords.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
-#include "WorldSnapshotRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
+#include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "CvrFrameAssembler.h"
+#include "CvrIndexedRasterizer.h"
+#include "CvrBasisConverter.h"
+#include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
 
 #include "engine/Engine.h"
@@ -57,9 +69,18 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
+		tests::AddRosterRecordTests( task );
+		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
+		tests::AddCvrFrameAssemblerTests( task );
+		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
+		tests::AddCvrBasisConverterTests( task );
+		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
 		task->AddTest(
 			"test if tests work",
@@ -67,7 +88,9 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
 		task->AddTest(
 			"test UUID generation works independently of an existing account",
 			GT() {
@@ -186,11 +209,14 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
-		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddWorldSnapshotRulesTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
-	tests::AddScriptsTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		tests::AddScriptsTests( task );
+	}
 
 }
 

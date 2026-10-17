@@ -43,6 +43,7 @@
 #include "gse/value/Exception.h"
 #include "gse/value/Ptr.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/IntegerArithmetic.h"
 
 #include "gc/Space.h"
 #if defined( DEBUG ) || defined ( FASTDEBUG )
@@ -372,6 +373,19 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 	const auto& math_error = [ expression, &ctx, &ep ]( const std::string& reason ) -> gse::Exception {
 		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si, ep );
 	};
+	const auto integer_math = [ expression, &math_error ]( const int64_t a, const int64_t b ) -> int64_t {
+		try {
+			switch ( expression->op->op ) {
+				case OT_ADD: case OT_INC_BY: case OT_INC: return integer::Add( a, b );
+				case OT_SUB: case OT_DEC_BY: case OT_DEC: return integer::Subtract( a, b );
+				case OT_MULT: case OT_MULT_BY: return integer::Multiply( a, b );
+				case OT_DIV: case OT_DIV_BY: return integer::Divide( a, b );
+				case OT_MOD: case OT_MOD_BY: return integer::Modulo( a, b );
+				default: THROW( "unexpected integer arithmetic operator" );
+			}
+		}
+		catch ( const integer::Error& error ) { throw math_error( error.what() ); }
+	};
 	switch ( expression->op->op ) {
 		case OT_RETURN: {
 			ASSERT( returnflag, "return keyword not allowed here" );
@@ -497,11 +511,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
             } \
             switch ( a->type ) { \
                 case gse::VT_INT: { \
-                    const auto bval = ( (Int*)b )->value; \
-                    if ( !_allow_b_zero && bval == 0 ) { \
-                        throw math_error( "Division by zero" ); \
-                    } \
-                    return VALUE( Int,, ( (Int*)a )->value _op bval ); \
+                    return VALUE( Int,, integer_math( ( (Int*)a )->value, ( (Int*)b )->value ) ); \
                 }
 #define MATH_OP_BEGIN_F( _op, _allow_b_zero ) \
         MATH_OP_BEGIN( _op, _allow_b_zero ) \
@@ -566,7 +576,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
             if ( value->type != gse::VT_INT ) {                         \
                 throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->a->ToString(), ctx, expression->a->m_si, ep ); \
             } \
-            ctx->UpdateVariable( varname, VALUE( Int,, ( (Int*)value )->value _op 1 ), expression->a->m_si, ep ); \
+            ctx->UpdateVariable( varname, VALUE( Int,, integer_math( ( (Int*)value )->value, 1 ) ), expression->a->m_si, ep ); \
             return value; \
         } \
         else if ( expression->b ) { \
@@ -575,7 +585,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
             if ( value->type != gse::VT_INT ) { \
                 throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->b->ToString(), ctx, expression->b->m_si, ep ); \
             } \
-            const auto result = VALUE( Int,, ( (Int*)value )->value _op 1 ); \
+            const auto result = VALUE( Int,, integer_math( ( (Int*)value )->value, 1 ) ); \
             ctx->UpdateVariable( varname, result, expression->b->m_si, ep ); \
             return result; \
         } \
@@ -601,7 +611,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         gse::Value* result = nullptr; \
         switch ( a->type ) { \
             case gse::VT_INT: { \
-                result = VALUE( Int,, ( (Int*)a )->value _op ( (Int*)b )->value ); \
+                result = VALUE( Int,, integer_math( ( (Int*)a )->value, ( (Int*)b )->value ) ); \
                 break; \
             }
 #define MATH_OP_BEGIN_F( _op ) \

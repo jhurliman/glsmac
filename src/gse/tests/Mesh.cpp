@@ -224,7 +224,10 @@ static std::string CheckWidgetMeshOwnership() {
 
 std::string CheckMeshCoordinateOutputs() {
 	std::string errors;
-	for ( const auto& error : { CheckMeshCoordinates(), CheckRectangleCoordinates(), CheckConsumingRectangleConversion(), CheckWidgetMeshOwnership() } ) {
+	// Script callbacks hold their Space accumulation lock. UI fixtures create a
+	// runtime and swap graphics under the global GC spaces lock, so they must
+	// only run through the native test harness, outside script accumulation.
+	for ( const auto& error : { CheckMeshCoordinates(), CheckRectangleCoordinates(), CheckConsumingRectangleConversion() } ) {
 		if ( !error.empty() ) {
 			if ( !errors.empty() ) { errors += "\n"; }
 			errors += error;

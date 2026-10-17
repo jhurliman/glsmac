@@ -228,7 +228,7 @@ calculator chooses eligible items or schedules a turn.
 [#111](https://github.com/jhurliman/glsmac/pull/111) freezes four SMAC production
 rule values and all 71 facility records in host settings. A separate V4
 world-header change binds that profile before map allocation; its source
-validation is recorded in [world snapshot rules](world-snapshot-rules.md).
+validation is recorded in [world snapshot rules](https://github.com/jhurliman/glsmac/blob/cfb5b4d55b5ea6d5ecd13dc81cc1e2106e6d89f5/docs/world-snapshot-rules.md).
 It is being prepared as a focused PR. SMAX has no SMAC numeric profile.
 Technology definitions and actual faction/design startup producers precede
 production activation.

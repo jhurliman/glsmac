@@ -66,7 +66,7 @@ CTest passes 8/8 in 38.91 seconds; Linux ASan/UBSan/LSan CTest passes 8/8 in
 53.83 seconds with leak detection enabled. This later revision has not received
 another native Mac run. The source change also has focused early-rejection,
 restoration and negative-control evidence in
-[world snapshot rules](../world-snapshot-rules.md).
+[world snapshot rules](https://github.com/jhurliman/glsmac/blob/cfb5b4d55b5ea6d5ecd13dc81cc1e2106e6d89f5/docs/world-snapshot-rules.md).
 
 The Windows `out/world-production-windows-ctest.log` SHA-256 is
 `f4d61ee99479ec78d7789d5193b554cb729ac6cac770e9feab2e93b533853489`.

@@ -6,6 +6,7 @@
 #include <string_view>
 
 namespace types::texture { class Texture; }
+namespace gse::tests { class CvrRenderPolicyFixture; }
 
 namespace loader::cvr {
 
@@ -46,7 +47,10 @@ public:
 
 private:
 	friend class CvrSpartanRoverRenderer;
-	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, const CvrActorMaterial* material );
+	friend class gse::tests::CvrRenderPolicyFixture;
+	// Fixed composition policy is independent of optional palette/material data.
+	enum class Profile { Infantry, SpartanSpeeder };
+	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material );
 	struct Assets;
 	explicit CvrScoutRenderer( std::shared_ptr< const Assets > assets );
 	std::shared_ptr< const Assets > m_assets;

@@ -148,6 +148,16 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
 		}
 		GT_ASSERT( rejects( [] { CvrScoutRender( 0, 0, 1, 1, { std::numeric_limits< float >::max(), 1 }, { 0, 0 } ); } ), "unbounded derived offset admitted" );
 		GT_ASSERT( rejects( [] { CvrScoutRender( 0, 0, 1, 1, { std::numeric_limits< float >::denorm_min(), 1 }, { 0, 0 } ); } ), "degenerate rectangle admitted" );
+		for ( const auto ratio : { std::array< int32_t, 2 >{ INT32_MAX, 1 }, { INT32_MAX, 49 }, { 2104533976, 49 } } ) {
+			GT_ASSERT( rejects( [ & ] { CvrScoutRender( 0, 0, ratio[ 0 ], ratio[ 1 ], { 2, 2 }, { 128, 128 } ); } ),
+				"constructor admitted overflowing derived Scout anchor" );
+		}
+		for ( const auto ratio : { std::array< int32_t, 2 >{ INT32_MAX, 50 }, { 2104533975, 49 } } ) {
+			const CvrScoutRender boundary( 0, 0, ratio[ 0 ], ratio[ 1 ], { 2, 2 }, { 128, 128 } );
+			const auto view = loader::cvr::scout::MakeView( boundary.view );
+			GT_ASSERT( view.target_anchor[ 0 ] == INT32_MAX && view.target_anchor[ 1 ] == INT32_MAX &&
+				CvrScoutRender::Decode( boundary.Encode() ).PixelKey() == boundary.PixelKey(), "valid divided anchor boundary rejected" );
+		}
 		const CvrScoutRender other_placement( 3, 2, 5, 4, { 2.000001f, 4 }, { 64, 192 } );
 		GT_ASSERT( other_placement.PixelKey() == source.PixelKey() && other_placement.PlacementKey() != source.PlacementKey(), "placement/pixel keys conflated or rounded" );
 		GT_OK();

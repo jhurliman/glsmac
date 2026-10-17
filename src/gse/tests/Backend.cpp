@@ -1561,6 +1561,34 @@ public:
 			try { fixture.WithRW( [ & ] { call( "invalid" ); } ); } catch ( const Exception& ) { rejected = true; }
 			GT_ASSERT( rejected && !manager->GetUnitDef( "invalid" ), "invalid descriptor published a definition" );
 			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 1 ) );
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, INT32_MAX ) );
+			bool script_anchor_rejected = false;
+			try { fixture.WithRW( [ & ] { call( "ANCHOR_OVERFLOW" ); } ); } catch ( const Exception& ) { script_anchor_rejected = true; }
+			// Construct raw wire independently: the public descriptor constructor
+			// must reject this record, so it cannot serve as the malformed writer.
+			types::Buffer bad_anchor;
+			for ( const int64_t field : { INT64_C( 0x43565253 ), INT64_C( 1 ), INT64_C( 0 ), INT64_C( 0 ), INT64_C( 0 ), int64_t( INT32_MAX ), INT64_C( 1 ) } ) { bad_anchor.WriteInt( field ); }
+			for ( const float field : { 2.0f, 4.0f, 64.0f, 192.0f } ) { bad_anchor.WriteFloat( field ); }
+			types::Buffer bad_definition;
+			bad_definition.WriteString( "WIRE_ANCHOR_OVERFLOW" ); bad_definition.WriteString( "SCOUT_TEST" ); bad_definition.WriteString( "Invalid anchor" );
+			bad_definition.WriteInt( DT_STATIC ); bad_definition.WriteInt( MT_LAND ); bad_definition.WriteFloat( 1 );
+			bad_definition.WriteInt( Render::RT_CVR_SCOUT ); bad_definition.WriteString( bad_anchor.ToString() );
+			bool snapshot_anchor_rejected = false;
+			try { std::unique_ptr< Def > unexpected( Def::Deserialize( bad_definition, manager ) ); }
+			catch ( const std::runtime_error& ) { snapshot_anchor_rejected = true; }
+			GT_ASSERT( script_anchor_rejected && snapshot_anchor_rejected && !manager->GetUnitDef( "ANCHOR_OVERFLOW" ) && !manager->GetUnitDef( "WIRE_ANCHOR_OVERFLOW" ),
+				"script or UnitDef snapshot admitted overflowing derived Scout anchor" );
+			// A quotient of INT32_MAX with a remainder remains admitted through
+			// actual script definition and the complete UnitDef snapshot codec.
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, 2104533975 ) );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 49 ) );
+			fixture.WithRW( [ & ] { call( "ANCHOR_BOUNDARY" ); } );
+			auto boundary_bytes = Def::Serialize( manager->GetUnitDef( "ANCHOR_BOUNDARY" ) );
+			std::unique_ptr< Def > boundary_copy( Def::Deserialize( boundary_bytes, manager ) );
+			GT_ASSERT( boundary_bytes.lenr == boundary_bytes.lenw && boundary_copy->m_id == "ANCHOR_BOUNDARY", "valid script/snapshot anchor boundary rejected" );
+			boundary_copy.reset(); manager->UndefineUnit( "ANCHOR_BOUNDARY" );
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, 1 ) );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 1 ) );
 			fixture.WithRW( [ & ] { call( "SCOUT_TEST" ); } );
 			auto def_bytes = Def::Serialize( manager->GetUnitDef( "SCOUT_TEST" ) );
 			std::unique_ptr< Def > copied( Def::Deserialize( def_bytes, manager ) );

@@ -56,3 +56,17 @@ passes all 335 production translation units with zero failures in 251.26 seconds
 (two jobs, excluding the Windows-only network implementation). No new sanitizer,
 native Windows/macOS, or original executable comparison is claimed by this
 adapter checkpoint.
+
+## Focused publication
+
+Publication code `b04a970ec913b117c027b04ae007525e0d7b503a` applies only source
+`5c70b3ee` onto Rover renderer PR #152 at `83501815`. Its stable patch ID matches
+the source change; no absent conventional-Unit or rollback prerequisite is
+imported. The actual publication passes all eight CTests in 73.38 seconds,
+all 22 Scout/Rover groups with allocation tracking, and the installed-asset
+Rover preview group. Read-only peer review found no actionable issue.
+
+The final publication commit adds only this receipt. GitHub Codex review of
+this head is still required; the draft remains unmerged while that review's
+usage quota is exhausted. The source analysis receipt above and the separately
+validated combined Windows/Linux/macOS checkpoint are not substituted for it.

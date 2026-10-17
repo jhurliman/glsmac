@@ -206,6 +206,8 @@ void AddSmacBaseAllocationTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* base = MakeBase( GSE_CALL, game ); base->PublishSmacAllocation( GSE_CALL, Allocation(), Roles() );
+			const Pop detached( nullptr, 79, game->GetBM()->GetPopDef( Roles().worker ), 0, game->GetMap()->GetTile( 4, 2 ) );
+			GT_ASSERT( Rejects( [ & ] { detached.GetWorkedTile(); } ) && !Pop().GetWorkedTile(), "detached worker resolved without a Base or empty Pop changed behavior" );
 			const auto before = Base::Serialize( base ).ToString(); const auto rng = game->GetRandom()->GetStateString();
 			auto* wrapper = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
 			auto* input = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "type", VALUE( value::String,, Roles().specialists[ 1 ] ) } } ) );

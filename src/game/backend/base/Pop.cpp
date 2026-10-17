@@ -71,6 +71,7 @@ const Pop::worked_tile_t& Pop::GetWorkedTileCoords() const {
 }
 
 map::tile::Tile* Pop::GetWorkedTile() const {
+	if ( m_worked_tile && !m_base ) { THROW( "Detached population cannot resolve a worked tile" ); }
 	if ( m_base ) { m_base->ValidateSmacAllocation(); }
 	return m_worked_tile ? m_base->GetGame()->GetMap()->GetTile( m_worked_tile->x, m_worked_tile->y ) : nullptr;
 }

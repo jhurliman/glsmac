@@ -443,8 +443,9 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			};
 			for ( size_t index=0; index<mutations.size(); ++index ) {
 				const auto& mutation=mutations[index];
-				GT_ASSERT( ( ( index==1 || index==2 || index==4 || index==7 || index==8 || index==9 || index==20 ) ? Rejects(mutation) : KnowledgeFence(mutation) ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
-					"guarded mutation changed IDs/membership/queues/terrain/turn/RNG or ran callback" );
+				// Canonical turn admission now rejects AdvanceTurn before the generic knowledge fence.
+				GT_ASSERT( ( ( index==1 || index==2 || index==4 || index==7 || index==8 || index==9 || index==17 || index==20 ) ? Rejects(mutation) : KnowledgeFence(mutation) ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
+					"guarded mutation changed IDs/membership/queues/terrain/turn/RNG or ran callback at index " + std::to_string(index) );
 			}
 			GT_OK();
 		} );

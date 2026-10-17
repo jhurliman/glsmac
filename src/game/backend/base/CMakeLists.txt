@@ -16,6 +16,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacAutomaticWorkerAllocation.cpp
 	${PWD}/SmacBaseAllocationState.cpp
 	${PWD}/SmacPopulationStep.cpp
+	${PWD}/SmacBaseEnergy.cpp
 	${PWD}/BaseSpecialists.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocationRules.cpp

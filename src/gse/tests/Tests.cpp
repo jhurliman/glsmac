@@ -56,6 +56,7 @@
 #include "Scripts.h"
 #include "SmacMineralCostFactor.h"
 #include "SmacPopulationStep.h"
+#include "SmacBaseEnergy.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
@@ -141,6 +142,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrSpartanRoverRendererTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
 		tests::AddSmacPopulationStepTests( task );
+		tests::AddSmacBaseEnergyTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );

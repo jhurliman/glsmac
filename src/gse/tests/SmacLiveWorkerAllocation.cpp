@@ -334,6 +334,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, 30, scout, 30, std::vector< ProductionItem >{} } );
 			// Owner remains Librarian while the global cost difficulty is easiest.
 			// Manual retooling must still charge the owner's 30-to-20 penalty.
+			game->GetState()->m_settings.global.difficulty_level = -3; // port encoding of Citizen
 			fixture.ResourceState( []( auto& state ) { state.designs.global_difficulty = 0; } );
 			const auto original = *base->GetProductionState(); const auto random = fixture.GameplayRandom();
 			auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_production_selection" ) );

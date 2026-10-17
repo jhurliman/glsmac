@@ -9,6 +9,7 @@
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacMineralCostFactor.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -52,6 +53,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
+		tests::AddSmacMineralCostFactorTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

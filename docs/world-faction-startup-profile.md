@@ -66,3 +66,17 @@ implementation is outside that compilation database. This covers the shared
 Settings.h scope left pending by the host slice's focused analysis. No human
 research files or original assets are part of this change, and no Windows/macOS
 validation is claimed here.
+
+## Focused publication
+
+The separate publication is stacked on host transport PR #123 at
+`ad6f765355e6a4f3186ce4c0b1320563ea0b3ea3`. Source commit
+`3f0d4d7a0d5ca282c4fdf18f8da9098892130fdb` applied without conflicts as
+`12ecc817ad75f0b709322d1bd54d9c3c1c973e41`; the production header, dedicated
+tests and malformed-header fixture are byte-identical. That exact narrower
+ancestry passed normal CTest 6/6 in 37.57 seconds, including the actual Client
+dispatcher cases. A copied registration-only translation unit ran the complete
+header test group and both copied-production controls failed their intended
+assertions. Focused production header analysis reported zero failures in 1.32
+seconds. These are separate from the integrated-source full sanitizer and
+309-unit analysis receipts above; no full publication sanitizer claim is made.

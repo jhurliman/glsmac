@@ -239,7 +239,7 @@ uint32_t SeedForBin( uint32_t bin ) {
 int64_t Int( Value* value, const std::string& key ) { return static_cast< value::Int* >( static_cast< value::Object* >( value )->Get( key ) )->value; }
 
 struct WireRecord {
-	int64_t version = 3, kind = 1, id = 71, owner = 0, x = 2, y = 2;
+	int64_t version = 4, kind = 1, id = 71, owner = 0, x = 2, y = 2;
 	std::string definition = "EXPLICIT_SCOUT";
 	int64_t design = 2, simulation = 1, morale = 255, damage = 4, spent = 255, home = 0, mode = 1;
 	bool failed = true;
@@ -248,7 +248,7 @@ struct WireRecord {
 		bytes.WriteInt( version ); bytes.WriteInt( kind ); bytes.WriteInt( id ); bytes.WriteString( definition );
 		bytes.WriteInt( owner ); bytes.WriteInt( x ); bytes.WriteInt( y );
 		for ( auto field : { design, simulation, morale, damage, spent } ) { bytes.WriteInt( field ); }
-		bytes.WriteBool( failed ); bytes.WriteInt( home ); bytes.WriteInt( mode ); return bytes.ToString();
+		bytes.WriteBool( failed ); bytes.WriteInt( home ); bytes.WriteInt( mode ); bytes.WriteInt( 0 ); bytes.WriteInt( 0 ); return bytes.ToString();
 	}
 };
 }

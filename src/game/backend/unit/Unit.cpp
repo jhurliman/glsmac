@@ -152,7 +152,7 @@ void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 const types::Buffer Unit::Serialize( const Unit* unit ) {
 	if ( unit->IsConventional() ) { unit->QueryStats( unit->Conventional().render_morale_mode ); }
 	types::Buffer buf;
-	buf.WriteInt( 3 );
+	buf.WriteInt( 4 );
 	buf.WriteInt( unit->IsConventional() ? 1 : 0 );
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( unit->m_def->m_id );
@@ -170,7 +170,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 
 Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver, bool defer_home ) {
 	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
-	if ( buf.ReadInt() != 3 ) { THROW( "unsupported unit record version" ); }
+	if ( buf.ReadInt() != 4 ) { THROW( "unsupported unit record version" ); }
 	const auto kind = buf.ReadInt();
 	if ( kind != 0 && kind != 1 ) { THROW( "unsupported unit record kind" ); }
 	const auto id = buf.ReadInt();
@@ -271,7 +271,9 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "morale_name", VALUE( gse::value::String,, m_def->m_moraleset->m_morale_values.at( stats.effective_morale ).m_name ) },
 			{ "quantum", VALUE( gse::value::Int,, stats.quantum ) }, { "basic_allowance", VALUE( gse::value::Int,, stats.basic_allowance ) },
 			{ "full_allowance", VALUE( gse::value::Int,, stats.full_allowance ) }, { "remaining_allowance", VALUE( gse::value::Int,, stats.remaining_allowance ) },
-			{ "hit_points", VALUE( gse::value::Int,, stats.hit_points ) }, { "maximum_hit_points", VALUE( gse::value::Int,, stats.maximum_hit_points ) }
+			{ "hit_points", VALUE( gse::value::Int,, stats.hit_points ) }, { "maximum_hit_points", VALUE( gse::value::Int,, stats.maximum_hit_points ) },
+			{ "work_order", VALUE( gse::value::Int,, static_cast< int32_t >( Conventional().work_order ) ) },
+			{ "work_progress", VALUE( gse::value::Int,, Conventional().work_progress ) }
 		} ) );
 	} ) },
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )

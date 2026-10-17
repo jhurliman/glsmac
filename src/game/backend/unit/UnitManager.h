@@ -77,6 +77,10 @@ public:
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
+	// Request preserves work/spent; Dispatch uses the actual movement remainder.
+	// None requests menu cancellation, retaining both accumulated bytes.
+	void ValidateConventionalWork( Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch ) const;
+	void SetConventionalWork( GSE_CALLABLE, Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch );
 	// Caller stages any knowledge/territory changes before Commit. No callback or
 	// world mutation may intervene. Notify retires the removed wrapper afterward.
 	class PreparedConventionalRemoval {
@@ -139,6 +143,13 @@ private:
 		std::optional< map::SmacWorkerKnowledge > sight;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
+	struct PreparedConventionalWork {
+		map::tile::Tile* tile;
+		std::vector<std::pair<Unit*,ConventionalUnitState>> units;
+		std::optional<uint16_t> terraforming;
+		std::optional<map::SmacWorkerKnowledge> knowledge;
+	};
+	PreparedConventionalWork PrepareConventionalWork( Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch ) const;
 	void PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const;
 	void SealConventionalStartup() noexcept;
 	Game* m_game = nullptr;

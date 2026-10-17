@@ -19,6 +19,11 @@ struct ConventionalUnitState {
 	Home home;
 	SmacMoraleMode render_morale_mode;
 	std::optional< uint64_t > home_base_id; // stable manager ID; never a retained pointer
+	// Port wire identities, mapped explicitly to positional TERRAIN source rows.
+	// Cancellation clears the order but deliberately preserves accumulated work.
+	enum class WorkOrder : uint8_t { None, Farm, Road, Forest, Solar, Mine };
+	WorkOrder work_order = WorkOrder::None;
+	uint8_t work_progress = 0;
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
 	void Serialize( types::Buffer& buffer ) const;

@@ -357,6 +357,9 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 		|| defense.rating != 1 || catalog.reactors.reactors[ 0 ].power != 1 ) {
 		throw std::runtime_error( "Unsupported conventional component semantics" );
 	}
+	if ( !former && ( state.work_order != unit::ConventionalUnitState::WorkOrder::None || state.work_progress != 0 ) ) {
+		throw std::runtime_error( "Only admitted Former packages may retain terraforming work" );
+	}
 	using Ground = settings::SmacMovementRules::GroundChassis;
 	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
 	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),

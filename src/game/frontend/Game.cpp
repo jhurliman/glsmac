@@ -59,6 +59,7 @@
 #include "widget/UnitPreview.h"
 #include "widget/BasePreview.h"
 #include "gse/value/Null.h"
+#include "gse/value/Int.h"
 #include "input/Event.h"
 #include "game/backend/resource/Resource.h"
 
@@ -1549,6 +1550,26 @@ void Game::Initialize(
 									m_um->SelectNextUnitMaybe();
 									break;
 								}
+                                // GLSMAC controls. Assignment and work dispatch are distinct
+                                // native events, preserving the measured command boundary.
+                                case input::K_F: case input::K_R: case input::K_O:
+                                case input::K_S: case input::K_M: case input::K_C: {
+                                    const auto* selected=m_um->GetSelectedUnit();
+                                    if(selected) {
+                                        const auto id=selected->GetId(); const auto key=event.data.key.code;
+                                        m_glsmac->WithGSE([game,id,key](GSE_CALLABLE) {
+                                            auto* actor=game->GetUM()->GetUnit(id);
+                                            if(!actor || !actor->IsConventional()){return;}
+                                            if(key==input::K_C){game->Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});return;}
+                                            {
+                                                using Order=backend::unit::ConventionalUnitState::WorkOrder;
+                                                const auto order=key==input::K_F?Order::Farm:key==input::K_R?Order::Road:key==input::K_O?Order::Forest:key==input::K_S?Order::Solar:Order::Mine;
+                                                game->Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(gse::value::Int,,static_cast<int32_t>(order))}});
+                                            }
+                                        });
+                                    }
+                                    break;
+                                }
                                 case input::K_B: {
                                     const auto* selected=m_um->GetSelectedUnit();
                                     if (selected) {

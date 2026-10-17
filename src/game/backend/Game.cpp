@@ -601,6 +601,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleConventionalWorkEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacFoundingEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacProductionEvent( GSE_CALL, name, args, m_slot_num, false )
@@ -936,6 +937,7 @@ WRAPIMPL_BEGIN( Game )
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleConventionalWorkEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacFoundingEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacProductionEvent( GSE_CALL, name, args->value, m_slot_num, false )
@@ -1846,6 +1848,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleConventionalWorkEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleConventionalWorkEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
 				if ( event->GetSource() == event::Event::ES_LOCAL

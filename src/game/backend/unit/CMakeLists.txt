@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 
 	${PWD}/UnitManager.cpp
 	${PWD}/ConventionalMovement.cpp
+	${PWD}/ConventionalWork.cpp
 	${PWD}/Def.cpp
 	${PWD}/StaticDef.cpp
 	${PWD}/Render.cpp

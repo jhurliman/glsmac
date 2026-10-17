@@ -15,11 +15,12 @@ int32_t Integer( types::Buffer& buffer, int32_t minimum, int32_t maximum ) {
 bool ConventionalUnitState::operator==( const ConventionalUnitState& other ) const {
 	return design_id == other.design_id && owner_simulation_id == other.owner_simulation_id
 		&& stored_morale == other.stored_morale && damage == other.damage && spent == other.spent
-		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode;
+		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode
+		&& work_order == other.work_order && work_progress == other.work_progress;
 }
 
 void ConventionalUnitState::Validate() const {
-	if ( design_id < 0 || design_id >= 512 || owner_simulation_id < 1 || owner_simulation_id > 7
+	if ( work_order > WorkOrder::Mine || design_id < 0 || design_id >= 512 || owner_simulation_id < 1 || owner_simulation_id > 7
 		|| ( home != Home::None && home != Home::Base )
 		|| ( home == Home::Base ) != home_base_id.has_value()
 		|| ( home_base_id && ( !*home_base_id || *home_base_id >= uint64_t( INT64_MAX ) || *home_base_id >= SIZE_MAX ) ) || ( render_morale_mode != SmacMoraleMode::Mode0 && render_morale_mode != SmacMoraleMode::Mode1 ) ) {
@@ -34,6 +35,7 @@ void ConventionalUnitState::Serialize( types::Buffer& buffer ) const {
 	buffer.WriteBool( failed_move ); buffer.WriteInt( static_cast< int32_t >( home ) );
 	buffer.WriteInt( static_cast< int32_t >( render_morale_mode ) );
 	if ( home_base_id ) { buffer.WriteInt( static_cast< int64_t >( *home_base_id ) ); }
+	buffer.WriteInt( static_cast< int32_t >( work_order ) ); buffer.WriteInt( work_progress );
 }
 
 ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer ) {
@@ -45,6 +47,8 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer 
 	if ( home ) { const auto id = buffer.ReadInt(); if ( id <= 0 ) { throw std::runtime_error( "Invalid conventional home ID" ); } home_id = static_cast< uint64_t >( id ); }
 	ConventionalUnitState result{ design, owner, static_cast< uint8_t >( morale ), static_cast< uint8_t >( damage ), static_cast< uint8_t >( spent ),
 		failed, static_cast< Home >( home ), static_cast< SmacMoraleMode >( mode ), home_id };
+	result.work_order = static_cast< WorkOrder >( Integer( buffer, 0, static_cast< int32_t >( WorkOrder::Mine ) ) );
+	result.work_progress = static_cast< uint8_t >( Integer( buffer, 0, 255 ) );
 	result.Validate(); return result;
 }
 

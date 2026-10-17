@@ -84,6 +84,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/ManufacturedConventionalUnits.cpp
+	${PWD}/ConventionalWork.cpp
 	${PWD}/SmacPopulationRules.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacFirstBase.cpp

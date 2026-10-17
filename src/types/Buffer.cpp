@@ -1,4 +1,5 @@
 #include <cstring>
+#include <new>
 #include <utility>
 
 #include "Buffer.h"
@@ -101,46 +102,53 @@ void Buffer::WriteImpl( type_t type, const char* s, const uint32_t sz ) {
 	//Log( "Written successfully" );
 }
 
-char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const uint32_t need_sz ) {
+char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const std::optional< uint32_t > need_sz ) {
 	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + std::to_string( need_type ) );
-	type_t type = T_NONE;
-	if ( lenw < lenr + sizeof( type ) + sizeof( *sz ) ) {
+	// Parse and validate the complete frame before allocating, changing the
+	// caller's output, or advancing the cursor. Subtract from bytes remaining
+	// instead of adding an untrusted size to the uint32_t read offset.
+	constexpr auto header_size = sizeof( type_t ) + sizeof( uint32_t );
+	if ( lenr > lenw || lenw - lenr < header_size ) {
 		THROW( "buffer ends prematurely (while reading header)" );
 	}
+	type_t type = T_NONE;
 	memcpy( &type, dr, sizeof( type ) );
-	dr += sizeof( type );
 	if ( type != need_type ) {
 		THROW( "unexpected type on buffer read ( " + std::to_string( need_type ) + " != " + std::to_string( type ) + " )" );
 	}
-	memcpy( sz, dr, sizeof( *sz ) );
-	dr += sizeof( *sz );
-	if ( need_sz && ( need_sz != *sz ) ) {
-		THROW( "buffer read size mismatch ( " + std::to_string( need_sz ) + " != " + std::to_string( *sz ) + " )" );
-	}
-	checksum_t need_c = 0;
-	lenr += sizeof( type ) + sizeof( *sz ) + *sz + sizeof( need_c );
-	if ( lenw < lenr ) {
+	uint32_t payload_size = 0;
+	memcpy( &payload_size, dr + sizeof( type ), sizeof( payload_size ) );
+	const auto body_available = lenw - lenr - header_size;
+	if ( body_available < sizeof( checksum_t ) || payload_size > body_available - sizeof( checksum_t ) ) {
 		THROW( "buffer ends prematurely (while reading data)" );
 	}
-	//Log( "Reading " + std::to_string( *sz ) + " bytes (type=" + std::to_string( type ) + ")" );
-
-	if ( s == nullptr && *sz > 0 ) {
-		s = (char*)malloc( *sz );
+	if ( need_sz && *need_sz != payload_size ) {
+		THROW( "buffer read size mismatch ( " + std::to_string( *need_sz ) + " != " + std::to_string( payload_size ) + " )" );
 	}
 
-	char* s_ptr = s;
-
-	for ( uint32_t i = 0 ; i < *sz ; i++ ) {
-		need_c ^= ( *( s_ptr++ ) = *( dr++ ) );
+	const auto* payload = dr + header_size;
+	checksum_t need_c = 0;
+	for ( uint32_t i = 0 ; i < payload_size ; i++ ) {
+		need_c ^= payload[ i ];
 	}
-
-	//Log( "Checking checksum (" + to_string( need_c ) + ")" );
-	checksum_t c = *( dr++ );
+	const checksum_t c = payload[ payload_size ];
 	if ( need_c != c ) {
 		THROW( "buffer read checksum mismatch ( " + std::to_string( need_c ) + " != " + std::to_string( c ) + " )" );
 	}
+	if ( payload_size > 0 ) {
+		if ( s == nullptr ) {
+			s = (char*)malloc( payload_size );
+			if ( !s ) {
+				throw std::bad_alloc();
+			}
+		}
+		memcpy( s, payload, payload_size );
+	}
+	const auto consumed = header_size + payload_size + sizeof( checksum_t );
+	*sz = payload_size;
+	lenr += consumed;
+	dr += consumed;
 	ASSERT( dr - data == lenr, "buffer read bytes count mismatch ( " + std::to_string( dr - data ) + " != " + std::to_string( lenr ) + " )" );
-	//Log( "Read successfully" );
 
 	return s;
 }
@@ -255,9 +263,7 @@ void Buffer::WriteData( const void* data, const uint32_t len ) {
 
 const void* Buffer::ReadData( const uint32_t len ) {
 	uint32_t sz = 0;
-	const void* val = ReadImpl( T_DATA, nullptr, &sz );
-	ASSERT( sz == len, "buffer data read size mismatch" );
-	return val;
+	return ReadImpl( T_DATA, nullptr, &sz, len );
 }
 
 const std::string Buffer::ToString() const {

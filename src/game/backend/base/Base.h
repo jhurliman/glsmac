@@ -11,6 +11,7 @@
 #include "types/Buffer.h"
 
 #include "Pop.h"
+#include "ProductionState.h"
 
 namespace gse::value {
 class Object;
@@ -54,7 +55,8 @@ public:
 		const facilities_t& facilities,
 		const pops_t& pops,
 		const size_t next_pop_id = 1,
-		const int64_t accumulated_nutrients = 0
+		const int64_t accumulated_nutrients = 0,
+		const std::optional< ProductionState >& production = std::nullopt
 	);
 	virtual ~Base() = default;
 
@@ -66,6 +68,8 @@ public:
 	void SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, map::tile::Tile* tile );
 	int64_t GetAccumulatedNutrients() const;
 	void SetAccumulatedNutrients( const int64_t nutrients );
+	const std::optional< ProductionState >& GetProductionState() const;
+	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -88,6 +92,7 @@ private:
 
 	size_t m_next_pop_id = 1;
 	int64_t m_accumulated_nutrients = 0;
+	std::optional< ProductionState > m_production;
 
 	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
 

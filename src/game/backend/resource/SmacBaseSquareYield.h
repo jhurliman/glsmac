@@ -69,10 +69,10 @@ struct BaseSquareInputs {
 // RE-SMAC-BASE-001: valid founded SMAC centers, before consumption, support,
 // commerce or allocation. No SMAX equivalence or live-state adapter is implied.
 // Every input is required: absent gameplay systems must not be inferred neutral.
-// Supported arithmetic domain: decoded int32 rules/economy, positive base count,
-// and every ordered arithmetic intermediate representable as signed int32.
-// Evaluation uses int64 to avoid C++ overflow, but throws std::overflow_error
-// outside that domain; unverified original wrap/overflow behavior is excluded.
+// RE-SMAC-BASE-INTEGER-001: decoded int32 rules/economy and positive base count.
+// Ordered arithmetic wraps to signed32 before sign tests and energy clamping.
+// Evaluation uses int64 and explicit modulo conversion to avoid C++ overflow;
+// the final signed values are widened into the backend resource-value type.
 // Invalid resource enums/zero base count throw std::invalid_argument in release.
 Yield CalculateBaseSquareYield( const BaseSquareRules& rules, const BaseSquareInputs& inputs );
 

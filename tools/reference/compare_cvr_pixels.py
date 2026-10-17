@@ -16,6 +16,13 @@ def require(condition, message):
         raise RuntimeError(message)
 
 
+def installed_asset(directory, filename):
+    matches = [path for path in directory.iterdir()
+               if path.is_file() and path.name.lower() == filename.lower()]
+    require(len(matches) == 1, 'installed asset must have one case-insensitive match: ' + filename)
+    return matches[0]
+
+
 def fixture(case):
     def supplied(label):
         values = [bytes.fromhex(entry['bytes']) for entry in case['supplied_bytes'] if entry['label'] == label]
@@ -56,7 +63,7 @@ def main():
         command = [str(args.probe.resolve()), str(request), str(output)]
         if 'installed_geometry' in case:
             metadata = case['installed_geometry']
-            asset = args.assets / metadata['file']
+            asset = installed_asset(args.assets, metadata['file'])
             require(hashlib.sha256(asset.read_bytes()).hexdigest() == metadata['file_sha256'], 'asset hash mismatch')
             require(metadata['object'] in ('EH_M1-Mask05', 'VIPTA00'), 'unsupported object selection')
             command.extend([str(asset), '0'])

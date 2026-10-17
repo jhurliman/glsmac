@@ -6,6 +6,8 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/map/tile/Tiles.h"
 
 #include "Base.h"
 #include "PopDef.h"
@@ -22,7 +24,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V2";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V3";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -35,6 +37,7 @@ BaseManager::~BaseManager() {
 }
 
 void BaseManager::Clear() {
+	m_work_assignments.clear();
 	for ( auto& it : m_base_popdefs ) {
 		delete it.second;
 	}
@@ -68,6 +71,58 @@ Base* BaseManager::GetBase( const size_t id ) const {
 	}
 	else {
 		return nullptr;
+	}
+}
+
+Pop* BaseManager::GetWorkingPop( const map::tile::coords_t& coord ) const {
+	const auto claim = m_work_assignments.find( { coord.x, coord.y } );
+	if ( claim == m_work_assignments.end() ) {
+		return nullptr;
+	}
+	auto* base = GetBase( claim->second.first );
+	if ( !base ) {
+		return nullptr;
+	}
+	const auto pop = base->m_pops.find( claim->second.second );
+	return pop == base->m_pops.end() ? nullptr : &pop->second;
+}
+
+std::string BaseManager::ValidateAssignment( const size_t base_id, const map::tile::coords_t& center, const size_t pop_id, const PopDef* def, const Pop::worked_tile_t& tile ) const {
+	if ( !tile ) {
+		return "";
+	}
+	const auto* tiles = m_game->GetMap()->GetTilesPtr();
+	if ( tile->x >= tiles->GetWidth() || tile->y >= tiles->GetHeight() || ( tile->x & 1 ) != ( tile->y & 1 ) ) {
+		return "Invalid worked tile coordinates";
+	}
+	if ( *tile == center ) {
+		return "The base center does not need a worker";
+	}
+	if ( !def || !( def->m_flags & PopDef::PF_TILE_WORKER ) ) {
+		return "This population type cannot work tiles";
+	}
+	const auto claim = m_work_assignments.find( { tile->x, tile->y } );
+	if ( claim != m_work_assignments.end() && claim->second != pop_key_t( base_id, pop_id ) ) {
+		return "This tile is already worked";
+	}
+	return "";
+}
+
+void BaseManager::ChangeAssignment( const size_t base_id, const size_t pop_id, const Pop::worked_tile_t& old_tile, const Pop::worked_tile_t& new_tile ) {
+	if ( old_tile == new_tile ) {
+		return;
+	}
+	if ( new_tile ) {
+		m_work_assignments.emplace( tile_key_t( new_tile->x, new_tile->y ), pop_key_t( base_id, pop_id ) );
+	}
+	if ( old_tile ) {
+		m_work_assignments.erase( { old_tile->x, old_tile->y } );
+	}
+}
+
+void BaseManager::RemoveAssignments( const Base* base ) {
+	for ( const auto& pop : base->m_pops ) {
+		ChangeAssignment( base->m_id, pop.first, pop.second.GetWorkedTileCoords(), {} );
 	}
 }
 
@@ -142,6 +197,7 @@ void BaseManager::UndefineFacility( const std::string& id ) {
 }
 
 void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
+	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
 	auto* tile = base->GetTile();
 
@@ -187,8 +243,15 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 
 void BaseManager::RegisterBase( Base* base ) {
 	Log( "Registering base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
-	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "duplicate base id" );
+	if ( m_bases.find( base->m_id ) != m_bases.end() ) { THROW( "duplicate base ID" ); }
+	for ( const auto& pop : base->m_pops ) {
+		const auto error = ValidateAssignment( base->m_id, base->GetTile()->coord, pop.first, pop.second.m_def, pop.second.GetWorkedTileCoords() );
+		if ( !error.empty() ) { THROW( error ); }
+	}
 	m_bases.insert_or_assign( base->m_id, base );
+	for ( const auto& pop : base->m_pops ) {
+		ChangeAssignment( base->m_id, pop.first, {}, pop.second.GetWorkedTileCoords() );
+	}
 	m_registered_base_names.insert( base->m_name );
 	QueueBaseUpdate( base, BUO_SPAWN );
 	RefreshBase( base );
@@ -217,6 +280,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	ASSERT( tile->base, "base not found in tile" );
 	ASSERT( tile->base == base, "tile base mismatch" );
 	tile->base = nullptr;
+	RemoveAssignments( base );
 
 	m_bases.erase( it );
 

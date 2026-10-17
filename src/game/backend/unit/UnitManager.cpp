@@ -246,6 +246,87 @@ void UnitManager::PreparedConventionalUnit::Notify( GSE_CALLABLE ) {
 	data.manager->TriggerSpawnHook( GSE_CALL, data.published );
 }
 
+
+struct UnitManager::PreparedConventionalRemoval::Data {
+    UnitManager* manager;
+    std::vector<Unit*> removed;
+    std::vector<size_t> removed_ids;
+    std::map<size_t,Unit*> units;
+    std::vector<size_t> order;
+    std::unordered_map<size_t,unit_update_t> updates;
+    std::map<map::tile::Tile*,std::map<size_t,Unit*>> occupants;
+    std::optional<map::SmacWorkerKnowledge> knowledge;
+    std::vector<std::unique_ptr<Unit>> retired;
+    bool committed=false;
+};
+UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(std::unique_ptr<Data> data):m_data(std::move(data)) {}
+UnitManager::PreparedConventionalRemoval::~PreparedConventionalRemoval() = default;
+UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(PreparedConventionalRemoval&&) noexcept = default;
+UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemoval::operator=(PreparedConventionalRemoval&&) noexcept = default;
+UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created) {
+    m_game->CheckRW(GSE_CALL);
+    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
+    m_game->RequireConventionalSightWorld();
+    const auto* creation=created ? created->m_data.get() : nullptr;
+    if(created && (!creation || creation->manager!=this || !creation->candidate || creation->published)) {THROW("Removal requires an uncommitted same-manager creation");}
+    auto data=std::make_unique<PreparedConventionalRemoval::Data>(); data->manager=this;
+    data->units=creation ? creation->units : m_units; data->order=creation ? creation->order : m_unit_order;
+    data->updates=creation ? creation->updates : m_unit_updates;
+    data->knowledge=creation && creation->sight ? creation->sight : m_game->GetMap()->GetSmacWorkerKnowledge();
+    auto knowledge=data->knowledge ? std::optional<map::SmacWorkerKnowledge::Data>(data->knowledge->CopyData()) : std::nullopt;
+    data->removed.reserve(ids.size()); data->retired.resize(ids.size()); data->removed_ids=ids;
+    for(const auto id:ids) {
+        const auto found=data->units.find(id);
+        if(found==data->units.end() || !found->second || !found->second->IsConventional()
+            || std::count(data->order.begin(),data->order.end(),id)!=1) {THROW("Removal has duplicate or unknown Unit identity");}
+        auto* unit=found->second;
+        const bool newborn=creation && unit==creation->candidate.get();
+        unit->RequireConventionalReady(); (void)unit->QueryStats(SmacMoraleMode::Mode1);
+        auto* tile=newborn ? creation->tile : unit->GetTile();
+        if(!tile || tile->tiles!=m_game->GetMap()->GetTilesPtr() || tile->IsLocked() || unit->m_animation_id) {THROW("Removal Unit has unavailable placement");}
+        auto inserted=data->occupants.try_emplace(tile,creation && tile==creation->tile ? creation->occupants : tile->units);
+        auto& occupants=inserted.first->second;
+        if(!occupants.count(id) || occupants.at(id)!=unit) {THROW("Removal Unit membership differs");}
+        occupants.erase(id); data->units.erase(found);
+        data->order.erase(std::find(data->order.begin(),data->order.end(),id));
+        const auto old=data->updates.find(id);
+        if(old!=data->updates.end() && (old->second.ops & UUO_SPAWN)) {data->updates.erase(old);}
+        else {data->updates[id]={UUO_DESPAWN,nullptr};}
+        if(knowledge) {
+            const auto row=std::find_if(knowledge->units.begin(),knowledge->units.end(),[&](const auto& item){return item.id==id;});
+            if(row==knowledge->units.end()) {THROW("Removal Unit observation is absent");}
+            knowledge->units.erase(row);
+        }
+        data->removed.push_back(unit);
+    }
+    if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
+    return PreparedConventionalRemoval(std::move(data));
+}
+bool UnitManager::PreparedConventionalRemoval::Removes(size_t id) const {
+    return std::find(m_data->removed_ids.begin(),m_data->removed_ids.end(),id)!=m_data->removed_ids.end();
+}
+void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
+    if(!m_data || m_data->committed) {return;}
+    auto& d=*m_data;
+    static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
+        && std::is_nothrow_swappable_v<decltype(d.updates)>);
+    d.manager->m_units.swap(d.units); d.manager->m_unit_order.swap(d.order); d.manager->m_unit_updates.swap(d.updates);
+    for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
+    d.manager->m_game->CommitConventionalSight(d.knowledge);
+    for(size_t i=0;i<d.removed.size();++i) {d.retired[i].reset(d.removed[i]);}
+    d.committed=true;
+}
+void UnitManager::PreparedConventionalRemoval::Notify(GSE_CALLABLE) {
+    if(!m_data->committed) {THROW("Removal has not committed");}
+    auto retired=std::move(m_data->retired); // deletes every removed wrapper on a hook exception
+    for(const auto& owned:retired) {
+        auto* unit=owned.get();
+        m_data->manager->m_game->GetState()->TriggerObject(m_data->manager,"unit_despawn",ARGS_F(unit) {
+            {"unit",unit->Wrap(GSE_CALL)},
+        }; });
+    }
+}
+
 UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner,
 	map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->CheckRW( GSE_CALL );

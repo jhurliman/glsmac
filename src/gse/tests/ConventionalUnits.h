@@ -28,6 +28,7 @@ public:
 	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
 	void ResourcePolicy( bool present );
+	void BasePresentationRoles( const std::array<std::string,8>& roles );
 	void SelectStartup( int32_t simulation, int32_t design );
 	void CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation = 2 );
 	game::backend::SmacGameplayRandomState GameplayRandom() const;

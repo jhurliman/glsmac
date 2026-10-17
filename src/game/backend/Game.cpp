@@ -597,6 +597,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacFoundingEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
@@ -921,6 +922,7 @@ WRAPIMPL_BEGIN( Game )
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacFoundingEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
@@ -1819,6 +1821,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacFoundingEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacFoundingEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
 				if ( event->GetSource() == event::Event::ES_LOCAL

@@ -161,14 +161,13 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 	m_units.erase( it );
 
-	if ( unit->IsOwned() ) {
-		RemoveSelectable( unit );
-	}
-
-	ASSERT( m_selected_unit != unit, "unit still selected" );
-
+	const bool was_selected = m_selected_unit == unit;
+	m_selectable_units.erase( std::remove( m_selectable_units.begin(), m_selectable_units.end(), unit ), m_selectable_units.end() );
+	if ( was_selected ) { DeselectUnit(); }
+	if ( m_previously_deselected_unit == unit ) { m_previously_deselected_unit = nullptr; }
+	// Destruction removes tile membership before choosing another selection.
 	delete unit;
-
+	if ( was_selected ) { SelectNextUnitOrSwitchToTileSelection(); }
 	m_game->RefreshSelectedTile( m_selected_unit );
 
 }

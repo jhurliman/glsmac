@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseManager.cpp
 	${PWD}/Base.cpp
 	${PWD}/BaseStarting.cpp
+	${PWD}/BaseFounding.cpp
 	${PWD}/BaseResourceCalculation.cpp
 	${PWD}/BaseAllocation.cpp
 	${PWD}/BaseProduction.cpp

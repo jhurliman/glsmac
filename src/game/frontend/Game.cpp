@@ -1548,6 +1548,17 @@ void Game::Initialize(
 									m_um->SelectNextUnitMaybe();
 									break;
 								}
+                                case input::K_B: {
+                                    const auto* selected=m_um->GetSelectedUnit();
+                                    if (selected) {
+                                        const auto id=selected->GetId();
+                                        m_glsmac->WithGSE([game,id](GSE_CALLABLE) {
+                                            auto* unit=game->GetUM()->GetUnit(id);
+                                            if (unit) {game->Event(GSE_CALL,"found_base",{{"unit",unit->Wrap(GSE_CALL)}});}
+                                        });
+                                    }
+                                    break;
+                                }
 								case input::K_SPACE: {
 									auto* unit = m_um->GetSelectedUnit();
 									if ( unit ) {

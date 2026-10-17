@@ -90,18 +90,23 @@ bool Game::HasSmacProductionPrerequisite( const slot::Slot* owner, const base::P
 
 bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::ProductionItem& item ) const {
 	base.GetSmacResourceContext();
-	if ( base.GetGame() != this || item.kind != base::ProductionItemKind::Unit || !item.smac_source_id ) {
+	if ( base.GetGame() != this ) { throw std::runtime_error("Production Base belongs to another game"); }
+	return IsSmacUnitProductionEligibleAt( base.m_owner, base.GetTile(), item );
+}
+
+bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const {
+	if ( item.kind != base::ProductionItemKind::Unit || !item.smac_source_id ) {
 		throw std::runtime_error( "Queue candidate is not an owned unit production target" );
 	}
-	const auto& participant = RequireSmacProductionOwner( base.m_owner );
-	(void)MakeSmacProductionItem( base.m_owner, item.kind, *item.smac_source_id );
+	const auto& participant = RequireSmacProductionOwner( owner );
+	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
 	const auto design = ResolveConventionalDesign( { *item.smac_source_id, participant.simulation_id, 1, 0, 0, false,
 		unit::ConventionalUnitState::Home::None, unit::SmacMoraleMode::Mode0 }, *m_simulation );
 	if ( !design.active || ( design.faction_exclusion & ( uint32_t( 1 ) << participant.simulation_id ) ) ) { return false; }
-	if ( !HasSmacProductionPrerequisite( base.m_owner, item ) ) { return false; }
+	if ( !HasSmacProductionPrerequisite( owner, item ) ) { return false; }
 	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	if ( catalog.weapons.weapons.at( design.weapon ).mode == loader::txt::WeaponMode::Colonist ) {
-		RequireSmacLocalHumanOwner( base.m_owner );
+		RequireSmacLocalHumanOwner( owner );
 		const auto map_type = m_state->m_settings.global.map.type;
 		// The current ordinary generated campaign has no scenario/no-colony rule
 		// producer. Scenario admission must supply that authority before this path.
@@ -113,7 +118,7 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 		const auto* map = GetMap();
 		static constexpr int offsets[ 8 ][ 2 ] = { { 1,-1 }, { 2,0 }, { 1,1 }, { 0,2 }, { -1,1 }, { -2,0 }, { -1,-1 }, { 0,-2 } };
 		for ( const auto& offset : offsets ) {
-			int64_t x = int64_t( base.GetTile()->coord.x ) + offset[ 0 ], y = int64_t( base.GetTile()->coord.y ) + offset[ 1 ];
+			int64_t x = int64_t( tile->coord.x ) + offset[ 0 ], y = int64_t( tile->coord.y ) + offset[ 1 ];
 			// Current native map topology is horizontal wrap, vertical clipping.
 			if ( x < 0 ) { x += map->GetWidth(); } else if ( x >= int64_t( map->GetWidth() ) ) { x -= map->GetWidth(); }
 			if ( x >= 0 && x < int64_t( map->GetWidth() ) && y >= 0 && y < int64_t( map->GetHeight() )

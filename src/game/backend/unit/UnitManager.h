@@ -77,6 +77,23 @@ public:
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
+	// Caller stages any knowledge/territory changes before Commit. No callback or
+	// world mutation may intervene. Notify retires the removed wrapper afterward.
+	class PreparedConventionalRemoval {
+	public:
+		~PreparedConventionalRemoval();
+		PreparedConventionalRemoval( PreparedConventionalRemoval&& ) noexcept;
+		PreparedConventionalRemoval& operator=( PreparedConventionalRemoval&& ) noexcept;
+		bool Removes( size_t id ) const;
+		void Commit() noexcept;
+		void Notify( GSE_CALLABLE );
+	private:
+		friend class UnitManager;
+		struct Data;
+		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
+		std::unique_ptr<Data> m_data;
+	};
+	PreparedConventionalRemoval PrepareConventionalRemoval( GSE_CALLABLE, const std::vector<size_t>& ids, PreparedConventionalUnit* created = nullptr );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;

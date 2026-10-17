@@ -133,6 +133,142 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC running founding consumes the manufactured moved Pod and preserves knowledge",[](GSE*,context::Context*) -> std::string {
+        std::string saved, new_record, old_record; size_t founded_id=0, pod_id=0;
+        ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+        const auto error=fixture.Run([&](GSE_CALLABLE) -> std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,false,false,0,1,2); auto* um=game->GetUM();
+            std::array<std::string,8> roles; roles[0]=Roles().worker; for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
+            fixture.BasePresentationRoles(roles);
+            game->GetMap()->GetTile(3,1)->terraforming=TERRAFORMING_FOREST;
+            game->GetMap()->GetTile(7,3)->terraforming=TERRAFORMING_FOREST;
+            um->DefineUnit(new StaticDef("live-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+            base->SetProductionState(GSE_CALL,ProductionState{target,game->GetSmacProductionCost(base->m_owner,target)-5,target,0,std::vector<ProductionItem>{}});
+            base->SetAccumulatedNutrients(0);
+            pod_id=*base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t){return um->GetUnitDef("live-colony");},SmacMoraleMode::Mode0).completed_unit;
+            auto* pod=um->GetUnit(pod_id); fixture.MoveEvent(GSE_CALL,pod,game->GetMap()->GetTile(4,2));
+            um->ResetConventionalSpent(GSE_CALL,pod); fixture.MoveEvent(GSE_CALL,pod,game->GetMap()->GetTile(6,2)); um->ResetConventionalSpent(GSE_CALL,pod);
+            (void)fixture.Updates();
+            const auto knowledge=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            const auto random=fixture.GameplayRandom(); const auto jsf=game->GetRandom()->GetStateString();
+            auto* old_reserved=game->GetBM()->GetWorkingPop({4,2});
+            old_record=Base::Serialize(base).ToString(); const auto scout=Unit::Serialize(um->GetUnit(91)).ToString();
+            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}}); fixture.DrainEvents();
+            auto* founded=game->GetMap()->GetTile(6,2)->base;
+            GT_ASSERT(founded && game->GetBM()->GetBases().size()==2 && !um->GetUnit(pod_id)
+                && um->GetUnitRecordOrder()==std::vector<size_t>{91},"actual founding event did not consume Pod or retain survivor order");
+            GT_ASSERT(Base::Serialize(base).ToString()==old_record && Unit::Serialize(um->GetUnit(91)).ToString()==scout,
+                "founding changed old Base or survivor Unit authority");
+            GT_ASSERT(founded->m_facilities.empty() && founded->m_pops.size()==1 && founded->GetProductionState()->current_item.smac_source_id==2
+                && founded->GetProductionState()->minerals==game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption
+                && founded->GetProductionState()->baseline_item==founded->GetProductionState()->current_item
+                && founded->GetProductionState()->baseline_minerals==founded->GetProductionState()->minerals
+                && founded->GetProductionState()->queue->empty(),"later Base used startup HQ/target/credit or omitted baselines");
+            const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            GT_ASSERT(after.remembered==knowledge.remembered && after.observers==knowledge.observers && after.units.size()+1==knowledge.units.size(),
+                "founding replayed memory/observer state or retained Pod observation");
+            for(size_t i=0;i<after.tiles.size();++i) {GT_ASSERT(after.tiles[i].explored_by==knowledge.tiles[i].explored_by,"founding revealed another 21 squares");}
+            GT_ASSERT(random==fixture.GameplayRandom() && jsf==game->GetRandom()->GetStateString(),"founding spent gameplay or map RNG");
+            auto* reserved=game->GetBM()->GetWorkingPop({4,2});
+            GT_ASSERT(reserved==old_reserved,"second Base stole the old worked forest");
+            bool removed=false, spawned=false;
+            for(const auto& update:fixture.Updates()) {
+                if(update.type==game::FrontendRequest::FR_UNIT_DESPAWN && update.data.unit_despawn.unit_id==pod_id) {removed=true;}
+                if(update.type==game::FrontendRequest::FR_BASE_SPAWN && update.data.base_spawn.base_id==founded->m_id) {spawned=true;}
+            }
+            GT_ASSERT(removed && spawned,"founding did not publish actual Pod/Base frontend updates");
+            founded_id=founded->m_id; new_record=Base::Serialize(founded).ToString(); saved=fixture.Snapshot(); GT_OK();
+        }); GT_ASSERT(error.empty(),"running founding: "+error);
+        ConventionalUnitFixture restored; restored.ConfigureProduction(UpkeepSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE) -> std::string {
+            restored.Restore(GSE_CALL,saved,true); auto* game=restored.Game(); auto* founded=game->GetBM()->GetBase(founded_id);
+            GT_ASSERT(founded && Base::Serialize(founded).ToString()==new_record && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==old_record
+                && !game->GetUM()->GetUnit(pod_id) && game->GetUM()->GetUnitRecordOrder()==std::vector<size_t>{91},"restore replayed founding or resurrected Pod");
+            (void)game->GetSmacWorkerAvailability(*founded); GT_OK();
+        });
+    });
+    task->AddTest("SMAC running founding rejects terrain claims and late role failures atomically",[](GSE*,context::Context*) -> std::string {
+        ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE) -> std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,false); auto* um=game->GetUM(); auto* site=game->GetMap()->GetTile(6,2);
+            um->DefineUnit(new StaticDef("live-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
+            auto* pod=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-colony"),base->m_owner,site,{0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false}); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            std::array<std::string,8> roles; roles[0]=Roles().worker; for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
+            fixture.BasePresentationRoles(roles); (void)fixture.Updates();
+            for(int failure=0;failure<5;++failure) {
+                if(failure==0) {site->features|=FEATURE_XENOFUNGUS;}
+                if(failure==1) {site->rockiness=ROCKINESS_ROCKY;}
+                if(failure==2) {roles[7]="absent-role";}
+                if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant=2; game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
+                if(failure==4) {auto value=pod->Conventional(); value.spent=3; um->UpdateConventionalUnit(GSE_CALL,pod,value);}
+                const auto before=fixture.Snapshot(); const auto id=Base::GetNextId();
+                GT_ASSERT(Rejects([&]{game->GetBM()->FoundSmacBase(GSE_CALL,*pod,roles);}) && fixture.Snapshot()==before && Base::GetNextId()==id,
+                    "rejected founding changed Base/Unit/knowledge or ID");
+                site->features=0; site->rockiness=ROCKINESS_FLAT; roles[7]=Roles().specialists[6];
+                if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant.reset(); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
+            }
+            GT_OK();
+        });
+    });
+    task->AddTest("SMAC running founding scans saved designs and uses retained SUPPORT credit",[](GSE*,context::Context*) -> std::string {
+        for(const int32_t support:{-2,-1}) {
+            ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE) -> std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,false); auto* um=game->GetUM();
+                const auto& rows=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog.units;
+                const auto row=std::find_if(rows.begin(),rows.end(),[](const auto& value){return value.source_id==2;});
+                GT_ASSERT(row!=rows.end(),"fixture lacks actual Scout source");
+                fixture.ResourceState([&](auto& state){
+                    state.social.factions.front().retained->at(2)=support;
+                    state.social.factions.front().current[2]=support==-2 ? 3 : -4;
+                    // Explicit owner1 custom ID64, identical score to actual source2.
+                    state.designs.owners.front().designs.push_back({64,row->chassis_id,row->weapon_id,row->defense_id,row->reactor,
+                        row->cost,row->plan,row->carry,row->abilities,row->faction_exclusion,true,true});
+                });
+                um->DefineUnit(new StaticDef("live-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
+                auto* site=game->GetMap()->GetTile(6,2);
+                auto* pod=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-colony"),base->m_owner,site,{0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
+                fixture.BasePresentationRoles(roles); game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}}); fixture.DrainEvents();
+                auto* founded=site->base;
+                GT_ASSERT(founded && founded->GetProductionState()->current_item.smac_source_id==64
+                    && founded->GetProductionState()->minerals==(support==-2 ? 0 : game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption),
+                    "founding hardcoded Scout or substituted current SUPPORT for retained credit"); GT_OK();
+            });GT_ASSERT(error.empty(),"founding selection: "+error);
+        } GT_OK();
+    });
+    task->AddTest("SMAC prepared removal composes ordered existing and newborn Unit retirement",[](GSE*,context::Context*) -> std::string {
+        ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE) -> std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,true); auto* um=game->GetUM();
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64)); (void)fixture.Updates();
+            const auto before=fixture.Snapshot(); const auto next=Unit::GetNextId();
+            {auto creation=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,2,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);
+             auto removal=um->PrepareConventionalRemoval(GSE_CALL,{91,creation.Candidate().m_id},&creation);}
+            GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"abandoned creation/removal leaked authority");
+            auto creation=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,2,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);
+            const auto id=creation.Candidate().m_id; auto removal=um->PrepareConventionalRemoval(GSE_CALL,{91,id},&creation);
+            creation.Commit(); removal.Commit(); removal.Notify(GSE_CALL);
+            GT_ASSERT(removal.Removes(id) && um->GetUnits().empty() && um->GetUnitRecordOrder().empty()
+                && base->GetTile()->units.empty() && game->GetMap()->GetSmacWorkerKnowledge()->CopyData().units.empty(),"batch retirement left membership/order/sight");
+            size_t despawns=0;
+            for(const auto& update:fixture.Updates()) {
+                GT_ASSERT(update.type!=game::FrontendRequest::FR_UNIT_SPAWN,"removed newborn leaked a spawn update");
+                if(update.type==game::FrontendRequest::FR_UNIT_DESPAWN) {GT_ASSERT(update.data.unit_despawn.unit_id==91,"newborn emitted redundant despawn");++despawns;}
+            }
+            GT_ASSERT(despawns==1,"existing Unit did not emit one despawn"); GT_OK();
+        });
+    });
 	task->AddTest( "SMAC Colony completion debits population before growth and repeats its queue", []( GSE*, context::Context* ) -> std::string {
 		for ( const int food : { 0, 20 } ) {
 			// Housing2 distinguishes the staged post-debit population from the live P2.

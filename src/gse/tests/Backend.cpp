@@ -267,6 +267,7 @@ public:
 		} );
 		if ( !error.empty() ) { throw std::runtime_error( error ); }
 	}
+	void BasePresentationRoles( const std::array<std::string,8>& roles ) { m_game.m_smac_base_presentations=roles; }
 	void ResourcePolicy( const bool present ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
 			m_game.m_map->m_resource_policy = present ? std::optional( game::backend::map::GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
@@ -1757,6 +1758,7 @@ public:
 		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
 		if ( installed && *installed ) { resources.m_smac_path = installed; }
 		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
+		resources.m_resource_paths[ resource::PCX_TEXTURE ] = "synthetic-selection";
 		auto badges_loader = std::make_unique< BadgeLoader >();
 		auto* old_graphics = g_engine->m_graphics;
 		auto* old_resources = g_engine->m_resource_manager;
@@ -1990,8 +1992,20 @@ public:
 			presenter.reset(); // actual unregister does not clear detached DOM actors
 			frontend.m_widgets.UnitPreview = nullptr;
 			widget->WrapSet( "data", new value::Object( GSE_CALL, {} ), GSE_CALL ); // old callback must skip before this/Game access
-			um->m_units.erase( 1 );
-			unit.reset(); def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
+			// Actual despawn must retire an exhausted manually selected Unit even
+			// when it never belonged to the active/selectable list.
+			unit->SetActionability(true,false); unit->SetMovement(0);
+			um->m_selected_unit=unit.get(); um->m_previously_deselected_unit=unit.get();
+			um->m_selectable_units.clear(); frontend.SetSelectedTile(unit->GetTile());
+			unit.release();
+			game::FrontendRequest despawn(game::FrontendRequest::FR_UNIT_DESPAWN); despawn.data.unit_despawn.unit_id=1;
+			frontend.m_game=&fixture.m_game; frontend.m_world_scene=&scene;
+			util::FinallyGuard clear_backend([&]{frontend.HideTileSelector(); frontend.m_game=nullptr; frontend.m_world_scene=nullptr;});
+			frontend.ProcessRequest(&despawn);
+			GT_ASSERT(!um->m_selected_unit && !um->m_previously_deselected_unit && tile.GetUnits().empty(),
+				"inactive despawn retained selection or tile membership");
+			frontend.HideTileSelector();
+			def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
 			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
 				"scene/cache retirement released a still-borrowed Scout image" );
 			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,
@@ -4636,6 +4650,7 @@ void ConventionalUnitFixture::SpecialistKnowledge( int32_t simulation, const std
 void ConventionalUnitFixture::ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
 }
+void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
 void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );

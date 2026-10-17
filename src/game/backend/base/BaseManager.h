@@ -33,6 +33,7 @@ namespace slot {
 class Slot;
 }
 namespace faction { class Faction; }
+namespace unit { class Unit; }
 
 namespace base {
 
@@ -70,6 +71,8 @@ public:
 	SmacBaseResourceContext PrepareStartingResourceContext( const slot::Slot* owner ) const;
 	Base* SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* tile,
 		const std::string& worker, const std::array< std::string, 7 >& specialists );
+	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles );
+	void ValidateSmacFounding( const unit::Unit& colony ) const;
 	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 
 	const std::map< size_t, Base* >& GetBases() const;

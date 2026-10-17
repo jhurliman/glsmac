@@ -1,0 +1,146 @@
+#include "BaseManager.h"
+#include "Base.h"
+#include "PopDef.h"
+#include "FacilityDef.h"
+#include "SmacAutomaticWorkerAllocation.h"
+#include "SmacWorkedSquareCollection.h"
+#include "game/backend/Game.h"
+#include "game/backend/Player.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/map/tile/Tiles.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/slot/Slot.h"
+#include "gc/Space.h"
+#include <algorithm>
+#include <limits>
+#include <memory>
+
+namespace game::backend::base {
+void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
+    using namespace map::tile;
+    if (!m_game->IsRunning() || m_game->GetTurnId()==0 || m_game->GetTurnId()>INT32_MAX
+        || m_dispatching_updates || m_game->GetUM()->GetUnit(colony.m_id)!=&colony || !colony.IsConventional()
+        || colony.m_owner->GetPlayer()!=m_game->GetPlayer()) {THROW("Founding requires the current local running Colony Pod");}
+    m_game->RequireSmacLocalHumanOwner(colony.m_owner);
+    colony.RequireConventionalReady();
+    const auto resolved=m_game->ResolveConventionalUnit(colony.Conventional(),colony.m_owner);
+    if (resolved.package!=unit::ConventionalUnitContext::Package::Colony || !colony.HasMovesLeft() || colony.m_animation_id) {
+        THROW("Founding requires an available ordinary land Colony Pod");
+    }
+    const auto& global=m_game->GetState()->m_settings.global;
+    if ((global.map.type!=settings::MapSettings::MT_RANDOM && global.map.type!=settings::MapSettings::MT_CUSTOM)
+        || m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain
+        || m_game->m_simulation->value.designs.global_difficulty!=3) {
+        THROW("Running founding currently admits the ordinary generated difficulty-3 no-project campaign");
+    }
+    auto* tile=colony.GetTile();
+    if (!tile || tile->tiles!=m_game->GetMap()->GetTilesPtr() || tile->base || tile->is_water_tile || tile->IsLocked()
+        || tile->rockiness==ROCKINESS_ROCKY || (tile->features & (FEATURE_XENOFUNGUS|FEATURE_MONOLITH))
+        || m_bases.size()>=512 || Base::GetNextId()==std::numeric_limits<size_t>::max()) {
+        THROW("Colony founding site is unavailable");
+    }
+    for (const auto* adjacent:tile->neighbours) {if (adjacent->base) {THROW("Founding cannot adjoin an existing Base");}}
+    bool existing=false;
+    for (const auto& entry:m_bases) {if(entry.second->m_owner==colony.m_owner) {existing=true;}}
+    if (!existing) {THROW("Running founding currently requires an existing owner Base");}
+    const auto& knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
+    if (!knowledge) {THROW("Founding requires saved exploration and territory");}
+    // Full current entity and directed-observer authentication, before reading
+    // the raw claimant. Foreign diplomatic choices remain a separate UI path.
+    const auto frame=m_game->ProjectSmacWorkerKnowledge(*knowledge,colony.Conventional().owner_simulation_id).CopyData();
+    const auto& square=frame.tiles.at(size_t(tile->coord.y)*(frame.width/2)+tile->coord.x/2);
+    if (square.claimant && *square.claimant!=colony.Conventional().owner_simulation_id) {
+        THROW("Foreign-territory founding requires an explicit diplomatic choice");
+    }
+}
+
+Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::array<std::string,8>& roles) {
+    m_game->CheckRW(GSE_CALL);
+    if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Founding requires the owning accumulation");}
+    ValidateSmacFounding(colony);
+    auto* owner=colony.m_owner; auto* tile=colony.GetTile();
+    const auto simulation_id=colony.Conventional().owner_simulation_id;
+    const auto& global=m_game->GetState()->m_settings.global;
+    const auto* profile=global.GetSmacFactionStartupRules()->Find(owner->GetPlayer()->GetFaction()->m_id);
+    const auto* technology=m_game->m_simulation->value.technology.Find(simulation_id);
+    const auto* social=m_game->m_simulation->value.social.Find(simulation_id);
+    if (!profile || !technology || !social || !social->retained) {THROW("Founding requires actual retained owner inputs");}
+    SmacBaseResourceContext context{simulation_id,false,0,0,0x00dfbe41u,false};
+    ValidateSmacResourceContext(context,owner,owner->GetPlayer()->GetFaction());
+    const auto* worker=GetPopDef(roles[0]);
+    if (!worker || !(worker->m_flags & PopDef::PF_TILE_WORKER) || worker->m_smac_specialist_id) {THROW("Founding worker role is invalid");}
+    ValidateSmacPopDef(worker);
+    std::array<const PopDef*,7> specialists{};
+    for (size_t i=0;i<7;++i) {
+        specialists[i]=GetPopDef(roles[i+1]);
+        if (!specialists[i] || specialists[i]->m_smac_specialist_id!=i || (specialists[i]->m_flags & PopDef::PF_TILE_WORKER)) {THROW("Founding specialist role is invalid");}
+        ValidateSmacPopDef(specialists[i]);
+    }
+    Base::facilities_t facilities;
+    for (const auto& bonus:profile->Records()) {
+        if (bonus.kind!=settings::SmacFactionStartupBonus::Kind::FACILITY) {continue;}
+        const auto source=std::clamp(bonus.parameter,1,38);
+        const FacilityDef* selected=nullptr;
+        for (const auto& entry:m_base_facilitydefs) {if(entry.second->m_smac_source_id==source) {selected=entry.second;break;}}
+        if (!selected) {THROW("Founding facility source is not registered");}
+        ValidateSmacFacilityDef(selected); facilities.emplace(selected->m_id,selected);
+    }
+    const auto target=m_game->SelectSmacFoundingProduction(owner,tile);
+    const int64_t credit=social->retained->at(2)>=-1 ? global.GetSmacProductionRules()->retool_exemption : 0;
+    const ProductionState production{target,credit,target,credit,std::vector<ProductionItem>{}};
+    m_game->ValidateSmacProductionState(owner,production);
+    std::unique_ptr<Base> candidate(new Base(Base::ConstructionKind::PreparedStartup,m_game,Base::GetNextId(),owner,
+        owner->GetPlayer()->GetFaction(),tile,"",facilities,{{1,Pop(nullptr,1,specialists[0],0)}},2,0,production,context,std::nullopt));
+    candidate->m_allocation=SmacBaseAllocationState{0,{{},1}};
+    auto knowledge=m_game->PrepareBaseTerritory(candidate.get(),nullptr,false);
+    if (!knowledge) {THROW("Founding requires prepared saved territory");}
+    // The normal projector authenticates actual entities before a private
+    // candidate projection removes the consumed Pod and appends the new Base.
+    auto frame=m_game->ProjectSmacWorkerKnowledge(*knowledge,simulation_id).CopyData();
+    auto data=knowledge->CopyData();
+    const auto observation=std::find_if(data.units.begin(),data.units.end(),[&](const auto& row){return row.id==colony.m_id;});
+    if (observation==data.units.end()) {THROW("Founding Pod has no observation record");}
+    frame.units.erase(frame.units.begin()+std::distance(data.units.begin(),observation));
+    data.units.erase(observation);
+    const map::SmacWorkerMapFrame::Coordinate center{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)};
+    frame.bases.push_back({simulation_id,center,0});
+    const auto unavailable=map::SmacWorkerMapFrame::Create(frame).Evaluate(frame.bases.size()-1).unavailable;
+    knowledge=map::SmacWorkerKnowledge::Create(data); // exploration/memory unchanged
+    const auto catalog=ResolveSmacSpecialistAllocationCatalog(*global.GetSmacSpecialistRules(),*global.GetSmacTechnologyRules(),technology->owned);
+    bool aerospace=false; for (const auto& item:facilities) {aerospace |= item.second->m_smac_source_id==29;}
+    const auto prefix=m_game->m_simulation->value.GetSatelliteCounts(simulation_id).Intake(1,aerospace,false);
+    const SmacWorkerRadiusMap radius{center,frame.width,frame.height,true};
+    const SmacWorkerYieldQuery query=[&](int32_t index,const SmacWorkerStepState&) -> std::optional<SmacWorkerTileYield> {
+        const auto coordinate=SmacWorkedSquareCollection::Resolve(radius,index);
+        if (!coordinate) {return {};}
+        const auto* square=m_game->GetMap()->GetTile((*coordinate)[0],(*coordinate)[1]);
+        const auto values=m_game->CalculateCanonicalTileResources(*square,*candidate,Game::ResourceQueryPhase::Ordinary,false,true);
+        SmacWorkerTileYield result{{},square->is_water_tile};
+        for(size_t i=0;i<3;++i) {if(values[i]<INT32_MIN || values[i]>INT32_MAX) {THROW("Founding yield exceeds signed32");} result.resources[i]=static_cast<int32_t>(values[i]);}
+        return result;
+    };
+    // No Unit can already be homed to this unregistered fresh Base ID: the full
+    // current projection above validated every home. The consumed Pod retains
+    // its old home until this one transaction removes it.
+    const auto result=SmacAutomaticWorkerAllocation::Allocate({1,static_cast<int32_t>(m_game->GetTurnId()),
+        global.GetSmacResourceRules()->nutrients_per_citizen,0,SmacWorkerProduction::Unit,
+        {true,false,false,false,false,false,{}},context.ManageCitizens(),false,0,unavailable,prefix,{{},0},catalog,std::nullopt},query);
+    candidate->m_allocation=SmacBaseAllocationState{result.workers.visited,result.specialists};
+    const auto coordinates=candidate->AllocationCoordinates(*candidate->m_allocation);
+    candidate->m_pops.at(1)=coordinates.empty() ? Pop(nullptr,1,specialists.at(result.specialists.types[0]),0)
+        : Pop(nullptr,1,worker,0,m_game->GetMap()->GetTile(coordinates[0].x,coordinates[0].y));
+    candidate->ValidateAllocationProjection(false);
+    candidate->m_accumulated_nutrients=result.workers.intake[0]<global.GetSmacResourceRules()->nutrients_per_citizen ? -1 : 0;
+    auto removal=m_game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{colony.m_id});
+    PrepareBaseName(candidate.get());
+    auto* base=candidate.get();
+    RegisterBase(base); // every allocating registry/queue operation precedes writes
+    candidate.release(); base->CommitStartupPlacement(); removal.Commit();
+    m_game->CommitBaseTerritory(knowledge);
+    removal.Notify(GSE_CALL); // retired wrappers are owned even if a hook throws
+    m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});
+    return base;
+}
+}

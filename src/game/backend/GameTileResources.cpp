@@ -175,17 +175,18 @@ std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile&
 	return CalculateCanonicalTileResources( tile, evaluating_base, phase, false );
 }
 
-std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase, bool startup ) const {
+std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase, bool startup, bool founding ) const {
 	using namespace map::tile;
-	if ( startup ) {
-		RequireConventionalStartupClaim();
+	if ( startup || founding ) {
+		if ( startup ) { RequireConventionalStartupClaim(); }
+		else { RequireSmacLocalHumanOwner( evaluating_base.m_owner ); }
 		if ( !evaluating_base.m_resource_context || m_bm->GetBase( evaluating_base.m_id )
 			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.m_pops.size()!=1 ) {
 			throw std::runtime_error( "First-Base resources require a private uninstalled candidate" );
 		}
 		m_bm->ValidateSmacResourceContext( *evaluating_base.m_resource_context, evaluating_base.m_owner, evaluating_base.m_faction );
 	}
-	const auto context = startup ? *evaluating_base.m_resource_context : evaluating_base.GetSmacResourceContext();
+	const auto context = ( startup || founding ) ? *evaluating_base.m_resource_context : evaluating_base.GetSmacResourceContext();
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !m_map || !m_map->GetResourcePolicy()
 		|| m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
@@ -222,7 +223,7 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	const auto refs = rules->TechnologyReferences( *technologies );
 	const auto& global = m_simulation->value.resource_modifiers;
 	const auto facilities = ReadFacilityRoles( evaluating_base, *m_bm );
-	uint32_t base_count = startup ? 1 : 0;
+	uint32_t base_count = ( startup || founding ) ? 1 : 0;
 	for ( const auto& entry : m_bm->GetBases() ) {
 		const auto* candidate = entry.second;
 		if ( !candidate || candidate->m_id != entry.first ) { throw std::runtime_error( "Invalid canonical base registry" ); }

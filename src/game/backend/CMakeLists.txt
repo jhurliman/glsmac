@@ -31,6 +31,7 @@ SET( SRC ${SRC}
 	${PWD}/GameWorkerKnowledge.cpp
 	${PWD}/GameTerritory.cpp
 	${PWD}/GameStartingBase.cpp
+	${PWD}/GameFounding.cpp
 	${PWD}/GameCanonicalTurn.cpp
 	${PWD}/GamePresentations.cpp
 	${PWD}/Account.cpp

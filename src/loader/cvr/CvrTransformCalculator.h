@@ -29,7 +29,7 @@ public:
 	// cvr-caller-origin-evidence.md, including each nearest-even binary32 store.
 	// All arithmetic uses integers, independent of the host FP environment.
 	// Rejects negative zero inputs/stores, nonfinite inputs, nonpositive scalar, intermediates
-	// requiring >64 significand bits, nonnormal nonzero stores, and basis/origin
+	// requiring >64 significand bits, rounded nonzero subnormal/overflow stores, and basis/origin
 	// width failures with std::invalid_argument. Returns owned values; input is
 	// unchanged on success/failure. Later raster bounds remain a separate check.
 	static CvrTransformResult Calculate( const CvrTransformInput& input );

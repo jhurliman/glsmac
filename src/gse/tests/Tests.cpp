@@ -2,6 +2,7 @@
 
 #include "Backend.h"
 #include "Buffer.h"
+#include "SmacBaseSquareYield.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -13,6 +14,8 @@
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacProductionSwitch.h"
+#include "SmacMineralCostFactor.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -60,6 +63,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrIndexedRasterizerTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
+		tests::AddSmacMineralCostFactorTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -159,6 +163,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );
 		tests::AddBufferTests( task );
+		tests::AddSmacBaseSquareYieldTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
 	tests::AddScriptsTests( task );
 

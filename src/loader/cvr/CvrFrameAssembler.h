@@ -52,7 +52,9 @@ public:
 	// All selections are validated before result records are allocated, including
 	// any beyond capacity. Nonnegative frames use each scene's own frame count.
 	// Flags and matrix bits are copied; only location + explicit offset is computed.
-	// Arithmetic supports nearest rounding, normal-or-zero binary32 operands and
+	// Arithmetic requires nearest rounding in both the standard environment and
+	// the independent SSE control where available; it never changes either.
+	// It supports normal-or-zero binary32 operands and
 	// binary64 intermediate sums within the normal-or-zero binary32 range. Unsupported/malformed
 	// input throws std::invalid_argument ("CVR assembly:"); allocation errors pass
 	// through. Source creation checks counts and finite values in every frame.

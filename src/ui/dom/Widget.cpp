@@ -54,6 +54,16 @@ Widget::Widget( DOM_ARGS )
 	};
 }
 
+Widget::~Widget() {
+	// Generated textures must outlive actor destruction even when a retained
+	// widget is collected without a prior explicit Destroy/Clear.
+	if ( !m_retained_textures.empty() ) { Clear(); }
+}
+
+void Widget::RetainTexture( const std::shared_ptr< types::texture::Texture >& texture ) {
+	if ( texture ) { m_retained_textures.push_back( texture ); }
+}
+
 void Widget::Show() {
 	if ( !m_is_visible ) {
 		Area::Show();
@@ -121,6 +131,7 @@ void Widget::Clear() {
 	m_geometry->AsRectangle()->Clear();
 	ClearActors();
 	m_actors.clear();
+	m_retained_textures.clear();
 	for ( const auto& it : m_textures ) {
 		DELETE( it.second );
 	}
@@ -134,10 +145,9 @@ types::texture::Texture* const Widget::GetTexture( const size_t index ) const {
 }
 
 void Widget::OnUpdate( const f_widget_update_t& on_widget_update ) {
-	if ( !m_on_widget_update ) { // TODO: refactor
-		ASSERT( !m_on_widget_update, "m_on_widget_update already set" );
-		m_on_widget_update = on_widget_update;
-	}
+	// A retained widget can reattach to a replacement presenter. Release the
+	// previous closure while retaining the existing immediate-refresh behavior.
+	m_on_widget_update = on_widget_update;
 	if ( m_type && m_data ) {
 		UpdateWidget();
 	}

@@ -4,6 +4,8 @@
 #include "Backend.h"
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
+#include "SmacScoutCombat.h"
+#include "SmacEmptyGroundMovement.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -13,6 +15,7 @@
 #include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "SmacProductionRules.h"
+#include "SmacMovementRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
@@ -32,6 +35,7 @@
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
+#include "SmacConventionalStats.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -77,6 +81,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
+		tests::AddSmacScoutCombatTests( task );
+		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
@@ -87,6 +93,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
+		tests::AddSmacConventionalStatsTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -215,6 +222,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );

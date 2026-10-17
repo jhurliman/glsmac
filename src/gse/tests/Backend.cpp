@@ -6100,6 +6100,131 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+static void AddPopulationRollbackTests( task::gsetests::GSETests* task ) {
+	for ( const bool worker : { true, false } ) {
+		task->AddTest( worker ? "test removed worker rollback preserves identity and assignment" : "test removed specialist rollback preserves identity",
+			GT( worker ) {
+				using namespace game::backend::base;
+				const auto next = Base::GetNextId();
+				util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+				BackendFixture fixture;
+				fixture.EnableYieldFixture();
+				fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+				fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+				const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					AddWorkerBases( GSE_CALL, fixture );
+					auto* game = fixture.GetGame();
+					auto* base = game->GetBM()->GetBase( 601 );
+					const auto id = worker ? 7 : 9;
+					const auto variant = base->m_pops.at( id ).m_variant;
+					auto* original = base->m_pops.at( id ).Wrap( GSE_CALL );
+					types::Buffer reference;
+					Value::Serialize( &reference, original );
+					auto* facade = InitializeWorkers( GSE_CALL, fixture );
+					auto* handler = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/remove_base_pop" ) );
+					auto* request = new value::Object( GSE_CALL, {
+						{ "caller", VALUE( value::Int,, 0 ) },
+						{ "game", facade },
+						{ "data", new value::Object( GSE_CALL, { { "base", base->Wrap( GSE_CALL ) }, { "pop", original } } ) },
+					} );
+					const auto before = Base::Serialize( base ).ToString();
+					const auto rng = game->GetRandom()->GetStateString();
+					auto* valid = static_cast< value::Callable* >( handler->Get( "validate" ) )->Run( GSE_CALL, { request } );
+					GT_ASSERT( valid->type == VT_UNDEFINED, "host population removal was rejected" );
+					auto* applied = static_cast< value::Callable* >( handler->Get( "apply" ) )->Run( GSE_CALL, { request } );
+					GT_ASSERT( !base->m_pops.count( id ) && original->type == VT_UNDEFINED, "removal did not invalidate its original wrapper" );
+					if ( worker ) { GT_ASSERT( !game->GetBM()->GetWorkingPop( { 2, 4 } ), "removal retained the worker claim" ); }
+					request->Set( "applied", applied, GSE_CALL );
+					static_cast< value::Callable* >( handler->Get( "rollback" ) )->Run( GSE_CALL, { request } );
+					GT_ASSERT( base->m_pops.count( id ) == 1, "rollback assigned a new population ID" );
+					GT_ASSERT( base->m_pops.at( id ).m_variant == variant, "rollback changed the population variant" );
+					GT_ASSERT( Base::Serialize( base ).ToString() == before, "rollback changed population type, assignment, next ID, or nutrients" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == rng, "rollback consumed randomness" );
+					GT_ASSERT( original->type == VT_UNDEFINED, "rollback revived a stale population wrapper" );
+					auto* restored = Pop::Unwrap( Value::Deserialize( GSE_CALL, &reference, game ) );
+					GT_ASSERT( restored == &base->m_pops.at( id ), "saved reference did not resolve the restored population" );
+					if ( worker ) { GT_ASSERT( game->GetBM()->GetWorkingPop( { 2, 4 } ) == restored, "rollback did not restore the reverse worker claim" ); }
+					auto* object = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+					auto* created = Pop::Unwrap( static_cast< value::Callable* >( object->Get( "create_pop" ) )->Run( GSE_CALL, {
+						new value::Object( GSE_CALL, { { "type", VALUE( value::String,, "DOCTOR" ) } } ),
+					} ) );
+					GT_ASSERT( created->m_id == 20, "rollback advanced the next population ID" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "population rollback failed: " + error );
+				GT_OK();
+			}
+		);
+	}
+	task->AddTest( "test population restore rejects invalid data before changing state", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture foreign;
+		BackendFixture fixture;
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			AddWorkerBases( GSE_CALL, fixture );
+			auto* game = fixture.GetGame();
+			auto* base = game->GetBM()->GetBase( 601 );
+			auto* object = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+			auto* restore = static_cast< value::Callable* >( object->Get( "restore_pop" ) );
+			const auto record = [ & ]( long long id, long long variant, const std::string& type, Value* tile = nullptr ) {
+				value::object_properties_t fields = {
+					{ "id", VALUE( value::Int,, id ) }, { "type", VALUE( value::String,, type ) }, { "variant", VALUE( value::Int,, variant ) },
+				};
+				if ( tile ) { fields.emplace( "worked_tile", tile ); }
+				return new value::Object( GSE_CALL, fields );
+			};
+			const std::vector< Value* > invalid = {
+				record( -1, 0, "WORKER" ), record( 20, 0, "WORKER" ), record( std::numeric_limits< long long >::max(), 0, "WORKER" ),
+				record( 7, 0, "WORKER" ), record( 6, -1, "WORKER" ), record( 6, 256, "WORKER" ), record( 6, 0, "MISSING" ),
+				record( 6, 0, "WORKER", game->GetMap()->GetTile( 2, 4 )->Wrap( GSE_CALL ) ),
+				record( 6, 0, "WORKER", game->GetMap()->GetTile( 4, 4 )->Wrap( GSE_CALL ) ),
+				record( 6, 0, "DOCTOR", game->GetMap()->GetTile( 6, 2 )->Wrap( GSE_CALL ) ),
+				record( 6, 0, "WORKER", foreign.GetGame()->GetMap()->GetTile( 6, 2 )->Wrap( GSE_CALL ) ),
+				record( 6, 0, "WORKER", VALUE( value::Int,, 5 ) ), record( 6, 0, "WORKER", new value::Object( GSE_CALL, {} ) ),
+			};
+			fixture.SetRunning( true );
+			fixture.PushBaseUpdates();
+			const auto before = Base::Serialize( base ).ToString();
+			const auto rng = game->GetRandom()->GetStateString();
+			for ( auto* data : invalid ) {
+				bool rejected = false;
+				try { restore->Run( GSE_CALL, { data } ); }
+				catch ( const std::runtime_error& ) { rejected = true; }
+				GT_ASSERT( rejected, "invalid population restoration was accepted" );
+				GT_ASSERT( Base::Serialize( base ).ToString() == before && game->GetRandom()->GetStateString() == rng, "rejected restoration changed population state or RNG" );
+				GT_ASSERT( game->GetBM()->GetWorkingPop( { 2, 4 } ) == &base->m_pops.at( 7 ), "rejected restoration changed an existing worker claim" );
+				GT_ASSERT( !game->GetBM()->GetWorkingPop( { 6, 2 } ) && fixture.PushBaseUpdates().empty(), "rejected restoration published a worker claim or frontend update" );
+			}
+			for ( const auto variant : { 0, 255 } ) {
+				auto* pop = Pop::Unwrap( restore->Run( GSE_CALL, { record( 6, variant, "DOCTOR" ) } ) );
+				GT_ASSERT( pop->m_id == 6 && pop->m_variant == variant && !pop->GetWorkedTileCoords(), "valid variant boundary did not restore exactly" );
+				base->RemovePop( 6 );
+			}
+			GT_ASSERT( Base::Serialize( base ).ToString() == before && game->GetRandom()->GetStateString() == rng, "restoration advanced IDs or consumed RNG" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "population restore validation failed: " + error );
+		const auto readonly_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* object = static_cast< value::Object* >( fixture.GetGame()->GetBM()->GetBase( 601 )->Wrap( GSE_CALL ) );
+			try {
+				static_cast< value::Callable* >( object->Get( "restore_pop" ) )->Run( GSE_CALL, {
+					new value::Object( GSE_CALL, { { "id", VALUE( value::Int,, 6 ) }, { "type", VALUE( value::String,, "DOCTOR" ) }, { "variant", VALUE( value::Int,, 0 ) } } ),
+				} );
+			} catch ( const Exception& e ) {
+				GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong read-only restoration error" );
+				GT_OK();
+			}
+			GT_FAIL( "population restoration was accepted outside a write scope" );
+		} );
+		GT_ASSERT( readonly_error.empty(), "population restore permission check failed: " + readonly_error );
+		GT_OK();
+	} );
+}
+
 static void AddWorkerTests( task::gsetests::GSETests* task ) {
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest( immediate ? "test immediate worker snapshot preserves assignments and intake" : "test deferred worker snapshot preserves assignments and intake",
@@ -7827,6 +7952,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		}
 	);
+	AddPopulationRollbackTests( task );
 	AddWorkerTests( task );
 	AddResourceYieldTests( task );
 	AddInitialPopulationTests( task );

@@ -2603,6 +2603,7 @@ std::string Game::SerializeWorldSnapshot() const {
 	world_snapshot::WriteRandomState( buf, random_state );
 	world_snapshot::WriteTurnState( buf, turn_state );
 	WriteSimulationState( buf );
+	map::GlsmacResourceMapPolicy::WriteOptional( buf, m_map->GetResourcePolicy(), m_state->m_settings.global.GetRulesetId() == "smac" );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -2678,12 +2679,13 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 		const auto random_state = world_snapshot::ReadRandomState( buf );
 		const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
 		auto simulation = ReadSimulationState( buf, turn_state.id );
+		const auto map_policy = map::GlsmacResourceMapPolicy::ReadOptional( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
 
 		// map
 		const auto map_payload = buf.ReadString();
 		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 		NEW( m_map, map::Map, this );
-		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ) );
+		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy );
 		return true;
 	}
 	catch ( const std::runtime_error& error ) {
@@ -2698,7 +2700,7 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 	}
 }
 
-void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation ) {
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy ) {
 	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
@@ -2708,6 +2710,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	if ( ec != map::Map::EC_NONE ) {
 		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
 	}
+	m_map->m_resource_policy = map_policy; // decoded before Map allocation; raw loader never infers it
 	{
 		auto resources = types::Buffer( body.ReadString() );
 		m_rm->Deserialize( resources );

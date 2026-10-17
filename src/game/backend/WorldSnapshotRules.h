@@ -11,9 +11,10 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V17 additionally binds the owned specialist profile. Simulation V5 is unchanged.
-// V1..V16 downloads are unsupported.
-inline constexpr int64_t rules_version = 17;
+// V18 additionally carries the optional owned GLSMAC map-resource policy
+// before the map body. Its absence remains explicitly unavailable.
+// V1..V17 downloads are unsupported.
+inline constexpr int64_t rules_version = 18;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

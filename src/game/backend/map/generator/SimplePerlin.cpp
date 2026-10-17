@@ -157,7 +157,12 @@ void SimplePerlin::GenerateDetails( tile::Tiles* tiles, const backend::settings:
 
 			// bonus resources
 			if ( m_random->IsLucky( RESOURCE_SPAWN_CHANCE_DIFFICULTY ) ) {
-				tile->bonus = m_random->GetUInt( tile::BONUS_NUTRIENT, tile::BONUS_MINERALS );
+				// Preserve the candidate draw even when the named map policy rejects
+				// deep-water placement. Existing/restored maps are never rewritten.
+				const auto candidate = m_random->GetUInt( tile::BONUS_NUTRIENT, tile::BONUS_MINERALS );
+				if ( !m_resource_policy || m_resource_policy->AllowsGeneratedBonus( tile->is_water_tile, *tile->elevation.center ) ) {
+					tile->bonus = candidate;
+				}
 			}
 
 			MT_RETIF();

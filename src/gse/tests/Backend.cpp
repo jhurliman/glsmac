@@ -1,4 +1,6 @@
 #include "Backend.h"
+#include "GlsmacResourceMapPolicy.h"
+#include "game/backend/map/generator/SimplePerlin.h"
 #include "ConventionalUnits.h"
 #include "CvrScoutRenderer.h"
 #include "CvrSpartanRoverRenderer.h"
@@ -143,6 +145,74 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
+
+	std::string CheckResourceMapPolicy( const int scenario ) {
+		using namespace game::backend;
+		using Policy = map::GlsmacResourceMapPolicy;
+		if ( scenario == 0 ) {
+			return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* tiles = m_game.m_map->GetTilesPtr(); tiles->Resize( 32, 32 );
+				for ( const int64_t elevation : { -2500, -1500, -1000, 500 } ) {
+					const auto initialize = [ & ] {
+						tiles->Clear();
+						for ( size_t y = 0; y < 32; ++y ) { for ( size_t x = y & 1; x < 32; x += 2 ) {
+							auto& t = tiles->At( x, y ); for ( auto* corner : t.elevation.corners ) { *corner = elevation; }
+						} }
+						for ( size_t y = 0; y < 32; ++y ) { for ( size_t x = y & 1; x < 32; x += 2 ) { tiles->At( x, y ).Update(); } }
+					};
+					util::random::Random old_random( 19 ), accepted_random( 19 ); const common::mt_flag_t canceled = false;
+					initialize(); map::generator::SimplePerlin old( &m_game, &old_random );
+					old.GenerateDetails( tiles, &m_state->m_settings.global.map, canceled );
+					std::vector< uint8_t > expected; size_t candidates = 0;
+					for ( size_t y = 0; y < 32; ++y ) { for ( size_t x = y & 1; x < 32; x += 2 ) {
+						const auto value = tiles->At( x, y ).bonus; expected.push_back( value ); candidates += value != 0;
+					} }
+					GT_ASSERT( candidates != 0, "generator comparison did not produce resource candidates" );
+					initialize(); map::generator::SimplePerlin current( &m_game, &accepted_random, Policy::DisplayedTerrainV1() );
+					current.GenerateDetails( tiles, &m_state->m_settings.global.map, canceled ); size_t i = 0;
+					for ( size_t y = 0; y < 32; ++y ) { for ( size_t x = y & 1; x < 32; x += 2 ) {
+						const auto& tile = tiles->At( x, y );
+						GT_ASSERT( tile.bonus == ( elevation < -1000 ? 0 : expected[ i ] ), "policy changed shelf/land types or retained a deep bonus" ); ++i;
+					} }
+					GT_ASSERT( old_random.GetStateString() == accepted_random.GetStateString(), "policy changed actual detail-generator random draw order" );
+				}
+				GT_OK();
+			} );
+		}
+		if ( scenario == 2 ) {
+			ConfigureConventional( true, 3, true );
+			return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* map = m_game.m_map; DELETE( map->m_tiles ); map->m_tiles = nullptr;
+				const common::mt_flag_t canceled = true;
+				GT_ASSERT( map->Generate( &m_state->m_settings.global.map, canceled ) == map::Map::EC_ABORTED
+					&& !map->GetResourcePolicy() && !map->m_tiles, "canceled generation published a policy or tiles" );
+				m_state->m_settings.global.SelectSmacCustomSize( 32, 32 );
+				const common::mt_flag_t active = false;
+				GT_ASSERT( map->Generate( &m_state->m_settings.global.map, active ) == map::Map::EC_NONE && map->GetResourcePolicy(), "successful actual generator omitted policy" );
+				for ( size_t y = 0; y < map->GetHeight(); ++y ) { for ( size_t x = y & 1; x < map->GetWidth(); x += 2 ) {
+					(void)map->GetResourcePolicy()->Bonus( *map->GetTile( x, y ) );
+				} }
+				GT_OK();
+			} );
+		}
+		ConfigureConventional( true, 3, true );
+		auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.m_map->m_resource_policy = Policy::DisplayedTerrainV1(); GT_OK(); } );
+		if ( !setup.empty() ) { return setup; }
+		const auto saved = WorldSnapshot(); const auto random = m_game.m_simulation->value.gameplay_random; const auto jsf = m_game.GetRandom()->GetStateString();
+		BackendFixture destination; destination.ConfigureConventional( true, 3, true );
+		return destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.m_game.m_simulation.reset();
+			destination.RestoreWorldBody( GSE_CALL, saved ); destination.CompleteWorldRestore( GSE_CALL );
+			GT_ASSERT( destination.m_game.m_map->GetResourcePolicy() == m_game.m_map->GetResourcePolicy()
+				&& destination.m_game.m_simulation->value.gameplay_random == random && destination.m_game.GetRandom()->GetStateString() == jsf,
+				"actual decoder/InitComplete changed policy or RNG continuation" );
+			GT_ASSERT( destination.WorldSnapshot() == saved, "policy world roundtrip changed bytes" );
+			types::Buffer raw; m_game.m_map->SaveToBuffer( raw ); auto tiles = types::Buffer( raw.ReadString() );
+			GT_ASSERT( destination.m_game.m_map->LoadFromBuffer( tiles ) == map::Map::EC_NONE && !destination.m_game.m_map->GetResourcePolicy(), "raw map import inferred the saved policy" );
+			GT_OK();
+		} );
+	}
+
 	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -1021,7 +1091,7 @@ public:
 			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
 			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
 			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
-			bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
+			bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
 			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
 			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
 		} );
@@ -3398,7 +3468,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 55; ++scenario ) {
+		for ( int scenario = 0; scenario < 63; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3469,8 +3539,8 @@ public:
 				raw.WriteInt( scenario == 46 ? int64_t( INT32_MAX ) + 1 : scenario == 47 ? int64_t( INT32_MIN ) - 1 : value.resource_modifiers.atmospheric_dust_countdown );
 				if ( scenario == 48 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( value.resource_modifiers.solar_ordinary ); }
 				if ( scenario == 49 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( value.resource_modifiers.solar_upkeep ); }
-				if ( scenario == 50 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( scenario >= 51 || value.resource_modifiers.planetary_governor.has_value() ); }
-				if ( scenario >= 51 && scenario != 54 ) { raw.WriteInt( scenario == 51 ? 0 : scenario == 52 ? 8 : INT64_MAX ); }
+				if ( scenario == 50 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( ( scenario >= 51 && scenario <= 54 ) || value.resource_modifiers.planetary_governor.has_value() ); }
+				if ( scenario >= 51 && scenario <= 53 ) { raw.WriteInt( scenario == 51 ? 0 : scenario == 52 ? 8 : INT64_MAX ); }
 				else if ( value.resource_modifiers.planetary_governor ) { raw.WriteInt( *value.resource_modifiers.planetary_governor ); }
 			}
 			types::Buffer bytes;
@@ -3494,9 +3564,31 @@ public:
 					world_snapshot::ReadRandomState( input ); const auto turn = world_snapshot::ReadTurnState( input, destination.m_state->m_slots->GetSlots() );
 					destination.m_game.ReadSimulationState( input, turn.id );
 				} catch ( const std::runtime_error& ) { rejected = true; }
-				GT_ASSERT( rejected == ( scenario < 11 || scenario >= 17 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
+				GT_ASSERT( rejected == ( scenario < 11 || ( scenario >= 17 && scenario < 55 ) ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
 			} );
 			GT_ASSERT( prefix_check.empty(), "runtime prefix: " + prefix_check );
+			if ( scenario < 55 ) { bytes.WriteBool( false ); } // explicit unavailable resource policy
+			else {
+				using Policy = map::GlsmacResourceMapPolicy;
+				const auto policy_offset = bytes.lenw;
+				if ( scenario == 60 ) { bytes.WriteInt( 1 ); }
+				else if ( scenario != 61 ) {
+					bytes.WriteBool( true ); auto policy = Policy::DisplayedTerrainV1().Serialize().ToString();
+					if ( scenario == 55 || scenario == 56 ) {
+						types::Buffer replacement; replacement.WriteInt( scenario == 55 ? 2 : 1 ); replacement.WriteInt( scenario == 56 ? 0 : 1 ); policy = replacement.ToString();
+					}
+					if ( scenario == 57 ) { policy.pop_back(); }
+					if ( scenario == 58 || scenario == 59 ) { policy.assign( scenario == 58 ? 29 : 65536, 'x' ); }
+					if ( scenario == 62 ) { policy.back() ^= 1; }
+					bytes.WriteString( policy );
+				}
+				// Pin the failure to the real bounded policy reader, rather than
+				// letting a later incomplete map hide a missing validation check.
+				auto policy_input = types::Buffer( bytes.ToString().substr( policy_offset ) );
+				bool policy_rejected = false;
+				try { Policy::ReadOptional( policy_input, true ); } catch ( const std::runtime_error& ) { policy_rejected = true; }
+				GT_ASSERT( policy_rejected, "invalid map policy passed prefix " + std::to_string( scenario ) );
+			}
 			// The remaining cases have a valid runtime and reach the actual map
 			// frame/accepted-dimensions checks, still before Map construction.
 			if ( scenario == 12 ) { bytes.WriteInt( 0 ); }
@@ -3526,7 +3618,7 @@ public:
 		GT_OK();
 	}
 
-	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); }
+	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); game::backend::map::GlsmacResourceMapPolicy::ReadOptional( input, m_state->m_settings.global.GetRulesetId() == "smac" ); }
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
 	void SetSnapshotTurn( const size_t turn ) { m_game.m_current_turn.AdvanceTurn( turn ); }
 	void EnableTurnPlayers() {
@@ -3551,8 +3643,9 @@ public:
 		const auto random = game::backend::world_snapshot::ReadRandomState( buffer );
 		const auto turn = game::backend::world_snapshot::ReadTurnState( buffer, m_game.GetState()->m_slots->GetSlots() );
 		auto simulation = m_game.ReadSimulationState( buffer, turn.id );
+		const auto map_policy = game::backend::map::GlsmacResourceMapPolicy::ReadOptional( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
 		const auto map = buffer.ReadString();
-		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ) );
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ), map_policy );
 	}
 	void CompleteWorldRestore( GSE_CALLABLE, const bool dispatch_native_failure = false ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
@@ -4050,6 +4143,8 @@ void ConventionalUnitFixture::GameplayRandom( game::backend::SmacGameplayRandomS
 void ConventionalUnitFixture::RetainedPlanet( int32_t retained, int32_t current ) { fixture->ConventionalPlanet( retained, current ); }
 void ConventionalUnitFixture::MovementCapability( game::backend::faction::SmacSimulationState::MovementCapability value ) { fixture->ConventionalCapability( value ); }
 void ConventionalUnitFixture::MoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller ) { fixture->ConventionalMoveEvent( GSE_CALL, unit, tile, caller ); }
+std::string CheckResourceMapPolicyBackend( const int scenario ) { BackendFixture fixture; return fixture.CheckResourceMapPolicy( scenario ); }
+
 game::backend::Game* ConventionalUnitFixture::Game() const { return fixture->GetGame(); }
 std::string ConventionalUnitFixture::Run( const std::function< std::string( GSE_CALLABLE ) >& check ) { return fixture->WithEngineGameScriptValues( check ); }
 Value* ConventionalUnitFixture::Script( GSE_CALLABLE, const std::string& path ) { return fixture->RunScript( GSE_CALL, path ); }

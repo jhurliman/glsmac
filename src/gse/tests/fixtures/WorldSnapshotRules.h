@@ -124,6 +124,7 @@ inline types::Buffer SpecialistHeader( const std::string& id, const bool present
 inline std::vector< std::pair< std::string, std::string > > InvalidSpecialistHeaders( const std::string& id ) {
 	std::vector< std::pair< std::string, std::string > > result;
 	result.emplace_back( "old V16", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 16 ).ToString() );
+	result.emplace_back( "old V17", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 17 ).ToString() );
 	const auto valid = smac_rules_fixture::Specialists().Serialize().ToString();
 	result.emplace_back( "wrong presence", SpecialistHeader( id, id != "smac", valid ).ToString() );
 	if ( id != "smac" ) { return result; }

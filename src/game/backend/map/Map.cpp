@@ -646,8 +646,11 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 }
 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
+	m_resource_policy.reset();
 	auto* random = m_game->GetRandom();
-	generator::SimplePerlin generator( m_game, random );
+	const auto policy = m_game->GetState()->m_settings.global.GetRulesetId() == "smac"
+		? std::optional< GlsmacResourceMapPolicy >( GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
+	generator::SimplePerlin generator( m_game, random, policy );
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
@@ -683,6 +686,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 		m_tiles = nullptr;
 		return EC_ABORTED;
 	}
+	m_resource_policy = policy; // publish only after successful, uncancelled generation
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
@@ -696,6 +700,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 }
 
 const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
+	m_resource_policy.reset(); // raw/imported tile payloads never infer a policy
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}

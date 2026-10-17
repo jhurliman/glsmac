@@ -24,6 +24,7 @@
 #include "game/backend/turn/Turn.h"
 #include "util/random/Types.h"
 #include "WorldSnapshotTurn.h"
+#include "map/GlsmacResourceMapPolicy.h"
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
 #include "State.h"
@@ -517,7 +518,7 @@ private:
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
-	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation );
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy );
 	void ResetGame();
 	void ClearUntransferredMapData();
 	struct DetachedMapPresentation;

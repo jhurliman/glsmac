@@ -8,6 +8,7 @@
 #include "gse/GCWrappable.h"
 
 #include "Types.h"
+#include "GlsmacResourceMapPolicy.h"
 #include "common/MTTypes.h"
 #include "game/backend/map/tile/Types.h"
 #include "types/texture/Types.h"
@@ -132,6 +133,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void RemoveTerrainSpriteActorInstance( const std::string& key, const size_t instance_id );
 
 	Game* const GetGame() const;
+	const std::optional< GlsmacResourceMapPolicy >& GetResourcePolicy() const { return m_resource_policy; }
 
 	WRAPDEFS_PTR( Map )
 
@@ -172,6 +174,7 @@ private:
 
 	Game* m_game = nullptr;
 
+	std::optional< GlsmacResourceMapPolicy > m_resource_policy;
 	tile::Tiles* m_tiles = nullptr;
 	tile::Tile* m_selected_tile = nullptr;
 	MapState* m_map_state = nullptr;

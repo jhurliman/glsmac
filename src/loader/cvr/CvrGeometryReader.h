@@ -48,4 +48,21 @@ public:
 	static CvrGeometry Read( const std::vector< uint8_t >& bytes );
 };
 
+// Owned simple linked detail profile. Original flags, remaining-chain size,
+// local extent and records remain intact. Grouped/terminal chains are excluded.
+class CvrSimpleDetailChain {
+public:
+	static constexpr size_t MAX_LEVELS = 64; // Port resource policy.
+	static constexpr size_t MAX_RECORDS = 1024 * 1024;
+	// Validates the complete chain before allocating result storage.
+	static CvrSimpleDetailChain Read( const std::vector< uint8_t >& bytes );
+	const std::vector< CvrGeometry >& Levels() const { return m_levels; }
+	// Exact product of supplied finite binary32 scale and each positive scalar.
+	// Zero/negative scales are diagnostic inputs, not renderer zoom admission.
+	size_t Select( uint32_t scale_bits ) const;
+private:
+	CvrSimpleDetailChain() = default;
+	std::vector< CvrGeometry > m_levels;
+};
+
 }

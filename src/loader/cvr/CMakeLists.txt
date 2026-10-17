@@ -13,5 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/ScoutView.cpp
 	${PWD}/CvrScoutRenderer.cpp
 	${PWD}/CvrScoutTexture.cpp
+	${PWD}/CvrActorMaterial.cpp
+	${PWD}/CvrSpartanRoverRenderer.cpp
 
 	PARENT_SCOPE )

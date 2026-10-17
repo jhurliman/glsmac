@@ -3,38 +3,56 @@
 #include "CvrFrameAssembler.h"
 #include "CvrBasisConverter.h"
 #include "CvrPaletteReader.h"
+#include "CvrActorMaterial.h"
 #include "ScoutArithmetic.h"
 #include "ScoutLighting.h"
 #include "ScoutView.h"
 
 #include <algorithm>
 #include <cstring>
+#include <optional>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 
 namespace loader::cvr {
 
 struct CvrScoutRenderer::Assets {
 	std::shared_ptr< const CvrFrameSource > frames;
-	std::array< std::vector< CvrGeometry >, 2 > geometry;
-	std::array< CvrPalette, 2 > palettes;
+	using Geometry = std::variant< CvrGeometry, CvrSimpleDetailChain >;
+	std::vector< std::vector< Geometry > > geometry;
+	std::vector< CvrPalette > palettes;
+	std::optional< std::array< CvrPalette::Color, 256 > > software_colors;
 	scout::LightingTable lighting;
 };
 
 CvrScoutRenderer::CvrScoutRenderer( std::shared_ptr< const Assets > assets ) : m_assets( std::move( assets ) ) {}
 
 CvrScoutRenderer CvrScoutRenderer::Load( const std::string_view infantry, const std::string_view reactor ) {
+	return LoadParts( { infantry, reactor }, nullptr );
+}
+
+CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const CvrActorMaterial* material ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
-	if ( infantry.size() > MAX_ASSET_BYTES || reactor.size() > MAX_ASSET_BYTES ) {
-		throw std::invalid_argument( "CVR Scout: asset exceeds adapter budget" );
+	size_t total_bytes = 0;
+	for ( const auto bytes : parts ) {
+		if ( bytes.size() > MAX_ASSET_BYTES || bytes.size() > 64 * 1024 * 1024 - total_bytes ) {
+			throw std::invalid_argument( "CVR idle composition: asset exceeds adapter budget" );
+		}
+		total_bytes += bytes.size();
 	}
 	auto owned = std::make_shared< Assets >();
+	owned->geometry.resize( parts.size() ); owned->palettes.resize( parts.size() );
+	if ( material ) { owned->software_colors = material->colors; }
 	std::vector< CvrScene > scenes;
 	size_t object_count = 0, group_count = 0, record_count = 0;
-	for ( const auto bytes : { infantry, reactor } ) {
+	for ( const auto bytes : parts ) {
 		const auto index = scenes.size();
 		const auto container = CvrContainerReader::Read( bytes );
 		owned->palettes[ index ] = CvrPaletteReader::Read( container );
+		// Fixed Speeder composition: only VGMCP and VBP use the generated actor
+		// material. All other parts retain their own decoded shade lookups.
+		if ( material && ( index == 2 || index == 4 ) ) { owned->palettes[ index ].shades = material->shades; }
 		auto scene = CvrSceneReader::Read( container );
 		if ( scene.objects.size() > CvrFrameAssembler::CAPACITY - object_count ) {
 			throw std::invalid_argument( "CVR Scout: complete composition exceeds frame budget" );
@@ -44,18 +62,28 @@ CvrScoutRenderer CvrScoutRenderer::Load( const std::string_view infantry, const 
 			if ( !object.voxel_data || object.frames.empty() || object.frames[ 0 ].flags != 0 ) {
 				throw std::invalid_argument( "CVR Scout: missing geometry or unsupported idle frame" );
 			}
-			auto geometry = CvrGeometryReader::Read( *object.voxel_data );
-			if ( ( geometry.flags != 8 && geometry.flags != 10 ) || geometry.groups.size() > CvrIndexedRasterizer::MAX_DRAWS - group_count ) {
-				throw std::invalid_argument( "CVR Scout: unsupported geometry flags or excessive groups" );
-			}
-			group_count += geometry.groups.size();
-			for ( const auto& group : geometry.groups ) {
-				if ( ( group.header && group.header->flags != 0 ) || group.records.size() > CvrIndexedRasterizer::MAX_RECORDS - record_count ) {
-					throw std::invalid_argument( "CVR Scout: unsupported group flags or excessive records" );
+			const auto account = [ & ]( const CvrGeometry& geometry ) {
+				if ( geometry.groups.size() > CvrIndexedRasterizer::MAX_DRAWS - group_count ) { throw std::invalid_argument( "CVR idle composition: excessive groups" ); }
+				group_count += geometry.groups.size();
+				for ( const auto& group : geometry.groups ) {
+					if ( ( group.header && group.header->flags != 0 ) || group.records.size() > CvrIndexedRasterizer::MAX_RECORDS - record_count ) {
+						throw std::invalid_argument( "CVR idle composition: unsupported group flags or excessive records" );
+					}
+					record_count += group.records.size();
 				}
-				record_count += group.records.size();
+			};
+			if ( material && index == 8 ) {
+				// VLIGHTS retains every simple level, including continuation flags.
+				// Selection happens using each draw's actual global scale.
+				auto chain = CvrSimpleDetailChain::Read( *object.voxel_data );
+				for ( const auto& level : chain.Levels() ) { account( level ); }
+				owned->geometry[ index ].emplace_back( std::move( chain ) );
+			} else {
+				auto geometry = CvrGeometryReader::Read( *object.voxel_data );
+				if ( geometry.flags != 8 && geometry.flags != 10 ) { throw std::invalid_argument( "CVR idle composition: unsupported geometry flags" ); }
+				account( geometry );
+				owned->geometry[ index ].emplace_back( std::move( geometry ) );
 			}
-			owned->geometry[ index ].push_back( std::move( geometry ) );
 		}
 		scenes.push_back( std::move( scene ) );
 	}
@@ -77,9 +105,13 @@ template< size_t N > std::array< uint32_t, N > Bits( const std::array< float, N 
 
 CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	using namespace scout;
-	const auto view = MakeView( input );
-	const auto frames = CvrFrameAssembler::Assemble( m_assets->frames,
-		{ { 0, 0, { -400, 200, 0 } }, { 1, 0, { -400, 200, 0 } } } );
+	const auto view = MakeView( input, m_assets->software_colors ? IdleProfile::SpartanSpeeder : IdleProfile::Infantry );
+	std::vector< CvrFrameSelection > requests;
+	// Speeder assembly uses each part's asset location directly. The Infantry
+	// attachment offset belongs only to its distinct VI/reactor composition.
+	const std::array< float, 3 > offset = m_assets->software_colors ? std::array< float, 3 >{ 0, 0, 0 } : std::array< float, 3 >{ -400, 200, 0 };
+	for ( size_t i = 0; i < m_assets->geometry.size(); ++i ) { requests.push_back( { i, 0, offset } ); }
+	const auto frames = CvrFrameAssembler::Assemble( m_assets->frames, requests );
 	if ( frames.first_omitted ) { throw std::invalid_argument( "CVR Scout: incomplete frame assembly" ); }
 	CvrScoutImage result{ { 256, 256, 256, std::vector< uint8_t >( 256 * 256, 9 ),
 		std::vector< uint16_t >( 256 * 256, 65535 ) }, {}, view.target_anchor, 0, 0, 0 };
@@ -90,8 +122,11 @@ CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	for ( const auto& palette : m_assets->palettes ) {
 		for ( size_t i = palette.first; i < palette.end; ++i ) { colors[ i ] = palette.colors[ i ]; defined[ i ] = true; }
 	}
+	if ( m_assets->software_colors ) { colors = *m_assets->software_colors; defined.fill( true ); }
 	for ( const auto& frame : frames.records ) {
-		const auto& geometry = m_assets->geometry[ frame.scene_index ][ frame.object_index ];
+		const auto& source = m_assets->geometry[ frame.scene_index ][ frame.object_index ];
+		const auto* chain = std::get_if< CvrSimpleDetailChain >( &source );
+		const auto& geometry = chain ? chain->Levels()[ chain->Select( view.scales[ 0 ] ) ] : std::get< CvrGeometry >( source );
 		auto matrix = MultiplyMatrix( view.projection, Bits( frame.value.matrix ) );
 		for ( auto& component : matrix ) { component = Store( Multiply( Decode( component ), Decode( geometry.scalar_bits ) ) ); }
 		const auto location = AddVector( MultiplyVector( view.projection, Bits( frame.value.location ) ), view.translation );
@@ -118,7 +153,7 @@ CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 			std::copy( origin_bits.begin(), origin_bits.end(), origin_input.begin() + 6 );
 			const auto origin = CvrBasisConverter::Convert( origin_input )[ 2 ];
 			auto drawn = CvrIndexedRasterizer::DrawModuloDepth( result.indexed, lookups,
-				{ { &group.records, true, footprint, basis, origin } } );
+				{ { &group.records, ( geometry.flags & 8 ) != 0, footprint, basis, origin } } );
 			result.indexed = std::move( drawn.surface );
 			++result.draw_count;
 			result.processed_records += drawn.processed_records;

@@ -10,9 +10,9 @@ import json
 import struct
 import subprocess
 
-REPORT_HASH = 'e087d08630fa8ac9b7ad2b200c183bbc385bd53848c9f3c1488f512544a0fb2a'
+REPORT_HASH = '9e10d7d6f3a0ab8b919b5bafc130fe4dbe85aa00fb312a6da5f61f270cd24662'
 EXE_HASH = '0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01'
-SOURCE_HASH = '293b1b4a8dbf0725e8a55104f09f897af31079a26c2e4e35a336b68699b89c03'
+SOURCE_HASH = 'e9696bf1cfc6a9b88b458ca66866ceea9b3a0ea12a5ded97351fba0866c70db2'
 
 
 def words(value):
@@ -28,7 +28,7 @@ def main():
     if hashlib.sha256(raw).hexdigest() != REPORT_HASH:
         raise ValueError('Original report hash mismatch')
     report = json.loads(raw)
-    if report['executable_sha256'] != EXE_HASH or report['probe_sha256'] != SOURCE_HASH or len(report['cases']) != 25:
+    if report['executable_sha256'] != EXE_HASH or report['probe_sha256'] != SOURCE_HASH or len(report['cases']) != 44:
         raise ValueError('Unexpected original evidence profile')
     requests, expected = [], []
     for case in report['cases']:

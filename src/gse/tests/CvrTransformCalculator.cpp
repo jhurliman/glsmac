@@ -122,6 +122,68 @@ void AddCvrTransformCalculatorTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( CvrTransformCalculator::Calculate( input ).location_bits[ 0 ] == 0, "final signed subtraction changed rounding" );
 		GT_OK();
 	} );
+	task->AddTest( "CVR transform classifies rounded zero and minimum-normal stores", GT() {
+		struct Case { uint32_t left; uint32_t right; uint32_t expected; };
+		const Case cases[] = {
+			{ 0x0d800000, 0x0d800000, 0 }, // 2^-200: shifts beyond the significand width
+			{ 0x01000000, 0x01000000, 0 }, // 2^-250: shift beyond the 64-bit storage
+			{ 0x0d800000, 0x267fffff, 0 }, // immediately below the 2^-150 midpoint
+			{ 0x0d800000, 0x26800000, 0 }, // midpoint rounds to even +zero
+			{ 0x00800000, 0x3f7fffff, 0x00800000 }, // midpoint below minimum normal
+			{ 0x80800000, 0x3f7fffff, 0x80800000 },
+			{ 0x00800000, 0x3f800000, 0x00800000 },
+			{ 0x80800000, 0x3f800000, 0x80800000 },
+		};
+		RoundingGuard restore;
+		for ( const int mode : { FE_TONEAREST, FE_DOWNWARD, FE_UPWARD, FE_TOWARDZERO } ) {
+			GT_ASSERT( std::fesetround( mode ) == 0, "test platform cannot set rounding mode" );
+			for ( const auto& c : cases ) {
+				for ( std::size_t row = 0; row < 3; ++row ) {
+					for ( std::size_t col = 0; col < 3; ++col ) {
+						CvrTransformInput input{};
+						input.transform_bits[ row * 3 ] = c.left;
+						input.frame_matrix_bits[ col ] = c.right;
+						input.scalar_bits = Bits( 1 );
+						GT_ASSERT( !Rejected( input ), "rounded positive zero or minimum-normal product rejected" );
+						const auto product = CvrTransformCalculator::Calculate( input );
+						GT_ASSERT( product.matrix_bits[ row * 3 + col ] == c.expected, "matrix-product store boundary changed" );
+						if ( !( c.right & 0x80000000U ) ) {
+							input.frame_matrix_bits[ col ] = Bits( 1 ); input.scalar_bits = c.right;
+							GT_ASSERT( CvrTransformCalculator::Calculate( input ).matrix_bits[ row * 3 + col ] == c.expected,
+								"scalar store boundary changed" );
+						}
+					}
+					CvrTransformInput location{};
+					location.scalar_bits = Bits( 1 ); location.transform_bits[ row * 3 ] = c.left;
+					location.frame_location_bits[ 0 ] = c.right;
+					// Cancel a tiny normal stored result before the independent origin
+					// half-shift exactness check. Zero needs no cancellation.
+					location.translation_bits[ row ] = c.expected ? c.expected ^ 0x80000000U : 0;
+					GT_ASSERT( CvrTransformCalculator::Calculate( location ).location_bits[ row ] == 0,
+						"location store was rejected or skipped before cancellation" );
+				}
+			}
+			GT_ASSERT( std::fegetround() == mode, "boundary conversion changed host rounding" );
+		}
+		CvrTransformInput shift64{};
+		shift64.scalar_bits = Bits( 1 );
+		shift64.transform_bits = { 0x0d800000, 0x0d800000, 0, 0, 0, 0, 0, 0, 0 };
+		shift64.frame_matrix_bits = { 0x26800000, 0, 0, 0x87000000, 0, 0, 0, 0, 0 };
+		GT_ASSERT( CvrTransformCalculator::Calculate( shift64 ).matrix_bits[ 0 ] == 0,
+			"2^-150 minus 2^-213 did not round to +zero" );
+		shift64.frame_matrix_bits[ 3 ] = 0x07000000;
+		GT_ASSERT( Rejected( shift64 ), "2^-150 plus 2^-213 rounded subnormal accepted" );
+		for ( const auto& c : { Case{ 0x0d800000, 0x26800001, 0 }, // rounds to nonzero subnormal
+			Case{ 0x8d800000, 0x26800000, 0 }, Case{ 0x8d800000, 0x0d800000, 0 }, // generated -zero
+			Case{ 0x00800000, 0x3f7ffffe, 0 }, Case{ 0x80800000, 0x3f7ffffe, 0 } } ) {
+			CvrTransformInput input{};
+			input.scalar_bits = Bits( 1 ); input.transform_bits[ 0 ] = c.left; input.frame_matrix_bits[ 0 ] = c.right;
+			GT_ASSERT( Rejected( input ), "unsupported rounded subnormal or negative zero accepted" );
+			input.scalar_bits = c.right; input.frame_matrix_bits[ 0 ] = Bits( 1 );
+			GT_ASSERT( Rejected( input ), "unsupported scalar store accepted" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "CVR transform rejects exceptional input in every binary32 field", GT() {
 		for ( const uint32_t invalid : { 0x80000000U, 0x7f800000U, 0xff800000U, 0x7fc00001U, 0x7f800001U } ) {
 			for ( std::size_t field = 0; field < 25; ++field ) {

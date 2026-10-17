@@ -6,6 +6,7 @@
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "CvrFrameAssembler.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -55,6 +56,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
+		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
 		task->AddTest(
 			"test if tests work",

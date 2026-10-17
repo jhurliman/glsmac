@@ -44,7 +44,7 @@ bool HasConfiguredTechnology( const settings::SmacTechnologyReference& reference
 }
 
 struct FacilityRoles {
-	bool headquarters = false, recycling = false, tree_farm = false, hybrid_forest = false, pressure_dome = false;
+	bool headquarters = false, recycling = false, tree_farm = false, hybrid_forest = false, pressure_dome = false, aerospace = false;
 };
 
 FacilityRoles ReadFacilityRoles( const base::Base& base, const base::BaseManager& manager ) {
@@ -66,6 +66,7 @@ FacilityRoles ReadFacilityRoles( const base::Base& base, const base::BaseManager
 			case 13: result.tree_farm = true; break;
 			case 14: result.hybrid_forest = true; break;
 			case 26: result.pressure_dome = true; break;
+			case 29: result.aerospace = true; break;
 			default: break; // no queried role in these measured resource routines
 		}
 	}
@@ -78,6 +79,29 @@ void RequireResourceDefinitions( const resource::ResourceManager& manager ) {
 		if ( !definitions.count( id ) ) { throw std::runtime_error( "Canonical resources require the explicit NUTRIENTS/MINERALS/ENERGY port IDs" ); }
 	}
 }
+}
+
+std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& evaluating_base ) const {
+	ValidateCurrentSimulation();
+	const auto found = m_bm->GetBases().find( evaluating_base.m_id );
+	if ( evaluating_base.GetGame() != this || found == m_bm->GetBases().end() || found->second != &evaluating_base ) {
+		throw std::runtime_error( "Canonical orbital intake requires a registered Base in this world" );
+	}
+	const auto context = evaluating_base.GetSmacResourceContext();
+	if ( !m_simulation || m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
+		throw std::runtime_error( "Canonical orbital intake requires the explicit no-project campaign" );
+	}
+	bool aerospace = false;
+	for ( const auto& entry : m_bm->GetBases() ) {
+		if ( !entry.second || entry.second->m_id != entry.first ) { throw std::runtime_error( "Invalid canonical base registry" ); }
+		const auto roles = ReadFacilityRoles( *entry.second, *m_bm );
+		if ( entry.second == &evaluating_base ) { aerospace = roles.aerospace; }
+	}
+	// No Space Elevator follows from the saved campaign admission, not from
+	// missing project metadata. Registered project/orbital facility rows reject.
+	evaluating_base.ValidateSmacAllocation();
+	if ( evaluating_base.m_pops.size() > 127 ) { throw std::runtime_error( "Orbital intake population outside 0..127" ); }
+	return m_simulation->value.GetSatelliteCounts( context.owner_simulation_id ).Intake( static_cast< int32_t >( evaluating_base.m_pops.size() ), aerospace, false );
 }
 
 std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase ) const {

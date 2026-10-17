@@ -385,6 +385,7 @@ public:
 	enum class ResourceQueryPhase { Ordinary, Upkeep };
 	std::array< int64_t, 3 > GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& base, ResourceQueryPhase phase ) const;
 	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
+	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
 	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );

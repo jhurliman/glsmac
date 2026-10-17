@@ -6,6 +6,8 @@
 #include "game/backend/SmacMovementHistory.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "game/backend/RosterRecords.h"
+#include <array>
+#include <map>
 
 namespace game::backend::faction {
 
@@ -33,6 +35,17 @@ struct SmacGlobalResourceModifiers {
 	bool operator==( const SmacGlobalResourceModifiers& other ) const noexcept;
 };
 
+// Current faction assets, ordered nutrients/minerals/energy. Defense satellites
+// do not contribute intake and are outside this record. Signed diagnostic
+// values restore exactly; a calculation rejects an unmeasured overflow path.
+struct SmacSatelliteCounts {
+	std::array< int32_t, 3 > resources;
+	// Explicit GLSMAC new-campaign asset initialization, not a recovered reset.
+	static SmacSatelliteCounts NewWorld() noexcept { return { { 0, 0, 0 } }; }
+	std::array< int32_t, 3 > Intake( int32_t population, bool aerospace_complex, bool owns_space_elevator ) const;
+	bool operator==( const SmacSatelliteCounts& other ) const noexcept { return resources == other.resources; }
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -49,6 +62,9 @@ struct SmacSimulationState {
 	MovementCapability movement_capability;
 	SmacGlobalResourceModifiers resource_modifiers;
 	std::optional< SmacMovementHistory > movement_history;
+	// Exactly one record for each roster simulation ID; absence is not zero.
+	std::map< int32_t, SmacSatelliteCounts > satellites;
+	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;
 	const SmacSimulationParticipant* FindSlot( size_t slot ) const;

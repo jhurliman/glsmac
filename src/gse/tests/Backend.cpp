@@ -3418,7 +3418,10 @@ public:
 			value.resource_modifiers = { -7, true, false, 7 };
 			for ( size_t i = 0; i < 7; ++i ) { value.gameplay_random.NextSharedLow16(); value.gameplay_random.NextCrtRaw15(); }
 			const int32_t ids[] = { 7, 2, 5 };
+			value.satellites.clear();
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
+				const auto count = static_cast< int32_t >( i );
+				value.satellites.emplace( ids[ i ], faction::SmacSatelliteCounts{ { count + 3, count + 5, count + 7 } } );
 				value.roster[ i ].simulation_id = ids[ i ];
 				auto& social = value.social.factions[ i ]; social.admission.simulation_id = ids[ i ];
 				social.current.fill( INT32_MIN + static_cast< int32_t >( i ) ); social.intrinsic->fill( INT32_MAX ); social.retained->fill( -4 );
@@ -3621,7 +3624,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 6 : 7 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 7 : 8 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -3686,6 +3689,8 @@ public:
 					raw.WriteString( history );
 				}
 			}
+			raw.WriteInt( value.satellites.size() );
+			for ( const auto& entry : value.satellites ) { raw.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { raw.WriteInt( count ); } }
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }

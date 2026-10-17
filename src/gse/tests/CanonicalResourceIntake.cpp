@@ -157,6 +157,35 @@ std::string CanonicalResourceSnapshot( Game* game, const std::string& bytes ) {
 }
 
 void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "Canonical orbital intake consumes saved owner assets and registered Aerospace role", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source(), "GAIANS" );
+		std::string world; std::array< int32_t, 3 > expected{ 3, 4, 0 };
+		const auto prepared = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); Define( game ); auto* bm = game->GetBM();
+			bm->DefineFacility( new FacilityDef( "LAUNCH_SITE", "Misleading display", "", 0, {}, 29 ) );
+			auto* owner = &game->GetState()->m_slots->GetSlot( 0 ); Base::pops_t pops;
+			for ( size_t i = 1; i <= 4; ++i ) { pops.emplace( i, Pop( nullptr, i, bm->GetPopDef( "SPECIAL" ), 0 ) ); }
+			auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Orbital", {}, pops, 5, 0, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u } );
+			bm->SpawnBase( GSE_CALL, base );
+			GT_ASSERT( game->GetCanonicalOrbitalIntake( *base ) == ( std::array< int32_t, 3 >{ 0, 0, 0 } ), "actual new-world producer did not initialize satellite assets" );
+			fixture.ResourceState( []( auto& state ) { state.satellites.at( 1 ) = { { 3, 7, 0 } }; } );
+			GT_ASSERT( game->GetCanonicalOrbitalIntake( *base ) == ( std::array< int32_t, 3 >{ 2, 4, 0 } ), "actual owner counts or population cap ignored" );
+			base->m_facilities.emplace( "LAUNCH_SITE", bm->GetFacilityDef( "LAUNCH_SITE" ) );
+			const auto before = Base::Serialize( base ).ToString(); const auto pair = fixture.GameplayRandom();
+			GT_ASSERT( game->GetCanonicalOrbitalIntake( *base ) == expected && game->GetCanonicalOrbitalIntake( *base ) == expected, "Aerospace positional role ignored or query consumed assets" );
+			base->m_facilities.emplace( "HEADQUARTERS", bm->GetFacilityDef( "HEADQUARTERS" ) );
+			const bool rejected = Rejects( [ & ] { game->GetCanonicalOrbitalIntake( *base ); } ); base->m_facilities.erase( "HEADQUARTERS" );
+			GT_ASSERT( rejected && Base::Serialize( base ).ToString() == before && fixture.GameplayRandom() == pair, "missing facility role accepted or orbital query mutated authority/RNG" );
+			world = fixture.Snapshot(); GT_OK();
+		} ); if ( !prepared.empty() ) { return prepared; }
+		ConventionalUnitFixture destination; destination.ConfigureResources( Source(), "GAIANS" );
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.Restore( GSE_CALL, world, true ); const auto* base = destination.Game()->GetBM()->GetBase( 701 );
+			const auto before = destination.Snapshot();
+			GT_ASSERT( base && destination.Game()->GetCanonicalOrbitalIntake( *base ) == expected, "actual deferred restore reset satellite assets or lost Aerospace role" );
+			GT_ASSERT( destination.Snapshot() == before, "restored orbital query mutated the world" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "Canonical resource intake actual callbacks compose seven first-worker contexts", []( GSE*, context::Context* ) -> std::string {
 		// FIRST-WORKER-CONTEXT-001 reduced literal outcomes; synthetic host source
 		// and explicit existing assignment feed real Base/Tile callbacks. This is

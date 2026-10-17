@@ -1,19 +1,34 @@
 #include "SmacSimulationState.h"
 
 #include <set>
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 7;
+constexpr int64_t VERSION = 8;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC simulation integer outside signed32" ); }
 	return static_cast< int32_t >( value );
 }
+}
+
+std::array< int32_t, 3 > SmacSatelliteCounts::Intake( int32_t population, bool aerospace_complex, bool owns_space_elevator ) const {
+	if ( population < 0 || population > 127 ) { throw std::invalid_argument( "Orbital intake population outside 0..127" ); }
+	std::array< int32_t, 3 > result;
+	for ( size_t i = 0; i < result.size(); ++i ) {
+		auto count = resources[ i ];
+		if ( !aerospace_complex && !owns_space_elevator ) {
+			if ( count == INT32_MAX ) { throw std::invalid_argument( "Unmeasured orbital count increment overflow" ); }
+			count = ( count + 1 ) / 2; // Signed truncation, including diagnostic negatives.
+		}
+		result[ i ] = std::min( count, population );
+	}
+	return result;
 }
 
 SmacGlobalResourceModifiers SmacGlobalResourceModifiers::NewWorld() noexcept { return { 0, false, false, {} }; }
@@ -43,7 +58,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	technology.Validate( technologies, profiles );
 	social.Validate( technologies, profiles );
 	units.Validate( technologies ); designs.Validate( units.catalog );
-	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() || roster.size() != social.factions.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
+	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() || roster.size() != social.factions.size() || roster.size() != satellites.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
 	std::array< bool, 8 > ids{};
 	std::array< bool, 7 > slots{};
 	std::set< std::string > gsids;
@@ -52,6 +67,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		if ( participant.simulation_id < 1 || participant.simulation_id > 7 || ids[ participant.simulation_id ]
 			|| participant.slot < 0 || participant.slot > 6 || slots[ participant.slot ] ) { throw std::runtime_error( "Duplicate or invalid SMAC simulation identity" ); }
 		ids[ participant.simulation_id ] = true; slots[ participant.slot ] = true;
+		if ( !satellites.count( participant.simulation_id ) ) { throw std::runtime_error( "Missing SMAC faction satellite assets" ); }
 		if ( ( participant.slot == 0 && participant.role != roster::Role::Single && participant.role != roster::Role::Host )
 			|| ( participant.slot != 0 && participant.role != roster::Role::Player ) ) { throw std::runtime_error( "Invalid SMAC simulation controller role" ); }
 		for ( const auto* value : { &participant.gsid, &participant.faction_id } ) {
@@ -68,7 +84,17 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites; }
+
+SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
+	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
+	for ( const auto& owner : roster ) {
+		if ( !satellites.count( owner.simulation_id ) ) { throw std::runtime_error( "Missing SMAC faction satellite assets" ); }
+	}
+	const auto found = satellites.find( simulation_id );
+	if ( simulation_id < 1 || simulation_id > 7 || found == satellites.end() ) { throw std::runtime_error( "SMAC faction satellite assets are unavailable" ); }
+	return found->second;
+}
 
 const SmacSimulationParticipant* SmacSimulationState::FindSlot( size_t slot ) const {
 	for ( const auto& participant : roster ) { if ( static_cast< size_t >( participant.slot ) == slot ) { return &participant; } }
@@ -97,6 +123,11 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	if ( resource_modifiers.planetary_governor ) { buffer.WriteInt( *resource_modifiers.planetary_governor ); }
 	buffer.WriteBool( movement_history.has_value() );
 	if ( movement_history ) { buffer.WriteString( movement_history->Serialize() ); }
+	buffer.WriteInt( satellites.size() );
+	for ( const auto& entry : satellites ) {
+		buffer.WriteInt( entry.first );
+		for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); }
+	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -131,6 +162,14 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		if ( buffer.ReadBool() ) { governor = ReadInt32( buffer ); }
 		SmacSimulationState result( random, static_cast< MovementCapability >( capability ), { dust, ordinary, upkeep, governor } );
 		if ( buffer.ReadBool() ) { result.movement_history = SmacMovementHistory::Deserialize( buffer.ReadString( SmacMovementHistory::MAX_WIRE_BYTES ) ); }
+		const auto satellite_owners = buffer.ReadInt();
+		if ( satellite_owners < 1 || satellite_owners > 7 || satellite_owners != count ) { throw std::runtime_error( "Invalid SMAC satellite owner count" ); }
+		for ( int64_t i = 0; i < satellite_owners; ++i ) {
+			const auto id = ReadInt32( buffer );
+			SmacSatelliteCounts assets;
+			for ( auto& resource : assets.resources ) { resource = ReadInt32( buffer ); }
+			if ( id < 1 || id > 7 || !result.satellites.emplace( id, assets ).second ) { throw std::runtime_error( "Invalid or duplicate SMAC satellite owner" ); }
+		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

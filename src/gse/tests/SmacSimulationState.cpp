@@ -2,6 +2,7 @@
 
 #include "game/backend/faction/SmacSimulationState.h"
 #include "fixtures/SmacStartupSource.h"
+#include "fixtures/SmacOrbitalIntake.h"
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -15,6 +16,7 @@ using faction::SmacSimulationState;
 SmacSimulationState State() {
 	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain, faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
+	for ( const auto& owner : value.roster ) { value.satellites.emplace( owner.simulation_id, faction::SmacSatelliteCounts::NewWorld() ); }
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
 	value.social = faction::SmacSocialState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
@@ -26,10 +28,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 7 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 8 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -46,11 +48,62 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	if ( value.resource_modifiers.planetary_governor ) { buffer.WriteInt( *value.resource_modifiers.planetary_governor ); }
 	buffer.WriteBool( history || value.movement_history.has_value() );
 	if ( history || value.movement_history ) { buffer.WriteString( history ? *history : value.movement_history->Serialize() ); }
+	if ( satellites ) { return buffer.ToString() + *satellites; }
+	buffer.WriteInt( value.satellites.size() );
+	for ( const auto& entry : value.satellites ) { buffer.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); } }
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC orbital intake matches sixteen original independent resource prefixes", GT() {
+		for ( const auto& c : fixtures::ORBITAL_INTAKE ) {
+			const faction::SmacSatelliteCounts counts{ c.counts };
+			GT_ASSERT( counts.Intake( c.population, c.aerospace, c.owned_elevator ) == c.expected, "original orbital prefix differs: " + std::string( c.id ) );
+			GT_ASSERT( counts.resources == c.counts && counts.Intake( c.population, c.aerospace, c.owned_elevator ) == c.expected, "per-Base query consumed the faction assets" );
+		}
+		const faction::SmacSatelliteCounts maximum{ { INT32_MAX, INT32_MIN, 1 } };
+		GT_ASSERT( Rejects( [ & ] { maximum.Intake( 4, false, false ); } ), "unmeasured increment overflow accepted" );
+		GT_ASSERT( maximum.Intake( 4, true, false ) == ( std::array< int32_t, 3 >{ 4, INT32_MIN, 1 } ), "unused halving overflow incorrectly rejected full output" );
+		GT_ASSERT( Rejects( [ & ] { maximum.Intake( -1, true, false ); } ) && Rejects( [ & ] { maximum.Intake( 128, true, false ); } ), "unsupported population accepted" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC simulation satellite assets restore non-dense owners and exact signed counters", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		auto value = State();
+		GT_ASSERT( value.GetSatelliteCounts( 7 ).resources == ( std::array< int32_t, 3 >{ 0, 0, 0 } ), "explicit new-campaign initialization differs" );
+		value.satellites.at( 7 ) = { { 3, 7, 19 } }; value.satellites.at( 2 ) = { { INT32_MIN, -1, INT32_MAX } };
+		const auto wire = value.Serialize( technologies, profiles, units ).ToString();
+		auto restored = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
+		GT_ASSERT( restored == value && wire == Wire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "restore reset/reordered satellite assets or changed framing" );
+		auto copy = restored.GetSatelliteCounts( 7 ); copy.resources[ 0 ] = 100;
+		restored.satellites.at( 7 ).resources[ 1 ] = 99;
+		GT_ASSERT( value.GetSatelliteCounts( 7 ).resources == ( std::array< int32_t, 3 >{ 3, 7, 19 } ) && !( restored == value ), "counter copy aliases owner or equality ignores assets" );
+		GT_ASSERT( Rejects( [ & ] { value.GetSatelliteCounts( 1 ); } ), "missing owner silently became zero" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC simulation satellite suffix rejects missing duplicate and oversized records", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		const auto value = State(); const auto decode = [ & ]( const std::string& wire ) { SmacSimulationState::Deserialize( wire, technologies, profiles, units ); };
+		GT_ASSERT( Rejects( [ & ] { decode( Wire( value, 1, 7 ) ); } ), "pre-satellite SimulationV7 accepted" );
+		for ( int scenario = 0; scenario < 12; ++scenario ) {
+			types::Buffer suffix;
+			suffix.WriteInt( scenario == 0 ? -1 : scenario == 1 ? 0 : scenario == 2 ? 8 : scenario == 3 ? 1 : 2 );
+			suffix.WriteInt( scenario == 4 ? 0 : scenario == 5 ? 8 : scenario == 6 ? 3 : 2 );
+			suffix.WriteInt( scenario == 8 ? int64_t( INT32_MAX ) + 1 : scenario == 9 ? int64_t( INT32_MIN ) - 1 : 3 );
+			suffix.WriteInt( 4 ); suffix.WriteInt( 5 ); suffix.WriteInt( scenario == 7 ? 2 : 7 );
+			suffix.WriteInt( 6 ); suffix.WriteInt( 7 ); suffix.WriteInt( 8 );
+			auto raw = suffix.ToString(); if ( scenario == 10 ) { raw.clear(); } if ( scenario == 11 ) { raw.pop_back(); }
+			GT_ASSERT( Rejects( [ & ] { decode( Wire( value, SIZE_MAX, 0, nullptr, nullptr, nullptr, &raw ) ); } ), "invalid satellite suffix accepted: " + std::to_string( scenario ) );
+		}
+		for ( int scenario = 0; scenario < 3; ++scenario ) {
+			auto bad = value; bad.satellites.erase( 2 );
+			if ( scenario == 1 ) { bad.satellites.emplace( 3, faction::SmacSatelliteCounts::NewWorld() ); }
+			if ( scenario == 2 ) { bad.satellites = value.satellites; bad.satellites.emplace( 3, faction::SmacSatelliteCounts::NewWorld() ); }
+			GT_ASSERT( Rejects( [ & ] { bad.Serialize( technologies, profiles, units ); } ) && Rejects( [ & ] { bad.GetSatelliteCounts( 7 ); } ), "incomplete/extra satellite ownership accepted" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "movement history simulation optional maximum bitmap survives exact codec copy", GT() {
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
 		auto value = State();

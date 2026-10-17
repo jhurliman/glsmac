@@ -117,6 +117,9 @@ void Game::PrepareNewSimulation() {
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
 		faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
+	for ( const auto& participant : value.roster ) {
+		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
+	}
 	if ( m_active_admission && m_active_admission->generated_map ) {
 		const auto& selected = settings.map.GetSmacWorldSize();
 		if ( !selected ) { throw std::runtime_error( "Generated movement history requires accepted world geometry" ); }

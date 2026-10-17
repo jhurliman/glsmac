@@ -3,8 +3,105 @@
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
 
+#include <stdexcept>
+
 namespace loader {
 namespace txt {
+namespace {
+
+std::string Field( std::string value ) {
+	const auto first = value.find_first_not_of( " \t\r" );
+	if ( first == std::string::npos ) { return {}; }
+	return value.substr( first, value.find_last_not_of( " \t\r" ) - first + 1 );
+}
+
+std::vector< std::string > Fields( const std::string& row ) {
+	std::vector< std::string > result;
+	size_t start = 0;
+	for ( ;; ) {
+		const auto end = row.find( ',', start );
+		result.push_back( Field( row.substr( start, end == std::string::npos ? end : end - start ) ) );
+		if ( end == std::string::npos ) { return result; }
+		start = end + 1;
+	}
+}
+
+void ValidateLookupTables( const std::string& alpha ) {
+	const std::string names = "TECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO";
+	std::vector< std::string > actual;
+	for ( const auto& line : TXTLoader::ReadUniqueSection( alpha, "BONUSNAMES" ) ) {
+		auto fields = Fields( line.substr( 0, line.find( ';' ) ) );
+		// Installed continuation lines end with a comma.
+		if ( !fields.empty() && fields.back().empty() ) { fields.pop_back(); }
+		actual.insert( actual.end(), fields.begin(), fields.end() );
+	}
+	if ( actual != Fields( names ) ) { throw std::invalid_argument( "SMAC faction startup requires canonical #BONUSNAMES order" ); }
+	const auto socio = TXTLoader::ReadUniqueSection( alpha, "SOCIO" );
+	if ( socio.empty() || Fields( socio.front().substr( 0, socio.front().find( ';' ) ) ) !=
+		Fields( "ECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH" ) ) {
+		throw std::invalid_argument( "SMAC faction startup requires canonical #SOCIO axes" );
+	}
+}
+
+}
+
+std::vector< game::backend::settings::SmacFactionStartupBonus > FactionTXTLoader::ParseStartupBonuses(
+	const std::string& source, const std::string& section, const game::backend::settings::SmacTechnologyRules& technologies ) {
+	using game::backend::settings::SmacFactionStartupBonus;
+	technologies.Validate();
+	if ( source.find( '\0' ) != std::string::npos ) { throw std::invalid_argument( "NUL in SMAC faction source" ); }
+	bool found = false, active = false, header = false, bonus = false;
+	std::string bonus_line;
+	size_t start = 0;
+	while ( start < source.size() ) {
+		const auto end = source.find( '\n', start );
+		auto line = Field( source.substr( start, end == std::string::npos ? end : end - start ) );
+		start = end == std::string::npos ? source.size() : end + 1;
+		if ( line.rfind( "##", 0 ) == 0 || ( !line.empty() && line.front() == ';' ) ) { continue; }
+		line = Field( line.substr( 0, line.find( ';' ) ) );
+		if ( !line.empty() && line.front() == '#' ) {
+			active = line == "#" + section;
+			if ( active && found ) { throw std::invalid_argument( "Duplicate SMAC faction section #" + section ); }
+			found = found || active;
+			continue;
+		}
+		if ( !active || bonus ) { continue; }
+		if ( !header ) { if ( !line.empty() ) { header = true; } }
+		else { bonus_line = line; bonus = true; } // an empty bonus row is meaningful
+	}
+	if ( !found || !header || !bonus ) { throw std::invalid_argument( "Missing SMAC faction header/bonus row in #" + section ); }
+	std::vector< SmacFactionStartupBonus > result;
+	if ( bonus_line.empty() ) { return result; }
+	const auto fields = Fields( bonus_line );
+	if ( fields.size() % 2 != 0 ) { throw std::invalid_argument( "SMAC faction bonuses require complete keyword/value pairs" ); }
+	for ( size_t i = 0 ; i < fields.size() ; i += 2 ) { result.push_back( SmacFactionStartupBonus::Parse( fields[ i ], fields[ i + 1 ], technologies ) ); }
+	return result;
+}
+
+game::backend::settings::SmacFactionStartupRules FactionTXTLoader::ParseStartupRules( const std::string& alpha,
+	const StartupSource& read_source, const game::backend::settings::SmacTechnologyRules& technologies ) {
+	using game::backend::settings::SmacFactionStartupRules;
+	technologies.Validate();
+	ValidateLookupTables( alpha );
+	const auto rows = ReadUniqueSection( alpha, "FACTIONS" );
+	const auto& bindings = SmacFactionStartupRules::Bindings();
+	if ( rows.size() != bindings.size() ) { throw std::invalid_argument( "SMAC faction startup requires seven #FACTIONS rows" ); }
+	// Validate the complete host source mapping before opening any faction file.
+	for ( size_t i = 0 ; i < rows.size() ; ++i ) {
+		const auto fields = Fields( rows[ i ].substr( 0, rows[ i ].find( ';' ) ) );
+		if ( fields != std::vector< std::string >{ bindings[ i ].section, bindings[ i ].section } ) {
+			throw std::invalid_argument( "Unsupported SMAC faction filename/section binding" );
+		}
+	}
+	SmacFactionStartupRules result;
+	for ( size_t i = 0 ; i < bindings.size() ; ++i ) {
+		const auto& binding = bindings[ i ];
+		result.factions[ i ] = { binding.port_id, binding.filename, binding.section,
+			ParseStartupBonuses( read_source( binding.filename ), binding.section, technologies ) };
+	}
+	result.Validate( technologies );
+	return result;
+}
 
 const FactionTXTLoader::faction_data_t& FactionTXTLoader::GetFactionData( resource::resource_t res ) {
 	return GetFactionDataImpl( g_engine->GetResourceManager()->GetPath( res ) );

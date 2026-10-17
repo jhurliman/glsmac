@@ -125,6 +125,11 @@ Engine::Engine(
 		}
 		t_game->SetIPS( m_config->GetMaxIPS() );
 		t_game->AddModule( m_game );
+		if ( is_single_thread ) {
+			// Game borrows the scheduler-owned GLSMAC/State runtime. It must
+			// start first, but finish teardown before that runtime is destroyed.
+			t_main->StopModuleFirst( m_game );
+		}
 	}
 
 	t_main->AddModule( m_scheduler );

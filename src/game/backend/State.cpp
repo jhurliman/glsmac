@@ -37,6 +37,7 @@ State::State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMA
 	, m_glsmac( glsmac )
 	, m_slots( new slot::Slots( this ) ) {
 	NEW( m_fm, faction::FactionManager );
+ EnsureRosterEpoch();
 }
 
 State::~State() {
@@ -67,6 +68,11 @@ void State::SetGame( Game* game ) {
 void State::RetireGameCallbacks() {
 	std::lock_guard guard( m_game_session_mutex );
 	if ( m_game_session ) { m_game_session->active.store( false ); }
+}
+
+void State::RetireGameCallbacks( const game_session_t& expected_session ) {
+	std::lock_guard guard( m_game_session_mutex );
+	if ( m_game_session == expected_session && m_game_session ) { m_game_session->active.store( false ); }
 }
 
 void State::UnsetGame() {
@@ -119,16 +125,21 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
-			if ( m_connection ) {
-				m_connection->SetState( nullptr );
-				m_connection = nullptr;
-			}
-			for ( auto& player : m_players ) {
-				DELETE( player );
-			}
-			m_players.clear();
-			m_slots->Clear();
-			m_cid_slots.clear();
+			// Polling and callbacks above can queue work; only the native
+			// terminal ownership cleanup may share collection exclusion.
+			m_gc_space->WithNativeMutation( [ & ]() {
+				if ( m_connection ) {
+					m_connection->SetState( nullptr );
+					m_connection = nullptr;
+				}
+				RetireRosterEpoch();
+				for ( auto& player : m_players ) {
+					DELETE( player );
+				}
+				m_players.clear();
+				m_slots->Clear();
+				m_cid_slots.clear();
+			} );
 		}
 	}
 }
@@ -144,6 +155,7 @@ bool State::IsSlave() {
 }
 
 void State::AddPlayer( Player* player ) {
+ EnsureRosterEpoch(); player->BindRoster(this, m_roster_epoch);
 	Log( "adding player: " + player->GetPlayerName() );
 	ASSERT( m_players.find( player ) == m_players.end(), "duplicate player add" );
 	m_players.insert( player );
@@ -189,8 +201,7 @@ void State::SetConnection( connection::Connection* connection ) {
 	//std::lock_guard guard( m_connection_mutex );
 	ASSERT( !m_connection, "state connection already set" );
 	ASSERT( connection, "connection is null" );
-	connection->SetState( this );
-	m_connection = connection;
+	m_gc_space->WithNativeMutation([&]() { EnsureRosterEpoch(); connection->SetState(this); m_connection=connection; });
 }
 
 connection::Connection* State::GetConnection() {
@@ -200,6 +211,7 @@ connection::Connection* State::GetConnection() {
 
 void State::Reset() {
 	RetireGameCallbacks();
+ RetireRosterEpoch();
 	{
 		//std::lock_guard guard( m_connection_mutex );
 		if ( m_connection ) {
@@ -264,12 +276,27 @@ const types::Buffer State::Serialize() const {
 }
 
 void State::Deserialize( types::Buffer buf ) {
-	m_settings.global.Deserialize( buf.ReadString() );
-	m_fm->Deserialize( buf.ReadString() );
+	// Native packet dispatch can replace linked Factions while GC is active.
+	// Keep queueing, notifications and transport in the caller, outside this
+	// synchronous native-only mutation scope.
+	m_gc_space->WithNativeMutation( [ & ]() {
+		m_settings.global.Deserialize( buf.ReadString() );
+		m_fm->Deserialize( buf.ReadString() );
+	} );
+}
+
+void State::DeserializeRosterSettings(types::Buffer buf, connection::Connection* expected, const roster_epoch_t& epoch) {
+ m_gc_space->WithNativeMutation([&]() {
+  if (!expected || m_connection != expected) { throw std::runtime_error("Settings belong to another connection"); }
+  RequireRoster(epoch);
+  m_settings.global.Deserialize(buf.ReadString());
+  m_fm->Deserialize(buf.ReadString());
+ });
 }
 
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
+ GetRosterRoots(reachable_objects);
 
 	GC_DEBUG_BEGIN( "State" );
 

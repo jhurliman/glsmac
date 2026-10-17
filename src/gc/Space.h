@@ -36,6 +36,11 @@ CLASS( Space, common::Class )
 
 	void Accumulate( gc::Object* const owner, const f_accum_t& f, const f_accum_t& f_cleanup = nullptr, const bool need_now = false );
 	const bool IsAccumulating();
+	// Synchronous native root/wrapper retirement only. The caller must already
+	// exclude script execution and other native mutators, and keep Space alive.
+	// Do not allocate GSE objects, queue work, wait for another task, or reenter
+	// this guard from its body. An existing owner accumulation executes inline.
+	void WithNativeMutation( const std::function< void() >& f );
 
 	void SetThreadId( const std::thread::id& thread_id );
 	// Transfer ownership exclusively for final drain and destruction. The previous

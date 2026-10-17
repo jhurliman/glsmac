@@ -3,6 +3,7 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
@@ -13,6 +14,7 @@
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacPredefinedUnitCatalog.h"
+#include "SmacFactionStartupRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
@@ -21,6 +23,7 @@
 #include "CvrIndexedRasterizer.h"
 #include "CvrBasisConverter.h"
 #include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -71,11 +74,13 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
@@ -209,6 +214,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}

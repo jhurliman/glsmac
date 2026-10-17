@@ -25,6 +25,7 @@ namespace game {
 namespace backend {
 
 class State;
+class Game;
 
 namespace settings {
 class LocalSettings;
@@ -104,6 +105,8 @@ public:
 	virtual void SendMessage( const std::string& message ) = 0;
 
 protected:
+	Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings, network::Network* const network );
+
 	const int DOWNLOAD_CHUNK_SIZE = 16384;
 
 	network::Network* const m_network;
@@ -140,6 +143,11 @@ protected:
 
 private:
 	friend class gse::tests::BackendFixture;
+	friend class game::backend::Game;
+	friend class game::backend::State;
+	// No concurrent connection iteration may create a new events request.
+	// Separate the transport wait from collector-visible handler retirement.
+	void DrainEventRequest();
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
 	struct {
 		common::mt_id_t connect = 0;

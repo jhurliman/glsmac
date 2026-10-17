@@ -4,6 +4,16 @@ Run analysis when preparing a C++ change for review. It is separate from the
 normal edit/build/test loop and does not require the original game assets.
 The `C++ correctness` pull-request workflow runs the same command as local use.
 
+Pull requests that change only Markdown skip the engine build, regression and
+thread lifecycle workflows. Any non-Markdown change still triggers those checks,
+including scripts, data, fixtures and workflow edits. Pushes to `main`/`stable`
+and manual runs keep their existing full coverage. The correctness and reference
+inventory workflows retain their own path filters. This avoids rebuilding the
+engine for evidence receipts while preserving checks for executable changes.
+If these workflows become required branch checks, use an always-reporting gate
+before enabling that protection; a workflow skipped by a path filter does not
+produce a successful check.
+
 ## Local use
 
 Install clang-tidy **15** and the usual Linux build dependencies. On Ubuntu:

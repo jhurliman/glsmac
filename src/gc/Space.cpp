@@ -17,6 +17,14 @@
 
 namespace gc {
 
+void Space::WithNativeMutation( const std::function< void() >& f ) {
+	if ( IsAccumulating() ) { f(); return; }
+	// In particular, do not acquire pending: Collect/ProcessAccumulations take
+	// pending before collect. Native retirement must never queue an accumulation.
+	std::lock_guard guard( m_collect_mutex );
+	f();
+}
+
 Space::Space( Object* const root_object )
 	: m_root_object( root_object ) {
 	ASSERT( root_object, "root object is null" );

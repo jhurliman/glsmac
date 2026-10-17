@@ -70,6 +70,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerAvailability.cpp
 	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacWorkerKnowledge.cpp
+	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/SmacLiveWorkerKnowledge.cpp
 	${PWD}/SmacLiveWorkerAllocation.cpp
 	${PWD}/SmacConventionalStats.cpp

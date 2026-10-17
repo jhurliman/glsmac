@@ -67,6 +67,7 @@
 #include "SmacWorkerAvailability.h"
 #include "SmacWorkerMapFrame.h"
 #include "SmacWorkerKnowledge.h"
+#include "SmacTerritoryRules.h"
 #include "SmacLiveWorkerKnowledge.h"
 #include "SmacLiveWorkerAllocation.h"
 #include "SmacConventionalStats.h"
@@ -275,6 +276,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacWorkerAvailabilityTests( task );
 		tests::AddSmacWorkerMapFrameTests( task );
 		tests::AddSmacWorkerKnowledgeTests( task );
+		tests::AddSmacTerritoryRulesTests( task );
 		tests::AddSmacLiveWorkerKnowledgeTests( task );
 		tests::AddSmacLiveWorkerAllocationTests( task );
 		tests::AddFactionTests( task );

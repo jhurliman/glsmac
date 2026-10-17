@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/GlsmacResourceMapPolicy.cpp
 	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacWorkerKnowledge.cpp
+	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/MapState.cpp
 
 	PARENT_SCOPE )

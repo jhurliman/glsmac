@@ -3,6 +3,9 @@
 #include "Player.h"
 #include "slot/Slot.h"
 #include "slot/Slots.h"
+#include "base/Base.h"
+#include "map/Map.h"
+#include "map/tile/Tile.h"
 #include "resource/SmacMineralCostFactor.h"
 #include <algorithm>
 #include <limits>
@@ -83,6 +86,36 @@ bool Game::HasSmacProductionPrerequisite( const slot::Slot* owner, const base::P
 	const auto second = technologies.ResolveToken( definition.prerequisites[ 1 ] ).kind;
 	if ( first == Kind::UNKNOWN || second == Kind::UNKNOWN ) { throw std::runtime_error( "Production technology definition is unresolved" ); }
 	return first != Kind::DISABLED && ( second != Kind::DISABLED || first == Kind::NONE );
+}
+
+bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::ProductionItem& item ) const {
+	base.GetSmacResourceContext();
+	if ( base.GetGame() != this || item.kind != base::ProductionItemKind::Unit || !item.smac_source_id ) {
+		throw std::runtime_error( "Queue candidate is not an owned unit production target" );
+	}
+	const auto& participant = RequireSmacProductionOwner( base.m_owner );
+	(void)MakeSmacProductionItem( base.m_owner, item.kind, *item.smac_source_id );
+	const auto design = ResolveConventionalDesign( { *item.smac_source_id, participant.simulation_id, 1, 0, 0, false,
+		unit::ConventionalUnitState::Home::None, unit::SmacMoraleMode::Mode0 }, *m_simulation );
+	if ( !design.active || ( design.faction_exclusion & ( uint32_t( 1 ) << participant.simulation_id ) ) ) { return false; }
+	if ( !HasSmacProductionPrerequisite( base.m_owner, item ) ) { return false; }
+	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+	if ( catalog.weapons.weapons.at( design.weapon ).mode == loader::txt::WeaponMode::Colonist ) {
+		throw std::runtime_error( "Colony queue admission requires the owned no-colony rule" );
+	}
+	if ( catalog.chassis.chassis.at( design.chassis ).triad == loader::txt::ChassisTriad::Sea ) {
+		const auto* map = GetMap();
+		static constexpr int offsets[ 8 ][ 2 ] = { { 1,-1 }, { 2,0 }, { 1,1 }, { 0,2 }, { -1,1 }, { -2,0 }, { -1,-1 }, { 0,-2 } };
+		for ( const auto& offset : offsets ) {
+			int64_t x = int64_t( base.GetTile()->coord.x ) + offset[ 0 ], y = int64_t( base.GetTile()->coord.y ) + offset[ 1 ];
+			// Current native map topology is horizontal wrap, vertical clipping.
+			if ( x < 0 ) { x += map->GetWidth(); } else if ( x >= int64_t( map->GetWidth() ) ) { x -= map->GetWidth(); }
+			if ( x >= 0 && x < int64_t( map->GetWidth() ) && y >= 0 && y < int64_t( map->GetHeight() )
+				&& map->GetTile( x, y )->is_water_tile ) { return true; }
+		}
+		return false;
+	}
+	return true;
 }
 
 int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {

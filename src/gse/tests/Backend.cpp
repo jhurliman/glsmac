@@ -220,7 +220,7 @@ public:
 
 	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false,
 		const game::backend::settings::SmacSpecialistRules* specialists = nullptr,
-		const std::function< std::string( const std::string& ) >& source_override = {}, const std::string& resource_faction = {} ) {
+		const std::function< std::string( const std::string& ) >& source_override = {}, const std::string& resource_faction = {}, bool production_map = false ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -252,7 +252,7 @@ public:
 				if ( !m_state->GetFM()->Get( resource_faction ) ) { m_state->GetFM()->Add( new game::backend::faction::Faction( resource_faction, "Resource fixture faction" ) ); }
 				m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( resource_faction ) );
 			}
-			if ( movement_campaign ) {
+			if ( movement_campaign || production_map ) {
 				settings.SelectSmacCustomSize( 128, 64 );
 				auto* tiles = m_game.GetMap()->GetTilesPtr();
 				tiles->Resize( 128, 64 ); tiles->Clear();
@@ -4521,6 +4521,9 @@ void ConventionalUnitFixture::ConfigureResources( const std::function< std::stri
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
+	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
+}
 void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source ) {
 	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source ); fixture->ResourcePolicy( true );
 }

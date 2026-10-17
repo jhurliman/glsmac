@@ -19,6 +19,7 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
+#include "game/backend/unit/FormerMarkerRender.h"
 #include "game/FrontendRequest.h"
 #include "gse/value/Array.h"
 #include "gse/value/Callable.h"
@@ -73,7 +74,7 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
 	for ( uint8_t i = 0; i < 7; ++i ) { bm->DefinePop( new PopDef( roles.specialists[ i ], "Display only", {}, {}, PopDef::PF_NONE, i ) ); }
-	for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y & 1; x < 8; x += 2 ) {
+	for ( size_t y = 0; y < game->GetMap()->GetHeight(); ++y ) { for ( size_t x = y & 1; x < game->GetMap()->GetWidth(); x += 2 ) {
 		auto* tile = game->GetMap()->GetTile( x, y );
 		for ( auto* corner : tile->elevation.corners ) { *corner = 0; }
 		tile->Update(); tile->moisture = MOISTURE_ARID; tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0; tile->bonus = BONUS_NONE;
@@ -100,11 +101,11 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
 	return base;
 }
-Knowledge KnowledgeValue( bool old_available = false, bool candidate_available = true ) {
-	Knowledge::Data data{ 8, 8, true, true, 0, {}, {}, { { 91, 0, false } } };
-	data.observers[ 1 ] = Knowledge::Observer{ false, {} }; data.tiles.resize( 32, { 0, {} } );
+Knowledge KnowledgeValue( bool old_available = false, bool candidate_available = true, int32_t width = 8, int32_t height = 8 ) {
+	Knowledge::Data data{ width, height, true, true, 0, {}, {}, { { 91, 0, false } } };
+	data.observers[ 1 ] = Knowledge::Observer{ false, {} }; data.observers[ 1 ]->pact_with = 0; data.tiles.resize( width * height / 2, { 0, {} } );
 	for ( const auto xy : { std::array< int, 2 >{ 2, 2 }, { 3, 1 }, { 4, 2 } } ) {
-		auto& tile = data.tiles[ xy[ 1 ] * 4 + xy[ 0 ] / 2 ]; tile.claimant = 1;
+		auto& tile = data.tiles[ xy[ 1 ] * ( width / 2 ) + xy[ 0 ] / 2 ]; tile.claimant = 1;
 		tile.explored_by = xy[ 0 ] == 3 ? old_available ? 2 : 0 : xy[ 0 ] == 4 ? candidate_available ? 2 : 0 : 2;
 	}
 	return Knowledge::Create( data );
@@ -117,6 +118,54 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC live production commits actual Scout Former queue home and second-pass support", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( Source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
+			um->DefineUnit( new StaticDef( "live-former", um->GetMoraleSet( "live-morale" ), "Former port marker", MT_LAND, 0, new FormerMarkerRender() ) );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			const auto former = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 1 );
+			const auto resolver = [ & ]( int32_t id ) { return um->GetUnitDef( id == 1 ? "live-former" : "live-scout" ); };
+			const auto pair = fixture.GameplayRandom(); const auto jsf = game->GetRandom()->GetStateString(); auto* pop = &base->m_pops.at( 19 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, scout ) - 3, scout, 71, std::vector< ProductionItem >{ former } } );
+			const auto first = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( first.completed_unit && first.queue_advanced && first.first_calculation.minerals.surplus == 3, "actual first pass did not repair and complete at equality" );
+			auto* newborn = um->GetUnit( *first.completed_unit );
+			GT_ASSERT( newborn->Conventional().design_id == 2 && newborn->Conventional().home_base_id == base->m_id && newborn->GetTile() == base->GetTile()
+				&& newborn->Conventional().spent == 0 && newborn->Conventional().stored_morale == 1, "actual homed Scout differs" );
+			GT_ASSERT( base->GetProductionState()->current_item == former && base->GetProductionState()->baseline_item == former
+				&& base->GetProductionState()->queue->empty() && base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0
+				&& &base->m_pops.at( 19 ) == pop && base->GetSmacAllocation()->selected == 5, "queue baseline Pop transaction differs" );
+			for ( int i = 0; i < 2; ++i ) {
+				auto state = *base->GetProductionState(); state.minerals = game->GetSmacProductionCost( base->m_owner, state.current_item ) - 3; base->SetProductionState( GSE_CALL, state );
+				const auto made = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+				GT_ASSERT( made.completed_unit && um->GetUnit( *made.completed_unit )->Conventional().design_id == 1, "empty queue did not repeat Former" );
+			}
+			const auto second = base->PrepareSmacResourceCalculation( SmacBaseResourcePhase::Upkeep );
+			GT_ASSERT( second.minerals.demand == 1 && second.minerals.surplus == 2 && base->GetProductionState()->minerals == 0, "third home support or read-only second pass differs" );
+			const auto following = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( !following.completed_unit && base->GetProductionState()->minerals == 2 && base->GetProductionState()->baseline_minerals == 2
+				&& base->GetAccumulatedNutrients() == 13 && fixture.GameplayRandom() == pair && game->GetRandom()->GetStateString() == jsf, "following production changed food/RNG or completed twice" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC live production late rejection preserves prepared Unit Base Pops and queue", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( Source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); auto* um = game->GetUM(); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 ); const auto facility = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Facility, 1 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, scout ), scout, 17, std::vector< ProductionItem >{ facility } } );
+			fixture.Updates(); const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId(); auto* pop = &base->m_pops.at( 19 );
+			const auto resolver = [ & ]( int32_t ) { return um->GetUnitDef( "live-scout" ); };
+			GT_ASSERT( Rejects( [ & ] { base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 ); } ) && fixture.Snapshot() == before
+				&& Unit::GetNextId() == id && &base->m_pops.at( 19 ) == pop && um->GetUnits().size() == 1, "late queue rejection published partial production" );
+			auto state = *base->GetProductionState(); state.queue->clear(); base->SetProductionState( GSE_CALL, state );
+			const auto made = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( made.completed_unit && base->GetSmacAllocation()->specialists.total_count == 1 && base->GetSmacAllocation()->specialists.types[ 0 ] == 1, "valid Doctor replaced during completion" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "SMAC live worker upkeep admits second human participant but not manual control", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureTwoResourceParticipants( Source );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

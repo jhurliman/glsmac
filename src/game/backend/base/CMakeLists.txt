@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseStarting.cpp
 	${PWD}/BaseResourceCalculation.cpp
 	${PWD}/BaseAllocation.cpp
+	${PWD}/BaseProduction.cpp
 	${PWD}/BaseWorkers.cpp
 	${PWD}/BaseWorkerCommands.cpp
 	${PWD}/ProductionState.cpp

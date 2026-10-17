@@ -98,7 +98,45 @@ void Base::PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& a
 	PublishSmacWorkerState( GSE_CALL, allocation, roles, GetSmacResourceContext() );
 }
 
+struct Base::PreparedSmacWorkerState::Data {
+	Base* base;
+	BaseManager* manager;
+	struct Projection { Pop* pop; const PopDef* def; Pop::worked_tile_t coordinates; };
+	std::vector< Projection > projection;
+	std::map< BaseManager::tile_key_t, BaseManager::pop_key_t > assignments;
+	std::unordered_map< size_t, BaseManager::base_update_t > updates;
+	std::unordered_set< Base* > triggers;
+	std::unique_lock< std::mutex > lock;
+	std::optional< SmacBaseAllocationState > allocation;
+	std::optional< SmacBaseResourceContext > context;
+	std::optional< ProductionState > production;
+	int64_t nutrients;
+};
+Base::PreparedSmacWorkerState::PreparedSmacWorkerState( std::unique_ptr< Data > data ) : m_data( std::move( data ) ) {}
+Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
+Base::PreparedSmacWorkerState::PreparedSmacWorkerState( PreparedSmacWorkerState&& ) noexcept = default;
+void Base::PreparedSmacWorkerState::Commit() noexcept {
+	if ( !m_data ) { return; }
+	auto& data = *m_data;
+	for ( const auto& next : data.projection ) { next.pop->m_def = next.def; next.pop->m_worked_tile = next.coordinates; }
+	data.base->m_allocation.swap( data.allocation );
+	data.base->m_resource_context.swap( data.context );
+	data.base->m_production.swap( data.production );
+	data.base->m_accumulated_nutrients = data.nutrients;
+	data.manager->m_work_assignments.swap( data.assignments );
+	data.manager->m_base_updates.swap( data.updates );
+	data.manager->m_updated_bases.swap( data.triggers );
+	m_data.reset(); // release the trigger lock before any later script notification
+}
+
 void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context ) {
+	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, m_production, m_accumulated_nutrients );
+	prepared.Commit();
+}
+
+Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
+	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
+	const std::optional< ProductionState >& production, int64_t nutrients ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "SMAC allocation publication requires its owning accumulation" ); }
 	auto* bm = m_game->GetBM();
@@ -122,8 +160,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 		}
 		bm->ValidateSmacPopDef( specialists[ i ] );
 	}
-	struct Projection { Pop* pop; const PopDef* def; Pop::worked_tile_t coordinates; };
-	std::vector< Projection > projection;
+	std::vector< PreparedSmacWorkerState::Data::Projection > projection;
 	projection.reserve( m_pops.size() );
 	auto assignments = bm->m_work_assignments;
 	// Validate the existing derived index even during explicit first adoption.
@@ -160,7 +197,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 	auto& update = updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
 	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "SMAC allocation has an incompatible pending Base update" ); }
 	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
-	std::lock_guard lock( bm->m_updated_bases_mutex );
+	std::unique_lock lock( bm->m_updated_bases_mutex );
 	auto triggers = bm->m_updated_bases;
 	triggers.insert( this );
 	std::optional< SmacBaseAllocationState > replacement = allocation;
@@ -171,13 +208,14 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 	static_assert( std::is_nothrow_copy_constructible_v< map::tile::coords_t > );
 	static_assert( std::is_nothrow_copy_assignable_v< map::tile::coords_t > );
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
-	// Commit: no allocation, callbacks, IDs, node replacement or RNG draws.
-	for ( const auto& next : projection ) { next.pop->m_def = next.def; next.pop->m_worked_tile = next.coordinates; }
-	m_allocation.swap( replacement );
-	m_resource_context.swap( replacement_context );
-	bm->m_work_assignments.swap( assignments );
-	bm->m_base_updates.swap( updates );
-	bm->m_updated_bases.swap( triggers );
+	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
+	auto data = std::make_unique< PreparedSmacWorkerState::Data >();
+	data->base = this; data->manager = bm;
+	data->projection = std::move( projection ); data->assignments = std::move( assignments );
+	data->updates = std::move( updates ); data->triggers = std::move( triggers ); data->lock = std::move( lock );
+	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
+	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );
+	return PreparedSmacWorkerState( std::move( data ) );
 }
 
 }

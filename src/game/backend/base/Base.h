@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <memory>
+#include <functional>
 
 #include "gse/Wrappable.h"
 #include "game/backend/MapObject.h"
@@ -29,6 +31,7 @@ class Game;
 namespace slot {
 class Slot;
 }
+namespace unit { class Def; enum class SmacMoraleMode : uint8_t; }
 namespace faction {
 class Faction;
 }
@@ -101,6 +104,16 @@ public:
 	// Ordinary local tile click. The Game event dispatcher authenticates caller;
 	// all edits and the final allocation are staged before native publication.
 	void CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile );
+	// Native upkeep production stage. No script entry point: the turn caller
+	// owns once-per-turn invocation. The supplied resolver chooses registered
+	// presentation, while the factory authenticates the actual design package.
+	struct SmacProductionResult {
+		SmacBaseResourceCalculation first_calculation;
+		std::optional< size_t > completed_unit;
+		bool queue_advanced = false;
+	};
+	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
+		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
 	void ValidateSmacAllocation() const;
@@ -149,6 +162,22 @@ private:
 	void RequireGenericPopulationMutation() const;
 	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary ) const;
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
+	class PreparedSmacWorkerState {
+	public:
+		~PreparedSmacWorkerState();
+		PreparedSmacWorkerState( PreparedSmacWorkerState&& ) noexcept;
+		void Commit() noexcept;
+	private:
+		friend class Base;
+		struct Data;
+		explicit PreparedSmacWorkerState( std::unique_ptr< Data > data );
+		std::unique_ptr< Data > m_data;
+	};
+	PreparedSmacWorkerState PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
+		const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
+		const std::optional< ProductionState >& production, int64_t nutrients );
+	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
+		const SmacBaseAllocationState* allocation ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

@@ -25,6 +25,10 @@ int64_t AddIntake( const int64_t a, const int64_t b ) {
 }
 
 SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBaseResourcePhase phase ) const {
+    return CalculateSmacResourceCalculation( phase, nullptr );
+}
+
+SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation ) const {
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
     switch ( phase ) {
@@ -49,7 +53,10 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
         for ( size_t i = 0; i < values.size(); ++i ) { result.raw_intake[ i ] = AddIntake( result.raw_intake[ i ], values[ i ] ); }
     };
     add( *m_tile );
-    for ( const auto& entry : m_pops ) { if ( auto* tile = entry.second.GetWorkedTile() ) { add( *tile ); } }
+    if ( allocation ) {
+        for ( const auto& coordinate : AllocationCoordinates( *allocation ) ) { add( *m_game->GetMap()->GetTile( coordinate.x, coordinate.y ) ); }
+    }
+    else { for ( const auto& entry : m_pops ) { if ( auto* tile = entry.second.GetWorkedTile() ) { add( *tile ); } } }
 
     auto& n = result.nutrients;
     n.intake = Checked( result.raw_intake[ 0 ] );

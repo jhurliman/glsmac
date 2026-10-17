@@ -59,9 +59,17 @@ module test passed at `20f06c31` and is also unchanged. The integrated cached
 build linked successfully. These are focused Linux receipts, without a full-suite,
 platform-matrix or rendered acceptance claim.
 
-Owner-request amendment: three production and two test TUs pass focused syntax
-checks, and the updated real Save/Load module script passes. The new native
-regression covers an actual extracted event, deferred backend claim, complete
-post-event bytes, exactly-once frontend delivery and pending-reset retirement.
-Linked execution of the four campaign groups is pending the coordinated cache run.
-Earlier receipts above describe the pre-amendment implementation.
+Owner-request amendment: the cached Linux build linked at integrated
+`c14d32c7cba4d88f98470e232f25a9aa26ef6fd2`; the three existing campaign groups
+passed with allocation tracking, and the updated real Save/Load module script
+passed. The new ownership group initially reused a probe that ran during both
+validation and apply; its apply-only fixture correction was rebuilt at
+`9cd97fac5e8df10f018f45387f628d73c121d736`, where that group passed with allocation
+tracking. It covers an actual extracted event, deferred backend claim, complete
+post-event bytes, exactly-once frontend delivery, failed-save recovery and
+pending-reset/stale-callable retirement. The prior three groups were unchanged.
+Three changed production TUs also passed focused LLVM 15 correctness analysis
+(zero failures, 17.56 seconds); two test TUs passed syntax checks. Logs are
+`campaign-owner-{build,rebuild,native,concurrency,ui}.log` under the shared Linux
+cache parent. Earlier receipts above describe the pre-amendment implementation;
+no full suite or platform rerun was performed for this amendment.

@@ -17,17 +17,25 @@ SOURCE_SUFFIXES = {".cpp", ".cc", ".cxx"}
 HEADER_SUFFIXES = {".h", ".hpp", ".hh", ".hxx", ".inc", ".inl", ".tpp"}
 POLICY_FILES = {".clang-tidy", "CMakePresets.json", "CMakeUserPresets.json",
                 "tools/analyze_cpp.py", ".github/workflows/cpp-analysis.yml"}
+# These are concrete exceptions in the current CMake/source graph, not filename
+# conventions: unknown production .cpp files must still fail if absent from CMake.
+LINUX_EXCLUDED_SOURCES = {
+    "src/network/impl/Windows.cpp": "Windows-only implementation; outside Linux analysis",
+}
+INCLUDED_SOURCE_FRAGMENTS = {"src/ui/dom/Object.colormap.cpp"}  # included by Object.cpp
 
 
 def production_source(path):
     return (path.startswith("src/") and Path(path).suffix in SOURCE_SUFFIXES
-            and not path.startswith(("src/tmp/", "src/gse/tests/")))
+            and not path.startswith(("src/tmp/", "src/gse/tests/"))
+            and path not in LINUX_EXCLUDED_SOURCES and path not in INCLUDED_SOURCE_FRAGMENTS)
 
 
 def needs_full_scan(path):
     name = Path(path).name
     return (Path(path).suffix in HEADER_SUFFIXES | {".cmake"}
-            or name in {"CMakeLists.txt", ".clang-tidy"} or path in POLICY_FILES)
+            or name in {"CMakeLists.txt", ".clang-tidy"} or path in POLICY_FILES
+            or path in INCLUDED_SOURCE_FRAGMENTS)
 
 
 def git_output(root, *args):
@@ -75,6 +83,28 @@ def select_sources(root, sources, changed, all_sources=False):
     return sorted({path for path in candidates if (root / path).is_file()}), full
 
 
+def select_explicit_sources(root, sources, requested):
+    selected = set()
+    for source in requested:
+        path = (root / source).resolve()
+        try:
+            relative = path.relative_to(root.resolve()).as_posix()
+        except ValueError:
+            raise ValueError(f"Requested source is outside the checkout: {source}") from None
+        if relative in LINUX_EXCLUDED_SOURCES:
+            raise ValueError(f"Cannot analyze {relative}: {LINUX_EXCLUDED_SOURCES[relative]}.")
+        if relative in INCLUDED_SOURCE_FRAGMENTS:
+            raise ValueError(f"Requested source is an included fragment, not a complete translation unit: {relative}")
+        if not production_source(relative):
+            raise ValueError(f"Requested source must be a complete production translation unit under src/: {relative}")
+        if not path.is_file():
+            raise ValueError(f"Requested source is missing or is not a file: {relative}")
+        if relative not in sources:
+            raise ValueError(f"Reconfigure CMake; requested production source is absent from its database: {relative}")
+        selected.add(relative)
+    return sorted(selected)
+
+
 def run_analysis(root, build_dir, executable, source, timeout, output_dir):
     command = [executable, "--quiet", "-p", str(build_dir), f"--config-file={root / '.clang-tidy'}",
                f"--header-filter=^{re.escape(str(root / 'src'))}/", str(root / source)]
@@ -101,6 +131,8 @@ def main(argv=None):
     scope = parser.add_mutually_exclusive_group()
     scope.add_argument("--base", help="Compare against the merge base with REF, including local edits (default: HEAD).")
     scope.add_argument("--all", action="store_true", help="Analyze every production translation unit.")
+    scope.add_argument("--source", action="append", metavar="PATH",
+                       help="Analyze only this complete production translation unit (repeatable; paths relative to the checkout or absolute).")
     parser.add_argument("--build-dir", type=Path, default=Path("build/analysis"))
     parser.add_argument("--clang-tidy", default="clang-tidy-15")
     parser.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1))
@@ -112,8 +144,15 @@ def main(argv=None):
     build_dir = (ROOT / args.build_dir).resolve()
     output_dir = (ROOT / args.output_dir).resolve() if args.output_dir else build_dir / "analysis-results"
     try:
-        changed = [] if args.all else changed_paths(ROOT, args.base or "HEAD")
-        sources, full = select_sources(ROOT, compilation_sources(ROOT, build_dir), changed, args.all)
+        if args.source:
+            sources = select_explicit_sources(ROOT, compilation_sources(ROOT, build_dir), args.source)
+            changed, skipped, scope_name = [], {}, "explicit"
+        else:
+            changed = [] if args.all else changed_paths(ROOT, args.base or "HEAD")
+            sources, full = select_sources(ROOT, compilation_sources(ROOT, build_dir), changed, args.all)
+            skipped = {path: reason for path, reason in LINUX_EXCLUDED_SOURCES.items()
+                       if (full or path in changed) and (ROOT / path).is_file()}
+            scope_name = "full" if full else "changed"
         executable = shutil.which(args.clang_tidy)
         if not executable:
             raise ValueError(f"Cannot find {args.clang_tidy}; install clang-tidy-15 or pass --clang-tidy PATH.")
@@ -121,7 +160,9 @@ def main(argv=None):
         if not re.search(r"\bversion 15\.", version):
             raise ValueError(f"This check policy is validated with clang-tidy 15; found:\n{version}")
         output_dir.mkdir(parents=True, exist_ok=True)
-        print(f"Analyzing {len(sources)} production translation units ({'full' if full else 'changed'} scope), {args.jobs} jobs.", flush=True)
+        print(f"Analyzing {len(sources)} production translation units ({scope_name} scope), {args.jobs} jobs.", flush=True)
+        for path, reason in skipped.items():
+            print(f"Skipping {path}: {reason}.", flush=True)
         print(version, flush=True)
         started = time.monotonic()
         results = []
@@ -133,8 +174,11 @@ def main(argv=None):
                     print(f"\n--- {result['source']} ---\n{output}", flush=True)
         elapsed = round(time.monotonic() - started, 2)
         failures = sum(result["exit_code"] != 0 for result in results)
-        summary = {"version": version, "scope": "full" if full else "changed", "changed_paths": changed,
+        summary = {"version": version, "scope": scope_name, "changed_paths": changed,
+                   "skipped_sources": skipped,
                    "jobs": args.jobs, "seconds": elapsed, "failures": failures, "results": results}
+        if args.source:
+            summary["requested_sources"] = sources
         (output_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         print(f"\nAnalyzed {len(results)} translation units in {elapsed:.2f}s; {failures} failed. Logs: {output_dir}")
         return 1 if failures else 0

@@ -2,174 +2,140 @@
 
 #include "loader/txt/SmacRulesTXTLoader.h"
 #include "task/gsetests/GSETests.h"
+#include "fixtures/SmacResourceText.h"
+#include "fixtures/SmacRulesSource.h"
 
 #include <limits>
 #include <stdexcept>
 #include <vector>
 
 namespace gse::tests {
-
 using loader::txt::SmacRulesTXTLoader;
 using namespace game::backend::resource::smac;
 
-// Synthetic rules, deliberately different from installed defaults. Unused
-// rows and the fourth column are outside this parser's numeric contract.
 static std::vector< std::string > Rows() {
-	return {
-		"Ocean Square, *, *, *, unused",
-		"Base Square, 17, -3, 0, unused",
-		"Bonus Square, 4, 5, 6, unused, an annotation, with commas",
-		"Forest Square, *, *, *, unused",
-		"Recycling Tanks, 7, 8, 9, unused",
-		"Improved Land, *, *, *, unused",
-		"Improved Sea, *, *, *, unused",
-		"Monolith, *, *, *, unused",
-		"Borehole Square, *, *, *, unused"
-	};
+	return { "Ocean,*,*,*", "Base,17,-3,0,unused", "Bonus,4,5,6,unused,annotation,with commas",
+		"Forest,*,*,*", "Recycling,7,8,9,unused", "Land,*,*,*", "Sea,*,*,*", "Monolith,*,*,*", "Borehole,*,*,*" };
 }
 
 static std::string Source( const std::vector< std::string >& rows, const std::string& newline = "\n" ) {
-	std::string source = "#FACILITIES" + newline + "Recycling Tanks, 777, 888, 999" + newline
-		+ "##" + newline + "## ignored translator example" + newline + "##" + newline
-		+ "  #RESOURCEINFO \t" + newline;
-	for ( const auto& row : rows ) {
-		source += " ; a comment between records" + newline + "\t" + newline + " " + row + "\t" + newline;
-	}
-	return source + "#END" + newline + "#FACILITIES" + newline + "Recycling Tanks, 999, 888, 777" + newline;
+	// Comments outside RESOURCEINFO are not part of its physical nine-row loop.
+	std::string source = "#OTHER" + newline + "; comment" + newline + "## translator" + newline + "  #RESOURCEINFO \t" + newline;
+	for ( const auto& row : rows ) { source += row + newline; }
+	return source + "#END" + newline;
 }
 
-static std::string Rejection( const std::string& source ) {
+static bool Rejects( const std::string& source ) {
 	try { SmacRulesTXTLoader::ParseBaseSquareRules( source ); }
-	catch ( const std::invalid_argument& error ) { return error.what(); }
-	return "";
+	catch ( const std::invalid_argument& ) { return true; }
+	return false;
+}
+
+static bool Same( const BaseSquareRules& rules, const std::array< RuleTriple, 3 >& expected ) {
+	return rules.base_square == expected[ 0 ] && rules.bonus_square == expected[ 1 ] && rules.recycling == expected[ 2 ];
+}
+
+static Yield Calculate( const BaseSquareRules& rules, const size_t query ) {
+	return CalculateBaseSquareYield( rules, {
+		CenterTerrain( true, static_cast< ResourceBonus >( query / 4 ), { false, false, false }, false ),
+		CenterFacilities( false, ( query & 1 ) != 0, ( query & 2 ) != 0 ),
+		CenterFaction( 0, false, 2, false, false ),
+		CenterEvents( { false, false, false }, { false, false, false }, false, false )
+	} );
 }
 
 void AddSmacRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
-	task->AddTest( "SMAC RESOURCEINFO parses only required positional triples", GT() {
+	task->AddTest( "SMAC RESOURCEINFO literal original text produces 592 center yields", GT() {
+		size_t queries = 0;
+		for ( const auto& row : resource_text_fixture::cases ) {
+			GT_ASSERT( !Rejects( row.text ), "measured text rejected: " + std::string( row.id ) );
+			const auto rules = SmacRulesTXTLoader::ParseBaseSquareRules( row.text );
+			GT_ASSERT( Same( rules, row.rules ), "literal resource rules differ: " + std::string( row.id ) );
+			for ( size_t query = 0; query < row.yields.size(); ++query ) {
+				GT_ASSERT( Calculate( rules, query ) == row.yields[ query ], "literal center yield differs: " + std::string( row.id ) + "/" + std::to_string( query ) );
+				++queries;
+			}
+		}
+		GT_ASSERT( queries == 592, "owned text fixture projection changed" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC RESOURCEINFO physical blanks comments and extra rows preserve positions", GT() {
 		for ( const auto* newline : { "\n", "\r\n" } ) {
-			const auto rules = SmacRulesTXTLoader::ParseBaseSquareRules( Source( Rows(), newline ) );
-			const RuleTriple base = { 17, -3, 0 }, bonus = { 4, 5, 6 }, recycling = { 7, 8, 9 };
-			GT_ASSERT( rules.base_square == base && rules.bonus_square == bonus && rules.recycling == recycling, "rules came from defaults, another section, or the wrong columns" );
-			const BaseSquareInputs inputs(
-				CenterTerrain( true, ResourceBonus::None, { false, false, false }, false ),
-				CenterFacilities( false, true, false ),
-				CenterFaction( 0, false, 1, false, false ),
-				CenterEvents( { false, false, false }, { false, false, false }, false, false )
-			);
-			const Yield expected = { 24, 5, 9 };
-			GT_ASSERT( CalculateBaseSquareYield( rules, inputs ) == expected, "calculator did not use parsed custom rules" );
+			auto rows = Rows(); rows[ 1 ] = " \t"; rows[ 2 ] = "; 999,999,999,999";
+			const std::array< RuleTriple, 3 > expected = { RuleTriple{ 0, 0, 0 }, RuleTriple{ 0, 0, 0 }, RuleTriple{ 7, 8, 9 } };
+			rows.push_back( "later,99,99,99" );
+			GT_ASSERT( Same( SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows, newline ) ), expected ), "physical lines were skipped or extra row was consumed" );
 		}
-		// The subset consumes three mandatory values, not the unused fourth.
-		auto rows = Rows();
-		rows[ 1 ] = "Base Square, 1, 2, 3";
-		std::string source = "#RESOURCEINFO\n";
-		for ( const auto& row : rows ) { source += row + "\n"; }
-		source.pop_back(); // EOF also ends the section, without a newline or #END.
-		const RuleTriple expected = { 1, 2, 3 };
-		GT_ASSERT( SmacRulesTXTLoader::ParseBaseSquareRules( source ).base_square == expected, "valid end-of-file section rejected" );
+		auto source = Source( Rows() ); source.erase( source.find( "#END" ) ); source.pop_back();
+		GT_ASSERT( !Rejects( source ), "complete ninth row without final newline rejected by port policy" );
+		auto annotated = Rows(); annotated[ 1 ] = "Owned label,17,-3,0,unused, \"owned, annotation\"";
+		GT_ASSERT( !Rejects( Source( annotated ) ), "ignored quoted annotation rejected" );
+		GT_ASSERT( SmacRulesTXTLoader::ParseBaseSquareRules( Source( annotated ) ).base_square == SmacRulesTXTLoader::ParseBaseSquareRules( Source( Rows() ) ).base_square, "ignored annotation changed rules" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC RESOURCEINFO preserves signed int32 endpoints and explicit signs", GT() {
-		auto rows = Rows();
-		rows[ 1 ] = "Base Square, -2147483648, +2147483647, -0, 0";
-		rows[ 2 ] = "Bonus Square, +00017, -00003, +0, 0";
-		rows[ 4 ] = "Recycling Tanks, \t0\t, 2147483647, -2147483648, 0";
-		const auto rules = SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) );
-		const auto minimum = std::numeric_limits< int32_t >::min(), maximum = std::numeric_limits< int32_t >::max();
-		const RuleTriple base = { minimum, maximum, 0 }, bonus = { 17, -3, 0 }, recycling = { 0, maximum, minimum };
-		GT_ASSERT( rules.base_square == base && rules.bonus_square == bonus && rules.recycling == recycling, "signed rules were clamped, wrapped, or defaulted" );
-		GT_OK();
-	} );
-	task->AddTest( "SMAC RESOURCEINFO rejects missing or duplicated requested sections", GT() {
-		for ( const auto& source : {
-			std::string(), std::string( "#RESOURCEINFO_OTHER\n" ), std::string( "##RESOURCEINFO\n" ),
-			Source( Rows() ) + "#RESOURCEINFO\n", std::string( "#RESOURCEINFO\n#END\n" ) + Source( Rows() )
-		} ) {
-			GT_ASSERT( !Rejection( source ).empty(), "missing or duplicated RESOURCEINFO was accepted" );
-		}
-		GT_OK();
-	} );
-	task->AddTest( "SMAC RESOURCEINFO rejects missing or additional positional rows", GT() {
-		for ( size_t i = 0 ; i < Rows().size() ; ++i ) {
-			auto rows = Rows();
-			rows.erase( rows.begin() + i );
-			GT_ASSERT( !Rejection( Source( rows ) ).empty(), "missing table row was accepted" );
-			rows = Rows();
-			rows.insert( rows.begin() + i, rows[ i ] );
-			GT_ASSERT( !Rejection( Source( rows ) ).empty(), "additional table row was accepted" );
-			for ( const auto* label : { "", " \t " } ) {
-				rows = Rows();
-				rows[ i ] = label + rows[ i ].substr( rows[ i ].find( ',' ) );
-				GT_ASSERT( !Rejection( Source( rows ) ).empty(), "empty positional row label was accepted" );
-			}
-		}
-		auto source = Source( Rows() );
-		source.insert( source.find( "Forest Square" ), "#END\n" );
-		GT_ASSERT( !Rejection( source ).empty(), "parser read required rows past section end" );
-		GT_OK();
-	} );
-	task->AddTest( "SMAC RESOURCEINFO row labels do not select rule identity", GT() {
-		const auto expected = SmacRulesTXTLoader::ParseBaseSquareRules( Source( Rows() ) );
-		for ( const bool duplicate_labels : { false, true } ) {
-			auto rows = Rows();
-			for ( size_t i = 0 ; i < rows.size() ; ++i ) {
-				rows[ i ] = ( duplicate_labels ? "Repeated label" : "Resource " + std::to_string( i ) ) + rows[ i ].substr( rows[ i ].find( ',' ) );
-			}
-			GT_ASSERT( Rejection( Source( rows ) ).empty(), "positional rows with renamed or repeated labels were rejected" );
-			const auto actual = SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) );
-			GT_ASSERT( actual.base_square == expected.base_square && actual.bonus_square == expected.bonus_square && actual.recycling == expected.recycling,
-				"display labels changed positional resource rules" );
-		}
-		GT_OK();
-	} );
-	task->AddTest( "SMAC RESOURCEINFO moving complete rows changes their positional meaning", GT() {
-		auto rows = Rows();
+	task->AddTest( "SMAC RESOURCEINFO labels signs and row movement remain positional", GT() {
+		auto rows = Rows(); rows[ 1 ] = "Renamed,-2147483648,+2147483647,-0";
+		rows[ 2 ] = "Renamed,+00017,-00003,+0";
+		const std::array< RuleTriple, 3 > endpoints = { RuleTriple{ INT32_MIN, INT32_MAX, 0 }, RuleTriple{ 17, -3, 0 }, RuleTriple{ 7, 8, 9 } };
+		GT_ASSERT( Same( SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) ), endpoints ), "labels or signs changed numeric fields" );
 		std::swap( rows[ 1 ], rows[ 4 ] );
-		GT_ASSERT( Rejection( Source( rows ) ).empty(), "complete moved rows were rejected by their labels" );
-		const auto rules = SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) );
-		const RuleTriple base = { 7, 8, 9 }, bonus = { 4, 5, 6 }, recycling = { 17, -3, 0 };
-		GT_ASSERT( rules.base_square == base && rules.bonus_square == bonus && rules.recycling == recycling, "moved rows were rejected or remapped by label" );
-		const BaseSquareInputs inputs(
-			CenterTerrain( true, ResourceBonus::Nutrients, { false, false, false }, false ),
-			CenterFacilities( false, true, false ),
-			CenterFaction( 0, false, 1, false, false ),
-			CenterEvents( { false, false, false }, { false, false, false }, false, false )
-		);
-		const Yield expected = { 31, 5, 9 };
-		GT_ASSERT( CalculateBaseSquareYield( rules, inputs ) == expected, "center nutrient multiplier used a label-selected Base row" );
+		const std::array< RuleTriple, 3 > moved = { endpoints[ 2 ], endpoints[ 1 ], endpoints[ 0 ] };
+		GT_ASSERT( Same( SmacRulesTXTLoader::ParseBaseSquareRules( Source( rows ) ), moved ), "row move was remapped by label" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC RESOURCEINFO requires all three numeric columns in every selected row", GT() {
-		for ( const auto index : { 1, 2, 4 } ) {
-			for ( const auto* suffix : { "", ",", ", 1", ", 1,", ", 1, 2", ", 1, 2," } ) {
-				auto rows = Rows();
-				rows[ index ] = rows[ index ].substr( 0, rows[ index ].find( ',' ) ) + suffix;
-				GT_ASSERT( !Rejection( Source( rows ) ).empty(), "missing N/M/E value was accepted" );
+	task->AddTest( "SMAC RESOURCEINFO rejects unsupported framing without recovery", GT() {
+		for ( const auto& source : { std::string(), std::string( "#RESOURCEINFO_OTHER\n" ), std::string( "##RESOURCEINFO\n" ), Source( Rows() ) + "#RESOURCEINFO\n" } ) {
+			GT_ASSERT( Rejects( source ), "missing or duplicate section accepted" );
+		}
+		for ( size_t count = 0; count < 9; ++count ) {
+			auto rows = Rows(); rows.resize( count );
+			GT_ASSERT( Rejects( Source( rows ) ), "early section accepted" );
+			auto source = Source( rows ); source.erase( source.find( "#END" ) );
+			GT_ASSERT( Rejects( source ), "early EOF accepted" );
+		}
+		for ( size_t index = 0; index < 9; ++index ) {
+			for ( const auto& bad : { std::string( "No delimiters" ), std::string( ",1,2,3" ), std::string( "Row,1,2" ),
+				std::string( "\"quoted,name\",1,2,3" ), std::string( "Row,1\r2,2,3" ), std::string( "Row,1\0x,2,3", 12 ), std::string( 1025, 'x' ),
+				std::string( "Row;comment,1,2,3" ), std::string( "Row,1;comment,2,3" ), std::string( "Row,1,2;comment,3" ), std::string( "Row,1,2,3;comment" ) } ) {
+				auto rows = Rows(); rows[ index ] = bad;
+				GT_ASSERT( Rejects( Source( rows ) ), "unsupported physical row admitted" );
+			}
+		}
+		auto rows = Rows(); rows[ 1 ] = std::string( 1018, 'L' ) + ",1,2,3";
+		GT_ASSERT( !Rejects( Source( rows ) ), "exact port row cap rejected" );
+		rows[ 1 ].insert( 0, "L" ); GT_ASSERT( Rejects( Source( rows ) ), "cap+1 row accepted" );
+		auto terminal_cr = Source( Rows() ); terminal_cr.erase( terminal_cr.find( "#END" ) ); terminal_cr.back() = '\r';
+		GT_ASSERT( Rejects( terminal_cr ), "bare CR at EOF was treated as CRLF" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC RESOURCEINFO numeric prefix bound rejects beyond measured magnitude", GT() {
+		for ( const auto* token : { "4294967297", "-4294967297", "0x100000001", "0b100000000000000000000000000000001", "999999999999999999999999999999" } ) {
+			for ( const auto index : { 0, 1, 2, 4, 8 } ) {
+				auto rows = Rows(); rows[ index ] = std::string( "Row," ) + token + ",1,2";
+				GT_ASSERT( Rejects( Source( rows ) ), "unsupported magnitude accepted" );
 			}
 		}
 		GT_OK();
 	} );
-	task->AddTest( "SMAC RESOURCEINFO rejects malformed and out-of-range numeric fields", GT() {
-		const std::vector< std::string > invalid = {
-			"", " ", "*", "1junk", "1.0", "0x10", "1 2", "+", "-", "+-1", "++1", "--1",
-			"2147483648", "+2147483648", "-2147483649", "999999999999999999999999999999", std::string( "1\0x", 3 )
-		};
-		for ( const auto index : { 1, 2, 4 } ) {
-			for ( size_t column = 0 ; column < 3 ; ++column ) {
-				for ( const auto& field : invalid ) {
-					auto rows = Rows();
-					const auto label = rows[ index ].substr( 0, rows[ index ].find( ',' ) );
-					rows[ index ] = label;
-					for ( size_t c = 0 ; c < 3 ; ++c ) { rows[ index ] += ", " + ( c == column ? field : "1" ); }
-					rows[ index ] += ", 0";
-					const auto error = Rejection( Source( rows ) );
-					GT_ASSERT( !error.empty(), "malformed numeric field was accepted: " + field );
-					GT_ASSERT( error.find( label ) != std::string::npos && error.find( "column " + std::to_string( column + 1 ) ) != std::string::npos, "numeric error did not identify its row and column" );
-				}
-			}
+	task->AddTest( "SMAC RESOURCEINFO host freeze and restored rules use physical text yields", GT() {
+		for ( const auto& row : resource_text_fixture::cases ) {
+			if ( std::string( row.id ) != "comments_and_blank_lines" && std::string( row.id ) != "token_13" ) { continue; }
+			game::backend::settings::Settings host; host.global.SelectRuleset( "smac" );
+			host.PrepareRuleset( [ & ]( const std::string& filename ) {
+				auto source = smac_rules_fixture::Source( filename );
+				if ( filename == "alpha.txt" ) { source.erase( source.find( "#RESOURCEINFO" ) ); source += row.text; }
+				return source;
+			} );
+			game::backend::settings::GlobalSettings restored; restored.Deserialize( host.global.Serialize() );
+			GT_ASSERT( host.global.IsRulesetLocked() && restored.IsRulesetLocked() && restored.GetSmacBaseSquareRules(), "host rules were not frozen and restored" );
+			const auto& rules = *restored.GetSmacBaseSquareRules();
+			GT_ASSERT( Same( rules, row.rules ), "host transport changed resource projection" );
+			GT_ASSERT( *host.global.GetSmacMovementRules() == smac_rules_fixture::Movement()
+				&& *host.global.GetSmacProductionRules() == smac_rules_fixture::Production()
+				&& *host.global.GetSmacTechnologyRules() == smac_rules_fixture::Technologies(), "RESOURCEINFO parsing changed other profiles" );
+			for ( size_t query = 0; query < 16; ++query ) { GT_ASSERT( Calculate( rules, query ) == row.yields[ query ], "restored center yield changed" ); }
 		}
 		GT_OK();
 	} );
 }
-
 }

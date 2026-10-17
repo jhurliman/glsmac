@@ -135,6 +135,7 @@ void UnitManager::UndefineUnit( const std::string& id ) {
 }
 
 void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
+	m_game->RequireWorkerKnowledgeMutation();
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_units.push_back( { unit, true } );
 		return;
@@ -273,6 +274,7 @@ bool UnitManager::HasUnitId( const size_t id ) const {
 }
 
 void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
+	m_game->RequireWorkerKnowledgeMutation();
 
 	const auto& it = m_units.find( unit_id );
 	if ( it == m_units.end() ) {
@@ -926,6 +928,7 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 }
 
 const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
+	m_game->RequireWorkerKnowledgeMutation();
 	if ( unit->IsConventional() ) { return new std::string( "Conventional movement is not activated" ); }
 
 	auto* tm = m_game->GetTM();

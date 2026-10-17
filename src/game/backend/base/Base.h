@@ -113,6 +113,18 @@ public:
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+	// Only complete native record decoding can request snapshot construction.
+	// A running/initializing phase or script callback is not restore authority.
+	enum class ConstructionKind { Live, Snapshot };
+	Base(
+		ConstructionKind kind,
+		Game* game, size_t id, slot::Slot* owner, faction::Faction* faction,
+		map::tile::Tile* tile, const std::string& name,
+		const facilities_t& facilities, const pops_t& pops, size_t next_pop_id,
+		int64_t accumulated_nutrients, const std::optional< ProductionState >& production,
+		const std::optional< SmacBaseResourceContext >& resource_context,
+		const std::optional< SmacBaseAllocationState >& allocation
+	);
 	Game* const m_game;
 
 	size_t m_next_pop_id = 1;

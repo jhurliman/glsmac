@@ -53,6 +53,25 @@ Base::Base(
 	const std::optional< SmacBaseResourceContext >& resource_context,
 	const std::optional< SmacBaseAllocationState >& allocation
 )
+	: Base( ConstructionKind::Live, game, id, owner, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation ) {
+}
+
+Base::Base(
+	ConstructionKind kind,
+	Game* game,
+	const size_t id,
+	slot::Slot* owner,
+	faction::Faction* faction,
+	map::tile::Tile* tile,
+	const std::string& name,
+	const facilities_t& facilities,
+	const pops_t& pops,
+	const size_t next_pop_id,
+	const int64_t accumulated_nutrients,
+	const std::optional< ProductionState >& production,
+	const std::optional< SmacBaseResourceContext >& resource_context,
+	const std::optional< SmacBaseAllocationState >& allocation
+)
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
 	, m_id( id )
@@ -66,6 +85,7 @@ Base::Base(
 	, m_production( production )
 	, m_resource_context( resource_context )
 	, m_allocation( allocation ) {
+	if ( kind == ConstructionKind::Live ) { game->RequireWorkerKnowledgeMutation(); }
 	if ( m_production ) { m_production->Validate(); }
 	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
 	// Validate the complete record before claiming the center or advancing IDs.
@@ -307,7 +327,7 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	std::optional< SmacBaseAllocationState > allocation;
 	if ( buf.ReadBool() ) { allocation = SmacBaseAllocationState::Deserialize( types::Buffer( buf.ReadString( SmacBaseAllocationState::WIRE_BYTES ) ) ); }
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
-	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
+	return new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
 }
 
 WRAPIMPL_SERIALIZE( Base )

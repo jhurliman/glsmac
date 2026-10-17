@@ -124,6 +124,9 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 }
 
 void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
+	// Decoded snapshot records alone suppress placement; script rollback uses
+	// the ordinary constructor and must not bypass supplied knowledge fences.
+	if ( record_placement ) { m_um->m_game->RequireWorkerKnowledgeMutation(); }
 	const auto placement = record_placement ? m_um->PreparePlacementHistory( *this, tile ) : std::pair< SmacMovementHistory*, size_t >{ nullptr, 0 };
 	if ( m_tile ) {
 		m_tile->units.erase( m_id );
@@ -280,6 +283,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_GET_CALLABLE( on_complete, 1 );
+			m_um->m_game->RequireWorkerKnowledgeMutation();
 			m_um->Persist( on_complete );
 			const auto* errmsg = m_um->MoveUnitToTile( GSE_CALL, this, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
 				auto ep2 = ep;

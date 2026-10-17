@@ -42,6 +42,7 @@ smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitte
 }
 
 UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
+	m_game->RequireWorkerKnowledgeMutation();
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) {
 		throw std::runtime_error( "Conventional movement requires a registered conventional unit" );
 	}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "common/Common.h"
 
 #include "types/Vec2.h"
@@ -46,6 +48,8 @@ CLASS( Buffer, common::Class )
 	void WriteColor( const Color& val );
 	void ReadColor( Color& val );
 	void WriteData( const void* data, const uint32_t len );
+	// Require exactly len bytes. The caller frees the returned storage;
+	// an empty data payload returns nullptr.
 	const void* ReadData( const uint32_t len );
 
 	const std::string ToString() const;
@@ -69,7 +73,7 @@ private:
 	};
 
 	void WriteImpl( const type_t type, const char* s, const uint32_t sz );
-	char* ReadImpl( const type_t need_type, char* s, uint32_t* sz, const uint32_t need_sz = 0 );
+	char* ReadImpl( const type_t need_type, char* s, uint32_t* sz, const std::optional< uint32_t > need_sz = std::nullopt );
 	void Alloc( uint32_t size );
 
 };

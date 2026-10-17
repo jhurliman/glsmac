@@ -69,7 +69,7 @@ CvrSpartanRoverRenderer CvrSpartanRoverRenderer::Load( const AssetReader& read )
 	auto material = CvrActorMaterial::Read( palette, faction, body.shades );
 	std::vector< std::string_view > parts;
 	for ( const auto& part : bytes ) { parts.push_back( part ); }
-	auto renderer = CvrScoutRenderer::LoadParts( parts, &material );
+	auto renderer = CvrScoutRenderer::LoadParts( parts, CvrScoutRenderer::Profile::SpartanSpeeder, &material );
 	return CvrSpartanRoverRenderer( std::move( renderer ), std::move( material ) );
 }
 

@@ -2,6 +2,7 @@
 
 #include "loader/cvr/CvrPaletteReader.h"
 #include "loader/cvr/CvrScoutRenderer.h"
+#include "loader/cvr/CvrActorMaterial.h"
 #include "loader/cvr/ScoutArithmetic.h"
 #include "loader/cvr/ScoutLighting.h"
 #include "loader/cvr/ScoutView.h"
@@ -23,6 +24,16 @@
 #include <fstream>
 
 namespace gse::tests {
+
+// Synthetic palette independence only: this does not expose an initialized
+// faction loader or establish which Infantry parts receive a real remap.
+class CvrRenderPolicyFixture {
+public:
+	static loader::cvr::CvrScoutRenderer Infantry( const std::string_view body, const std::string_view reactor, const loader::cvr::CvrActorMaterial& material ) {
+		return loader::cvr::CvrScoutRenderer::LoadParts( { body, reactor }, loader::cvr::CvrScoutRenderer::Profile::Infantry, &material );
+	}
+};
+
 namespace {
 
 using namespace loader::cvr;
@@ -131,6 +142,30 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "CVR Infantry geometry and scene shades are independent of owned software colors", GT() {
+		const auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
+		const auto baseline = loader::cvr::CvrScoutRenderer::Load( body, reactor );
+		loader::cvr::CvrActorMaterial material{};
+		for ( size_t i = 0; i < material.colors.size(); ++i ) { material.colors[ i ] = { static_cast< uint8_t >( 255 - i ), 61, 91 }; }
+		material.shades.fill( 123 ); // Must not replace either Infantry scene table.
+		const auto expected_colors = material.colors;
+		const auto changed = CvrRenderPolicyFixture::Infantry( body, reactor, material );
+		material = {}; // The loaded renderer owns its colors.
+		for ( const auto view : { VIEW, CvrScoutViewInput{ 2, -1, 0, 1, { 11, 29 } }, CvrScoutViewInput{ 7, 5, 1, 2, { -13, 41 } } } ) {
+			const auto before = baseline.Render( view ), after = changed.Render( view );
+			GT_ASSERT( before.indexed.color == after.indexed.color && before.indexed.depth == after.indexed.depth
+				&& before.draw_count == after.draw_count && before.processed_records == after.processed_records
+				&& before.written_samples == after.written_samples && before.target_anchor == after.target_anchor,
+				"optional software colors changed Infantry geometry, lighting or scene shades" );
+			GT_ASSERT( before.rgba != after.rgba, "diagnostic colors did not reach owned output" );
+			for ( size_t i = 0; i < after.indexed.color.size(); ++i ) {
+				const auto index = after.indexed.color[ i ];
+				GT_ASSERT( std::equal( expected_colors[ index ].begin(), expected_colors[ index ].end(), after.rgba.begin() + i * 4 )
+					&& after.rgba[ i * 4 + 3 ] == ( index == 9 ? 0 : 255 ), "software colors were borrowed or changed index-key alpha" );
+			}
+		}
+		GT_OK();
+	} );
 	task->AddTest( "CVR Scout descriptor strict codec and explicit placement", GT() {
 		using game::backend::unit::CvrScoutRender;
 		const CvrScoutRender source( 3, 2, 5, 4, { 2, 4 }, { 64, 192 } );

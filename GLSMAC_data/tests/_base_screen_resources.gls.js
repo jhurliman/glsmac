@@ -32,7 +32,9 @@ return (game, base, ui) => {
 	ui.root = node({});
 	game.get_year = () => { return 2100; };
 	screen.init({
-		ui: ui, game: game, hide: () => { hidden++; screen.on_hide(); }, modules: { bottom_bar: { height: 200 } },
+		ui: ui, game: game, hide: () => {}, modules: { bottom_bar: { height: 200 }, popup: {
+			hide: (name) => { if (name != 'base_screen') { throw TestError('retirement hid another popup'); } hidden++; screen.on_hide(); },
+		} },
 		create: (title, width, height, initialize) => { initialize(node({}), () => {}); },
 	});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };

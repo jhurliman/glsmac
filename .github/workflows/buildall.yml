@@ -1,12 +1,10 @@
 name: GLSMAC autobuild
 
-# Feature branches are checked by pull requests; integration pushes still publish.
+# PR regression/correctness workflows cover development. Packaging and the
+# additional full scan-build compilation run only for stable releases or by hand.
 on:
   push:
-    branches: [main, stable]
-  pull_request:
-    paths-ignore:
-      - '**/*.md'
+    branches: [stable]
   workflow_dispatch:
 
 concurrency:
@@ -110,7 +108,7 @@ jobs:
   build_ubuntu:
     needs: [ prepare ]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/stable' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/stable' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v7
       - name: install_dependencies

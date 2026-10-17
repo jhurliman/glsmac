@@ -58,6 +58,7 @@ SET( SRC ${SRC}
 	${PWD}/Runner.cpp
 	${PWD}/Scripts.cpp
 	${PWD}/SmacMineralCostFactor.cpp
+	${PWD}/SmacPopulationStep.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp

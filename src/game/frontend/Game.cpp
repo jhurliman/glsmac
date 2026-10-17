@@ -953,6 +953,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					f_exit( errmsg );
 				}
 			);
+			break;
 		}
 		case FrontendRequest::FR_UPDATE_TERRAIN: {
 			// All atlas/actor access stays on the frontend thread. A reset can retire

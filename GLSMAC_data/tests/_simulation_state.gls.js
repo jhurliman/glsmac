@@ -20,7 +20,15 @@ return (game) => {
 				designs_copy.designs[0].prototyped = !designs_copy.designs[0].prototyped;
 			}
 			const designs_after = game.get_startup_designs(slot);
-			participants :+ {slot: slot.id, id: id, before: before, after: after, designs_before: designs_before, designs_after: designs_after};
+			const social_before = game.get_social_state(slot);
+			let social_copy = game.get_social_state(slot);
+			social_copy.phase = 'changed';
+			social_copy.current[4] = 7654321;
+			social_copy.selected_models[0] = 3;
+			if (social_copy.intrinsic != undefined) { social_copy.intrinsic[4] = 7654321; }
+			if (social_copy.retained != undefined) { social_copy.retained[4] = 7654321; }
+			const social_after = game.get_social_state(slot);
+			participants :+ {slot: slot.id, id: id, before: before, after: after, designs_before: designs_before, designs_after: designs_after, social_before: social_before, social_after: social_after};
 		}
 		observations :+ {phase: phase, turn: game.get_turn(), participants: participants};
 	};

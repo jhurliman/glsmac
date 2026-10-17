@@ -17,6 +17,7 @@ SmacSimulationState State() {
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
+	value.social = faction::SmacSocialState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.technology.factions[ 0 ].owned.fill( true ); value.technology.factions[ 0 ].labs = INT32_MIN;
 	value.technology.factions[ 1 ].owned.fill( false ); value.technology.factions[ 1 ].score = INT32_MAX;
 	value.technology.factions[ 1 ].target = 88; value.technology.factions[ 1 ].cached_threshold = -7;
@@ -28,13 +29,14 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0 ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 2 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 3 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
 	}
 	buffer.WriteString( value.technology.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	buffer.WriteString( value.designs.Serialize( smac_startup_fixture::Units().catalog ).ToString() );
+	buffer.WriteString( value.social.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	return buffer.ToString();
 }
 }
@@ -59,7 +61,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto wire = Wire( expected );
 		for ( const auto size : { size_t( 0 ), size_t( 1 ), wire.size() - 1 } ) { GT_ASSERT( Rejects( [ & ]() { decode( wire.substr( 0, size ) ); } ), "truncated state accepted" ); }
 		GT_ASSERT( Rejects( [ & ]() { decode( wire + "x" ); } ) && Rejects( [ & ]() { decode( std::string( SmacSimulationState::MAX_WIRE_BYTES + 1, 'x' ) ); } ), "trailing or oversized runtime state accepted" );
-		for ( size_t scenario = 0; scenario < 9; ++scenario ) {
+		for ( size_t scenario = 0; scenario < 13; ++scenario ) {
 			auto bad = expected;
 			if ( scenario == 0 ) { bad.roster[ 1 ].simulation_id = 7; }
 			if ( scenario == 1 ) { bad.roster[ 1 ].slot = 0; }
@@ -70,8 +72,12 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 6 ) { bad.technology.factions[ 1 ].target = 89; }
 			if ( scenario == 7 ) { bad.technology.factions[ 1 ].cached_threshold = -1; }
 			if ( scenario == 8 ) { bad.roster[ 1 ].gsid.assign( SmacSimulationState::MAX_TEXT_BYTES, 'a' ); }
+			if ( scenario == 9 ) { bad.social.factions.pop_back(); }
+			if ( scenario == 10 ) { bad.social.factions[ 1 ].admission.simulation_id = 5; }
+			if ( scenario == 11 ) { bad.social.factions[ 1 ].admission.faction_id = "HIVE"; }
+			if ( scenario == 12 ) { bad.social.factions.push_back( { { 4, "HIVE" } } ); }
 			GT_ASSERT( Rejects( [ & ]() { bad.Serialize( technologies, profiles, smac_startup_fixture::Units() ); } ), "invalid complete runtime state serialized" );
-			if ( scenario < 6 || scenario == 8 ) { GT_ASSERT( Rejects( [ & ]() { decode( Wire( bad ) ); } ), "invalid complete runtime state decoded" ); }
+			if ( scenario < 6 || scenario >= 8 ) { GT_ASSERT( Rejects( [ & ]() { decode( Wire( bad ) ); } ), "invalid complete runtime state decoded" ); }
 		}
 		GT_OK();
 	} );

@@ -82,6 +82,22 @@ game::backend::settings::SmacTechnologyRules SmacRulesTXTLoader::ParseTechnology
 	return result;
 }
 
+game::backend::settings::SmacWorldSizeRules SmacRulesTXTLoader::ParseWorldSizeRules( const std::string& source ) {
+	const auto rows = TXTLoader::ReadUniqueSection( source, "WORLDSIZE" );
+	if ( rows.size() != 6 || ParseField( util::String::TrimCopy( rows.front().substr( 0, rows.front().find( ';' ) ) ), "count", 1, "WORLDSIZE" ) != 5 ) {
+		throw std::invalid_argument( "#WORLDSIZE requires a count of five and five SMAC rows" );
+	}
+	game::backend::settings::SmacWorldSizeRules result;
+	for ( size_t i = 0; i < result.presets.size(); ++i ) {
+		const auto line = rows[ i + 1 ].substr( 0, rows[ i + 1 ].find( ';' ) );
+		const auto fields = util::String::Split( line, ',' );
+		if ( fields.size() != 3 || std::count( line.begin(), line.end(), ',' ) != 2 ) { throw std::invalid_argument( "#WORLDSIZE requires exactly three columns" ); }
+		result.presets[ i ] = { fields[ 0 ], ParseField( fields[ 1 ], "row " + std::to_string( i ), 2, "WORLDSIZE" ), ParseField( fields[ 2 ], "row " + std::to_string( i ), 3, "WORLDSIZE" ) };
+	}
+	try { result.Validate(); } catch ( const std::runtime_error& error ) { throw std::invalid_argument( error.what() ); }
+	return result;
+}
+
 game::backend::settings::SmacMovementRules SmacRulesTXTLoader::ParseMovementRules( const std::string& source ) {
 	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
 	if ( rules.size() != 70 ) { throw std::invalid_argument( "SMAC movement requires 70 positional RULES rows" ); }

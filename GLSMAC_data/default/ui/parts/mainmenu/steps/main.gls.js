@@ -16,7 +16,9 @@ return (i) => {
 				i.steps.select_ruleset(i, () => {
 					i.glsmac.init();
 					i.randomize_map();
-					i.glsmac.start_game();
+					if (i.glsmac.game.get_ruleset() == 'smac') {
+						i.steps.select_mapsize(i, () => { i.glsmac.start_game(); });
+					} else { i.glsmac.start_game(); }
 				});
 			}],
 			['Scenario', () => {

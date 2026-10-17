@@ -21,7 +21,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const std::optional< bool > production_present = std::nullopt,
 	const std::optional< std::string >& production = std::nullopt,
 	const std::optional< bool > technologies_present = std::nullopt,
-	const std::optional< std::string >& technologies = std::nullopt ) {
+	const std::optional< std::string >& technologies = std::nullopt,
+	const std::optional< bool > sizes_present = std::nullopt,
+	const std::optional< std::string >& sizes = std::nullopt,
+	const std::optional< std::string >& selection = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
@@ -38,7 +41,51 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		result.WriteBool( has_technologies );
 		if ( has_technologies ) { result.WriteString( technologies ? *technologies : smac_rules_fixture::Technologies().Serialize().ToString() ); }
 	}
+	if ( version >= 6 ) {
+		const auto present_sizes = sizes_present.value_or( id == "smac" ); result.WriteBool( present_sizes );
+		if ( present_sizes ) {
+			result.WriteString( sizes ? *sizes : smac_rules_fixture::WorldSizes().Serialize().ToString() );
+			result.WriteString( selection ? *selection : smac_rules_fixture::WorldSizes().SelectPreset( 0 ).Serialize().ToString() );
+		}
+	}
 	return result;
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidWorldSizeHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > invalid;
+	const std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
+	const auto add = [ & ]( const std::string& label, bool present, const std::optional< std::string >& sizes = {}, const std::optional< std::string >& selection = {} ) {
+		invalid.emplace_back( label, Header( id, id == "smac", values, game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version,
+			{}, {}, {}, {}, present, sizes, selection ).ToString() );
+	};
+	if ( id == "smax" ) { add( "unexpected size profile", true ); return invalid; }
+	add( "absent size profile", false );
+	add( "different valid accepted preset", true, {}, smac_rules_fixture::WorldSizes().SelectPreset( 1 ).Serialize().ToString() );
+	add( "different valid accepted custom", true, {}, game::backend::settings::SmacWorldSizeRules::SelectCustom( 48, 48 ).Serialize().ToString() );
+	for ( size_t i = 0; i < 5; ++i ) {
+		for ( int field = 0; field < 3; ++field ) {
+			auto changed = smac_rules_fixture::WorldSizes();
+			if ( field == 0 ) { changed.presets[ i ].name += " changed"; }
+			if ( field == 1 ) { ++changed.presets[ i ].source_x; }
+			if ( field == 2 ) { changed.presets[ i ].source_y += 2; }
+			add( "changed source row " + std::to_string( i ) + ":" + std::to_string( field ), true, changed.Serialize().ToString() );
+		}
+	}
+	auto rows = smac_rules_fixture::WorldSizes().Serialize(); rows.WriteInt( 1 ); add( "extra catalog fields", true, rows.ToString() );
+	for ( const auto category : { int64_t( -1 ), int64_t( 1 ), int64_t( 5 ), int64_t( 99 ), INT64_MAX } ) {
+		types::Buffer selection; selection.WriteInt( 1 ); selection.WriteInt( category ); selection.WriteInt( 8 ); selection.WriteInt( 8 );
+		add( "invalid or different category", true, {}, selection.ToString() );
+	}
+	for ( const auto dimensions : { std::pair< int64_t, int64_t >{ -1, 8 }, { 8, 9 }, { INT64_MAX, 8 }, { 10, 8 } } ) {
+		types::Buffer selection; selection.WriteInt( 1 ); selection.WriteInt( 0 ); selection.WriteInt( dimensions.first ); selection.WriteInt( dimensions.second );
+		add( "invalid or changed selected dimensions", true, {}, selection.ToString() );
+	}
+	const auto encoded = smac_rules_fixture::WorldSizes().Serialize().ToString();
+	for ( const auto length : { size_t( 0 ), size_t( 1 ), encoded.size() - 1 } ) { add( "truncated catalog", true, encoded.substr( 0, length ) ); }
+	types::Buffer malformed; malformed.WriteInt( 1 ); malformed.WriteInt( 5 );
+	for ( size_t i = 0; i < 5; ++i ) { malformed.WriteString( "valid name" ); malformed.WriteInt( 24 ); if ( i == 4 ) { malformed.WriteString( "48" ); } else { malformed.WriteInt( 48 ); } }
+	add( "mistyped last catalog dimension", true, malformed.ToString() );
+	return invalid;
 }
 
 inline std::vector< std::pair< std::string, std::string > > InvalidSmacHeaders() {
@@ -63,6 +110,10 @@ inline std::vector< std::pair< std::string, std::string > > InvalidSmacHeaders()
 	game::backend::world_snapshot::WriteRandomState( old_v4, { 1, 2, 3, 4 } );
 	game::backend::world_snapshot::WriteTurnState( old_v4, { 37, { { 0, true }, { 2, false } } } );
 	old_v4.WriteString( "old map body" ); add( "old V4", old_v4 );
+	auto old_v5 = Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 5 );
+	game::backend::world_snapshot::WriteRandomState( old_v5, { 1, 2, 3, 4 } );
+	game::backend::world_snapshot::WriteTurnState( old_v5, { 37, { { 0, true }, { 2, false } } } );
+	old_v5.WriteString( "old map body" ); add( "old V5", old_v5 );
 	add( "unknown version", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version + 1 ) );
 	add( "unknown identity", Header( "gog", false ) );
 	add( "different identity", Header( "smax", false ) );

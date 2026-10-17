@@ -77,7 +77,6 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
-#include "game/backend/map/tile/TileManager.h"
 #include "game/backend/map/module/Module.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "util/FinallyGuard.h"
@@ -3030,6 +3029,18 @@ public:
 		} );
 	}
 
+	std::string WithEngineGameScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
+		// Player's native ready callback resolves its backend from Engine when wrapped.
+		// The headless fixture owns that backend; synchronize the temporary service binding
+		// with the collector, as in the existing actual network/startup fixtures.
+		auto* const previous_game = g_engine->m_game;
+		{ std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = &m_game; }
+		util::FinallyGuard restore( [ & ]() {
+			std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = previous_game;
+		} );
+		return WithMutableScriptValues( check );
+	}
+
 	std::string WithScriptValues( const std::function< std::string( GSE_CALLABLE ) >& check ) {
 		std::string result;
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &check, &result ]() {
@@ -4852,6 +4863,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				BackendFixture source;
 				source.GetGame()->GetState()->m_settings.global.SelectRuleset( id );
 				source.GetGame()->GetState()->m_settings.PrepareRuleset( smac_rules_fixture::Source );
+				smac_rules_fixture::AcceptWorldSize( source.GetGame()->GetState()->m_settings.global );
 				types::Packet settings( types::Packet::PT_GLOBAL_SETTINGS );
 				settings.data.str = source.GetGame()->GetState()->Serialize().ToString();
 				const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -4873,6 +4885,9 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 						callbacks++;
 						callback_ruleset = actual == announced ? state->m_settings.global.GetRulesetId() : "wrong state";
 						callback_rules_valid = std::string( id ) == "smac" ? smac_rules_fixture::Matches( state->m_settings.global ) : !state->m_settings.global.GetSmacBaseSquareRules();
+						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
+							? state->m_settings.global.map.GetSmacWorldSize() == std::optional< settings::SmacWorldSizeSelection >( smac_rules_fixture::WorldSizes().SelectPreset( 0 ) )
+							: !state->m_settings.global.map.GetSmacWorldSize() && !state->m_settings.global.GetSmacWorldSizeRules() );
 						using Prerequisite = settings::SmacProductionPrerequisite;
 						const auto reference = state->m_settings.global.GetSmacFacilityPrerequisite( 3 );
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
@@ -4912,7 +4927,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 } ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 } ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -4925,9 +4940,10 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15;
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
+			std::optional< std::string > sizes;
 			if ( scenario == 3 || scenario == 4 ) {
 				auto changed = smac_rules_fixture::Production();
 				if ( scenario == 3 ) { changed.facilities.front().cost = 123; }
@@ -4951,8 +4967,26 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 13 ) {
 				types::Buffer wrong_range; wrong_range.WriteInt( 1 ); wrong_range.WriteInt( 89 ); wrong_range.WriteInt( int64_t( INT32_MAX ) + 1 ); technologies = wrong_range.ToString();
 			}
+			if ( scenario == 14 || scenario == 15 ) {
+				auto changed = smac_rules_fixture::WorldSizes();
+				if ( scenario == 14 ) { changed.presets.back().name += " changed"; }
+				else { changed.presets.back().source_y += 2; } // valid geometry, different frozen profile
+				sizes = changed.Serialize().ToString();
+			}
+			if ( scenario == 16 ) { types::Buffer bad; bad.WriteInt( 2 ); sizes = bad.ToString(); }
+			if ( scenario == 17 ) { sizes = smac_rules_fixture::WorldSizes().Serialize().ToString(); sizes->pop_back(); }
+			if ( scenario == 18 ) {
+				types::Buffer bad; bad.WriteInt( 1 ); bad.WriteInt( 5 );
+				const auto rows = smac_rules_fixture::WorldSizes();
+				for ( size_t index = 0; index < 5; ++index ) {
+					const auto& row = rows.presets[ index ];
+					bad.WriteString( row.name ); bad.WriteInt( row.source_x ); bad.WriteInt( index == 4 ? INT64_MAX : row.source_y );
+				}
+				sizes = bad.ToString();
+			}
+			if ( scenario == 19 ) { auto bad = smac_rules_fixture::WorldSizes().Serialize(); bad.WriteInt( 42 ); sizes = bad.ToString(); }
 			types::Buffer invalid_state;
-			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies ).ToString() );
+			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes ).ToString() );
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();
@@ -4994,6 +5028,45 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
+	for ( const auto* id : { "smac", "smax" } ) {
+		task->AddTest( std::string( "actual world-size menu custom cancellation and lobby rollback " ) + id, GT( id ) {
+			BackendFixture fixture; fixture.EnableTurnPlayers();
+			auto* state = fixture.GetGame()->GetState();
+			state->m_settings.global.SelectRuleset( id ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			const auto error = fixture.WithEngineGameScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_world_size_setup" ) );
+				script->Run( GSE_CALL, { fixture.GetGame()->Wrap( GSE_CALL ), state->m_settings.global.Wrap( GSE_CALL ), VALUE( value::Bool,, std::string( id ) == "smac" ) } );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "setup route: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "actual SMAC world-size event and State Packet preserve accepted category", GT() {
+		using namespace game::backend;
+		using namespace game::backend::event;
+		BackendFixture fixture, destination; fixture.EnableTurnPlayers();
+		auto* game = fixture.GetGame(); auto* state = game->GetState();
+		state->m_settings.global.SelectRuleset( "smac" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		state->m_settings.global.SelectSmacCustomSize( 48, 48 );
+		const auto error = fixture.WithEngineGameScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* handlers = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/game_settings" ) );
+			fixture.RegisterEvent( "game_settings", new EventHandler( gc_space, "game_settings", static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+				static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+			auto* change = VALUE( value::Array,, ( value::array_elements_t{ VALUE( value::String,, "planet_size" ), VALUE( value::String,, "1" ) } ) );
+			game->AddEvent( new Event( game, Event::ES_LOCAL, 0, GSE_CALL, "game_settings", {
+				{ "changes", VALUE( value::Array,, ( value::array_elements_t{ change } ) ) } } ) );
+			fixture.ProcessEvents();
+			GT_ASSERT( state->m_settings.global.map.GetSmacWorldSize()->category == 1 && state->m_settings.global.map.size_x == 48, "actual accepted event lost preset identity" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "event route: " + error );
+		types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS ); packet.data.str = state->Serialize().ToString();
+		types::Packet decoded( types::Packet::PT_NONE ); decoded.Deserialize( packet.Serialize() );
+		auto* restored = destination.GetGame()->GetState(); restored->Deserialize( types::Buffer( decoded.data.str ) );
+		GT_ASSERT( restored->m_settings.global.map.GetSmacWorldSize() == state->m_settings.global.map.GetSmacWorldSize()
+			&& *restored->m_settings.global.GetSmacWorldSizeRules() == *state->m_settings.global.GetSmacWorldSizeRules(), "State Packet lost accepted category or frozen source" );
+		GT_OK();
+	} );
 	task->AddTest( "actual world snapshot writer captures RNG without drawing or changing body layout", GT() {
 		for ( const auto* id : { "smac", "smax" } ) {
 			BackendFixture fixture;
@@ -5001,7 +5074,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			auto* game = fixture.GetGame();
 			auto& settings = game->GetState()->m_settings.global;
 			settings.SelectRuleset( id );
-			settings.InitializeHostRules( smac_rules_fixture::Source );
+			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			types::Buffer old_body;
 			game->GetMap()->SaveToBuffer( old_body );
 			const auto managers = fixture.WorldManagers();
@@ -5033,6 +5106,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			for ( const auto& invalid : world_rules_fixture::InvalidTechnologyHeaders( ruleset ) ) {
 				rejected.emplace_back( "technology: " + invalid.first, invalid.second );
 			}
+			for ( const auto& invalid : world_rules_fixture::InvalidWorldSizeHeaders( ruleset ) ) { rejected.emplace_back( "world-size: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
@@ -5048,9 +5122,14 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				auto wrong_body = world_rules_fixture::WorldHeader( turn );
 				wrong_body.WriteInt( 0 );
 				rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
+				for ( const auto xy : { std::pair< int64_t, int64_t >{ 10, 8 }, { 8, 9 }, { -1, 8 }, { INT64_MAX, 8 } } ) {
+					auto wrong_map = world_rules_fixture::WorldHeader( turn ); types::Buffer map;
+					map.WriteInt( xy.first ); map.WriteInt( xy.second ); wrong_map.WriteString( map.ToString() );
+					rejected.emplace_back( "world-size: mismatched actual tile prefix", wrong_map.ToString() );
+				}
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();
@@ -5078,7 +5157,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				packet.udata.download.size = packet.data.str.size();
 				const auto setup_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 					state->m_settings.global.SelectRuleset( ruleset );
-					state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+					state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( state->m_settings.global );
 					const auto on_callback = [ & ]() { return NATIVE_CALL( &callbacks ) { ++callbacks; return VALUE( value::Undefined ); } ); };
 					game->On( GSE_CALL, "start", on_callback() ); game->On( GSE_CALL, "turn", on_callback() );
 					game->GetUM()->On( GSE_CALL, "unit_spawn", on_callback() ); game->GetBM()->On( GSE_CALL, "base_spawn", on_callback() );
@@ -6237,7 +6316,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "world completion decoder rejects malformed records without a usable turn state", GT() {
 		BackendFixture fixture; fixture.EnableTurnPlayers();
 		auto* state = fixture.GetGame()->GetState();
-		state->m_settings.global.SelectRuleset( "smac" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		state->m_settings.global.SelectRuleset( "smac" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( state->m_settings.global );
 		for ( const auto& invalid : world_rules_fixture::InvalidTurnHeaders() ) {
 			types::Buffer input( invalid.second ); world_snapshot::ValidateHeader( input, state->m_settings.global ); world_snapshot::ReadRandomState( input );
 			bool rejected = false;
@@ -6249,7 +6328,7 @@ static void AddWorldCompletionTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "world completion capture owns exact occupied roster including disconnected players", GT() {
 		BackendFixture fixture; fixture.EnableWorldSnapshot(); fixture.EnableTurnPlayers(); fixture.SetSnapshotTurn( 37 );
 		auto* game = fixture.GetGame(); auto* state = game->GetState();
-		state->m_settings.global.SelectRuleset( "smax" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		state->m_settings.global.SelectRuleset( "smax" ); state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( state->m_settings.global );
 		auto* first = state->m_slots->GetSlot( 0 ).GetPlayer(); auto* last = state->m_slots->GetSlot( 2 ).GetPlayer();
 		first->CompleteTurn(); last->Connect(); last->Disconnect();
 		const auto random = game->GetRandom()->GetStateString();
@@ -6398,7 +6477,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 			for ( auto* fixture : { &source, &destination } ) {
 				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
 				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			}
 			source.SetRunning( true ); source.SetSnapshotTurn( 37 );
 			source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
@@ -6492,7 +6571,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "world turn restore validates signed ID and mission year boundaries", GT() {
 		BackendFixture source; source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
 		auto& settings = source.GetGame()->GetState()->m_settings.global;
-		settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+		settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 		const auto snapshot = source.WorldSnapshot();
 		types::Buffer input( snapshot ); game::backend::world_snapshot::ValidateHeader( input, settings );
 		game::backend::world_snapshot::ReadRandomState( input );
@@ -6561,7 +6640,7 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 				for ( auto* fixture : { &source, &destination } ) {
 					fixture->EnableWorldSnapshot();
 					auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source );
+					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 				}
 				source.SetRunning( true ); source.SetSnapshotTurn( 37 );
 				source.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );

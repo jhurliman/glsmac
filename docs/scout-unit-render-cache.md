@@ -152,3 +152,11 @@ has the identical tested tree (`bdf9ae5b2f3c8265f38ba23f8456e410a03b03cb`).
 These publication results are distinct from the source sanitizer receipts above.
 Logs use the `scout-cache-publication-*` prefix in the same retained evidence
 directory. No test fixture behavior or production code changed at that checkpoint.
+
+The anchor admission update on exact publication source 6ad2c846 passes all
+eight normal CTests in 51.96 seconds, all three affected tracked native groups,
+and changed-production-TU analysis with zero failures in 1.96 seconds. The
+production and regression changes are the same as source 12499e46; only the
+receipt union differs. Logs use the publication- prefix under
+/home/jhurliman/src/glsmac-scout-anchor/. Source sanitizer and copied-control
+receipts above remain separate from this exact publication run.

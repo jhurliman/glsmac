@@ -672,26 +672,27 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "conventional movement fungus lottery and upkeep preserve exact paired RNG and failure marker", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "conventional HQ fungus lottery and upkeep preserve exact paired RNG and failure marker", []( GSE*, context::Context* ) -> std::string {
 		using namespace map::tile;
-		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		const auto initial_id = Unit::GetNextId(), base_id = base::Base::GetNextId();
+		util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); base::Base::SetNextId( base_id ); } );
 		for ( int scenario = 0; scenario < 3; ++scenario ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); Land( game ); Define( game->GetUM() ); fixture.RetainedPlanet( scenario == 2 ? 1 : 0, scenario == 2 ? -9 : 9 );
-				auto record = Record(); record.damage = 2; auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
-				destination->features = FEATURE_XENOFUNGUS;
+				auto record = Record(); auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
+				HQ( GSE_CALL, game, unit, source ); destination->features = FEATURE_XENOFUNGUS;
 				const uint32_t seed = SeedForBin( scenario == 0 ? 0 : 8 ); fixture.GameplayRandom( { seed, 0xabcdef01 } ); fixture.Updates();
 				const auto jsf = game->GetRandom()->GetStateString(); fixture.MoveEvent( GSE_CALL, unit, destination );
 				const bool failed = scenario == 1;
 				GT_ASSERT( unit->GetTile() == ( failed ? source : destination ) && unit->Conventional().failed_move == failed
-					&& unit->Conventional().spent == ( scenario == 0 ? 9 : 3 ) && unit->Conventional().damage == 2,
+					&& unit->Conventional().spent == ( scenario == 0 ? 9 : 3 ) && unit->Conventional().damage == 0,
 					"fungus result did not use retained PLANET or the admitted lottery" );
 				GT_ASSERT( fixture.GameplayRandom() == SmacGameplayRandomState( scenario == 2 ? seed : SharedNext( seed ), 0xabcdef01 )
 					&& game->GetRandom()->GetStateString() == jsf, "lottery advanced the wrong stream or wrong draw count" );
 				if ( failed ) {
 					game->AdvanceTurn( 2 );
-					GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move && unit->Conventional().damage == 2,
+					GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move && unit->Conventional().damage == 0,
 						"genuine upkeep erased retry marker or healed stored damage" );
 					const auto retry_seed = SeedForBin( 4 ); fixture.GameplayRandom( { retry_seed, 7 } );
 					fixture.MoveEvent( GSE_CALL, unit, destination );
@@ -699,6 +700,38 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 						&& fixture.GameplayRandom() == SmacGameplayRandomState( SharedNext( retry_seed ), 7 ), "retry omitted Q bonus or spent a second draw" );
 				}
 				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional destination fungus without HQ rejects atomically while ordinary exit remains", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		for ( int scenario = 0; scenario < 4; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
+				fixture.RetainedPlanet( scenario == 1 ? 1 : 0, 9 ); auto record = Record();
+				if ( scenario == 2 ) { record.spent = 1; record.failed_move = true; }
+				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
+				destination->features = FEATURE_XENOFUNGUS; if ( scenario == 3 ) { source->features = FEATURE_XENOFUNGUS; }
+				fixture.GameplayRandom( { 0, 0xdeadbeef } ); fixture.Updates();
+				const auto snapshot = fixture.Snapshot(); const auto members = source->units; const auto next = Unit::GetNextId();
+				std::string rejection; try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& e ) { rejection = e.what(); }
+				GT_ASSERT( rejection.find( "nearest-base" ) != std::string::npos, "base-free fungus lacked explicit caller-context rejection at " + std::to_string( scenario ) );
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				GT_ASSERT( fixture.Snapshot() == snapshot && unit->Conventional() == record && unit->GetTile() == source && source->units == members
+					&& destination->units.empty() && Unit::GetNextId() == next, "unsupported fungus changed saved authority or membership" );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ),
+					"unsupported fungus published unit effects" );
+				// The encounter prelude tests destination fungus. A source-only fungus
+				// flag does not require that unimplemented native-life context.
+				source->features = FEATURE_XENOFUNGUS; destination->features = FEATURE_NONE;
+				manager->UpdateConventionalUnit( GSE_CALL, unit, Record() ); fixture.Updates();
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				GT_ASSERT( unit->GetTile() == destination && unit->Conventional().spent == 3 && !unit->Conventional().failed_move
+					&& fixture.GameplayRandom() == SmacGameplayRandomState( 0, 0xdeadbeef ), "ordinary exit incorrectly inherited destination-fungus fence" ); GT_OK();
 			} ); if ( !error.empty() ) { return error; }
 		}
 		GT_OK();
@@ -763,8 +796,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		std::string bytes; SmacGameplayRandomState saved( 0, 0 ); ConventionalUnitState record = Record();
 		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = source.Game(); Land( game ); Define( game->GetUM() ); source.RetainedPlanet( 0, 9 );
-			auto* unit = Spawn( GSE_CALL, source, record ); unit->GetTile()->E->features = FEATURE_XENOFUNGUS;
-			source.GameplayRandom( { SeedForBin( 8 ), 77 } ); source.MoveEvent( GSE_CALL, unit, unit->GetTile()->E );
+			record.spent = 2; auto* unit = Spawn( GSE_CALL, source, record );
+			source.GameplayRandom( { 1, 77 } ); source.MoveEvent( GSE_CALL, unit, unit->GetTile()->E );
+			GT_ASSERT( unit->Conventional().failed_move && unit->Conventional().spent == 3, "ordinary partial command did not preserve a genuine failed attempt" );
 			record = unit->Conventional(); saved = source.GameplayRandom(); bytes = source.Snapshot(); GT_OK();
 		} ); if ( !setup.empty() ) { return setup; }
 		const auto restored = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -777,7 +811,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		for ( auto* fixture : { &source, &destination } ) {
 			const auto error = fixture->Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture->Game(); game->AdvanceTurn( 2 ); auto* unit = game->GetUM()->GetUnit( 71 );
-				fixture->MoveEvent( GSE_CALL, unit, unit->GetTile()->E );
+				auto* target = unit->GetTile()->E; fixture->MoveEvent( GSE_CALL, unit, target );
+				GT_ASSERT( unit->GetTile() == target && unit->Conventional().spent == 3 && !unit->Conventional().failed_move && fixture->GameplayRandom() == saved, "continued ordinary command changed saved stream or failed to move" );
 				if ( continued.empty() ) { continued = fixture->Snapshot(); }
 				else { GT_ASSERT( fixture->Snapshot() == continued, "restored command did not continue exact record tile and paired RNG" ); }
 				GT_OK();

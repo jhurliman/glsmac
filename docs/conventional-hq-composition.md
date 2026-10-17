@@ -48,11 +48,12 @@ producer for the unimplemented farther branch.
 Only preparation/admission changes. Allocations still precede the synchronous
 nonthrowing Unit/tile/paired-RNG commit, and presentation remains postcommit.
 No new wire version, entropy, JSF draw, animation callback, home inference or
-rollback ownership is introduced. The existing base-free fungus route is a
-separate limitation: its original complete-request fixture inherited a zero
-nearest-distance value when no Base existed. It does not establish arbitrary
-initialized no-base native-life/CRT behavior; a separately scoped correction
-will fence that unsupported destination-fungus path.
+rollback ownership is introduced. The separate
+[destination-fungus correction](conventional-fungus-admission.md) now rejects
+that path without an admitted endpoint HQ. The earlier base-free original
+complete-request fixture inherited a zero nearest-distance value when no Base
+existed; it does not establish arbitrary initialized no-base native-life/CRT
+behavior.
 
 ## Literal original comparison
 

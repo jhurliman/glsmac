@@ -149,6 +149,11 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		// another base winning an equal-distance tie cannot invalidate it.
 		admitted_hq = hq;
 	}
+	// Without an endpoint HQ the original nearest-base result may retain prior state,
+	// and destination fungus can enter the unsupported native-life/CRT encounter path.
+	if ( !admitted_hq && ( destination->features & map::tile::FEATURE_XENOFUNGUS ) ) {
+		throw std::runtime_error( "Conventional destination fungus requires admitted nearest-base context" );
+	}
 	const auto edge_source = EdgeTile( *source, admitted_hq ), edge_destination = EdgeTile( *destination, admitted_hq );
 	const smac_edge::Query query{
 		{ design.id, static_cast< smac_edge::Chassis >( design.chassis ), static_cast< int32_t >( catalog.chassis.chassis.at( design.chassis ).triad ),

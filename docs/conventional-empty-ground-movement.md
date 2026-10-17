@@ -8,6 +8,9 @@ starting units in the default world script.
 This note records the original globally base-free checkpoint. The subsequent
 [friendly HQ extension](conventional-friendly-hq-movement.md) adds one narrowly
 validated exception; its scope and validation are documented separately.
+The later [destination-fungus correction](conventional-fungus-admission.md)
+supersedes this checkpoint's base-free fungus admission: destination fungus now
+requires an admitted endpoint HQ. Pure edge/lottery results remain unchanged.
 
 ## Admitted producer inputs
 

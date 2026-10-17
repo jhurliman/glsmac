@@ -41,7 +41,15 @@ overflow type can become active without reducing the combined count.
 `Compete` requires managed allocation, population at least five, turn after
 100, and either nutrient intake strictly above demand or no positive candidate
 nutrient return. The configured minimum size does not change that fixed-five
-gate. Available, nonobsolete types compete with the existing tile best score:
+gate. Evaluation order is managed/population, nutrient demand, candidate maximum
+when needed, then the turn gate. The retained `linear-004fd650.json` (SHA-256
+`ae1b27e7d30118ac1aff9065e02d7af5fe685110d24ad40a0f53c5a64cd343ed`)
+multiplies demand at `0x4fe0b5`, compares intake at `0x4fe0bc`, conditionally
+tests candidate maximum at `0x4fe0c8`, and only then compares turn at `0x4fe0d0`.
+Thus early turns still reject an overflowing demand under this port's checked
+policy; specialist scoring after the turn gate remains unevaluated. This is
+not a claim that the original rejects overflow.
+Available, nonobsolete types compete with the existing tile best score:
 
 ```text
 d = clamp(current_energy + provisional, 1, 99)
@@ -78,9 +86,11 @@ between population and intermediate counts is invented.
 
 Evaluated signed32 intermediate overflow rejects. Competition preserves the
 observed psych, economy and labs instruction order, including denominator
-addition before clamping. Final-fill grouping is preserved even when changing
+addition before clamping and demand before the early-turn gate. Final-fill
+grouping is preserved even when changing
 the grouping would make a different intermediate overflow. Unused branches are
-not evaluated. This checked policy is narrower than unmeasured extreme original
+not evaluated: "unused" follows the original instruction control flow, not an
+algebraic reordering of the conditions. This checked policy is narrower than unmeasured extreme original
 arithmetic; it does not change collection's separately measured wrapping sums.
 All operations stage owned values, so rejection leaves caller inputs unchanged.
 
@@ -120,8 +130,11 @@ correction does not change the production arithmetic.
 ## Focused publication and validation
 
 This publication is based on scoring review `91a4403ae58c095d95bef42f68c03db1358bc905`.
-The pure implementation, fixture, projector and six retained test groups match
-integrated feature source `b6d356d39452a93c9a139cbcfe1e0dccd72f3c85` exactly.
+The pure implementation, fixture, projector and six retained test groups were
+extracted from integrated feature source `b6d356d39452a93c9a139cbcfe1e0dccd72f3c85`.
+Review follow-ups keep projector integrity checks active under Python optimization
+and clarify the preserved demand-before-turn instruction order, with a bounded
+early-turn overflow regression. Production control flow is unchanged.
 It omits only the typed resolver declaration/include, its thirteen-line adapter,
 two test includes and the resolver test group. No collection or live Base/query
 dependency is imported. Registrations are additive on the scoring base.
@@ -144,3 +157,9 @@ The detached orchestrator is a separate consumer of these stages. Live Base
 publication still needs a coherent assignment representation and complete
 calculation/handler ordering. There are no new world/settings versions, RNG
 draws, UI commands or default activation.
+
+The demand-order review follow-up ran the six actual native test functions in
+an isolated minimal registry linked to the production helper, optimized with
+UBSan. All six pass. A copied helper moving the turn guard ahead of demand
+fails the new instruction-boundary assertion. The linked engine rerun is left
+to the shared cached batch; no full build or platform run was repeated.

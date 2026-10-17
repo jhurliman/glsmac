@@ -8,6 +8,8 @@
 #include "Types.h"
 #include "config/Types.h"
 
+namespace gse::tests { class BackendFixture; }
+
 namespace resource {
 
 CLASS( ResourceManager, common::Module )
@@ -24,6 +26,7 @@ CLASS( ResourceManager, common::Module )
 	const std::string& GetCustomPath( const std::string& path );
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	config::smac_type_t m_detected_smac_type = config::ST_UNKNOWN;
 	std::string m_data_path = "";

@@ -21,6 +21,7 @@ void Connection::SetState( State* state ) {
 		m_state->DetachConnection();
 	}*/
 	m_state = state;
+	if (!state) { m_player = nullptr; m_slot = 0; }
 }
 
 void Connection::ResetHandlers() {

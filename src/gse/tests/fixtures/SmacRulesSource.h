@@ -3,17 +3,38 @@
 #include "game/backend/settings/Settings.h"
 
 #include <array>
+#include <bitset>
 #include <stdexcept>
 #include <string>
 
 namespace gse::tests::smac_rules_fixture {
+
+inline game::backend::settings::SmacTechnologyRules Technologies() {
+	game::backend::settings::SmacTechnologyRules result;
+	for ( size_t i = 0 ; i < result.technologies.size() ; ++i ) {
+		result.technologies[ i ] = { static_cast< int32_t >( i ), "Repeated technology name", "Tech" + std::to_string( i ),
+			{ INT32_MIN, static_cast< int32_t >( i ), -static_cast< int32_t >( i ), INT32_MAX }, { "None", "None" }, static_cast< uint16_t >( i * 5 ) };
+	}
+	return result;
+}
+
+inline std::string TechnologySource() {
+	std::string source = "#TECHNOLOGY\n";
+	for ( const auto& row : Technologies().technologies ) {
+		source += row.name + ", " + row.key;
+		for ( const auto value : row.priorities ) { source += ", " + std::to_string( value ); }
+		for ( const auto& prerequisite : row.prerequisites ) { source += ", " + prerequisite; }
+		source += ", " + std::bitset< 9 >( row.flags ).to_string() + "\n";
+	}
+	return source + "#END\n";
+}
 
 inline game::backend::settings::SmacProductionRules Production() {
 	game::backend::settings::SmacProductionRules result{ 123, -50, INT32_MAX, INT32_MIN, {} };
 	for ( size_t i = 0 ; i < result.facilities.size() ; ++i ) {
 		result.facilities[ i ] = { static_cast< int32_t >( i + 1 ), i < 2 ? "Repeated display name" : "Facility " + std::to_string( i + 1 ),
 			i == 0 ? INT32_MIN : i == 70 ? INT32_MAX : static_cast< int32_t >( 100 + i ), -static_cast< int32_t >( i ),
-			i == 0 || i == 37 ? "None" : i == 70 ? "Disable" : "UnknownTech" + std::to_string( i ) };
+			i == 0 || i == 37 ? "None" : i == 70 ? "Disable" : i == 2 ? "Tech2" : "UnknownTech" + std::to_string( i ) };
 	}
 	return result;
 }
@@ -37,7 +58,7 @@ inline std::string ProductionSource() {
 // Synthetic numeric values intentionally differ from installed defaults.
 inline std::string Source( const std::string& filename ) {
 	if ( filename != "alpha.txt" ) { throw std::runtime_error( "Unexpected rules filename: " + filename ); }
-	return ProductionSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	return ProductionSource() + TechnologySource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -47,19 +68,22 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 	using game::backend::resource::smac::RuleTriple;
 	return rules && rules->base_square == RuleTriple{ 17, INT32_MIN, INT32_MAX }
 		&& rules->bonus_square == RuleTriple{ -2, 300, 0 } && rules->recycling == RuleTriple{ -7, 8, 9 }
-		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production();
+		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production()
+		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::array< int64_t, 9 >& values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
-	const std::optional< std::string >& production = std::nullopt ) {
+	const std::optional< std::string >& production = std::nullopt,
+	const std::optional< std::string >& technologies = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 3 );
+	result.WriteInt( 4 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
 		for ( const auto value : values ) { result.WriteInt( value ); }
 		result.WriteString( production ? *production : Production().Serialize().ToString() );
+		result.WriteString( technologies ? *technologies : Technologies().Serialize().ToString() );
 	}
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;

@@ -44,6 +44,7 @@
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
 #include "gse/value/Bool.h"
+#include <limits>
 #include <algorithm>
 
 namespace game {
@@ -93,45 +94,205 @@ common::mt_id_t Game::MT_Ping() {
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_Init( State* state ) {
- 	MT_Request request = {};
-	request.op = OP_INIT;
-	return MT_CreateRequest( request );
+world_ticket_t Game::ReserveWorldTicket() {
+	static std::atomic< world_ticket_t > next{ 0 };
+	auto value = next.load();
+	do {
+		if ( value == std::numeric_limits< world_ticket_t >::max() ) { THROW( "world admission tickets exhausted" ); }
+	} while ( !next.compare_exchange_weak( value, value + 1 ) );
+	return value + 1;
 }
 
-common::mt_id_t Game::MT_GetMapData() {
+pending_initialization_t Game::MT_Init( State* state, const world_ticket_t previous_world ) {
+	if ( !state ) { THROW( "initialization requires a configured State" ); }
+	std::lock_guard guard( m_admission_mutex );
+	return EnqueueInitialization( state, previous_world );
+}
+
+pending_initialization_t Game::MT_LoadMap( const world_ticket_t world, const std::string& path ) {
+	if ( path.empty() ) { THROW( "map path is empty" ); }
+	std::lock_guard guard( m_admission_mutex );
+	if ( !MatchesActiveAdmission( world ) ) { THROW( "map reload requires the active world ticket" ); }
+	return EnqueueInitialization( m_active_admission->state, world, path );
+}
+
+pending_initialization_t Game::EnqueueInitialization( State* state, const world_ticket_t previous_world, std::optional< std::string > map_path ) {
+	const auto ticket = ReserveWorldTicket();
+	const auto admission = std::make_shared< WorldAdmission >( ticket, WorldAdmission::INITIALIZATION, state, state->CaptureGameSession(), previous_world, std::move( map_path ) );
+	// Publish the real State root before the request can be consumed. The
+	// immutable session token identifies a binding, but is not itself a GC root.
+	m_admissions.emplace( ticket, admission );
+	MT_Request request = {};
+	request.op = OP_INIT;
+	request.world_ticket = ticket;
+	try {
+		const auto id = MT_CreateRequest( request );
+		admission->request = id;
+		return { id, ticket };
+	}
+	catch ( ... ) { m_admissions.erase( ticket ); throw; }
+}
+
+void Game::ReleaseAdmissionRequest( const common::mt_id_t request ) {
+	std::lock_guard guard( m_admission_mutex );
+	for ( auto it = m_admissions.begin(); it != m_admissions.end(); ++it ) {
+		if ( it->second->request == request ) { m_admissions.erase( it ); break; }
+	}
+}
+
+MT_Response Game::MT_GetResponse( const common::mt_id_t request ) {
+	const auto response = MTModule::MT_GetResponse( request );
+	if ( response.result != R_NONE ) { ReleaseAdmissionRequest( request ); }
+	return response;
+}
+
+MT_Response Game::MT_WaitResponse( const common::mt_id_t request ) {
+	const auto response = MTModule::MT_WaitResponse( request );
+	ReleaseAdmissionRequest( request );
+	return response;
+}
+
+void Game::CancelAdmission( const std::shared_ptr< WorldAdmission >& admission ) {
+	admission->cancelled = true;
+	if ( m_active_admission == admission ) {
+		m_init_cancel = true;
+		admission->state->RetireGameCallbacks( admission->admitted_binding );
+	}
+}
+
+void Game::MT_Cancel( const common::mt_id_t request ) {
+	if ( !request ) { return; }
+	{
+		std::lock_guard guard( m_admission_mutex );
+		for ( const auto& entry : m_admissions ) {
+			if ( entry.second->request == request ) { CancelAdmission( entry.second ); break; }
+		}
+	}
+	// Neither wait nor MT payload destruction may hold the admission mutex.
+	MTModule::MT_Cancel( request );
+	// MTModule leaves an already completed response for its caller to consume.
+	const auto response = MTModule::MT_GetResponse( request );
+	MTModule::MT_DestroyResponse( response );
+	ReleaseAdmissionRequest( request );
+}
+
+bool Game::MatchesActiveAdmission( const world_ticket_t ticket ) const {
+	return ticket && m_active_admission && m_active_admission->ticket == ticket
+		&& !m_active_admission->cancelled && m_state == m_active_admission->state
+		&& m_state->CaptureGameSession() == m_active_admission->admitted_binding
+		&& m_state->IsGameSessionActive( m_active_admission->admitted_binding );
+}
+
+common::mt_id_t Game::MT_GetMapData( const world_ticket_t world ) {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
+	request.world_ticket = world;
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_Reset() {
-	m_init_cancel = true; // stop initialization in Iterate()
+common::mt_id_t Game::MT_Reset( const world_ticket_t world, const world_ticket_t pending_initialization ) {
+	std::lock_guard guard( m_admission_mutex );
 	MT_Request request = {};
 	request.op = OP_RESET;
-	return MT_CreateRequest( request );
+	request.world_ticket = world;
+	request.data.reset.pending_initialization = pending_initialization;
+	const auto id = MT_CreateRequest( request );
+	RetireWorld( world, pending_initialization );
+	return id;
 }
 
-common::mt_id_t Game::MT_SaveMap( const std::string& path ) {
+void Game::MT_RetireWorld( const world_ticket_t world, const world_ticket_t pending_initialization ) {
+	std::lock_guard guard( m_admission_mutex );
+	RetireWorld( world, pending_initialization );
+}
+
+void Game::RetireWorld( const world_ticket_t world, const world_ticket_t pending_initialization ) {
+	for ( const auto& entry : m_admissions ) {
+		if ( entry.first == world || entry.first == pending_initialization ) { CancelAdmission( entry.second ); }
+	}
+	if ( m_active_admission && ( m_active_admission->ticket == world || m_active_admission->ticket == pending_initialization ) ) { CancelAdmission( m_active_admission ); }
+	if ( m_failed_admission && ( m_failed_admission->ticket == world || m_failed_admission->ticket == pending_initialization ) ) {
+		CancelAdmission( m_failed_admission );
+		m_failed_admission.reset();
+		m_failed_admission_error.clear();
+	}
+}
+
+common::mt_id_t Game::MT_ResetController() {
+	const auto barrier = MT_BeginResetController();
+	try { return MT_SubmitResetController( barrier ); }
+	catch ( ... ) { MT_AbandonResetController( barrier ); throw; }
+}
+
+world_ticket_t Game::MT_BeginResetController() {
+	std::lock_guard guard( m_admission_mutex );
+	const auto cutoff = ReserveWorldTicket();
+	const auto admission = std::make_shared< WorldAdmission >( cutoff, WorldAdmission::CONTROLLER_RESET, m_state, m_state ? m_state->CaptureGameSession() : State::game_session_t{} );
+	m_admissions.emplace( cutoff, admission );
+	for ( const auto& entry : m_admissions ) {
+		if ( entry.second->kind == WorldAdmission::INITIALIZATION ) { CancelAdmission( entry.second ); }
+	}
+	if ( m_active_admission ) { CancelAdmission( m_active_admission ); }
+	m_failed_admission.reset();
+	m_failed_admission_error.clear();
+	return cutoff;
+}
+
+common::mt_id_t Game::MT_SubmitResetController( const world_ticket_t barrier ) {
+	std::lock_guard guard( m_admission_mutex );
+	const auto found = m_admissions.find( barrier );
+	if ( found == m_admissions.end() || found->second->kind != WorldAdmission::CONTROLLER_RESET || found->second->cancelled ) {
+		THROW( "reset controller barrier is retired or unknown" );
+	}
+	const auto& admission = found->second;
+	if ( admission->request ) { return admission->request; }
+	MT_Request request = {};
+	request.op = OP_RESET;
+	request.world_ticket = barrier;
+	request.data.reset.controller = true;
+	const auto id = MT_CreateRequest( request );
+	admission->request = id;
+	return id;
+}
+
+void Game::MT_AbandonResetController( const world_ticket_t barrier ) {
+	common::mt_id_t request = 0;
+	{
+		std::lock_guard guard( m_admission_mutex );
+		const auto found = m_admissions.find( barrier );
+		if ( found == m_admissions.end() ) { return; }
+		if ( found->second->kind != WorldAdmission::CONTROLLER_RESET ) { THROW( "not a reset controller barrier" ); }
+		found->second->cancelled = true;
+		request = found->second->request;
+		if ( !request ) { m_admissions.erase( found ); }
+	}
+	if ( request ) { MT_Cancel( request ); }
+}
+
+common::mt_id_t Game::MT_SaveMap( const world_ticket_t world, const std::string& path ) {
 	ASSERT( !path.empty(), "savemap path is empty" );
 	MT_Request request = {};
 	request.op = OP_SAVE_MAP;
-	NEW( request.data.save_map.path, std::string );
-	*request.data.save_map.path = path;
-	return MT_CreateRequest( request );
+	request.world_ticket = world;
+	NEW( request.data.save_map.path, std::string, path );
+	try { return MT_CreateRequest( request ); }
+	catch ( ... ) { DestroyRequest( request ); throw; }
 }
 
-common::mt_id_t Game::MT_GetFrontendRequests() {
+common::mt_id_t Game::MT_GetFrontendRequests( const world_ticket_t world ) {
 	MT_Request request = {};
 	request.op = OP_GET_FRONTEND_REQUESTS;
+	request.world_ticket = world;
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest >& requests ) {
+common::mt_id_t Game::MT_SendBackendRequests( const world_ticket_t world, const std::vector< BackendRequest >& requests ) {
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
+	request.world_ticket = world;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
-	return MT_CreateRequest( request );
+	try { return MT_CreateRequest( request ); }
+	catch ( ... ) { DestroyRequest( request ); throw; }
 }
 
 #ifdef DEBUG
@@ -195,6 +356,12 @@ void Game::Stop() {
 	m_random = nullptr;
 
 	MTModule::Stop();
+	{
+		std::lock_guard guard( m_admission_mutex );
+		m_admissions.clear();
+		m_failed_admission.reset();
+		m_failed_admission_error.clear();
+	}
 }
 
 void Game::Iterate() {
@@ -907,6 +1074,14 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "Game" );
+	{
+		std::lock_guard guard( m_admission_mutex );
+		for ( const auto& entry : m_admissions ) {
+			if ( entry.second->state ) { GC_REACHABLE( entry.second->state ); }
+		}
+		if ( m_active_admission ) { GC_REACHABLE( m_active_admission->state ); }
+		if ( m_failed_admission ) { GC_REACHABLE( m_failed_admission->state ); }
+	}
 
 	if ( m_tm ) {
 		GC_REACHABLE( m_tm );
@@ -978,15 +1153,50 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
 	response.op = request.op;
+	response.world_ticket = request.world_ticket;
+	if ( request.op == OP_GET_MAP_DATA || request.op == OP_SAVE_MAP ||
+		request.op == OP_GET_FRONTEND_REQUESTS || request.op == OP_SEND_BACKEND_REQUESTS ) {
+		std::lock_guard guard( m_admission_mutex );
+		if ( !MatchesActiveAdmission( request.world_ticket ) ) {
+			if ( request.op == OP_GET_MAP_DATA && m_failed_admission &&
+				m_failed_admission->ticket == request.world_ticket && !m_failed_admission->cancelled ) {
+				response.result = R_ERROR;
+				NEW( response.data.error.error_text, std::string, m_failed_admission_error );
+			}
+			else { response.result = R_ABORTED; }
+			return response;
+		}
+	}
 
 	switch ( request.op ) {
 		case OP_INIT: {
 			//MTModule::Log( "Got init request" );
 
-			ASSERT( m_state, "state not set" );
-
-			InitGame( response, MT_C );
-			response.data.init.slot_index = m_slot_num;
+			std::shared_ptr< WorldAdmission > admission;
+			{
+				std::lock_guard guard( m_admission_mutex );
+				const auto found = m_admissions.find( request.world_ticket );
+				if ( found != m_admissions.end() ) { admission = found->second; }
+				if ( !admission || admission->kind != WorldAdmission::INITIALIZATION || admission->cancelled ||
+					m_state != admission->state || m_state->CaptureGameSession() != admission->binding ||
+					!m_state->IsGameSessionActive( admission->binding ) ||
+					( admission->previous ? !MatchesActiveAdmission( admission->previous ) : !!m_active_admission ) ) {
+					response.result = R_ABORTED;
+					break;
+				}
+			}
+			try { InitGame( admission, response, MT_C ); }
+			catch ( const std::exception& error ) {
+				// A native/immediate initialization failure must still finish the
+				// MT request. Deferred owner failures are handled by their own path.
+				{
+					std::lock_guard guard( m_admission_mutex );
+					CancelAdmission( admission );
+				}
+				response.result = R_ERROR;
+				NEW( response.data.error.error_text, std::string, error.what() );
+			}
+			if ( response.result == R_SUCCESS ) { response.data.init.slot_index = m_slot_num; }
 			break;
 		}
 		case OP_GET_MAP_DATA: {
@@ -1020,7 +1230,29 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_RESET: {
 			//MTModule::Log( "Got reset request" );
-			ResetGame();
+			bool reset = false;
+			{
+				std::lock_guard guard( m_admission_mutex );
+				if ( request.data.reset.controller ) {
+					const auto found = m_admissions.find( request.world_ticket );
+					if ( found != m_admissions.end() && found->second->kind == WorldAdmission::CONTROLLER_RESET && !found->second->cancelled ) {
+						const auto& controller = found->second;
+						if ( m_active_admission ) {
+							reset = m_active_admission->ticket < controller->ticket && m_state == m_active_admission->state &&
+								m_state->CaptureGameSession() == m_active_admission->admitted_binding;
+						}
+						else {
+							reset = m_state == controller->state && ( !m_state || m_state->CaptureGameSession() == controller->binding );
+						}
+					}
+				}
+				else if ( m_active_admission ) {
+					reset = ( m_active_admission->ticket == request.world_ticket ||
+						m_active_admission->ticket == request.data.reset.pending_initialization ) &&
+						m_state == m_active_admission->state && m_state->CaptureGameSession() == m_active_admission->admitted_binding;
+				}
+			}
+			if ( reset ) { ResetGame(); }
 			response.result = R_SUCCESS;
 			break;
 		}
@@ -1031,10 +1263,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SAVE_MAP: {
 			//MTModule::Log( "got save map request" );
+			if ( m_game_state != GS_RUNNING || !m_map ) { response.result = R_ABORTED; break; }
 			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
-				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
+				NEW( response.data.error.error_text, std::string, map::Map::GetErrorString( ec ) );
 			}
 			else {
 				response.result = R_SUCCESS;
@@ -1057,6 +1290,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
+			if ( m_game_state != GS_RUNNING || !m_am ) { response.result = R_ABORTED; break; }
 			try {
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
@@ -1131,6 +1365,9 @@ void Game::DestroyRequest( const MT_Request& request ) {
 }
 
 void Game::DestroyResponse( const MT_Response& response ) {
+	if ( response.result == R_ERROR && response.data.error.error_text ) {
+		DELETE( response.data.error.error_text );
+	}
 	if ( response.result == R_SUCCESS ) {
 		switch ( response.op ) {
 			case OP_GET_MAP_DATA: {
@@ -1432,6 +1669,11 @@ void Game::InitFailed( const std::string& error_text ) {
 		}; }
 	);
 
+	{
+		std::lock_guard guard( m_admission_mutex );
+		m_failed_admission = m_active_admission;
+		m_failed_admission_error = error_text;
+	}
 	ResetGame();
 	m_state = nullptr;
 
@@ -1633,7 +1875,7 @@ void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	m_pending_frontend_requests->push_back( request );
 }
 
-void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
+void Game::InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE ) {
 
 	if ( m_game_state != GS_NONE ) {
 		ResetGame();
@@ -1644,6 +1886,22 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	// Reset retires the old session before any new initialization work queues.
 	if ( !m_state->GetGame() ) { m_state->SetGame( this ); }
+	{
+		std::lock_guard guard( m_admission_mutex );
+		admission->admitted_binding = m_state->CaptureGameSession();
+		m_active_admission = admission;
+		m_failed_admission.reset();
+		m_failed_admission_error.clear();
+		if ( admission->cancelled || canceled ) {
+			CancelAdmission( admission );
+			response.result = R_ABORTED;
+			return;
+		}
+	}
+	if ( admission->map_path ) {
+		m_state->m_settings.global.map.type = settings::MapSettings::MT_MAPFILE;
+		m_state->m_settings.global.map.filename = *admission->map_path;
+	}
 
 	m_state->WithGame(
 		this,
@@ -1886,6 +2144,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
 		}
+		else {
+			response.result = ec == map::Map::EC_ABORTED ? R_ABORTED : R_ERROR;
+			if ( response.result == R_ERROR ) {
+				NEW( response.data.error.error_text, std::string, map::Map::GetErrorString( ec ) );
+			}
+		}
 	}
 	else {
 		connection->IfClient(
@@ -1926,6 +2190,10 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				response.result = R_SUCCESS;
 			}
 		);
+	}
+	{
+		std::lock_guard guard( m_admission_mutex );
+		if ( response.result == R_SUCCESS && ( admission->cancelled || canceled ) ) { response.result = R_ABORTED; }
 	}
 }
 
@@ -2050,6 +2318,10 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 }
 
 void Game::ResetGame() {
+	{
+		std::lock_guard guard( m_admission_mutex );
+		m_active_admission.reset();
+	}
 	if ( m_state ) { m_state->RetireGameCallbacks(); }
 
 	ClearHandlers();

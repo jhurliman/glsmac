@@ -31,6 +31,7 @@ class GLSMAC;
 
 namespace gse {
 class GCWrappable;
+namespace tests { class BackendFixture; }
 }
 
 namespace ui {
@@ -146,6 +147,9 @@ CLASS( Game, common::Module )
 
 	void Start() override;
 	void Stop() override;
+	// Revoke this frontend's world, then retire all owned MT IDs. Call outside
+	// script accumulation when a request may still be executing.
+	void RetireBackendRequests();
 	void Iterate() override;
 
 	struct consts_t {
@@ -279,6 +283,9 @@ private:
 
 	GLSMAC* m_glsmac = nullptr;
 	backend::State* m_state = nullptr;
+	uint64_t m_world_ticket = 0;
+	uint64_t m_pending_world_ticket = 0;
+	bool m_world_retired = false;
 	ui::UI* m_ui = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
@@ -474,6 +481,7 @@ private:
 private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
+	friend class gse::tests::BackendFixture;
 
 	const bool IsTurnActive() const;
 

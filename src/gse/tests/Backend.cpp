@@ -5,8 +5,6 @@
 #include "ui/UI.h"
 #include "ui/BaseResourcePresentation.h"
 #include <cmath>
-#include "engine/Engine.h"
-#include "gc/GC.h"
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -19,6 +17,7 @@
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
+#include "gc/GC.h"
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
 #include "game/backend/Game.h"
@@ -31,6 +30,8 @@
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/resource/ResourceManager.h"
+#include "game/frontend/Game.h"
+#include "graphics/Null.h"
 #include "game/backend/resource/Resource.h"
 #include "game/backend/map/tile/TileManager.h"
 #include "game/frontend/resource/ResourceDisplay.h"
@@ -67,6 +68,7 @@
 #include <atomic>
 #include <new>
 #include <chrono>
+#include <condition_variable>
 
 namespace gse {
 namespace tests {
@@ -115,7 +117,11 @@ public:
 
 	~BackendFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
-			m_game.GetState()->DetachConnection();
+			m_state->DetachConnection();
+			m_game.MTModule::Stop();
+			m_game.m_admissions.clear();
+			m_game.m_active_admission.reset();
+			m_game.m_failed_admission.reset();
 		} );
 		// State and BaseManager belong to this GSE's collector. Destroy its
 		// space while the game, map, and frontend request queue are still alive.
@@ -134,6 +140,57 @@ public:
 
 	game::backend::Game* GetGame() {
 		return &m_game;
+	}
+	static std::string CheckFrontendQuitAdmission() {
+		class SizedNull final : public graphics::Null {
+		public:
+			SizedNull() { OnWindowResize(); }
+			const unsigned short GetWindowWidth() const override { return 64; }
+			const unsigned short GetWindowHeight() const override { return 64; }
+			const unsigned short GetViewportWidth() const override { return 64; }
+			const unsigned short GetViewportHeight() const override { return 64; }
+		} graphics;
+		auto* previous_graphics = g_engine->m_graphics;
+		{
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_graphics = &graphics;
+		}
+		util::FinallyGuard restore_graphics( [ & ]() {
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_graphics = previous_graphics;
+		} );
+		BackendFixture fixture; // local runtime is destroyed before graphics restoration
+		auto* previous_game = g_engine->m_game;
+		{
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = fixture.GetGame();
+		}
+		util::FinallyGuard restore_game( [ & ]() {
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = previous_game;
+		} );
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* ui = new ::ui::UI( GSE_CALL );
+			fixture.m_glsmac->m_ui = ui;
+			fixture.m_gse->AddRootObject( ui );
+			game::frontend::Game frontend( fixture.m_glsmac.get(), fixture.m_state, ui, {}, {} );
+			// Only the quit/request path is initialized; returning on retirement
+			// must avoid accessing asset-bearing presentation managers.
+			frontend.m_is_initialized = true;
+			frontend.m_world_ticket = fixture.FixtureWorldTicket();
+			util::FinallyGuard release_frontend( [ & ]() { frontend.m_is_initialized = false; frontend.RetireBackendRequests(); } );
+			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+				fixture.m_game.Quit( "fixture quit" );
+				frontend.m_mt_ids.get_frontend_requests = fixture.m_game.MT_GetFrontendRequests( frontend.m_world_ticket );
+				fixture.ProcessRequests();
+				frontend.Iterate(); // actual FR_QUIT -> ExitGame -> targeted reset
+				GT_ASSERT( frontend.m_world_retired && frontend.m_on_game_exit && frontend.m_mt_ids.reset, "quit notification canceled its newly owned exit reset" );
+				size_t exits = 0;
+				frontend.m_on_game_exit = [ & ]() { ++exits; }; // observe terminal navigation without exiting the test application
+				fixture.ReleaseMapOwnership();
+				fixture.ProcessRequests();
+				frontend.Iterate();
+				frontend.Iterate();
+				GT_ASSERT( exits == 1 && !frontend.m_mt_ids.reset && !frontend.m_on_game_exit, "exit reset did not deliver exactly one terminal frontend completion" );
+				GT_OK();
+			} );
+		} );
 	}
 
 	std::string CheckScriptRunEntry( const bool active, const bool reset_pending, const bool retained_prompt ) {
@@ -217,12 +274,51 @@ public:
 		// This test owns the GC exclusion. The independent OP_RESET/collector
 		// diagnostic documents why production's missing exclusion is separate.
 		m_map.release();
-		const auto id = m_game.MT_Reset();
+		const auto id = m_game.MT_ResetController();
 		m_game.MTModule::Iterate();
 		const auto response = m_game.MT_GetResponse( id );
 		if ( response.result != game::backend::R_SUCCESS ) { throw std::runtime_error( "reset request failed" ); }
 	}
 	void ProcessRequests() { m_game.MTModule::Iterate(); }
+	// Older backend fixtures directly construct a running world. Give that
+	// fixture world an explicit ticket; admission tests below use real MT_Init.
+	game::backend::world_ticket_t FixtureWorldTicket() {
+		std::lock_guard guard( m_game.m_admission_mutex );
+		const auto session = m_state->CaptureGameSession();
+		if ( !m_game.m_active_admission || m_game.m_active_admission->admitted_binding != session ) {
+			const auto ticket = game::backend::Game::ReserveWorldTicket();
+			m_game.m_active_admission = std::make_shared< game::backend::Game::WorldAdmission >(
+				ticket, game::backend::Game::WorldAdmission::INITIALIZATION, m_state, session );
+			m_game.m_active_admission->admitted_binding = session;
+		}
+		return m_game.m_active_admission->ticket;
+	}
+	size_t AdmissionCount() const { std::lock_guard guard( m_game.m_admission_mutex ); return m_game.m_admissions.size(); }
+	bool AdmissionCanceled( game::backend::world_ticket_t ticket ) const {
+		std::lock_guard guard( m_game.m_admission_mutex );
+		const auto found = m_game.m_admissions.find( ticket );
+		return found != m_game.m_admissions.end() && found->second->cancelled;
+	}
+	void ReleaseMapOwnership() { m_map.release(); }
+	void CancelWorldInitialization() { m_map.release(); m_game.InitFailed( "Operation aborted" ); }
+	bool HasActiveAdmission( game::backend::world_ticket_t ticket ) const {
+		std::lock_guard guard( m_game.m_admission_mutex ); return m_game.MatchesActiveAdmission( ticket );
+	}
+	bool CollectAdmissionRoot( game::backend::world_ticket_t ticket ) {
+		bool reachable = false;
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			std::unordered_set< gc::Object* > objects;
+			m_game.GetReachableObjects( objects );
+			reachable = objects.count( m_state ) != 0 && m_game.m_admissions.count( ticket ) != 0;
+			if ( reachable ) { m_gse->AddRootObject( &m_game ); m_gse->RemoveRootObject( m_state ); }
+		} );
+		if ( !reachable ) { return false; } // do not destroy a missing production root
+		g_engine->GetGC()->Iterate();
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			m_gse->AddRootObject( m_state ); m_gse->RemoveRootObject( &m_game );
+		} );
+		return true;
+	}
 	bool CollectDuringEventHandoff( gc::Object* expected, const std::function< void() >& after_collection ) {
 		// Split the two actual production stages deterministically: collection
 		// and reset/rebind can run after extraction but before queue registration.
@@ -587,8 +683,8 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
 				common::mt_id_t reset = 0, progress = 0, ping = 0;
 				module.enqueue = [ & ]() {
-					reset = game->MT_Reset();
-					progress = game->MT_GetFrontendRequests();
+					reset = game->MT_Reset( fixture.FixtureWorldTicket() );
+					progress = game->MT_GetFrontendRequests( fixture.FixtureWorldTicket() );
 					ping = game->MT_Ping();
 				};
 				processing = true;
@@ -599,10 +695,7 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( game->MT_GetResponse( reset ).result == R_NONE, "reset completed inside Map progress" );
 				const auto progress_response = game->MT_GetResponse( progress );
 				util::FinallyGuard release_progress( [ & ]() { game->MT_DestroyResponse( progress_response ); } );
-				GT_ASSERT( progress_response.result == R_SUCCESS, "loader progress response was blocked by queued reset" );
-				const auto* const requests = progress_response.data.get_frontend_requests.requests;
-				GT_ASSERT( requests && requests->size() == 1 && requests->at( 0 ).type == game::FrontendRequest::FR_LOADER_TEXT, "loader text was not delivered" );
-				GT_ASSERT( *requests->at( 0 ).data.loader.text == "Processing tiles (99%)", "actual Map progress text changed" );
+				GT_ASSERT( progress_response.result == R_ABORTED, "retired world published loader progress" );
 				GT_ASSERT( game->MT_GetResponse( progress ).result == R_NONE, "frontend response was delivered twice" );
 				GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "progress pump did not answer ping" );
 				fixture.IterateWorldRestore();
@@ -638,7 +731,7 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 					if ( op == OP_ADD_EVENT ) { NEW( request.data.add_event.serialized_event, std::string, "must-not-be-executed" ); }
 					ids.push_back( game->MT_CreateRequest( request ) );
 				}
-				const auto progress = game->MT_GetFrontendRequests();
+				const auto progress = game->MT_GetFrontendRequests( fixture.FixtureWorldTicket() );
 				const auto ping = game->MT_Ping();
 				game->SetLoaderText( "Still processing" );
 				for ( const auto id : ids ) {
@@ -994,6 +1087,343 @@ public:
 	}
 };
 
+static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+	using namespace game::backend;
+	task->AddTest( "world admission frontend quit retains its newly enqueued exit reset", GT() { return BackendFixture::CheckFrontendQuitAdmission(); } );
+	const auto prepare = []( BackendFixture& fixture, gc::Space* space ) {
+		fixture.EnableTurnPlayers();
+		fixture.ResetRequest();
+		auto* game = fixture.GetGame();
+		auto* state = game->GetState();
+		state->SetGame( game );
+		state->SetConnection( new RulesetClient( space, &state->m_settings.local ) );
+	};
+	task->AddTest( "world admission cancels queued init without retaining request or changing binding", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto binding = game->GetState()->CaptureGameSession();
+			const auto pending = game->MT_Init( game->GetState() );
+			GT_ASSERT( pending.request && pending.ticket && fixture.AdmissionCount() == 1, "init did not publish an owned admission" );
+			game->MT_Cancel( pending.request );
+			fixture.ProcessRequests();
+			GT_ASSERT( fixture.AdmissionCount() == 0 && game->MT_GetResponse( pending.request ).result == R_NONE, "queued cancellation retained an admission or response" );
+			GT_ASSERT( game->GetState()->CaptureGameSession() == binding && !game->GetUM(), "queued cancellation initialized or rebound the world" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission cancellation retires an already completed init response", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			GT_ASSERT( fixture.HasActiveAdmission( pending.ticket ), "real client init did not publish its accepted binding" );
+			game->MT_Cancel( pending.request );
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_NONE && fixture.AdmissionCount() == 0, "completed cancellation left MT response or pending ownership" );
+			GT_ASSERT( !fixture.HasActiveAdmission( pending.ticket ), "completed cancellation left its session active" );
+			const auto map = game->MT_GetMapData( pending.ticket );
+			const auto reset = game->MT_Reset( 0, pending.ticket );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( map ).result == R_ABORTED, "canceled initialization accepted map polling" );
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS && !game->GetState()->GetGame(), "pending handle could not retire its admitted world" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission validates canceled init inside an already extracted request batch", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			const auto reset = game->MT_Reset( 0, pending.ticket );
+			// MTModule extracts both requests before executing the first one.
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_ABORTED && !game->GetUM(), "canceled extracted init ran callbacks or remained pending" );
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS && fixture.AdmissionCount() == 0, "targeted reset failed to finish its request bookkeeping" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission rejects same-address State rebinding before init teardown", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			fixture.RebindSession();
+			const auto replacement = game->GetState()->CaptureGameSession();
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_ABORTED, "old configured binding was admitted into replacement State session" );
+			GT_ASSERT( game->GetState()->CaptureGameSession() == replacement && game->GetState()->IsGameSessionActive( replacement ) && !game->GetUM(), "stale init touched replacement binding or managers" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission completes immediate initialization errors without corrupting the error payload", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			game->On( GSE_CALL, "initialize", NATIVE_CALL() { throw std::runtime_error( "intentional admission initialization error" ); } ) );
+			const auto pending = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			const auto response = game->MT_GetResponse( pending.request );
+			util::FinallyGuard destroy( [ & ]() { game->MT_DestroyResponse( response ); } );
+			GT_ASSERT( response.result == R_ERROR && response.world_ticket == pending.ticket && response.data.error.error_text &&
+				*response.data.error.error_text == "intentional admission initialization error", "initialization failed without a terminal owned error" );
+			GT_ASSERT( fixture.AdmissionCount() == 0 && !fixture.HasActiveAdmission( pending.ticket ), "failed init kept request ownership or an executable session" );
+			const auto reset = game->MT_Reset( 0, pending.ticket );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS, "failed init could not be reset by its pending handle" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission valid preparing ticket cannot save absent map or finish absent animations", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_SUCCESS, "initial admission failed" );
+			const auto save = game->MT_SaveMap( pending.ticket, "must-not-exist.map" );
+			const auto animation = game->MT_SendBackendRequests( pending.ticket, {} );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( save ).result == R_ABORTED && game->MT_GetResponse( animation ).result == R_ABORTED, "ticket was mistaken for map/manager readiness" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission reload retains accepted session after init response retirement", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto first = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			const auto first_response = game->MT_GetResponse( first.request );
+			GT_ASSERT( first_response.result == R_SUCCESS && first_response.world_ticket == first.ticket && fixture.AdmissionCount() == 0, "accepted init did not return its own ticket and release pending record" );
+			const auto old_binding = game->GetState()->CaptureGameSession();
+			const auto reload = game->MT_LoadMap( first.ticket, "synthetic-reload.map" );
+			fixture.ProcessRequests();
+			const auto response = game->MT_GetResponse( reload.request );
+			GT_ASSERT( response.result == R_SUCCESS && response.world_ticket == reload.ticket && reload.ticket > first.ticket, "reload admission failed or reused a ticket" );
+			GT_ASSERT( game->GetState()->CaptureGameSession() != old_binding && fixture.HasActiveAdmission( reload.ticket ), "reload did not retain its exact post-reset binding" );
+			GT_ASSERT( game->GetState()->m_settings.global.map.filename == "synthetic-reload.map", "reload admission lost its owned path" );
+			const auto stale_reset = game->MT_Reset( first.ticket );
+			const auto stale_poll = game->MT_GetMapData( first.ticket );
+			const auto fresh_poll = game->MT_GetMapData( reload.ticket );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( stale_reset ).result == R_SUCCESS && fixture.HasActiveAdmission( reload.ticket ), "old reset retired fresh reload" );
+			GT_ASSERT( game->MT_GetResponse( stale_poll ).result == R_ABORTED && game->MT_GetResponse( fresh_poll ).result == R_PENDING, "map polling crossed world tickets" );
+			bool rejected = false;
+			try { game->MT_LoadMap( first.ticket, "old.map" ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected && game->GetState()->m_settings.global.map.filename == "synthetic-reload.map", "stale reload changed replacement settings" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission aborts old operations extracted behind reset with terminal responses", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_SUCCESS, "initial admission failed" );
+			const auto reset = game->MT_Reset( pending.ticket );
+			const std::vector< common::mt_id_t > old{
+				game->MT_GetMapData( pending.ticket ), game->MT_SaveMap( pending.ticket, "must-not-be-written.map" ),
+				game->MT_GetFrontendRequests( pending.ticket ), game->MT_SendBackendRequests( pending.ticket, {} ),
+			};
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS, "reset did not finish" );
+			for ( const auto id : old ) {
+				const auto response = game->MT_GetResponse( id );
+				util::FinallyGuard destroy( [ & ]() { game->MT_DestroyResponse( response ); } );
+				GT_ASSERT( response.result == R_ABORTED && response.world_ticket == pending.ticket, "extracted old operation ran or lacked terminal identity" );
+				GT_ASSERT( game->MT_GetResponse( id ).result == R_NONE, "aborted response was not retired" );
+			}
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission controller cutoff cancels prior init and ignores replacement binding", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto pending = game->MT_Init( game->GetState() );
+			const auto reset = game->MT_ResetController();
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( pending.request ).result == R_ABORTED && game->MT_GetResponse( reset ).result == R_SUCCESS, "controller cutoff admitted an older queued init" );
+			game->GetState()->SetGame( game );
+			const auto stale_reset = game->MT_ResetController();
+			fixture.RebindSession();
+			const auto replacement = game->GetState()->CaptureGameSession();
+			const auto fresh = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( stale_reset ).result == R_SUCCESS && game->MT_GetResponse( fresh.request ).result == R_SUCCESS, "stale controller reset prevented replacement admission" );
+			GT_ASSERT( game->GetState()->CaptureGameSession() == replacement && fixture.HasActiveAdmission( fresh.ticket ), "stale controller reset retired replacement binding" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission pending State is a collector root until request cancellation", GT( prepare ) {
+		BackendFixture fixture;
+		pending_initialization_t pending;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			pending = fixture.GetGame()->MT_Init( fixture.GetGame()->GetState() );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "admission setup: " + setup );
+		GT_ASSERT( fixture.CollectAdmissionRoot( pending.ticket ), "pending admission omitted the intended State from actual Game reachability" );
+		fixture.GetGame()->MT_Cancel( pending.request );
+		GT_ASSERT( fixture.AdmissionCount() == 0, "canceled admission retained pending State root" );
+		GT_OK();
+	} );
+	task->AddTest( "world admission controller reserves cancellation before drain and submits its original cutoff once", GT( prepare ) {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			const auto old = game->MT_Init( game->GetState() );
+			const auto barrier = game->MT_BeginResetController();
+			GT_ASSERT( fixture.AdmissionCanceled( old.ticket ), "reset reservation did not revoke pending admission before drain" );
+			game->MT_Cancel( old.request ); // actual frontend-style drain, before reset submission
+			GT_ASSERT( fixture.AdmissionCount() == 1, "drain lost the unsubmitted controller root" );
+			fixture.RebindSession();
+			const auto fresh = game->MT_Init( game->GetState() );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( fresh.request ).result == R_SUCCESS, "fresh admission after cutoff failed" );
+			const auto request = game->MT_SubmitResetController( barrier );
+			GT_ASSERT( game->MT_SubmitResetController( barrier ) == request, "repeated submit enqueued another reset" );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( request ).result == R_SUCCESS && fixture.HasActiveAdmission( fresh.ticket ), "late controller submission resampled and reset a newer world" );
+			bool rejected = false;
+			try { game->MT_SubmitResetController( barrier ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected && fixture.AdmissionCount() == 0, "consumed barrier was reused or retained" );
+			const auto abandoned = game->MT_BeginResetController();
+			game->MT_AbandonResetController( abandoned );
+			game->MT_AbandonResetController( abandoned );
+			GT_ASSERT( fixture.AdmissionCount() == 0 && !fixture.HasActiveAdmission( fresh.ticket ), "abandonment leaked a barrier or revived retired world" );
+			const auto completed_barrier = game->MT_BeginResetController();
+			const auto completed_reset = game->MT_SubmitResetController( completed_barrier );
+			fixture.ProcessRequests();
+			game->MT_AbandonResetController( completed_barrier );
+			GT_ASSERT( fixture.AdmissionCount() == 0 && game->MT_GetResponse( completed_reset ).result == R_NONE, "abandoning a completed barrier retained its MT response" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission concurrent reservation and reset have one scalar cutoff order", GT( prepare ) {
+		BackendFixture fixture;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { prepare( fixture, gc_space ); GT_OK(); } );
+		GT_ASSERT( setup.empty(), "admission setup: " + setup );
+		auto* game = fixture.GetGame();
+		pending_initialization_t pending;
+		world_ticket_t barrier = 0;
+		std::mutex mutex;
+		std::condition_variable changed;
+		size_t ready = 0;
+		bool start = false;
+		std::exception_ptr init_error, reset_error;
+		const auto rendezvous = [ & ]() {
+			std::unique_lock lock( mutex ); ++ready; changed.notify_all(); changed.wait( lock, [ & ]() { return start; } );
+		};
+		std::thread initializer( [ & ]() { rendezvous(); try { pending = game->MT_Init( game->GetState() ); } catch ( ... ) { init_error = std::current_exception(); } } );
+		std::thread resetter( [ & ]() { rendezvous(); try { barrier = game->MT_BeginResetController(); } catch ( ... ) { reset_error = std::current_exception(); } } );
+		{
+			std::unique_lock lock( mutex ); changed.wait( lock, [ & ]() { return ready == 2; } ); start = true; changed.notify_all();
+		}
+		initializer.join(); resetter.join();
+		if ( init_error ) { std::rethrow_exception( init_error ); }
+		if ( reset_error ) { std::rethrow_exception( reset_error ); }
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			const auto reset = game->MT_SubmitResetController( barrier );
+			fixture.ProcessRequests();
+			const auto response = game->MT_GetResponse( pending.request );
+			const bool before_cutoff = pending.ticket < barrier;
+			GT_ASSERT( response.result == ( before_cutoff ? R_ABORTED : R_SUCCESS ), "ticket reservation and request admission crossed reset cutoff order" );
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS && fixture.HasActiveAdmission( pending.ticket ) == !before_cutoff, "controller reset applied outside its reserved cutoff" );
+			GT_ASSERT( fixture.AdmissionCount() == 0, "concurrent requests retained pending bookkeeping" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission failed-map errors are owned by their ticket and retired by reset", GT() {
+		BackendFixture fixture;
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			const auto ticket = fixture.FixtureWorldTicket();
+			fixture.CancelWorldInitialization(); // real InitFailed with an asset-free map
+			const auto own = game->MT_GetMapData( ticket );
+			const auto unrelated = game->MT_GetMapData( ticket + 1 );
+			fixture.ProcessRequests();
+			const auto error = game->MT_GetResponse( own );
+			util::FinallyGuard destroy( [ & ]() { game->MT_DestroyResponse( error ); } );
+			GT_ASSERT( error.result == R_ERROR && error.data.error.error_text && *error.data.error.error_text == "Operation aborted", "own failure was lost or mislabeled" );
+			GT_ASSERT( game->MT_GetResponse( unrelated ).result == R_ABORTED, "another ticket observed failed-world error" );
+			const auto reset = game->MT_Reset( ticket );
+			const auto late = game->MT_GetMapData( ticket );
+			fixture.ProcessRequests();
+			GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS && game->MT_GetResponse( late ).result == R_ABORTED, "reset retained its failed admission/error" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "world admission cancels an in-flight init before owner callbacks drain", GT( prepare ) {
+		class BlockingClient final : public RulesetClient {
+		public:
+			using RulesetClient::RulesetClient;
+			std::mutex mutex;
+			std::condition_variable changed;
+			bool entered = false, released = false;
+			void ResetHandlers() override {
+				RulesetClient::ResetHandlers();
+				std::unique_lock lock( mutex );
+				entered = true; changed.notify_all();
+				changed.wait( lock, [ & ]() { return released; } );
+			}
+		};
+		BackendFixture fixture;
+		BlockingClient* client = nullptr;
+		pending_initialization_t pending;
+		size_t callbacks = 0;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			prepare( fixture, gc_space );
+			auto* game = fixture.GetGame();
+			game->GetState()->DetachConnection();
+			client = new BlockingClient( gc_space, &game->GetState()->m_settings.local );
+			game->GetState()->SetConnection( client );
+			game->On( GSE_CALL, "initialize", NATIVE_CALL( &callbacks ) { ++callbacks; return VALUE( value::Undefined ); } ) );
+			pending = game->MT_Init( game->GetState() );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "admission setup: " + setup );
+		std::exception_ptr producer_error;
+		std::thread producer( [ & ]() { try { fixture.ProcessRequests(); } catch ( ... ) { producer_error = std::current_exception(); } } );
+		bool entered;
+		{
+			std::unique_lock lock( client->mutex );
+			entered = client->changed.wait_for( lock, std::chrono::seconds( 10 ), [ & ]() { return client->entered; } );
+		}
+		std::thread canceler;
+		bool canceled = false;
+		if ( entered ) {
+			canceler = std::thread( [ & ]() { fixture.GetGame()->MT_Cancel( pending.request ); } );
+			const auto limit = std::chrono::steady_clock::now() + std::chrono::seconds( 10 );
+			while ( !( canceled = fixture.AdmissionCanceled( pending.ticket ) ) && std::chrono::steady_clock::now() < limit ) { std::this_thread::yield(); }
+		}
+		{
+			std::lock_guard guard( client->mutex ); client->released = true; client->changed.notify_all();
+		}
+		producer.join();
+		if ( canceler.joinable() ) { canceler.join(); }
+		if ( producer_error ) { std::rethrow_exception( producer_error ); }
+		GT_ASSERT( entered && canceled, "actual in-flight init/cancel handoff did not occur" );
+		GT_ASSERT( fixture.GetGame()->MT_GetResponse( pending.request ).result == R_NONE && fixture.AdmissionCount() == 0, "in-flight cancellation left a response or request owner" );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( callbacks == 0 && !fixture.GetGame()->GetUM(), "canceled init's queued owner work ran" );
+		GT_OK();
+	} );
+}
+
 // Session tests use the real packet dispatcher and event queue, without sockets.
 class SessionServer : public game::backend::connection::Server {
 public:
@@ -1118,6 +1548,7 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 			fixture.ResetRequest();
 			auto* state = game->GetState();
 			GT_ASSERT( !state->GetGame(), "reset did not unbind the old game" );
+			state->SetGame( game ); // production GLSMAC configures the binding before MT_Init
 			auto* client = new RulesetClient( gc_space, &state->m_settings.local );
 			state->SetConnection( client );
 			game->On( GSE_CALL, "initialize", NATIVE_CALL( &order, state, game ) {
@@ -1131,7 +1562,7 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 			game->On( GSE_CALL, "message", NATIVE_CALL( &order ) { order.push_back( "stale" ); return VALUE( value::Undefined ); } ) );
 			const auto id = game->MT_Init( state );
 			fixture.ProcessRequests();
-			const auto response = game->MT_GetResponse( id );
+			const auto response = game->MT_GetResponse( id.request );
 			GT_ASSERT( response.result == game::backend::R_SUCCESS && fixture.IsPreparingMap(), "asset-free client initialization failed" );
 			GT_OK();
 		} );
@@ -1327,6 +1758,7 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test session animation completion copies request IDs and cancels retired callbacks", GT() {
 		BackendFixture fixture;
 		fixture.EnableWorldSnapshot();
+		fixture.SetRunning( true );
 		std::vector< size_t > completed, requested;
 		const auto send = [ & ]() {
 			std::vector< game::BackendRequest > requests;
@@ -1335,7 +1767,7 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 				requested.push_back( id );
 				game::BackendRequest request( game::BackendRequest::BR_ANIMATION_FINISHED ); request.data.animation_finished.animation_id = id; requests.push_back( request );
 			}
-			const auto id = fixture.GetGame()->MT_SendBackendRequests( requests );
+			const auto id = fixture.GetGame()->MT_SendBackendRequests( fixture.FixtureWorldTicket(), requests );
 			std::thread producer( [ & ]() { fixture.ProcessRequests(); } ); producer.join();
 			const auto result = fixture.GetGame()->MT_GetResponse( id );
 			return result.result == game::backend::R_SUCCESS;
@@ -3268,6 +3700,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	}
 	AddLoaderProgressTests( task );
 	AddSessionCallbackTests( task );
+	AddWorldAdmissionTests( task );
 	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );

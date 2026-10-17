@@ -1460,15 +1460,15 @@ void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 void Game::FirstTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 
-	// reset some states
-	m_current_turn.AdvanceTurn( 1 );
+	// Startup events already queued by create_world/start still belong to turn 0.
+	// Let the advance_turn event change the live ID when that event is applied.
 	m_verified_turn_checksum_slots.clear();
 	m_turn_checksum = 0;
 
-	MTModule::Log( "Advancing turn ( id = " + std::to_string( m_current_turn.GetId() ) + " )" );
+	MTModule::Log( "Advancing turn ( id = 1 )" );
 	m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ){
 		Event( GSE_CALL, "advance_turn", {
-			{ "turn_id", VALUE( gse::value::Int,, m_current_turn.GetId() ) }
+			{ "turn_id", VALUE( gse::value::Int,, 1 ) }
 		} );
 	});
 }

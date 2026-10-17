@@ -4,9 +4,12 @@
 #include "SmacPopulationStep.h"
 #include "SmacUnitSupport.h"
 #include "game/backend/Game.h"
+#include "game/backend/Player.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/slot/Slot.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/SmacStartupDesignState.h"
 #include "gc/Space.h"
 #include <algorithm>
 #include <stdexcept>
@@ -53,7 +56,25 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
 		}
 		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item );
-		if ( production.minerals >= cost ) {
+		bool complete = production.minerals >= cost;
+		bool colony = false;
+		if ( complete ) {
+			// Classify the actual owned package before preparing a factory. A
+			// governor deferral neither needs a presentation nor reserves a Unit.
+			const unit::ConventionalUnitState identity{ *production.current_item.smac_source_id, context.owner_simulation_id,
+				1, 0, 0, false, unit::ConventionalUnitState::Home::Base, mode, m_id };
+			colony = m_game->ResolveConventionalUnit( identity, m_owner ).package == unit::ConventionalUnitContext::Package::Colony;
+			if ( colony ) {
+				if ( !population_step || population == 0 ) { THROW( "Colony completion requires full upkeep and a populated Base" ); }
+				if ( population == 1 && unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ) > 1 ) {
+					// Stored easy difficulty bypasses this check. Production
+					// management (0x1) is independent of citizen management.
+					if ( context.GovernorActive() && ( context.governor_options & 0x1u ) ) { complete = false; }
+					else { THROW( "Size-one Colony completion requires an explicit player choice" ); }
+				}
+			}
+		}
+		if ( complete ) {
 			const auto exemption = m_game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption;
 			production.minerals = std::min( Checked( production.minerals - cost ), std::max( 0, std::min( exemption, resources.minerals.surplus ) ) );
 			production.baseline_minerals = production.minerals;
@@ -63,8 +84,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
 			auto* def = definition( design_id );
 			unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
-			if ( m_game->ResolveConventionalUnit( unit->Candidate().Conventional(), m_owner ).package == unit::ConventionalUnitContext::Package::Colony ) {
-				if ( !population_step || population < 2 ) { THROW( "Colony completion requires full upkeep and size-one choice policy is not connected" ); }
+			if ( colony && population > 1 ) {
 				--population; // factory/home first; debit before queue, baselines and growth
 			}
 			// Empty queues keep the current target without revalidation. Each

@@ -530,7 +530,100 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				&& base->m_pops.size() == 1 && pod->Conventional().home_base_id == base->m_id, "restored following upkeep replayed Colony completion or lost home" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "SMAC Colony size-one and wrong presentation reject before publication", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "SMAC Colony easy difficulty bypasses size-one governor deferral without population debit", []( GSE*, context::Context* ) -> std::string {
+		for ( const auto difficulty : { "Citizen", "Specialist" } ) {
+			for ( const size_t population : { 1u, 2u } ) {
+				ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+				const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+					using namespace game::backend::unit;
+					auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 0, 1, population ); auto* um = game->GetUM();
+					base->m_owner->GetPlayer()->SetDifficultyLevel( difficulty ); // global remains Librarian
+					game->GetMap()->GetTile( 3, 1 )->terraforming = TERRAFORMING_FOREST;
+					auto allocation = *base->GetSmacAllocation(); allocation.selected = population == 1 ? 5 : 7;
+					base->PublishSmacAllocation( GSE_CALL, allocation, Roles() );
+					auto context = base->GetSmacResourceContext(); context.governor_options = 0x80000001u;
+					base->SetSmacResourceContext( GSE_CALL, context );
+					um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
+					game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+					const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+					GT_ASSERT( game->GetSmacProductionCost( base->m_owner, target ) == 30, "Colony literal fixture cost changed" );
+					base->SetProductionState( GSE_CALL, ProductionState{ target, population == 1 ? 27 : 25, target, 77, std::vector< ProductionItem >{} } );
+					base->SetAccumulatedNutrients( 0 );
+					const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return um->GetUnitDef( "live-colony" ); }, SmacMoraleMode::Mode0 );
+					GT_ASSERT( result.completed_unit && um->GetUnits().size() == 2 && base->m_pops.size() == 1
+						&& base->GetAccumulatedNutrients() == ( population == 1 ? 1 : 0 )
+						&& base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0,
+						"stored easy difficulty did not precede governor deferral, or protected a larger population" );
+					const auto* pod = um->GetUnit( *result.completed_unit );
+					GT_ASSERT( pod->Conventional().home_base_id == base->m_id && pod->Conventional().spent == 0
+						&& base->GetProductionState()->current_item == target && base->GetProductionState()->queue->empty()
+						&& base->GetSmacResourceContext() == context, "easy completion changed home, target or governor policy" ); GT_OK();
+				} ); GT_ASSERT( error.empty(), "difficulty " + std::string( difficulty ) + ": " + error );
+			}
+		} GT_OK();
+	} );
+	task->AddTest( "SMAC Colony governor deferral posts before growth and completes only on a later upkeep", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
+			base->m_owner->GetPlayer()->SetDifficultyLevel( "Librarian" );
+			game->GetMap()->GetTile( 3, 1 )->terraforming = TERRAFORMING_FOREST;
+			auto allocation = *base->GetSmacAllocation(); allocation.selected = 5; base->PublishSmacAllocation( GSE_CALL, allocation, Roles() );
+			auto context = base->GetSmacResourceContext(); context.governor_options = 0x80000001u; base->SetSmacResourceContext( GSE_CALL, context );
+			um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+			GT_ASSERT( game->GetSmacProductionCost( base->m_owner, target ) == 30, "Colony literal fixture cost changed" );
+			base->SetProductionState( GSE_CALL, ProductionState{ target, 27, target, 27, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( 19 );
+			const auto next_id = Unit::GetNextId(); size_t factory_calls = 0;
+			const auto resolver = [ & ]( int32_t ) { ++factory_calls; return um->GetUnitDef( "live-colony" ); };
+			const auto first = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( !first.completed_unit && factory_calls == 0 && Unit::GetNextId() == next_id && base->m_pops.size() == 1
+				&& base->GetAccumulatedNutrients() == 20 && base->GetProductionState()->minerals == 30
+				&& base->GetProductionState()->baseline_minerals == 30, "governor deferral skipped posting or created a premature Pod" );
+			const auto second = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( !second.completed_unit && factory_calls == 0 && Unit::GetNextId() == next_id && base->m_pops.size() == 2
+				&& base->GetAccumulatedNutrients() == 0 && base->GetProductionState()->minerals == 33
+				&& base->GetProductionState()->baseline_minerals == 33, "same-upkeep growth retroactively completed the deferred Pod" );
+			const auto third = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( third.completed_unit && factory_calls == 1 && base->m_pops.size() == 1 && base->GetAccumulatedNutrients() == 0
+				&& base->GetProductionState()->minerals == 5 && base->GetProductionState()->baseline_minerals == 5
+				&& base->GetProductionState()->current_item == target && base->GetProductionState()->baseline_item == target
+				&& base->GetSmacResourceContext() == context, "later Colony completion lost carry, population debit or target authority" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC Colony automatic deferral requires both governor bits and preserves the pending queue", []( GSE*, context::Context* ) -> std::string {
+		for ( const uint32_t options : { 0u, 0x80000000u, 1u, 0x80000001u } ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				using namespace game::backend::unit;
+				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
+				base->m_owner->GetPlayer()->SetDifficultyLevel( "Talent" ); // exact first non-easy boundary
+				auto allocation = *base->GetSmacAllocation(); allocation.selected = 5; base->PublishSmacAllocation( GSE_CALL, allocation, Roles() );
+				auto context = base->GetSmacResourceContext(); context.governor_options = options; base->SetSmacResourceContext( GSE_CALL, context );
+				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
+				const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+				const auto next = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+				const ProductionState production{ target, 27, target, 27, std::vector< ProductionItem >{ next } };
+				base->SetProductionState( GSE_CALL, production ); base->SetAccumulatedNutrients( 0 );
+				const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId(); const auto requests = fixture.QueuedFrontendRequests().size();
+				if ( options != 0x80000001u ) {
+					GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), {}, SmacMoraleMode::Mode0 ); } )
+						&& fixture.Snapshot() == before && Unit::GetNextId() == id && fixture.QueuedFrontendRequests().size() == requests,
+						"missing governor bit bypassed explicit choice or partially posted" );
+				} else {
+					const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), {}, SmacMoraleMode::Mode0 ); // no factory/presentation needed
+					GT_ASSERT( !result.completed_unit && !result.queue_advanced && Unit::GetNextId() == id && um->GetUnits().size() == 1
+						&& base->m_pops.size() == 1 && base->GetAccumulatedNutrients() == 1
+						&& base->GetProductionState()->minerals == 30 && base->GetProductionState()->baseline_minerals == 30
+						&& base->GetProductionState()->queue == production.queue && base->GetProductionState()->current_item == target,
+						"automatic deferral advanced its queue, lost posting or attempted a factory" );
+				} GT_OK();
+			} ); GT_ASSERT( error.empty(), "governor options " + std::to_string( options ) + ": " + error );
+		} GT_OK();
+	} );
+	task->AddTest( "SMAC Colony explicit choice and wrong presentation reject before publication", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
@@ -538,8 +631,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
 			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) ); const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
 			base->SetProductionState( GSE_CALL, ProductionState{ target, game->GetSmacProductionCost( base->m_owner, target ), target, 0, std::vector< ProductionItem >{} } );
-			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
 			for ( const auto* presentation : { "live-scout", "live-colony" } ) {
+				base->m_owner->GetPlayer()->SetDifficultyLevel( std::string( presentation ) == "live-colony" ? "Librarian" : "Specialist" );
+				const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
 				GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return um->GetUnitDef( presentation ); }, SmacMoraleMode::Mode0 ); } )
 					&& fixture.Snapshot() == before && Unit::GetNextId() == id, "unsupported Colony choice/presentation partially posted" );
 			} GT_OK();

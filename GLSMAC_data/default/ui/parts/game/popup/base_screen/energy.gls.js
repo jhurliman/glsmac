@@ -206,7 +206,8 @@ return {
 		for (type in data) {
 			const d = data[type];
 			const l = this.labels[type];
-			l.percentage.text = this._pad(#round(d.allocation * 100.0)) + '%';
+			const percent = #is_defined(d.percent) ? d.percent : #round(d.allocation * 100.0);
+			l.percentage.text = this._pad(percent) + '%';
 			l.value.text = this._pad(d.value);
 			l.bonus.text = this._pad(d.bonus);
 			l.total.text = this._pad(d.value + d.bonus);

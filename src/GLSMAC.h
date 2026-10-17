@@ -113,7 +113,7 @@ private:
 	void InitGameState( GSE_CALLABLE );
 	void RandomizeSettings( GSE_CALLABLE );
 
-	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );
+	void AddSinglePlayerSlot( const std::optional< std::string >& faction_id );
 	void StartGame( GSE_CALLABLE );
 
 	game::frontend::Game* m_game = nullptr;

@@ -81,6 +81,13 @@ public:
 	// None requests menu cancellation, retaining both accumulated bytes.
 	void ValidateConventionalWork( Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch ) const;
 	void SetConventionalWork( GSE_CALLABLE, Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch );
+	struct ConventionalCommands {
+		ConventionalUnitContext::Package package = ConventionalUnitContext::Package::Combat;
+		std::vector<int32_t> actions; // 0 cancel, 1..5 WorkOrder, 6 found Base
+	};
+	// Detached presentation query. Existing command preparation decides admission;
+	// unavailable world/turn authority yields no actions and never mutates state.
+	ConventionalCommands QueryConventionalCommands( Unit* unit ) const;
 	// Caller stages any knowledge/territory changes before Commit. No callback or
 	// world mutation may intervene. Notify retires the removed wrapper afterward.
 	class PreparedConventionalRemoval {

@@ -333,7 +333,12 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"start_game",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
+				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+				std::optional< std::string > faction_id;
+				if ( !arguments.empty() ) {
+					N_GETVALUE( id, 0, String );
+					faction_id = id;
+				}
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -343,8 +348,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_loading ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
 				}
-				if ( m_state->m_slots->GetSlots().empty() ) {
-					AddSinglePlayerSlot( nullptr );
+				if ( faction_id || m_state->m_slots->GetSlots().empty() ) {
+					try { AddSinglePlayerSlot( faction_id ); }
+					catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 				}
 				StartGame( GSE_CALL );
 				return VALUE( gse::value::Undefined );
@@ -565,20 +571,8 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 			} catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 		}
 		m_state->m_settings.global.Initialize();
-		game::backend::faction::Faction* faction = nullptr;
-		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-			const auto* fm = m_state->GetFM();
-			ASSERT( fm, "fm is null" );
-			faction = fm->Get( c->GetQuickstartFaction() );
-			if ( !faction ) {
-				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
-				for ( const auto& f : fm->GetAll() ) {
-					errmsg += " " + f->m_id;
-				}
-				THROW( errmsg );
-			}
-		}
-		AddSinglePlayerSlot( faction );
+		AddSinglePlayerSlot( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION )
+			? std::optional< std::string >( c->GetQuickstartFaction() ) : std::nullopt );
 		auto ep2 = ep;
 		StartGame( m_gc_space, ctx, si, ep2 );
 	}
@@ -646,11 +640,19 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
+void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id ) {
+	if ( !m_state || m_state->m_connection || !m_state->m_slots->GetSlots().empty()
+		|| m_state->m_settings.local.game_mode != game::backend::settings::LocalSettings::GM_SINGLEPLAYER
+		|| m_state->m_settings.local.network_role != game::backend::settings::LocalSettings::NR_NONE ) {
+		THROW( "Choose a single-player faction before creating the local roster" );
+	}
+	if ( faction_id && !m_state->GetFM()->Get( *faction_id ) ) {
+		THROW( "Unknown faction for the configured ruleset: " + *faction_id );
+	}
     const auto& rules = m_state->m_settings.global.rules;
     m_state->m_settings.local.player_name = "Player";
     m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, game::backend::roster::Role::Single,
-        faction ? std::optional<std::string>(faction->m_id) : std::nullopt, rules.GetDefaultDifficultyLevel()},
+        faction_id, rules.GetDefaultDifficultyLevel()},
         m_state->m_settings.local.account.GetGSID(), 0, "", false);
     m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
 

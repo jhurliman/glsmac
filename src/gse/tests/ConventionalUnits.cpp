@@ -205,8 +205,8 @@ std::string CanonicalMovementSnapshot( Game* game, const std::string& bytes ) {
 	return result.ToString();
 }
 
-// Rewrite one existing unit's trailing home ID while preserving every other
-// actual snapshot frame, including checksum framing and the saved Base body.
+// Rewrite one existing unit's home ID through its owned state codec, retaining
+// later work fields and every other snapshot frame including the saved Base body.
 std::string WithLastHome( const std::string& bytes, Game* game, int64_t home ) {
 	types::Buffer world( bytes ); world_snapshot::ValidateHeader( world, game->GetState()->m_settings.global );
 	(void)world_snapshot::ReadRandomState( world ); (void)world_snapshot::ReadTurnState( world, game->GetState()->m_slots->GetSlots() );
@@ -223,7 +223,16 @@ std::string WithLastHome( const std::string& bytes, Game* game, int64_t home ) {
 	const auto count = units.ReadInt(); replacement.WriteInt( count );
 	for ( int64_t i = 0; i < count; ++i ) {
 		auto wire = units.ReadString();
-		if ( i + 1 == count ) { types::Buffer changed( wire.substr( 0, wire.size() - 14 ) ); changed.WriteInt( home ); wire = changed.ToString(); }
+		if ( i + 1 == count ) {
+			types::Buffer record( wire );
+			if ( record.ReadInt() != 4 || record.ReadInt() != 1 ) { throw std::runtime_error( "expected current conventional Unit record" ); }
+			(void)record.ReadInt(); (void)record.ReadString();
+			for ( int field = 0; field < 3; ++field ) { (void)record.ReadInt(); } // owner and coordinates
+			types::Buffer changed( wire.substr( 0, record.lenr ) );
+			auto state = ConventionalUnitState::Deserialize( record );
+			if ( !state.home_base_id || record.lenr != record.lenw ) { throw std::runtime_error( "expected complete homed Unit state" ); }
+			state.home_base_id = static_cast< uint64_t >( home ); state.Serialize( changed ); wire = changed.ToString();
+		}
 		replacement.WriteString( wire );
 	}
 	replacement.WriteInt( units.ReadInt() ); types::Buffer framed; framed.WriteString( replacement.ToString() );
@@ -314,7 +323,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		} );
 	} );
-	task->AddTest( "Conventional support query consumes actual homes retained rating and current population", GT() {
+	task->AddTest( "Conventional support query consumes actual homes current rating and population", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* um = game->GetUM(); auto* bm = game->GetBM(); Define( um ); Land( game );
@@ -332,8 +341,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			const auto pair = fixture.GameplayRandom(); const auto bytes = base::Base::Serialize( home ).ToString();
 			const std::array< int32_t, 8 > expected{ 6, 3, 2, 2, 1, 0, 0, 0 };
 			for ( int rating = -4; rating <= 3; ++rating ) {
-				fixture.ResourceState( [ & ]( auto& state ) { state.social.factions.front().retained->at( 2 ) = rating; state.social.factions.front().current[ 2 ] = 3; } );
-				GT_ASSERT( game->GetCanonicalMineralSupport( *home ) == expected[ rating + 4 ], "actual aggregate ignored retained rating/home filtering" );
+				fixture.ResourceState( [ & ]( auto& state ) { state.social.factions.front().current[ 2 ] = rating; state.social.factions.front().retained->at( 2 ) = 3; } );
+				GT_ASSERT( game->GetCanonicalMineralSupport( *home ) == expected[ rating + 4 ], "actual aggregate ignored current rating/home filtering" );
 				auto* support = Call( GSE_CALL, static_cast< value::Object* >( home->Wrap( GSE_CALL ) ), "get_smac_mineral_support" );
 				GT_ASSERT( support->type == VT_INT && static_cast< value::Int* >( support )->value == expected[ rating + 4 ], "Base wrapper omitted actual canonical support" );
 			}
@@ -375,7 +384,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			auto* game = source.Game(); Define( game->GetUM() ); Land( game ); auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
 			auto* base = new base::Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 0 ), "Saved home", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ 1, false, 0, 0, 0, true } );
 			game->GetBM()->SpawnBase( GSE_CALL, base ); auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = 701;
-			Spawn( GSE_CALL, source, record ); source.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } ); saved = source.Snapshot(); GT_OK();
+			Spawn( GSE_CALL, source, record ); source.ResourceState( []( auto& state ) { state.social.factions.front().current[ 2 ] = -4; state.social.factions.front().retained->at( 2 ) = 3; } ); saved = source.Snapshot(); GT_OK();
 		} ); if ( !prepared.empty() ) { return prepared; }
 		ConventionalUnitFixture destination; destination.Configure();
 		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -960,7 +969,13 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				// Ordinary forest is admitted; distant destination fungus still
 				// requires a separate encounter caller instead of the HQ bypass.
 				if ( scenario == 8 ) { unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 20, 20 ) ); source = unit->GetTile(); destination = source->E; destination->features = map::tile::FEATURE_XENOFUNGUS; }
-				fixture.Updates(); const auto before = unit->Conventional(); const auto bases = BaseBytes( game );
+				fixture.Updates();
+				util::FinallyGuard restore_membership( [ & ] { source->units.erase( 0 ); } );
+				if ( scenario == 2 ) {
+					// Canonical friendly source stacks are admitted; an extra wrong-ID alias is not.
+					game->GetUM()->ValidateConventionalMove( unit, destination, caller ); source->units.emplace( 0, world.remote[ 0 ] );
+				}
+				const auto before = unit->Conventional(); const auto bases = BaseBytes( game );
 				const auto random = fixture.GameplayRandom(); const auto members = source->units; const auto jsf = game->GetRandom()->GetStateString();
 				bool rejected = false; try { game->GetUM()->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& ) { rejected = true; }
 				GT_ASSERT( rejected, "remote-world unsupported command accepted at " + std::to_string( scenario ) );
@@ -1065,7 +1080,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				util::FinallyGuard unlock( [ & ] { if ( source->IsLocked() ) { source->Unlock(); } } );
 				if ( scenario == 5 ) { fixture.SelectStartup( 1, 2 ); }
 				if ( scenario == 6 ) { fixture.CopyRoverDesign( 1, 65, 1 ); fixture.SelectStartup( 1, 65 ); }
-				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72, 0, "EXPLICIT_ROVER" ); other->SetTile( GSE_CALL, source ); fixture.Updates(); }
+				util::FinallyGuard restore_membership( [ & ] { source->units.erase( 0 ); } );
+				if ( scenario == 7 ) {
+					auto* other = Spawn( GSE_CALL, fixture, record, 72, 0, "EXPLICIT_ROVER" ); other->SetTile( GSE_CALL, source ); fixture.Updates();
+					manager->ValidateConventionalMove( unit, destination, 0 ); // valid friendly stack
+					source->units.emplace( 0, other ); // mismatched member ID must still reject atomically
+				}
 				const auto base_bytes = base::Base::Serialize( hq ).ToString();
 				fixture.GameplayRandom( { 0, 77 } ); const auto jsf = game->GetRandom()->GetStateString(); const auto members = source->units;
 				const auto before = unit->Conventional(); const auto next = Unit::GetNextId(); bool rejected = false;
@@ -1111,7 +1131,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 14 ) { source->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 18 ) { destination->features = FEATURE_XENOFUNGUS; destination->terraforming = TERRAFORMING_ROAD; }
 				if ( scenario == 19 ) { source->base = nullptr; }
-				if ( scenario == 20 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, source ); fixture.Updates(); }
+				util::FinallyGuard restore_membership( [ & ] { source->units.erase( 0 ); } );
+				if ( scenario == 20 ) {
+					auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, source ); fixture.Updates();
+					manager->ValidateConventionalMove( unit, destination, 0 ); // valid friendly stack
+					source->units.emplace( 0, other ); // preserve malformed-stack rejection coverage
+				}
 				base::FacilityDef unregistered( "HEADQUARTERS", "Unregistered", "Fixture", 1, { "fixture", 0, 0, 1, 1 } );
 				util::FinallyGuard restore_facility( [ & ] { if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = game->GetBM()->GetFacilityDef( "HEADQUARTERS" ); } } );
 				if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = &unregistered; }
@@ -1318,7 +1343,13 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 3 ) { for ( auto* c : destination->elevation.corners ) { *c = -100; } destination->Update(); }
 				if ( scenario == 4 ) { destination->rockiness = ROCKINESS_NONE; }
 				if ( scenario == 5 ) { destination->features = FEATURE_UNITY_POD; }
-				if ( scenario == 6 ) { destination->terraforming = TERRAFORMING_FARM; }
+				if ( scenario == 6 ) {
+					// Completed ordinary improvements are accepted; other improvements remain fenced.
+					for ( const auto improvement : { TERRAFORMING_FARM, TERRAFORMING_SOLAR, TERRAFORMING_MINE } ) {
+						destination->terraforming = improvement; manager->ValidateConventionalMove( unit, destination, caller );
+					}
+					destination->terraforming = TERRAFORMING_BUNKER;
+				}
 				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, destination ); }
 				if ( scenario == 8 ) { unit->m_animation_id = 99; }
 				if ( scenario == 9 ) { destination->Lock( 0 ); }

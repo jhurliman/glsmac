@@ -22,11 +22,11 @@ disk saves or menu navigation.
 
 | Path | Gap | Required outcome |
 | --- | --- | --- |
-| Setup | All six difficulties are selectable; canonical starting Base context currently requires Librarian. Faction selection is a TODO. | Every offered selection starts correctly; the selected faction is explicit. |
+| Setup | All six difficulties are selectable; canonical starting Base context currently requires Librarian. Faction selection is implemented and covered by the focused UI batch; rendered validation remains. | Every offered selection starts correctly; the selected faction is explicit. |
 | Units | Former/Colony use temporary markers; conventional scale/pivot is port policy. | Verify placement, image, scale, movement and selection against reference captures; list remaining visual differences. |
-| Unit controls | Former F/R/O/S/M, cancel C and Colony B lack a visible command/help surface. Saved work/order progress is not displayed. | Actions and current orders are discoverable without reading source. |
-| Selection | Retention, wrap distance and record-order ties are being integrated from original controller evidence. | Work continues and selection changes correctly across movement, work and turn boundaries. |
-| Base | Energy distribution, eco-damage and treasury presentation have unavailable fields. Production offers a limited unit set. | Verify worker edits, quantities and picker confirm/cancel; close/reopen without changing simulation values. |
+| Unit controls | A visible command panel now exposes currently available Former F/R/O/S/M, cancel C and Colony B actions, plus saved work/order state. Rendered placement remains unverified. | Actions and current orders are discoverable without reading source. |
+| Selection | Retention, wrap distance and record-order ties are integrated and pass focused controller tests. | Work continues and selection changes correctly across movement, work and turn boundaries. |
+| Base | Treasury and energy allocation now use authoritative values and pass focused UI/native checks. Eco-damage remains unavailable; production offers a limited unit set. | Verify worker edits, quantities and picker confirm/cancel; close/reopen without changing simulation values. |
 | Research | Required-choice script passes with UI doubles; native rendered modal is unverified. | Selection, scrolling, confirmation, repeated owner requests and reset behave correctly. |
 | Save/load | Load Game is a stub; SaveMap writes only terrain. | A local campaign envelope restores frozen setup, roster/local owner and the complete world without replaying first-turn creation. |
 | Lifecycle | Latest retained interactive receipts predate this renderer. | New game, close and relaunch pass with the checkpoint build. |
@@ -63,3 +63,16 @@ observations to recheck include jagged map edges, clipped Base badges and a Mac
 texture warning. Do not label them fixed until the current session demonstrates
 it. Save each issue with the screen, reproduction steps, expected/reference
 behavior and the fixing revision.
+
+## Focused UI integration — 2026-10-17
+
+Source `b238976a` combines faction selection, live treasury, discoverable
+Former/Colony commands and Base energy allocation. One cached Linux build passed
+12 affected native groups with allocation tracking, including startup owner
+selection, treasury restore, command dispatch and the real Base screen path.
+The four scripts `faction_selection`, `minimap_treasury`, `unit_commands` and
+`base_energy_display` also passed with the same binary and allocation tracking.
+Focused Base.cpp LLVM 15 analysis completed with zero failures in 5.52 seconds;
+the other new native query implementations passed their focused source checks
+before integration. No new full platform or interactive visual receipt is
+claimed by this batch.

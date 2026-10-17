@@ -3,6 +3,7 @@
 const minimap = #include('../default/ui/parts/game/bottom_bar/mini_map');
 return (game) => {
 	let year = null;
+	let energy = null;
 	let turn_button = null;
 	let plays = 0;
 	let timers = 0;
@@ -29,6 +30,7 @@ return (game) => {
 			button: button,
 			text: (properties) => {
 				if (year == null) { year = properties; }
+				else { energy = properties; }
 				return properties;
 			},
 			widget: (properties) => { return {
@@ -38,5 +40,5 @@ return (game) => {
 		};
 	};
 	minimap.init({game: game, ui: {class: (name) => { return style; }}, el: {panel: panel}});
-	return () => { return {year: year.text, text: turn_button.text, plays: plays, timers: timers}; };
+	return () => { return {year: year.text, energy: energy.text, text: turn_button.text, plays: plays, timers: timers}; };
 };

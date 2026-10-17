@@ -57,15 +57,24 @@ return {
 			left: 3,
 			text: 'Mission Year ' + #to_string(p.game.get_year()),
 		});
-		minimap.listen(p.game, 'turn', (e) => {
-			info_year.text = 'Mission Year ' + #to_string(e.year);
-		});
 		const info_energy = info_block.text({
 			class: 'bottombar-minimap-info-text',
 			align: 'bottom left',
 			bottom: 4,
 			left: 3,
-			text: 'Energy: 0',
+			text: 'Energy: N/A',
+		});
+
+		const refresh_energy = () => {
+			const credits = p.game.get_smac_credits();
+			info_energy.text = #is_defined(credits) ? 'Energy: ' + #to_string(credits) : 'Energy: N/A';
+		};
+		// Initial construction covers restored sessions, which do not emit a
+		// gameplay turn just to open the UI. Later reads follow actual state events.
+		refresh_energy();
+		minimap.listen(p.game, 'turn', (e) => {
+			info_year.text = 'Mission Year ' + #to_string(e.year);
+			refresh_energy();
 		});
 
 		// minimap-related buttons (no functionality yet)
@@ -245,6 +254,7 @@ return {
 			}
 		};
 		minimap.listen(p.game, 'turn_status', (e) => {
+			refresh_energy();
 			f_set_status(e.status);
 		});
 		f_set_status(p.game.get_turn_status());

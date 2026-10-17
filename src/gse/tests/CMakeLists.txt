@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
 	${PWD}/SmacGameplayRandomState.cpp
+	${PWD}/SmacScoutCombat.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Value.cpp

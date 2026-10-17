@@ -33,6 +33,16 @@ sanitizer and correctness-analysis receipts. The additional orbital Base wrapper
 passed its one-TU correctness check. No full platform matrix or full suite was
 run for this gameplay batch.
 
+The subsequent combined source at `006ba7eb` passes 126 affected native groups
+with memory tracking: saved territory and Base order, actual founding/removal,
+zone-of-control admission and refusal sight, Base N/M calculation and display,
+startup, home links, legacy worker lifecycle, and world/Client decoding. The
+integration corrected an over-broad native script-access check, a missing Unit
+registry guard in legacy Base removal, and handcrafted snapshot fixtures. Base
+record order remains exact when comparing restored worlds. The final changed
+BaseManager TU passes targeted correctness analysis; component analysis and
+sanitizer receipts remain separate. No platform matrix was repeated.
+
 ## Base authority and publication
 
 One optional Base-owned `SmacBaseAllocationState` retains selected32, count and
@@ -111,15 +121,18 @@ and a second-base conquest loop remain later functional gates.
 Original receipts now cover ordinary land sight, retained native and foreign
 visibility, land territory rebuilding and the sea/coast comparison. Territory
 rules now reproduce fourteen complete captured claim maps, including later-Base
-tie winners and foreign-land vetoes of sea claims. Live topology, saved Base
-order and founding/removal publication are being connected separately. Live
+tie winners and foreign-land vetoes of sea claims. [Live territory](smac-live-territory.md)
+now binds current topology and frozen borders, preserves Base record order,
+and stages claims with complete canonical founding/removal transactions. Live
 movement and ready-factory creation now stage ordinary sight and remembered
 terrain; moving units clear their positive visibility while stationary units
-retain it. Restoration does not replay these effects. Original zone-of-control
-receipts and a focused implementation are ready for the next integration batch.
+retain it. Restoration does not replay these effects. [Zone-of-control admission](smac-live-ordinary-zoc.md)
+now uses directed Pact state and preserves the distinct refusal-reveal behavior.
 
-The next Base consumer is actual nutrient/mineral calculation, followed by
-production and population in the measured upkeep order. Original full-loop
+[Actual nutrient/mineral preparation](base-resource-calculation.md) now feeds
+the canonical Base screen without posting or mutating the food buffer. The next
+consumers are canonical startup, production and population in measured upkeep
+order. Original full-loop
 receipts now cover ordinary Scout/Former production, newborn movement and the
 following upkeep. Colony production and Former command admission still need
 their remaining observations. The user's separate base-yield investigation

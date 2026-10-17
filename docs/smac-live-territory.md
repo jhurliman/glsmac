@@ -83,7 +83,12 @@ Local standalone topology checks passed optimized normal and ASan/UBSan/LSan
 with leak/halt enabled. A copied-source omission of polar overwrite failed its
 original projection assertion. Changed live production TUs and the new test TU
 passed syntax checks; ten affected production TUs passed LLVM15 correctness
-analysis with zero diagnostics. Engine-level execution of the five new groups
-and affected existing world/knowledge tests is pending the coordinator's cached
-integration build. No full-suite or platform validation is claimed for this
-checkpoint.
+analysis with zero diagnostics. Combined source at `006ba7eb` passes all five
+new groups within 126 affected memory-tracked native groups, including existing
+world/knowledge, home, worker lifecycle and resource consumers. Integration
+preserves legacy native setup access and guards partial legacy teardown without
+a Unit registry; canonical removal still requires that registry. Handcrafted
+snapshot fixtures now consume the territory frame, preserve semantic Base order,
+and retain unrelated rule tokens when testing the border field. The final
+BaseManager TU passes targeted LLVM15 correctness analysis with zero failures
+(7.31 seconds). No full-suite or platform validation is claimed for this batch.

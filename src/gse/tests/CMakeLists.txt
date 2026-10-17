@@ -44,6 +44,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrBasisConverter.cpp
 	${PWD}/CvrTransformCalculator.cpp
 	${PWD}/CvrScoutRenderer.cpp
+	${PWD}/CvrSpartanRoverRenderer.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

@@ -80,7 +80,7 @@ struct AssetInput {
 
 // Complete self-authored two-record asset, through the real container, scene,
 // geometry and palette readers. No installed bytes are part of this fixture.
-std::string Asset( const AssetInput& input ) {
+std::string Asset( const AssetInput& input, const Bytes* const replacement = nullptr ) {
 	Bytes geometry;
 	for ( const uint32_t v : { input.grouped ? 10U : 8U, 0U, input.scalar, 0U, 0U } ) { Word( geometry, v ); }
 	geometry.resize( 38, 0 ); Word( geometry, input.grouped ? 1U : 2U );
@@ -96,6 +96,7 @@ std::string Asset( const AssetInput& input ) {
 	PutWord( geometry, 4, static_cast< uint32_t >( geometry.size() ) );
 	PutWord( geometry, 12, static_cast< uint32_t >( geometry.size() ) );
 	PutWord( geometry, 16, static_cast< uint32_t >( geometry.size() - 1 ) );
+	if ( replacement ) { geometry = *replacement; }
 	Bytes voxel; Field( voxel, 0x01020404, geometry );
 	Bytes locations; Float( locations, input.x ); Float( locations, -200 ); Float( locations, 0 );
 	Bytes matrix;
@@ -123,6 +124,10 @@ std::string MakeScoutTestAsset( const bool reactor ) {
 	if ( reactor ) { input.x = 500; input.shade = 77; }
 	else { input.grouped = true; }
 	return Asset( input );
+}
+
+std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geometry ) {
+	return Asset( AssetInput{}, &geometry );
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {

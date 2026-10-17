@@ -18,6 +18,7 @@ struct View {
 	std::array< int32_t, 2 > target_anchor;
 };
 
-View MakeView( const CvrScoutViewInput& input );
+enum class IdleProfile { Infantry, SpartanSpeeder };
+View MakeView( const CvrScoutViewInput& input, IdleProfile profile = IdleProfile::Infantry );
 
 }

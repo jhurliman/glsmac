@@ -50,7 +50,10 @@ def record(code, lighting, color):
 
 def installed_stream(directory, filename, object_name):
     """Extract one flags-8 simple stream; do not emulate the original loader."""
-    raw = (directory / filename).read_bytes()
+    paths = [path for path in directory.iterdir()
+             if path.is_file() and path.name.lower() == filename.lower()]
+    require(len(paths) == 1, 'installed asset must have one case-insensitive match: ' + filename)
+    raw = paths[0].read_bytes()
     require(hash_bytes(raw) == ASSETS[filename][0], 'asset hash mismatch')
     require(raw[:4] == b'CVR\0' and int.from_bytes(raw[4:8], 'little') == len(raw), 'bad CVR envelope')
     outer = list(chunks(raw[8:]))

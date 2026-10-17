@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Tests.cpp
 	${PWD}/Backend.cpp
+	${PWD}/RosterRecords.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp

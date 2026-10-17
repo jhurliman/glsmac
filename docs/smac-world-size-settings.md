@@ -166,3 +166,15 @@ callback fixture, and old fixtures that had not selected a size. Those were
 corrected before the final receipts. Evidence is retained under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/world-size-*`.
 No rendered UI or hardware-platform smoke is claimed by these local receipts.
+
+### Focused publication
+
+The initial focused publication is based on world-technology PR #116 at
+`97eacd430e51c7df45e88e1ce2defed3fca6b631`. Applying source
+`fe87bb2ba788d5a9c29b23b08a43d67e8de80c24` required only test-registration unions
+and an explicit `value/Bool.h` test include; production behavior is unchanged.
+That actual publication tree passed all six registered CTests in 34.57 seconds
+(full GSE 24.15 seconds), including the new size/menu/packet/download cases.
+This narrower parent does not contain all eight integration checks or imply the
+source parent's sanitizer/lifecycle coverage. Its separately identified async
+timer cancellation prerequisite must also be present for reliable hosted runs.

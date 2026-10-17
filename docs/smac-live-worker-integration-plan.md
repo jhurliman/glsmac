@@ -7,6 +7,14 @@ actual population, owners and terrain. This remains a controlled native
 integration surface; generated-world startup still needs sight and territory
 producers. Combined validation is recorded separately from component receipts.
 
+The [live recalculation caller](smac-live-worker-recalculation.md) now composes
+these values with actual Base resource queries, specialist eligibility, saved
+production category and [owned orbital assets](smac-owned-satellite-state.md).
+It commits through the complete allocation transaction. Combined source at
+`50d43f9f` passes 16 affected tracked native groups, including actual restore
+and the complete Base screen. Manual click commands and homed-unit support
+are the next live integrations; no default campaign is activated by this caller.
+
 ## Base authority and publication
 
 One optional Base-owned `SmacBaseAllocationState` retains selected32, count and
@@ -80,9 +88,11 @@ and a second-base conquest loop remain later functional gates.
 
 ## Reverse-engineering queue and review
 
-The next requested map contracts are ordinary land sight/visibility lifetime,
-then bounded first/overlapping-base territory rebuilding and contested foreign
-borders. The user's separate base-yield investigation takes priority when
+Original receipts now cover ordinary land sight, retained native visibility,
+land territory rebuilding and contested foreign borders. Ordinary exploration
+is implemented; its live callers and the territory producer remain pending.
+The next requested map contract is the bounded sea/coast territory comparison.
+The user's separate base-yield investigation takes priority when
 directed in that thread. Reuse existing startup and transition receipts rather
 than repeating allocator research.
 

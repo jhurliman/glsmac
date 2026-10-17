@@ -198,14 +198,34 @@ The focused LLVM 15 correctness gate has landed on main through PR #16;
 readability and modernization checks remain disabled. The explicit single-file
 runner has landed in #55. The analyzer still honors explicit NOLINT
 directives, so those require review; there is no blanket suppression baseline.
-Shared-header changes continue to trigger a full production scan rather than
-using the single-file option to narrow the required check.
+Shared-header changes include known affected consumers in the focused scan;
+widen to the full production scan when the dependency boundary is unclear.
+Routine gameplay work uses cached incremental builds and affected tests. Full
+platform suites are reserved for platform changes, playable integration
+milestones and releases. The scoped CI policy is in
+[PR #168](https://github.com/jhurliman/glsmac/pull/168).
 
 ## Current status — 2026-10-17
 
 M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
+
+The current live integration at `50d43f9f` connects actual Base worker
+recalculation to owned availability, frozen specialist rules, saved production
+category and faction satellite counts. Base screens use actual intake, nutrient
+demand and stored resources; unfinished consumption and forecasts display as
+unavailable. A combined cached build passes 16 affected native groups with
+allocation tracking, including the complete screen, worker recalculation and
+restore, orbital intake/state, and ordinary exploration. Component analysis
+results are reused for unchanged production source. This is focused Linux
+validation, not a new platform checkpoint or a playable campaign claim.
+
+The active integration work is ordinary terrain movement, manual worker clicks,
+and actual home-base mineral support. Exploration is implemented as a checked
+rule; sight, remembered terrain and territory still need their live producers.
+The next functional gate is a real first base and Scout with editable workers
+and a coherent turn, followed by production, founding and a second base.
 
 The latest [unit, Rover and resource receipt](validation/unit-rover-resources-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
@@ -411,8 +431,8 @@ extreme social/resource inputs or a complete base economy.
    contexts. The detached automatic allocator now composes existing collection,
    repair, scoring, tile add/swap and specialist competition/final fill. A separate
    unavailable-square builder consumes explicit map and relationship knowledge.
-   Connect their saved inputs and atomic live publication before activating manual
-   worker commands; gross intake alone cannot substitute for the handler's full
+   Saved inputs and atomic live publication now drive ordinary recalculation.
+   Connect manual worker commands; gross intake alone cannot substitute for the handler's full
    forced calculation. Preserve valid allocations through the measured early exit,
    including shortages, and keep recalculation separate from turn posting.
    Initial exploration, territorial recognition and unit visibility still need

@@ -7,8 +7,12 @@ supplying zero. `GetSatelliteCounts` returns a detached value. Signed32 counts
 are retained exactly, including diagnostic negative values.
 
 `Game::PrepareNewSimulation` explicitly constructs zero satellite assets for
-each participant. This is GLSMAC new-campaign initialization, not a claim to
-have recovered the original game's reset producer. Loading never invokes that
+each participant. The later `RE-SMAC-ORBIT-CALLER-001` receipt confirms zeroing
+at turn zero in four poisoned calls to the actual faction-initialization
+fragment, preserving other factions and skipping the reset at turn one. Twelve
+complete forced resource calls also confirm owner-specific prefix replacement.
+Those bounded original calls do not establish frontend or load timing.
+Loading never invokes that
 initialization: Simulation V8 appends the bounded owner/count records and
 restores every value. V7 and malformed/truncated/duplicate/mismatched records
 reject. The existing world prefix decodes the strict simulation version before

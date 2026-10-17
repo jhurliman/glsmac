@@ -2214,6 +2214,10 @@ public:
 		game::frontend::Game frontend( m_glsmac.get(), m_state, ui, {}, {} );
 		frontend.m_is_initialized = true; frontend.m_turn_id = m_game.GetTurnId();
 		util::FinallyGuard clean_frontend( [ & ] { frontend.m_is_initialized = false; } );
+		scene::Scene controller_scene( "Selected work fixture", scene::SCENE_TYPE_WORLD );
+		game::frontend::sprite::InstancedSpriteManager sprites( &controller_scene );
+		frontend.m_ism = &sprites;
+		util::FinallyGuard detach_sprites( [ & ] { frontend.m_ism = nullptr; } );
 		game::frontend::unit::UnitManager controller( &frontend );
 		const auto id = actor->m_id;
 		const auto count = [ & ] { return m_game.m_pending_events.size(); };

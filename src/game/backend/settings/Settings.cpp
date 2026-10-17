@@ -313,7 +313,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_faction_startup_rules.has_value() ) { THROW( "Gameplay ruleset and SMAC faction startup rules do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_predefined_unit_rules.has_value() ) { THROW( "Gameplay ruleset and predefined unit profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 7 );
+	buf.WriteInt( 8 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_base_square_rules.has_value() );
 	if ( m_smac_base_square_rules ) {
@@ -342,8 +342,8 @@ static bool SameSmacRules( const std::optional< resource::smac::BaseSquareRules 
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 7 ) {
-		THROW( "Unsupported global settings format (expected version 7)" );
+	if ( buf.ReadInt() != 8 ) {
+		THROW( "Unsupported global settings format (expected version 8)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -406,7 +406,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		world_sizes->ValidateSelection( *next_selection );
 	}
 	const auto rules_data = buf.ReadString();
-	// Default rules currently serialize no fields; V7 must not silently drop
+	// Default rules currently serialize no fields; V8 must not silently drop
 	// unknown payload bytes. A future rules format requires an explicit version.
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();

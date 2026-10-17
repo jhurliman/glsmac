@@ -125,6 +125,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 			game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version,
 			{}, {}, {}, {}, {}, {}, {}, present, bytes ).ToString();
 	};
+	result.emplace_back( "old V10", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 10 ).ToString() );
 	if ( id == "smax" ) { result.emplace_back( "unexpected faction profile", header( true ) ); return result; }
 	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
 	result.emplace_back( "absent faction profile", header( false ) );
@@ -145,6 +146,19 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 	const auto bytes = profile.Serialize( technologies ).ToString();
 	for ( const auto length : { size_t( 0 ), size_t( 1 ), bytes.size() - 1 } ) { add( "truncated faction payload", bytes.substr( 0, length ) ); }
 	auto trailing = profile.Serialize( technologies ); trailing.WriteInt( 1 ); add( "extra faction fields", trailing.ToString() );
+	for ( size_t i = 0; i < 4; ++i ) {
+		auto changed = profile; changed.initial_social_models[ i ].name += " changed";
+		add( "different model-zero source name", changed.Serialize( technologies ).ToString() );
+		for ( const int field : { 0, 1, 2 } ) {
+			changed = profile; auto& row = changed.initial_social_models[ i ];
+			if ( field == 0 ) { row.name = std::string( 257, 'x' ); }
+			if ( field == 1 ) { row.prerequisite = "Disable"; }
+			if ( field == 2 ) { row.modifiers = "+MORALE"; }
+			add( "invalid model-zero source field", smac_rules_fixture::UncheckedFactions( changed ).ToString() );
+		}
+	}
+	types::Buffer old_version; old_version.WriteInt( 1 );
+	add( "old faction V1", old_version.ToString() + bytes.substr( old_version.lenw ) );
 	using Bonus = game::backend::settings::SmacFactionStartupBonus;
 	const std::array< const char*, 12 > values = { "Tech3", "tech2 ", "Disable", "None", "--SUPPORT", "17", "POLICE", "2", "3", "+1suffix", "7", "23" };
 	for ( size_t i = 0; i < values.size(); ++i ) {
@@ -163,7 +177,9 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 		add( "invalid late faction field " + std::to_string( field ), smac_rules_fixture::UncheckedFactions( changed ).ToString() );
 	}
 	// Independently corrupt framed integers after all preceding records decode.
-	auto wire = profile.Serialize( technologies ); wire.ReadInt(); const auto count = wire.ReadInt();
+	auto wire = profile.Serialize( technologies ); wire.ReadInt(); const auto models = wire.ReadInt();
+	for ( int64_t i = 0; i < models; ++i ) { wire.ReadString(); wire.ReadString(); wire.ReadString(); }
+	const auto count = wire.ReadInt();
 	std::vector< std::pair< size_t, size_t > > numbers;
 	for ( int64_t faction = 0; faction < count; ++faction ) {
 		wire.ReadString(); wire.ReadString(); wire.ReadString(); const auto bonuses = wire.ReadInt();

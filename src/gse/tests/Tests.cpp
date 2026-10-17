@@ -5,6 +5,7 @@
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
 #include "SmacScoutCombat.h"
+#include "SmacEmptyGroundMovement.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -14,6 +15,7 @@
 #include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "SmacProductionRules.h"
+#include "SmacMovementRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacTechnologyState.h"
 #include "SmacWorldSizeRules.h"
@@ -82,6 +84,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
+		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
@@ -221,6 +224,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );

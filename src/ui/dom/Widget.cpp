@@ -83,6 +83,9 @@ void Widget::Destroy( GSE_CALLABLE ) {
 		m_on_widget_remove( this );
 	}
 	Area::Destroy( GSE_CALL );
+	// Preserve remove/deinit callback ordering, then release anything retained
+	// when root destruction detached the UI before widget unregistration.
+	Clear();
 }
 
 const bool Widget::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
@@ -112,7 +115,7 @@ void Widget::Clear() {
 	m_event_handlers.clear();
 	m_global_event_handlers.clear();
 	if ( m_global_handler_id ) {
-		m_ui->RemoveGlobalHandler( m_global_handler_id );
+		if ( m_ui ) { m_ui->RemoveGlobalHandler( m_global_handler_id ); }
 		m_global_handler_id = 0;
 	}
 	m_geometry->AsRectangle()->Clear();

@@ -32,41 +32,22 @@ void Server::ProcessEvent( const network::Event& event ) {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
-			m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-			const auto& rules = m_state->m_settings.global.rules;
-			NEW(
-				m_player, Player,
-				m_state->m_settings.local.player_name,
-				Player::PR_HOST,
-				{},
-				rules.GetDefaultDifficultyLevel()
-			);
-			m_state->AddPlayer( m_player );
-			m_slot = 0; // host always has slot 0
-			m_state->AddCIDSlot( 0, m_slot );
-			auto& slot = m_state->m_slots->GetSlot( m_slot );
-			slot.SetPlayer( m_player, 0, event.data.remote_address ); // host always has cid 0
-			slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
-			if ( m_on_listen ) {
-				m_on_listen();
-			}
-			if ( m_on_global_settings_update ) {
-				m_on_global_settings_update();
-			}
-
-			auto* const player_copy = new Player( m_player );
-			WTrigger(
-				"player_join", ARGS_F( player_copy ) {
-					{
-						"player", player_copy->Wrap( GSE_CALL )
-					}
-				}; },
-				[ player_copy ]() {
-					delete player_copy;
-				}
-			);
-
-			OnOpen();
+            const auto& rules = m_state->m_settings.global.rules;
+            m_player = m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, roster::Role::Host, std::nullopt, rules.GetDefaultDifficultyLevel()},
+                m_state->m_settings.local.account.GetGSID(), 0, event.data.remote_address, false);
+            m_slot = 0;
+            auto* const state = m_state;
+            const auto epoch = state->CaptureRosterEpoch();
+            const auto current = [&]() { return epoch && epoch->active && m_state == state && state->GetConnection() == this; };
+            const auto on_listen = m_on_listen;
+            if (on_listen) { on_listen(); }
+            if (!current()) { break; }
+            const auto on_settings = m_on_global_settings_update;
+            if (on_settings) { on_settings(); }
+            if (!current()) { break; }
+            state->NotifyPlayerJoin(m_slot);
+            if (!current()) { break; }
+            OnOpen();
 
 			break;
 		}
@@ -86,70 +67,26 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_CLIENT_DISCONNECT: {
-			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
-			auto it = m_state->GetCidSlots().find( event.cid );
-			if ( it != m_state->GetCidSlots().end() ) {
-				const auto slot_num = it->second;
-				m_state->RemoveCIDSlot( event.cid );
-
-				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
-
-				auto& slot = m_state->m_slots->GetSlot( slot_num );
-				Player* player = nullptr;
-				if ( m_game_state == GS_LOBBY ) {
-					// free slot for next player
-					player = slot.GetPlayerAndClose();
-					ASSERT( player, "player in slot is null" );
-					m_state->RemovePlayer( player );
-					slot.UnsetLinkedGSID();
-				}
-				else {
-					// mark slot as disconnected
-					player = slot.GetPlayer();
-					ASSERT( player, "player in slot is null" );
-					player->Disconnect();
-				}
-				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
-
-				// cleanup
-				const auto& download_data_it = m_download_data.find( event.cid );
-				if ( download_data_it != m_download_data.end() ) {
-					m_download_data.erase( download_data_it );
-				}
-
-				if ( m_game_state == GS_LOBBY ) {
-					ClearReadyFlags();
-				}
-
-				auto* player_copy = new Player( player );
-				WTrigger(
-					"player_leave", ARGS_F( player_copy ) {
-						{
-							"player", player_copy->Wrap( GSE_CALL )
-						}
-					}; },
-					[ space = GetGCSpace(), player_copy ]() {
-						// Cleanup may run after the notification's accumulation ends.
-						space->WithNativeMutation( [ player_copy ]() { delete player_copy; } );
-					}
-				);
-
-				if ( m_game_state == GS_LOBBY ) {
-					// Broadcast and callback scheduling above must stay outside this
-					// collection exclusion; only retire the native wrapper target here.
-					GetGCSpace()->WithNativeMutation( [ player ]() { DELETE( player ); } );
-				}
-			}
-			break;
-		}
+        case network::Event::ET_CLIENT_DISCONNECT: {
+            const auto it = m_state->GetCidSlots().find(event.cid);
+            if (it != m_state->GetCidSlots().end()) {
+                const auto index = it->second;
+                m_state->RetirePlayerSlot(index, this, m_game_state != GS_LOBBY, [&]() {
+                    const auto& slot = m_state->m_slots->GetSlot(index);
+                    SendSlotUpdate(index, &slot, event.cid);
+                    m_download_data.erase(event.cid);
+                    if (m_game_state == GS_LOBBY) { ClearReadyFlags(); }
+                });
+            }
+            break;
+        }
 		case network::Event::ET_PACKET: {
 			try {
 				types::Packet packet( types::Packet::PT_NONE );
 				packet.Deserialize( types::Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case types::Packet::PT_AUTH: {
-						ASSERT( packet.data.vec.size() == 2, "unexpected vec size of PT_AUTH" );
+						if (packet.data.vec.size() != 2) { throw std::runtime_error("Invalid authentication field count"); }
 						const std::string& gsid = packet.data.vec[ 0 ];
 						const std::string& player_name = packet.data.vec[ 1 ];
 						if ( gsid.empty() || player_name.empty() ) {
@@ -215,28 +152,22 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 						}
 
-						const auto& rules = m_state->m_settings.global.rules;
-						m_state->AddCIDSlot( event.cid, slot_num );
-						auto& slot = m_state->m_slots->GetSlot( slot_num );
-
-						Player* player = nullptr;
-						if ( m_game_state == GS_LOBBY ) {
-							ClearReadyFlags();
-							NEW(
-								player, Player,
-								player_name,
-								Player::PR_PLAYER,
-								{},
-								rules.GetDefaultDifficultyLevel()
-							);
-							m_state->AddPlayer( player );
-							slot.SetLinkedGSID( gsid );
-						}
-						else {
-							player = slot.GetPlayer();
-						}
-						slot.SetPlayer( player, event.cid, event.data.remote_address );
-						player->Connect();
+                        auto* const state = m_state;
+                        const auto epoch = state->CaptureRosterEpoch();
+                        const auto current = [&]() { return epoch && epoch->active && m_state == state && state->GetConnection() == this; };
+                        const auto& rules = state->m_settings.global.rules;
+                        if (m_game_state == GS_LOBBY) {
+                            // Existing clients receive these flags before the new CID
+                            // joins broadcasts; its first packets must be the initial
+                            // roster, phase and settings, in that order.
+                            ClearReadyFlags();
+                            if (!current()) { break; }
+                            m_state->CreatePlayerSlot(slot_num, {player_name, roster::Role::Player, std::nullopt, rules.GetDefaultDifficultyLevel()}, gsid, event.cid, event.data.remote_address, true);
+                        } else {
+                            if (!slot_num) { throw std::runtime_error("A remote connection cannot assume the host Slot"); }
+                            m_state->ReconnectPlayerSlot(slot_num, event.cid, event.data.remote_address);
+                        }
+                        auto& slot = m_state->m_slots->GetSlot(slot_num);
 
 						SendPlayersList( event.cid, slot_num );
 						SendGameState( event.cid );
@@ -244,62 +175,35 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
-						auto* player_copy = new Player( player );
-						WTrigger(
-							"player_join", ARGS_F( player_copy ) {
-								{
-									"player", player_copy->Wrap( GSE_CALL )
-								}
-							}; },
-							[ player_copy ]() {
-								delete player_copy;
-							}
-						);
+                        m_state->NotifyPlayerJoin(slot_num);
 
 						break;
 					}
-					case types::Packet::PT_UPDATE_SLOT:
-					case types::Packet::PT_UPDATE_FLAGS: {
-						const auto& slots = m_state->GetCidSlots();
-						const auto& it = slots.find( event.cid );
-						if ( it == slots.end() ) {
-							Error( event.cid, "slot index mismatch" );
-							break;
-						}
-						auto& slot = m_state->m_slots->GetSlot( it->second );
-						if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
-							Error( event.cid, "slot state mismatch" );
-							break;
-						}
-						const bool only_flags = packet.type == types::Packet::PT_UPDATE_FLAGS;
-						const auto old_flags = slot.GetState() == slot::Slot::SS_PLAYER
-							? slot.GetPlayerFlags()
-							: 0;
-						if ( only_flags ) {
-							Log( "Got flags update from " + std::to_string( event.cid ) );
-							slot.SetPlayerFlags( packet.udata.flags.flags );
-							SendFlagsUpdate( it->second, &slot, event.cid ); // notify others
-						}
-						else {
-							Log( "Got slot update from " + std::to_string( event.cid ) );
-							const bool wasReady = slot.HasPlayerFlag( slot::PF_READY );
-							slot.Deserialize( packet.data.str );
-							if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
-								Error( event.cid, "slot update while ready" );
-								break;
-							}
-							SendSlotUpdate( it->second, &slot, event.cid ); // notify others
-						}
-						if ( !only_flags ) {
-							if ( m_on_slot_update ) {
-								m_on_slot_update( it->second, &slot );
-							}
-						}
-						if ( m_on_flags_update ) {
-							m_on_flags_update( it->second, &slot, old_flags, slot.GetPlayerFlags() );
-						}
-						break;
-					}
+                    case types::Packet::PT_UPDATE_SLOT:
+                    case types::Packet::PT_UPDATE_FLAGS: {
+                        auto* const state=m_state; const auto epoch=state->CaptureRosterEpoch();
+                        const auto current=[&]() {return epoch && epoch->active && m_state==state && state->GetConnection()==this;};
+                        const auto it = m_state->GetCidSlots().find(event.cid);
+                        if (it == m_state->GetCidSlots().end()) { throw std::runtime_error("Unknown Player CID"); }
+                        const auto index = it->second;
+                        const auto old = m_state->ExportSlot(index);
+                        if (!old.player) { throw std::runtime_error("Update requires occupied Slot"); }
+                        const bool flags_only = packet.type == types::Packet::PT_UPDATE_FLAGS;
+                        if (flags_only) { m_state->ApplyFlagsUpdate(index, packet.udata.flags.flags, this, epoch); }
+                        else {
+                            const auto next = roster::DecodeSlot(packet.data.str, State::ROSTER_LIMITS);
+                            if (!next.player || next.linked_gsid != old.linked_gsid || next.player->role != old.player->role) { throw std::runtime_error("Client cannot replace its occupant identity"); }
+                            m_state->ApplySlotUpdate(index, next, this, epoch);
+                        }
+                        if (!current()) { break; }
+                        auto& slot = state->m_slots->GetSlot(index);
+                        if (flags_only) { SendFlagsUpdate(index, &slot, event.cid); }
+                        else { SendSlotUpdate(index, &slot, event.cid); const auto on_slot=m_on_slot_update; if (on_slot) { on_slot(index, &slot); } }
+                        if (!current()) { break; }
+                        const auto on_flags=m_on_flags_update;
+                        if (on_flags) { on_flags(index, &slot, old.flags, slot.GetPlayerFlags()); }
+                        break;
+                    }
 					case types::Packet::PT_MESSAGE: {
 						Log( "Got chat message from " + std::to_string( event.cid ) + ": " + packet.data.str );
 						const auto& slots = m_state->GetCidSlots();
@@ -394,7 +298,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 				}
 			}
-			catch ( std::runtime_error& err ) {
+			catch ( const std::invalid_argument& err ) {
+                Error( event.cid, err.what() );
+            }
+            catch ( std::runtime_error& err ) {
 				Error( event.cid, err.what() );
 			}
 			break;
@@ -506,18 +413,19 @@ void Server::SendGameEventResponse( const size_t slot_num, const std::string& ev
 }
 
 void Server::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags ) {
-	if ( !only_flags ) {
-		if ( m_on_slot_update ) {
-			m_on_slot_update( slot_num, slot );
-		}
-		SendSlotUpdate( slot_num, slot );
-	}
-	if ( m_on_flags_update ) {
-		m_on_flags_update( slot_num, slot, slot->GetPlayerFlags(), slot->GetPlayerFlags() ); // TODO: old flags?
-	}
-	if ( only_flags ) {
-		SendFlagsUpdate( slot_num, slot );
-	}
+    auto* const state = m_state;
+    const auto epoch = state->CaptureRosterEpoch();
+    const auto current = [&]() { return epoch && epoch->active && m_state == state && state->GetConnection() == this; };
+    if (!only_flags) {
+        const auto on_slot = m_on_slot_update;
+        if (on_slot) { on_slot(slot_num, slot); }
+        if (!current()) { return; }
+        SendSlotUpdate(slot_num, slot);
+    }
+    const auto on_flags = m_on_flags_update;
+    if (on_flags) { on_flags(slot_num, slot, slot->GetPlayerFlags(), slot->GetPlayerFlags()); }
+    if (!current()) { return; }
+    if (only_flags) { SendFlagsUpdate(slot_num, slot); }
 }
 
 void Server::SendMessage( const std::string& message ) {
@@ -593,8 +501,8 @@ void Server::SendPlayersList( const network::cid_t cid, const size_t slot_num ) 
 	Log( "Sending players list to " + std::to_string( cid ) );
 	types::Packet p( types::Packet::PT_PLAYERS );
 	p.data.num = slot_num;
-	p.data.str = m_state->m_slots->Serialize().ToString();
-	g_engine->GetNetwork()->MT_SendPacket( &p, cid );
+	p.data.str = roster::EncodeRoster(m_state->ExportRoster(), State::ROSTER_LIMITS);
+	m_network->MT_SendPacket( &p, cid );
 }
 
 void Server::SendSlotUpdate( const size_t slot_num, const slot::Slot* slot, network::cid_t skip_cid ) {
@@ -604,7 +512,7 @@ void Server::SendSlotUpdate( const size_t slot_num, const slot::Slot* slot, netw
 				Log( "Sending slot update to " + std::to_string( cid ) );
 				types::Packet p( types::Packet::PT_SLOT_UPDATE );
 				p.data.num = slot_num;
-				p.data.str = slot->Serialize().ToString();
+				p.data.str = roster::EncodeSlot(m_state->ExportSlot(slot_num), State::ROSTER_LIMITS);
 				m_network->MT_SendPacket( &p, cid );
 			}
 		}
@@ -630,21 +538,25 @@ const std::string Server::FormatChatMessage( const Player* player, const std::st
 }
 
 void Server::ClearReadyFlags() {
-	ASSERT( m_game_state, "unexpected game state" );
-	// clear readyness of everyone
-	auto& slots = m_state->m_slots->GetSlots();
-	for ( size_t num = 0 ; num < slots.size() ; num++ ) {
-		auto& slot = slots.at( num );
-		if ( slot.GetState() == slot::Slot::SS_PLAYER && slot.HasPlayerFlag( slot::PF_READY ) ) {
-			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
-			const auto old_flags = slot.GetPlayerFlags();
-			slot.UnsetPlayerFlag( slot::PF_READY );
-			UpdateSlot( num, &slot, true );
-			if ( m_on_flags_update ) {
-				m_on_flags_update( num, &slot, old_flags, slot.GetPlayerFlags() );
-			}
-		}
-	}
+    ASSERT(m_game_state, "unexpected game state");
+    auto* const state = m_state;
+    const auto epoch = state->CaptureRosterEpoch();
+    const auto current = [&]() { return epoch && epoch->active && m_state == state && state->GetConnection() == this; };
+    // A notification or native callback may retire this roster synchronously.
+    // Never retain a Slot/vector reference across that boundary without checking.
+    for (size_t num = 0; current() && num < state->m_slots->GetCount(); ++num) {
+        auto& slot = state->m_slots->GetSlot(num);
+        if (slot.GetState() == slot::Slot::SS_PLAYER && slot.HasPlayerFlag(slot::PF_READY)) {
+            Log("Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName());
+            const auto old_flags = slot.GetPlayerFlags();
+            slot.UnsetPlayerFlag(slot::PF_READY);
+            if (!current()) { return; }
+            UpdateSlot(num, &slot, true);
+            if (!current()) { return; }
+            const auto on_flags = m_on_flags_update;
+            if (on_flags) { on_flags(num, &slot, old_flags, slot.GetPlayerFlags()); }
+        }
+    }
 }
 
 }

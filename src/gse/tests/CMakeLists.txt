@@ -6,7 +6,9 @@ SET( SRC ${SRC}
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
+	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
 	${PWD}/SmacHostRules.cpp

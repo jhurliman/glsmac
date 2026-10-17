@@ -647,22 +647,13 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 }
 
 void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
-	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-	const auto& rules = m_state->m_settings.global.rules;
-	m_state->m_settings.local.player_name = "Player";
-	NEWV( player, ::game::backend::Player,
-		m_state->m_settings.local.player_name,
-		::game::backend::Player::PR_SINGLE,
-		faction,
-		rules.GetDefaultDifficultyLevel() // TODO: make configurable
-	);
-	m_state->AddPlayer( player );
-	size_t slot_num = 0; // player always has slot 0
-	m_state->AddCIDSlot( 0, slot_num ); // for consistency
-	auto& slot = m_state->m_slots->GetSlot( slot_num );
-	slot.SetPlayer( player, 0, "" );
-	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
-	slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
+    const auto& rules = m_state->m_settings.global.rules;
+    m_state->m_settings.local.player_name = "Player";
+    m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, game::backend::roster::Role::Single,
+        faction ? std::optional<std::string>(faction->m_id) : std::nullopt, rules.GetDefaultDifficultyLevel()},
+        m_state->m_settings.local.account.GetGSID(), 0, "", false);
+    m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
+
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {

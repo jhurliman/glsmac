@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, stable]
   pull_request:
+    paths-ignore:
+      - '**/*.md'
   workflow_dispatch:
 
 # A new PR revision supersedes its prior checks; integration/manual runs finish.

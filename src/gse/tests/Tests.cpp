@@ -3,7 +3,9 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
 #include "SmacHostRules.h"
@@ -72,6 +74,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddRosterRecordTests( task );
+		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
@@ -88,31 +91,9 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
 		tests::AddAsyncTests( task );
-		task->AddTest(
-			"test UUID generation works independently of an existing account",
-			GT() {
-				// Always exercise export, even when a prior run saved accounts.yml.
-				// With --memorydebug, freeing an untracked library allocation throws.
-				try {
-					for ( size_t iteration = 0 ; iteration < 32 ; iteration++ ) {
-						const auto id = util::UUID::Generate();
-						GT_ASSERT( id.size() == 36, "UUID text has the wrong length" );
-						for ( size_t i = 0 ; i < id.size() ; i++ ) {
-							const bool separator = i == 8 || i == 13 || i == 18 || i == 23;
-							GT_ASSERT( separator ? id[ i ] == '-' : std::string( "0123456789abcdef" ).find( id[ i ] ) != std::string::npos, "UUID text has an invalid character or separator" );
-						}
-						GT_ASSERT( id[ 14 ] == '4', "default UUID generation changed version" );
-						GT_ASSERT( std::string( "89ab" ).find( id[ 19 ] ) != std::string::npos, "UUID has an invalid variant" );
-					}
-				}
-				catch ( const std::exception& error ) {
-					GT_FAIL( std::string( "UUID generation failed: " ) + error.what() );
-				}
-				GT_OK();
-			}
-		);
 		task->AddTest(
 			"test UUID generation works independently of an existing account",
 			GT() {
@@ -241,7 +222,9 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );
 	}
-	tests::AddScriptsTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		tests::AddScriptsTests( task );
+	}
 
 }
 

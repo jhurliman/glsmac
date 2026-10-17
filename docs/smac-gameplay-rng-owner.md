@@ -93,3 +93,20 @@ pair with zeros; and removing the pair's outer frame cap. The intended source
 was never temporarily mutated. Receipts are retained under
 `/home/jhurliman/src/glsmac-unit-weapon-parser/gameplay-rng-*` on the validation
 host. No original executable or proprietary asset is needed by these tests.
+
+## Focused publication receipt
+
+Publication implementation `2022d60077284e2073ad5c4dc72292408b44f351` is the
+single source cherry-pick onto world-frame prerequisite
+`9c031ff0f6de2508f0d6da8559b2239419163953` (PR153). Game header and Backend test
+context merged automatically; no production behavior or test assertion was
+adapted. The actual publication checkout passes full normal CTest 8/8 (78.17s),
+the same 45 tracked native groups, and explicit three-TU LLVM15 correctness
+analysis with zero failures (17.02s). Source sanitizer and copied-TU controls
+above remain source receipts; they were not repeated for this history-only
+publication. The later loader-argument clarification changes only this note.
+
+The draft remains dependent on PR153. A fresh GitHub Codex review is pending
+because the review quota is exhausted; no repeated review request or merge is
+claimed. Publication receipts use the `gameplay-rng-publication-*` prefix in
+the same validation directory.

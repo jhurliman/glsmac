@@ -121,7 +121,6 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( error.empty(), "event snapshot validation failed: " + error );
 		GT_OK();
 	} );
-
 	task->AddTest( "test GSE exception what owns stable formatted storage across copies", GT() {
 		std::unique_ptr< Exception > copied;
 		std::exception_ptr thrown;

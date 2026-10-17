@@ -28,9 +28,31 @@ void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
 		}
 		GT_ASSERT( rows.presets[ 0 ].name == "Tiny|annotation", "source name was normalized" );
 		GT_ASSERT( SmacWorldSizeRules::Deserialize( rows.Serialize() ) == rows, "owned catalog codec lost fields" );
-		auto altered = rows; altered.presets[ 4 ].source_y = 25;
-		GT_ASSERT( SmacWorldSizeRules::Deserialize( altered.Serialize() ) == altered, "raw odd source dimension was rounded" );
-		GT_ASSERT( Rejects( [ & ]() { altered.SelectPreset( 4 ); } ), "unsupported odd-height preset selected" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC world-size catalogs reject every unsupported preset before publication", GT() {
+		for ( size_t index = 0; index < 5; ++index ) {
+			auto rows = fixture::WorldSizes(); ++rows.presets[ index ].source_y;
+			GT_ASSERT( Rejects( [ & ]() { rows.Validate(); } ) && Rejects( [ & ]() { rows.Serialize(); } ), "unselectable preset admitted to catalog" );
+			// Build malformed wire/source directly; do not rely on Serialize rejecting it.
+			types::Buffer wire; wire.WriteInt( 1 ); wire.WriteInt( 5 );
+			std::string table = "#WORLDSIZE\n5\n";
+			for ( const auto& row : rows.presets ) {
+				wire.WriteString( row.name ); wire.WriteInt( row.source_x ); wire.WriteInt( row.source_y );
+				table += row.name + ", " + std::to_string( row.source_x ) + ", " + std::to_string( row.source_y ) + "\n";
+			}
+			table += "#END\n";
+			GT_ASSERT( Rejects( [ & ]() { SmacWorldSizeRules::Deserialize( wire ); } ), "wire catalog accepted an unselectable preset" );
+			GT_ASSERT( Rejects( [ & ]() { loader::txt::SmacRulesTXTLoader::ParseWorldSizeRules( table ); } ), "source catalog accepted an unselectable preset" );
+			auto source = fixture::Source( "alpha.txt" );
+			const auto original = fixture::WorldSizeSource(); source.replace( source.find( original ), original.size(), table );
+			GlobalSettings host; host.SelectRuleset( "smac" );
+			GT_ASSERT( Rejects( [ & ]() { host.InitializeHostRules( [ & ]( const std::string& ) { return source; } ); } ), "host published an unselectable preset" );
+			GT_ASSERT( !host.IsRulesetLocked() && !host.GetSmacBaseSquareRules() && !host.GetSmacProductionRules() && !host.GetSmacTechnologyRules() && !host.GetSmacWorldSizeRules() && !host.map.GetSmacWorldSize(), "rejected preset partially published host state" );
+			GlobalSettings peer;
+			GT_ASSERT( Rejects( [ & ]() { peer.Deserialize( fixture::Payload( "smac", true, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, {}, {}, wire.ToString() ) ); } ), "peer published an unselectable preset" );
+			GT_ASSERT( peer.GetRulesetId() == "unselected" && !peer.IsRulesetLocked() && !peer.GetSmacWorldSizeRules(), "rejected wire catalog partially published peer state" );
+		}
 		GT_OK();
 	} );
 	task->AddTest( "SMAC world-size parser and codecs reject malformed late fields without partial settings", GT() {
@@ -49,7 +71,7 @@ void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
 				auto rows = fixture::WorldSizes();
 				if ( field == 0 ) { rows.presets[ i ].name += " changed"; }
 				if ( field == 1 ) { ++rows.presets[ i ].source_x; }
-				if ( field == 2 ) { ++rows.presets[ i ].source_y; }
+				if ( field == 2 ) { rows.presets[ i ].source_y += 2; }
 				GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( fixture::Payload( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, rows.Serialize().ToString() ) ); } ), "locked source row changed" );
 				GT_ASSERT( settings.Serialize().ToString() == before, "rejected late field mutated settings" );
 			}

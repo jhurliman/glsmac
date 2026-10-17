@@ -15,7 +15,7 @@ return (i) => {
 				const path = input.value;
 				let accepted = false;
 				try { i.glsmac.load_campaign(path); accepted = true; }
-				catch { : (error) => { status.text = error.reason; } }
+				catch { : (error) => { if (#is_defined(status)) { status.text = error.reason; } } }
 				if (accepted) { i.popup.dismiss(); }
 				return true;
 			}},

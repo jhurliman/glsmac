@@ -106,7 +106,9 @@ void Game::PrepareNewSimulation() {
 	// A second-sample failure publishes neither word nor the staged simulation.
 	const auto shared = m_gameplay_entropy_word_source();
 	const auto crt = m_gameplay_entropy_word_source();
-	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ) );
+	// Explicit GLSMAC supported campaign: project effects are not activated.
+	// This is not a claim about original setup or a missing-project fallback.
+	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain );
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	m_simulation = BindSimulation( std::move( value ) );
 }
@@ -182,6 +184,25 @@ const faction::SmacSimulationParticipant& Game::RequireSimulationParticipant( co
 	throw std::runtime_error( "Player is not an admitted simulation participant" );
 }
 
+unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::ConventionalUnitState& state, const BoundSimulation& simulation ) const {
+	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+	unit::SmacCustomDesign design;
+
+	if ( state.design_id < 64 ) {
+		for ( const auto& row : catalog.units ) {
+			if ( row.source_id == static_cast< uint32_t >( state.design_id ) ) {
+				design = { state.design_id, row.chassis_id, row.weapon_id, row.defense_id, row.reactor, row.cost, row.plan,
+					row.carry, row.abilities, row.faction_exclusion, row.active, row.prototyped };
+				return design;
+			}
+		}
+	}
+	else if ( const auto* designs = simulation.value.designs.Find( state.owner_simulation_id ) ) {
+		for ( const auto& row : designs->designs ) { if ( row.id == state.design_id ) { return row; } }
+	}
+	throw std::runtime_error( "Conventional design not found in its owner's catalog" );
+}
+
 unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner ) const {
 	ValidateCurrentSimulation();
 	if ( !m_simulation ) { throw std::runtime_error( "Conventional units require an admitted SMAC simulation" ); }
@@ -215,21 +236,8 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 	}
 	const auto& catalog = units->catalog;
 	simulation.value.designs.Validate( catalog );
-	unit::SmacCustomDesign design;
-	bool found = false;
-	if ( state.design_id < 64 ) {
-		for ( const auto& row : catalog.units ) {
-			if ( row.source_id == static_cast< uint32_t >( state.design_id ) ) {
-				design = { state.design_id, row.chassis_id, row.weapon_id, row.defense_id, row.reactor, row.cost, row.plan,
-					row.carry, row.abilities, row.faction_exclusion, row.active, row.prototyped };
-				found = true; break;
-			}
-		}
-	}
-	else if ( const auto* designs = simulation.value.designs.Find( state.owner_simulation_id ) ) {
-		for ( const auto& row : designs->designs ) { if ( row.id == state.design_id ) { design = row; found = true; break; } }
-	}
-	if ( !found || !design.active || design.chassis > 1 || design.weapon != 0 || design.defense != 0 || design.reactor != 1
+	const auto design = ResolveConventionalDesign( state, simulation );
+	if ( !design.active || design.chassis > 1 || design.weapon != 0 || design.defense != 0 || design.reactor != 1
 		|| design.abilities != 0 || design.faction_exclusion != 0 || design.plan != 3
 		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.empty()
 		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {

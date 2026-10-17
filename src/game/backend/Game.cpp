@@ -1440,9 +1440,8 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			if ( unit->IsConventional() ) {
-				// Conventional upkeep is not activated. Preserve every stored byte,
-				// including failure state; refresh only the derived presentation.
-				m_um->RefreshUnit( GSE_CALL, unit );
+				// Captured spent reset only: no healing or failure-marker clearing.
+				m_um->ResetConventionalSpent( GSE_CALL, unit );
 				continue;
 			}
 			m_state->TriggerObject(

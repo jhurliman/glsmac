@@ -350,6 +350,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidSmacHeaders()
 	game::backend::world_snapshot::WriteRandomState( old_v6, { 1, 2, 3, 4 } );
 	game::backend::world_snapshot::WriteTurnState( old_v6, { 37, { { 0, true }, { 2, false } } } );
 	old_v6.WriteString( "old map body" ); add( "old V6", old_v6 );
+	add( "old V14 without campaign capability", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 14 ) );
 	add( "old V13 without gameplay pair", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 13 ) );
 	add( "unknown version", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version + 1 ) );
 	add( "unknown identity", Header( "gog", false ) );

@@ -5,6 +5,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/Bool.h"
+#include "gse/value/String.h"
 #include "gse/value/Ptr.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
@@ -105,6 +106,11 @@ const bool Unit::HasMovesLeft() const {
 
 const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( GetPresentation().morale ).m_name;
+}
+
+void Unit::CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept {
+	std::get< ConventionalUnitState >( m_state ) = state;
+	m_tile = tile;
 }
 
 void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
@@ -218,6 +224,20 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "spent", VALUE( gse::value::Int,, state.spent ) }, { "failed_move", VALUE( gse::value::Bool,, state.failed_move ) },
 			{ "home", VALUE( gse::value::String,, "none" ) }, { "render_morale_mode", VALUE( gse::value::Int,, static_cast< int32_t >( state.render_morale_mode ) ) }
 		} ) );
+	} ) },
+	{ "validate_conventional_move", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 ); N_GETVALUE( caller, 0, Int ); N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
+		if ( caller < 0 || static_cast< uint64_t >( caller ) > SIZE_MAX ) { return VALUE( gse::value::String,, "Conventional movement caller is invalid" ); }
+		try { m_um->ValidateConventionalMove( this, tile, static_cast< size_t >( caller ) ); }
+		catch ( const std::runtime_error& error ) { return VALUE( gse::value::String,, error.what() ); }
+		catch ( const std::invalid_argument& error ) { return VALUE( gse::value::String,, error.what() ); }
+		return VALUE( gse::value::Undefined );
+	} ) },
+	{ "move_conventional", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 ); N_GETVALUE( caller, 0, Int ); N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
+		if ( caller < 0 || static_cast< uint64_t >( caller ) > SIZE_MAX ) { GSE_ERROR( gse::EC.INVALID_CALL, "Conventional movement caller is invalid" ); }
+		auto* result = VALUE( gse::value::Undefined ); // allocate before authority commit
+		m_um->MoveConventionalUnit( GSE_CALL, this, tile, static_cast< size_t >( caller ) ); return result;
 	} ) },
 	{ "query_conventional_stats", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 ); N_GETVALUE( mode, 0, Int );

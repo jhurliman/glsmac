@@ -6,6 +6,7 @@
 
 #include "Types.h"
 #include "ConventionalUnitState.h"
+#include "SmacEmptyGroundMovement.h"
 
 #include <deque>
 
@@ -44,6 +45,9 @@ public:
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
 	Unit* SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
 	void UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state );
+	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
+	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
+	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;
@@ -74,6 +78,14 @@ private:
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
 		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver ) const;
+	struct PreparedConventionalMove {
+		Unit* unit;
+		map::tile::Tile* source;
+		map::tile::Tile* destination;
+		ConventionalUnitState state;
+		smac_move::Result result;
+	};
+	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	Game* m_game = nullptr;
 
 	std::unordered_map< std::string, MoraleSet* > m_unit_moralesets = {};

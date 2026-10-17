@@ -41,6 +41,9 @@ struct Result {
 // or exhausted selection produces CannotAct, one notification and latch0.
 // Unproved context/status/input domains throw invalid_argument, not CannotAct.
 // No RNG, cost, movement body, window input, or general command legality.
+// Shared selected-unit body used by the original key wrapper and GLSMAC's
+// explicit direction event. It does not map a physical key or emit a request.
+bool CanAct( const SelectedUnit& unit, int32_t focused_faction, int32_t width, int32_t height );
 Result AdmitDirectionalKey( const Query& query );
 
 }

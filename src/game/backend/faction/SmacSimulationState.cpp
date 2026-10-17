@@ -7,7 +7,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 4;
+constexpr int64_t VERSION = 5;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -21,6 +21,9 @@ bool SmacSimulationParticipant::operator==( const SmacSimulationParticipant& oth
 }
 
 void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const {
+	if ( movement_capability != MovementCapability::Unavailable && movement_capability != MovementCapability::NoProjectsOrdinaryTerrain ) {
+		throw std::runtime_error( "Unknown SMAC supported-campaign movement capability" );
+	}
 	technology.Validate( technologies, profiles );
 	social.Validate( technologies, profiles );
 	units.Validate( technologies ); designs.Validate( units.catalog );
@@ -49,7 +52,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability; }
 
 const SmacSimulationParticipant* SmacSimulationState::FindSlot( size_t slot ) const {
 	for ( const auto& participant : roster ) { if ( static_cast< size_t >( participant.slot ) == slot ) { return &participant; } }
@@ -71,6 +74,7 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	buffer.WriteString( design_state.ToString() );
 	buffer.WriteString( social_state.ToString() );
 	buffer.WriteString( gameplay_random.Serialize() );
+	buffer.WriteInt( static_cast< int64_t >( movement_capability ) );
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -96,7 +100,10 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		auto technology = SmacTechnologyState::Deserialize( buffer.ReadString( SmacTechnologyState::MAX_WIRE_BYTES ), technologies, profiles );
 		auto designs = unit::SmacStartupDesignState::Deserialize( buffer.ReadString( unit::SmacStartupDesignState::MAX_WIRE_BYTES ), units.catalog );
 		auto social = SmacSocialState::Deserialize( buffer.ReadString( SmacSocialState::MAX_WIRE_BYTES ), technologies, profiles );
-		SmacSimulationState result( SmacGameplayRandomState::Deserialize( buffer.ReadString( SmacGameplayRandomState::WIRE_SIZE ) ) );
+		const auto random = SmacGameplayRandomState::Deserialize( buffer.ReadString( SmacGameplayRandomState::WIRE_SIZE ) );
+		const auto capability = buffer.ReadInt();
+		if ( capability != 0 && capability != 1 ) { throw std::runtime_error( "Unknown SMAC supported-campaign movement capability" ); }
+		SmacSimulationState result( random, static_cast< MovementCapability >( capability ) );
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

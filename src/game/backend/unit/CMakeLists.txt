@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacEmptyGroundMovement.cpp
 
 	${PWD}/UnitManager.cpp
+	${PWD}/ConventionalMovement.cpp
 	${PWD}/Def.cpp
 	${PWD}/StaticDef.cpp
 	${PWD}/Render.cpp

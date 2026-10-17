@@ -188,6 +188,16 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 	m_game->UpdateRelatedWidgets( ui::WT_UNIT_PREVIEW, unit->GetId(), unit );
 }
 
+void UnitManager::RelocateConventionalUnit( Unit* unit, tile::Tile* dst_tile ) {
+	if ( m_moving_units.count( unit ) || unit->IsMoving() ) { THROW( "conventional relocation cannot own a legacy animation" ); }
+	auto* source = unit->GetTile();
+	unit->SetTile( dst_tile );
+	if ( unit == m_selected_unit ) { m_game->SetSelectedTile( dst_tile ); }
+	m_game->RefreshSelectedTileIf( source, m_selected_unit );
+	m_game->RefreshSelectedTileIf( dst_tile, m_selected_unit );
+	RefreshUnit( unit );
+}
+
 void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id ) {
 	auto* src_tile = unit->GetTile();
 	const auto& it = m_moving_units.find( unit );

@@ -143,7 +143,8 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
-	void ConfigureConventional( bool refreshed, int32_t road_rate, bool selected_rover = false ) {
+	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false ) {
+		if ( single && selected_rover ) { throw std::invalid_argument( "Fixture roster modes must be selected separately" ); }
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -157,7 +158,7 @@ public:
 				return source;
 			} );
 			smac_rules_fixture::AcceptWorldSize( settings );
-			EnableSimulationParticipants( selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
+			EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
 			m_game.PrepareNewSimulation();
 			if ( refreshed ) {
 				m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
@@ -170,6 +171,23 @@ public:
 	}
 	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
+	}
+	game::backend::SmacGameplayRandomState ConventionalRandom() const { return m_game.m_simulation->value.gameplay_random; }
+	void ConventionalRandom( game::backend::SmacGameplayRandomState value ) { m_game.m_simulation->value.gameplay_random = value; }
+	void ConventionalPlanet( int32_t retained, int32_t current ) {
+		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 7 ) = retained; owner.current[ 7 ] = current; }
+	}
+	void ConventionalCapability( game::backend::faction::SmacSimulationState::MovementCapability capability ) { m_game.m_simulation->value.movement_capability = capability; }
+	void ConventionalMoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller ) {
+		using namespace game::backend::event;
+		if ( !m_game.m_event_handlers.count( "move_unit" ) ) {
+			auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/move_unit" ) );
+			RegisterEvent( "move_unit", new EventHandler( gc_space, "move_unit", static_cast< value::Callable* >( handlers->Get( "validate" ) ),
+				static_cast< value::Callable* >( handlers->Get( "resolve" ) ), static_cast< value::Callable* >( handlers->Get( "apply" ) ),
+				static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+		}
+		m_game.AddEvent( new Event( &m_game, Event::ES_LOCAL, caller, GSE_CALL, "move_unit", { { "unit", unit->Wrap( GSE_CALL ) }, { "tile", tile->Wrap( GSE_CALL ) } } ) );
+		ProcessEvents();
 	}
 	void ConventionalEarly() {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.phase = game::backend::faction::SmacFactionSocialState::Phase::Early; owner.retained.reset(); }
@@ -1600,7 +1618,7 @@ public:
 			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
 		} );
 		BackendFixture fixture; // runtime dies before services are restored
-		if ( rover ) { fixture.ConfigureConventional( true, 3, true ); }
+		if ( rover ) { fixture.ConfigureConventional( true, 3, false, true ); }
 		else { fixture.EnableTurns(); }
 		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
@@ -1742,12 +1760,28 @@ public:
 			GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2", "frontend discarded integer actionability or fresh full allowance" );
 			unit->SetActionability( true, false );
 			GT_ASSERT( !unit->CanMove(), "frontend ignored exact conventional exhaustion" );
+
 			unit->SetActionability( false, true );
 			GT_ASSERT( !unit->CanMove(), "legacy frontend threshold changed" );
 			unit->SetMovement( 1 ); unit->SetMorale( 6, "Elite refreshed" );
 			GT_ASSERT( unit->GetMoraleString() == "Elite refreshed" && unit->GetSprite()->instanced_sprite->actor->HasInstance( 2 ),
 				"frontend did not refresh morale text and rendered actor" );
 			unit->SetMorale( 0, "Rank" );
+			tile_manager.InitTiles( { 8, 8 } );
+			{
+				game::FrontendRequest move( game::FrontendRequest::FR_UNIT_UPDATE );
+				auto& update = move.data.unit_update;
+				update.unit_id = 1; update.tile_coords = { 4, 2 }; update.render_coords = { 0, 0, 0 };
+				update.movement = 0.01f; update.full_movement = 1.0f; update.health = 0.8f;
+				update.conventional = true; update.has_moves = true; update.morale = 1; NEW( update.morale_string, std::string, "Fresh move" );
+				frontend.ProcessRequest( &move );
+				GT_ASSERT( unit->GetTile() == tile_manager.GetTile( 4, 2 ) && tile.GetUnits().empty()
+					&& unit->CanMove() && !unit->IsMoving() && um->m_moving_units.empty() && unit->GetMoraleString() == "Fresh move",
+					"committed conventional refresh did not relocate without animation" );
+				// Return the shared preview fixture to its original source tile.
+				unit->SetTile( &tile ); unit->SetMorale( 0, "Rank" );
+			}
+			unit->SetActionability( false, true );
 			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
 			frontend.m_widgets.UnitPreview = presenter.get();
 			Unit* backend_unit = nullptr;
@@ -3170,7 +3204,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 41; ++scenario ) {
+		for ( int scenario = 0; scenario < 45; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3193,7 +3227,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 3 : 4 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 4 : 5 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -3233,6 +3267,10 @@ public:
 			if ( scenario == 38 ) { gameplay_wire.pop_back(); }
 			if ( scenario == 39 || scenario == 40 ) { gameplay_wire.resize( scenario == 39 ? 17 : 4096, 'x' ); }
 			if ( scenario != 35 ) { raw.WriteString( gameplay_wire ); }
+			if ( scenario == 41 ) { raw.WriteInt( -1 ); }
+			else if ( scenario == 42 ) { raw.WriteInt( 2 ); }
+			else if ( scenario == 43 ) { raw.WriteInt( INT64_MAX ); }
+			else if ( scenario != 44 ) { raw.WriteInt( static_cast< int64_t >( value.movement_capability ) ); }
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }
@@ -3801,9 +3839,14 @@ private:
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
-void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, selected_rover ); }
+void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design ) { fixture->ConventionalCopyRoverDesign( simulation, design ); }
+game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }
+void ConventionalUnitFixture::GameplayRandom( game::backend::SmacGameplayRandomState value ) { fixture->ConventionalRandom( value ); }
+void ConventionalUnitFixture::RetainedPlanet( int32_t retained, int32_t current ) { fixture->ConventionalPlanet( retained, current ); }
+void ConventionalUnitFixture::MovementCapability( game::backend::faction::SmacSimulationState::MovementCapability value ) { fixture->ConventionalCapability( value ); }
+void ConventionalUnitFixture::MoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller ) { fixture->ConventionalMoveEvent( GSE_CALL, unit, tile, caller ); }
 game::backend::Game* ConventionalUnitFixture::Game() const { return fixture->GetGame(); }
 std::string ConventionalUnitFixture::Run( const std::function< std::string( GSE_CALLABLE ) >& check ) { return fixture->WithEngineGameScriptValues( check ); }
 Value* ConventionalUnitFixture::Script( GSE_CALLABLE, const std::string& path ) { return fixture->RunScript( GSE_CALL, path ); }

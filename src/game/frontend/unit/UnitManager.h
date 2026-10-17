@@ -65,6 +65,7 @@ CLASS( UnitManager, common::Class )
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
 	void MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id );
+	void RelocateConventionalUnit( Unit* unit, tile::Tile* dst_tile );
 
 	Unit* GetSelectedUnit() const;
 	void SelectUnit( Unit* unit, const bool actually_select_unit );

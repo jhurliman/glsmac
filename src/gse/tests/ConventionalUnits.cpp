@@ -5,6 +5,10 @@
 #include "game/backend/Random.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/tile/Tile.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/FacilityDef.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/StaticDef.h"
@@ -59,6 +63,24 @@ Unit* Spawn( GSE_CALLABLE, ConventionalUnitFixture& fixture, const ConventionalU
 	return static_cast< Unit* >( result->wrapobj );
 }
 
+void Land( Game* game ) {
+	using namespace map::tile;
+	for ( size_t y = 0; y < game->GetMap()->GetHeight(); ++y ) {
+		for ( size_t x = y & 1; x < game->GetMap()->GetWidth(); x += 2 ) {
+			auto* tile = game->GetMap()->GetTile( x, y );
+			for ( auto* corner : tile->elevation.corners ) { *corner = 100; }
+			tile->rockiness = ROCKINESS_FLAT; tile->features = FEATURE_NONE; tile->terraforming = TERRAFORMING_NONE;
+			tile->Update();
+		}
+	}
+}
+
+uint32_t SharedNext( uint32_t value ) { return static_cast< uint32_t >( UINT64_C( 1664525 ) * value + UINT64_C( 1013904223 ) ); }
+uint32_t SeedForBin( uint32_t bin ) {
+	for ( uint32_t seed = 0; seed < 65536; ++seed ) { if ( uint64_t( SharedNext( seed ) & 65535 ) * 9 / 65536 == bin ) { return seed; } }
+	throw std::runtime_error( "missing fixture lottery bin" );
+}
+
 int64_t Int( Value* value, const std::string& key ) { return static_cast< value::Int* >( static_cast< value::Object* >( value )->Get( key ) )->value; }
 
 struct WireRecord {
@@ -78,7 +100,7 @@ struct WireRecord {
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "selected Spartan Rover actual spawn and staged restore preserve presentation authority", GT() {
-		ConventionalUnitFixture source, destination; source.Configure( true, 3, true ); destination.Configure( true, 3, true );
+		ConventionalUnitFixture source, destination; source.Configure( true, 3, false, true ); destination.Configure( true, 3, false, true );
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( next ); } );
 		ConventionalUnitState record{ 128, 2, 1, 0, 1, true, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 		std::string bytes;
@@ -110,7 +132,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		} );
 	} );
 	task->AddTest( "selected Spartan Rover rejects other owners selections and mismatched renderers before effects", GT() {
-		ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+		ConventionalUnitFixture fixture; fixture.Configure( true, 3, false, true );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Define( manager, true ); fixture.Updates();
 			// Structurally valid owned rows isolate faction/selection admission from
@@ -132,6 +154,164 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					&& hooks == 0 && fixture.Updates().empty(), "invalid selected Rover produced effects at scenario " + std::to_string( scenario ) );
 			}
 			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "conventional movement real event commits terrain road tube river and wrap edges", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		for ( int scenario = 0; scenario < 7; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 6 ? 100 : 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); Land( game ); Define( game->GetUM() ); fixture.RetainedPlanet( 0, 9 );
+				auto record = Record(); if ( scenario == 6 ) { record.spent = 99; }
+				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
+				int expected_cost = 3;
+				if ( scenario == 1 || scenario == 6 ) { source->terraforming = destination->terraforming = TERRAFORMING_ROAD; expected_cost = 1; }
+				if ( scenario == 2 ) { source->terraforming = destination->terraforming = TERRAFORMING_MAG_TUBE; expected_cost = 0; }
+				if ( scenario == 3 ) { destination->rockiness = ROCKINESS_ROCKY; destination->terraforming = TERRAFORMING_FOREST; expected_cost = 9; }
+				if ( scenario == 4 ) { destination = source->NE; source->features = destination->features = FEATURE_RIVER; expected_cost = 1; }
+				if ( scenario == 5 ) { unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 0, 2 ) ); source = unit->GetTile(); destination = source->W; }
+				fixture.GameplayRandom( { 0, UINT32_MAX } ); fixture.Updates();
+				const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				GT_ASSERT( unit->GetTile() == destination && !source->units.count( unit->m_id ) && destination->units.at( unit->m_id ) == unit,
+					"actual event did not atomically relocate membership at terrain scenario " + std::to_string( scenario ) );
+				GT_ASSERT( unit->Conventional().spent == record.spent + expected_cost && !unit->Conventional().failed_move
+					&& !unit->m_animation_id && Unit::GetNextId() == next && fixture.GameplayRandom() == SmacGameplayRandomState( 0, UINT32_MAX )
+					&& game->GetRandom()->GetStateString() == jsf, "deterministic edge spent wrong amount or touched RNG/animation/ID" );
+				const auto& updates = fixture.Updates();
+				const auto found = std::find_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } );
+				GT_ASSERT( found != updates.end() && std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == 1
+					&& std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_MOVE; } ), "move used animation or omitted committed refresh" );
+				const auto& update = found->data.unit_update;
+				GT_ASSERT( update.tile_coords.x == destination->coord.x && update.tile_coords.y == destination->coord.y
+					&& update.conventional && update.has_moves == ( unit->Conventional().spent < unit->QueryStats( SmacMoraleMode::Mode1 ).full_allowance ),
+					"refresh did not publish integer-authoritative actionability and position" ); GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional movement fungus lottery and upkeep preserve exact paired RNG and failure marker", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		for ( int scenario = 0; scenario < 3; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); Land( game ); Define( game->GetUM() ); fixture.RetainedPlanet( scenario == 2 ? 1 : 0, scenario == 2 ? -9 : 9 );
+				auto record = Record(); record.damage = 2; auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
+				destination->features = FEATURE_XENOFUNGUS;
+				const uint32_t seed = SeedForBin( scenario == 0 ? 0 : 8 ); fixture.GameplayRandom( { seed, 0xabcdef01 } ); fixture.Updates();
+				const auto jsf = game->GetRandom()->GetStateString(); fixture.MoveEvent( GSE_CALL, unit, destination );
+				const bool failed = scenario == 1;
+				GT_ASSERT( unit->GetTile() == ( failed ? source : destination ) && unit->Conventional().failed_move == failed
+					&& unit->Conventional().spent == ( scenario == 0 ? 9 : 3 ) && unit->Conventional().damage == 2,
+					"fungus result did not use retained PLANET or the admitted lottery" );
+				GT_ASSERT( fixture.GameplayRandom() == SmacGameplayRandomState( scenario == 2 ? seed : SharedNext( seed ), 0xabcdef01 )
+					&& game->GetRandom()->GetStateString() == jsf, "lottery advanced the wrong stream or wrong draw count" );
+				if ( failed ) {
+					game->AdvanceTurn( 2 );
+					GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move && unit->Conventional().damage == 2,
+						"genuine upkeep erased retry marker or healed stored damage" );
+					const auto retry_seed = SeedForBin( 4 ); fixture.GameplayRandom( { retry_seed, 7 } );
+					fixture.MoveEvent( GSE_CALL, unit, destination );
+					GT_ASSERT( unit->GetTile() == destination && unit->Conventional().spent == 9 && !unit->Conventional().failed_move
+						&& fixture.GameplayRandom() == SmacGameplayRandomState( SharedNext( retry_seed ), 7 ), "retry omitted Q bonus or spent a second draw" );
+				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional movement rejects unsupported commands before any authority or RNG effects", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		for ( int scenario = 0; scenario < 20; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 14 ? 100 : 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager ); fixture.RetainedPlanet( 0, 0 );
+				auto record = Record(); if ( scenario == 2 ) { record.spent = 3; }
+				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E; size_t caller = 0;
+				if ( scenario == 0 ) { fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); }
+				if ( scenario == 1 ) { caller = 6; }
+				if ( scenario == 2 ) { source->terraforming = destination->terraforming = TERRAFORMING_MAG_TUBE; }
+				if ( scenario == 3 ) { for ( auto* c : destination->elevation.corners ) { *c = -100; } destination->Update(); }
+				if ( scenario == 4 ) { destination->rockiness = ROCKINESS_NONE; }
+				if ( scenario == 5 ) { destination->features = FEATURE_UNITY_POD; }
+				if ( scenario == 6 ) { destination->terraforming = TERRAFORMING_FARM; }
+				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, destination ); }
+				if ( scenario == 8 ) { unit->m_animation_id = 99; }
+				if ( scenario == 9 ) { destination->Lock( 0 ); }
+				if ( scenario == 10 ) { destination = source; }
+				if ( scenario == 11 ) { destination = game->GetMap()->GetTile( 6, 6 ); }
+				if ( scenario == 12 ) { game->GetState()->m_settings.local.game_mode = settings::LocalSettings::GM_MULTIPLAYER; }
+				if ( scenario == 13 ) { game->GetState()->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT; }
+				if ( scenario == 14 ) { destination->rockiness = ROCKINESS_ROCKY; destination->terraforming = TERRAFORMING_FOREST; }
+				const auto base_next = base::Base::GetNextId(); util::FinallyGuard restore_base_id( [ = ] { base::Base::SetNextId( base_next ); } );
+				if ( ( scenario >= 15 && scenario <= 17 ) || scenario == 19 ) {
+					base::Base::facilities_t facilities;
+					if ( scenario == 17 ) {
+						auto* facility = new base::FacilityDef( "HEADQUARTERS", "Headquarters", "Fixture", 1, { "fixture", 0, 0, 1, 1 } );
+						game->GetBM()->DefineFacility( facility ); facilities.emplace( facility->m_id, facility );
+					}
+					auto* site = scenario == 15 ? source : scenario == 16 ? destination : game->GetMap()->GetTile( 6, 6 );
+					game->GetBM()->SpawnBase( GSE_CALL, new base::Base( game, 31, unit->m_owner, game->GetFaction( "GAIANS" ), site, "Admission fence", facilities, {} ) );
+				}
+				if ( scenario == 18 ) { fixture.MovementCapability( static_cast< faction::SmacSimulationState::MovementCapability >( 2 ) ); }
+				fixture.GameplayRandom( { 0xdeadbeef, 0x12345678 } ); fixture.Updates();
+				const auto before = unit->Conventional(); const auto source_members = source->units, destination_members = destination->units;
+				const auto random = fixture.GameplayRandom(); const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+				std::string rejection;
+				try { manager->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& error ) { rejection = error.what(); }
+				GT_ASSERT( !rejection.empty(), "unsupported command was admitted at " + std::to_string( scenario ) );
+				if ( scenario == 2 ) { GT_ASSERT( rejection.find( "exhausted" ) != std::string::npos, "zero-cost pricing preceded actionability" ); }
+				fixture.MoveEvent( GSE_CALL, unit, destination, caller );
+				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == source_members && destination->units == destination_members
+					&& fixture.GameplayRandom() == random && game->GetRandom()->GetStateString() == jsf && Unit::GetNextId() == next,
+					"rejected event partially committed movement at " + std::to_string( scenario ) );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ), "rejected move queued a unit effect" );
+				unit->m_animation_id = 0; if ( destination->IsLocked() ) { destination->Unlock(); } GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional movement actual world restore continues failed attempt without reseeding or policy inference", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		ConventionalUnitFixture source, destination; source.Configure( true, 3, true ); destination.Configure( true, 3, true );
+		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
+		std::string bytes; SmacGameplayRandomState saved( 0, 0 ); ConventionalUnitState record = Record();
+		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Land( game ); Define( game->GetUM() ); source.RetainedPlanet( 0, 9 );
+			auto* unit = Spawn( GSE_CALL, source, record ); unit->GetTile()->E->features = FEATURE_XENOFUNGUS;
+			source.GameplayRandom( { SeedForBin( 8 ), 77 } ); source.MoveEvent( GSE_CALL, unit, unit->GetTile()->E );
+			record = unit->Conventional(); saved = source.GameplayRandom(); bytes = source.Snapshot(); GT_OK();
+		} ); if ( !setup.empty() ) { return setup; }
+		const auto restored = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); destination.GameplayRandom( { 1, 2 } );
+			destination.Restore( GSE_CALL, bytes ); auto* unit = destination.Game()->GetUM()->GetUnit( 71 );
+			GT_ASSERT( unit->Conventional() == record && destination.GameplayRandom() == saved && destination.Snapshot() == bytes,
+				"world restoration changed continuation or inferred movement capability" ); GT_OK();
+		} ); if ( !restored.empty() ) { return restored; }
+		std::string continued;
+		for ( auto* fixture : { &source, &destination } ) {
+			const auto error = fixture->Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture->Game(); game->AdvanceTurn( 2 ); auto* unit = game->GetUM()->GetUnit( 71 );
+				fixture->MoveEvent( GSE_CALL, unit, unit->GetTile()->E );
+				if ( continued.empty() ) { continued = fixture->Snapshot(); }
+				else { GT_ASSERT( fixture->Snapshot() == continued, "restored command did not continue exact record tile and paired RNG" ); }
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		const auto unavailable = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			source.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); bytes = source.Snapshot(); GT_OK();
+		} ); if ( !unavailable.empty() ) { return unavailable; }
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			destination.Restore( GSE_CALL, bytes );
+			GT_ASSERT( destination.Snapshot() == bytes, "Unavailable capability was replaced while restoring actual world" );
+			auto* game = destination.Game(); auto* unit = game->GetUM()->GetUnit( 71 );
+			std::string rejection; try { game->GetUM()->ValidateConventionalMove( unit, unit->GetTile()->E, 0 ); }
+			catch ( const std::exception& error ) { rejection = error.what(); }
+			GT_ASSERT( rejection.find( "campaign admission" ) != std::string::npos, "restored absence inferred no-project support" ); GT_OK();
 		} );
 	} );
 	task->AddTest( "conventional unit record rejects malformed fields before publication", GT() {
@@ -295,7 +475,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					// Rejected conventional despawn has no applied backup. Legacy
 					// rollback reads that backup after its old wrapper was invalidated.
 					if ( std::string( name ) == "despawn_unit" && std::string( stage ) == "rollback" ) { continue; }
-					if ( handlers->Get( stage )->type == VT_UNDEFINED ) { continue; }
+					if ( handlers->Get( stage )->type == VT_UNDEFINED || ( std::string( name ) == "move_unit" && std::string( stage ) == "resolve" ) ) { continue; }
 					bool rejected = false; try { Call( GSE_CALL, handlers, stage, { event } ); }
 					catch ( const std::exception& error ) { rejected = std::string( error.what() ).find( "Conventional" ) != std::string::npos; }
 					GT_ASSERT( rejected, "actual event body bypassed conventional guard" );
@@ -307,6 +487,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			Call( GSE_CALL, turns, "configure", { game->Wrap( GSE_CALL ) } );
 			game->GetState()->TriggerObject( game->GetUM(), "unit_turn", ARGS_F( &wrapper ) { { "unit", wrapper } }; } );
 			game->AdvanceTurn( 2 );
+			record.spent = 0;
 			GT_ASSERT( unit->Conventional() == record && unit->GetTile() == game->GetMap()->GetTile( 2, 2 ) && !unit->m_animation_id
 				&& game->GetRandom()->GetStateString() == rng, "legacy handler or turn changed state, tile, animation or RNG" ); GT_OK();
 		} );

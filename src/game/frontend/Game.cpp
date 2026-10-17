@@ -1113,20 +1113,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
-				/*MoveUnit(
-					unit,
-					GetTile(
-						{
-							d.tile_coords.x,
-							d.tile_coords.y
-						}
-					), {
-						d.render_coords.x,
-						d.render_coords.y,
-						d.render_coords.z,
-					}
-				);*/
-				THROW( "deprecated, shouldnt be here" );
+				if ( !d.conventional ) { THROW( "unexpected legacy unit relocation" ); }
+				m_um->RelocateConventionalUnit( unit, m_tm->GetTile( { d.tile_coords.x, d.tile_coords.y } ) );
 			}
 			else {
 				unit->Refresh();

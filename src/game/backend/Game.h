@@ -501,6 +501,7 @@ private:
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
 	void ValidateSimulation( const BoundSimulation& value ) const;
+	unit::SmacCustomDesign ResolveConventionalDesign( const unit::ConventionalUnitState& state, const BoundSimulation& simulation ) const;
 	void PrepareNewSimulation();
 	void PublishPendingSimulation();
 	void ValidateCurrentSimulation() const;

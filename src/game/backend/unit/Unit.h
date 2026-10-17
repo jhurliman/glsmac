@@ -80,6 +80,8 @@ private:
 	friend class UnitManager;
 	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state );
 	void Publish( GSE_CALLABLE, map::tile::Tile* tile );
+	// Called only after manager validation and membership/update allocation.
+	void CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept;
 	std::variant< LegacyState, ConventionalUnitState > m_state;
 	UnitManager* const m_um;
 

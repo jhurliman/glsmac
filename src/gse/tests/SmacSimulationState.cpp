@@ -13,7 +13,7 @@ using namespace game::backend;
 using faction::SmacSimulationState;
 
 SmacSimulationState State() {
-	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ) );
+	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
@@ -29,7 +29,7 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 4 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 5 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -38,11 +38,27 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	buffer.WriteString( value.designs.Serialize( smac_startup_fixture::Units().catalog ).ToString() );
 	buffer.WriteString( value.social.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	buffer.WriteString( random ? *random : value.gameplay_random.Serialize() );
+	write( static_cast< int64_t >( value.movement_capability ) );
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC simulation movement capability is explicit bounded and preserved on restore", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		for ( const auto capability : { SmacSimulationState::MovementCapability::Unavailable, SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain } ) {
+			auto value = State(); value.movement_capability = capability;
+			const auto decoded = SmacSimulationState::Deserialize( value.Serialize( technologies, profiles, units ).ToString(), technologies, profiles, units );
+			GT_ASSERT( decoded == value && decoded.movement_capability == capability, "restoration inferred supported campaign from absent project data" );
+		}
+		for ( const int64_t invalid : { int64_t( -1 ), int64_t( 2 ), INT64_MIN, INT64_MAX } ) {
+			auto value = State(); value.movement_capability = static_cast< SmacSimulationState::MovementCapability >( invalid );
+			GT_ASSERT( Rejects( [ & ] { value.Serialize( technologies, profiles, units ); } )
+				&& Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( value ), technologies, profiles, units ); } ), "unknown capability accepted" );
+		}
+		GT_ASSERT( Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( State(), 1, 4 ), technologies, profiles, units ); } ), "pre-capability V4 accepted" );
+		GT_OK();
+	} );
 	task->AddTest( "SMAC simulation gameplay RNG pair is required bounded and exactly owned", GT() {
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
 		auto value = State();

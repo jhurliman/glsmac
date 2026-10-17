@@ -24,6 +24,7 @@
 #include "SmacTechnologyRules.h"
 #include "SmacFactionStartupRules.h"
 #include "SmacTechnologyState.h"
+#include "SmacSimulationState.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
 #include "SmacPredefinedUnitRules.h"
@@ -231,6 +232,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
+	AddSmacSimulationStateTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );

@@ -26,6 +26,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
+	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp

@@ -207,9 +207,10 @@ fixed Rover presentation reaches real unit previews, and resource text follows
 measured physical-row semantics. The subsequent movement implementation in
 [the bounded command receipt](conventional-empty-ground-movement.md) connects the
 real event to Unit/tile/RNG authority and exact continuation. Its source passes
-full normal and leak-enabled sanitizer suites. Integration with selected Rover
-presentation is undergoing separate combined validation; friendly-HQ movement
-and default conventional startup remain follow-ups.
+full normal and leak-enabled sanitizer suites. The subsequent
+[combined movement receipt](validation/conventional-movement-2026-10-17.md)
+records Windows and Linux CTest 8/8 and 18 tracked groups at `5bc62766`.
+Friendly-HQ movement and default conventional startup remain follow-ups.
 
 The preceding [social and movement receipt](validation/social-movement-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at

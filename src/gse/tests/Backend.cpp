@@ -357,6 +357,11 @@ public:
 		RegisterEvent( "knowledge_probe", new game::backend::event::EventHandler( gc_space, "knowledge_probe", probe, probe, probe, probe ) );
 		m_game.Event( GSE_CALL, "knowledge_probe", {} );
 	}
+	void SelectSinglePlayerFaction( const std::optional< std::string >& id ) {
+		m_glsmac->m_state = m_state;
+		util::FinallyGuard clear( [ & ] { m_glsmac->m_state = nullptr; } );
+		m_glsmac->AddSinglePlayerSlot( id );
+	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
 		, m_gse( CreateRuntime() )
@@ -7185,6 +7190,33 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		} );
 		GT_ASSERT( error.empty(), "decoded roster ownership check: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "test single-player setup selects a configured faction before roster publication", GT() {
+		using namespace game::backend;
+		for ( const auto& selected : { std::optional< std::string >{}, std::optional< std::string >{ "SPARTANS" } } ) {
+			BackendFixture fixture;
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* state = fixture.GetGame()->GetState();
+				state->m_slots->Clear();
+				state->m_settings.local.game_mode = settings::LocalSettings::GM_SINGLEPLAYER;
+				state->m_settings.local.network_role = settings::LocalSettings::NR_NONE;
+				state->GetFM()->Add( new faction::Faction( "SPARTANS", "Translated faction label" ) );
+				const auto name = state->m_settings.local.player_name;
+				GT_ASSERT( RejectsSettings( [ & ] { fixture.SelectSinglePlayerFaction( "UNKNOWN" ); } ), "unknown faction reached local roster" );
+				GT_ASSERT( state->m_slots->GetSlots().empty() && state->m_settings.local.player_name == name, "rejected faction changed setup" );
+				state->m_settings.local.network_role = settings::LocalSettings::NR_SERVER;
+				GT_ASSERT( RejectsSettings( [ & ] { fixture.SelectSinglePlayerFaction( "SPARTANS" ); } ), "local faction argument replaced network setup" );
+				state->m_settings.local.network_role = settings::LocalSettings::NR_NONE;
+				fixture.SelectSinglePlayerFaction( selected );
+				auto* player = state->m_slots->GetSlot( 0 ).GetPlayer();
+				GT_ASSERT( player->GetRole() == Player::PR_SINGLE, "local roster did not use single-player role" );
+				GT_ASSERT( player->GetFaction() == ( selected ? state->GetFM()->Get( *selected ) : nullptr ), "chosen faction ID was lost or Random was preselected" );
+				GT_ASSERT( RejectsSettings( [ & ] { fixture.SelectSinglePlayerFaction( "GAIANS" ); } ) && state->m_slots->GetSlot( 0 ).GetPlayer() == player, "second choice replaced an existing roster" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "single-player faction setup: " + error );
+		}
 		GT_OK();
 	} );
 	task->AddTest( "test production faction configure registers both rulesets", GT() {

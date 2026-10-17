@@ -24,7 +24,8 @@ std::string Source( const std::string& replacement = {}, size_t position = 0, si
 	std::string result = "#RULES\n";
 	for ( size_t row = 1; row <= count; ++row ) {
 		result += row == position ? replacement : row == 2 ? "-2147483648" : row == 9 ? "+2147483647"
-			: row == 10 ? "-7" : row == 54 ? "Tech8" : row == 55 ? "tEcH2" : row == 56 ? "None" : row == 58 ? "Disable" : "unused";
+			: row == 10 ? "-7" : row == 6 ? "10" : row == 13 ? "7" : row == 14 ? "14"
+			: row == 54 ? "Tech8" : row == 55 ? "tEcH2" : row == 56 ? "None" : row == 58 ? "Disable" : "unused";
 		result += ", ; strict RULES annotation\n";
 	}
 	result += "#RESOURCEINFO\n";
@@ -61,6 +62,7 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( profile.rows[ row ][ col ] == static_cast< int32_t >( row * 3 + col + 1 ), "discarded/reordered RESOURCEINFO triple" );
 		} }
 		GT_ASSERT( profile.nutrients_per_citizen == INT32_MIN && profile.unroaded_mine_limit == INT32_MAX && profile.mine_nutrient_effect == -7, "RULES numeric positions or signed values changed" );
+		GT_ASSERT( profile.nutrient_multiplier == 10 && profile.hab_complex_limit == 7 && profile.hab_dome_limit == 14, "growth RULES positions changed" );
 		const auto n = profile.TileNutrients(); const auto m = profile.TileMinerals(); const auto e = profile.TileEnergy(); const auto center = profile.BaseSquare();
 		GT_ASSERT( n.ocean == 1 && n.bonus == 7 && n.forest == 10 && n.improved_land == 16 && n.improved_sea == 19 && n.monolith == 22 && n.borehole == 25 && n.mine_effect == -7, "nutrient view differs" );
 		GT_ASSERT( m.ocean == 2 && m.bonus == 8 && m.forest == 11 && m.improved_sea == 20 && m.monolith == 23 && m.borehole == 26 && m.unroaded_mine_limit == INT32_MAX, "mineral view differs" );
@@ -91,7 +93,7 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "SMAC resource RULES ingestion rejects unsupported lexical forms and unresolved tokens", GT() {
 		const auto catalog = fixture::Technologies();
-		for ( const auto position : { 2u, 9u, 10u } ) {
+		for ( const auto position : { 2u, 6u, 9u, 10u, 13u, 14u } ) {
 			for ( const auto& field : { std::string( "0x10" ), std::string( "2junk" ), std::string( "2147483648" ), std::string( "-2147483649" ), std::string( "1,," ), std::string(), std::string( "2\0x", 3 ) } ) {
 				GT_ASSERT( Rejects( [ & ]() { SmacRulesTXTLoader::ParseResourceRules( Source( field, position ), catalog ); } ), "RULES silently used RESOURCEINFO prefix/wrap semantics" );
 			}
@@ -113,17 +115,17 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( wire == fixture::UncheckedResources( profile ).ToString(), "resource wire order differs from independent builder" );
 		GT_ASSERT( SmacResourceRules::Deserialize( types::Buffer( wire ), catalog ) == profile, "resource roundtrip changed owned authority" );
 		for ( size_t prefix = 0; prefix < wire.size(); ++prefix ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( types::Buffer( wire.substr( 0, prefix ) ), catalog ); } ), "truncated profile accepted" ); }
-		for ( size_t index = 1; index <= 30; ++index ) { for ( const auto value : { int64_t{ INT32_MIN } - 1, int64_t{ INT32_MAX } + 1 } ) {
+		for ( size_t index = 1; index <= 33; ++index ) { for ( const auto value : { int64_t{ INT32_MIN } - 1, int64_t{ INT32_MAX } + 1 } ) {
 			GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, index, value ), catalog ); } ), "out-of-range resource integer narrowed" );
 		} }
-		for ( const auto version : { 0, 2 } ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, 0, version ), catalog ); } ), "unknown resource version accepted" ); }
+		for ( const auto version : { 0, 1, 3 } ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, 0, version ), catalog ); } ), "old/unknown resource version accepted" ); }
 		types::Buffer wrong; wrong.WriteString( "1" );
 		GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( wrong, catalog ); } ), "wrong resource field type accepted" );
 		GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( types::Buffer( wire + 'x' ), catalog ); } ), "trailing profile byte accepted" );
 		auto maximum = profile;
 		for ( auto& token : maximum.technology_tokens ) { token = "Tech0" + std::string( 251, ' ' ); }
 		const auto exact = maximum.Serialize( catalog ).ToString();
-		GT_ASSERT( SmacResourceRules::MAX_WIRE_BYTES == 1482 && exact.size() == 1482, "wire bound does not match exact admitted profile" );
+		GT_ASSERT( SmacResourceRules::MAX_WIRE_BYTES == 1524 && exact.size() == 1524, "wire bound does not match exact admitted profile" );
 		GT_ASSERT( SmacResourceRules::Deserialize( types::Buffer( exact ), catalog ) == maximum, "exact-cap semantic profile rejected" );
 		maximum.technology_tokens[ 3 ] += ' ';
 		GT_ASSERT( Rejects( [ & ]() { maximum.Serialize( catalog ); } ), "writer accepted over-budget token" );
@@ -139,13 +141,16 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 		GlobalSettings restored; restored.Deserialize( types::Buffer( before ) );
 		GT_ASSERT( restored.Serialize().ToString() == before, "settings restore changed full profile bytes" );
 		const auto profile = fixture::Resources();
-		for ( size_t index = 0; index < 34; ++index ) {
+		for ( size_t index = 0; index < 37; ++index ) {
 			auto changed = profile;
 			if ( index < 27 ) { auto& value = changed.rows[ index / 3 ][ index % 3 ]; value += value == INT32_MAX ? -1 : 1; }
 			else if ( index == 27 ) { ++changed.nutrients_per_citizen; }
 			else if ( index == 28 ) { ++changed.unroaded_mine_limit; }
 			else if ( index == 29 ) { ++changed.mine_nutrient_effect; }
-			else { changed.technology_tokens[ index - 30 ] = "tECH" + std::to_string( index - 30 ); }
+			else if ( index == 30 ) { ++changed.nutrient_multiplier; }
+			else if ( index == 31 ) { ++changed.hab_complex_limit; }
+			else if ( index == 32 ) { ++changed.hab_dome_limit; }
+			else { changed.technology_tokens[ index - 33 ] = "tECH" + std::to_string( index - 33 ); }
 			const auto bytes = changed.Serialize( fixture::Technologies() ).ToString();
 			GT_ASSERT( !( changed == profile ), "resource equality omitted a field or normalized spelling" );
 			GT_ASSERT( Rejects( [ & ]() { host.Deserialize( SettingsFrame( bytes ) ); } ), "locked settings accepted changed resource field" );

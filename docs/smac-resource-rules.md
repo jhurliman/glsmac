@@ -12,13 +12,15 @@ The frozen profile preserves these values:
 | --- | --- |
 | RESOURCEINFO 1–9 | Ocean, base, bonus, forest, recycling, improved land, improved sea, monolith and borehole triples |
 | RULES 2 | Nutrients per citizen |
+| RULES 6 | Nutrient cost multiplier |
 | RULES 9 | Unroaded mine mineral limit |
 | RULES 10 | Mine nutrient effect |
+| RULES 13, 14 | Population limits without Hab Complex and Hab Dome |
 | RULES 54, 55, 56 | Nutrient, mineral and energy limit technology tokens |
 | RULES 58 | Advanced mining-platform technology token |
 
 Positions establish row identity. Display labels can repeat or change; the
-fourth resource column and annotations are not modeled. All 30 numeric
+fourth resource column and annotations are not modeled. All 33 numeric
 fields retain signed32 values, including zero and negative metadata. The
 profile applies no yield arithmetic, demand clamp or gameplay default.
 `BaseSquare`, `TileNutrients`, `TileMinerals` and `TileEnergy` return copied
@@ -49,14 +51,22 @@ in particular it does not apply RESOURCEINFO prefix/wrap behavior to RULES.
 The 256-byte token budget is a port admission limit, not a recovered original
 buffer size.
 
-Profile V1 uses the existing typed `Buffer` encoding: version, 27 row-major
-integers, three RULES integers, then four strings. Its maximum is exactly
-1,482 bytes: 31 integer frames of 14 bytes and four string frames of at most
+Profile V2 uses the existing typed `Buffer` encoding: version, 27 row-major
+integers, the three yield/demand RULES integers, nutrient cost multiplier,
+Hab Complex limit, Hab Dome limit, then four strings. Its maximum is exactly
+1,524 bytes: 34 integer frames of 14 bytes and four string frames of at most
 262 bytes. The decoder checks the complete budget, every signed32 narrowing,
 individual string bounds, version/types, references and exact end. Writers
 validate before encoding. Outer settings and world readers bound the frame
 before copying or checksum processing; an over-limit world frame leaves its
 cursor at the start of that frame.
+
+V1 rejects because it lacks the frozen growth inputs; no local defaults are
+substituted during restore. This nested profile extension leaves the current
+GlobalSettings V13 and World V26 outer framing unchanged. The three growth
+inputs come from RULES 6/13/14, with installed values 10/7/14. Retaining them
+does not itself activate population upkeep; the live caller must apply the
+recovered nutrient-cost and housing branches.
 
 GlobalSettings V10 carries the full profile instead of nine inline integers.
 Host initialization reads `alpha.txt` once, stages the technology catalog and
@@ -67,7 +77,7 @@ settings. V9 and other old settings versions reject.
 
 World V16 binds the same complete profile to the frozen session before map
 allocation. The writer preencodes all profiles before appending the header;
-the reader compares all 34 semantic fields, including exact token spelling.
+the reader now compares all 37 semantic fields, including exact token spelling.
 V15 rejects. SMAX continues to carry no SMAC profile. Simulation encoding,
 RNG ownership and the world body layout are unchanged.
 

@@ -185,14 +185,14 @@ inline std::string Source( const std::string& filename ) {
 
 inline game::backend::settings::SmacResourceRules Resources( const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
 	return { { { { 0, 0, 0 }, { 17, INT32_MIN, INT32_MAX }, { -2, 300, 0 }, { 0, 0, 0 }, { -7, 8, 9 },
-		{ 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } } }, 0, 0, 0,
+		{ 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } } }, 0, 0, 0, 0, 0, 0,
 		{ technologies.technologies[ 0 ].key, technologies.technologies[ 1 ].key, technologies.technologies[ 2 ].key, technologies.technologies[ 3 ].key } };
 }
 
 // Independent wire builder intentionally permits malformed late values.
 inline types::Buffer UncheckedResources( const game::backend::settings::SmacResourceRules& profile,
 	const std::optional< std::array< int64_t, 9 > >& center = {} ) {
-	types::Buffer result; result.WriteInt( 1 );
+	types::Buffer result; result.WriteInt( 2 );
 	for ( size_t row = 0; row < 9; ++row ) {
 		for ( size_t column = 0; column < 3; ++column ) {
 			const int index = row == 1 ? 0 : row == 2 ? 1 : row == 4 ? 2 : -1;
@@ -200,6 +200,7 @@ inline types::Buffer UncheckedResources( const game::backend::settings::SmacReso
 		}
 	}
 	result.WriteInt( profile.nutrients_per_citizen ); result.WriteInt( profile.unroaded_mine_limit ); result.WriteInt( profile.mine_nutrient_effect );
+	result.WriteInt( profile.nutrient_multiplier ); result.WriteInt( profile.hab_complex_limit ); result.WriteInt( profile.hab_dome_limit );
 	for ( const auto& token : profile.technology_tokens ) { result.WriteString( token ); }
 	return result;
 }

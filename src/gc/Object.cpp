@@ -10,6 +10,12 @@ Object::Object( gc::Space* const gc_space ) {
 	}
 }
 
+Object::~Object() {
+	if ( m_pending_space ) {
+		m_pending_space->CancelPending( this );
+	}
+}
+
 void Object::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "gc::Object" );
 

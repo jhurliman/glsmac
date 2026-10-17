@@ -3,6 +3,7 @@ SUBDIR( mocks )
 SET( SRC ${SRC}
 
 	${PWD}/Tests.cpp
+	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/SmacBaseSquareYield.cpp
@@ -15,10 +16,13 @@ SET( SRC ${SRC}
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp
+	${PWD}/CvrFrameAssembler.cpp
+	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp
 	${PWD}/Scripts.cpp
+	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 
 	PARENT_SCOPE )

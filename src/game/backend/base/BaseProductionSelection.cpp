@@ -75,7 +75,7 @@ SmacManualSwitchResult Base::PrepareSmacProductionSelection( const int32_t sourc
     (void)m_game->GetSmacProductionCost( m_owner, target );
     const auto& rules = *m_game->GetState()->m_settings.global.GetSmacProductionRules();
     SmacProductionSwitchContext context{ rules.retool_strictness, rules.retool_loss_percent, rules.retool_exemption,
-        true, m_game->m_simulation->value.designs.global_difficulty, false, {} };
+        true, unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ), false, {} };
     for ( const auto& entry : m_facilities ) {
         const auto* facility = entry.second;
         if ( !facility || m_game->GetBM()->GetFacilityDef( entry.first ) != facility || !facility->m_smac_source_id ) {

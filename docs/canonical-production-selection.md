@@ -10,7 +10,7 @@ selection, workshop designs and queue editing remain outside this UI slice.
 
 The read-only Base query copies the complete saved production state and reports
 actual cost and the manual-switch result. The existing switch kernel consumes
-frozen retool rules, original difficulty and installed positional facilities
+frozen retool rules, the owner's stored difficulty and installed positional facilities
 (Skunkworks source 10). OK first displays a required retool confirmation; Cancel
 does not post a command. A native cancellation also preserves the original
 state. No target, mineral balance, baseline or queue is supplied as replacement

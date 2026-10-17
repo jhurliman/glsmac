@@ -2266,7 +2266,7 @@ public:
 		} );
 		const auto id = actor->m_id;
 		const auto count = [ & ] { return m_game.m_pending_events.size(); };
-		const auto initial=WithScriptValues([&](GSE_CALLABLE)->std::string {
+		const auto initial=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
 			ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
 			frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
 			frontend->m_is_initialized=true;frontend->m_turn_id=m_game.GetTurnId();frontend->m_ism=&sprites;

@@ -19,6 +19,7 @@
 #include "gc/GC.h"
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
+#include "loader/texture/TextureLoader.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
 #include "game/backend/resource/Resource.h"
@@ -69,6 +70,8 @@
 #include <atomic>
 #include <new>
 #include <chrono>
+#include <future>
+#include <fstream>
 #include <condition_variable>
 
 namespace gse {
@@ -143,6 +146,1081 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+	std::string CheckServerPlayerRetirement( const bool native_poll, const bool running, const bool close_slot, const bool nested_owner = true ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait( const std::chrono::milliseconds timeout = std::chrono::seconds( 2 ) ) {
+				std::unique_lock lock( mutex ); return cv.wait_for( lock, timeout, [ & ]() { return entered; } );
+			}
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} destruction_gate, collection_gate;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			size_t retired = 0;
+			std::function< void() > on_retire;
+			void NotifyDependencyDestruction( const Wrappable* ) override { ++retired; if ( on_retire ) { on_retire(); } }
+		} player_observer, copy_observer;
+		class PlayerProbe final : public Player {
+		public:
+			PlayerProbe( Gate& gate, std::atomic< bool >& pause )
+				: Player( "Leaving player", Player::PR_PLAYER, nullptr, "" ), gate( gate ), pause( pause ) {}
+			~PlayerProbe() override { if ( pause ) { gate.Enter(); } }
+		private:
+			Gate& gate; std::atomic< bool >& pause;
+		};
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		class Transport final : public network::Network {
+		public:
+			~Transport() override { Stop(); }
+			void DisconnectEvent( network::cid_t cid ) { network::Event event; event.type = network::Event::ET_CLIENT_DISCONNECT; event.cid = cid; AddEvent( event ); }
+			network::events_t sent;
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { const auto events = GetEvents(); sent.insert( sent.end(), events.begin(), events.end() ); }
+		} transport;
+		class Server final : public connection::Server {
+		public:
+			Server( gc::Space* space, settings::LocalSettings* settings, network::Network* transport ) : connection::Server( space, settings, transport ) {}
+			void Phase( bool running ) { m_game_state = running ? GS_RUNNING : GS_LOBBY; }
+		};
+		std::atomic< bool > pause_destruction{ native_poll && !running };
+		PlayerProbe* player = nullptr;
+		Value* player_wrapper = nullptr; Value* copy_wrapper = nullptr;
+		Server* server = nullptr;
+		size_t leave_calls = 0; bool copy_fields_ok = false, rooted = false, observing = false;
+		std::thread producer, collector;
+		std::exception_ptr producer_error, collector_error;
+		std::mutex thread_mutex; std::thread::id collector_thread;
+		std::promise< void > collect_started;
+		bool collection_crossed_retirement = false;
+		bool collection_attempt_started = true;
+		util::FinallyGuard cleanup( [ & ]() {
+			pause_destruction = false;
+			destruction_gate.Release(); collection_gate.Release();
+			if ( producer.joinable() ) { producer.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			ProcessAccumulations();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( observing && !player_observer.retired ) { player->Undepend( &player_observer ); }
+				if ( server ) { server->ResetHandlers(); }
+				// This fixture owns all remaining native Players. Retire them before
+				// the local derived destructor's gate and observers leave scope.
+				m_state->Reset();
+				transport.Iterate();
+				if ( server ) { server->IterateAndMaybeDelete( false ); }
+			} );
+			g_engine->GetGC()->Iterate(); // retire the Server while its transport lives
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collector_thread != std::this_thread::get_id() ) { return; } }
+			collection_gate.Enter();
+		};
+		if ( !native_poll && !nested_owner ) {
+			// An immediate owner's WTrigger cleanup runs after its internal
+			// accumulation. Observe the real copy destructor at that boundary.
+			copy_observer.on_retire = [ & ]() {
+				collector = std::thread( [ & ]() {
+					{ std::lock_guard lock( thread_mutex ); collector_thread = std::this_thread::get_id(); }
+					collect_started.set_value();
+					try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collector_error = std::current_exception(); }
+				} );
+				collection_attempt_started = collect_started.get_future().wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready;
+				collection_crossed_retirement = collection_gate.Wait( std::chrono::milliseconds( 100 ) );
+				collection_gate.Release();
+				if ( collection_crossed_retirement ) { collector.join(); }
+			};
+		}
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEW( player, PlayerProbe, destruction_gate, pause_destruction );
+			m_state->AddPlayer( player );
+			auto& slot = m_state->m_slots->GetSlot( 1 ); slot.SetPlayer( player, 17, "fixture" ); slot.SetLinkedGSID( "leaving-gsid" ); player->Connect();
+			m_state->AddCIDSlot( 17, 1 ); if ( close_slot ) { slot.SetCloseAfterClear(); }
+			NEWV( survivor, Player, "Remaining player", Player::PR_PLAYER, nullptr, "" );
+			m_state->AddPlayer( survivor ); m_state->m_slots->GetSlot( 2 ).SetPlayer( survivor, 23, "fixture" ); survivor->Connect(); m_state->AddCIDSlot( 23, 2 );
+			player_wrapper = player->Wrap( GSE_CALL ); ctx->CreateConst( "server_leaving_player", player_wrapper, si, ep );
+			player->Depend( &player_observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			server = new Server( gc_space, &m_state->m_settings.local, &transport ); m_state->SetConnection( server );
+			server->On( GSE_CALL, "player_leave", NATIVE_CALL( &leave_calls, &copy_fields_ok, &copy_wrapper, &copy_observer, running, player ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( copy, event, "player", Player );
+				++leave_calls;
+				copy_fields_ok = copy != player && copy->GetPlayerName() == "Leaving player" && copy->GetRole() == Player::PR_PLAYER &&
+					( running ? copy->GetSlot() != nullptr && !copy->IsConnected() : copy->GetSlot() == nullptr );
+				copy_wrapper = copy->Wrap( GSE_CALL ); ctx->CreateConst( "server_leave_copy", copy_wrapper, si, ep ); copy->Depend( &copy_observer );
+				return VALUE( value::Undefined );
+			} ) );
+			server->Connect(); transport.Iterate(); m_state->Iterate(); // real connect request/result
+			server->Phase( running );
+			m_state->Iterate(); // enqueue actual GETEVENTS
+			transport.DisconnectEvent( 17 ); transport.Iterate(); // publish actual successful MT event response
+			GT_ASSERT( !leave_calls && !player_observer.retired && m_state->GetCidSlots().count( 17 ), "pending response changed the roster" );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "server disconnect setup: " + setup );
+		if ( native_poll ) {
+			producer = std::thread( [ & ]() { try { m_state->Iterate(); } catch ( ... ) { producer_error = std::current_exception(); } } );
+			if ( !running ) {
+				GT_ASSERT( destruction_gate.Wait(), "real Server event did not reach final Player destruction" );
+				GT_ASSERT( leave_calls == 0 && !player_observer.retired, "notification ran early or Player base destructor was entered" );
+				// The real event has already queued player_leave. Pausing the test
+				// derived destructor keeps the base Player/wrappers alive in the old
+				// code control while testing the actual final retirement boundary.
+				collector = std::thread( [ & ]() {
+					{ std::lock_guard lock( thread_mutex ); collector_thread = std::this_thread::get_id(); }
+					collect_started.set_value();
+					try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collector_error = std::current_exception(); }
+				} );
+				GT_ASSERT( collect_started.get_future().wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready, "collector did not start" );
+				collection_crossed_retirement = collection_gate.Wait( std::chrono::milliseconds( 100 ) );
+				collection_gate.Release();
+				if ( collection_crossed_retirement ) { collector.join(); } // old-code control: finish Collect while Player is still alive
+				destruction_gate.Release();
+			}
+			producer.join(); if ( collector.joinable() ) { collector.join(); }
+			if ( producer_error ) { std::rethrow_exception( producer_error ); }
+			if ( collector_error ) { std::rethrow_exception( collector_error ); }
+			GT_ASSERT( leave_calls == 0, "foreign dispatch executed script notification inline" );
+			ProcessAccumulations();
+		}
+		else if ( nested_owner ) {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				m_state->Iterate(); GT_ASSERT( gc_space->IsAccumulating(), "nested disconnect lost owner accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested disconnect: " + nested );
+		}
+		else {
+			m_state->Iterate();
+			if ( collector.joinable() ) { collector.join(); }
+			if ( collector_error ) { std::rethrow_exception( collector_error ); }
+		}
+		GT_ASSERT( leave_calls == 1 && copy_fields_ok && copy_observer.retired == 1 && copy_wrapper && copy_wrapper->type == VT_UNDEFINED,
+			"leave copy notification/retirement did not complete exactly once" );
+		GT_ASSERT( !m_state->GetCidSlots().count( 17 ) && m_state->GetCidSlots().at( 23 ) == 2, "disconnect damaged CID ownership" );
+		const auto& slot = m_state->m_slots->GetSlot( 1 );
+		if ( running ) {
+			GT_ASSERT( !player_observer.retired && player_wrapper->type == VT_OBJECT && m_state->m_players.count( player ) && m_state->m_players.size() == 2 &&
+				slot.GetState() == slot::Slot::SS_PLAYER && slot.GetPlayer() == player && player->GetSlot() == &slot && !player->IsConnected() && slot.GetLinkedGSID() == "leaving-gsid",
+				"running disconnect retired the reconnectable Player" );
+		}
+		else {
+			GT_ASSERT( player_observer.retired == 1 && player_wrapper->type == VT_UNDEFINED && !m_state->m_players.count( player ) && m_state->m_players.size() == 1 &&
+				slot.GetState() == ( close_slot ? slot::Slot::SS_CLOSED : slot::Slot::SS_OPEN ) && slot.GetLinkedGSID().empty(),
+				"lobby retirement left Player/Slot ownership or a live wrapper" );
+		}
+		transport.Iterate(); // consume the real queued broadcast request
+		size_t updates = 0;
+		for ( const auto& sent : transport.sent ) {
+			if ( sent.type != network::Event::ET_PACKET ) { continue; }
+			types::Packet packet( types::Packet::PT_NONE ); packet.Deserialize( types::Buffer( sent.data.packet_data ) );
+			if ( packet.type == types::Packet::PT_SLOT_UPDATE && packet.data.num == 1 && sent.cid == 23 ) { ++updates; }
+		}
+		GT_ASSERT( updates == 1, "disconnect did not broadcast its one slot update" );
+		m_state->Iterate(); transport.Iterate(); m_state->Iterate(); ProcessAccumulations();
+		GT_ASSERT( leave_calls == 1 && copy_observer.retired == 1 && player_observer.retired == ( running ? 0u : 1u ), "repeat polling repeated Player retirement" );
+		GT_ASSERT( collection_attempt_started, "copy retirement collector did not start" );
+		GT_ASSERT( !collection_crossed_retirement, "collection entered during final Server Player retirement" );
+		GT_OK();
+	}
+
+	std::string CheckTerminalConnectionRetirement( const bool native_poll, const bool detached ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} callback_gate, collect_gate;
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			std::atomic< size_t > retired{ 0 };
+			void NotifyDependencyDestruction( const Wrappable* ) override { ++retired; }
+		} observer;
+		class Transport final : public network::Network {
+		public:
+			explicit Transport( bool fail ) : fail( fail ) {}
+			~Transport() override { Stop(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return fail ? Error( "terminal test connect error" ) : Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		private:
+			const bool fail;
+		} transport( !detached );
+		std::atomic< bool > client_destroyed{ false };
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network, std::atomic< bool >& destroyed )
+				: connection::Client( space, settings, network ), destroyed( destroyed ) {}
+			~Client() override { destroyed = true; }
+		private:
+			std::atomic< bool >& destroyed;
+		};
+		Player* player = nullptr; Value* wrapper = nullptr; Client* client = nullptr;
+		bool rooted = false, observing = false;
+		std::atomic< size_t > callbacks{ 0 };
+		std::thread collector, producer;
+		std::exception_ptr collect_error, poll_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		util::FinallyGuard cleanup( [ & ]() {
+			callback_gate.Release(); collect_gate.Release();
+			if ( producer.joinable() ) { producer.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			ProcessAccumulations();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( observing && !observer.retired ) { player->Undepend( &observer ); }
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( client && !client_destroyed ) { client->ResetHandlers(); }
+				m_state->DetachConnection();
+				m_game.m_active_admission.reset();
+			} );
+			// Destroy the test Client before its transport/destruction observer.
+			g_engine->GetGC()->Iterate();
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			collect_gate.Enter();
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEW( player, Player, "Terminal player", Player::PR_PLAYER, nullptr, "" );
+			m_state->AddPlayer( player ); m_state->m_slots->GetSlot( 0 ).SetPlayer( player, 17, "fixture" ); m_state->AddCIDSlot( 17, 0 );
+			wrapper = player->Wrap( GSE_CALL ); ctx->CreateConst( "terminal_player", wrapper, si, ep );
+			player->Depend( &observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			m_state->m_settings.local.remote_address = "fixture";
+			client = new Client( gc_space, &m_state->m_settings.local, &transport, client_destroyed );
+			m_state->SetConnection( client ); client->Connect();
+			if ( detached ) {
+				transport.Iterate(); m_state->Iterate(); // actual successful connect response
+				const auto pending = m_game.MT_Init( m_state ); ProcessRequests();
+				GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS && m_game.m_active_admission->connection == client,
+					"actual admission did not retain its connection" );
+				// Invoke the real native binding phase, without generating a world.
+				m_game.PrepareInitializationBindings();
+				const auto disconnect = client->m_on_disconnect;
+				client->m_on_disconnect = [ &, disconnect ]() {
+					disconnect(); ++callbacks;
+					if ( native_poll ) { callback_gate.Enter(); }
+				};
+				client->Disconnect();
+			}
+			else {
+				client->m_on_error = [ & ]( const std::string& message ) {
+					if ( message != "terminal test connect error" ) { throw std::runtime_error( "unexpected native error response" ); }
+					++callbacks;
+					if ( native_poll ) { callback_gate.Enter(); }
+					return true;
+				};
+			}
+			m_state->Iterate(); // terminal request has no response yet
+			GT_ASSERT( !observer.retired && callbacks == 0 && wrapper->type == VT_OBJECT && m_state->m_players.size() == 1 && m_state->m_slots->GetCount() == 3,
+				"pending connection response retired native state" );
+			transport.Iterate(); // real MT response, only socket operations are synthetic
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "terminal connection setup: " + setup );
+		bool retired_during_collect = false;
+		if ( native_poll ) {
+			producer = std::thread( [ & ]() { try { m_state->Iterate(); } catch ( ... ) { poll_error = std::current_exception(); } } );
+			GT_ASSERT( callback_gate.Wait(), "native terminal callback was not reached" );
+			// Remove the queued disconnect notification as a possible root. In the
+			// detached case only the actual Game admission retains the Client.
+			ProcessAccumulations();
+			GT_ASSERT( ( m_state->GetConnection() == nullptr ) == detached, "native callback did not preserve its real detach behavior" );
+			collector = std::thread( [ & ]() {
+				{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+				try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+			} );
+			GT_ASSERT( collect_gate.Wait(), "collector could not enter while native callback was paused outside retirement" );
+			callback_gate.Release();
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !observer.retired && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			retired_during_collect = observer.retired != 0;
+			collect_gate.Release(); producer.join(); collector.join();
+			if ( poll_error ) { std::rethrow_exception( poll_error ); }
+			if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		}
+		else {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				m_state->Iterate(); GT_ASSERT( gc_space->IsAccumulating(), "nested terminal cleanup lost accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested terminal cleanup: " + nested );
+		}
+		GT_ASSERT( observer.retired == 1 && wrapper->type == VT_UNDEFINED, "terminal cleanup did not invalidate retained Player wrapper exactly once" );
+		GT_ASSERT( !m_state->GetConnection() && m_state->m_players.empty() && m_state->m_slots->GetCount() == 0 && m_state->GetCidSlots().empty(),
+			"terminal cleanup left native connection/player/slot/CID ownership" );
+		GT_ASSERT( callbacks == 1, "terminal native callback count changed" );
+		if ( detached ) {
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( !client_destroyed && m_game.m_active_admission && m_game.m_active_admission->connection == client,
+				"detached Client was not retained by the actual admission" );
+		}
+		m_state->Iterate();
+		GT_ASSERT( observer.retired == 1 && callbacks == 1, "repeated terminal polling repeated retirement or callback" );
+		GT_ASSERT( !retired_during_collect, "terminal Player retirement crossed an active collection" );
+		GT_OK();
+	}
+
+	std::string CheckFactionReplacement( const bool native_packet, const bool malformed ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} gate;
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			std::atomic< bool > retired{ false };
+			void NotifyDependencyDestruction( const Wrappable* ) override { retired = true; }
+		} observer;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings ) : connection::Client( space, settings ) { m_game_state = GS_LOBBY; }
+			void Receive( const types::Packet& packet ) {
+				network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event );
+			}
+			bool HasProtocolError() const { return m_disconnect_reason == "Network protocol error"; }
+		};
+		auto* const old = m_state->GetFM()->Get( "GAIANS" );
+		Value* wrapper = nullptr; Value* color_wrapper = nullptr;
+		Client* client = nullptr;
+		bool rooted = false, observing = false;
+		std::thread collector, receiver, notification_collector;
+		std::exception_ptr collect_error, receive_error, notification_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::atomic< bool > started{ false };
+		std::promise< void > notification_done; auto notification_future = notification_done.get_future();
+		bool notification_collected = false;
+		size_t notifications = 0;
+		util::FinallyGuard cleanup( [ & ]() {
+			gate.Release();
+			if ( receiver.joinable() ) { receiver.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			if ( notification_collector.joinable() ) { notification_collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( observing && !observer.retired ) { old->Undepend( &observer ); }
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( client ) { client->ResetHandlers(); m_state->DetachConnection(); }
+			} );
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			gate.Enter();
+		};
+		types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEWV( host, Player, "Host", Player::PR_SINGLE, nullptr, "" );
+			m_state->AddPlayer( host ); m_state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+			m_state->m_settings.global.SelectRuleset( "smax" );
+			wrapper = old->Wrap( GSE_CALL ); color_wrapper = old->m_colors.text.Wrap( GSE_CALL );
+			ctx->CreateConst( "retired_faction", wrapper, si, ep ); ctx->CreateConst( "retired_faction_color", color_wrapper, si, ep );
+			old->Depend( &observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			client = new Client( gc_space, &m_state->m_settings.local ); m_state->SetConnection( client );
+			client->m_on_global_settings_update = [ & ]() {
+				++notifications;
+				if ( native_packet ) {
+					// This callback must stay outside the native replacement guard.
+					// The timeout records failure; joining happens only after it returns.
+					notification_collector = std::thread( [ & ]() {
+						try { g_engine->GetGC()->Iterate(); } catch ( ... ) { notification_error = std::current_exception(); }
+						notification_done.set_value();
+					} );
+					notification_collected = notification_future.wait_for( std::chrono::seconds( 2 ) ) == std::future_status::ready;
+				}
+			};
+			types::Buffer state, factions;
+			state.WriteString( m_state->m_settings.global.Serialize().ToString() );
+			faction::Faction first( "FIRST", "First complete faction" );
+			factions.WriteInt( malformed ? 2 : 1 ); factions.WriteString( first.m_id ); factions.WriteString( first.Serialize().ToString() );
+			// A wrong-type next key rejects before insertion on both supported manager codecs.
+			if ( malformed ) { factions.WriteInt( 42 ); }
+			state.WriteString( factions.ToString() ); packet.data.str = state.ToString(); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "faction setup: " + setup );
+		bool retired_during_collect = false;
+		if ( native_packet ) {
+			collector = std::thread( [ & ]() {
+				{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+				try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+			} );
+			GT_ASSERT( gate.Wait(), "collector did not reach faction retirement barrier" );
+			receiver = std::thread( [ & ]() {
+				started = true;
+				try { WithoutDisconnectIO( client, [ & ]() { client->Receive( packet ); } ); }
+				catch ( ... ) { receive_error = std::current_exception(); }
+			} );
+			const auto start_deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 2 );
+			while ( !started && std::chrono::steady_clock::now() < start_deadline ) { std::this_thread::yield(); }
+			GT_ASSERT( started, "native packet receiver did not start" );
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !observer.retired && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			retired_during_collect = observer.retired;
+			gate.Release(); receiver.join(); collector.join();
+			if ( notification_collector.joinable() ) { notification_collector.join(); }
+			if ( receive_error ) { std::rethrow_exception( receive_error ); }
+			if ( collect_error ) { std::rethrow_exception( collect_error ); }
+			if ( notification_error ) { std::rethrow_exception( notification_error ); }
+		}
+		else {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				WithoutDisconnectIO( client, [ & ]() { client->Receive( packet ); } );
+				GT_ASSERT( gc_space->IsAccumulating(), "nested replacement lost owner accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested replacement: " + nested );
+		}
+		ProcessAccumulations();
+		GT_ASSERT( observer.retired && wrapper->type == VT_UNDEFINED && color_wrapper->type == VT_OBJECT, "replacement did not invalidate the linked faction or preserve its detached color value" );
+		GT_ASSERT( !m_state->GetFM()->Get( "GAIANS" ) && m_state->GetFM()->GetAll().size() == 1 && m_state->GetFM()->Get( "FIRST" ),
+			"replacement changed existing clear-first/per-complete-record behavior" );
+		GT_ASSERT( client->HasProtocolError() == malformed && notifications == ( malformed ? 0 : 1 ), "packet result/notification changed on decode failure" );
+		GT_ASSERT( !native_packet || malformed || notification_collected, "settings notification ran while native replacement still excluded collection" );
+		GT_ASSERT( !retired_during_collect, "faction retirement crossed an active collection" );
+		g_engine->GetGC()->Iterate();
+		GT_OK();
+	}
+
+	std::string CheckMapPublication( const bool prepare ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} gate;
+		class Root final : public gc::Object {
+		public:
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		map::Map* candidate = nullptr;
+		auto* const old = m_game.m_map;
+		Value* old_wrapper = nullptr;
+		std::thread collector, publisher;
+		std::exception_ptr collect_error, publish_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::atomic< bool > started{ false }, done{ false };
+		bool rooted = false;
+		util::FinallyGuard cleanup( [ & ]() {
+			gate.Release();
+			if ( publisher.joinable() ) { publisher.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { if ( rooted ) { m_gse->RemoveRootObject( &root ); } } );
+			m_game.DiscardInitializationMap( candidate );
+			m_game.RetireOldMap();
+			m_map.reset( m_game.m_map );
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			gate.Enter();
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			old_wrapper = old->Wrap( GSE_CALL ); ctx->CreateConst( "old_publication_map", old_wrapper, si, ep );
+			m_gse->AddRootObject( &root ); rooted = true; GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "publication setup: " + setup );
+		m_map.release();
+		if ( !prepare ) {
+			m_game.PrepareInitializationMap();
+			NEW( candidate, map::Map, &m_game, 8, 8 );
+			auto bytes = old->GetTilesPtr()->Serialize();
+			GT_ASSERT( candidate->LoadFromBuffer( bytes ) == map::Map::EC_NONE, "private candidate failed valid tile decode" );
+			const auto unexposed = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				std::unordered_set< gc::Object* > reachable; m_game.GetReachableObjects( reachable );
+				GT_ASSERT( reachable.count( old ) && !reachable.count( candidate ) && !m_game.m_map, "private candidate became a collector root" ); GT_OK();
+			} );
+			GT_ASSERT( unexposed.empty(), "fixture: " + unexposed );
+		}
+		collector = std::thread( [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+			try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+		} );
+		GT_ASSERT( gate.Wait(), "actual Collect did not reach publication barrier" );
+		publisher = std::thread( [ & ]() {
+			started = true;
+			try { if ( prepare ) { m_game.PrepareInitializationMap(); } else { m_game.PublishInitializationMap( candidate ); } }
+			catch ( ... ) { publish_error = std::current_exception(); }
+			done = true;
+		} );
+		const auto start_deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 2 );
+		while ( !started && std::chrono::steady_clock::now() < start_deadline ) { std::this_thread::yield(); }
+		GT_ASSERT( started, "map publisher did not enter its mutation attempt" );
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+		while ( !done && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+		const bool crossed = done;
+		gate.Release(); publisher.join(); collector.join();
+		if ( publish_error ) { std::rethrow_exception( publish_error ); }
+		if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		GT_ASSERT( started && done && !crossed, "map root publication crossed active collection" );
+		GT_ASSERT( m_game.m_old_map == old && old_wrapper->type == VT_OBJECT, "publication lost or retired the previous map" );
+		GT_ASSERT( prepare ? !m_game.m_map : ( m_game.m_map && !candidate ), "publication did not transfer exact candidate ownership" );
+		if ( !prepare ) {
+			const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* tile = m_game.m_map->GetTile( 2, 2 )->Wrap( GSE_CALL ); ctx->CreateConst( "published_tile", tile, si, ep );
+				std::unordered_set< gc::Object* > reachable; m_game.GetReachableObjects( reachable );
+				GT_ASSERT( reachable.count( old ) && reachable.count( m_game.m_map ), "committed maps are missing from collector roots" ); GT_OK();
+			} );
+			GT_ASSERT( check.empty(), "fixture: " + check );
+		}
+		g_engine->GetGC()->Iterate();
+		m_game.RetireOldMap();
+		GT_ASSERT( old_wrapper->type == VT_UNDEFINED, "old map was not retired through the existing guarded path" ); GT_OK();
+	}
+
+	std::string CheckMapCandidateFailure( const int mode ) {
+		using namespace game::backend;
+		struct Probe { size_t textures = 0, meshes = 0; } probe;
+		struct Texture final : types::texture::Texture {
+			Probe& probe; explicit Texture( Probe& probe ) : types::texture::Texture( 1, 1 ), probe( probe ) {}
+			~Texture() override { ++probe.textures; }
+		};
+		struct Render final : types::mesh::Render {
+			Probe& probe; explicit Render( Probe& probe ) : types::mesh::Render( 3, 1 ), probe( probe ) {}
+			~Render() override { ++probe.meshes; }
+		};
+		struct Data final : types::mesh::Data {
+			Probe& probe; explicit Data( Probe& probe ) : types::mesh::Data( 3, 1 ), probe( probe ) {}
+			~Data() override { ++probe.meshes; }
+		};
+		auto* const old = m_game.m_map;
+		Value* old_wrapper = nullptr;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			old_wrapper = old->Wrap( GSE_CALL ); ctx->CreateConst( "surviving_old_map", old_wrapper, si, ep ); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "fixture: " + setup );
+		m_map.release();
+		util::FinallyGuard recover( [ & ]() { m_game.m_init_cancel = false; m_game.RetireOldMap(); m_map.reset( m_game.m_map ); } );
+		m_game.PrepareInitializationMap();
+		bool rejected = false;
+		try {
+			map::Map* candidate = nullptr;
+			util::FinallyGuard discard( [ & ]() { m_game.DiscardInitializationMap( candidate ); } );
+			NEW( candidate, map::Map, &m_game, 8, 8 );
+			NEW( candidate->m_textures.terrain, Texture, probe );
+			NEW( candidate->m_meshes.terrain, Render, probe ); NEW( candidate->m_meshes.terrain_data, Data, probe );
+			NEW( candidate->m_map_state, map::MapState );
+			candidate->m_map_state->dimensions = { 8, 8 }; const common::mt_flag_t canceled = false;
+			candidate->m_map_state->LinkTileStates( canceled );
+			NEW( candidate->m_map_state->At( 2, 2 )->moisture_original, Texture, probe );
+			// The real candidate decoder and cancellation cleanup have
+			// no published roots. Collection remains possible between stages.
+			if ( mode == 0 ) {
+				types::Buffer invalid; invalid.WriteString( "not a tile width" );
+				if ( candidate->LoadFromBuffer( invalid ) != map::Map::EC_NONE ) { throw std::runtime_error( "candidate map decode failed" ); }
+			}
+			g_engine->GetGC()->Iterate();
+			if ( mode == 1 ) { m_game.m_init_cancel = true; m_game.PublishInitializationMap( candidate ); }
+			else { throw std::runtime_error( "candidate setup failure" ); }
+		} catch ( const std::runtime_error& ) { rejected = true; }
+		GT_ASSERT( rejected && !m_game.m_map && m_game.m_old_map == old && old_wrapper->type == VT_OBJECT,
+			"failed or canceled candidate was published or lost the old map" );
+		GT_ASSERT( probe.textures == 2 && probe.meshes == 2 && !m_game.m_response_map_data, "candidate-only presentation leaked or touched a response envelope" );
+		m_game.m_init_cancel = false;
+		g_engine->GetGC()->Iterate();
+		const auto failed = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.InitFailed( "candidate failed" ); GT_OK(); } );
+		GT_ASSERT( failed.empty() && m_game.m_map == old && !m_game.m_old_map && old_wrapper->type == VT_OBJECT,
+			"actual InitFailed failed to restore old ownership once: " + failed );
+		GT_OK();
+	}
+
+	static std::string CheckMapAcquisition( const int mode ) {
+		using namespace game::backend;
+		// The production Map constructor only borrows these two source textures.
+		// All constructor/modules, packet decode, owner stages and collection are
+		// real; no terrain rendering or original-game resource is involved.
+		::resource::ResourceManager resources( "unused-map-publication-fixture" );
+		resources.m_resource_paths = {
+			{ ::resource::PCX_TEXTURE, "fixture-texture" }, { ::resource::PCX_TER1, "fixture-ter1" }
+		};
+		class Textures final : public loader::texture::TextureLoader {
+		public:
+			types::texture::Texture texture{ 1, 1 }, terrain{ 1, 1 };
+			size_t loads = 0;
+			std::function< void() > on_load;
+		protected:
+			types::texture::Texture* LoadTextureImpl( const std::string& path, types::texture::texture_flag_t ) override {
+				++loads;
+				if ( on_load ) { on_load(); }
+				if ( path == "fixture-texture" ) { return &texture; }
+				if ( path == "fixture-ter1" ) { return &terrain; }
+				throw std::runtime_error( "unexpected map source texture" );
+			}
+			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override {
+				throw std::runtime_error( "map failure fixture unexpectedly rendered a texture region" );
+			}
+		} textures;
+		class Transport final : public network::Network {
+		public: ~Transport() override { Stop(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		} transport;
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Client( space, settings, network ) {}
+			void Receive( const types::Packet& packet ) {
+				network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event );
+			}
+		};
+		auto* const old_resources = g_engine->m_resource_manager;
+		auto* const old_textures = g_engine->m_texture_loader;
+		{
+			std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_resource_manager = &resources; g_engine->m_texture_loader = &textures;
+		}
+		util::FinallyGuard restore( [ & ]() {
+			std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
+		} );
+		// Runtime is destroyed before services/transport are restored or freed.
+		BackendFixture fixture;
+		fixture.EnableTurnPlayers();
+		if ( mode ) {
+			// Slot::Update uses the actual Engine backend during acquisition.
+			// The queued notification captures that backend before restoration.
+			auto* const previous_game = g_engine->m_game;
+			{ std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = &fixture.m_game; }
+			util::FinallyGuard restore_game( [ & ]() {
+				std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = previous_game;
+			} );
+			auto* const old = fixture.m_game.m_map;
+			const auto path = std::filesystem::temp_directory_path() / ( "glsmac-map-publication-" + util::UUID::Generate() + ".map" );
+			util::FinallyGuard remove_file( [ & ]() { std::error_code ignored; std::filesystem::remove( path, ignored ); } );
+			const auto bytes = old->GetTilesPtr()->Serialize().ToString();
+			{ std::ofstream file( path, std::ios::binary ); file.write( bytes.data(), bytes.size() ); if ( !file ) { throw std::runtime_error( "could not write synthetic map" ); } }
+			fixture.m_state->m_settings.global.map.type = settings::MapSettings::MT_MAPFILE;
+			fixture.m_state->m_settings.global.map.filename = path.string();
+			fixture.m_game.m_slot = &fixture.m_state->m_slots->GetSlot( 0 );
+			fixture.m_game.m_player = fixture.m_game.m_slot->GetPlayer();
+			bool unpublished = true;
+			textures.on_load = [ & ]() {
+				unpublished = unpublished && !fixture.m_game.m_map && fixture.m_game.m_old_map == old;
+				g_engine->GetGC()->Iterate(); // actual collection while construction is private
+				if ( mode == 2 ) { fixture.m_game.m_init_cancel = true; }
+			};
+			fixture.m_map.release();
+			util::FinallyGuard recover( [ & ]() {
+				textures.on_load = nullptr;
+				fixture.m_game.m_init_cancel = false;
+				fixture.m_game.RetireOldMap(); fixture.m_map.reset( fixture.m_game.m_map );
+			} );
+			std::exception_ptr error;
+			std::thread native( [ & ]() { try { fixture.m_game.AcquireInitializationMap(); } catch ( ... ) { error = std::current_exception(); } } );
+			native.join();
+			GT_ASSERT( unpublished && textures.loads == 2, "actual acquisition exposed current/partial map during constructor source loads" );
+			if ( mode == 1 ) {
+				if ( error ) { std::rethrow_exception( error ); }
+				GT_ASSERT( fixture.m_game.m_map && fixture.m_game.m_map != old && fixture.m_game.m_old_map == old &&
+					fixture.m_game.m_map->GetTilesPtr()->Serialize().ToString() == bytes && fixture.m_game.m_game_state == Game::GS_INITIALIZING,
+					"actual file acquisition did not commit complete equivalent tile storage" );
+				fixture.ProcessAccumulations();
+			} else {
+				GT_ASSERT( error && !fixture.m_game.m_map && fixture.m_game.m_old_map == old, "actual canceled acquisition published a candidate" );
+				fixture.m_game.m_init_cancel = false;
+				const auto failure = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.m_game.InitFailed( "canceled candidate" ); GT_OK(); } );
+				GT_ASSERT( failure.empty() && fixture.m_game.m_map == old && !fixture.m_game.m_old_map, "actual canceled acquisition lost old map: " + failure );
+			}
+			GT_OK();
+		}
+		Client* client = nullptr;
+		size_t errors = 0;
+		types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.ResetRequest(); fixture.m_state->SetGame( &fixture.m_game );
+			fixture.m_state->m_settings.global.SelectRuleset( "smax" );
+			fixture.m_state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			client = new Client( gc_space, &fixture.m_state->m_settings.local, &transport ); fixture.m_state->SetConnection( client );
+			fixture.FixtureWorldTicket();
+			fixture.m_game.m_active_admission->connection = client;
+			fixture.m_game.m_active_admission->stage = Game::StartupStage::AwaitDownload;
+			fixture.m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+			types::Buffer bytes, bad_tiles; bad_tiles.WriteString( "invalid tile width" );
+			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
+			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
+			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
+			bytes.WriteString( bad_tiles.ToString() );
+			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
+			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "fixture: " + setup );
+		std::exception_ptr native_error;
+		const auto checkpoint = [ & ]( const bool receive ) {
+			std::thread worker( [ & ]() {
+				try {
+					if ( receive ) { client->Receive( packet ); }
+					// Real post-batch continuation, separated explicitly from socket
+					// polling so this case tests the Ingress/Failure boundary alone.
+					fixture.m_game.AdvanceInitialization();
+				} catch ( ... ) { native_error = std::current_exception(); }
+			} ); worker.join();
+			if ( native_error ) { std::rethrow_exception( native_error ); }
+			fixture.ProcessAccumulations();
+		};
+		util::FinallyGuard cleanup( [ & ]() {
+			transport.Iterate();
+			fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				client->IterateAndMaybeDelete(); client->ResetHandlers(); fixture.m_state->DetachConnection();
+				fixture.m_map.release(); fixture.m_game.ResetGame(); GT_OK();
+			} );
+		} );
+		checkpoint( true );
+		GT_ASSERT( textures.loads == 2 && !errors && fixture.m_game.m_map && !fixture.m_game.m_map->m_tiles &&
+			fixture.m_game.m_active_admission && fixture.m_game.m_active_admission->stage == Game::StartupStage::Failure,
+			"real download did not leave its rejected empty Map between owner checkpoints" );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( !errors && fixture.m_game.m_map, "collection prematurely ran failure cleanup" );
+		checkpoint( false );
+		GT_ASSERT( errors == 1 && !fixture.m_game.m_map && !fixture.m_game.OwnerBlocksNative(), "later Failure checkpoint did not retire rejected map exactly once" );
+		GT_OK();
+	}
+
+	std::string CheckEmptyMapCollection() {
+		// Model the rooted state left by a failed actual map-body decode; the
+		// separate packet case also covers the Ingress -> Failure interval.
+		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			types::Buffer invalid; invalid.WriteString( "not a tile width" );
+			GT_ASSERT( m_game.m_map->LoadFromBuffer( invalid ) == game::backend::map::Map::EC_MAPFILE_FORMAT_ERROR,
+				"invalid tile body was accepted" );
+			GT_ASSERT( !m_game.m_map->m_tiles, "failed decoder did not produce an empty map" ); GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "fixture: " + error );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( m_game.m_map && !m_game.m_map->m_tiles, "collection changed the rooted empty map" ); GT_OK();
+	}
+
+	std::string CheckNativeRetirementOverlap( const bool collector_first, const bool old_map ) {
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv;
+			bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} collector_gate, retirement_gate;
+		class Root final : public gc::Object {
+		public:
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+				gc::Object::GetReachableObjects( reachable_objects ); visit();
+			}
+		} root;
+		class Observer final : public Wrappable {
+		public:
+			std::function< void( const Wrappable* ) > notify;
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			void NotifyDependencyDestruction( const Wrappable* dependency ) override { notify( dependency ); }
+		} observer;
+		auto* map = m_game.m_map;
+		auto* tile = map->GetTile( 2, 2 );
+		Value* map_value = nullptr; Value* tile_value = nullptr;
+		std::atomic< size_t > destroyed{ 0 };
+		std::atomic< bool > visited{ false }, reset_started{ false }, reset_done{ false };
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		std::thread collector, resetter;
+		std::exception_ptr collect_error, reset_error;
+		bool rooted = false, attached = false;
+		// Release every barrier and join before any captured observer/root dies,
+		// including early assertion or native exception exits.
+		util::FinallyGuard cleanup( [ & ]() {
+			collector_gate.Release(); retirement_gate.Release();
+			if ( resetter.joinable() ) { resetter.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( attached && !destroyed.load() ) { map->Undepend( &observer ); tile->Undepend( &observer ); }
+				if ( old_map && m_game.m_old_map ) { m_game.RetireOldMap(); }
+			} );
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			visited = true;
+			if ( collector_first ) { collector_gate.Enter(); }
+		};
+		observer.notify = [ & ]( const Wrappable* dependency ) {
+			++destroyed;
+			if ( !collector_first && dependency == map ) { retirement_gate.Enter(); }
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			map_value = map->Wrap( GSE_CALL ); tile_value = tile->Wrap( GSE_CALL );
+			ctx->CreateConst( "retired_map", map_value, si, ep ); ctx->CreateConst( "retired_tile", tile_value, si, ep );
+			map->Depend( &observer ); tile->Depend( &observer ); attached = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			if ( old_map ) {
+				m_game.m_old_map = std::exchange( m_game.m_map, nullptr );
+				std::unordered_set< gc::Object* > reachable;
+				m_game.GetReachableObjects( reachable );
+				GT_ASSERT( reachable.count( map ), "retained old map is missing from collector roots" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "setup: " + setup );
+		m_map.release();
+		const auto request = old_map ? 0 : m_game.MT_ResetController();
+		game::backend::MT_Response response{};
+		const auto start_collect = [ & ]() {
+			collector = std::thread( [ & ]() {
+				{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+				try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+			} );
+		};
+		const auto start_reset = [ & ]() {
+			resetter = std::thread( [ & ]() {
+				reset_started = true;
+				try {
+					if ( old_map ) { m_game.RetireOldMap(); }
+					else { m_game.MTModule::Iterate(); response = m_game.MT_GetResponse( request ); }
+				} catch ( ... ) { reset_error = std::current_exception(); }
+				reset_done = true;
+			} );
+		};
+		bool crossed = false;
+		if ( collector_first ) {
+			start_collect(); GT_ASSERT( collector_gate.Wait(), "actual Collect did not reach its rooted barrier" );
+			start_reset();
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !reset_done && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			crossed = reset_done || destroyed != 0;
+			collector_gate.Release();
+		}
+		else {
+			start_reset(); GT_ASSERT( retirement_gate.Wait(), "actual Map destructor did not reach its dependency notification" );
+			start_collect();
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !visited && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			crossed = visited;
+			retirement_gate.Release();
+		}
+		resetter.join(); collector.join();
+		if ( reset_error ) { std::rethrow_exception( reset_error ); }
+		if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		GT_ASSERT( reset_started && reset_done && visited, "workers did not complete their actual reset/collection operations" );
+		GT_ASSERT( !crossed, "native Map retirement and actual Collect overlapped" );
+		GT_ASSERT( destroyed == 2 && !m_game.m_map && !m_game.m_old_map, "actual Map/Tile destruction was incomplete or duplicated" );
+		GT_ASSERT( old_map || response.result == game::backend::R_SUCCESS, "actual MT reset did not publish success" );
+		GT_ASSERT( map_value->type == VT_UNDEFINED && tile_value->type == VT_UNDEFINED, "retired wrappers remained valid" );
+		m_game.ResetGame(); // repeated empty reset remains synchronous
+		GT_OK();
+	}
+
+	std::string CheckNativePresentationRetirement( const bool partial_envelope ) {
+		struct Probe {
+			gc::Space* space;
+			std::thread worker;
+			std::mutex mutex; std::condition_variable cv;
+			bool acquired = false, outside = false, map_destroyed = false;
+			size_t textures = 0, meshes = 0;
+			void Observe() {
+				++textures;
+				if ( worker.joinable() ) { return; }
+				worker = std::thread( [ this ]() { space->WithNativeMutation( [ this ]() {
+					std::lock_guard lock( mutex ); acquired = true; cv.notify_all();
+				} ); } );
+				std::unique_lock lock( mutex );
+				outside = map_destroyed && cv.wait_for( lock, std::chrono::seconds( 1 ), [ this ]() { return acquired; } );
+			}
+		} probe{ m_gse->GetGCSpace() };
+		util::FinallyGuard join( [ & ]() { if ( probe.worker.joinable() ) { probe.worker.join(); } } );
+		struct Texture final : types::texture::Texture {
+			Probe& probe;
+			explicit Texture( Probe& probe ) : types::texture::Texture( 1, 1 ), probe( probe ) {}
+			~Texture() override { probe.Observe(); }
+		};
+		struct Render final : types::mesh::Render {
+			Probe& probe;
+			explicit Render( Probe& probe ) : types::mesh::Render( 3, 1 ), probe( probe ) {}
+			~Render() override { ++probe.meshes; }
+		};
+		struct Data final : types::mesh::Data {
+			Probe& probe;
+			explicit Data( Probe& probe ) : types::mesh::Data( 3, 1 ), probe( probe ) {}
+			~Data() override { ++probe.meshes; }
+		};
+		struct Observer final : Wrappable {
+			Probe& probe;
+			explicit Observer( Probe& probe ) : probe( probe ) {}
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			void NotifyDependencyDestruction( const Wrappable* ) override { probe.map_destroyed = true; }
+		} observer( probe );
+		auto* const map = m_game.m_map;
+		bool attached = false;
+		util::FinallyGuard cleanup( [ & ]() {
+			if ( m_game.m_map ) {
+				m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+					if ( attached ) { map->Undepend( &observer ); }
+					m_map.release(); m_game.ResetGame();
+				} );
+			}
+		} );
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEW( map->m_textures.terrain, Texture, probe );
+			NEW( map->m_meshes.terrain, Render, probe ); NEW( map->m_meshes.terrain_data, Data, probe );
+			NEW( m_game.m_response_map_data, game::backend::response_map_data_t );
+			m_game.m_response_map_data->terrain_texture = map->m_textures.terrain;
+			if ( !partial_envelope ) {
+				m_game.m_response_map_data->terrain_mesh = map->m_meshes.terrain;
+				m_game.m_response_map_data->terrain_data_mesh = map->m_meshes.terrain_data;
+			}
+			NEW( map->m_map_state, game::backend::map::MapState );
+			map->m_map_state->dimensions = { 8, 8 }; const common::mt_flag_t canceled = false;
+			map->m_map_state->LinkTileStates( canceled );
+			auto* tile_state = map->m_map_state->At( 2, 2 );
+			NEW( tile_state->moisture_original, Texture, probe ); NEW( tile_state->river_original, Texture, probe );
+			map->Depend( &observer ); attached = true;
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "presentation setup: " + setup );
+		m_map.release();
+		m_game.ResetGame(); // outside accumulation: this must not hold collect during renderer-facing destruction
+		if ( probe.worker.joinable() ) { probe.worker.join(); }
+		GT_ASSERT( probe.map_destroyed && probe.outside && probe.textures == 3 && probe.meshes == 2,
+			"presentation was duplicated, retained, or destroyed under native collector exclusion" );
+		GT_ASSERT( !m_game.m_response_map_data && !m_game.m_map, "reset retained presentation sources" );
+		GT_OK();
+	}
+
+	std::string CheckNativeStop( const bool state_null_old_map ) {
+		Value* random_wrapper = nullptr;
+		Value* map_wrapper = nullptr;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_random.reset();
+			NEW( m_game.m_random, game::backend::Random, &m_game, 12345 );
+			NEW( m_game.m_pending_frontend_requests, std::vector< game::FrontendRequest > );
+			random_wrapper = m_game.m_random->Wrap( GSE_CALL ); map_wrapper = m_game.m_map->Wrap( GSE_CALL );
+			ctx->CreateConst( "stopped_random", random_wrapper, si, ep ); ctx->CreateConst( "stopped_map", map_wrapper, si, ep );
+			if ( state_null_old_map ) {
+				m_game.m_old_map = std::exchange( m_game.m_map, nullptr );
+				m_state->UnsetGame(); m_game.m_state = nullptr;
+			}
+			GT_OK();
+		} );
+		// Stop owns these two tracked allocations; restore the fixture's stack
+		// queue only after production Stop has completed, before fixture teardown.
+		util::FinallyGuard restore( [ & ]() { m_game.m_pending_frontend_requests = &m_frontend_requests; } );
+		GT_ASSERT( setup.empty(), "Stop setup: " + setup );
+		m_map.release();
+		std::exception_ptr error;
+		std::thread worker( [ & ]() { try { m_game.Stop(); } catch ( ... ) { error = std::current_exception(); } } );
+		worker.join();
+		if ( error ) { std::rethrow_exception( error ); }
+		GT_ASSERT( !m_game.m_map && !m_game.m_old_map && !m_game.m_random && !m_game.m_world_space && !m_game.m_state,
+			"Stop retained native wrappers or its borrowed Space" );
+		GT_ASSERT( random_wrapper->type == VT_UNDEFINED && map_wrapper->type == VT_UNDEFINED, "Stop did not invalidate surviving wrappers" );
+		g_engine->GetGC()->Iterate();
+		GT_OK();
+	}
+
+	static std::string CheckResetTransportDrain() {
+		class Transport final : public network::Network {
+		public:
+			std::mutex mutex; std::condition_variable cv;
+			bool entered = false, release = false;
+			const common::mt_flag_t* cancel_flag = nullptr;
+			void Release() { std::lock_guard lock( mutex ); release = true; cv.notify_all(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override {}
+			const network::MT_Response ProcessRequest( const network::MT_Request& request, MT_CANCELABLE ) override {
+				auto response = Network::ProcessRequest( request, MT_C );
+				if ( request.op == network::OP_GETEVENTS ) {
+					std::unique_lock lock( mutex ); cancel_flag = &MT_C; entered = true; cv.notify_all(); cv.wait( lock, [ this ]() { return release; } );
+				}
+				return response;
+			}
+		} transport;
+		class Client final : public game::backend::connection::Connection {
+		public:
+			Client( gc::Space* space, network::Network* network ) : Connection( space, network::CM_CLIENT, nullptr, network ) {}
+			void UpdateSlot( size_t, game::backend::slot::Slot*, bool ) override {}
+			void SendMessage( const std::string& ) override {}
+		protected:
+			void SendGameEvents( const game_events_t& ) override {}
+		};
+		BackendFixture fixture; // runtime/connection destruction precedes transport destruction
+		auto* space = fixture.m_gse->GetGCSpace();
+		Client* client = nullptr;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			client = new Client( gc_space, &transport ); fixture.m_state->SetConnection( client );
+			client->m_mt_ids.events = transport.MT_GetEvents(); GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "transport setup: " + setup );
+		std::thread network_worker, resetter, collector;
+		std::exception_ptr network_error, reset_error, collect_error;
+		std::atomic< bool > canceled{ false }, collected{ false };
+		util::FinallyGuard cleanup( [ & ]() {
+			transport.Release();
+			if ( network_worker.joinable() ) { network_worker.join(); }
+			if ( resetter.joinable() ) { resetter.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			// No live sockets are used; retire the real disconnect response ID
+			// while its transport still exists, before runtime-owned Client cleanup.
+			if ( client->m_mt_ids.disconnect ) {
+				transport.MT_Cancel( client->m_mt_ids.disconnect );
+				transport.MT_GetResult( client->m_mt_ids.disconnect ); client->m_mt_ids.disconnect = 0;
+			}
+		} );
+		network_worker = std::thread( [ & ]() { try { transport.MTModule::Iterate(); } catch ( ... ) { network_error = std::current_exception(); } } );
+		{
+			std::unique_lock lock( transport.mutex );
+			GT_ASSERT( transport.cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return transport.entered; } ), "real network event request did not enter" );
+		}
+		fixture.m_map.release();
+		const auto request = fixture.m_game.MT_ResetController();
+		resetter = std::thread( [ & ]() {
+			try { fixture.m_game.MTModule::Iterate(); canceled = true; } catch ( ... ) { reset_error = std::current_exception(); }
+		} );
+		const auto cancel_deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 2 );
+		while ( !*transport.cancel_flag && std::chrono::steady_clock::now() < cancel_deadline ) { std::this_thread::yield(); }
+		GT_ASSERT( *transport.cancel_flag, "reset did not enter actual MT_Cancel for the processing event request" );
+		// An actual transport request remains in processing. Collection must
+		// finish independently; teardown may not hold collect while cancel waits.
+		collector = std::thread( [ & ]() { try { g_engine->GetGC()->Iterate(); collected = true; } catch ( ... ) { collect_error = std::current_exception(); } } );
+		const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds( 1 );
+		while ( !collected && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+		const bool independent = collected && !canceled;
+		transport.Release(); network_worker.join(); resetter.join(); collector.join();
+		if ( network_error ) { std::rethrow_exception( network_error ); }
+		if ( reset_error ) { std::rethrow_exception( reset_error ); }
+		if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		GT_ASSERT( independent, "transport cancellation blocked collection or reset escaped a processing request" );
+		GT_ASSERT( fixture.m_game.MT_GetResponse( request ).result == game::backend::R_SUCCESS && !fixture.m_game.m_map,
+			"reset failed after transport cancellation completed" );
+		GT_ASSERT( !client->m_mt_ids.events && !space->IsAccumulating(), "transport drain retained its event ID or changed owner state" );
+		GT_OK();
+	}
+
 	static std::string CheckPolledReset( const int scenario, size_t& owner_destroyed ) {
 		class SizedNull final : public graphics::Null {
 		public:
@@ -2786,6 +3864,92 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "server Player retirement immediate-owner copy cleanup", GT() {
+		BackendFixture fixture; return fixture.CheckServerPlayerRetirement( false, false, false, false );
+	} );
+	for ( const bool native : { false, true } ) {
+		for ( const int mode : { 0, 1, 2 } ) {
+			task->AddTest( "server Player retirement native " + std::to_string( native ) + " mode " + std::to_string( mode ), GT( native, mode ) {
+				BackendFixture fixture; return fixture.CheckServerPlayerRetirement( native, mode == 2, mode == 1 );
+			} );
+		}
+	}
+
+	for ( const bool native : { false, true } ) {
+		for ( const bool detached : { false, true } ) {
+			task->AddTest( "terminal connection cleanup native " + std::to_string( native ) + " detached " + std::to_string( detached ), GT( native, detached ) {
+				BackendFixture fixture; return fixture.CheckTerminalConnectionRetirement( native, detached );
+			} );
+		}
+	}
+
+	for ( const bool native : { false, true } ) {
+		for ( const bool malformed : { false, true } ) {
+			task->AddTest( "faction replacement excludes collection native " + std::to_string( native ) + " malformed " + std::to_string( malformed ), GT( native, malformed ) {
+				BackendFixture fixture; return fixture.CheckFactionReplacement( native, malformed );
+			} );
+		}
+	}
+
+	for ( const int mode : { 1, 2 } ) {
+		task->AddTest( "map publication actual native file acquisition " + std::to_string( mode ), GT( mode ) {
+			const auto error = BackendFixture::CheckMapAcquisition( mode ); GT_ASSERT( error.empty(), "acquisition: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "map publication collects rejected final chunk between Ingress and Failure", GT() {
+		const auto error = BackendFixture::CheckMapAcquisition( 0 ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+	} );
+	for ( const bool prepare : { true, false } ) {
+		task->AddTest( std::string( "map publication excludes collection during " ) + ( prepare ? "old root transfer" : "candidate commit" ), GT( prepare ) {
+			BackendFixture fixture; const auto error = fixture.CheckMapPublication( prepare ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+		} );
+	}
+	for ( const int mode : { 0, 1, 2 } ) {
+		task->AddTest( "map publication discards failed candidate and restores old ownership " + std::to_string( mode ), GT( mode ) {
+			BackendFixture fixture; const auto error = fixture.CheckMapCandidateFailure( mode ); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "map publication collects a rooted failed map before its failure checkpoint", GT() {
+		BackendFixture fixture; const auto error = fixture.CheckEmptyMapCollection(); GT_ASSERT( error.empty(), "fixture: " + error ); GT_OK();
+	} );
+	task->AddTest( "native retirement drains real transport requests before collector exclusion", GT() {
+		const auto error = BackendFixture::CheckResetTransportDrain();
+		GT_ASSERT( error.empty(), "transport drain: " + error ); GT_OK();
+	} );
+	for ( const bool state_null : { false, true } ) {
+		task->AddTest( std::string( "native retirement Stop retains owning Space " ) + ( state_null ? "state null old map" : "bound world" ), GT( state_null ) {
+			BackendFixture fixture;
+			const auto error = fixture.CheckNativeStop( state_null );
+			GT_ASSERT( error.empty(), "Stop retirement: " + error ); GT_OK();
+		} );
+	}
+	for ( const bool partial : { false, true } ) {
+		task->AddTest( std::string( "native retirement releases presentation after collector exclusion " ) + ( partial ? "partial aliases" : "complete aliases" ), GT( partial ) {
+			BackendFixture fixture;
+			const auto error = fixture.CheckNativePresentationRetirement( partial );
+			GT_ASSERT( error.empty(), "presentation retirement: " + error ); GT_OK();
+		} );
+	}
+	for ( const bool collector_first : { true, false } ) {
+		for ( const bool old_map : { false, true } ) {
+			task->AddTest( std::string( "native retirement excludes actual collection " ) + ( collector_first ? "collector first " : "retirement first " ) + ( old_map ? "old map" : "MT reset" ), GT( collector_first, old_map ) {
+				BackendFixture fixture;
+				const auto error = fixture.CheckNativeRetirementOverlap( collector_first, old_map );
+				GT_ASSERT( error.empty(), "retirement: " + error ); GT_OK();
+			} );
+		}
+	}
+	task->AddTest( "native retirement guard preserves owner nesting and releases after arbitrary exceptions", GT() {
+		auto* space = gse->GetGCSpace();
+		bool native = false, nested = false, caught = false;
+		try { space->WithNativeMutation( [ & ]() { native = !space->IsAccumulating(); throw 93; } ); }
+		catch ( int error ) { caught = error == 93; }
+		space->Accumulate( gse, [ & ]() {
+			space->WithNativeMutation( [ & ]() { nested = space->IsAccumulating(); } );
+		} );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( native && nested && caught, "native guard changed accumulation identity, exception, or nested execution" ); GT_OK();
+	} );
 	task->AddTest( "test backend fixture retires map and tile wrappers under GC exclusion", GT() {
 		for ( const bool already_accumulating : { false, true } ) {
 			BackendFixture fixture;

@@ -25,6 +25,7 @@ namespace game {
 namespace backend {
 
 class State;
+class Game;
 
 namespace settings {
 class LocalSettings;
@@ -142,6 +143,10 @@ protected:
 
 private:
 	friend class gse::tests::BackendFixture;
+	friend class game::backend::Game;
+	// No concurrent connection iteration may create a new events request.
+	// Separate the transport wait from collector-visible handler retirement.
+	void DrainEventRequest();
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
 	struct {
 		common::mt_id_t connect = 0;

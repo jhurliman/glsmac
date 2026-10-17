@@ -475,6 +475,9 @@ private:
 	void InitializeConfigure( GSE_CALLABLE );
 	void PrepareInitializationBindings();
 	void AcquireInitializationMap();
+	void PrepareInitializationMap();
+	void PublishInitializationMap( map::Map*& candidate );
+	void DiscardInitializationMap( map::Map*& candidate );
 	void InitializeMap();
 	void StartInitializedWorld( GSE_CALLABLE );
 	bool DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes );
@@ -483,6 +486,11 @@ private:
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state );
 	void ResetGame();
 	void ClearUntransferredMapData();
+	struct DetachedMapPresentation;
+	void DetachMapPresentation( map::Map* map, response_map_data_t*& response, DetachedMapPresentation& detached );
+	void RetireMap( map::Map*& map, DetachedMapPresentation& detached );
+	void RetireOldMap();
+	void WithNativeRetirement( const std::function< void() >& f );
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
@@ -504,6 +512,9 @@ private:
 	bool IsSnapshotTurnFailurePending() const;
 	std::optional< size_t > ApplySnapshotTurn();
 	State* m_state = nullptr;
+	// Borrowed until Stop has invalidated every native wrapper, even when an
+	// initialization failure has cleared State and retained an old Map.
+	gc::Space* m_world_space = nullptr;
 
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed

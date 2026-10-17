@@ -124,16 +124,20 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
-			if ( m_connection ) {
-				m_connection->SetState( nullptr );
-				m_connection = nullptr;
-			}
-			for ( auto& player : m_players ) {
-				DELETE( player );
-			}
-			m_players.clear();
-			m_slots->Clear();
-			m_cid_slots.clear();
+			// Polling and callbacks above can queue work; only the native
+			// terminal ownership cleanup may share collection exclusion.
+			m_gc_space->WithNativeMutation( [ & ]() {
+				if ( m_connection ) {
+					m_connection->SetState( nullptr );
+					m_connection = nullptr;
+				}
+				for ( auto& player : m_players ) {
+					DELETE( player );
+				}
+				m_players.clear();
+				m_slots->Clear();
+				m_cid_slots.clear();
+			} );
 		}
 	}
 }
@@ -269,8 +273,13 @@ const types::Buffer State::Serialize() const {
 }
 
 void State::Deserialize( types::Buffer buf ) {
-	m_settings.global.Deserialize( buf.ReadString() );
-	m_fm->Deserialize( buf.ReadString() );
+	// Native packet dispatch can replace linked Factions while GC is active.
+	// Keep queueing, notifications and transport in the caller, outside this
+	// synchronous native-only mutation scope.
+	m_gc_space->WithNativeMutation( [ & ]() {
+		m_settings.global.Deserialize( buf.ReadString() );
+		m_fm->Deserialize( buf.ReadString() );
+	} );
 }
 
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

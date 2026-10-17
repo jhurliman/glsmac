@@ -1,18 +1,16 @@
 # C++ correctness checks
 
-Run analysis when preparing a C++ change for review. It is separate from the
-normal edit/build/test loop and does not require the original game assets.
-The `C++ correctness` pull-request workflow runs the same command as local use.
+Run analysis when preparing a C++ change for review. Use targeted production
+units and their known consumers for bounded gameplay changes. It is separate from
+the normal edit/build/test loop and does not require the original game assets.
+The `C++ correctness` pull-request workflow uses the branch selector below.
 
-Pull requests that change only Markdown skip the engine build, regression and
-thread lifecycle workflows. Any non-Markdown change still triggers those checks,
-including scripts, data, fixtures and workflow edits. Pushes to `main`/`stable`
-and manual runs keep their existing full coverage. The correctness and reference
-inventory workflows retain their own path filters. This avoids rebuilding the
-engine for evidence receipts while preserving checks for executable changes.
-If these workflows become required branch checks, use an always-reporting gate
-before enabling that protection; a workflow skipped by a path filter does not
-produce a successful check.
+The [CI coverage policy](ci-validation.md) keeps Linux regression coverage on
+code pull requests and selects full platform runs for explicit checkpoints, manual
+runs, releases and platform-sensitive changes. Ready status alone does not
+expand coverage. The correctness and reference inventory workflows retain
+their existing path filters; unlike the regression/lifecycle gates, these
+path-filtered workflows are not unconditional always-reporting branch checks.
 
 ## Local use
 
@@ -78,18 +76,38 @@ compilation databases and MSVC arguments are not part of this Linux CI check.
 ## Scope and diagnostics
 
 The runner analyzes complete changed production translation units under `src/`.
-Generated `src/tmp/` files and `src/gse/tests/` test fixtures are excluded. A
-header, CMake file, analysis configuration, runner, or analysis workflow change
-widens the run to all production translation units. Deleted headers also widen
-the scan. This avoids incomplete include-dependency guesses; source deletion
-alone needs no analysis. A changed source missing from the compilation database
-fails with a reconfiguration request.
+Generated `src/tmp/` files and `src/gse/tests/` test fixtures, including their
+headers, are excluded. Production header changes select actual consumers,
+including transitive and conditional includes, using the compiler commands in
+the compilation database with dependency-only preprocessing (`-M`). This does
+not compile objects or run correctness analysis on unrelated units. The pass
+also handles included source fragments. It runs only when those inputs change;
+source-only edits need no dependency pass.
+
+Fresh compiler dependency output is used instead of trusting potentially stale
+Ninja/Make depfiles after include changes. No separate dependency cache is built.
+Every production compile command must produce valid dependencies before analysis
+starts. Missing compilers/generated headers, unresolved deleted includes, invalid
+dependency output and timeouts fail with a diagnostic and no partial pass. Fix or
+reconfigure the build, use `--source` for explicitly reviewed consumers, or
+request `--all` for conservative full analysis. Removing a header and all of its
+includes needs no header-consumer analysis; changed production sources still run.
+
+Edits to existing `src/**/CMakeLists.txt` which only add/remove literal
+`${PWD}/file.cpp` source-list entries do not force full analysis. Newly registered
+production units are selected even if their source bytes did not change; test
+registrations select no production units. Root CMake, new/unrecognized CMake
+structure, build-semantic edits, analysis configuration/runner/workflow changes
+and explicit `--all` retain full scope. The log names full-scope reasons or narrow
+registration edits, and reports dependency preprocessing separately. A changed
+or newly registered production source missing from the compilation database
+fails with a reconfiguration request. Source deletion alone needs no analysis.
 
 Two known `.cpp` files are not independent Linux translation units.
 `src/network/impl/Windows.cpp` is explicitly excluded from this Linux check;
 relevant runs report it in the console and `summary.json` as skipped.
 `src/ui/dom/Object.colormap.cpp` is included by `Object.cpp`, so its changes
-trigger a full scan just like a header. These are exact paths; other sources
+select its compiler-observed consumers just like a header. These are exact paths; other sources
 missing from the database still fail instead of being silently skipped.
 
 Diagnostics from project headers remain enabled. This policy introduces no
@@ -120,7 +138,8 @@ trial, `bugprone-string-constructor` mostly identified an overridden member
 initializer, and `bugprone-undefined-memory-manipulation` flagged the existing
 numeric vector/color buffer copies. Those entire categories are omitted rather
 than accumulating local suppressions or requiring unrelated representation
-changes. The older broad `scan-build` artifact job remains separate.
+changes. The older broad `scan-build` artifact job runs separately on stable
+release pushes or explicit autobuild dispatch, not on each PR/main revision.
 Leak-only checks such as `clang-analyzer-cplusplus.NewDeleteLeaks` have not been
 validated and remain disabled; the manual GC ownership model needs particular
 care when evaluating those categories.

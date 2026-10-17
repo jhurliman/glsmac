@@ -435,10 +435,10 @@ public:
 	void EnableYieldFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			using namespace game::backend;
-			m_game.m_rm = new resource::ResourceManager( &m_game );
+			m_game.m_rm = new game::backend::resource::ResourceManager( &m_game );
 			m_game.m_tm = new map::tile::TileManager( &m_game );
 			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
-				m_game.m_rm->DefineResource( new resource::Resource( id, id, {} ) );
+				m_game.m_rm->DefineResource( new game::backend::resource::Resource( id, id, {} ) );
 			}
 			for ( const size_t slot : { 0, 2 } ) {
 				NEWV( player, Player, "Test player", Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );

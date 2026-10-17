@@ -12,6 +12,7 @@
 #include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "SmacProductionRules.h"
+#include "SmacTechnologyRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
@@ -209,6 +210,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}

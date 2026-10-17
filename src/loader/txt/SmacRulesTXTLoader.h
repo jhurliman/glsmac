@@ -4,6 +4,7 @@
 
 #include "game/backend/resource/SmacBaseSquareYield.h"
 #include "game/backend/settings/SmacProductionRules.h"
+#include "game/backend/settings/SmacTechnologyRules.h"
 
 namespace loader::txt {
 
@@ -20,6 +21,9 @@ public:
 	// Obsolete Free and the effect/AI suffix are not interpreted. No file I/O,
 	// technology resolution, port definition creation or buildability decision.
 	static game::backend::settings::SmacProductionRules ParseProductionRules( const std::string& source );
+	// Exactly 89 canonical positional TECHNOLOGY records, nine columns each.
+	// Four signed priorities retain their order; flags retain nine source bits.
+	static game::backend::settings::SmacTechnologyRules ParseTechnologyRules( const std::string& source );
 };
 
 }

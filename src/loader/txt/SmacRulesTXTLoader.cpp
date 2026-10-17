@@ -4,6 +4,7 @@
 #include "util/String.h"
 
 #include <array>
+#include <algorithm>
 #include <charconv>
 #include <stdexcept>
 
@@ -56,6 +57,29 @@ BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& sou
 		}
 	}
 	return BaseSquareRules( triples[ 0 ], triples[ 1 ], triples[ 2 ] );
+}
+
+game::backend::settings::SmacTechnologyRules SmacRulesTXTLoader::ParseTechnologyRules( const std::string& source ) {
+	const auto rows = TXTLoader::ReadUniqueSection( source, "TECHNOLOGY" );
+	game::backend::settings::SmacTechnologyRules result;
+	if ( rows.size() != result.technologies.size() ) { throw std::invalid_argument( "#TECHNOLOGY requires 89 SMAC rows" ); }
+	for ( size_t i = 0 ; i < rows.size() ; ++i ) {
+		const auto line = rows[ i ].substr( 0, rows[ i ].find( ';' ) );
+		const auto fields = util::String::Split( line, ',' );
+		if ( fields.size() != 9 || std::count( line.begin(), line.end(), ',' ) != 8 ) { throw std::invalid_argument( "#TECHNOLOGY requires nine columns" ); }
+		auto& row = result.technologies[ i ];
+		row.source_id = static_cast< int32_t >( i ); row.name = fields[ 0 ];
+		if ( fields[ 1 ].find( '\0' ) != std::string::npos ) { throw std::invalid_argument( "#TECHNOLOGY key contains NUL" ); }
+		row.key = fields[ 1 ].substr( 0, 7 );
+		for ( size_t field = 0 ; field < 4 ; ++field ) { row.priorities[ field ] = ParseField( fields[ field + 2 ], "row " + std::to_string( i ), field + 3, "TECHNOLOGY" ); }
+		row.prerequisites = { fields[ 6 ], fields[ 7 ] };
+		const auto& flags = fields[ 8 ];
+		if ( flags.size() != 9 || flags.find_first_not_of( "01" ) != std::string::npos ) { throw std::invalid_argument( "#TECHNOLOGY flags require nine binary digits" ); }
+		row.flags = 0;
+		for ( const char bit : flags ) { row.flags = static_cast< uint16_t >( row.flags * 2 + ( bit - '0' ) ); }
+	}
+	result.Validate();
+	return result;
 }
 
 game::backend::settings::SmacProductionRules SmacRulesTXTLoader::ParseProductionRules( const std::string& source ) {

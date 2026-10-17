@@ -14,6 +14,9 @@ void AddSmacFirstBaseTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC canonical upkeep late failure blocks retry and retires partial world",GT(){
         return CheckSmacFirstBaseFixture(10,false);
     });
+    task->AddTest("SMAC canonical upkeep groups owners before saved Base record order",GT(){
+        return CheckSmacFirstBaseFixture(11,false);
+    });
     task->AddTest("SMAC first Base rejected preparation leaves identity map and knowledge unchanged",GT(){
         return CheckSmacFirstBaseFixture(3,false);
     });

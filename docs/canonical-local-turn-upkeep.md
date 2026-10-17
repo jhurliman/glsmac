@@ -2,8 +2,10 @@
 
 The native local `complete_turn` request now binds the incoming turn number when
 queued. Dispatch admits only the actual local Single controller and the admitted
-Single/Player human roster, checks exact current+1, and processes Bases in saved
-record order. Duplicate queued requests cannot run the same upkeep twice. Direct
+Single/Player human roster, checks exact current+1, and processes factions in ascending accepted simulation-ID order, then Bases
+in saved record order within each owner. This faction controller order is an
+explicit GLSMAC local policy; the original receipt proves the per-faction traversal. Duplicate queued requests are ignored as stale and cannot run upkeep twice or
+discard the following valid worker command. Direct
 script `advance_turn` cannot bypass the native route when worker knowledge exists.
 
 The transition refreshes social state and seals pending startup Units, publishes
@@ -27,7 +29,8 @@ baseline, zero arid nutrient posting, and a configured productive tile's +3 food
 It continues through two queued end-turn requests, checking exactly one second
 posting across both human owners and unchanged RNG pairs. A later Base with an
 unsupported facility target tests committed-prefix failure, blocked save/retry and
-real failure cleanup. These are synthetic source/map compositions using the real
+real failure cleanup. A reversed cross-owner registration order verifies faction
+grouping before saved Base order. These are synthetic source/map compositions using the real
 native dispatcher and owned records. Runtime validation is pending the shared
 cached integration build; changed production and fixture TUs pass syntax checks.
 Default-world canonical activation is the immediate follow-up, not claimed here.

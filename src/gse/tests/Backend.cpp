@@ -3341,6 +3341,8 @@ public:
 				auto* base=Base::Unwrap(static_cast<value::Callable*>(wrapper->Get("spawn_starting_smac_base"))->Run(GSE_CALL,{slot->GetPlayer()->Wrap(GSE_CALL),tile->Wrap(GSE_CALL),input}));
 				created.push_back(base->m_id);initial_minerals.emplace(base->m_id,base->GetProductionState()->minerals);return base;
 			};
+			Base* remote_first=nullptr;
+			if(scenario==11) {remote_first=spawn(&m_state->m_slots->GetSlot(2),map->GetTile(0,4));}
 			auto* base=spawn(owner,center);const auto allocation=*base->GetSmacAllocation();
 			if(scenario==1) {require(base->m_pops.at(1).GetWorkedTile()==map->GetTile(6,4) && allocation.specialists.total_count==0,"productive first Base used fixed Doctor allocation");}
 			else {require(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1,"arid first-worker literal changed");}
@@ -3359,7 +3361,7 @@ public:
 					new CvrScoutRender(2,0,100,100,{1.0f,1.0f},{128.0f,128.0f},CvrScoutRender::Composition::InitializedScout)));
 				auto* scout=um->SpawnStartingConventionalUnit(GSE_CALL,um->GetUnitDef("FIRST_SCOUT"),owner,center,SmacMoraleMode::Mode0);
 				require(scout->IsConventionalPending() && scout->GetTile()==center && map->GetSmacWorkerKnowledge()->CopyData().units.size()==1,"post-Base raw Scout lost staged sight or Early lifecycle");
-				auto* remote=spawn(&m_state->m_slots->GetSlot(2),map->GetTile(0,4));
+				auto* remote=remote_first?remote_first:spawn(&m_state->m_slots->GetSlot(2),map->GetTile(0,4));
 				require(remote->GetProductionState()->current_item.smac_source_id==2 && remote->GetProductionState()->minerals==4 && remote->m_facilities.size()==2,"second accepted human owner lost initial target or faction grant");
 			}
 			const auto saved=map->GetSmacWorkerKnowledge()->Serialize();const auto id=Base::GetNextId();bool rejected=false;
@@ -3388,10 +3390,12 @@ public:
 			}
 			const auto pair=m_game.m_simulation->value.gameplay_random;
 			const auto jsf=m_game.GetRandom()->GetStateString();
-			if (scenario==10) {
+			if (scenario==10 || scenario==11) {
 				// The first Base can commit before a later supported transition is
 				// found unavailable. This must retire the world, never permit repost.
-				auto* last=m_game.GetBM()->GetBase(created.back());
+				const auto failed_id=scenario==11?created.front():created.back();
+				const auto first_id=scenario==11?created.back():created.front();
+				auto* last=m_game.GetBM()->GetBase(failed_id);
 				auto invalid=*last->GetProductionState();
 				invalid.current_item=m_game.MakeSmacProductionItem(last->m_owner,ProductionItemKind::Facility,1);
 				m_game.WithRW([&]{last->SetProductionState(GSE_CALL,invalid);});
@@ -3400,7 +3404,7 @@ public:
 				bool failed=false; try {m_game.ProcessEvents();} catch(const std::exception&) {failed=true;}
 				GT_ASSERT(failed && m_game.m_canonical_turn_failed && m_game.HasInitializationFailure()
 					&& m_game.GetTurnId()==2,"late upkeep failure did not terminally stop the incoming turn");
-				GT_ASSERT(m_game.GetBM()->GetBase(created.front())->GetProductionState()->minerals==initial_minerals.at(created.front())+2
+				GT_ASSERT(m_game.GetBM()->GetBase(first_id)->GetProductionState()->minerals==initial_minerals.at(first_id)+2
 					&& Base::Serialize(last).ToString()==before,"late failure lost the committed prefix or changed failed Base");
 				bool save=false,retry=false;try{m_game.SerializeWorldSnapshot();}catch(const std::exception&){save=true;}
 				try{m_game.Event(GSE_CALL,"complete_turn",{});}catch(const std::exception&){retry=true;}
@@ -3412,8 +3416,11 @@ public:
 			// Enqueue the real frontend request twice while still at turn one.
 			// The duplicate carries the same stamped turn and cannot post twice.
 			m_game.Event(GSE_CALL,"complete_turn",{});m_game.Event(GSE_CALL,"complete_turn",{});
-			bool duplicate=false;try{m_game.ProcessEvents();}catch(const std::exception&){duplicate=true;}
-			GT_ASSERT(duplicate && m_game.GetTurnId()==2 && !m_game.m_canonical_turn_failed,"duplicate completion reposted or poisoned successful turn");
+			auto* local_base=m_game.GetBM()->GetBase(created.front());
+			m_game.Event(GSE_CALL,"work_base_tile",{{"base",local_base->Wrap(GSE_CALL)},{"tile",local_base->GetTile()->Wrap(GSE_CALL)}});
+			bool threw=false;try{m_game.ProcessEvents();}catch(const std::exception&){threw=true;}
+			GT_ASSERT(!threw && m_game.GetTurnId()==2 && !m_game.m_canonical_turn_failed,"duplicate completion threw, reposted or poisoned successful turn");
+			GT_ASSERT(!local_base->GetSmacResourceContext().ManageCitizens(),"stale completion discarded the following real worker command");
 			for(const auto id:created) {
 				const auto* base=m_game.GetBM()->GetBase(id);
 				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+2

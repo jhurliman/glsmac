@@ -63,6 +63,10 @@ bool Game::HandleCanonicalStartupTurnEvent(GSE_CALLABLE,const std::string& name,
 	}
 	const auto next=static_cast<gse::value::Int*>(turn->second)->value;
 	if (next>INT32_MAX) { throw std::runtime_error("Canonical turn exceeds the supported signed domain"); }
+	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { throw std::runtime_error("Canonical turn is failed or already in progress"); }
+	// A genuine local click stamped in an earlier turn is harmless stale
+	// input. Do not abort the batch or discard later valid commands.
+	if (name=="complete_turn" && static_cast<size_t>(next)<=m_current_turn.GetId()) { return true; }
 	RequireCanonicalTurn(static_cast<size_t>(next));
 	if (apply) { CheckRW(GSE_CALL); AdvanceCanonicalTurn(GSE_CALL,static_cast<size_t>(next)); }
 	return true;
@@ -87,12 +91,24 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	}
 	if (roles.worker.empty()) { throw std::runtime_error("Canonical upkeep lacks its worker role"); }
 	for (const auto& role:roles.specialists) { if(role.empty()) { throw std::runtime_error("Canonical upkeep lacks a specialist role"); } }
-	const auto order=m_bm->GetBaseRecordOrder();
-	for (const auto id:order) {
+	const auto records=m_bm->GetBaseRecordOrder();
+	for (const auto id:records) {
 		const auto* base=m_bm->GetBase(id);
 		if (!base || !base->HasSmacResourceContext()) { throw std::runtime_error("Canonical campaign contains a legacy or missing Base"); }
 		RequireSmacLocalHumanOwner(base->m_owner);
 	}
+	// The original upkeep traverses one faction's live records at a time.
+	// Ascending accepted simulation IDs are the explicit local human campaign
+	// controller policy; saved record order remains authoritative within it.
+	std::map<int32_t,const slot::Slot*> owners;
+	for (const auto& participant:m_simulation->value.roster) {
+		owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));
+	}
+	std::vector<size_t> order; order.reserve(records.size());
+	for (const auto& owner:owners) {
+		for (const auto id:records) { if (m_bm->GetBase(id)->m_owner==owner.second) {order.push_back(id);} }
+	}
+	if (order.size()!=records.size()) { throw std::runtime_error("Canonical upkeep Base owner is outside the admitted roster"); }
 	m_canonical_turn_in_progress=true;
 	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
 	try {

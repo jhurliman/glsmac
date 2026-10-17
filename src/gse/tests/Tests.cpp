@@ -27,6 +27,7 @@
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
 #include "SmacSimulationState.h"
+#include "SmacStartupDesignState.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
 #include "CvrBasisConverter.h"
@@ -229,6 +230,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
 		tests::AddSmacSimulationStateTests( task );
+		tests::AddSmacStartupDesignStateTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );

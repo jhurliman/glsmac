@@ -30,6 +30,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp
 	${PWD}/SmacSimulationState.cpp
+	${PWD}/SmacStartupDesignState.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/CvrBasisConverter.cpp

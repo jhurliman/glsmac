@@ -322,7 +322,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
-	task->AddTest( "SMAC startup governor marker changes only on an accepted different production event", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "SMAC startup governor marker preserves same-item and unmarked production events", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game=fixture.Game(); auto* base=Populate(GSE_CALL,fixture,false); SelectionPresentations(fixture);
@@ -330,8 +330,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
 			const ProductionState original{scout,0,scout,0,std::vector<ProductionItem>{scout}};
 			const auto allocation=*base->GetSmacAllocation();const auto pair=fixture.GameplayRandom();
-			// Exact eight original prelude configurations. The port event commits
-			// the accepted item and marker together; modal cancellation is separate.
+			// Eight original prelude configurations, independent of the loss prompt.
+			// Same-item and unmarked activation remain unchanged.
 			for(uint32_t flags:{0xc0dfbe41u,0x00dfbe41u,0x80dfbe41u,0x40dfbe41u}) {
 				for(bool change:{false,true}) {
 					base->SetProductionState(GSE_CALL,original);
@@ -363,6 +363,83 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			} GT_OK();
 		});
 	});
+	task->AddTest( "SMAC production picker clears marked governor before loss decline", []( GSE*, context::Context* ) -> std::string {
+		// RE-SMAC-GOVERNOR-MARKER-CANCEL-001: six literal original compositions.
+		// Marked Talent/Librarian are controlled retained-marker states, not startup defaults.
+		struct Case { const char* difficulty; uint32_t flags; int32_t minerals; bool prompt; uint32_t after; };
+		const Case cases[]{
+			{ "Citizen", 0xc0dfbe41u, 7, false, 0x00dfbe41u },
+			{ "Specialist", 0x00dfbe41u, 7, false, 0x00dfbe41u },
+			{ "Talent", 0xc0dfbe41u, 30, true, 0x00dfbe41u },
+			{ "Librarian", 0xc0dfbe41u, 30, true, 0x00dfbe41u },
+			{ "Talent", 0x80dfbe41u, 30, true, 0x80dfbe41u },
+			{ "Talent", 0x00dfbe41u, 30, true, 0x00dfbe41u },
+		};
+		for ( const auto& row : cases ) {
+			size_t refreshes = 0;
+			std::string saved;
+			std::optional< ProductionState > saved_production;
+			std::optional< SmacBaseResourceContext > saved_context;
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); SelectionPresentations( fixture );
+				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
+				base->m_owner->GetPlayer()->SetDifficultyLevel( row.difficulty );
+				const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+				const ProductionState original{ scout, row.minerals, scout, 30, std::vector< ProductionItem >{ scout } };
+				base->SetProductionState( GSE_CALL, original );
+				auto context = base->GetSmacResourceContext(); context.governor_options = row.flags;
+				base->SetSmacResourceContext( GSE_CALL, context );
+				game->GetBM()->TriggerUpdates( GSE_CALL ); fixture.Updates();
+				const auto listener = game->On( GSE_CALL, "update_base", NATIVE_CALL( &refreshes ) { ++refreshes; return VALUE( value::Undefined ); } ) );
+				const auto allocation = *base->GetSmacAllocation(); const auto pair = fixture.GameplayRandom();
+				const auto global = game->GetState()->m_settings.global.Serialize().ToString();
+				const auto before = fixture.Snapshot();
+				game->Event( GSE_CALL, "select_smac_production", { { "base", base->Wrap( GSE_CALL ) },
+					{ "source_id", VALUE( value::Int,, 1 ) }, { "expected_state", VALUE( value::String,, "retired selection" ) },
+					{ "expected_minerals", VALUE( value::Int,, row.prompt ? 20 : 30 ) }, { "confirm", VALUE( value::Bool,, false ) } } );
+				fixture.DrainEvents();
+				GT_ASSERT( fixture.Snapshot() == before, "stale prelude cleared marked governor state" );
+				auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_production_selection" ) );
+				auto* picker = static_cast< value::Callable* >( setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ) } ) );
+				const auto click = [ & ]( const char* action ) { return static_cast< value::Bool* >( picker->Run( GSE_CALL,
+					{ VALUE( value::Int,, 1 ), VALUE( value::String,, action ) } ) )->value; };
+				GT_ASSERT( click( "open" ) && fixture.Snapshot() == before, "read-only picker changed governor or production" );
+				GT_ASSERT( click( "ok" ) == row.prompt && fixture.Snapshot() == before, "picker applied before dispatch or used wrong loss gate" );
+				fixture.DrainEvents();
+				context.governor_options = row.after;
+				GT_ASSERT( base->GetSmacResourceContext() == context, "admitted pre-confirmation did not preserve exact governor permissions" );
+				if ( row.prompt ) {
+					GT_ASSERT( *base->GetProductionState() == original, "pre-confirmation posted production loss" );
+					game->GetBM()->TriggerUpdates( GSE_CALL );
+					GT_ASSERT( refreshes == 0 && fixture.Updates().empty(), "governor-only prelude refreshed and closed the confirmation" );
+					GT_ASSERT( !click( "cancel" ), "declined loss left the picker open" );
+					fixture.DrainEvents();
+					GT_ASSERT( *base->GetProductionState() == original && base->GetSmacResourceContext() == context,
+						"declining loss restored marked governor or changed production/baseline/queue" );
+				} else {
+					GT_ASSERT( base->GetProductionState()->current_item.smac_source_id == 1 && base->GetProductionState()->minerals == 30
+						&& base->GetProductionState()->baseline_item == scout && base->GetProductionState()->baseline_minerals == 30
+						&& base->GetProductionState()->queue == original.queue, "easy no-prompt switch did not restore full baseline" );
+				}
+				GT_ASSERT( base->GetSmacAllocation() == allocation && fixture.GameplayRandom() == pair
+					&& game->GetState()->m_settings.global.Serialize().ToString() == global, "Base override changed allocation, RNG or frozen founding defaults" );
+				saved_production = base->GetProductionState(); saved_context = context; saved = fixture.Snapshot();
+				game->GetBM()->TriggerUpdates( GSE_CALL );
+				game->Off( GSE_CALL, "update_base", listener ); GT_OK();
+			} ); GT_ASSERT( error.empty(), "governor loss composition: " + error );
+			// A real body restore begins with a fresh destination Map. Its terrain
+			// construction must not mutate the source's already-bound knowledge.
+			ConventionalUnitFixture restored; restored.ConfigureProduction( SelectionSource, "GAIANS" );
+			const auto restore_error = restored.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = restored.Game();
+				game->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->SetDifficultyLevel( row.difficulty );
+				restored.Restore( GSE_CALL, saved, true ); const auto* base = game->GetBM()->GetBase( 701 );
+				GT_ASSERT( base && base->GetSmacResourceContext() == *saved_context && base->GetProductionState() == saved_production,
+					"world restore lost pre-confirmation governor state or changed production" ); GT_OK();
+			} ); GT_ASSERT( restore_error.empty(), "governor loss restore: " + restore_error );
+		} GT_OK();
+	} );
 	task->AddTest( "SMAC active governor uses saved management and current phase in live allocation", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"GAIANS");
 		return fixture.Run([&](GSE_CALLABLE)->std::string {

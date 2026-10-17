@@ -379,16 +379,23 @@ return {
 		if (this.production_selection != null) {
 			if (!#is_defined(this.production_choice)) { return; }
 			const choice = this.production_choice;
+			// GSE object literals bind this to the new object. Capture the screen
+			// values before either authenticated production event is constructed.
+			const base = this.base;
+			const expected_state = this.production_data.expected_state;
 			if (choice.confirmation && !this.production_confirming) {
+				// The changed-item prelude clears marked governor activation before
+				// the loss decision. A later Cancel keeps production, not those bits.
+				this.p.game.event('select_smac_production', {
+					base: base, source_id: choice.source_id,
+					expected_state: expected_state, confirm: false,
+					expected_minerals: choice.minerals,
+				});
 				this.production_confirming = true;
 				this.production_prompt.text = 'Retooling: ' + #to_string(this.production_data.minerals)
 					+ ' → ' + #to_string(choice.minerals) + ' minerals. OK to confirm; Cancel keeps production.';
 				return;
 			}
-			// GSE object literals bind this to the new object, so retain screen
-			// values before constructing the event payload.
-			const base = this.base;
-			const expected_state = this.production_data.expected_state;
 			const confirm = this.production_confirming;
 			this.p.game.event('select_smac_production', {
 				base: base, source_id: choice.source_id,

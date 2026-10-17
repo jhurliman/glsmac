@@ -2235,17 +2235,21 @@ public:
 		game::frontend::tile::Tile tile(actor->GetTile()->coord);
 		::ui::UI* ui=nullptr;value::Callable* check=nullptr;
 		std::unique_ptr<game::frontend::Game> frontend;
+		std::unique_ptr<game::frontend::tile::TileManager> tiles;
 		std::unique_ptr<game::frontend::unit::UnitDef> definition;
 		std::unique_ptr<game::frontend::unit::UnitManager> controller;
 		util::FinallyGuard cleanup([&]{
-			controller.reset();definition.reset();
-			if(frontend){frontend->m_is_initialized=false;frontend->m_um=nullptr;frontend->m_ism=nullptr;frontend->m_game=nullptr;frontend.reset();}
+			controller.reset();definition.reset();tiles.reset();
+			if(frontend){frontend->m_is_initialized=false;frontend->m_tm=nullptr;frontend->m_um=nullptr;frontend->m_ism=nullptr;frontend->m_game=nullptr;frontend.reset();}
 			WithScriptValues([&](GSE_CALLABLE)->std::string{if(check){m_gse->RemoveRootObject(check);}if(ui){ui->GetRoot()->Container::Destroy(GSE_CALL);}GT_OK();});
 		});
 		const auto setup=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
 			ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
 			frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
 			frontend->m_game=&m_game;frontend->m_ism=&sprites;
+			// RenderTile also queries map focus during a real Unit refresh.
+			// Leave focus unset so this test isolates selected-Unit notification.
+			tiles=std::make_unique<game::frontend::tile::TileManager>(frontend.get());frontend->m_tm=tiles.get();
 			controller=std::make_unique<game::frontend::unit::UnitManager>(frontend.get());frontend->m_um=controller.get();
 			controller->DefineSlotBadges(0,&faction);
 			definition=std::make_unique<game::frontend::unit::UnitDef>(&sprites,actor->m_def);

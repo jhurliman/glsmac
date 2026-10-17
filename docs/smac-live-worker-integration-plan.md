@@ -4,16 +4,34 @@ The checked values at `dacac744` now have native Base publication and an
 [explicit live worker knowledge adapter](smac-live-worker-knowledge.md). They
 support a real Base query and allocation that survive world restoration using
 actual population, owners and terrain. This remains a controlled native
-integration surface; generated-world startup still needs sight and territory
-producers. Combined validation is recorded separately from component receipts.
+integration surface; generated-world startup still needs canonical knowledge
+publication and the complete Base economy. Combined validation is recorded
+separately from component receipts.
 
 The [live recalculation caller](smac-live-worker-recalculation.md) now composes
 these values with actual Base resource queries, specialist eligibility, saved
 production category and [owned orbital assets](smac-owned-satellite-state.md).
-It commits through the complete allocation transaction. Combined source at
-`50d43f9f` passes 16 affected tracked native groups, including actual restore
-and the complete Base screen. Manual click commands and homed-unit support
-are the next live integrations; no default campaign is activated by this caller.
+It commits through the complete allocation transaction. Manual click commands
+use the native local dispatcher, actual homed-unit support and frozen worker
+priorities. The handler privately runs the preliminary allocation, applies the
+click, recalculates, then publishes allocation and citizen-management state
+together. The Base resource callback now includes actual owned orbital intake.
+
+The combined worker, territory core, sight, support and Base-intake batch passes
+88 affected native groups across its initial run and a targeted rerun of the
+World-header fixture after correcting its stale expected version from 23 to 24.
+All engine behavior cases passed on the initial run. The subsequent source
+at `f5a190e6` passes ten conventional-startup groups, including two actual default
+script cases: Gaia receives a Scout, Sparta receives its selected Rover, each
+moves from HQ, advances to turn two and restores exact Unit state. This enables
+conventional startup for local SMAC; placement and camera policy remain
+provisional and the default Base economy remains legacy. It does not establish
+complete campaign or graphics parity.
+
+Validation used the cached Linux build and affected tests, reusing component
+sanitizer and correctness-analysis receipts. The additional orbital Base wrapper
+passed its one-TU correctness check. No full platform matrix or full suite was
+run for this gameplay batch.
 
 ## Base authority and publication
 
@@ -70,12 +88,14 @@ pre-event energy intermediate is not an intake contribution. Keep the original
 per-selector cap-loss lifecycle outside the whole-tile callback contract until
 its actual consumer is implemented.
 
-Support, prepared orbital intake, production category and priorities also need
-authenticated inputs. Current conventional Units explicitly retain home=None;
-that supports their unhomed case, not a universal zero-support rule. Ordered
-unit-support recalculation is now an independent checked arithmetic slice in
-[draft PR #166](https://github.com/jhurliman/glsmac/pull/166). Its live home and
-ordered-unit bindings still need implementation. Current
+Support, prepared orbital intake, production category and priorities now have
+owned inputs for the admitted local human path. Conventional Units retain
+home=None or an authenticated same-owner Base ID; restore waits for Base
+registration before sealing homed units. Live worker recalculation and manual
+replacement use actual aggregate mineral support. The ordinary combat-design
+aggregate is independent of unit ordering; broader per-unit support flags and
+convoys remain separate work. [Draft PR #166](https://github.com/jhurliman/glsmac/pull/166)
+contains the detached ordered support calculation. Current
 resource queries require refreshed social state, so the first live preview must
 not be presented as the original early founding calculation.
 
@@ -88,13 +108,23 @@ and a second-base conquest loop remain later functional gates.
 
 ## Reverse-engineering queue and review
 
-Original receipts now cover ordinary land sight, retained native visibility,
-land territory rebuilding and contested foreign borders. Ordinary exploration
-is implemented; its live callers and the territory producer remain pending.
-The next requested map contract is the bounded sea/coast territory comparison.
-The user's separate base-yield investigation takes priority when
-directed in that thread. Reuse existing startup and transition receipts rather
-than repeating allocator research.
+Original receipts now cover ordinary land sight, retained native and foreign
+visibility, land territory rebuilding and the sea/coast comparison. Territory
+rules now reproduce fourteen complete captured claim maps, including later-Base
+tie winners and foreign-land vetoes of sea claims. Live topology, saved Base
+order and founding/removal publication are being connected separately. Live
+movement and ready-factory creation now stage ordinary sight and remembered
+terrain; moving units clear their positive visibility while stationary units
+retain it. Restoration does not replay these effects. Original zone-of-control
+receipts and a focused implementation are ready for the next integration batch.
+
+The next Base consumer is actual nutrient/mineral calculation, followed by
+production and population in the measured upkeep order. Original full-loop
+receipts now cover ordinary Scout/Former production, newborn movement and the
+following upkeep. Colony production and Former command admission still need
+their remaining observations. The user's separate base-yield investigation
+takes priority when directed in that thread. Reuse existing startup and
+transition receipts rather than repeating allocator research.
 
 Keep each implementation slice in a focused PR. Drafts #159–#165 cover scoring,
 collection, specialist bookkeeping, availability, complete allocation and the

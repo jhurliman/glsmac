@@ -44,6 +44,7 @@
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
+#include "SmacSpecialistAllocation.h"
 #include "SmacWorkedSquareCollection.h"
 #include "SmacUnitSupport.h"
 #include "SmacMineralCostFactor.h"
@@ -251,6 +252,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacWorkerAllocationTests( task );
+		tests::AddSmacSpecialistAllocationTests( task );
 		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacUnitSupportTests( task );
 	}

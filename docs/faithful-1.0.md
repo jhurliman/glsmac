@@ -420,6 +420,14 @@ extreme social/resource inputs or a complete base economy.
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
 
+The [complete detached allocator checkpoint](validation/automatic-worker-2026-10-17.md)
+at `df61f015` passes all eight tests on Windows, Linux Debug, Linux sanitizers and
+native macOS, with the same 144 affected allocation-tracked groups on Windows and
+both Linux builds. The full 350-unit correctness scan has zero failures. The
+allocator matches 51 complete original returns; availability matches 736 masks.
+Saved worker knowledge, lossless Base allocation state and atomic live publication
+are the next dependencies. This does not activate a default canonical campaign.
+
 The [live-intake and worker-stage checkpoint](validation/worker-intake-2026-10-17.md)
 at `ce47b2b1` passes all eight tests on Windows, Linux sanitizer and native macOS,
 with the same 111 affected allocation-tracked groups on Windows and Linux and

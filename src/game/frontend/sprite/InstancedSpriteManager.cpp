@@ -1,6 +1,10 @@
 #include "InstancedSpriteManager.h"
 
 #include "InstancedSprite.h"
+#include "ScoutSpriteCache.h"
+#include "game/backend/unit/CvrScoutRender.h"
+#include "engine/Engine.h"
+#include <memory>
 #include "scene/Scene.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
@@ -27,6 +31,28 @@ InstancedSpriteManager::~InstancedSpriteManager() {
 	for ( const auto& it : m_repainted_textures ) {
 		DELETE( it.second );
 	}
+}
+
+InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor ) {
+	const auto key = "Scout:" + std::to_string( name.size() ) + ":" + name + ":" + descriptor.PlacementKey();
+	const auto existing = m_instanced_sprites.find( key );
+	if ( existing != m_instanced_sprites.end() ) { return &existing->second; }
+	if ( !m_scout_cache ) { m_scout_cache = std::make_unique< ScoutSpriteCache >(); }
+	auto texture = m_scout_cache->Get( *g_engine->GetResourceManager(), descriptor );
+	const auto delete_sprite = []( scene::actor::Sprite* value ) { DELETE( value ); };
+	const auto delete_actor = []( scene::actor::Instanced* value ) { DELETE( value ); };
+	NEWV( sprite, scene::actor::Sprite, name, descriptor.size, texture.get(), { { 0, 0 }, { 1, 1 } }, descriptor.Offset() );
+	std::unique_ptr< scene::actor::Sprite, decltype( delete_sprite ) > sprite_owner( sprite, delete_sprite );
+	NEWV( actor, scene::actor::Instanced, sprite );
+	sprite_owner.release();
+	std::unique_ptr< scene::actor::Instanced, decltype( delete_actor ) > actor_owner( actor, delete_actor );
+	actor->SetZIndex( s_zlevel_map.at( ZL_UNITS ) );
+	// Publish the owned value before scene registration; roll back both on failure.
+	auto inserted = m_instanced_sprites.emplace( key, InstancedSprite{ key, name, { 0, 0 }, { 256, 256 }, { 128, 128 }, actor, texture } ).first;
+	try { m_scene->AddActor( actor ); }
+	catch ( ... ) { m_scene->RemoveActor( actor ); m_instanced_sprites.erase( inserted ); throw; }
+	actor_owner.release();
+	return &inserted->second;
 }
 
 InstancedSprite* InstancedSpriteManager::GetInstancedSprite(

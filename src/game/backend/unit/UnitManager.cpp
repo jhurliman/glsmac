@@ -11,6 +11,7 @@
 #include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/SpriteRender.h"
+#include "game/backend/unit/CvrScoutRender.h"
 #include "game/backend/Player.h"
 
 #include "gse/context/Context.h"
@@ -449,6 +450,31 @@ WRAPIMPL_BEGIN( UnitManager )
 
 						DefineUnit( def );
 
+						return VALUE( gse::value::Undefined );
+					}
+					else if ( render_type == "cvr_scout" ) {
+						N_GETPROP( facing, render_def, "facing", Int );
+						N_GETPROP( zoom, render_def, "zoom", Int );
+						N_GETPROP( numerator, render_def, "scale_numerator", Int );
+						N_GETPROP( denominator, render_def, "scale_denominator", Int );
+						N_GETPROP( width, render_def, "world_width", Float );
+						N_GETPROP( height, render_def, "world_height", Float );
+						N_GETPROP( center_x, render_def, "center_x", Float );
+						N_GETPROP( center_y, render_def, "center_y", Float );
+						for ( const auto value : { facing, zoom, numerator, denominator } ) {
+							if ( value < INT32_MIN || value > INT32_MAX ) { GSE_ERROR( gse::EC.INVALID_CALL, "Scout view integer out of range" ); }
+						}
+						const auto* moraleset = GetMoraleSet( morale );
+						if ( !moraleset ) { GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined" ); }
+						std::unique_ptr< unit::CvrScoutRender > render;
+						try {
+							render = std::make_unique< unit::CvrScoutRender >( static_cast< int32_t >( facing ), static_cast< int32_t >( zoom ),
+								static_cast< int32_t >( numerator ), static_cast< int32_t >( denominator ), types::Vec2< float >{ width, height }, types::Vec2< float >{ center_x, center_y } );
+						}
+						catch ( const std::invalid_argument& error ) { GSE_ERROR( gse::EC.INVALID_CALL, error.what() ); }
+						auto* def = new unit::StaticDef( id, moraleset, name, movement_type, movement_per_turn, render.get() );
+						render.release();
+						DefineUnit( def );
 						return VALUE( gse::value::Undefined );
 					}
 					else {

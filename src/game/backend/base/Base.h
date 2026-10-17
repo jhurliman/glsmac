@@ -120,6 +120,7 @@ public:
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+	friend class backend::Game;
 	// Only complete native record decoding can request snapshot construction.
 	// A running/initializing phase or script callback is not restore authority.
 	enum class ConstructionKind { Live, Snapshot };
@@ -140,7 +141,7 @@ private:
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	std::optional< SmacBaseAllocationState > m_allocation;
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation ) const;
-	void ValidateAllocationProjection( bool registered ) const;
+	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
 	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context ) const;
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );

@@ -57,6 +57,8 @@ inline game::backend::settings::SmacProductionRules Production() {
 
 inline game::backend::settings::SmacMovementRules Movement() { return game::backend::settings::SmacMovementRules( -1 ); }
 
+inline game::backend::settings::SmacTerritoryRules Territory() { return game::backend::settings::SmacTerritoryRules(8); }
+
 inline game::backend::settings::SmacSpecialistRules Specialists() {
 	game::backend::settings::SmacSpecialistRules result{ -3, {} };
 	for ( size_t i = 0; i < result.specialists.size(); ++i ) {
@@ -93,7 +95,7 @@ inline std::string ProductionSource() {
 	std::string source = "#RULES\n";
 	for ( size_t row = 1 ; row <= 70 ; ++row ) {
 		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
-			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : 0;
+			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : row == 48 ? Territory().RawBorderDistance() : 0;
 		const auto token = row == 54 ? "Tech0" : row == 55 ? "Tech1" : row == 56 ? "Tech2" : row == 58 ? "Tech3" : "";
 		source += ( *token ? std::string( token ) : std::to_string( value ) ) + ", ; synthetic annotation\n";
 	}
@@ -233,7 +235,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& specialists = std::nullopt,
 	const std::optional< bool > specialists_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 12 );
+	result.WriteInt( 13 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -261,6 +263,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	if ( has_movement ) { result.WriteString( movement ? *movement : Movement().Serialize().ToString() ); }
 	const auto has_specialists = specialists_present.value_or( present ); result.WriteBool( has_specialists );
 	if ( has_specialists ) { result.WriteString( specialists ? *specialists : Specialists().Serialize().ToString() ); }
+	result.WriteBool(present); if(present) { result.WriteString(Territory().Serialize().ToString()); }
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;
 	result.WriteString( map.Serialize().ToString() );

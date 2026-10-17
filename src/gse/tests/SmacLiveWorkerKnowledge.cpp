@@ -351,7 +351,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				[ & ] { Spawn( GSE_CALL, game, Unit::GetNextId(), 0, 1, 7, 5 ); },
 				[ & ] { um->DespawnUnit( GSE_CALL, world.local_unit->m_id ); },
 				[ & ] { um->SpawnUnit( GSE_CALL, world.local_unit ); },
-				[ & ] { bm->DespawnBase( GSE_CALL, world.local->m_id ); },
+				[ & ] { bm->DespawnBase( GSE_CALL, 999999 ); },
 				[ & ] { bm->SpawnBase( GSE_CALL, world.local ); },
 				[ & ] { std::unique_ptr< Base > rejected( new Base( game, Base::GetNextId(), world.local->m_owner, world.local->m_faction, target, "Rejected", {}, {} ) ); },
 				[ & ] { target->Clear(); }, [ & ] { target->Deserialize( target->Serialize() ); },
@@ -361,11 +361,11 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				[ & ] { game->AdvanceTurn( 2 ); },
 				[ & ] { auto tiles = game->GetMap()->GetTilesPtr()->Serialize(); (void)game->GetMap()->LoadFromBuffer( tiles ); },
 				[ & ] { Call( GSE_CALL, static_cast< value::Object* >( um->Wrap( GSE_CALL ) ), "despawn_unit", { world.local_unit->Wrap( GSE_CALL ) } ); },
-				[ & ] { Call( GSE_CALL, static_cast< value::Object* >( bm->Wrap( GSE_CALL ) ), "despawn_base", { world.local->Wrap( GSE_CALL ) } ); }
+				[ & ] { Call( GSE_CALL, static_cast< value::Object* >( bm->Wrap( GSE_CALL ) ), "despawn_base", { VALUE(value::Int,,999999) } ); }
 			};
 			for ( size_t index=0; index<mutations.size(); ++index ) {
 				const auto& mutation=mutations[index];
-				GT_ASSERT( ( ( index==1 || index==2 || index==4 ) ? Rejects(mutation) : KnowledgeFence(mutation) ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
+				GT_ASSERT( ( ( index==1 || index==2 || index==4 || index==7 || index==8 || index==9 || index==20 ) ? Rejects(mutation) : KnowledgeFence(mutation) ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
 					"guarded mutation changed IDs/membership/queues/terrain/turn/RNG or ran callback" );
 			}
 			GT_OK();

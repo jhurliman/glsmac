@@ -11,6 +11,7 @@
 #include "State.h"
 #include "WorldSnapshotRules.h"
 #include "WorldSnapshotWorkerKnowledge.h"
+#include "WorldSnapshotTerritory.h"
 #include "WorldSnapshotRandom.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
@@ -2621,7 +2622,9 @@ std::string Game::SerializeWorldSnapshot() const {
 	if ( m_map->m_worker_knowledge ) {
 		if ( !m_map->m_worker_knowledge_ready ) { THROW( "Worker knowledge restore is incomplete" ); }
 		ValidateSmacWorkerKnowledge( *m_map->m_worker_knowledge );
+		if (!m_map->m_territory_topology) { THROW("Worker knowledge lacks saved territory topology"); }
 	}
+	if (m_map->m_territory_topology) { m_map->m_territory_topology->ValidateTerrain(m_map->TerritorySea()); }
 	MTModule::Log( "Preparing snapshot for download" );
 	// Capture at the start of the existing synchronous world serialization.
 	// Reading/writing this state does not draw from the generator.
@@ -2640,6 +2643,7 @@ std::string Game::SerializeWorldSnapshot() const {
 	WriteSimulationState( buf );
 	map::GlsmacResourceMapPolicy::WriteOptional( buf, m_map->GetResourcePolicy(), m_state->m_settings.global.GetRulesetId() == "smac" );
 	world_snapshot::WriteWorkerKnowledge( buf, m_map->m_worker_knowledge, m_state->m_settings.global.GetRulesetId() == "smac" );
+	world_snapshot::WriteTerritoryTopology( buf, m_map->m_territory_topology, m_state->m_settings.global.GetRulesetId() == "smac" );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -2717,13 +2721,15 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 		auto simulation = ReadSimulationState( buf, turn_state.id );
 		const auto map_policy = map::GlsmacResourceMapPolicy::ReadOptional( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
 		auto worker_knowledge = world_snapshot::ReadWorkerKnowledge( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
+		auto territory = world_snapshot::ReadTerritoryTopology( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
 
 		// map
 		const auto map_payload = buf.ReadString();
 		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 		world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
+		world_snapshot::ValidateTerritoryGeometry( territory, map_payload, worker_knowledge.has_value() );
 		NEW( m_map, map::Map, this );
-		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ) );
+		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ), std::move( territory ) );
 		return true;
 	}
 	catch ( const std::runtime_error& error ) {
@@ -2738,9 +2744,10 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 	}
 }
 
-void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge ) {
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge, std::optional< map::GlsmacTerritoryTopology > territory ) {
 	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 	world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
+	world_snapshot::ValidateTerritoryGeometry( territory, map_payload, worker_knowledge.has_value() );
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
@@ -2749,6 +2756,8 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	if ( ec != map::Map::EC_NONE ) {
 		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
 	}
+	if (territory) { territory->ValidateTerrain(m_map->TerritorySea()); }
+	m_map->m_territory_topology = std::move(territory);
 	m_map->m_resource_policy = map_policy; // decoded before Map allocation; raw loader never infers it
 	m_map->m_worker_knowledge = std::move( worker_knowledge );
 	m_map->m_worker_knowledge_ready = false; // only bind after both pending entity registries drain

@@ -139,6 +139,7 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 	m_smac_predefined_unit_rules.reset();
 	m_smac_movement_rules.reset();
 	m_smac_specialist_rules.reset();
+	m_smac_territory_rules.reset();
 	map.ClearSmacWorldSize();
 }
 
@@ -153,10 +154,12 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	std::optional< SmacPredefinedUnitRules > units;
 	std::optional< SmacMovementRules > movement;
 	std::optional< SmacSpecialistRules > specialists;
+	std::optional< SmacTerritoryRules > territory;
 	if ( m_ruleset == RULESET_SMAC ) {
 		const auto source = read_source( "alpha.txt" );
 		movement = loader::txt::SmacRulesTXTLoader::ParseMovementRules( source );
 		specialists = loader::txt::SmacRulesTXTLoader::ParseSpecialistRules( source );
+		territory = loader::txt::SmacRulesTXTLoader::ParseTerritoryRules( source );
 		production = loader::txt::SmacRulesTXTLoader::ParseProductionRules( source );
 		technologies = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( source );
 		parsed = loader::txt::SmacRulesTXTLoader::ParseResourceRules( source, *technologies );
@@ -180,6 +183,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	staged.m_smac_predefined_unit_rules = std::move( units );
 	staged.m_smac_movement_rules = std::move( movement );
 	staged.m_smac_specialist_rules = std::move( specialists );
+	staged.m_smac_territory_rules = std::move( territory );
 	staged.Serialize();
 	m_smac_resource_rules = staged.m_smac_resource_rules;
 	m_smac_production_rules = std::move( staged.m_smac_production_rules );
@@ -189,6 +193,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	m_smac_predefined_unit_rules = std::move( staged.m_smac_predefined_unit_rules );
 	m_smac_movement_rules = std::move( staged.m_smac_movement_rules );
 	m_smac_specialist_rules = std::move( staged.m_smac_specialist_rules );
+	m_smac_territory_rules = std::move( staged.m_smac_territory_rules );
 	LockRuleset();
 }
 
@@ -210,6 +215,7 @@ const std::optional< SmacFactionStartupRules >& GlobalSettings::GetSmacFactionSt
 const std::optional< SmacPredefinedUnitRules >& GlobalSettings::GetSmacPredefinedUnitRules() const { return m_smac_predefined_unit_rules; }
 const std::optional< SmacMovementRules >& GlobalSettings::GetSmacMovementRules() const { return m_smac_movement_rules; }
 const std::optional< SmacSpecialistRules >& GlobalSettings::GetSmacSpecialistRules() const { return m_smac_specialist_rules; }
+const std::optional< SmacTerritoryRules >& GlobalSettings::GetSmacTerritoryRules() const { return m_smac_territory_rules; }
 
 void GlobalSettings::SelectSmacWorldSize( const int64_t category ) {
 	if ( m_ruleset != RULESET_SMAC || !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
@@ -280,6 +286,7 @@ void GlobalSettings::ResetRuleset() {
 	m_smac_predefined_unit_rules.reset();
 	m_smac_movement_rules.reset();
 	m_smac_specialist_rules.reset();
+	m_smac_territory_rules.reset();
 	map.ClearSmacWorldSize();
 }
 
@@ -328,8 +335,9 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_predefined_unit_rules.has_value() ) { THROW( "Gameplay ruleset and predefined unit profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_movement_rules.has_value() ) { THROW( "Gameplay ruleset and movement profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_specialist_rules.has_value() ) { THROW( "Gameplay ruleset and specialist profile do not match" ); }
+	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_territory_rules.has_value() ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 12 );
+	buf.WriteInt( 13 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -345,6 +353,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( m_smac_movement_rules ) { buf.WriteString( m_smac_movement_rules->Serialize().ToString() ); }
 	buf.WriteBool( m_smac_specialist_rules.has_value() );
 	if ( m_smac_specialist_rules ) { buf.WriteString( m_smac_specialist_rules->Serialize().ToString() ); }
+	buf.WriteBool( m_smac_territory_rules.has_value() );
+	if ( m_smac_territory_rules ) { buf.WriteString( m_smac_territory_rules->Serialize().ToString() ); }
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
@@ -356,8 +366,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 12 ) {
-		THROW( "Unsupported global settings format (expected version 12)" );
+	if ( buf.ReadInt() != 13 ) {
+		THROW( "Unsupported global settings format (expected version 13)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -372,6 +382,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	std::optional< SmacPredefinedUnitRules > units;
 	std::optional< SmacMovementRules > movement;
 	std::optional< SmacSpecialistRules > specialists;
+	std::optional< SmacTerritoryRules > territory;
 	if ( has_smac_rules ) {
 		// Bound the frame before copying; resolve tokens after the staged catalog.
 		const auto resource_bytes = buf.ReadString( SmacResourceRules::MAX_WIRE_BYTES );
@@ -390,6 +401,11 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	const auto has_specialists = buf.ReadBool();
 	if ( ( ruleset == RULESET_SMAC ) != has_specialists ) { THROW( "Gameplay ruleset and specialist profile do not match" ); }
 	if ( has_specialists ) { specialists = SmacSpecialistRules::Deserialize( types::Buffer( buf.ReadString( SmacSpecialistRules::MAX_WIRE_BYTES ) ) ); }
+	const auto has_territory = buf.ReadBool();
+	if ( ( ruleset == RULESET_SMAC ) != has_territory ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
+	if ( has_territory ) { territory = SmacTerritoryRules::Deserialize( types::Buffer( buf.ReadString( SmacTerritoryRules::MAX_WIRE_BYTES ) ) ); }
+	if ( m_ruleset_locked && ( territory.has_value() != m_smac_territory_rules.has_value()
+		|| ( territory && !( *territory == *m_smac_territory_rules ) ) ) ) { THROW( "Host changed the frozen territory profile" ); }
 	if ( m_ruleset_locked && ( specialists.has_value() != m_smac_specialist_rules.has_value()
 		|| ( specialists && !( *specialists == *m_smac_specialist_rules ) ) ) ) { THROW( "Host changed the frozen specialist profile" ); }
 	if ( m_ruleset_locked && ( movement.has_value() != m_smac_movement_rules.has_value()
@@ -424,7 +440,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		world_sizes->ValidateSelection( *next_selection );
 	}
 	const auto rules_data = buf.ReadString();
-	// Default rules currently serialize no fields; V12 must not silently drop
+	// Default rules currently serialize no fields; V13 must not silently drop
 	// unknown payload bytes. A future rules format requires an explicit version.
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();
@@ -446,6 +462,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	m_smac_predefined_unit_rules = std::move( units );
 	m_smac_movement_rules = std::move( movement );
 	m_smac_specialist_rules = std::move( specialists );
+	m_smac_territory_rules = std::move( territory );
 	m_ruleset_locked = true;
 }
 

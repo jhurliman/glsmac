@@ -19,6 +19,8 @@
 #include "gse/value/Bool.h"
 #include "gse/value/Array.h"
 #include <memory>
+#include <algorithm>
+#include <set>
 #include "util/FinallyGuard.h"
 
 namespace game {
@@ -27,7 +29,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V8";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V9";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -49,6 +51,7 @@ void BaseManager::Clear() {
 		delete it.second;
 	}
 	m_bases.clear();
+	m_base_order.clear();
 	for ( auto& it : m_base_facilitydefs ) {
 		delete it.second;
 	}
@@ -272,7 +275,8 @@ void BaseManager::UndefineFacility( const std::string& id ) {
 }
 
 void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
-	m_game->RequireWorkerKnowledgeMutation();
+	m_game->CheckRW( GSE_CALL );
+	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
 	auto* tile = base->GetTile();
@@ -305,6 +309,7 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 		}
 	}
 	RegisterBase( base );
+	m_game->CommitBaseTerritory( territory );
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -320,11 +325,14 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 void BaseManager::RegisterBase( Base* base ) {
 	Log( "Registering base #" + std::to_string( base->m_id ) + " ( " + base->m_name + " ) at " + base->GetTile()->ToString() );
 	if ( m_bases.find( base->m_id ) != m_bases.end() ) { THROW( "duplicate base ID" ); }
+	auto next_order = m_base_order;
+	next_order.push_back( base->m_id );
 	for ( const auto& pop : base->m_pops ) {
 		const auto error = ValidateAssignment( base->m_id, base->GetTile()->coord, pop.first, pop.second.m_def, pop.second.GetWorkedTileCoords() );
 		if ( !error.empty() ) { THROW( error ); }
 	}
 	m_bases.insert_or_assign( base->m_id, base );
+	m_base_order.swap( next_order );
 	for ( const auto& pop : base->m_pops ) {
 		ChangeAssignment( base->m_id, pop.first, {}, pop.second.GetWorkedTileCoords() );
 	}
@@ -334,7 +342,7 @@ void BaseManager::RegisterBase( Base* base ) {
 }
 
 void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
-	m_game->RequireWorkerKnowledgeMutation();
+	m_game->CheckRW( GSE_CALL );
 
 	const auto& it = m_bases.find( base_id );
 	if ( it == m_bases.end() ) {
@@ -342,7 +350,10 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	}
 
 	auto* base = it->second;
+	const auto ordered = std::find( m_base_order.begin(), m_base_order.end(), base_id );
+	if ( ordered == m_base_order.end() ) { THROW( "Base is missing its record order" ); }
 	if ( m_game->GetUM()->HasConventionalHome( base_id ) ) { THROW( "Cannot remove a conventional home Base before explicit reassignment" ); }
+	auto territory = m_game->PrepareBaseTerritory( nullptr, base, false );
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
 
@@ -361,6 +372,8 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	RemoveAssignments( base );
 
 	m_bases.erase( it );
+	m_base_order.erase( ordered );
+	m_game->CommitBaseTerritory( territory );
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -738,9 +751,14 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	}
 
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
+	if ( m_base_order.size() != m_bases.size() ) { THROW( "Base record order differs from registry" ); }
+	std::set< size_t > ordered_ids;
+	for ( const auto id : m_base_order ) {
+		if ( !m_bases.count( id ) || !ordered_ids.insert( id ).second ) { THROW( "Invalid Base record order" ); }
+	}
 	buf.WriteInt( m_bases.size() );
-	for ( const auto& it : m_bases ) {
-		buf.WriteString( Base::Serialize( it.second ).ToString() );
+	for ( const auto id : m_base_order ) {
+		buf.WriteString( Base::Serialize( m_bases.at( id ) ).ToString() );
 	}
 	buf.WriteInt( Base::GetNextId() );
 
@@ -751,6 +769,7 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_base_facilitydefs.empty(), "base facility defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
+	ASSERT( m_base_order.empty(), "Base record order not empty" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
 
 	// Unversioned snapshots start with an integer and fail the typed read;

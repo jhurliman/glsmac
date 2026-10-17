@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "game/backend/WorldSnapshotWorkerKnowledge.h"
+#include "game/backend/WorldSnapshotTerritory.h"
 #include "GlsmacResourceMapPolicy.h"
 #include "game/backend/map/generator/SimplePerlin.h"
 #include "ConventionalUnits.h"
@@ -1164,7 +1165,7 @@ public:
 			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
 			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
 			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
-			bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
+			bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
 			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
 			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
 		} );
@@ -3799,6 +3800,8 @@ public:
 				try { Policy::ReadOptional( policy_input, true ); } catch ( const std::runtime_error& ) { policy_rejected = true; }
 				GT_ASSERT( policy_rejected, "invalid map policy passed prefix " + std::to_string( scenario ) );
 			}
+			bytes.WriteBool(false); // explicit absent worker knowledge
+			bytes.WriteBool(false); // explicit absent territory topology
 			// The remaining cases have a valid runtime and reach the actual map
 			// frame/accepted-dimensions checks, still before Map construction.
 			if ( scenario == 12 ) { bytes.WriteInt( 0 ); }
@@ -3829,7 +3832,7 @@ public:
 		GT_OK();
 	}
 
-	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); game::backend::map::GlsmacResourceMapPolicy::ReadOptional( input, m_state->m_settings.global.GetRulesetId() == "smac" ); game::backend::world_snapshot::ReadWorkerKnowledge( input, m_state->m_settings.global.GetRulesetId() == "smac" ); }
+	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); game::backend::map::GlsmacResourceMapPolicy::ReadOptional( input, m_state->m_settings.global.GetRulesetId() == "smac" ); game::backend::world_snapshot::ReadWorkerKnowledge( input, m_state->m_settings.global.GetRulesetId() == "smac" ); game::backend::world_snapshot::ReadTerritoryTopology( input, m_state->m_settings.global.GetRulesetId() == "smac" ); }
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
 	void SetSnapshotTurn( const size_t turn ) { m_game.m_current_turn.AdvanceTurn( turn ); }
 	void EnableTurnPlayers() {
@@ -3856,8 +3859,9 @@ public:
 		auto simulation = m_game.ReadSimulationState( buffer, turn.id );
 		const auto map_policy = game::backend::map::GlsmacResourceMapPolicy::ReadOptional( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
 		auto worker_knowledge = game::backend::world_snapshot::ReadWorkerKnowledge( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
+		auto territory = game::backend::world_snapshot::ReadTerritoryTopology( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
 		const auto map = buffer.ReadString();
-		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ), map_policy, std::move( worker_knowledge ) );
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ), map_policy, std::move( worker_knowledge ), std::move(territory) );
 	}
 	void CompleteWorldRestore( GSE_CALLABLE, const bool dispatch_native_failure = false ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.
@@ -5187,7 +5191,7 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 						if ( scenario == 9 ) { production.WriteInt( 99 ); }
 					}
 					types::Buffer snapshot;
-					snapshot.WriteString( "GLSMAC_BASES_V7" ); snapshot.WriteInt( 2 );
+					snapshot.WriteString( "GLSMAC_BASES_V9" ); snapshot.WriteInt( 2 );
 					for ( const auto* id : { "WORKER", "DOCTOR" } ) { snapshot.WriteString( id ); snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() ); }
 					snapshot.WriteInt( 0 ); snapshot.WriteInt( prior_record ? 2 : 1 );
 					if ( prior_record ) { snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() ); }
@@ -5434,7 +5438,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
 			GT_ASSERT( setup.empty(), "worker setup: " + setup );
 			types::Buffer snapshot;
-			snapshot.WriteString( "GLSMAC_BASES_V7" ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( "GLSMAC_BASES_V9" ); snapshot.WriteInt( 2 );
 			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
 				snapshot.WriteString( id );
 				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );

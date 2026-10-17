@@ -15,7 +15,7 @@
 
 namespace game::backend {
 
-map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer ) const {
+map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base ) const {
 	using Frame = map::SmacWorkerMapFrame;
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !m_map || !m_bm || !m_um || m_state->m_settings.global.GetRulesetId() != "smac" ) {
@@ -71,7 +71,7 @@ map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerK
 		if ( tile->base ) {
 			bool found = false;
 			for ( const auto& entry : m_bm->GetBases() ) { if ( entry.second == tile->base ) { found = entry.second->GetTile() == tile; break; } }
-			if ( !found ) { throw std::runtime_error( "Worker map has an unregistered or displaced Base center" ); }
+			if ( !found && !( tile->base == pending_base && pending_base->GetTile() == tile ) ) { throw std::runtime_error( "Worker map has an unregistered or displaced Base center" ); }
 		}
 		for ( const auto& entry : tile->units ) {
 			const auto found = m_um->GetUnits().find( entry.first );
@@ -96,14 +96,21 @@ void Game::PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowle
 		throw std::runtime_error( "Worker knowledge publication requires its running owning accumulation" );
 	}
 	ValidateSmacWorkerKnowledge( knowledge );
+	auto topology = m_map->m_territory_topology;
+	if ( topology ) { topology->ValidateTerrain( m_map->TerritorySea() ); }
+	else { topology = map::GlsmacTerritoryTopology::Build( m_map->GetWidth(), m_map->GetHeight(), true, m_map->TerritorySea() ); }
 	std::optional< map::SmacWorkerKnowledge > replacement = knowledge;
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
+	static_assert( std::is_nothrow_swappable_v< decltype( topology ) > );
 	m_map->m_worker_knowledge.swap( replacement );
+	m_map->m_territory_topology.swap( topology );
 	m_map->m_worker_knowledge_ready = true;
 }
 
 void Game::CompleteSmacWorkerKnowledgeRestore() {
 	if ( m_map && m_map->m_worker_knowledge ) {
+		if ( !m_map->m_territory_topology ) { throw std::runtime_error( "Worker knowledge lacks saved territory topology" ); }
+		m_map->m_territory_topology->ValidateTerrain( m_map->TerritorySea() );
 		ValidateSmacWorkerKnowledge( *m_map->m_worker_knowledge );
 		m_map->m_worker_knowledge_ready = true;
 	}

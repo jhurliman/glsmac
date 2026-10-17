@@ -88,7 +88,6 @@ Base::Base(
 	, m_production( production )
 	, m_resource_context( resource_context )
 	, m_allocation( allocation ) {
-	if ( kind == ConstructionKind::Live ) { game->RequireWorkerKnowledgeMutation(); }
 	if ( m_production ) { m_production->Validate(); }
 	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
 	// Validate the complete record before claiming the center or advancing IDs.
@@ -117,6 +116,7 @@ Base::Base(
 		THROW( "next population ID must follow existing IDs" );
 	}
 	ValidateAllocationProjection( false );
+	if ( kind == ConstructionKind::Live ) { (void)game->PrepareBaseTerritory( this, nullptr, false ); }
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}

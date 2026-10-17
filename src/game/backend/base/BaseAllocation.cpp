@@ -46,14 +46,14 @@ std::vector< map::tile::coords_t > Base::AllocationCoordinates( const SmacBaseAl
 	return coordinates;
 }
 
-void Base::ValidateAllocationProjection( bool registered ) const {
+void Base::ValidateAllocationProjection( bool registered, bool attached ) const {
 	if ( !m_allocation ) { return; }
 	const auto coordinates = AllocationCoordinates( *m_allocation );
 	const auto* bm = m_game->GetBM();
 	size_t position = 0;
 	for ( const auto& item : m_pops ) {
 		const auto& pop = item.second;
-		if ( item.first != pop.m_id || ( registered ? pop.m_base != this : pop.m_base != nullptr ) ) {
+		if ( item.first != pop.m_id || ( registered || attached ? pop.m_base != this : pop.m_base != nullptr ) ) {
 			THROW( "SMAC allocation population identity is invalid" );
 		}
 		ValidatePopulationRole( pop.m_def, pop.m_worked_tile );

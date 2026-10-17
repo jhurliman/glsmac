@@ -27,6 +27,7 @@
 #include "WorldSnapshotTurn.h"
 #include "map/GlsmacResourceMapPolicy.h"
 #include "map/SmacWorkerKnowledge.h"
+#include "map/GlsmacTerritoryTopology.h"
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
 #include "State.h"
@@ -535,8 +536,10 @@ private:
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
-	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge );
-	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer ) const;
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge, std::optional< map::GlsmacTerritoryTopology > territory = std::nullopt );
+	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base = nullptr ) const;
+	std::optional< map::SmacWorkerKnowledge > PrepareBaseTerritory( const base::Base* added, const base::Base* removed, bool attached ) const;
+	void CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
 	void ValidateSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge ) const;
 	void CompleteSmacWorkerKnowledgeRestore();
 	void RequireConventionalSightWorld() const;
@@ -639,6 +642,7 @@ private:
 	friend class resource::ResourceManager;
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
+	friend class base::Base;
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 

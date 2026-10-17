@@ -11,6 +11,8 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacWorkerKnowledge.cpp
 	${PWD}/SmacTerritoryRules.cpp
+	${PWD}/GlsmacTerritoryTopology.cpp
+	${PWD}/MapTerritory.cpp
 	${PWD}/MapState.cpp
 
 	PARENT_SCOPE )

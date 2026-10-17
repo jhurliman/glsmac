@@ -109,6 +109,9 @@ std::string CheckTerritoryBoundaries() {
 	GT_ASSERT( !territory::Rebuild(input)[index(62,16)], "nonwrapping metric crossed seam" );
 	input = Input(fixture::cases[0]); input.tiles[index(18,16)].region = 2;
 	GT_ASSERT( !territory::Rebuild(input)[index(18,16)], "region identity was inferred from adjacent terrain" );
+	input.border_distance = 0;
+	const auto zero = territory::Rebuild(input);
+	GT_ASSERT(std::none_of(zero.begin(),zero.end(),[](const auto& value){return value.has_value();}), "zero strict cutoff claimed a Base center");
 	input = Input(fixture::cases[8]); input.border_distance = 1;
 	const auto empty_sea = territory::Rebuild(input);
 	GT_ASSERT( std::none_of(empty_sea.begin(),empty_sea.end(),[](const auto& value){return value.has_value();}), "sea half-cutoff zero admitted a claim" );
@@ -117,7 +120,7 @@ std::string CheckTerritoryBoundaries() {
 	for ( int scenario = 0; scenario < 15; ++scenario ) {
 		auto bad = Input(fixture::cases[0]);
 		if(scenario==0){bad.width=0;} if(scenario==1){bad.width=513;} if(scenario==2){bad.width=63;}
-		if(scenario==3){bad.height=257;} if(scenario==4){bad.border_distance=0;} if(scenario==5){bad.border_distance=-1;}
+		if(scenario==3){bad.height=257;} if(scenario==4){bad.border_distance=INT32_MIN;} if(scenario==5){bad.border_distance=-1;}
 		if(scenario==6){bad.tiles.pop_back();} if(scenario==7){bad.tiles.back().region=64;} if(scenario==8){bad.tiles.back().sea=true;}
 		if(scenario==9){bad.bases[0].owner=0;} if(scenario==10){bad.bases[0].owner=8;} if(scenario==11){bad.bases[0].coordinate={-2,16};}
 		if(scenario==12){bad.bases[0].coordinate={16,17};} if(scenario==13){bad.bases[0].coordinate={64,16};} if(scenario==14){bad.bases.push_back(bad.bases[0]);}

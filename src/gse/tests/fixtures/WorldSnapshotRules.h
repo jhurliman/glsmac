@@ -78,6 +78,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		const auto has_specialists = specialists_present.value_or( id == "smac" ); result.WriteBool( has_specialists );
 		if ( has_specialists ) { result.WriteString( specialists ? *specialists : smac_rules_fixture::Specialists().Serialize().ToString() ); }
 	}
+	if (version >= 25) {
+		result.WriteBool(id == "smac");
+		if (id == "smac") { result.WriteString(smac_rules_fixture::Territory().Serialize().ToString()); }
+	}
 	return result;
 }
 

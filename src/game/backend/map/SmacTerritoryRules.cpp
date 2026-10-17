@@ -16,7 +16,7 @@ size_t Index( const Input& input, const Coordinate& position ) {
 void Validate( const Input& input ) {
 	Require( input.width >= 2 && input.width <= 512 && !( input.width & 1 ) && input.height >= 1 && input.height <= 256,
 		"Territory requires the bounded doubled-coordinate worker grid" );
-	Require( input.border_distance > 0, "Territory requires a positive border distance" );
+	Require( input.border_distance >= 0, "Territory requires a nonnegative border distance" );
 	const auto count = static_cast< size_t >( input.width ) * input.height / 2;
 	Require( input.tiles.size() == count && input.bases.size() <= count, "Territory map or Base count differs from geometry" );
 	for ( const auto& tile : input.tiles ) {

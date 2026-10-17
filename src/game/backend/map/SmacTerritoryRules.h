@@ -21,7 +21,7 @@ struct Base {
 struct Input {
 	int32_t width, height;
 	bool horizontal_wrap;
-	int32_t border_distance; // positive signed32; sea uses floor(value/2)
+	int32_t border_distance; // nonnegative signed32; sea uses floor(value/2)
 	// Y ascending, X from row parity in steps of two, including polar rows.
 	std::vector< Tile > tiles;
 	// Explicit current record order. Later records win equal-distance ties.

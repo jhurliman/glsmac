@@ -36,6 +36,7 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( ( id == "smac" ) != settings.GetSmacPredefinedUnitRules().has_value() ) { throw std::runtime_error( "World snapshot predefined unit profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacMovementRules().has_value() ) { throw std::runtime_error( "World snapshot movement profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacSpecialistRules().has_value() ) { throw std::runtime_error( "World snapshot specialist profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacTerritoryRules().has_value() ) { throw std::runtime_error( "World snapshot territory profile does not match ruleset" ); }
 	settings.ValidateWorldSize();
 }
 
@@ -61,6 +62,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto movement_bytes = movement ? movement->Serialize().ToString() : std::string{};
 	const auto& specialists = settings.GetSmacSpecialistRules();
 	const auto specialist_bytes = specialists ? specialists->Serialize().ToString() : std::string{};
+	const auto& territory = settings.GetSmacTerritoryRules();
+	const auto territory_bytes = territory ? territory->Serialize().ToString() : std::string{};
 	RequireFrameSize( settings.GetRulesetId(), max_ruleset_bytes );
 	for ( const auto* bytes : { &production_bytes, &technology_bytes, &size_bytes, &faction_bytes } ) {
 		RequireFrameSize( *bytes, max_profile_bytes );
@@ -70,6 +73,7 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	RequireFrameSize( movement_bytes, settings::SmacMovementRules::MAX_WIRE_BYTES );
 	RequireFrameSize( specialist_bytes, settings::SmacSpecialistRules::MAX_WIRE_BYTES );
 	RequireFrameSize( resource_bytes, settings::SmacResourceRules::MAX_WIRE_BYTES );
+	RequireFrameSize( territory_bytes, settings::SmacTerritoryRules::MAX_WIRE_BYTES );
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -89,6 +93,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	if ( movement ) { buffer.WriteString( movement_bytes ); }
 	buffer.WriteBool( specialists.has_value() );
 	if ( specialists ) { buffer.WriteString( specialist_bytes ); }
+	buffer.WriteBool( territory.has_value() );
+	if ( territory ) { buffer.WriteString( territory_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -159,6 +165,12 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( specialists ) {
 		const auto incoming = settings::SmacSpecialistRules::Deserialize( types::Buffer( buffer.ReadString( settings::SmacSpecialistRules::MAX_WIRE_BYTES ) ) );
 		if ( !( incoming == *specialists ) ) { throw std::runtime_error( "World snapshot specialist profile differs from the session" ); }
+	}
+	const auto& territory = settings.GetSmacTerritoryRules();
+	if ( buffer.ReadBool() != territory.has_value() ) { throw std::runtime_error("World snapshot territory presence differs"); }
+	if ( territory ) {
+		const auto incoming = settings::SmacTerritoryRules::Deserialize( types::Buffer(buffer.ReadString(settings::SmacTerritoryRules::MAX_WIRE_BYTES)) );
+		if (!(incoming == *territory)) { throw std::runtime_error("World snapshot territory profile differs"); }
 	}
 }
 

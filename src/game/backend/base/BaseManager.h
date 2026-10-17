@@ -71,6 +71,9 @@ public:
 	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 
 	const std::map< size_t, Base* >& GetBases() const;
+	// Explicit current record order. Live registration appends; removal keeps
+	// survivor order; V9 serializes this sequence and restores it verbatim.
+	const std::vector< size_t >& GetBaseRecordOrder() const { return m_base_order; }
 	const popdefs_t& GetBasePopDefs() const;
 
 	void ProcessUnprocessed( GSE_CALLABLE );
@@ -106,6 +109,7 @@ private:
 	facilitydefs_t m_base_facilitydefs = {};
 
 	std::map< size_t, Base* > m_bases = {};
+	std::vector< size_t > m_base_order;
 	std::vector< types::Buffer > m_unprocessed_bases = {};
 
 	std::unordered_set< std::string > m_registered_base_names = {};

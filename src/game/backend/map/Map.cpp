@@ -649,6 +649,7 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	m_game->RequireWorkerKnowledgeMutation();
 	m_resource_policy.reset();
+	m_territory_topology.reset();
 	auto* random = m_game->GetRandom();
 	const auto policy = m_game->GetState()->m_settings.global.GetRulesetId() == "smac"
 		? std::optional< GlsmacResourceMapPolicy >( GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
@@ -705,6 +706,7 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	m_game->RequireWorkerKnowledgeMutation();
 	m_worker_knowledge_ready = false;
 	m_resource_policy.reset(); // raw/imported tile payloads never infer a policy
+	m_territory_topology.reset();
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}

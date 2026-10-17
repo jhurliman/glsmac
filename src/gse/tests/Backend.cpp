@@ -398,13 +398,6 @@ public:
 		} );
 	}
 
-	void EnableTurns() {
-		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
-			m_game.m_um = new game::backend::unit::UnitManager( &m_game );
-		} );
-	}
-
-	const std::vector< game::backend::event::Event* >& PendingEvents() const { return m_game.m_pending_events; }
 
 	void DestroyMapBeforeManagers() {
 		// The registered State reaches Game's map and tile wrappers. Retire the

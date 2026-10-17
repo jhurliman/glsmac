@@ -24,6 +24,11 @@ CvrScoutRender::CvrScoutRender( const int32_t facing, const int32_t zoom, const 
 	if ( facing < -1 || facing > 7 || zoom < -8 || zoom > 8 || denominator <= 0 ) {
 		throw std::invalid_argument( "Unsupported Scout idle view" );
 	}
+	// MakeView adds this quotient to the descriptor's fixed zero anchor. Check
+	// after integer division: a nonzero remainder may still yield INT32_MAX.
+	if ( numerator > 0 && int64_t{ 50 } * numerator / denominator > INT32_MAX ) {
+		throw std::invalid_argument( "Scout descriptor target anchor overflow" );
+	}
 	// Explicit port admission bounds, independent of source camera arithmetic.
 	for ( const float dimension : { size.x, size.y } ) {
 		if ( !std::isfinite( dimension ) || dimension <= 0 || dimension > 16 || dimension / 2 == 0 ) {

@@ -17,8 +17,13 @@ allocation or cursor advancement, using the bounded Buffer reader prerequisite.
 
 Every field is required by the native `define_unit` API. Facing is -1 through 7,
 zoom is -8 through 8, and the scale denominator is positive. The signed32
-numerator retains the renderer's nonpositive-scale culling behavior. World
-width and height must be finite, positive, no greater than 16, and have a
+numerator retains the renderer's nonpositive-ratio zoom fallback. Positive
+ratios must also satisfy `floor(50 * numerator / denominator) <= INT32_MAX`,
+computed with a widened product and checked after division. This is the derived
+anchor added to the texture path's fixed zero anchor; constructor, script
+definition and snapshot admission all reject overflow before frontend rendering.
+A nonzero division remainder may still produce an admitted INT32_MAX quotient.
+World width and height must be finite, positive, no greater than 16, and have a
 nonzero half-size. Image centers must be finite and within 0 through 256.
 Derived offsets and rectangle extents must remain finite. These are explicit
 port admission limits, not original game world-unit measurements.
@@ -115,6 +120,19 @@ checkpoint also passed both suites and is retained separately.
 No native Windows/macOS run, rendered preview, hot-reload transaction, or live
 gameplay Scout replacement is claimed by this adapter receipt.
 
+The follow-up anchor admission repair on source parent `cdfc2a51` passes normal
+CTest 8/8 in 72.48 seconds, all three affected tracked groups in normal and
+ASan/UBSan/LSan, and the installed-asset Unit/registered-preview case with
+sanitizers and tracking. Changed-production-TU correctness analysis has zero
+failures in 1.85 seconds. A separately compiled original `CvrScoutRender.cpp`
+with the new tests gives one pass/two failures at the constructor and actual
+script/UnitDef snapshot admission assertions. The exact quotient-with-remainder
+boundary remains accepted through MakeView and both codecs; this is descriptor
+admission coverage, not an assertion that arbitrary extreme scales rasterize
+within the bounded surface. Logs are retained under
+`/home/jhurliman/src/glsmac-scout-anchor/`. This follow-up does not claim another
+full sanitizer-suite or native platform run.
+
 ## Focused publication validation
 
 The publication starts from main `7a47ca74` plus bounded-reader prerequisite
@@ -133,4 +151,4 @@ with zero failures in 233.13 seconds. The later history-only merge `85ec62e8`
 has the identical tested tree (`bdf9ae5b2f3c8265f38ba23f8456e410a03b03cb`).
 These publication results are distinct from the source sanitizer receipts above.
 Logs use the `scout-cache-publication-*` prefix in the same retained evidence
-directory. No test fixture behavior or production code changed after these runs.
+directory. No test fixture behavior or production code changed at that checkpoint.

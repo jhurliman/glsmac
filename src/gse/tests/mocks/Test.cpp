@@ -12,7 +12,9 @@
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/tests/Tests.h"
+#include "gse/tests/Mesh.h"
 #include "gse/ExecutionPointer.h"
+#include "util/UUID.h"
 
 namespace gse {
 namespace tests {
@@ -45,6 +47,21 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 					GSE_ERROR( "TestError", "Assertion failed: " + reason );
 				}
 				return VALUE( value::Undefined );
+			} )
+		},
+		{
+			"check_mesh_coordinate_outputs",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( value::String,, CheckMeshCoordinateOutputs() );
+			} )
+		},
+		{
+			"generate_uuid",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS( 0 );
+				// Exercise the production utility without constructing a backend account.
+				return VALUE( value::String,, util::UUID::Generate() );
 			} )
 		},
 		{

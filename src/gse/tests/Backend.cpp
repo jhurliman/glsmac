@@ -5,6 +5,8 @@
 #include "ui/UI.h"
 #include "ui/BaseResourcePresentation.h"
 #include <cmath>
+#include "engine/Engine.h"
+#include "gc/GC.h"
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -21,6 +23,10 @@
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/StaticDef.h"
+#include "game/backend/unit/SpriteRender.h"
+#include "game/backend/unit/MoraleSet.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/resource/Resource.h"
@@ -28,6 +34,7 @@
 #include "game/frontend/resource/ResourceDisplay.h"
 #include "game/backend/State.h"
 #include "game/backend/connection/Client.h"
+#include "game/backend/connection/Server.h"
 #include "types/Packet.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
@@ -41,6 +48,8 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
+#include "game/backend/map/tile/TileManager.h"
+#include "game/backend/map/module/Module.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "util/FinallyGuard.h"
 
@@ -49,7 +58,11 @@
 #include <exception>
 #include <limits>
 #include <stdexcept>
+#include <set>
 #include <thread>
+#include <atomic>
+#include <new>
+#include <chrono>
 
 namespace gse {
 namespace tests {
@@ -76,6 +89,7 @@ public:
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
+			m_state = state;
 			m_gse->AddRootObject( state );
 			state->SetGame( &m_game );
 			m_game.SetState( state );
@@ -141,6 +155,71 @@ public:
 		operation();
 	}
 
+	size_t PendingResponses() const { return m_game.m_pending_event_responses.size(); }
+	const std::vector< game::backend::event::Event* >& PendingEvents() const { return m_game.m_pending_events; }
+	void RebindSession() { m_state->UnsetGame(); m_state->SetGame( &m_game ); }
+	void ResetRequest() {
+		// This test owns the GC exclusion. The independent OP_RESET/collector
+		// diagnostic documents why production's missing exclusion is separate.
+		m_map.release();
+		const auto id = m_game.MT_Reset();
+		m_game.MTModule::Iterate();
+		const auto response = m_game.MT_GetResponse( id );
+		if ( response.result != game::backend::R_SUCCESS ) { throw std::runtime_error( "reset request failed" ); }
+	}
+	void ProcessRequests() { m_game.MTModule::Iterate(); }
+	bool CollectDuringEventHandoff( gc::Object* expected, const std::function< void() >& after_collection ) {
+		// Split the two actual production stages deterministically: collection
+		// and reset/rebind can run after extraction but before queue registration.
+		const auto session = m_state->CaptureGameSession();
+		auto handoff = m_game.ExtractEventBatch( m_state, session );
+		bool rooted = false;
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+			std::unordered_set< gc::Object* > reachable;
+			m_game.GetReachableObjects( reachable );
+			rooted = handoff && reachable.count( expected ) != 0;
+		} );
+		// A broken handoff must fail before destructive collection of an Event
+		// still held by the native batch. Handoff destruction always unpublishes.
+		if ( !rooted ) { return false; }
+		g_engine->GetGC()->Iterate();
+		after_collection();
+		std::exception_ptr producer_error;
+		std::thread producer( [ & ]() {
+			try { m_game.DispatchEventBatch( std::move( handoff ) ); }
+			catch ( ... ) { producer_error = std::current_exception(); }
+		} );
+		producer.join();
+		if ( producer_error ) { std::rethrow_exception( producer_error ); }
+		return true;
+	}
+	bool ExtractWithSession( const game::backend::State::game_session_t& session ) {
+		return m_game.ExtractEventBatch( m_state, session ) != nullptr;
+	}
+	void SplitTileLockDispatch( const std::function< void() >& after_extraction ) {
+		auto* const manager = m_game.GetTM();
+		const auto session = m_state->CaptureGameSession();
+		auto batch = manager->ExtractTileLockBatch( m_state, session );
+		after_extraction();
+		std::exception_ptr producer_error;
+		std::thread producer( [ & ]() {
+			try { game::backend::map::tile::TileManager::DispatchTileLockBatch( std::move( batch ) ); }
+			catch ( ... ) { producer_error = std::current_exception(); }
+		} );
+		producer.join();
+		if ( producer_error ) { std::rethrow_exception( producer_error ); }
+	}
+	size_t ExtractTileLocksWithSession( const game::backend::State::game_session_t& session ) {
+		return m_game.GetTM()->ExtractTileLockBatch( m_state, session ).requests.size();
+	}
+
+	size_t EventHandoffs() const { return m_game.m_event_batch_handoffs.size(); }
+
+	void QueueTileLock() {
+		m_game.GetTM()->m_tile_lock_requests.push_back( { true, 2, { m_game.GetMap()->GetTile( 2, 2 ) } } );
+	}
+	size_t TileLockCount() const { return m_game.GetTM()->m_tile_locks.size(); }
+
 	void SetRunning( const bool running ) {
 		m_game.m_game_state = running ? game::backend::Game::GS_RUNNING : game::backend::Game::GS_NONE;
 	}
@@ -152,8 +231,61 @@ public:
 			m_game.m_am = new game::backend::animation::AnimationManager( &m_game );
 		} );
 	}
+	void EnableTurnPlayers() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			for ( const size_t id : { 0, 2 } ) {
+				NEWV( player, game::backend::Player, "Turn player", game::backend::Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
+				m_game.GetState()->AddPlayer( player );
+				m_game.GetState()->m_slots->GetSlot( id ).SetPlayer( player, 0, "" );
+			}
+			m_game.m_slot_num = 2;
+			m_game.m_slot = &m_game.GetState()->m_slots->GetSlot( 2 );
+			m_game.m_player = m_game.m_slot->GetPlayer();
+		} );
+	}
+	void EnableTileLockFixture() {
+		EnableTurnPlayers();
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_tm = new game::backend::map::tile::TileManager( &m_game );
+		} );
+	}
 
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
+	void IterateWorldRestore() {
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		m_game.Iterate();
+	}
+	std::string WithTransferableFrontendQueue( const std::function< std::string() >& check ) {
+		// The production request transfers this queue to the response recipient.
+		// Most fixture tests instead borrow the stack-owned m_frontend_requests.
+		auto* const previous = m_game.m_pending_frontend_requests;
+		NEW( m_game.m_pending_frontend_requests, std::vector< game::FrontendRequest > );
+		util::FinallyGuard restore( [ & ]() {
+			using Requests = common::MTModule< game::backend::MT_Request, game::backend::MT_Response >;
+			static_cast< Requests& >( m_game ).Requests::Stop();
+			DELETE( m_game.m_pending_frontend_requests );
+			m_game.m_pending_frontend_requests = previous;
+		} );
+		return check();
+	}
+	void ProcessMapProgress( game::backend::map::module::Module& module ) {
+		// Invoke the actual progress/cancellation loop without render assets.
+		auto* const map = m_game.m_map;
+		if ( !map->m_map_state ) {
+			NEW( map->m_map_state, game::backend::map::MapState );
+			map->m_map_state->dimensions = { 8, 8 };
+			const common::mt_flag_t canceled = false;
+			map->m_map_state->LinkTileStates( canceled );
+		}
+		game::backend::map::Map::module_passes_t passes{ { &module } };
+		game::backend::map::Map::tiles_t tiles{ map->GetTile( 0, 0 ) };
+		// The old progress pump can execute ResetGame and delete this Map.
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		map->ProcessTiles( passes, tiles, m_game.m_init_cancel );
+	}
+	bool IsInitializationCanceled() const { return m_game.m_init_cancel; }
 	std::string WorldManagers() const {
 		types::Buffer result, resources, units, bases, animations;
 		m_game.GetRM()->Serialize( resources );
@@ -206,6 +338,12 @@ public:
 		m_game.m_random = m_random.get();
 	}
 
+	const std::vector< game::FrontendRequest >& PushUnitUpdates() {
+		PushBaseUpdates(); // Initializes the asset-free map's frontend coordinates.
+		m_game.GetUM()->PushUpdates();
+		return m_frontend_requests;
+	}
+
 	Value* RunScript( GSE_CALLABLE, const std::string& path ) {
 		return m_gse->RunScript( GSE_CALL, path );
 	}
@@ -238,13 +376,19 @@ public:
 		return result;
 	}
 
+	void EnableTurns() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_um = new game::backend::unit::UnitManager( &m_game );
+		} );
+	}
+
 	void EnableYieldFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			using namespace game::backend;
-			m_game.m_rm = new resource::ResourceManager( &m_game );
+			m_game.m_rm = new game::backend::resource::ResourceManager( &m_game );
 			m_game.m_tm = new map::tile::TileManager( &m_game );
 			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
-				m_game.m_rm->DefineResource( new resource::Resource( id, id, {} ) );
+				m_game.m_rm->DefineResource( new game::backend::resource::Resource( id, id, {} ) );
 			}
 			for ( const size_t slot : { 0, 2 } ) {
 				NEWV( player, Player, "Test player", Player::PR_SINGLE, m_game.GetFaction( "GAIANS" ), "" );
@@ -309,6 +453,7 @@ public:
 	}
 
 private:
+	game::backend::State* m_state = nullptr;
 	static GSE* CreateRuntime() {
 		// GLSMAC owns this runtime and destroys it through tracked DELETE.
 		NEWV( runtime, GSE );
@@ -357,6 +502,155 @@ std::string CheckTileSnapshot( const Tile& expected, const Tile& actual ) {
 	GT_OK();
 }
 
+}
+
+static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "loader progress keeps reset queued until actual map processing returns", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		auto* const game = fixture.GetGame();
+		bool processing = false, destroyed_during_processing = false;
+		size_t destructions = 0;
+		class Observer final : public Wrappable {
+		public:
+			std::function< void() > on_destroy;
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			void NotifyDependencyDestruction( const Wrappable* ) override { on_destroy(); }
+		} observer;
+		observer.on_destroy = [ & ]() { ++destructions; destroyed_during_processing |= processing; };
+		class ProgressModule final : public map::module::Module {
+		public:
+			explicit ProgressModule( map::Map* map ) : Module( map ) {}
+			std::function< void() > enqueue;
+			void GenerateTile( const map::tile::Tile*, map::tile::TileState*, map::MapState* ) override { enqueue(); }
+		} module( game->GetMap() );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* const map = game->GetMap();
+			map->Depend( &observer );
+			util::FinallyGuard detach( [ & ]() { if ( !destructions ) { map->Undepend( &observer ); } } );
+			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+				common::mt_id_t reset = 0, progress = 0, ping = 0;
+				module.enqueue = [ & ]() {
+					reset = game->MT_Reset();
+					progress = game->MT_GetFrontendRequests();
+					ping = game->MT_Ping();
+				};
+				processing = true;
+				fixture.ProcessMapProgress( module );
+				processing = false;
+				GT_ASSERT( !destroyed_during_processing && !destructions && fixture.HasMap(), "progress pump destroyed the executing Map" );
+				GT_ASSERT( fixture.IsInitializationCanceled(), "progress pump cleared cancellation before Map returned" );
+				GT_ASSERT( game->MT_GetResponse( reset ).result == R_NONE, "reset completed inside Map progress" );
+				const auto progress_response = game->MT_GetResponse( progress );
+				util::FinallyGuard release_progress( [ & ]() { game->MT_DestroyResponse( progress_response ); } );
+				GT_ASSERT( progress_response.result == R_SUCCESS, "loader progress response was blocked by queued reset" );
+				const auto* const requests = progress_response.data.get_frontend_requests.requests;
+				GT_ASSERT( requests && requests->size() == 1 && requests->at( 0 ).type == game::FrontendRequest::FR_LOADER_TEXT, "loader text was not delivered" );
+				GT_ASSERT( *requests->at( 0 ).data.loader.text == "Processing tiles (99%)", "actual Map progress text changed" );
+				GT_ASSERT( game->MT_GetResponse( progress ).result == R_NONE, "frontend response was delivered twice" );
+				GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "progress pump did not answer ping" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( destructions == 1 && !destroyed_during_processing && !fixture.HasMap(), "ordinary Iterate did not retire Map after processing" );
+				GT_ASSERT( !fixture.IsInitializationCanceled(), "ordinary reset did not clear cancellation" );
+				GT_ASSERT( game->MT_GetResponse( reset ).result == R_SUCCESS, "ordinary Iterate did not complete queued reset" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( destructions == 1 && game->MT_GetResponse( reset ).result == R_NONE, "reset ran more than once" );
+				GT_OK();
+			} );
+		} );
+		GT_ASSERT( error.empty(), "loader progress check: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "loader progress leaves every non-progress operation queued and cancellable", GT() {
+		using namespace game::backend;
+		BackendFixture fixture;
+		auto* const game = fixture.GetGame();
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
+				const std::vector< op_t > blocked{
+					OP_NONE, OP_INIT, OP_GET_MAP_DATA, OP_RESET, OP_SAVE_MAP, OP_SEND_BACKEND_REQUESTS, OP_ADD_EVENT,
+#ifdef DEBUG
+					OP_SAVE_DUMP, OP_LOAD_DUMP,
+#endif
+				};
+				std::vector< common::mt_id_t > ids;
+				for ( const auto op : blocked ) {
+					MT_Request request{};
+					request.op = op;
+					if ( op == OP_SAVE_MAP ) { NEW( request.data.save_map.path, std::string, "must-not-be-written.map" ); }
+					if ( op == OP_SEND_BACKEND_REQUESTS ) { NEW( request.data.send_backend_requests.requests, std::vector< game::BackendRequest > ); }
+					if ( op == OP_ADD_EVENT ) { NEW( request.data.add_event.serialized_event, std::string, "must-not-be-executed" ); }
+					ids.push_back( game->MT_CreateRequest( request ) );
+				}
+				const auto progress = game->MT_GetFrontendRequests();
+				const auto ping = game->MT_Ping();
+				game->SetLoaderText( "Still processing" );
+				for ( const auto id : ids ) {
+					GT_ASSERT( game->MT_GetResponse( id ).result == R_NONE, "progress pump claimed a non-progress operation" );
+					game->MT_Cancel( id );
+				}
+				const auto response = game->MT_GetResponse( progress );
+				util::FinallyGuard release( [ & ]() { game->MT_DestroyResponse( response ); } );
+				GT_ASSERT( response.result == R_SUCCESS && response.data.get_frontend_requests.requests, "blocked operations starved frontend polling" );
+				GT_ASSERT( game->MT_GetResponse( ping ).result == R_SUCCESS, "blocked operations starved ping" );
+				fixture.IterateWorldRestore();
+				GT_ASSERT( fixture.HasMap(), "canceled reset was dispatched by normal Iterate" );
+				for ( const auto id : ids ) { GT_ASSERT( game->MT_GetResponse( id ).result == R_NONE, "canceled operation published a response" ); }
+				GT_OK();
+			} );
+		} );
+		GT_ASSERT( error.empty(), "operation filtering check: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "filtered MT extraction preserves payload ownership and unrestricted iteration", GT() {
+		struct Payload {
+			explicit Payload( size_t& destroyed ) : destroyed( destroyed ) {}
+			~Payload() { ++destroyed; }
+			size_t& destroyed;
+		};
+		struct Request { bool allowed; Payload* payload; };
+		struct Response { bool ready; Payload* payload; };
+		size_t request_destructions = 0, response_destructions = 0, executions = 0;
+		class CountingModule final : public common::MTModule< Request, Response > {
+		public:
+			const std::string GetClassName() const override { return "CountingModule"; }
+			CountingModule( size_t& executions, size_t& response_destructions )
+				: executions( executions ), response_destructions( response_destructions ) {}
+			~CountingModule() override { Stop(); }
+			void Pump() { ProcessRequests( []( const Request& request ) noexcept { return request.allowed; } ); }
+		protected:
+			const Response ProcessRequest( const Request&, MT_CANCELABLE ) override {
+				++executions;
+				return { true, new Payload( response_destructions ) };
+			}
+			void DestroyRequest( const Request& request ) override { delete request.payload; }
+			void DestroyResponse( const Response& response ) override { delete response.payload; }
+		private:
+			size_t& executions;
+			size_t& response_destructions;
+		} module( executions, response_destructions );
+		const auto blocked = module.MT_CreateRequest( { false, new Payload( request_destructions ) } );
+		const auto retrieved = module.MT_CreateRequest( { true, new Payload( request_destructions ) } );
+		module.MT_CreateRequest( { true, new Payload( request_destructions ) } );
+		module.Pump();
+		GT_ASSERT( executions == 2 && request_destructions == 0 && response_destructions == 0, "filtered dispatch changed payload ownership" );
+		module.MT_Cancel( blocked );
+		GT_ASSERT( request_destructions == 1 && !module.MT_GetResponse( blocked ).ready, "skipped request was not cancellable before execution" );
+		const auto response = module.MT_GetResponse( retrieved );
+		GT_ASSERT( response.ready && request_destructions == 2, "response retrieval did not release exactly one request" );
+		module.MT_DestroyResponse( response );
+		GT_ASSERT( response_destructions == 1 && !module.MT_GetResponse( retrieved ).ready, "response ownership was retained after delivery" );
+		module.Stop();
+		GT_ASSERT( request_destructions == 3 && response_destructions == 2, "Stop did not release the unclaimed response exactly once" );
+		module.Stop();
+		const auto normal = module.MT_CreateRequest( { false, new Payload( request_destructions ) } );
+		module.Iterate();
+		const auto normal_response = module.MT_GetResponse( normal );
+		GT_ASSERT( executions == 3 && normal_response.ready && request_destructions == 4, "normal Iterate inherited the progress filter" );
+		module.MT_DestroyResponse( normal_response );
+		GT_ASSERT( response_destructions == 3, "normal response cleanup changed" );
+		GT_OK();
+	} );
 }
 
 static void AddEventTransportTests( task::gsetests::GSETests* task ) {
@@ -643,6 +937,413 @@ public:
 		ProcessEvent( event );
 	}
 };
+
+// Session tests use the real packet dispatcher and event queue, without sockets.
+class SessionServer : public game::backend::connection::Server {
+public:
+	using Server::Server;
+	void Receive( const types::Packet& packet ) {
+		network::Event event;
+		event.type = network::Event::ET_PACKET;
+		event.cid = 23;
+		event.data.packet_data = packet.Serialize().ToString();
+		ProcessEvent( event );
+	}
+};
+
+static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test session callbacks keep their State and supplied owner rooted until cancellation drains", GT() {
+		using namespace game::backend;
+		std::atomic< size_t > state_destroyed{ 0 }, owner_destroyed{ 0 };
+		class CountedState final : public State {
+		public:
+			CountedState( gc::Space* space, context::Context* ctx, std::atomic< size_t >& count ) : State( space, ctx, nullptr ), count( count ) {}
+			~CountedState() override { ++count; }
+		private:
+			std::atomic< size_t >& count;
+		};
+		class CountedOwner final : public gc::Object {
+		public:
+			CountedOwner( gc::Space* space, std::atomic< size_t >& count ) : gc::Object( space ), count( count ) {}
+			~CountedOwner() override { ++count; }
+		private:
+			std::atomic< size_t >& count;
+		};
+		Game game;
+		GSE runtime;
+		auto* space = runtime.GetGCSpace();
+		CountedState* state = nullptr;
+		CountedOwner* owner = nullptr;
+		size_t calls = 0, cleanups = 0;
+		space->Accumulate( &runtime, [ & ]() {
+			state = new CountedState( space, runtime.CreateGlobalContext(), state_destroyed );
+			owner = new CountedOwner( space, owner_destroyed );
+			state->SetGame( &game );
+			runtime.AddRootObject( state ); runtime.AddRootObject( owner );
+		} );
+		std::thread producer( [ & ]() { state->WithGame( owner, [ & ]( Game* const bound, GSE_CALLABLE ) { if ( bound == &game ) { ++calls; } }, [ & ]() { ++cleanups; } ); } );
+		producer.join();
+		space->Accumulate( &runtime, [ & ]() { runtime.RemoveRootObject( state ); runtime.RemoveRootObject( owner ); } );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( state_destroyed == 0 && owner_destroyed == 0, "queued callback lost State or owner before retirement" );
+		space->Accumulate( &runtime, [ & ]() { state->Reset(); } );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( state_destroyed == 0 && owner_destroyed == 0, "canceled callback lost captures before its queue entry was retired" );
+		space->ProcessAccumulations();
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( calls == 0 && cleanups == 1, "canceled session executed or cleanup count changed" );
+		GT_ASSERT( state_destroyed == 1 && owner_destroyed == 1, "retired callback retained State or owner" );
+		GT_OK();
+	} );
+	task->AddTest( "test session callbacks preserve immediate nesting exceptions cleanup and fresh binding order", GT() {
+		BackendFixture fixture;
+		auto* state = fixture.GetGame()->GetState();
+		std::vector< int > order;
+		const auto immediate = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* other_state = new game::backend::State( gc_space, ctx, nullptr );
+			other_state->SetGame( fixture.GetGame() );
+			const auto invalid = [ & ]( game::backend::Game* const, GSE_CALLABLE ) { order.push_back( -1 ); };
+			state->WithGameSession( {}, state, invalid );
+			state->WithGameSession( other_state->CaptureGameSession(), state, invalid );
+			state->WithGame( state, [ & ]( game::backend::Game* const bound, GSE_CALLABLE ) {
+				if ( bound != fixture.GetGame() ) { throw std::runtime_error( "wrong game binding" ); }
+				order.push_back( 1 );
+				state->WithGame( state, [ & ]( game::backend::Game* const, GSE_CALLABLE ) { order.push_back( 2 ); } );
+				order.push_back( 3 );
+			} );
+			GT_OK();
+		} );
+		GT_ASSERT( immediate.empty() && order == std::vector< int >( { 1, 2, 3 } ), "nested session order changed: " + immediate );
+		size_t attempts = 0, cleanups = 0;
+		bool caught = false;
+		try { state->WithGame( state, []( game::backend::Game* const, GSE_CALLABLE ) { throw 41; } ); }
+		catch ( int value ) { caught = value == 41; }
+		GT_ASSERT( caught && !fixture.IsAccumulating(), "immediate exception lost identity or accumulation state" );
+		std::thread producer( [ & ]() {
+			state->WithGame( state, [ & ]( game::backend::Game* const, GSE_CALLABLE ) { if ( ++attempts == 1 ) { throw 42; } }, [ & ]() { ++cleanups; } );
+		} ); producer.join();
+		caught = false;
+		try { fixture.ProcessAccumulations(); } catch ( int value ) { caught = value == 42; }
+		GT_ASSERT( caught && cleanups == 0, "queued exception changed existing queue cleanup semantics" );
+		fixture.RebindSession();
+		state->WithGame( state, [ & ]( game::backend::Game* const, GSE_CALLABLE ) { order.push_back( 4 ); } );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( attempts == 1 && cleanups == 1 && order.back() == 4, "retired throwing callback ran again in replacement session" );
+		GT_OK();
+	} );
+	task->AddTest( "test session reset retires queued Game messages and pending event responses", GT() {
+		BackendFixture fixture;
+		auto* game = fixture.GetGame();
+		size_t messages = 0;
+		std::thread producer( [ & ]() { game->Message( "old world" ); } ); producer.join();
+		const auto reset = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			game->AddEventResponse( "reused-id", true, VALUE( value::Int,, 7 ) );
+			GT_ASSERT( fixture.PendingResponses() == 1, "response setup failed" );
+			fixture.ResetRequest();
+			GT_ASSERT( fixture.PendingResponses() == 0, "reset kept a response for retired event IDs" );
+			game->GetState()->SetGame( game );
+			game->On( GSE_CALL, "message", NATIVE_CALL( &messages ) { ++messages; return VALUE( value::Undefined ); } ) );
+			GT_OK();
+		} );
+		GT_ASSERT( reset.empty(), "reset/rebind setup failed: " + reset );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( messages == 0, "old message reached replacement handlers" );
+		game->Message( "fresh world" );
+		GT_ASSERT( messages == 1, "fresh message was canceled" );
+		GT_OK();
+	} );
+	task->AddTest( "test session initialize after reset binds before initialize and configure callbacks", GT() {
+		BackendFixture fixture;
+		fixture.EnableTurnPlayers();
+		auto* game = fixture.GetGame();
+		std::vector< std::string > order;
+		std::thread producer( [ & ]() { game->Message( "old world" ); } ); producer.join();
+		const auto result = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.ResetRequest();
+			auto* state = game->GetState();
+			GT_ASSERT( !state->GetGame(), "reset did not unbind the old game" );
+			auto* client = new RulesetClient( gc_space, &state->m_settings.local );
+			state->SetConnection( client );
+			game->On( GSE_CALL, "initialize", NATIVE_CALL( &order, state, game ) {
+				if ( state->GetGame() != game || game->GetUM() ) { throw std::runtime_error( "initialize binding/order is wrong" ); }
+				order.push_back( "initialize" ); return VALUE( value::Undefined );
+			} ) );
+			game->On( GSE_CALL, "configure", NATIVE_CALL( &order, state, game ) {
+				if ( state->GetGame() != game || !game->GetUM() ) { throw std::runtime_error( "configure binding/order is wrong" ); }
+				order.push_back( "configure" ); return VALUE( value::Undefined );
+			} ) );
+			game->On( GSE_CALL, "message", NATIVE_CALL( &order ) { order.push_back( "stale" ); return VALUE( value::Undefined ); } ) );
+			const auto id = game->MT_Init( state );
+			fixture.ProcessRequests();
+			const auto response = game->MT_GetResponse( id );
+			GT_ASSERT( response.result == game::backend::R_SUCCESS && fixture.IsPreparingMap(), "asset-free client initialization failed" );
+			GT_OK();
+		} );
+		GT_ASSERT( result.empty(), "initialization ordering failed: " + result );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( order == std::vector< std::string >( { "initialize", "configure" } ), "new initialization was canceled or old message reached it" );
+		GT_OK();
+	} );
+
+	for ( const bool cancel : { false, true } ) {
+		task->AddTest( std::string( "test session extracted event batch survives collection then " ) + ( cancel ? "retires" : "executes" ), GT( cancel ) {
+			using namespace game::backend::event;
+			std::atomic< size_t > destroyed{ 0 };
+			class CountedEvent final : public Event {
+			public:
+				CountedEvent( game::backend::Game* game, GSE_CALLABLE, std::atomic< size_t >& count ) : Event( game, ES_LOCAL, 0, GSE_CALL, "batch", {}, "batch-id" ), count( count ) {}
+				~CountedEvent() override { ++count; }
+			private: std::atomic< size_t >& count;
+			};
+			BackendFixture fixture;
+			CountedEvent* pending_event = nullptr;
+			size_t applied = 0;
+			const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+				auto* apply = NATIVE_CALL( &applied ) { ++applied; return VALUE( value::Undefined ); } );
+				fixture.RegisterEvent( "batch", new EventHandler( gc_space, "batch", noop, nullptr, apply, noop ) );
+				pending_event = new CountedEvent( fixture.GetGame(), GSE_CALL, destroyed );
+				fixture.GetGame()->AddEvent( pending_event );
+				GT_OK();
+			} );
+			GT_ASSERT( setup.empty(), "batch setup failed: " + setup );
+			bool alive_during_handoff = false;
+			const auto handed_off = fixture.CollectDuringEventHandoff( pending_event, [ & ]() { alive_during_handoff = destroyed == 0; } );
+			GT_ASSERT( handed_off && alive_during_handoff, "event lost its root between extraction and queue registration" );
+			GT_ASSERT( fixture.EventHandoffs() == 0, "temporary batch root outlived queue registration" );
+			GT_ASSERT( fixture.PendingEvents().empty(), "batch was not extracted before queuing" );
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( destroyed == 0, "extracted event was collected before dispatch" );
+			if ( cancel ) { fixture.RebindSession(); }
+			fixture.ProcessAccumulations();
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( applied == ( cancel ? 0 : 1 ), "batch crossed a retired session or fresh delivery failed" );
+			GT_ASSERT( destroyed == 1, "completed/canceled batch still roots its event" );
+			const auto throwing = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				// Same extraction path on the owner: a throwing immediate callback
+				// must release the handoff even though Space skips f_cleanup.
+				fixture.GetGame()->ClearEvents();
+				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+				auto* fail = NATIVE_CALL() { throw 73; return VALUE( value::Undefined ); } );
+				fixture.RegisterEvent( "batch", new EventHandler( gc_space, "batch", noop, nullptr, fail, noop ) );
+				fixture.GetGame()->AddEvent( new CountedEvent( fixture.GetGame(), GSE_CALL, destroyed ) );
+				bool caught = false;
+				try { fixture.ProcessEvents(); } catch ( int value ) { caught = value == 73; }
+				GT_ASSERT( caught && fixture.EventHandoffs() == 0, "throwing immediate batch leaked its native handoff" );
+				GT_OK();
+			} );
+			GT_ASSERT( throwing.empty(), "throwing batch check failed: " + throwing );
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( destroyed == 2, "throwing immediate batch retained its event" );
+			const auto abandoned = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				pending_event = new CountedEvent( fixture.GetGame(), GSE_CALL, destroyed );
+				fixture.GetGame()->AddEvent( pending_event );
+				GT_OK();
+			} );
+			GT_ASSERT( abandoned.empty(), "abandoned batch setup failed: " + abandoned );
+			bool caught = false;
+			try { fixture.CollectDuringEventHandoff( pending_event, []() { throw 74; } ); }
+			catch ( int value ) { caught = value == 74; }
+			GT_ASSERT( caught && fixture.EventHandoffs() == 0, "abandoned extracted batch retained its handoff" );
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( destroyed == 3, "abandoned extracted batch retained its event" );
+			GT_OK();
+		} );
+	}
+	task->AddTest( "test session extracted event retains its identity across reset before dispatch", GT() {
+		using namespace game::backend::event;
+		BackendFixture fixture;
+		auto* state = fixture.GetGame()->GetState();
+		const auto old_session = state->CaptureGameSession();
+		Event* old_event = nullptr;
+		size_t applied = 0;
+		const auto add = [ & ]( GSE_CALLABLE ) {
+			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+			auto* apply = NATIVE_CALL( &applied ) { ++applied; return VALUE( value::Undefined ); } );
+			fixture.RegisterEvent( "handoff", new EventHandler( gc_space, "handoff", noop, nullptr, apply, noop ) );
+			auto* event = new Event( fixture.GetGame(), Event::ES_LOCAL, 0, GSE_CALL, "handoff", {}, "reused-id" );
+			fixture.GetGame()->AddEvent( event );
+			return event;
+		};
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { old_event = add( GSE_CALL ); GT_OK(); } );
+		GT_ASSERT( setup.empty(), "handoff setup failed: " + setup );
+		std::string reset_error;
+		bool consumed_fresh = true;
+		const auto handed_off = fixture.CollectDuringEventHandoff( old_event, [ & ]() {
+			reset_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				fixture.ResetRequest();
+				state->SetGame( fixture.GetGame() );
+				add( GSE_CALL );
+				consumed_fresh = fixture.ExtractWithSession( old_session );
+				GT_OK();
+			} );
+			g_engine->GetGC()->Iterate(); // Extracted old batch is still a real root after reset.
+		} );
+		GT_ASSERT( handed_off && reset_error.empty(), "handoff/reset failed: " + reset_error );
+		GT_ASSERT( !consumed_fresh && fixture.PendingEvents().size() == 1, "retired producer consumed the new-session queue" );
+		GT_ASSERT( fixture.EventHandoffs() == 0, "dispatched handoff was not released" );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( applied == 0, "old extracted batch sampled the replacement session at dispatch" );
+		fixture.ProcessEvents(); // Normal unsplit production entry still processes the fresh batch.
+		GT_ASSERT( applied == 1 && fixture.PendingEvents().empty(), "fresh event failed after stale dispatch cancellation" );
+		GT_OK();
+	} );
+
+	for ( const bool server : { false, true } ) {
+		task->AddTest( std::string( "test session " ) + ( server ? "Server" : "Client" ) + " ingress rejects retired packets and targets its bound world", GT( server ) {
+			using namespace game::backend;
+			BackendFixture fixture;
+			fixture.EnableTurnPlayers();
+			auto* state = fixture.GetGame()->GetState();
+			RulesetClient* client = nullptr;
+			SessionServer* host = nullptr;
+			types::Packet packet( types::Packet::PT_GAME_EVENT );
+			types::Packet response( types::Packet::PT_GAME_EVENT_RESPONSE );
+			const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				if ( server ) {
+					host = new SessionServer( gc_space, &state->m_settings.local ); state->SetConnection( host );
+					auto& slot = state->m_slots->GetSlot( 2 ); slot.SetPlayer( slot.GetPlayer(), 23, "" );
+				} else { client = new RulesetClient( gc_space, &state->m_settings.local ); state->SetConnection( client ); }
+				auto* event = new event::Event( fixture.GetGame(), event::Event::ES_LOCAL, 2, GSE_CALL, "bound-event", { { "tile", fixture.GetGame()->GetMap()->GetTile( 2, 2 )->Wrap( GSE_CALL ) } }, "wire-id" );
+				types::Buffer bytes; bytes.WriteString( event->Serialize().ToString() ); packet.data.str = bytes.ToString();
+				response.data.str = "wire-id"; response.data.boolean = true;
+				types::Buffer result; Value::Serialize( &result, fixture.GetGame()->GetMap()->GetTile( 2, 2 )->Wrap( GSE_CALL ) ); response.data.str2 = result.ToString();
+				GT_OK();
+			} );
+			GT_ASSERT( setup.empty(), "ingress setup failed: " + setup );
+			const auto receive = [ & ]() { if ( server ) { host->Receive( packet ); } else { client->Receive( packet ); client->Receive( response ); } };
+			std::thread old( receive ); old.join();
+			fixture.RebindSession();
+			fixture.ProcessAccumulations();
+			GT_ASSERT( fixture.PendingEvents().empty() && fixture.PendingResponses() == 0, "retired packet reached replacement session" );
+			std::thread fresh( receive ); fresh.join();
+			fixture.ProcessAccumulations();
+			GT_ASSERT( fixture.PendingEvents().size() == 1 && fixture.PendingResponses() == ( server ? 0 : 1 ), "fresh packet did not target fixture Game" );
+			const auto check = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* data = VALUE_DATA( value::Object, fixture.PendingEvents().front()->GetData().at( "data" ) );
+				GT_ASSERT( Tile::Unwrap( data->Get( "tile" ) ) == fixture.GetGame()->GetMap()->GetTile( 2, 2 ), "packet reference resolved in another world" );
+				GT_OK();
+			} );
+			GT_ASSERT( check.empty(), "bound packet reference failed: " + check );
+			GT_OK();
+		} );
+	}
+	task->AddTest( "test session queued world completion cannot resume after reset and rebind", GT() {
+		BackendFixture fixture;
+		auto* state = fixture.GetGame()->GetState();
+		RulesetClient* client = nullptr;
+		types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
+		packet.data.str = "invalid world header"; packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			state->m_settings.global.SelectRuleset( "smac" );
+			state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+			client = new RulesetClient( gc_space, &state->m_settings.local ); state->SetConnection( client );
+			fixture.PrepareWorldDownload( client, packet.data.str.size() );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "completion setup failed: " + setup );
+		const auto retained_complete = client->m_on_download_complete;
+		const auto retained_progress = client->m_on_download_progress;
+		std::thread producer( [ & ]() { client->Receive( packet ); } ); producer.join();
+		const auto reset = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.WithoutDisconnectIO( client, [ & ]() { fixture.ResetRequest(); } );
+			state->SetGame( fixture.GetGame() );
+			GT_OK();
+		} );
+		GT_ASSERT( reset.empty(), "completion reset failed: " + reset );
+		fixture.WithoutDisconnectIO( client, [ & ]() { fixture.ProcessAccumulations(); } );
+		GT_ASSERT( client->DisconnectReason().empty() && !fixture.HasMap(), "old completion resumed in replacement session" );
+		const auto fresh = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK(); } );
+		GT_ASSERT( fresh.empty(), "fresh completion setup failed: " + fresh );
+		const auto frontend_count = fixture.FrontendRequestCount();
+		// These are actual installed handlers retained before reset, invoked only
+		// after the same Client/State/Game have a new session and fresh handlers.
+		retained_progress( 0.5f );
+		fixture.WithoutDisconnectIO( client, [ & ]() { retained_complete( packet.data.str ); } );
+		GT_ASSERT( client->m_on_download_complete && client->m_on_download_progress, "retired completion erased replacement download handlers" );
+		GT_ASSERT( fixture.FrontendRequestCount() == frontend_count && client->DisconnectReason().empty(), "retired download handler published progress or decoded a replacement world" );
+		std::thread fresh_producer( [ & ]() { client->Receive( packet ); } ); fresh_producer.join();
+		fixture.WithoutDisconnectIO( client, [ & ]() { fixture.ProcessAccumulations(); } );
+		GT_ASSERT( client->DisconnectReason() == "Snapshot format mismatch" && !fixture.HasMap(), "fresh completion no longer validates its header" );
+		GT_OK();
+	} );
+
+	task->AddTest( "test session animation completion copies request IDs and cancels retired callbacks", GT() {
+		BackendFixture fixture;
+		fixture.EnableWorldSnapshot();
+		std::vector< size_t > completed, requested;
+		const auto send = [ & ]() {
+			std::vector< game::BackendRequest > requests;
+			for ( size_t i = 0; i < 2; ++i ) {
+				const auto id = fixture.GetGame()->GetAM()->AddAnimationCallback( [ & ]( const size_t& id ) { completed.push_back( id ); } );
+				requested.push_back( id );
+				game::BackendRequest request( game::BackendRequest::BR_ANIMATION_FINISHED ); request.data.animation_finished.animation_id = id; requests.push_back( request );
+			}
+			const auto id = fixture.GetGame()->MT_SendBackendRequests( requests );
+			std::thread producer( [ & ]() { fixture.ProcessRequests(); } ); producer.join();
+			const auto result = fixture.GetGame()->MT_GetResponse( id );
+			return result.result == game::backend::R_SUCCESS;
+		};
+		GT_ASSERT( send(), "animation request failed" );
+		fixture.RebindSession(); fixture.ProcessAccumulations();
+		GT_ASSERT( completed.empty(), "retired animation callback ran" );
+		GT_ASSERT( send(), "fresh animation request failed" );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( completed == std::vector< size_t >( requested.begin() + 2, requested.end() ), "animation completion retained a destroyed request-loop reference" );
+		GT_OK();
+	} );
+	task->AddTest( "test session tile lock batches retain values and retire without consuming randomness", GT() {
+		BackendFixture fixture;
+		fixture.EnableTileLockFixture(); fixture.SetRunning( true );
+		auto* const state = fixture.GetGame()->GetState();
+		const auto old_session = state->CaptureGameSession();
+		const auto random = fixture.GetGame()->GetRandom()->GetStateString();
+		fixture.QueueTileLock();
+		size_t stolen = 1;
+		fixture.SplitTileLockDispatch( [ & ]() {
+			fixture.RebindSession();
+			fixture.QueueTileLock();
+			stolen = fixture.ExtractTileLocksWithSession( old_session );
+		} );
+		fixture.ProcessAccumulations();
+		GT_ASSERT( stolen == 0, "retired tile producer consumed replacement requests" );
+		GT_ASSERT( fixture.TileLockCount() == 0, "retired tile-lock batch executed" );
+		std::thread fresh( [ & ]() { fixture.GetGame()->GetTM()->ProcessTileLockRequests(); } ); fresh.join();
+		fixture.ProcessAccumulations();
+		GT_ASSERT( fixture.TileLockCount() == 1, "fresh tile-lock batch lost its copied requests" );
+		GT_ASSERT( fixture.GetGame()->GetRandom()->GetStateString() == random, "tile-lock cancellation consumed random state" );
+		GT_OK();
+	} );
+	task->AddTest( "test session extracted tile batch cancels after reset collects its manager", GT() {
+		BackendFixture fixture;
+		fixture.EnableTileLockFixture(); fixture.SetRunning( true );
+		auto* const state = fixture.GetGame()->GetState();
+		Value* manager_wrapper = nullptr;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			manager_wrapper = fixture.GetGame()->GetTM()->Wrap( GSE_CALL );
+			ctx->CreateConst( "retired_tile_manager", manager_wrapper, si, ep );
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "tile lifetime setup failed: " + setup );
+		fixture.QueueTileLock();
+		std::string reset_error;
+		bool collected = false;
+		fixture.SplitTileLockDispatch( [ & ]() {
+			reset_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				fixture.ResetRequest();
+				state->SetGame( fixture.GetGame() );
+				GT_OK();
+			} );
+			g_engine->GetGC()->Iterate();
+			collected = manager_wrapper->type == VT_UNDEFINED;
+		} );
+		GT_ASSERT( reset_error.empty() && collected, "reset did not collect the extracted batch's manager: " + reset_error );
+		g_engine->GetGC()->Iterate(); // No pending queue owner may reference the retired manager.
+		fixture.ProcessAccumulations();
+		GT_ASSERT( !fixture.HasMap() && fixture.GetGame()->GetTM() == nullptr, "retired tile batch recreated world state" );
+		GT_OK();
+	} );
+}
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test backend fixture retires map and tile wrappers under GC exclusion", GT() {
@@ -2047,7 +2748,398 @@ static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+namespace {
+
+using namespace game::backend::unit;
+
+void DefineSnapshotUnit( UnitManager* manager ) {
+	MoraleSet::morale_values_t values;
+	for ( size_t i = 0 ; i < 7 ; ++i ) { values.emplace_back( "Rank " + std::to_string( i ) ); }
+	manager->DefineMoraleSet( new MoraleSet( "TEST_MORALE", values ) );
+	manager->DefineUnit( new StaticDef( "TEST_UNIT", manager->GetMoraleSet( "TEST_MORALE" ), "Snapshot unit",
+		MT_LAND, 1.0f, new SpriteRender( "unused-test-asset.pcx", 2, 3, 100, 75, 53, 54, 102 ) ) );
+}
+
+struct UnitSnapshotRecord {
+	int64_t id = 71, owner = 2, x = 2, y = 2, morale = 3;
+	std::string def = "TEST_UNIT";
+	float movement = 0.375f, health = 0.625f;
+	bool moved = true;
+	types::Buffer Encode() const {
+		types::Buffer buf;
+		buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
+		buf.WriteInt( x ); buf.WriteInt( y ); buf.WriteFloat( movement );
+		buf.WriteInt( morale ); buf.WriteFloat( health ); buf.WriteBool( moved );
+		return buf;
+	}
+};
+
+Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixture, const size_t id, const size_t x = 2 ) {
+	auto* game = fixture.GetGame();
+	auto* unit = new Unit( GSE_CALL, game->GetUM(), id, game->GetUM()->GetUnitDef( "TEST_UNIT" ),
+		&game->GetState()->m_slots->GetSlot( 2 ), game->GetMap()->GetTile( x, 2 ), 0.375f, 3, 0.625f, true );
+	game->GetUM()->SpawnUnit( GSE_CALL, unit );
+	return unit;
+}
+
+class CountedUnitDef : public StaticDef {
+public:
+	CountedUnitDef( const MoraleSet* morale, size_t& destroyed )
+		: StaticDef( "COUNTED", morale, "Counted", MT_LAND, 1.0f, new SpriteRender( "unused", 0, 0, 1, 1, 0, 0, 0 ) )
+		, m_destroyed( destroyed ) {}
+	~CountedUnitDef() override { ++m_destroyed; }
+private:
+	size_t& m_destroyed;
+};
+
+}
+
+static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test unit snapshots use destination definitions and preserve state without spawn hooks", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool immediate : { false, true } ) {
+			for ( const bool client : { false, true } ) {
+				BackendFixture source, restored;
+				source.EnableTurns(); restored.EnableTurns();
+				source.SetRunning( true ); restored.SetRunning( immediate );
+				auto* source_manager = source.GetGame()->GetUM();
+				auto* manager = restored.GetGame()->GetUM();
+				size_t hook_calls = 0;
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					DefineSnapshotUnit( source_manager );
+					SpawnSnapshotUnit( GSE_CALL, source, 71 );
+					auto* second = SpawnSnapshotUnit( GSE_CALL, source, 88, 4 );
+					second->m_movement = -0.0f; second->m_morale = 6;
+					second->m_health = -0.125f; second->m_moved_this_turn = false;
+					GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "source unit setup failed: " + source_error );
+				Unit::SetNextId( 123 );
+				types::Buffer snapshot;
+				source_manager->Serialize( snapshot );
+				const auto rng = restored.GetGame()->GetRandom()->GetStateString();
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					if ( client ) { restored.UseClientConnection( gc_space ); }
+					manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &restored, &hook_calls ) {
+						++hook_calls;
+						restored.GetGame()->GetRandom()->GetUInt( 1, 100 );
+						return VALUE( value::Undefined );
+					} ) );
+					manager->Deserialize( GSE_CALL, snapshot );
+					if ( !immediate ) {
+						GT_ASSERT( manager->GetUnits().empty(), "deferred restore published units before startup" );
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 2, 2 )->units.size() == 1, "deferred restore lost its tile registration" );
+						restored.SetRunning( true );
+						manager->ProcessUnprocessed( GSE_CALL );
+						manager->ProcessUnprocessed( GSE_CALL );
+					}
+					GT_ASSERT( manager->GetUnits().size() == 2 && Unit::GetNextId() == 123, "unit count or next ID changed" );
+					for ( const auto& entry : source_manager->GetUnits() ) {
+						const auto* unit = manager->GetUnit( entry.first );
+						GT_ASSERT( unit && unit->m_def == manager->GetUnitDef( "TEST_UNIT" ), "restored unit does not borrow its manager's definition" );
+						GT_ASSERT( unit->m_def != entry.second->m_def, "restored unit borrowed the source world's definition" );
+						GT_ASSERT( unit->m_def->m_moraleset == manager->GetMoraleSet( "TEST_MORALE" ), "definition borrowed another world's morale" );
+						GT_ASSERT( unit->m_owner == &restored.GetGame()->GetState()->m_slots->GetSlot( 2 ), "unit owner resolved in another world" );
+						GT_ASSERT( unit->GetTile()->units.at( unit->m_id ) == unit, "tile lost its unit identity" );
+						GT_ASSERT( Unit::Serialize( unit ).ToString() == Unit::Serialize( entry.second ).ToString(), "unit record changed after round trip" );
+					}
+					GT_ASSERT( hook_calls == 0 && restored.GetGame()->GetRandom()->GetStateString() == rng, "restore invoked new-unit gameplay or consumed RNG" );
+					types::Buffer again; manager->Serialize( again );
+					GT_ASSERT( snapshot.lenr == snapshot.lenw && again.ToString() == snapshot.ToString(), "unit manager snapshot changed" );
+					types::Buffer retry( snapshot.ToString() );
+					bool rejected = false;
+					try { manager->Deserialize( GSE_CALL, retry ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && retry.lenr == 0 && manager->GetUnits().size() == 2 && Unit::GetNextId() == 123, "reload into populated manager changed live state" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "unit restore failed: " + error );
+				const auto& requests = restored.PushUnitUpdates();
+				std::set< size_t > spawned;
+				for ( const auto& request : requests ) {
+					if ( request.type == game::FrontendRequest::FR_TURN_STATUS ) { continue; }
+					GT_ASSERT( request.type == game::FrontendRequest::FR_UNIT_SPAWN, "restore queued an unexpected frontend operation" );
+					const auto& data = request.data.unit_spawn;
+					GT_ASSERT( spawned.insert( data.unit_id ).second, "restored unit spawned twice in the frontend" );
+					const auto* unit = manager->GetUnit( data.unit_id );
+					GT_ASSERT( unit && *data.unitdef_id == unit->m_def->m_id && data.health == unit->m_health && data.movement == unit->m_movement, "frontend spawn lost restored state" );
+				}
+				GT_ASSERT( spawned == std::set< size_t >( { 71, 88 } ), "restored units need exactly one frontend spawn each" );
+				const auto spawn_error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					restored.SetRunning( false );
+					SpawnSnapshotUnit( GSE_CALL, restored, Unit::GetNextId(), 6 );
+					GT_ASSERT( hook_calls == 0, "ordinary deferred spawn fired before startup" );
+					restored.SetRunning( true ); manager->ProcessUnprocessed( GSE_CALL );
+					GT_ASSERT( hook_calls == ( client ? 0 : 1 ), "ordinary deferred spawn lost master/client hook behavior" );
+					GT_ASSERT( ( restored.GetGame()->GetRandom()->GetStateString() != rng ) == !client, "ordinary spawn RNG behavior changed" );
+					SpawnSnapshotUnit( GSE_CALL, restored, Unit::GetNextId(), 6 );
+					GT_ASSERT( hook_calls == ( client ? 0 : 2 ), "ordinary immediate spawn lost master/client hook behavior" );
+					GT_OK();
+				} );
+				GT_ASSERT( spawn_error.empty(), "ordinary spawn after restore failed: " + spawn_error );
+			}
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test malformed unit records reject before tile registration or ID allocation", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( int scenario = 0 ; scenario < 22 ; ++scenario ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM();
+				DefineSnapshotUnit( manager );
+				UnitSnapshotRecord record;
+				switch ( scenario ) {
+					case 0: record.id = 0; break;
+					case 1: record.id = -1; break;
+					case 2: record.id = std::numeric_limits< int64_t >::max(); break;
+					case 3: record.def = "MISSING"; break;
+					case 4: record.owner = -1; break;
+					case 5: record.owner = 3; break;
+					case 6: record.x = -2; break;
+					case 7: record.x = 8; break;
+					case 8: record.y = 8; break;
+					case 9: record.x = 3; break;
+					case 10: record.morale = -1; break;
+					case 11: record.morale = 7; break;
+					case 12: record.movement = std::numeric_limits< float >::quiet_NaN(); break;
+					case 13: record.movement = std::numeric_limits< float >::infinity(); break;
+					case 14: record.health = std::numeric_limits< float >::quiet_NaN(); break;
+					case 15: record.health = -std::numeric_limits< float >::infinity(); break;
+				}
+				Unit* existing = nullptr;
+				if ( scenario >= 18 ) {
+					fixture.SetRunning( scenario < 20 );
+					existing = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+					if ( scenario & 1 ) { record.x = 4; }
+				}
+				auto bytes = record.Encode().ToString();
+				if ( scenario == 16 ) { bytes.pop_back(); }
+				if ( scenario == 17 ) { bytes += "trailing"; }
+				types::Buffer input( bytes );
+				const auto next_id = Unit::GetNextId();
+				bool rejected = false;
+				try { std::unique_ptr< Unit > unexpected( Unit::Deserialize( GSE_CALL, input, manager ) ); }
+				catch ( const std::runtime_error& ) { rejected = true; }
+				GT_ASSERT( rejected, "malformed unit record accepted: " + std::to_string( scenario ) );
+				GT_ASSERT( Unit::GetNextId() == next_id, "rejected unit consumed an ID" );
+				const auto& units = fixture.GetGame()->GetMap()->GetTile( 2, 2 )->units;
+				GT_ASSERT( units.size() == ( existing ? 1 : 0 ), "rejected unit changed tile occupancy" );
+				GT_ASSERT( !existing || units.at( 71 ) == existing, "duplicate unit displaced the original" );
+				GT_ASSERT( fixture.GetGame()->GetMap()->GetTile( 4, 2 )->units.empty(), "duplicate unit claimed a second tile" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "malformed unit validation failed: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit snapshot preserves finite signed movement and health boundaries", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const float value : { -std::numeric_limits< float >::max(), -1.0f, -0.0f, 0.0f,
+			std::numeric_limits< float >::denorm_min(), 1.0f, 2.0f, std::numeric_limits< float >::max() } ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+				UnitSnapshotRecord record; record.movement = record.health = value;
+				auto input = record.Encode();
+				auto* unit = Unit::Deserialize( GSE_CALL, input, manager );
+				manager->SpawnUnit( GSE_CALL, unit );
+				GT_ASSERT( Unit::Serialize( unit ).ToString() == input.ToString(), "finite unit state changed" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "finite boundary snapshot failed: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit manager snapshot rejects unsupported formats and malformed registries", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			for ( int scenario = 0 ; scenario < 18 ; ++scenario ) {
+				BackendFixture source, restored; source.EnableTurns(); restored.EnableTurns(); restored.SetRunning( running );
+				std::string morale_bytes, def_bytes;
+				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* manager = source.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+					morale_bytes = MoraleSet::Serialize( manager->GetMoraleSet( "TEST_MORALE" ) ).ToString();
+					def_bytes = Def::Serialize( manager->GetUnitDef( "TEST_UNIT" ) ).ToString();
+					GT_OK();
+				} );
+				GT_ASSERT( source_error.empty(), "registry fixture failed: " + source_error );
+				types::Buffer input;
+				if ( scenario == 0 ) { input.WriteInt( 0 ); } // legacy unversioned manager
+				else if ( scenario == 1 ) { input.WriteString( "GLSMAC_UNITS_V999" ); }
+				else {
+					input.WriteString( "GLSMAC_UNITS_V1" );
+					if ( scenario == 2 || scenario == 3 ) { input.WriteInt( scenario == 2 ? -1 : std::numeric_limits< int64_t >::max() ); }
+					else {
+						input.WriteInt( scenario == 5 ? 2 : 1 );
+						input.WriteString( scenario == 4 ? "WRONG_MORALE_KEY" : "TEST_MORALE" ); input.WriteString( morale_bytes );
+						if ( scenario == 5 ) { input.WriteString( "TEST_MORALE" ); input.WriteString( morale_bytes ); }
+						input.WriteInt( scenario == 7 ? 2 : 1 );
+						input.WriteString( scenario == 6 ? "WRONG_UNIT_KEY" : "TEST_UNIT" );
+						if ( scenario == 8 || scenario == 9 || scenario >= 14 ) {
+							types::Buffer invalid;
+							invalid.WriteString( "TEST_UNIT" ); invalid.WriteString( scenario == 8 ? "MISSING" : "TEST_MORALE" );
+							invalid.WriteString( "Broken definition" ); invalid.WriteInt( scenario < 14 ? INT64_C( 4294967296 ) : DT_STATIC );
+							if ( scenario >= 14 ) {
+								invalid.WriteInt( scenario == 14 ? -1 : ( scenario == 15 ? INT64_C( 4294967296 ) : MT_LAND ) );
+								invalid.WriteFloat( scenario == 16 ? std::numeric_limits< float >::infinity() : 1.0f );
+								invalid.WriteInt( INT64_C( 4294967296 ) ); // invalid render tag must not narrow to RT_SPRITE
+							}
+							input.WriteString( invalid.ToString() );
+						}
+						else { input.WriteString( def_bytes ); }
+						if ( scenario == 7 ) { input.WriteString( "TEST_UNIT" ); input.WriteString( def_bytes ); }
+						input.WriteInt( scenario == 11 ? 2 : 1 );
+						UnitSnapshotRecord record; if ( scenario == 10 ) { record.def = "MISSING"; }
+						input.WriteString( record.Encode().ToString() );
+						if ( scenario == 11 ) { record.x = 4; input.WriteString( record.Encode().ToString() ); }
+						input.WriteInt( scenario == 12 ? 71 : 123 );
+						if ( scenario == 13 ) { input.WriteInt( 999 ); }
+					}
+				}
+				const auto next_id = Unit::GetNextId();
+				const auto rng = restored.GetGame()->GetRandom()->GetStateString();
+				size_t hooks = 0;
+				const auto error = restored.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* manager = restored.GetGame()->GetUM();
+					manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
+					bool rejected = false;
+					try { manager->Deserialize( GSE_CALL, input ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected, "malformed unit manager accepted: " + std::to_string( scenario ) );
+					GT_ASSERT( hooks == 0 && restored.GetGame()->GetRandom()->GetStateString() == rng, "malformed restore ran gameplay" );
+					if ( scenario < 4 ) {
+						GT_ASSERT( !manager->GetMoraleSet( "TEST_MORALE" ) && !manager->GetUnitDef( "TEST_UNIT" ) && manager->GetUnits().empty(), "unsupported header published state" );
+						GT_ASSERT( next_id == Unit::GetNextId() && restored.FrontendRequestCount() == 0, "unsupported header changed IDs or frontend" );
+					}
+					if ( scenario == 11 ) {
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 2, 2 )->units.size() == 1, "duplicate record displaced accepted unit" );
+						GT_ASSERT( restored.GetGame()->GetMap()->GetTile( 4, 2 )->units.empty(), "duplicate record claimed another tile" );
+					}
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "manager rejection failed: " + error );
+			}
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test deferred unit callback failure transfers ownership exactly once", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool resume : { false, true } ) {
+			BackendFixture fixture; fixture.EnableTurns();
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* manager = fixture.GetGame()->GetUM(); DefineSnapshotUnit( manager );
+				size_t hooks = 0;
+				manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) {
+					if ( ++hooks == 1 ) { GSE_ERROR( EC.GAME_ERROR, "deferred unit hook failure" ); }
+					return VALUE( value::Undefined );
+				} ) );
+				auto* first = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+				auto* second = SpawnSnapshotUnit( GSE_CALL, fixture, 88, 4 );
+				const auto next_id = Unit::GetNextId();
+				for ( size_t phase = 0 ; phase < 2 ; ++phase ) {
+					types::Buffer output; output.WriteString( "preserve" );
+					const auto before = output.ToString();
+					bool rejected = false;
+					try { manager->Serialize( output ); }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && output.ToString() == before, "snapshot omitted pending units or changed output before rejecting" );
+					if ( !phase ) {
+						fixture.SetRunning( true );
+						bool threw = false;
+						try { manager->ProcessUnprocessed( GSE_CALL ); }
+						catch ( const Exception& error ) { threw = error.class_name == EC.GAME_ERROR; }
+						GT_ASSERT( threw && hooks == 1, "deferred spawn did not propagate its callback failure" );
+						GT_ASSERT( manager->GetUnits().size() == 1 && manager->GetUnit( 71 ) == first && !manager->GetUnit( 88 ), "callback failure lost ownership of registered or pending units" );
+					}
+				}
+				if ( resume ) {
+					manager->ProcessUnprocessed( GSE_CALL ); manager->ProcessUnprocessed( GSE_CALL );
+					GT_ASSERT( hooks == 2 && manager->GetUnit( 71 ) == first && manager->GetUnit( 88 ) == second, "resuming pending startup replayed an already published unit" );
+					types::Buffer completed; manager->Serialize( completed );
+				}
+				GT_ASSERT( Unit::GetNextId() == next_id, "startup registration changed IDs" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "deferred ownership failure: " + error );
+			fixture.DestroyMapBeforeManagers(); // also exercises teardown with an untouched pending entry
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test unit registry removal preserves live and pending borrowers", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			size_t destroyed = 0;
+			BackendFixture fixture; fixture.EnableTurns(); fixture.SetRunning( running );
+			const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame(); auto* manager = game->GetUM(); DefineSnapshotUnit( manager );
+				auto* morale = manager->GetMoraleSet( "TEST_MORALE" );
+				auto* def = new CountedUnitDef( morale, destroyed ); manager->DefineUnit( def );
+				manager->SpawnUnit( GSE_CALL, new Unit( GSE_CALL, manager, 71, def, &game->GetState()->m_slots->GetSlot( 2 ),
+					game->GetMap()->GetTile( 2, 2 ), 1, 0, 1, false ) );
+				const auto requests = fixture.FrontendRequestCount();
+				for ( const bool remove_morale : { false, true } ) {
+					bool rejected = false;
+					try { if ( remove_morale ) { manager->UndefineMoraleSet( "TEST_MORALE" ); } else { manager->UndefineUnit( "COUNTED" ); } }
+					catch ( const std::runtime_error& ) { rejected = true; }
+					GT_ASSERT( rejected && destroyed == 0 && manager->GetUnitDef( "COUNTED" ) == def && manager->GetMoraleSet( "TEST_MORALE" ) == morale, "registry removal invalidated a borrower" );
+					GT_ASSERT( fixture.FrontendRequestCount() == requests, "rejected undefine sent a frontend change" );
+				}
+				fixture.SetRunning( true ); manager->ProcessUnprocessed( GSE_CALL );
+				manager->DespawnUnit( GSE_CALL, 71 );
+				manager->UndefineUnit( "COUNTED" );
+				GT_ASSERT( destroyed == 1 && !manager->GetUnitDef( "COUNTED" ), "unused definition was not deleted exactly once" );
+				// Reverse-order definition rollback remains valid once no units borrow it.
+				manager->UndefineUnit( "TEST_UNIT" ); manager->UndefineMoraleSet( "TEST_MORALE" );
+				GT_ASSERT( !manager->GetUnitDef( "TEST_UNIT" ) && !manager->GetMoraleSet( "TEST_MORALE" ), "unused registries could not be removed in reverse order" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "registry ownership failure: " + error );
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "test manager owns shared unit definitions through map-first teardown", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool running : { false, true } ) {
+			size_t destroyed = 0;
+			{
+				BackendFixture fixture; fixture.EnableTurns(); fixture.SetRunning( running );
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = fixture.GetGame(); auto* manager = game->GetUM(); DefineSnapshotUnit( manager );
+					auto* def = new CountedUnitDef( manager->GetMoraleSet( "TEST_MORALE" ), destroyed ); manager->DefineUnit( def );
+					for ( size_t id : { 71, 88 } ) {
+						manager->SpawnUnit( GSE_CALL, new Unit( GSE_CALL, manager, id, def, &game->GetState()->m_slots->GetSlot( 2 ),
+							game->GetMap()->GetTile( 2, 2 ), 1, 0, 1, false ) );
+					}
+					GT_ASSERT( destroyed == 0, "live units destroyed their shared definition" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "unit ownership setup failed: " + error );
+				fixture.DestroyMapBeforeManagers();
+			}
+			GT_ASSERT( destroyed == 1, "shared unit definition was not destroyed exactly once" );
+		}
+		GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	AddLoaderProgressTests( task );
+	AddSessionCallbackTests( task );
+	AddUnitSnapshotTests( task );
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
 	AddRulesetTests( task );

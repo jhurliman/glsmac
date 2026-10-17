@@ -74,62 +74,73 @@ void TileManager::UnlockTiles( const size_t initiator_slot, const tiles_t& tiles
 }
 
 void TileManager::ProcessTileLockRequests() {
-	if ( m_game->IsRunning() ) {
-		auto* state = m_game->GetState();
-		if ( state->IsMaster() && !m_tile_lock_requests.empty() ) {
-			const auto tile_lock_requests = m_tile_lock_requests;
-			m_tile_lock_requests.clear();
-			const auto slot_num = m_game->GetSlotNum();
-			if ( !tile_lock_requests.empty() ) {
-				m_game->GetState()->WithGSE(
-					this,
-					[ this, &tile_lock_requests, &state, &slot_num ]( GSE_CALLABLE ) {
-						for ( const auto& req : tile_lock_requests ) {
-							const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();
-							if ( slot_state != slot::Slot::SS_PLAYER ) {
-								// player disconnected?
-								Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( slot_state ) + ")" );
-								continue;
+	if ( !m_game->IsRunning() ) { return; }
+	auto* const state = m_game->GetState();
+	const auto session = state->CaptureGameSession();
+	DispatchTileLockBatch( ExtractTileLockBatch( state, session ) );
+}
+
+TileManager::TileLockBatch TileManager::ExtractTileLockBatch( State* state, const State::game_session_t& session ) {
+	// These native requests keep their existing backend-thread ownership. The
+	// identity check prevents a delayed old producer stealing a fresh batch.
+	TileLockBatch batch{ this, state, session, {} };
+	if ( state->IsGameSessionActive( session ) && state->IsMaster() ) {
+		batch.requests.swap( m_tile_lock_requests );
+	}
+	return batch;
+}
+
+void TileManager::DispatchTileLockBatch( TileLockBatch batch ) {
+	// A retired batch may outlive its native manager and tiles. The static
+	// consumer checks only the owned token before touching any captured owner.
+	if ( batch.requests.empty() || !batch.session || !batch.session->IsActive() ) { return; }
+	batch.state->WithGameSession(
+		batch.session, batch.manager,
+		[ manager = batch.manager, tile_lock_requests = std::move( batch.requests ) ]( Game* const game, GSE_CALLABLE ) {
+			auto* const state = game->GetState();
+			for ( const auto& req : tile_lock_requests ) {
+				const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();
+				if ( slot_state != slot::Slot::SS_PLAYER ) {
+					// player disconnected?
+					manager->Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( slot_state ) + ")" );
+					continue;
+				}
+				auto it = manager->m_tile_locks.find( req.initiator_slot );
+				if ( it == manager->m_tile_locks.end() ) {
+					it = manager->m_tile_locks.insert(
+						{
+							req.initiator_slot,
+							{}
+						}
+					).first;
+				}
+				auto& locks = it->second;
+				if ( req.is_lock ) {
+					// lock
+					manager->Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + manager->TilesToString( req.tile_positions ) );
+					locks.push_back( TileLock{ req.tile_positions } );
+				}
+				else {
+					// unlock
+					bool found = false;
+					for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
+						if ( locks_it->Matches( req.tile_positions ) ) {
+							found = true;
+							manager->Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + manager->TilesToString( req.tile_positions ) );
+							locks.erase( locks_it );
+							if ( locks.empty() ) {
+								manager->m_tile_locks.erase( it );
 							}
-							auto it = m_tile_locks.find( req.initiator_slot );
-							if ( it == m_tile_locks.end() ) {
-								it = m_tile_locks.insert(
-									{
-										req.initiator_slot,
-										{}
-									}
-								).first;
-							}
-							auto& locks = it->second;
-							if ( req.is_lock ) {
-								// lock
-								Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
-								locks.push_back( TileLock{ req.tile_positions } );
-							}
-							else {
-								// unlock
-								bool found = false;
-								for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
-									if ( locks_it->Matches( req.tile_positions ) ) {
-										found = true;
-										Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
-										locks.erase( locks_it );
-										if ( locks.empty() ) {
-											m_tile_locks.erase( it );
-										}
-										break;
-									}
-								}
-								if ( !found ) {
-									Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
-								}
-							}
+							break;
 						}
 					}
-				);
+					if ( !found ) {
+						manager->Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + manager->TilesToString( req.tile_positions ) );
+					}
+				}
 			}
 		}
-	}
+	);
 }
 
 void TileManager::ReleaseTileLocks( const size_t initiator_slot ) {

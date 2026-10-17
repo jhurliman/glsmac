@@ -23,6 +23,7 @@ return (format_balance) => {
 		clear: () => { cells = []; },
 		surface: (properties) => { cells :+properties.class; },
 	};
+	panel.intake_caption = {};
 	panel.cell_width = 4;
 	panel.total_cells = 58;
 	panel.format_resource_balance = format_balance;
@@ -33,6 +34,7 @@ return (format_balance) => {
 	};
 	for (data of cases) {
 		panel.set({ nutrients: data, minerals: data, energy: data });
+		check(panel.intake_caption.text == 'INTAKE - CONSUMPTION', 'complete resource costs lost their caption');
 		check(#sizeof(cells) == 174, 'cell allocation grew with resource amount');
 		for (type of ['nutrients', 'minerals', 'energy']) {
 			check(panel.labels[type].left.text == data.left, 'intake or consumption label changed: ' + data.left);

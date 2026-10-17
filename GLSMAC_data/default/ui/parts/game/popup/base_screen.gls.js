@@ -138,12 +138,18 @@ return {
 		const canonical = base.has_smac_resource_context;
 		let intake = undefined;
 		let consumption = undefined;
+		let energy = undefined;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
-			// collect nutrients, post minerals or invent energy processing.
+			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
+			if (#is_defined(energy)) {
+				intake.ENERGY = energy.raw_intake;
+				consumption.ENERGY = energy.waste;
+			}
 		} else {
 			intake = base.get_intake();
 			consumption = base.get_consumption();
@@ -175,7 +181,7 @@ return {
 
 		this.sections.game_state.set({
 			year: game.get_year(),
-			energy: canonical ? 'N/A' : 0, // TODO
+			energy: #is_defined(energy) ? energy.credits : (canonical ? 'N/A' : 0),
 			ecodamage: canonical ? 'N/A' : 0, // TODO
 		});
 
@@ -204,7 +210,18 @@ return {
 		this.sections.resources.set(resource_data);
 
 		if (canonical) {
-			this.sections.energy.set_unavailable();
+			if (#is_defined(energy)) {
+				const allocation = {};
+				for (type of ['economy', 'labs', 'psych']) {
+					const value = energy.allocated[type];
+					const bonus = energy.final[type] - value;
+					const percent = energy.rates[type] * 10;
+					allocation[type] = {percent: percent, value: value, bonus: bonus};
+				}
+				this.sections.energy.set(allocation);
+			} else {
+				this.sections.energy.set_unavailable();
+			}
 		} else {
 			const allocation_labs = 0.4;
 			const allocation_psych = 0.2;

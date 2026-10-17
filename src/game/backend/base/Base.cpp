@@ -20,6 +20,7 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/faction/Faction.h"
+#include "game/backend/faction/SmacEconomyState.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
@@ -781,6 +782,34 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_smac_resource_calculation",
 		NATIVE_CALL( this ) { N_EXPECT_ARGS( 0 ); return CopySmacResourceCalculation( GSE_CALL ); } )
+	},
+	{
+		"get_smac_energy_calculation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			// Older/partial Base records have no authoritative allocation or
+			// production target. They cannot supply a made-up energy breakdown.
+			if ( !m_resource_context || !m_allocation || !m_production ) { return VALUE( gse::value::Undefined ); }
+			const auto energy = m_game->GetCanonicalBaseEnergy( *this );
+			const auto economy = m_game->GetCanonicalEconomy( m_owner );
+			const auto categories = [ & ]( const SmacEnergyCategories& value ) {
+				return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+					{ "economy", VALUE( gse::value::Int,, value.economy ) },
+					{ "psych", VALUE( gse::value::Int,, value.psych ) },
+					{ "labs", VALUE( gse::value::Int,, value.labs ) }
+				} ) );
+			};
+			return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+				{ "credits", VALUE( gse::value::Int,, economy.credits ) },
+				{ "raw_intake", VALUE( gse::value::Int,, energy.raw_intake ) },
+				{ "waste", VALUE( gse::value::Int,, energy.waste ) },
+				{ "net", VALUE( gse::value::Int,, energy.net ) },
+				{ "maintenance", VALUE( gse::value::Int,, energy.maintenance ) },
+				{ "rates", categories( { 10 - economy.rates.psych - economy.rates.labs, economy.rates.psych, economy.rates.labs } ) },
+				{ "allocated", categories( energy.allocation.after_specialists ) },
+				{ "final", categories( energy.tail.final ) }
+			} ) );
+		} )
 	},
 	{
 		"get_smac_nutrient_demand",

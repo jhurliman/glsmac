@@ -21,6 +21,8 @@ namespace map::tile {
 class Tile;
 }
 
+namespace base { class BaseManager; }
+
 namespace unit {
 
 class Def;
@@ -81,6 +83,7 @@ public:
 
 private:
 	friend class UnitManager;
+	friend class base::BaseManager; // staged home repair before canonical Base removal
 	struct Unplaced {};
 	Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state );
 	void CommitInitialPlacement( map::tile::Tile* tile ) noexcept;

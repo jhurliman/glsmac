@@ -156,6 +156,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 			const auto result=base->ProcessSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
 				return ResolveSmacProductionPresentation(base->m_owner,design);
 			},unit::SmacMoraleMode::Mode0);
+			if (result.removed_base) { continue; }
 			if (!result.final_calculation) { throw std::runtime_error("Canonical upkeep omitted its final resource pass"); }
 			m_bm->RefreshBase(base);
 		}

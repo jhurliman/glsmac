@@ -30,7 +30,7 @@ namespace slot {
 class Slot;
 }
 
-namespace base { class Base; }
+namespace base { class Base; class BaseManager; }
 
 namespace unit {
 
@@ -175,6 +175,7 @@ private:
 
 private:
 	friend class Unit;
+	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
 	std::pair< SmacMovementHistory*, size_t > PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const;
 	map::Map* GetMap() const;

@@ -509,7 +509,78 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				&& destination.GameplayRandom() == pair && game->GetRandom()->GetStateString() == jsf, "restored next upkeep changed posting/home/food/RNG" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "SMAC live upkeep rejects pending size-one removal without partial production", []( GSE*, context::Context* ) -> std::string {
+    task->AddTest("SMAC starvation removes first middle and last records through the real turn",[](GSE*,context::Context*) -> std::string {
+        for (size_t lost_index=0;lost_index<3;++lost_index) {
+            ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+            std::string saved; size_t destination=0;
+            const auto error=fixture.Run([&](GSE_CALLABLE) -> std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game(); auto* bm=game->GetBM(); auto* um=game->GetUM();
+                auto* first=Populate(GSE_CALL,fixture,true);
+                game->GetMap()->GetTile(4,2)->terraforming=0;
+                const auto roles=Roles(); const auto scout=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,2);
+                first->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                std::array<Base*,3> bases{first,nullptr,nullptr};
+                for(size_t i=1;i<3;++i) {
+                    Base::pops_t pops; pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(roles.specialists[1]),1));
+                    bases[i]=new Base(game,701+i,first->m_owner,first->m_faction,game->GetMap()->GetTile(2+4*i,2),"Survivor "+std::to_string(i),{},pops,20,10,
+                        ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+                    bm->SpawnBase(GSE_CALL,bases[i]);
+                    SmacBaseAllocationState allocation{1,{{},1}}; allocation.specialists.types[0]=1;
+                    bases[i]->PublishSmacAllocation(GSE_CALL,allocation,roles);
+                }
+                auto* lost=bases[lost_index]; const auto lost_id=lost->m_id; auto* lost_tile=lost->GetTile();
+                auto* lost_wrapper=static_cast<value::Object*>(lost->Wrap(GSE_CALL));
+                auto* lost_pop=static_cast<value::Object*>(lost->m_pops.begin()->second.Wrap(GSE_CALL));
+                auto context=lost->GetSmacResourceContext(); context.resource_events=SmacBaseResourceContext::Famine;
+                lost->SetSmacResourceContext(GSE_CALL,context); lost->SetAccumulatedNutrients(0);
+                auto data=KnowledgeValue(true,true,128,64).CopyData();
+                for(auto& row:data.tiles) {row.explored_by=2;row.claimant=1;}
+                for(size_t i=0;i<3;++i) {
+                    auto record=um->GetUnit(91)->Conventional(); record.home=ConventionalUnitState::Home::Base;record.home_base_id=lost_id;
+                    um->SpawnConventionalUnit(GSE_CALL,92+i,um->GetUnitDef("live-scout"),lost->m_owner,game->GetMap()->GetTile(i*2,8),record);
+                    data.units.push_back({92+i,0,false});
+                }
+                fixture.ResourceState([](auto& state){state.social.factions.front().current[2]=3;});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                fixture.BasePresentationRoles({roles.worker,roles.specialists[0],roles.specialists[1],roles.specialists[2],roles.specialists[3],roles.specialists[4],roles.specialists[5],roles.specialists[6]});
+                const auto before=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                const auto pair=fixture.GameplayRandom(); const auto order=bm->GetBaseRecordOrder();
+                fixture.Updates();
+                destination=bases[lost_index==1 ? 2 : 1]->m_id;
+                game->Event(GSE_CALL,"complete_turn",{}); fixture.DrainEvents();
+                GT_ASSERT(game->GetTurnId()==2 && !bm->GetBase(lost_id) && !lost_tile->base && !lost_wrapper->wrapobj && !lost_pop->wrapobj,"actual turn did not retire starving Base and Pop wrappers");
+                const auto& updates=fixture.Updates(); size_t despawns=0;
+                for(const auto& update:updates) {if(update.type==game::FrontendRequest::FR_BASE_DESPAWN && update.data.base_despawn.base_id==lost_id) {++despawns;}}
+                GT_ASSERT(despawns==1,"starvation did not publish exactly one Base despawn");
+                auto remaining=order; remaining.erase(remaining.begin()+lost_index);
+                GT_ASSERT(bm->GetBaseRecordOrder()==remaining,"starvation changed survivor Base order or stable IDs");
+                for(const auto id:remaining) {
+                    const auto* survivor=bm->GetBase(id);
+                    GT_ASSERT(survivor->GetProductionState()->minerals==1 && survivor->GetProductionState()->baseline_minerals==1,
+                        "controller skipped or double-posted a surviving Base");
+                }
+                for(size_t id=92;id<95;++id) {GT_ASSERT(um->GetUnit(id)->Conventional().home_base_id==destination,"home repair used Unit position or wrong Base tie order");}
+                GT_ASSERT(!um->GetUnit(91)->Conventional().home_base_id && um->GetUnitRecordOrder()==std::vector<size_t>({91,92,93,94}),"starvation changed unhomed Unit or Unit roster");
+                const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(before.units==after.units && before.remembered==after.remembered && before.observers==after.observers,"starvation changed observation or remembered authority");
+                for(size_t i=0;i<before.tiles.size();++i) {GT_ASSERT(before.tiles[i].explored_by==after.tiles[i].explored_by,"starvation replayed exploration");}
+                GT_ASSERT(fixture.GameplayRandom()==pair,"starvation changed paired RNG");
+                GT_ASSERT(game->GetCanonicalMineralSupport(*bm->GetBase(destination))==0,"repaired homes did not feed actual support");
+                saved=fixture.Snapshot(); GT_OK();
+            });
+            if(!error.empty()) {return "starvation position "+std::to_string(lost_index)+": "+error;}
+            ConventionalUnitFixture restored; restored.ConfigureProduction(UpkeepSource,"GAIANS");
+            const auto continuation=restored.Run([&](GSE_CALLABLE) -> std::string {
+                restored.Restore(GSE_CALL,saved,true); auto* game=restored.Game();
+                for(size_t id=92;id<95;++id) {GT_ASSERT(game->GetUM()->GetUnit(id)->Conventional().home_base_id==destination,"restore lost stable repaired home");}
+                GT_ASSERT(game->GetCanonicalMineralSupport(*game->GetBM()->GetBase(destination))==0,"restored home support differs"); GT_OK();
+            });
+            if(!continuation.empty()) {return continuation;}
+        }
+        return {};
+    });
+	task->AddTest( "SMAC live upkeep rejects last-owned-Base removal without partial production", []( GSE*, context::Context* ) -> std::string {
 		const auto source = []( const std::string& filename ) { auto text = UpkeepSource( filename );
 			if ( filename == "alpha.txt" ) { const auto at = text.find( "#RULES\n" ); const auto end = text.find( '\n', at + 7 ); const auto next = end + 1; text.replace( next, text.find( ',', next ) - next, "3" ); } return text; };
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( source, "GAIANS" );

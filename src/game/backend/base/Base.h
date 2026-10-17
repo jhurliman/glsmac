@@ -116,6 +116,7 @@ public:
 		bool queue_advanced = false;
 		std::optional< SmacBaseResourceCalculation > final_calculation;
 		std::vector<size_t> removed_units; // shortage order; may include completed_unit
+		bool removed_base = false; // caller must not dereference the retired Base
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );

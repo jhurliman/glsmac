@@ -89,7 +89,14 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		// is explicit GLSMAC non-scenario policy, not an inferred original flag.
 		const auto plan = SmacPopulationStep::Prepare( m_game->CalculateCanonicalPopulationRules( *this, population ),
 			static_cast< int32_t >( population ), food, resources.nutrients.surplus, false );
-		if ( !plan.stored_nutrients ) { THROW( "Size-one starvation awaits canonical Base removal and home reassignment" ); }
+		if ( !plan.stored_nutrients ) {
+			// Negative normalized food skipped completion above. Keep this explicit
+			// so a future producer cannot discard an uncommitted newborn here.
+			if ( unit ) { THROW( "Starvation removal cannot retain a prepared completion" ); }
+			result.removed_base = true;
+			m_game->GetBM()->RemoveStarvedSmacBase( GSE_CALL, *this );
+			return result; // this has retired; only the owned local result remains
+		}
 		population = plan.population; food = *plan.stored_nutrients;
 		const auto* newborn = unit ? &unit->Candidate() : nullptr;
 		auto gross_minerals = resources.minerals.intake;

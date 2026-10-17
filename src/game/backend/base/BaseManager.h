@@ -102,6 +102,8 @@ private:
 	friend class gse::tests::BaseAllocationFixture;
 	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;
 	void RequireSmacWorkerRecalculation() const;
+	// Called only by the actual population-removal branch; owns retirement.
+	void RemoveStarvedSmacBase( GSE_CALLABLE, Base& base );
 	using tile_key_t = std::pair< size_t, size_t >;
 	using pop_key_t = std::pair< size_t, size_t >;
 	// Derived lookup only. IDs/coordinates remain safe after the map is destroyed.

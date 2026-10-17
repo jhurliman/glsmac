@@ -3,6 +3,7 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -73,6 +74,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );

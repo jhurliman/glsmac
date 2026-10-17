@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Mesh.cpp

@@ -3640,7 +3640,7 @@ public:
 		} );
 	}
 
-	std::string CheckSimulationRejectedDownload( const bool queued ) {
+	std::string CheckSimulationRejectedDownload( const bool queued, const bool knowledge_only = false ) {
 		using namespace game::backend;
 		class Client final : public connection::Client {
 		public:
@@ -3659,7 +3659,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 71; ++scenario ) {
+		for ( int scenario = knowledge_only ? 71 : 0; scenario < ( knowledge_only ? 75 : 71 ); ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3741,8 +3741,8 @@ public:
 			}
 			if ( scenario == 64 ) { raw.WriteInt( 1 ); }
 			else if ( scenario != 63 ) {
-				raw.WriteBool( scenario >= 65 );
-				if ( scenario >= 65 ) {
+				raw.WriteBool( scenario >= 65 && scenario <= 70 );
+				if ( scenario >= 65 && scenario <= 70 ) {
 					auto history = SmacMovementHistory::NewGeneratedWorld( scenario == 68 ? 16 : scenario == 70 ? 6 : 8, scenario == 70 ? 6 : 8 ).Serialize();
 					if ( scenario == 65 ) { history.pop_back(); }
 					if ( scenario == 66 ) { history.resize( SmacMovementHistory::MAX_WIRE_BYTES + 1, 'x' ); }
@@ -3775,7 +3775,7 @@ public:
 					world_snapshot::ReadRandomState( input ); const auto turn = world_snapshot::ReadTurnState( input, destination.m_state->m_slots->GetSlots() );
 					destination.m_game.ReadSimulationState( input, turn.id );
 				} catch ( const std::runtime_error& ) { rejected = true; }
-				GT_ASSERT( rejected == ( scenario < 11 || ( scenario >= 17 && scenario < 55 ) || scenario >= 63 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
+				GT_ASSERT( rejected == ( scenario < 11 || ( scenario >= 17 && scenario < 55 ) || ( scenario >= 63 && scenario <= 70 ) ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
 			} );
 			GT_ASSERT( prefix_check.empty(), "runtime prefix: " + prefix_check );
 			if ( scenario < 55 || scenario >= 63 ) { bytes.WriteBool( false ); } // explicit unavailable resource policy
@@ -3800,8 +3800,23 @@ public:
 				try { Policy::ReadOptional( policy_input, true ); } catch ( const std::runtime_error& ) { policy_rejected = true; }
 				GT_ASSERT( policy_rejected, "invalid map policy passed prefix " + std::to_string( scenario ) );
 			}
-			bytes.WriteBool(false); // explicit absent worker knowledge
-			bytes.WriteBool(false); // explicit absent territory topology
+			if ( knowledge_only ) {
+				using Knowledge = map::SmacWorkerKnowledge;
+				Knowledge::Data data{ 8, 8, true, true, 0, {}, {}, {} };
+				data.observers[ 1 ] = Knowledge::Observer{}; data.tiles.resize( 32, { 2, std::nullopt } );
+				data.remembered[ 1 ].resize( 32 );
+				auto wire = Knowledge::Create( data ).Serialize();
+				if ( scenario == 71 ) { wire[ 0 ] = 'X'; } // inner magic, outer Buffer framing remains valid
+				if ( scenario == 72 ) { wire[ 53 ] = 8; } // first tile claimant, outside 0..7/255
+				if ( scenario == 73 ) { wire[ 117 ] = 2; } // first remembered-entry presence
+				if ( scenario == 74 ) { wire[ wire.size() - 9 ] |= 1; } // Pact row for absent observer zero
+				bool invalid = false;
+				try { Knowledge::Deserialize( wire ); } catch ( const std::invalid_argument& ) { invalid = true; }
+				GT_ASSERT( invalid, "malformed knowledge control was valid" );
+				bytes.WriteBool( true ); bytes.WriteString( wire );
+			}
+			else { bytes.WriteBool( false ); } // explicit absent worker knowledge
+			bytes.WriteBool( false ); // explicit absent territory topology
 			// The remaining cases have a valid runtime and reach the actual map
 			// frame/accepted-dimensions checks, still before Map construction.
 			if ( scenario == 12 ) { bytes.WriteInt( 0 ); }
@@ -3810,19 +3825,29 @@ public:
 				map.WriteInt( scenario == 14 ? 9 : 8 ); bytes.WriteString( map.ToString() );
 			}
 			types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE ); packet.data.str = bytes.ToString();
-			const auto ready = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { destination.PrepareFinalWorldChunk( client, packet ); GT_OK(); } );
+			const auto ready = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				// This fixture already owns a world; give the real decoder an explicit
+				// ticket so its exact failure reason can be checked after dispatch.
+				if ( knowledge_only ) { destination.FixtureWorldTicket(); }
+				destination.PrepareFinalWorldChunk( client, packet ); GT_OK();
+			} );
 			GT_ASSERT( ready.empty(), "runtime download prepare failed: " + ready );
 			auto* prior_map = destination.m_game.m_map; types::Buffer prior_tiles; prior_map->SaveToBuffer( prior_tiles );
 			const auto prior_rng = destination.m_game.GetRandom()->GetStateString(); const auto prior_turn = destination.m_game.GetTurnId();
 			const auto prior_managers = destination.WorldManagers(); const auto prior_frontend = destination.m_frontend_requests.size();
 			std::exception_ptr escaped;
 			destination.WithoutDisconnectIO( client, [ & ]() {
-				if ( queued ) { std::thread worker( [ & ]() { try { client->Receive( packet ); } catch ( ... ) { escaped = std::current_exception(); } } ); worker.join(); destination.ProcessAccumulations(); }
-				else { client->Receive( packet ); }
+				if ( queued ) { std::thread worker( [ & ]() { try { client->Receive( packet ); } catch ( ... ) { escaped = std::current_exception(); } } ); worker.join(); try { destination.ProcessAccumulations(); } catch ( ... ) { escaped = std::current_exception(); } }
+				else { try { client->Receive( packet ); } catch ( ... ) { escaped = std::current_exception(); } }
 			} );
-			if ( escaped ) { std::rethrow_exception( escaped ); }
+			GT_ASSERT( !escaped, "malformed snapshot escaped the Client safe-disconnect path" );
 			types::Buffer after_tiles; destination.m_game.m_map->SaveToBuffer( after_tiles );
 			GT_ASSERT( client->ErrorReason() == "Snapshot format mismatch" && destination.m_game.m_map == prior_map && after_tiles.ToString() == prior_tiles.ToString(), "runtime rejection reached map construction or escaped safe disconnect" );
+			if ( knowledge_only ) {
+				GT_ASSERT( destination.m_game.m_active_admission && destination.m_game.m_active_admission->stage == Game::StartupStage::Failure
+					&& destination.m_game.m_active_admission->error.find( "Invalid worker knowledge: " ) == 0,
+					"malformed knowledge rejection was hidden by a later snapshot failure" );
+			}
 			const bool retained_simulation = prior_simulation ? destination.m_game.m_simulation && destination.m_game.m_simulation->value == *prior_simulation : !destination.m_game.m_simulation;
 			GT_ASSERT( !callbacks && retained_simulation && !destination.m_game.m_pending_simulation
 				&& !destination.HasPendingSnapshotTurn() && !destination.HasPendingSnapshotRandom() && destination.m_game.GetRandom()->GetStateString() == prior_rng
@@ -9053,6 +9078,9 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	for ( const bool queued : { false, true } ) {
 		task->AddTest( std::string( "SMAC simulation actual Client rejects runtime before Map " ) + std::to_string( queued ), GT( queued ) {
 			BackendFixture fixture; return fixture.CheckSimulationRejectedDownload( queued );
+		} );
+		task->AddTest( std::string( "SMAC worker knowledge actual Client rejects malformed download " ) + std::to_string( queued ), GT( queued ) {
+			BackendFixture fixture; return fixture.CheckSimulationRejectedDownload( queued, true );
 		} );
 	}
 

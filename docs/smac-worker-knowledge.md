@@ -89,3 +89,23 @@ time; 4.282 s wrapper). Copied production controls that joined Units by list
 position or collapsed native claimant zero into absence both failed the intended
 assertions. Checkouts were not mutated for those controls. No full platform suite
 or live binding is claimed.
+
+## Download error boundary
+
+The world reader translates only the value codec's `std::invalid_argument`
+rejections into `std::runtime_error`, the existing Client snapshot-failure
+contract. Bounded outer-frame reads remain outside this translation; allocation
+failures are not caught. The value codec keeps its native-caller contract.
+
+Four validly framed malformed records (magic, tile claimant, remembered-entry
+presence and directed Pact row) now run through actual Client final-chunk
+handling in immediate and queued modes. They assert the specific knowledge
+failure, safe disconnect and unchanged Map, managers, simulation, RNG, turn,
+callbacks and frontend queue. The already-created fixture world has an explicit
+fixture ticket; this is not a full new-world admission test.
+
+The unchanged reader failed both new groups before the fix. The final test also
+adds that fixture ticket to observe the exact decoder error. Fourteen focused
+memory-tracked groups pass (2.069 s), including the existing 71-scenario Client
+matrix and ten live-knowledge groups. Targeted reader-TU analysis passes with
+zero failures (0.93 s). No full-suite or platform rerun was needed.

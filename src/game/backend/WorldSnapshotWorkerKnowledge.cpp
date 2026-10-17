@@ -13,7 +13,15 @@ void WriteWorkerKnowledge( types::Buffer& output, const std::optional< map::Smac
 std::optional< map::SmacWorkerKnowledge > ReadWorkerKnowledge( types::Buffer& input, bool smac ) {
 	if ( !input.ReadBool() ) { return {}; }
 	if ( !smac ) { throw std::runtime_error( "Unexpected worker knowledge for this ruleset" ); }
-	return map::SmacWorkerKnowledge::Deserialize( input.ReadString( map::SmacWorkerKnowledge::MAX_WIRE_BYTES ) );
+	const auto wire = input.ReadString( map::SmacWorkerKnowledge::MAX_WIRE_BYTES );
+	try {
+		return map::SmacWorkerKnowledge::Deserialize( wire );
+	}
+	catch ( const std::invalid_argument& error ) {
+		// The value codec also serves native callers. Translate only its input
+		// rejection into the transport's existing safe-disconnect error class.
+		throw std::runtime_error( std::string( "Invalid worker knowledge: " ) + error.what() );
+	}
 }
 
 void ValidateWorkerKnowledgeGeometry( const std::optional< map::SmacWorkerKnowledge >& knowledge, const std::string& map_payload ) {

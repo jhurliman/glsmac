@@ -16,7 +16,9 @@ return (game) => {
 		result.listen = (object, name, callback) => { object.on(name, callback); };
 		result.show = () => {};
 		result.hide = () => {};
-		result.remove = () => {};
+		let removed = false;
+		result.remove = () => { removed = true; };
+		result.was_removed = () => { return removed; };
 		result.clear = () => { result.children = []; };
 		result.timer = (delay, callback) => { return { stop: () => {} }; };
 		result.sound = (properties) => { return { play: () => {} }; };
@@ -48,8 +50,19 @@ return (game) => {
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
 	let previous_item = null;
 	let previous_unit = null;
+	let previous_list = null;
 	return (unit, expected) => {
 		const sections = bottom_bar.pp.sections;
+		if (#is_defined(expected.retired_id)) {
+			const list = sections.objects_list;
+			check(!#is_defined(list.units[#to_string(expected.retired_id)]), 'retired Unit retained its clickable row');
+			check(list.units[#to_string(unit.id)].object == unit, 'same-tile survivor disappeared');
+			check(previous_list.was_removed(), 'old clickable list was not removed');
+			check(list.selected_object == null, 'retired selected Unit remains selected');
+			previous_unit = null;
+			previous_item = null;
+			return;
+		}
 		const lines = sections.object_preview.lines.children;
 		check(#sizeof(lines) == (unit.is_immovable ? 3 : 4), 'wrong preview line count');
 		check(lines[0].text == unit.get_def().name, 'wrong unit name');
@@ -72,5 +85,6 @@ return (game) => {
 		if (previous_unit == unit) { check(previous_item == entry.item.node_id, 'refresh replaced the existing same-tile item'); }
 		previous_unit = unit;
 		previous_item = entry.item.node_id;
+		previous_list = sections.objects_list.list;
 	};
 };

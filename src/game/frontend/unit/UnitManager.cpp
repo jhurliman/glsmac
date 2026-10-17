@@ -14,6 +14,7 @@
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/map/Map.h"
+#include "gse/value/Int.h"
 
 namespace game {
 namespace frontend {
@@ -167,6 +168,11 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	if ( m_previously_deselected_unit == unit ) { m_previously_deselected_unit = nullptr; }
 	// Destruction removes tile membership before choosing another selection.
 	delete unit;
+	// Rebuild same-tile UI entries before selecting a surviving Unit. The
+	// backend wrapper has already retired, so publish only its stable ID.
+	m_game->Trigger( m_game->GetGame(), "unit_despawn", ARGS_F( unit_id ) {
+		{ "unit_id", VALUE( gse::value::Int,, unit_id ) },
+	}; } );
 	if ( was_selected ) { SelectNextUnitOrSwitchToTileSelection(); }
 	m_game->RefreshSelectedTile( m_selected_unit );
 

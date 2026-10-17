@@ -255,6 +255,14 @@ return {
 			}
 		});
 
+		this.frame.listen(p.game, 'unit_despawn', (e) => {
+			const key = #to_string(e.unit_id);
+			if (#is_defined(this.units[key])) {
+				if (this.selected_object == this.units[key].object) { this.selected_object = null; }
+				this.update_tile(this.selected_tile);
+			}
+		});
+
 		this.frame.listen(p.game, 'tile_select', (e) => {
 			if (this.selected_object != null) {
 				this.selected_object = null;

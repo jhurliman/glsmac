@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp

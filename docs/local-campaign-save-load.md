@@ -6,8 +6,9 @@ read or write original SMAC .SAV files. The first local file policy supports a
 SMAC campaign with the local Single player in slot zero and additional human
 Player participants. Network sessions and unstable turns/queued commands reject.
 
-Saving validates before touching the destination, writes a sibling temporary
-file, closes it, and atomically replaces the requested path. File and nested
+Saving validates before touching the destination, exclusively creates a sibling
+temporary file, writes and flushes it, then atomically replaces the requested
+path. Exclusive creation prevents concurrent processes from sharing a temporary. File and nested
 frame budgets are checked before materialization. Loading stages a new State,
 checks the exact frozen profiles, roster and complete world envelopes, then uses
 a claimed RestoreCampaign owner checkpoint. Normal configure runs once; the
@@ -22,8 +23,21 @@ path. Malformed file/prefix input throws before publication. Existing running-wo
 load is refused. The save API returns the absolute path after successful replacement;
 the load API returns after acceptance, with normal asynchronous loading afterward.
 
-Validation: six affected production TUs and three test TUs syntax-checked. The two
-native groups cover file replacement, actual claimed restore (asset-free fixture
-skips renderer construction only), settings/roster/world bytes, subsequent turn,
-malformed-file session preservation and queued-command rejection. Linked focused
-results are pending the shared cached build; no platform/full-suite claim.
+Validation: affected production and test TUs syntax-checked. At integrated
+`d2fbf105`, the repository LLVM 15.0.7 correctness policy passed all four explicit
+campaign production TUs (`CampaignFile`, `GameCampaign`, `StateRoster`, `GLSMAC`)
+in 10.34 seconds. Three native groups
+cover file replacement, actual claimed restore (the asset-free fixture skips
+renderer construction), settings/roster/world authority, subsequent turn, malformed
+file session preservation, queued-command rejection and partial frontend cleanup.
+The restore comparison normalizes only unordered PopDef registry enumeration; it
+checks each definition ID/value and preserves exact comparison of all other world
+bytes, including Base and Unit record order.
+
+The complete file/restore/next-turn/callback-failure group passed with allocation
+tracking at integrated `f0c4d8af` after its viewport fixture correction. The
+cancellation and malformed/unstable-save groups passed at `d2fbf105`; their code
+is unchanged at the final integration. The real GSE `campaign_file_ui.gls.js`
+module test passed at `20f06c31` and is also unchanged. The integrated cached
+build linked successfully. These are focused Linux receipts, without a full-suite,
+platform-matrix or rendered acceptance claim.

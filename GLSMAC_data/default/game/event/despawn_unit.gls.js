@@ -7,23 +7,30 @@ return {
 	},
 
 	apply: (e) => {
-		e.game.um.despawn_unit(e.data.unit);
-		return {
-			unit: e.data.unit,
+		const unit = e.data.unit;
+		// Assignment dereferences native Ptr fields. A property read directly in
+		// an object literal can retain a pointer into the soon-deleted unit.
+		const movement = unit.movement;
+		const morale = unit.morale;
+		const health = unit.health;
+		const moved_this_turn = unit.moved_this_turn;
+		// Copy scalar state before destruction invalidates every unit wrapper.
+		const backup = {
+			id: unit.id,
+			def: unit.def,
+			owner: unit.owner,
+			tile: unit.tile,
+			movement: movement,
+			morale: morale,
+			health: health,
+			moved_this_turn: moved_this_turn,
 		};
+		e.game.um.despawn_unit(unit);
+		return {unit: backup};
 	},
 
 	rollback: (e) => {
-		const u = e.applied.unit;
-		// TODO: make e.game.um.spawn_unit(u); possible
-		e.game.um.spawn_unit({
-			id: u.id,
-			def: u.def,
-			owner: e.game.get_player(u.owner),
-			tile: e.game.tm.get_tile(u.tile.x, u.tile.y),
-			morale: u.morale,
-			health: u.health,
-		});
+		e.game.um.restore_unit(e.applied.unit);
 	},
 
 };

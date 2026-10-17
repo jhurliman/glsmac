@@ -6863,6 +6863,21 @@ struct UnitSnapshotRecord {
 	}
 };
 
+value::Object* UnitRestoreRecord( GSE_CALLABLE, const UnitSnapshotRecord& record = {} ) {
+	return new value::Object( GSE_CALL, {
+		{ "id", VALUE( value::Int,, record.id ) }, { "def", VALUE( value::String,, record.def ) },
+		{ "owner", VALUE( value::Int,, record.owner ) },
+		{ "tile", new value::Object( GSE_CALL, { { "x", VALUE( value::Int,, record.x ) }, { "y", VALUE( value::Int,, record.y ) } } ) },
+		{ "movement", VALUE( value::Float,, record.movement ) }, { "morale", VALUE( value::Int,, record.morale ) },
+		{ "health", VALUE( value::Float,, record.health ) }, { "moved_this_turn", VALUE( value::Bool,, record.moved ) },
+	} );
+}
+
+Value* RestoreUnitRecord( GSE_CALLABLE, UnitManager* manager, value::Object* record ) {
+	auto* object = static_cast< value::Object* >( manager->Wrap( GSE_CALL ) );
+	return static_cast< value::Callable* >( object->Get( "restore_unit" ) )->Run( GSE_CALL, { record } );
+}
+
 Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixture, const size_t id, const size_t x = 2 ) {
 	auto* game = fixture.GetGame();
 	auto* unit = new Unit( GSE_CALL, game->GetUM(), id, game->GetUM()->GetUnitDef( "TEST_UNIT" ),
@@ -7353,6 +7368,198 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
+	for ( const bool flush_despawn : { false, true } ) {
+		task->AddTest( std::string( "test unit despawn rollback restores authoritative state " ) + ( flush_despawn ? "after frontend despawn" : "before frontend despawn" ), GT( flush_despawn ) {
+			const auto old_next_id = Unit::GetNextId();
+			util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+			BackendFixture fixture;
+			fixture.EnableYieldFixture(); fixture.EnableTurns(); fixture.SetRunning( true );
+			const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame(); auto* manager = game->GetUM();
+				DefineSnapshotUnit( manager );
+				auto* unit = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+				unit->m_morale = 6; unit->m_moved_this_turn = true;
+				Unit::SetNextId( 123 );
+				fixture.PushUnitUpdates();
+				// The frontend has the original movement/health. Despawn will
+				// coalesce this newer queued refresh; rollback must publish it.
+				unit->m_movement = -0.25f; unit->m_health = -0.125f;
+				manager->RefreshUnit( GSE_CALL, unit );
+				size_t spawn_hooks = 0, despawn_hooks = 0;
+				manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &spawn_hooks, game ) {
+					++spawn_hooks; game->GetRandom()->GetUInt( 1, 100 ); return VALUE( value::Undefined );
+				} ) );
+				manager->On( GSE_CALL, "unit_despawn", NATIVE_CALL( &despawn_hooks ) {
+					++despawn_hooks; return VALUE( value::Undefined );
+				} ) );
+				auto* original = unit->Wrap( GSE_CALL );
+				types::Buffer reference; Value::Serialize( &reference, original );
+				const auto before = Unit::Serialize( unit ).ToString();
+				const auto rng = game->GetRandom()->GetStateString();
+				auto* handlers = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/despawn_unit" ) );
+				auto* request = new value::Object( GSE_CALL, {
+					{ "caller", VALUE( value::Int,, 0 ) }, { "game", game->Wrap( GSE_CALL ) },
+					{ "data", new value::Object( GSE_CALL, { { "unit", original } } ) },
+				} );
+				auto* valid = static_cast< value::Callable* >( handlers->Get( "validate" ) )->Run( GSE_CALL, { request } );
+				GT_ASSERT( valid->type == VT_UNDEFINED, "host despawn was rejected" );
+				auto* applied = static_cast< value::Callable* >( handlers->Get( "apply" ) )->Run( GSE_CALL, { request } );
+				GT_ASSERT( !manager->GetUnit( 71 ) && original->type == VT_UNDEFINED && !game->GetMap()->GetTile( 2, 2 )->units.count( 71 ), "despawn retained a live unit or wrapper" );
+				if ( flush_despawn ) {
+					const auto& updates = fixture.PushUnitUpdates();
+					GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_DESPAWN; } ) == 1, "despawn was not published exactly once" );
+				}
+				request->Set( "applied", applied, GSE_CALL );
+				static_cast< value::Callable* >( handlers->Get( "rollback" ) )->Run( GSE_CALL, { request } );
+				auto* restored = manager->GetUnit( 71 );
+				GT_ASSERT( restored && Unit::Serialize( restored ).ToString() == before, "rollback changed authoritative unit fields" );
+				GT_ASSERT( restored->m_def == manager->GetUnitDef( "TEST_UNIT" ) && restored->m_owner == &game->GetState()->m_slots->GetSlot( 2 ), "rollback lost canonical definition or owner" );
+				GT_ASSERT( restored->GetTile() == game->GetMap()->GetTile( 2, 2 ) && restored->GetTile()->units.at( 71 ) == restored, "rollback lost canonical tile membership" );
+				GT_ASSERT( Unit::GetNextId() == 123 && game->GetRandom()->GetStateString() == rng, "rollback changed the ID allocator or RNG" );
+				GT_ASSERT( despawn_hooks == 1 && spawn_hooks == 0, "rollback replayed new-unit gameplay" );
+				GT_ASSERT( original->type == VT_UNDEFINED && Unit::Unwrap( Value::Deserialize( GSE_CALL, &reference, game ) ) == restored, "rollback revived an invalid wrapper or lost stable reference identity" );
+				const auto& updates = fixture.PushUnitUpdates();
+				GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_SPAWN; } ) == ( flush_despawn ? 1 : 0 ), "rollback published the wrong frontend spawn count" );
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_DESPAWN; } ), "rollback left a pending frontend despawn" );
+				size_t state_updates = 0;
+				for ( const auto& update : updates ) {
+					if ( update.type == game::FrontendRequest::FR_UNIT_SPAWN ) {
+						++state_updates;
+						GT_ASSERT( update.data.unit_spawn.unit_id == 71 && update.data.unit_spawn.movement == -0.25f && update.data.unit_spawn.health == -0.125f, "restored spawn used stale or invalid unit state" );
+					}
+					if ( update.type == game::FrontendRequest::FR_UNIT_UPDATE ) {
+						++state_updates;
+						GT_ASSERT( update.data.unit_update.unit_id == 71 && update.data.unit_update.movement == -0.25f && update.data.unit_update.health == -0.125f, "restored refresh used a stale unit pointer or state" );
+					}
+				}
+				GT_ASSERT( state_updates == 1, "rollback lost the pre-despawn refresh of authoritative state" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "production despawn rollback failed: " + error ); GT_OK();
+		} );
+	}
+	task->AddTest( "test unit despawn responses restore rejection and retain acceptance", GT() {
+		using namespace game::backend::event;
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		for ( const bool accepted : { false, true } ) {
+			for ( const bool flush_despawn : { false, true } ) {
+				BackendFixture fixture;
+				fixture.EnableYieldFixture(); fixture.EnableTurns(); fixture.SetRunning( true );
+				const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = fixture.GetGame(); auto* manager = game->GetUM();
+					DefineSnapshotUnit( manager ); auto* unit = SpawnSnapshotUnit( GSE_CALL, fixture, 71 );
+					Unit::SetNextId( 123 ); fixture.PushUnitUpdates();
+					const auto before = Unit::Serialize( unit ).ToString();
+					const auto rng = game->GetRandom()->GetStateString();
+					auto* original = unit->Wrap( GSE_CALL );
+					auto* connection = fixture.UseClientConnection( gc_space );
+					auto* handlers = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/despawn_unit" ) );
+					fixture.RegisterEvent( "despawn_unit", new EventHandler( gc_space, "despawn_unit",
+						static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+					game->AddEvent( new Event( game, Event::ES_LOCAL, 2, GSE_CALL, "despawn_unit", { { "unit", original } }, "nonhost-despawn" ) );
+					fixture.ProcessEvents();
+					GT_ASSERT( manager->GetUnit( 71 ) == unit && original->type == VT_OBJECT && fixture.WaitingResponses() == 0 && fixture.PendingWireEvents() == 0, "ordinary nonhost despawn bypassed production caller validation" );
+					// Production validation only permits caller 0. Exercise its response
+					// contract explicitly; this is not an ordinary nonhost request.
+					game->AddEvent( new Event( game, Event::ES_LOCAL, 0, GSE_CALL, "despawn_unit", { { "unit", original } }, "despawn-response" ) );
+					fixture.ProcessEvents(); fixture.FlushEvents();
+					GT_ASSERT( !manager->GetUnit( 71 ) && original->type == VT_UNDEFINED && fixture.WaitingResponses() == 1 && connection->sent.size() == 1, "despawn was not optimistically applied and retained once" );
+					if ( flush_despawn ) { fixture.PushUnitUpdates(); }
+					game->AddEventResponse( "despawn-response", accepted, nullptr ); game->Iterate();
+					GT_ASSERT( fixture.WaitingResponses() == 0, "completed despawn response remained pending" );
+					auto* restored = manager->GetUnit( 71 );
+					GT_ASSERT( accepted ? !restored : restored && Unit::Serialize( restored ).ToString() == before, "response did not preserve accepted deletion or rejected unit state" );
+					GT_ASSERT( original->type == VT_UNDEFINED && Unit::GetNextId() == 123 && game->GetRandom()->GetStateString() == rng, "response revived a stale wrapper or changed ID/RNG state" );
+					game->Iterate();
+					GT_ASSERT( manager->GetUnit( 71 ) == restored && fixture.WaitingResponses() == 0, "response was applied twice" );
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "despawn response contract failed: " + error );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "test unit restore rejects invalid scalar records before mutation", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.EnableTurns(); fixture.SetRunning( true );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame(); auto* manager = game->GetUM();
+			DefineSnapshotUnit( manager ); auto* existing = SpawnSnapshotUnit( GSE_CALL, fixture, 88, 4 );
+			Unit::SetNextId( 123 ); fixture.PushUnitUpdates();
+			types::Buffer before; manager->Serialize( before );
+			const auto rng = game->GetRandom()->GetStateString();
+			for ( size_t scenario = 0 ; scenario < 24 ; ++scenario ) {
+				UnitSnapshotRecord record;
+				switch ( scenario ) {
+					case 0: record.id = -1; break;
+					case 1: record.id = 0; break;
+					case 2: record.id = 88; break;
+					case 3: record.id = 123; break;
+					case 4: record.id = std::numeric_limits< int64_t >::max(); break;
+					case 5: record.def = "missing"; break;
+					case 6: record.owner = -1; break;
+					case 7: record.owner = 3; break;
+					case 8: record.x = -1; break;
+					case 9: record.y = -2; break;
+					case 10: record.x = 8; break;
+					case 11: record.y = 8; break;
+					case 12: record.x = 3; break;
+					case 13: record.morale = -1; break;
+					case 14: record.morale = 7; break;
+					case 15: record.movement = std::numeric_limits< float >::infinity(); break;
+					case 16: record.movement = std::numeric_limits< float >::quiet_NaN(); break;
+					case 17: record.health = -std::numeric_limits< float >::infinity(); break;
+					case 18: record.health = std::numeric_limits< float >::quiet_NaN(); break;
+				}
+				auto* data = UnitRestoreRecord( GSE_CALL, record );
+				if ( scenario == 19 ) { data->Set( "id", VALUE( value::String,, "71" ), GSE_CALL ); }
+				if ( scenario == 20 ) { data->Set( "tile", VALUE( value::Undefined ), GSE_CALL ); }
+				if ( scenario == 21 ) { data->Set( "moved_this_turn", VALUE( value::Int,, 1 ), GSE_CALL ); }
+				if ( scenario == 22 ) { data->Set( "movement", VALUE( value::Int,, 1 ), GSE_CALL ); }
+				if ( scenario == 23 ) { auto fields = data->value; fields.erase( "health" ); data = new value::Object( GSE_CALL, fields ); }
+				bool rejected = false;
+				try { RestoreUnitRecord( GSE_CALL, manager, data ); }
+				catch ( const gse::Exception& ) { rejected = true; }
+				GT_ASSERT( rejected, "invalid restore accepted: " + std::to_string( scenario ) );
+				types::Buffer after; manager->Serialize( after );
+				GT_ASSERT( before.ToString() == after.ToString() && game->GetRandom()->GetStateString() == rng, "rejected restore changed manager state or RNG" );
+				GT_ASSERT( manager->GetUnit( 88 ) == existing && existing->GetTile()->units.at( 88 ) == existing && game->GetMap()->GetTile( 2, 2 )->units.empty(), "rejected restore changed canonical tile ownership" );
+				const auto& updates = fixture.PushUnitUpdates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_SPAWN || r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_DESPAWN; } ), "rejected restore queued a frontend unit mutation" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "unit restore validation failed: " + error ); GT_OK();
+	} );
+	task->AddTest( "test unit restore preserves signed finite fields through deferred registration", GT() {
+		const auto old_next_id = Unit::GetNextId();
+		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.EnableTurns();
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame(); auto* manager = game->GetUM();
+			DefineSnapshotUnit( manager ); Unit::SetNextId( 123 );
+			size_t spawn_hooks = 0;
+			manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &spawn_hooks ) { ++spawn_hooks; return VALUE( value::Undefined ); } ) );
+			UnitSnapshotRecord record; record.movement = -std::numeric_limits< float >::max(); record.health = 0.0f; record.moved = false;
+			auto* wrapped = RestoreUnitRecord( GSE_CALL, manager, UnitRestoreRecord( GSE_CALL, record ) );
+			auto* unit = Unit::Unwrap( wrapped );
+			GT_ASSERT( manager->GetUnits().empty() && unit->GetTile()->units.at( 71 ) == unit, "deferred restore lost pending ownership or published early" );
+			bool duplicate_rejected = false;
+			try { RestoreUnitRecord( GSE_CALL, manager, UnitRestoreRecord( GSE_CALL, record ) ); }
+			catch ( const gse::Exception& ) { duplicate_rejected = true; }
+			GT_ASSERT( duplicate_rejected, "duplicate pending restore was accepted" );
+			fixture.SetRunning( true ); manager->ProcessUnprocessed( GSE_CALL );
+			GT_ASSERT( manager->GetUnit( 71 ) == unit && Unit::Serialize( unit ).ToString() == record.Encode().ToString(), "deferred registration changed restored identity or signed fields" );
+			GT_ASSERT( Unit::GetNextId() == 123 && spawn_hooks == 0, "deferred restore allocated an ID or ran new-unit gameplay" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "deferred unit restoration failed: " + error ); GT_OK();
+	} );
 	task->AddTest( "test unit snapshots use destination definitions and preserve state without spawn hooks", GT() {
 		const auto old_next_id = Unit::GetNextId();
 		util::FinallyGuard reset_id( [ = ]() { Unit::SetNextId( old_next_id ); } );

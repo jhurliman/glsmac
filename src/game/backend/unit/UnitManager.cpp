@@ -20,7 +20,9 @@
 #include "gse/value/Float.h"
 #include "gse/value/Array.h"
 #include "game/backend/map/tile/TileManager.h"
+#include "game/backend/map/Map.h"
 #include <memory>
+#include <cmath>
 #include <limits>
 
 namespace game {
@@ -561,6 +563,59 @@ WRAPIMPL_BEGIN( UnitManager )
 				SpawnUnit( GSE_CALL, unit );
 				return unit->Wrap( GSE_CALL );
 			})
+		},
+		{
+			"restore_unit",
+			NATIVE_CALL( this ) {
+				m_game->CheckRW( GSE_CALL );
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( obj, 0, Object );
+				N_GETPROP( id, obj, "id", Int );
+				N_GETPROP( def_id, obj, "def", String );
+				N_GETPROP( owner, obj, "owner", Int );
+				N_GETPROP( position, obj, "tile", Object );
+				N_GETPROP( x, position, "x", Int );
+				N_GETPROP( y, position, "y", Int );
+				N_GETPROP( movement, obj, "movement", Float );
+				N_GETPROP( morale, obj, "morale", Int );
+				N_GETPROP( health, obj, "health", Float );
+				N_GETPROP( moved, obj, "moved_this_turn", Bool );
+
+				// A rollback restores an allocated identity; it must not allocate a
+				// new ID or resolve links into another manager/world.
+				if ( id <= 0 || static_cast< uint64_t >( id ) >= Unit::GetNextId() || HasUnitId( id ) ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Restored unit ID must be vacant and precede the next unit ID" );
+				}
+				auto* def = GetUnitDef( def_id );
+				if ( !def ) { GSE_ERROR( gse::EC.GAME_ERROR, "Restored unit definition not found: " + def_id ); }
+				if ( owner < 0 || static_cast< uint64_t >( owner ) >= m_game->GetState()->m_slots->GetCount() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid restored unit owner" );
+				}
+				auto* map = GetMap();
+				if ( x < 0 || y < 0 || static_cast< uint64_t >( x ) >= map->GetWidth() ||
+					static_cast< uint64_t >( y ) >= map->GetHeight() || ( x & 1 ) != ( y & 1 ) ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid restored unit tile" );
+				}
+				if ( morale < MORALE_MIN || morale > MORALE_MAX || !std::isfinite( movement ) || !std::isfinite( health ) ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid restored unit morale, movement or health" );
+				}
+				// All fields are validated before Unit claims its tile. Finite signed
+				// movement/health are retained, including zero and negative health.
+				auto* unit = new Unit( GSE_CALL, this, static_cast< size_t >( id ), def, GetSlot( owner ),
+					map->GetTile( x, y ), movement, morale, health, moved );
+				if ( m_game->IsRunning() ) {
+					const auto pending = m_unit_updates.find( unit->m_id );
+					const bool cancels_despawn = pending != m_unit_updates.end() && ( pending->second.ops & UUO_DESPAWN );
+					RegisterUnit( unit );
+					// Cancelling a pending despawn also discarded any earlier refresh.
+					// Publish the restored state using its new, live unit pointer.
+					if ( cancels_despawn ) { QueueUnitUpdate( unit, UUO_REFRESH ); }
+				}
+				else { m_unprocessed_units.push_back( { unit, false } ); }
+				// Old wrappers stay undefined; the restored numeric ID has a new
+				// wrapper. Restoration never invokes new-unit gameplay callbacks.
+				return unit->Wrap( GSE_CALL );
+			} )
 		},
 		{
 			"despawn_unit",

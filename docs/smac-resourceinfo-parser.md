@@ -51,3 +51,12 @@ in the first negative harness were corrected before these reported runs.
 The final correction, including empty-label rejection coverage, passes the full
 integrated Linux ASan/UBSan/LSan CTest suite: 8/8 in 65.43 seconds. This broader
 integration result is separate from validation of the focused publication tree.
+
+The exact focused publication tree `e1c8396e` also passed full Linux CTest 5/5
+in 26.65 seconds. Full integration correctness analysis checked 307 production
+translation units with LLVM 15.0.7: zero failures in 238.80 seconds (two workers).
+That scan includes the integration's additional technology code; it is not a
+claim that the smaller publication contains those systems. The publication
+script's final log-display command initially failed on a CRLF path after CTest
+had returned success; the completed test log is retained and the display script
+was corrected without rerunning unaffected tests.

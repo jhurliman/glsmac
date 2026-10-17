@@ -60,3 +60,25 @@ silently substitute patched rules to obtain expected rule values.
 
 GLSMAC coverage: none. This case tracks reference availability only; it does
 not establish game-rule fidelity or satisfy a completed-game release gate.
+
+## October 17 random-map replay and offline diagnosis
+
+After backing up the INI and disabling only the opening movie, Small random
+map, Librarian, standard rules and Gaia reached the first base name. Accepting
+Gaia's Landing crashed at 15:07:24 local. Repeating through the actual installed
+SMAX PRACX shortcut crashed at 15:18:13 with the same `0xc0000005` and module
+offset `0x001269e4`; the shortcut route did not resolve it.
+
+Both retained minidumps contain the relevant global memory. At instruction
+`0x005269e4`, the project-location index at `0x009a658c` was `0x02dc0000` and
+`0x02f20000`, respectively, while the base count was 1. Nearby project entries
+contain pointer-shaped values and the base array contains first-base naming
+text. This supports runtime state corruption; it does not identify the writer
+or justify a configuration workaround. The older plain `terranx.exe` dump has
+a different null-pointer fault and is not evidence of the same corruption.
+
+Private dump-analysis logs and register/memory receipts are retained under
+`C:/Users/jhurliman/.codex-validation/smax-crash-offline-20261017`. A bounded
+next diagnostic would watch the first write to the invalid project slot during
+base naming. No original executable or gameplay data was modified for this
+analysis, and stable original Base-screen validation remains unavailable.

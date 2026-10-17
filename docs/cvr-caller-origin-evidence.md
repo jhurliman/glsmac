@@ -7,10 +7,10 @@ two original fragments with a deliberate gap: **A stops before lighting; B is
 started separately using the actual matrix and location bytes captured from A.**
 It does not execute a complete renderer or produce a Scout image.
 
-The current retained run passes **29 paired cases, 17 pre-execution domain rejections
-and 15 negative controls**, executing 24,351 original instructions. Every case
+The current retained run passes **44 paired cases, 23 pre-execution domain rejections
+and 16 negative controls**, executing 36,893 original instructions. Every case
 checks intermediate binary32 stores, all nine basis results and all three
-initial-position results. Of those 29, 25 also satisfy the separately checked
+initial-position results. Of those 44, 40 also satisfy the separately checked
 raster arithmetic domain. No surface, clip bounds or palette is supplied or
 validated by that classification.
 
@@ -142,7 +142,15 @@ the admitted subset. The oracle rounds to binary32 only at the observed store
 boundaries, using integer nearest-even rounding. It does not use host `float`
 matrix multiplication or assume a sequence of binary32 additions matches x87.
 
-Requests with nonfinite inputs, negative-zero inputs, nonnormal nonzero stores,
+Store classification follows rounding: a positive exact value at or below the
+`2^-150` midpoint can store as positive zero. The exact midpoint immediately
+below minimum normal, `2^-126 - 2^-150`, stores as minimum normal by the same
+nearest-even rule, for either sign. Nonzero subnormal **results** remain outside
+the admitted domain, as do generated negative-zero results. This extends the
+earlier pre-rounding normal-exponent restriction; it does not model all original
+subnormal or signed-zero behavior.
+
+Requests with nonfinite inputs, negative-zero inputs, rounded nonzero subnormal/overflow stores,
 inexact extended intermediates, invalid array extents, unsupported header flags,
 nonpositive scalar/admission scale, or out-of-width basis/origin results are
 outside this probe's admitted domain. These restrictions are experiment policy,
@@ -154,7 +162,7 @@ Both fragments begin with x87 control word `0x037f` and an empty x87 stack.
 Each returns to its specified boundary with the same control word and empty
 tags/TOP. Every conversion checks the original saved/truncation control-word
 writes (`037f`, `0f7f`). Status is recorded separately and may change; this run
-observes `0000` and `0100`, with no invalid/divide/overflow/underflow flags in
+observes `0000`, `0100` and `4000`, with no invalid/divide/overflow/underflow flags in
 Unicorn. Hardware FP status equivalence is not claimed. Returned helpers check
 their cdecl stack and callee-saved registers; the two incomplete containing
 functions are checked at their explicit fragment boundaries, not presented as
@@ -172,7 +180,7 @@ and two-second emulator timeout.
 
 ## Cases, controls and separate raster admissibility
 
-The 29 cases cover five installed frames, three noncommuting synthetic frames,
+The first 29 cases cover five installed frames, three noncommuting synthetic frames,
 four scalar values, three header vectors including signed16 endpoints, four
 translations, one large depth-basis case, eight admission/footprint scales and
 one explicitly supplied attachment case. The controls independently reverse
@@ -186,14 +194,25 @@ values on both sides that serialize to exactly `0.5`. A fifteenth control uses
 the unrounded requested scale for the oracle and fails specifically at the
 actual renderer-argument comparison.
 
-Seventeen malformed/unsupported requests reject before original execution. The
+Fifteen further synthetic cases execute the actual matrix, scalar and location
+stores at the new rounding boundaries. They include `2^-200` and `2^-250`, the
+zero midpoint and its lower binary32-operand neighbor, minimum-normal midpoint
+and exact minimum normal for both signs, scalar-store equivalents, and location
+stores followed by exact cancellation before the independent origin check.
+`2^-150 - 2^-213` exercises a 64-bit rounding shift. Six additional domain
+rejections cover its positive perturbation, the upper zero-midpoint neighbor,
+negative underflow to zero and both signs below the minimum-normal midpoint.
+A sixteenth control flushes the minimum-normal oracle result to zero and fails
+at the actual matrix-product stage comparison. The original code is unchanged.
+
+Twenty-three malformed/unsupported requests reject before original execution. The
 report retains the precise reason for each. No control is counted merely for
 throwing an arbitrary exception.
 
 Signed-width conversion validity is checked first. The separate raster policy
 then computes all 26 direction steps, checks signed32 sums and shifted depth,
 and walks the selected installed stream's 1,385 nonterminal records in order.
-It classifies 25 cases as arithmetically admissible. Two more fail the initial
+It classifies 40 cases as arithmetically admissible. Two more fail the initial
 shifted-depth bound, one fails a cumulative depth bound and one fails a shifted
 step bound. This classification executes **no original raster code** and checks
 no surface extent, color/lighting lookup or draw footprint. Even its admitted
@@ -226,14 +245,29 @@ GitHub review then identified the pre-serialization scale error described above.
 The corrected run and expanded boundary/control cases are retained separately in
 the `camera-review-fix` managed tree:
 
-| Current artifact | SHA-256 |
+| Scale-correction artifact | SHA-256 |
 | --- | --- |
 | Probe source | `a0a9e485b90a8b2229d86a59f88bfbf8c80204899be764db6c0a08b73f21c163` |
 | `out/validation-cvr-caller-origin-scale/caller-origin-report.json` (3,631,414 bytes) | `a431e72dce2b475b90b0c715685774e7e6c53e39e8c8323909d88cd0fbc7f822` |
 
-Imported helper fingerprints are unchanged. Python bytecode compilation and
-`git diff --check` pass. No application build or rendered-game smoke is claimed
-for this evidence-only change.
+The rounded-store extension and complete combined run are retained in the
+`unit-weapon-table-parser` managed tree:
+
+| Current artifact | SHA-256 |
+| --- | --- |
+| Probe source | `e9696bf1cfc6a9b88b458ca66866ceea9b3a0ea12a5ded97351fba0866c70db2` |
+| `out/validation-cvr-transform-store/caller-origin-report.json` (5,498,649 bytes) | `9e10d7d6f3a0ab8b919b5bafc130fe4dbe85aa00fb312a6da5f61f270cd24662` |
+
+This combined receipt includes the case-sensitive-filesystem correction to
+the imported geometry-stream helper, now
+`502db5ce7cdd9e1538d1920992f31cab1293cb77beb8dbf2a872ba809209e750`.
+The other imported fingerprints are unchanged. The preceding 44-case receipt
+remains at `out/validation-cvr-transform-store/caller-origin-report-before-path-fix.json`;
+the refreshed report differs only in that imported-helper fingerprint.
+Python bytecode compilation and
+`git diff --check` pass. The separate
+[calculator validation](cvr-transform-calculator.md) covers the production
+implementation. Neither check claims a rendered-game smoke.
 
 The next supported implementation boundary is an explicit-input composition
 and origin calculator preserving these staged binary32 stores and checked

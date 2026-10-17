@@ -2,8 +2,8 @@
 
 `loader::cvr::CvrTransformCalculator::Calculate` implements the bounded arithmetic
 from the [original caller/origin experiment](cvr-caller-origin-evidence.md).
-Its Release production probe matches all 25 retained original cases: **375
-binary32 output bit patterns and 300 integer results**. The calculator has an
+Its Release production probe matches all 44 retained original cases: **660
+binary32 output bit patterns and 528 integer results**. The calculator has an
 explicit-input CLI caller; no game, scene renderer or runtime unit is activated.
 
 ## Inputs and owned output
@@ -53,7 +53,14 @@ required.
 Every product, all three possible pair sums in each dot product and the final
 sum must be exact in the original x87 64-bit significand. Store conversion uses
 integer nearest-even rounding to 24 significand bits, including an exponent
-carry. The original origin fragment's `abs(Q*256)+0.5` must also be exact before
+carry. Below minimum normal it first rounds on the `2^-149` lattice, then
+classifies the result. Positive values at/below `2^-150` may round to positive
+zero, and either sign of `2^-126 - 2^-150` rounds to minimum normal. Exact
+nonzero subnormal lattice values, and values rounding to a nonzero subnormal,
+remain rejected. Right shifts below, equal to and greater than 64 have separate
+bounded paths; no oversized shift is evaluated.
+
+The original origin fragment's `abs(Q*256)+0.5` must also be exact before
 truncation. For example, both signs of `Q=2^-72` are admitted and round to zero;
 both signs of `2^-73` reject because that half-shift requires 65 significant
 bits. Reusing the existing converter's signed32 row is valid after this check:
@@ -67,8 +74,8 @@ The calculator rejects with `std::invalid_argument`:
   products/sums so these cannot silently become positive zero. This is an
   explicit narrower restriction where the rational evidence oracle does not
   generalize original signed-zero propagation.
-- An intermediate requiring more than 64 significant bits, or a nonzero store
-  outside the normal finite binary32 range. Subnormal **inputs** are allowed
+- An intermediate requiring more than 64 significant bits, or a rounded
+  nonzero subnormal/overflow store. Subnormal **inputs** are allowed
   when their eventual products/stores satisfy this rule.
 - A basis result outside signed16 in its first two rows or signed32 in its last
   row; an origin result outside signed32.
@@ -95,7 +102,7 @@ python3 tools/reference/compare_cvr_transform.py \
 ```
 
 The comparator requires exact report SHA-256
-`e087d08630fa8ac9b7ad2b200c183bbc385bd53848c9f3c1488f512544a0fb2a`, executable
+`9e10d7d6f3a0ab8b919b5bafc130fe4dbe85aa00fb312a6da5f61f270cd24662`, executable
 hash and original-probe source hash. It supplies the recorded inputs to the
 actual C++ calculator, then compares matrix/location/origin words with captured
 original stage-memory bytes and the integer results with the original helper's
@@ -113,33 +120,44 @@ not a file, save or network protocol.
 
 ## Validation
 
-Six native groups exercise noncommuting composition, all staged stores, even
+Seven native groups exercise noncommuting composition, all staged stores, even
 and odd halfway values with signs, rounding carry, exact `2^64-1` borrowing and
 three-term `UINT64_MAX+1` carry, excessive exponent separation, exceptional
 inputs in all 25 fields, generated negative zero, normal products from
 subnormal inputs, signed header/origin endpoints, the origin half-shift
-threshold, owned output and all four standard host rounding modes.
+threshold, owned output and all four standard host rounding modes. The new
+group checks positive zero and signed minimum-normal boundaries in every matrix
+cell, scalar and location stores, including exact 64-bit rounding shifts and
+larger shifts. It rejects the neighboring nonzero subnormal and negative-zero
+results. These cases run under all four host rounding modes without changing
+the caller's mode.
 
-- Full normal CTest: 4/4, 17.15 seconds. This isolated publication ancestry
+- Full normal CTest after the rounded-store correction: 4/4, 17.17 seconds. This isolated publication ancestry
   predates the later primary suite; it is not a claim about that suite.
-- The same six groups pass focused native execution with `--memorydebug` and
+- The same seven groups pass focused native execution with `--memorydebug` and
   ASan/UBSan/LSan `detect_leaks=1`, with no reported memory leaks. Ignored copied
   registration TUs select the groups while linking the actual unchanged
   production/application objects. The local sanitizer non-PIE cache workaround
   does not change repository build policy.
-- Six copied-production controls transpose output, round ties away, omit the
+- Six earlier copied-production controls transpose output, round ties away, omit the
   scalar, omit the header contribution, omit the origin half-shift exactness
   check, or incorrectly reject the 65-bit borrow temporary. All return exit 1
   from the native assertions; intended checkout source is never replaced.
+  For the rounded-store correction, the original production reader with the
+  new native group returns exit 1: six groups pass and the new group fails at
+  `rounded positive zero or minimum-normal product rejected`, with no tracked
+  leaks. The fixed implementation passes. The final original-code comparison
+  includes the 29 scale-corrected caller cases and 15 new store cases.
 - Explicit production-TU correctness analysis passes in Debug/Release with
-  zero findings (1.26/1.24 seconds). The warning-clean Release CLI matches
-  all 25 original cases after the final arithmetic changes.
-- Eleven malformed CLI requests return exit 2 without output; four arithmetic
+  zero findings (1.28/1.28 seconds). The warning-clean Release CLI matches
+  all 44 original cases after the final arithmetic changes.
+- Previously, eleven malformed CLI requests returned exit 2 without output; four arithmetic
   rejection requests print `invalid` and exit 0. Python syntax and
   `git diff --check` pass.
 
 Evidence is retained under
-`/home/jhurliman/src/glsmac-unit-weapon-parser/transform-*` and each build's
+`/home/jhurliman/src/glsmac-unit-weapon-parser/transform-store-*` (prior checks:
+`transform-*`) and each build's
 `transform-validation/`. Independent read-only arithmetic review found no
 actionable issue; that review did not rerun the original executable.
 

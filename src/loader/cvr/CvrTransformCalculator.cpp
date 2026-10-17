@@ -106,7 +106,27 @@ uint32_t Store( const Dyadic value ) {
 	}
 	const auto width = Width( value.magnitude );
 	int exponent = value.exponent + static_cast< int >( width ) - 1;
-	if ( exponent < -126 || exponent > 127 ) { Invalid( "CVR transform: nonnormal binary32 store" ); }
+	if ( exponent < -126 ) {
+		// Round on the subnormal lattice (2^-149) before classifying the
+		// stored result. This can produce +zero or carry into minimum normal.
+		const int shift = -149 - value.exponent;
+		// A nonzero exact lattice value below minimum normal cannot round to
+		// either supported endpoint, so no left shift is needed in this case.
+		if ( shift <= 0 ) { Invalid( "CVR transform: nonnormal binary32 store" ); }
+		uint64_t rounded = 0;
+		if ( shift < 64 ) {
+			rounded = value.magnitude >> shift;
+			const auto remainder = value.magnitude & ( ( uint64_t{ 1 } << shift ) - 1 );
+			const auto half = uint64_t{ 1 } << ( shift - 1 );
+			if ( remainder > half || ( remainder == half && ( rounded & 1 ) ) ) { ++rounded; }
+		}
+		else if ( shift == 64 && value.magnitude > ( uint64_t{ 1 } << 63 ) ) { rounded = 1; }
+		// For shift>64 a <=64-bit magnitude is strictly below the midpoint.
+		if ( !rounded && value.negative ) { Invalid( "CVR transform: negative-zero store outside supported domain" ); }
+		if ( rounded && rounded != 0x800000U ) { Invalid( "CVR transform: nonnormal binary32 store" ); }
+		return ( value.negative ? 0x80000000U : 0U ) | static_cast< uint32_t >( rounded );
+	}
+	if ( exponent > 127 ) { Invalid( "CVR transform: nonnormal binary32 store" ); }
 	uint64_t significand;
 	if ( width <= 24 ) {
 		significand = value.magnitude << ( 24 - width );

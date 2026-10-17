@@ -43,6 +43,7 @@
 #include "util/FinallyGuard.h"
 
 #include <memory>
+#include <array>
 #include <exception>
 #include <limits>
 #include <stdexcept>
@@ -1605,6 +1606,125 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test production tile scoring rejects overflowing resource arithmetic", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			std::array< int64_t, 3 > amounts{};
+			auto* getter = NATIVE_CALL( &amounts ) {
+				return new value::Object( GSE_CALL, {
+					{ "NUTRIENTS", VALUE( value::Int,, amounts[ 0 ] ) },
+					{ "MINERALS", VALUE( value::Int,, amounts[ 1 ] ) },
+					{ "ENERGY", VALUE( value::Int,, amounts[ 2 ] ) },
+				} );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			auto* services = static_cast< value::Object* >( script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } ) );
+			auto* get = static_cast< value::Callable* >( services->Get( "get" ) );
+			auto* select = static_cast< value::Callable* >( get->Run( GSE_CALL, { VALUE( value::String,, "f_base_find_best_or_worst_tiles" ) } ) );
+			auto* tile = game->GetMap()->GetTile( 2, 4 );
+			auto* tiles = new value::Array( gc_space, { tile->Wrap( GSE_CALL ) } );
+			const auto before = Base::Serialize( base ).ToString();
+			const auto rng = game->GetRandom()->GetStateString();
+			const auto frontend = fixture.FrontendRequestCount();
+			const auto minimum = std::numeric_limits< int64_t >::min();
+			const auto maximum = std::numeric_limits< int64_t >::max();
+			struct Case { std::array< int64_t, 3 > resources; int modifier; bool overflow; };
+			const std::vector< Case > cases = {
+				{ { minimum, 0, 0 }, 1, true }, { { maximum, 0, 0 }, 1, true },
+				{ { 0, minimum, 0 }, 1, true }, { { 0, maximum, 0 }, 1, true },
+				{ { maximum / 3, 1, 0 }, 1, true }, { { minimum / 3, -2, 0 }, 1, true },
+				{ { 0, maximum / 2, 2 }, 1, true }, { { 0, minimum / 2, -1 }, 1, true },
+				{ { 0, 0, minimum }, -1, true },
+				// Representable endpoint scores and ordinary negative/large yields
+				// remain usable in the actual best/worst worker-selection helper.
+				{ { maximum / 3, 0, 1 }, 1, false }, { { maximum / 3, 0, 1 }, -1, false },
+				{ { minimum / 3, 0, -2 }, 1, false }, { { 0, 0, maximum }, -1, false },
+				{ { -2, 300, 3 }, 1, false }, { { -2, 300, 3 }, -1, false },
+			};
+			for ( const auto& test : cases ) {
+				amounts = test.resources;
+				bool rejected = false;
+				try {
+					auto* result = static_cast< value::Array* >( select->Run( GSE_CALL, {
+						base->Wrap( GSE_CALL ), tiles, VALUE( value::Int,, 1 ), VALUE( value::Int,, test.modifier ),
+					} ) );
+					GT_ASSERT( result->value.size() == 1 && game::backend::map::tile::Tile::Unwrap( result->value[ 0 ] ) == tile,
+						"representable score changed worker selection" );
+				}
+				catch ( const Exception& e ) {
+					GT_ASSERT( e.class_name == EC.MATH_ERROR && e.reason == "Integer overflow", "wrong tile score error" );
+					rejected = true;
+				}
+				GT_ASSERT( rejected == test.overflow, "production tile scoring overflow admission changed" );
+				GT_ASSERT( Base::Serialize( base ).ToString() == before && game->GetRandom()->GetStateString() == rng && fixture.FrontendRequestCount() == frontend,
+					"tile scoring changed authoritative state before reporting its result" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production tile scoring: " + error ); GT_OK();
+	} );
+	task->AddTest( "test production base intake rejects overflowing resource sums", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			int64_t center = 0, worked = 0;
+			std::string resource = "NUTRIENTS";
+			auto* getter = NATIVE_CALL( &center, &worked, &resource ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				return new value::Object( GSE_CALL, { { resource, VALUE( value::Int,, tile->coord.x == 4 ? center : worked ) } } );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+			base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", game->GetMap()->GetTile( 2, 4 ) );
+			const auto before = Base::Serialize( base ).ToString();
+			const auto rng = game->GetRandom()->GetStateString();
+			const auto frontend = fixture.FrontendRequestCount();
+			const auto minimum = std::numeric_limits< int64_t >::min();
+			const auto maximum = std::numeric_limits< int64_t >::max();
+			struct Case { int64_t center, worked, expected; bool overflow; };
+			const std::vector< Case > cases = {
+				{ maximum, 1, 0, true }, { minimum, -1, 0, true },
+				{ maximum, maximum, 0, true }, { minimum, minimum, 0, true },
+				{ maximum - 1, 1, maximum, false }, { minimum + 1, -1, minimum, false },
+				{ maximum, 0, maximum, false }, { minimum, 0, minimum, false },
+				{ maximum, -maximum, 0, false }, { -2, 300, 298, false },
+			};
+			for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) {
+				resource = id;
+				for ( const auto& test : cases ) {
+					center = test.center; worked = test.worked;
+					bool rejected = false;
+					try {
+						auto* result = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+						GT_ASSERT( static_cast< value::Int* >( result->Get( resource ) )->value == test.expected, "representable intake changed" );
+					}
+					catch ( const Exception& e ) {
+						GT_ASSERT( e.class_name == EC.MATH_ERROR && e.reason == "Integer overflow", "wrong intake error" );
+						rejected = true;
+					}
+					GT_ASSERT( rejected == test.overflow, "production base intake overflow admission changed" );
+					GT_ASSERT( Base::Serialize( base ).ToString() == before && game->GetRandom()->GetStateString() == rng && fixture.FrontendRequestCount() == frontend,
+						"intake calculation changed authoritative state before reporting its result" );
+				}
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production resource intake: " + error ); GT_OK();
+	} );
 	task->AddTest( "test resource panel formats signed endpoint balances with bounded cells", GT() {
 		BackendFixture fixture;
 		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {

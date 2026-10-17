@@ -4,7 +4,16 @@ Resource callbacks return signed GSE Int values. ResourceRelated still rejects
 unknown resource IDs, non-object results, and non-Int amounts; omitted resource
 IDs still default to zero. Native Tile::resources_t now carries int64_t so the
 renderer receives exactly the same values as the script-facing Tile and Base
-callbacks. Yield and growth calculations are unchanged.
+callbacks. The yield and growth formulas are unchanged.
+
+The widened callback boundary must ship with [checked GSE integer
+arithmetic](gse-integer-arithmetic.md). A valid resource amount does not promise
+that every calculation involving it fits in a signed 64-bit result. The actual
+worker score (`3 * nutrients + 2 * minerals + energy`), worst-tile negation and
+base intake sums raise catchable `GSEMathError: Integer overflow` before an
+unrepresentable operation. This includes overflowing intermediate results even
+if a later term could cancel them. Representable results retain their values;
+there is no wrapping, clamping, narrower callback range or floating conversion.
 
 The usual tile display uses the original exact sprite assets unchanged. If any
 nonzero amount has no exact sprite, the tile switches to bounded rows. Each
@@ -41,8 +50,18 @@ formatter. Endpoint cases include MIN/2, MIN/0, MIN/MAX, MAX/MIN and equal
 endpoints, checking exact strings, bounded cells, and loss precedence. Tile
 presentation tests also cover unavailable sprites without negating INT64_MIN.
 
-This is presentation safety, not a wider gameplay arithmetic implementation.
-Other nutrient/economy calculations remain unchanged. The small fixed tile
+The production-callback regressions use the real worker-selection helper and
+base-intake handler from `default/game/bases.gls.js`: 15 score cases distinguish
+weighted multiplication, addition and negation, and 30 intake cases cover all
+three resource IDs. They check signed endpoints, ordinary -2/300 yields,
+catch-and-continue behavior and unchanged base bytes, RNG and frontend requests.
+They do not claim that an arbitrary callback's own side effects are rolled back;
+the integer operation only guarantees that its failed mutation is not applied.
+The panel's independent endpoint tests still require exact differences through
+2^64 - 1, even when that difference cannot be used as a GSE integer.
+
+These checks prevent undefined integer arithmetic; they do not implement new
+original-game economy rules. The small fixed tile
 preview fits long labels by shrinking them, so 20-digit values are not legible
 at ordinary tile size; the existing summary text layout can also be too narrow
 for extreme labels. These layout limits do not change the values or formatted
@@ -83,3 +102,33 @@ The 2/8/3 case must retain the existing stacked-icon layout and all-zero must
 retain the existing no-resource sprite. Keep screenshots/logs with the tested
 commit and variant. The temporary override is presentation test data, not an
 original-game behavior fixture; never commit it into default/.
+
+## Arithmetic review validation
+
+The PR32 repair combines signed-resource head
+`06db48422e7161151ffbcf8185fbb83ac395d076` with the existing checked-arithmetic
+implementation `3da26d1dc4483238173875543db31ada0b287c8f`, preserving that history
+in merge `2d14ffd6d9b9fb3ed690fba101e461da178622fc`. It adds the downstream
+regressions above rather than another arithmetic implementation.
+
+On the resulting Linux Clang 15 build, the full normal CTest suite passed 5/5
+in 28.71 seconds. All six resource test groups passed with ASan, UBSan and LSan
+(`detect_leaks=1`, `halt_on_error=1`). This older publication parent has no native
+filter option, so the focused executable uses copied registration translation
+units selecting those existing test bodies; production code is unchanged.
+The full sanitizer suite was not rerun for this repair.
+
+Two copied-interpreter controls use the original unchecked interpreter from
+`06db4842` with the same production callbacks and test bodies. UBSan rejects
+`INT64_MIN * 3` in worker scoring and `INT64_MAX + 1` in base intake; both exit
+1. The repaired executable passes both cases by raising the expected catchable
+script error. LLVM 15.0.7 analysis of the two changed production translation
+units inherited from PR45 (`Interpreter.cpp` and `Math.cpp`) reported zero
+failures in 3.80 seconds. This focused scan does not replace the hosted full
+scope required for the shared arithmetic header.
+
+An initial allocation-tracking attempt stopped at the older parent's separate
+OSSP UUID allocation mismatch (`UUID.cpp:59`), before these checks completed.
+That failed log is retained; the successful sanitizer run does not claim a
+`--memorydebug` pass. The UUID repair is tracked separately in PR37. No new
+rendered UI check is claimed by this arithmetic repair.

@@ -47,13 +47,24 @@ specialist finalization or complete intake results.
 ## Coordinates and admitted domain
 
 The optional `Resolve` method uses the measured 21 doubled-X radius offsets,
-horizontal wrapping or clipping, and unconditional vertical clipping. It takes
+one horizontal width adjustment or clipping, and unconditional vertical clipping. It takes
 explicit dimensions and center coordinates; it does not read a live map. The
 port admits positive dimensions, an even width at least two, an in-map center
 with matching coordinate parity, and radius index 0..20. Widened intermediates
 avoid signed32 coordinate overflow. These validation rules are an explicit port
 domain, not a statement that every admitted dimension is an original map preset.
 The original named coordinate cases use width 128 and height 64.
+
+A follow-up audit of the collection's own pinned instructions at
+`4fd8c3..4fd8d4`, followed by bounds checks at `4fd8fd..4fd907`, corrected
+the initial modular wrap to a single adjustment. On width two, a radius offset
+of three can remain outside the map and must clip. Four literal narrow-map
+assertions distinguish clipped and valid one-adjustment cases; they are static
+instruction-derived tests, not additional original execution. All five collection
+groups pass with tracking after this correction. A copied original-modulo TU
+fails the narrow-map assertion (exit 1). Existing 128-by-64 projections are
+unchanged. The focused build also includes the separate, uncommitted specialist
+bookkeeping work; no new whole-suite claim is made for this correction alone.
 
 Population and specialist counts are admitted in 0..127, with combined
 specialist budget at most 127. No relation between population and those counts

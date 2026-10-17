@@ -59,7 +59,9 @@ std::optional< std::array< int32_t, 2 > > SmacWorkedSquareCollection::Resolve( c
 	};
 	auto x = int64_t( map.center[ 0 ] ) + offsets[ index ][ 0 ];
 	const auto y = int64_t( map.center[ 1 ] ) + offsets[ index ][ 1 ];
-	if ( map.horizontal_wrap ) { x = ( x % map.width + map.width ) % map.width; }
+	// Original collection 4fd8c3..4fd8d4 adjusts only once, then checks
+	// bounds. On a width-two map an offset of three can remain clipped.
+	if ( map.horizontal_wrap ) { if ( x < 0 ) { x += map.width; } else if ( x >= map.width ) { x -= map.width; } }
 	if ( x < 0 || x >= map.width || y < 0 || y >= map.height ) { return std::nullopt; }
 	return std::array< int32_t, 2 >{ static_cast< int32_t >( x ), static_cast< int32_t >( y ) };
 }

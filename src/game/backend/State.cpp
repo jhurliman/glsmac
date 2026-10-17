@@ -8,10 +8,20 @@
 #include "Player.h"
 #include "GLSMAC.h"
 #include "gc/Space.h"
+#include "network/Network.h"
+#include "types/Packet.h"
 
 namespace game {
 namespace backend {
 namespace {
+
+void ValidateSettingsEnvelope( const types::Buffer& state ) {
+	types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+	packet.data.str = state.ToString();
+	if ( packet.Serialize().lenw > network::Network::MAX_PACKET_BYTES ) {
+		throw std::runtime_error( "Global settings and faction metadata exceed the network packet budget" );
+	}
+}
 
 // This native owner is retained by the queued callable, not registered with
 // the collector. The pending queue traverses it while holding its own lock.
@@ -268,11 +278,13 @@ const types::Buffer State::Serialize() const {
 
 	buf.WriteString( m_settings.global.Serialize().ToString() );
 	buf.WriteString( m_fm->Serialize().ToString() );
+	ValidateSettingsEnvelope( buf );
 
 	return buf;
 }
 
 void State::Deserialize( types::Buffer buf ) {
+	ValidateSettingsEnvelope( buf );
 	// Native packet dispatch can replace linked Factions while GC is active.
 	// Keep queueing, notifications and transport in the caller, outside this
 	// synchronous native-only mutation scope.

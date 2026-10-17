@@ -13,6 +13,9 @@ class Packet;
 namespace network {
 
 CLASS( Network, MTModule )
+	// SimpleTCP retains its signed-int length prefix and complete packet in
+	// the same receive buffer. This is the serialized Packet payload limit.
+	static constexpr size_t MAX_PACKET_BYTES = 65536 - sizeof( int );
 
 	common::mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
 	common::mt_id_t MT_Disconnect();
@@ -33,7 +36,7 @@ protected:
 	static const int GLSMAC_MAX_INCOMING_CONNECTIONS = 64;
 
 	// should be sufficient to fit any packet
-	static const int BUFFER_SIZE = 65536;
+	static const int BUFFER_SIZE = MAX_PACKET_BYTES + sizeof( int );
 
 	// shared structures to minimize reallocations
 

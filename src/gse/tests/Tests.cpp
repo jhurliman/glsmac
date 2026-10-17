@@ -18,6 +18,7 @@
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
 #include "SmacPredefinedUnitCatalog.h"
+#include "SmacPredefinedUnitRules.h"
 #include "UnitRulesTXTLoader.h"
 #include "UnitDesignResolver.h"
 #include "CvrBasisConverter.h"
@@ -236,6 +237,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
+		tests::AddSmacPredefinedUnitRulesTests( task );
 	}
 	tests::AddScriptsTests( task );
 

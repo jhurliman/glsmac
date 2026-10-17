@@ -14,6 +14,7 @@
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacFactionStartupRules.h"
+#include "SmacPredefinedUnitRules.h"
 
 #include "gse/Wrappable.h"
 
@@ -103,6 +104,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< SmacTechnologyRules >& GetSmacTechnologyRules() const;
 	const std::optional< SmacWorldSizeRules >& GetSmacWorldSizeRules() const;
 	const std::optional< SmacFactionStartupRules >& GetSmacFactionStartupRules() const;
+	const std::optional< SmacPredefinedUnitRules >& GetSmacPredefinedUnitRules() const;
 	void SelectSmacWorldSize( int64_t category );
 	void SelectSmacCustomSize( int64_t width, int64_t height );
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
@@ -137,6 +139,7 @@ private:
 	std::optional< SmacTechnologyRules > m_smac_technology_rules;
 	std::optional< SmacWorldSizeRules > m_smac_world_size_rules;
 	std::optional< SmacFactionStartupRules > m_smac_faction_startup_rules;
+	std::optional< SmacPredefinedUnitRules > m_smac_predefined_unit_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

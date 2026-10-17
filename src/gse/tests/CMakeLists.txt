@@ -21,6 +21,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacPredefinedUnitRules.cpp
 	${PWD}/UnitRulesTXTLoader.cpp
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/CvrBasisConverter.cpp

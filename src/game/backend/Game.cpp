@@ -2362,6 +2362,7 @@ void Game::AcquireInitializationMap() {
 		// generate map
 
 		MTModule::Log( "Game seed: " + m_random->GetStateString() );
+		m_state->m_settings.global.ValidateWorldSize();
 
 		ASSERT( !m_old_map, "old map not null" );
 		m_old_map = nullptr;
@@ -2474,6 +2475,12 @@ std::string Game::SerializeWorldSnapshot() const {
 	// Reading/writing this state does not draw from the generator.
 	const auto random_state = m_random->GetState();
 	const auto turn_state = world_snapshot::CaptureTurnState( m_current_turn.GetId(), m_state->m_slots->GetSlots() );
+	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
+		m_state->m_settings.global.ValidateWorldSize();
+		const auto& selection = *m_state->m_settings.global.map.GetSmacWorldSize();
+		if ( m_map->GetTilesPtr()->GetWidth() != static_cast< uint32_t >( selection.width )
+			|| m_map->GetTilesPtr()->GetHeight() != static_cast< uint32_t >( selection.height ) ) { THROW( "World map dimensions differ from accepted SMAC world size" ); }
+	}
 	types::Buffer buf;
 	world_snapshot::WriteHeader( buf, m_state->m_settings.global );
 	world_snapshot::WriteRandomState( buf, random_state );
@@ -2554,6 +2561,7 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 
 		// map
 		const auto map_payload = buf.ReadString();
+		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 		NEW( m_map, map::Map, this );
 		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state );
 		return true;
@@ -2571,6 +2579,7 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 }
 
 void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state ) {
+	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	auto map_buffer = types::Buffer( map_payload );

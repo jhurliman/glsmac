@@ -35,7 +35,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	task->AddTest( "world RNG codec rejects every malformed word before returning state", GT() {
-		GlobalSettings settings; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+		GlobalSettings settings; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 		for ( const auto& invalid : world_rules_fixture::InvalidRandomHeaders() ) {
 			types::Buffer input( invalid.second ); ValidateHeader( input, settings );
 			GT_ASSERT( Rejects( [ & ]() { ReadRandomState( input ); } ), "accepted " + invalid.first );
@@ -46,12 +46,12 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		for ( const auto* id : { "smac", "smax" } ) {
 			GlobalSettings settings;
 			settings.SelectRuleset( id );
-			settings.InitializeHostRules( smac_rules_fixture::Source );
+			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			const auto before = settings.Serialize().ToString();
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 5 && wire.ReadString() == id, "writer omitted the V5 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 6 && wire.ReadString() == id, "writer omitted the V6 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
@@ -62,6 +62,11 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( wire.ReadBool() == smac, "technology presence changed" );
 			if ( smac ) {
 				GT_ASSERT( wire.ReadString() == settings.GetSmacTechnologyRules()->Serialize().ToString(), "header changed the technology codec payload" );
+			}
+			GT_ASSERT( wire.ReadBool() == smac, "world-size presence changed" );
+			if ( smac ) {
+				GT_ASSERT( wire.ReadString() == settings.GetSmacWorldSizeRules()->Serialize().ToString(), "world-size profile changed" );
+				GT_ASSERT( wire.ReadString() == settings.map.GetSmacWorldSize()->Serialize().ToString(), "accepted selection changed" );
 			}
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
@@ -78,7 +83,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "world rules header rejects malformed identity and every changed or out-of-range numeric field", GT() {
 		GlobalSettings settings;
 		settings.SelectRuleset( "smac" );
-		settings.InitializeHostRules( smac_rules_fixture::Source );
+		settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 		const auto before = settings.Serialize().ToString();
 		for ( const auto& invalid : world_rules_fixture::InvalidSmacHeaders() ) {
 			types::Buffer snapshot( invalid.second );
@@ -110,11 +115,13 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		using game::backend::settings::SmacProductionRules;
 		using game::backend::settings::SmacFacilityRule;
 		GlobalSettings source; source.SelectRuleset( "smac" ); source.InitializeHostRules( smac_rules_fixture::Source );
+		smac_rules_fixture::AcceptWorldSize( source );
 		types::Buffer snapshot; WriteHeader( snapshot, source );
 		const auto reject = [ & ]( const SmacProductionRules& changed ) {
 			GlobalSettings destination;
 			destination.Deserialize( smac_rules_fixture::Payload( "smac", true,
 				{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, changed.Serialize().ToString() ) );
+			smac_rules_fixture::AcceptWorldSize( destination );
 			const auto before = destination.Serialize().ToString();
 			auto input = snapshot;
 			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
@@ -140,11 +147,13 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		using game::backend::settings::SmacTechnologyRules;
 		using game::backend::settings::SmacTechnologyRule;
 		GlobalSettings source; source.SelectRuleset( "smac" ); source.InitializeHostRules( smac_rules_fixture::Source );
+		smac_rules_fixture::AcceptWorldSize( source );
 		types::Buffer snapshot; WriteHeader( snapshot, source );
 		const auto reject = [ & ]( const SmacTechnologyRules& changed ) {
 			GlobalSettings destination;
 			destination.Deserialize( smac_rules_fixture::Payload( "smac", true,
 				{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, changed.Serialize().ToString() ) );
+			smac_rules_fixture::AcceptWorldSize( destination );
 			const auto before = destination.Serialize().ToString(); auto input = snapshot;
 			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
 		};
@@ -168,7 +177,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "world rules header rejects malformed technology catalogs without changing frozen settings", GT() {
 		for ( const auto* id : { "smac", "smax" } ) {
-			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source );
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			const auto before = settings.Serialize().ToString();
 			for ( const auto& invalid : world_rules_fixture::InvalidTechnologyHeaders( id ) ) {
 				types::Buffer input( invalid.second ); input.WriteString( "unread world body" );
@@ -180,7 +189,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "world rules header rejects malformed production profiles without changing frozen settings", GT() {
 		for ( const auto* id : { "smac", "smax" } ) {
-			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source );
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			const auto before = settings.Serialize().ToString();
 			for ( const auto& invalid : world_rules_fixture::InvalidProductionHeaders( id ) ) {
 				types::Buffer input( invalid.second );

@@ -11,6 +11,7 @@ SET( SRC ${SRC}
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp

@@ -5,6 +5,7 @@
 #include "game/backend/resource/SmacBaseSquareYield.h"
 #include "game/backend/settings/SmacProductionRules.h"
 #include "game/backend/settings/SmacTechnologyRules.h"
+#include "game/backend/settings/SmacWorldSizeRules.h"
 
 namespace loader::txt {
 
@@ -24,6 +25,9 @@ public:
 	// Exactly 89 canonical positional TECHNOLOGY records, nine columns each.
 	// Four signed priorities retain their order; flags retain nine source bits.
 	static game::backend::settings::SmacTechnologyRules ParseTechnologyRules( const std::string& source );
+	// Five positional SMAC presets: count, then name and two source dimensions.
+	// Strict port ingestion; no missing-section fallback or SMAX inference.
+	static game::backend::settings::SmacWorldSizeRules ParseWorldSizeRules( const std::string& source );
 };
 
 }

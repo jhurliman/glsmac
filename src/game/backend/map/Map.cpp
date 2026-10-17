@@ -650,7 +650,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 #endif
 	const auto* c = g_engine->GetConfig();
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) ) {
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) && m_game->GetState()->m_settings.global.GetRulesetId() != "smac" ) {
 			const auto size = c->GetQuickstartMapSize();
 			map_settings->size_x = size.x;
 			map_settings->size_y = size.y;
@@ -668,6 +668,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 			? c->GetQuickstartMapCloudCover()
 			: random->GetFloat( 0.2, 0.8f );
 	}
+	m_game->GetState()->m_settings.global.ValidateWorldSize();
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles, this, map_settings->size_x, map_settings->size_y );

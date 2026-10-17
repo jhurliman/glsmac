@@ -8,6 +8,7 @@
 #include "WorldSnapshotRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
+#include "SmacWorldSizeRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -189,6 +190,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacWorldSizeRulesTests( task );
 	}
 	tests::AddScriptsTests( task );
 

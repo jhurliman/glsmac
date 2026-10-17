@@ -44,6 +44,9 @@ boundary. One older remote-forest rejection now checks distant fungus instead.
 Other owner, domain, state, stack and unsupported-effect rejections remain.
 
 The fixture was projected from the pinned public JSON and the diff passes
-whitespace checks. Runtime validation is pending the combined cached build;
-no separate build or platform run was performed for this source checkpoint.
-Suggested focused selector: `conventional.*(movement|ground|HQ|terrain)|movement history`.
+whitespace checks. The combined cached Linux build passes 59 affected native
+groups with allocation tracking, including all 18 new event traces, prior
+movement boundaries, actual startup/restore, worker knowledge and Base screens.
+The changed movement translation unit passes LLVM15 correctness analysis
+(2.43 seconds, zero failures). Home-reference changes in the same integration
+have their separate focused sanitizer receipt. No full platform run was used.

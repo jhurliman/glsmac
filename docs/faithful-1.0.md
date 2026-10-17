@@ -221,9 +221,15 @@ restore, orbital intake/state, and ordinary exploration. Component analysis
 results are reused for unchanged production source. This is focused Linux
 validation, not a new platform checkpoint or a playable campaign claim.
 
-The active integration work is ordinary terrain movement, manual worker clicks,
-and actual home-base mineral support. Exploration is implemented as a checked
-rule; sight, remembered terrain and territory still need their live producers.
+The following integration at `fa159ff8` adds ordinary nonfungus terrain movement
+around owned Bases, saved same-owner home links and actual mineral support in
+the Base screen. A cached build passes 59 affected tracked native groups.
+The home-reference source separately passes 32 focused normal and sanitizer
+groups, and nine changed production units pass correctness analysis. The movement
+unit's targeted analysis also passes. No new full platform run was required.
+
+Manual worker clicks are being connected next. Exploration is implemented as a
+checked rule; sight, remembered terrain and territory still need their live producers.
 The next functional gate is a real first base and Scout with editable workers
 and a coherent turn, followed by production, founding and a second base.
 

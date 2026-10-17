@@ -91,3 +91,8 @@ hash is `c0909726903cd784447703af67b4b879d63c614803363969a780c45a74d0d1ac`.
 The first builds exposed an unqualified `size_t` in the new fixture declaration;
 it was corrected to `std::size_t`, with failed logs retained and no production
 change. Original reference execution remains the separate receipt above.
+
+The projector's provenance and case checks are unconditional, including under
+Python optimization. A focused follow-up reproduced the exact fixture with both
+ordinary Python and python -O and rejected a changed input hash, a failed case
+count and a retained Clean paid flag in both modes.

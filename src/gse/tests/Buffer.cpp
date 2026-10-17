@@ -30,6 +30,29 @@ static std::string ExpectReadFailure( types::Buffer& buffer, const std::function
 }
 
 static void AddFramedReadTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "bounded string frames preserve cursor and default reader semantics", GT() {
+		for ( const uint32_t cap : { 0u, 256u, 65536u } ) {
+			types::Buffer exact;
+			exact.WriteInt( 29 ); exact.WriteString( std::string( cap, 'a' ) ); exact.WriteInt( 31 );
+			GT_ASSERT( exact.ReadInt() == 29 && exact.ReadString( cap ) == std::string( cap, 'a' ) && exact.ReadInt() == 31,
+				"exact-cap string changed payload or adjacent frames" );
+			types::Buffer over;
+			over.WriteInt( 29 ); over.WriteString( std::string( cap + 1, 'b' ) ); over.WriteInt( 31 );
+			GT_ASSERT( over.ReadInt() == 29, "prefix changed" );
+			const auto error = ExpectReadFailure( over, [ & ] { over.ReadString( cap ); }, "payload limit" );
+			GT_ASSERT( error.empty(), "complete over-budget frame changed cursor: " + error );
+			GT_ASSERT( over.ReadString() == std::string( cap + 1, 'b' ) && over.ReadInt() == 31,
+				"default unbounded read changed after bounded rejection" );
+		}
+		types::Buffer wrong_type; wrong_type.WriteInt( 1 );
+		GT_ASSERT( ExpectReadFailure( wrong_type, [ & ] { wrong_type.ReadString( 0 ); }, "unexpected type" ).empty(),
+			"type rejection no longer precedes budget validation" );
+		types::Buffer valid; valid.WriteString( "payload" );
+		types::Buffer truncated( valid.ToString().substr( 0, valid.lenw - 1 ) );
+		GT_ASSERT( ExpectReadFailure( truncated, [ & ] { truncated.ReadString( 0 ); }, "prematurely" ).empty(),
+			"incomplete frame was treated as a complete oversized payload" );
+		GT_OK();
+	} );
 	task->AddTest(
 		"test truncated and corrupt frames preserve the cursor and caller output",
 		GT() {

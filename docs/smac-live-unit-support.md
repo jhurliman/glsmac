@@ -68,8 +68,12 @@ transitions, and orbital tests run alongside them. The invalid-reference test
 rewrites the actual Unit frame while preserving other world frames, so it must
 reach post-Base reference validation rather than an unrelated framing rejection.
 
-The final normal build passed 32 focused native groups with allocation tracking
-(1.066 s), including the eight claimed Early Start regressions. Focused sanitizer
-and final changed-TU analysis are pending at this source checkpoint. No full suite,
+Source `55e16d3d` passed the same 32 focused native groups with allocation
+tracking in normal (1.066 s) and ASan/UBSan/LSan (3.121 s) builds, including the
+eight claimed Early Start regressions. LLVM 15 correctness analysis passed all
+nine changed production translation units (22.93 s, zero failures). Initial
+fixture framing mistakes and the missing Space include were corrected before
+these final runs; the parent review also caught the all-Units restore preflight,
+which now correctly leaves Early startup under its own seal. No full suite,
 platform matrix, original emulator rerun or default gameplay activation is part
 of this slice.

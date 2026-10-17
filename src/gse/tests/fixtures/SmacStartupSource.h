@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SmacRulesSource.h"
+#include "SmacFactionStartupSource.h"
 
 #include <sstream>
 
@@ -37,7 +38,12 @@ inline std::string FactionSource( const std::string& filename ) {
 	const auto& bindings = game::backend::settings::SmacFactionStartupRules::Bindings();
 	const int grants[] = { 6, 43, 2, 1, 5, 4, 0 };
 	for ( size_t i = 0; i < bindings.size(); ++i ) {
-		if ( filename == bindings[ i ].filename ) { return "#" + std::string( bindings[ i ].section ) + "\nSynthetic header\nTECH,Tech" + std::to_string( grants[ i ] ) + "\n#END\n"; }
+		if ( filename == bindings[ i ].filename ) {
+			std::string bonuses = smac_faction_startup_fixture::BonusLines()[ i ];
+			const auto end = bonuses.find( ',', 5 );
+			bonuses.replace( 5, end - 5, "Tech" + std::to_string( grants[ i ] ) );
+			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic header\n" + bonuses + "\n#END\n";
+		}
 	}
 	throw std::runtime_error( "Unexpected startup faction source" );
 }

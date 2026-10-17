@@ -11,6 +11,7 @@
 #include "game/backend/Account.h"
 #include "game/backend/resource/SmacBaseSquareYield.h"
 #include "SmacProductionRules.h"
+#include "SmacTechnologyRules.h"
 
 #include "gse/Wrappable.h"
 
@@ -89,6 +90,10 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void InitializeHostRules( const RulesSource& read_source );
 	const std::optional< resource::smac::BaseSquareRules >& GetSmacBaseSquareRules() const;
 	const std::optional< SmacProductionRules >& GetSmacProductionRules() const;
+	const std::optional< SmacTechnologyRules >& GetSmacTechnologyRules() const;
+	// Source facility slot 1..71. Missing profile/slot remains unavailable;
+	// this query does not establish faction ownership or buildability.
+	SmacProductionPrerequisite GetSmacFacilityPrerequisite( int32_t source_id ) const;
 	void LockRuleset();
 	bool IsRulesetLocked() const;
 	void ResetRuleset();
@@ -112,6 +117,7 @@ private:
 	bool m_ruleset_locked = false; // lifecycle guard, not saved state
 	std::optional< resource::smac::BaseSquareRules > m_smac_base_square_rules;
 	std::optional< SmacProductionRules > m_smac_production_rules;
+	std::optional< SmacTechnologyRules > m_smac_technology_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

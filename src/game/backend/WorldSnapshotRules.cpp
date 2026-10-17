@@ -22,6 +22,7 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( ( id == "smac" ) != settings.GetSmacWorldSizeRules().has_value() ) { throw std::runtime_error( "World snapshot world-size profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacFactionStartupRules().has_value() ) { throw std::runtime_error( "World snapshot faction startup profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacPredefinedUnitRules().has_value() ) { throw std::runtime_error( "World snapshot predefined unit profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacMovementRules().has_value() ) { throw std::runtime_error( "World snapshot movement profile does not match ruleset" ); }
 	settings.ValidateWorldSize();
 }
 
@@ -41,6 +42,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto faction_bytes = factions ? factions->Serialize( *technologies ).ToString() : std::string{};
 	const auto& units = settings.GetSmacPredefinedUnitRules();
 	const auto unit_bytes = units ? units->Serialize( *technologies ).ToString() : std::string{};
+	const auto& movement = settings.GetSmacMovementRules();
+	const auto movement_bytes = movement ? movement->Serialize().ToString() : std::string{};
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -61,6 +64,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	if ( factions ) { buffer.WriteString( faction_bytes ); }
 	buffer.WriteBool( units.has_value() );
 	if ( units ) { buffer.WriteString( unit_bytes ); }
+	buffer.WriteBool( movement.has_value() );
+	if ( movement ) { buffer.WriteString( movement_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -128,6 +133,12 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( units ) {
 		const auto incoming = settings::SmacPredefinedUnitRules::Deserialize( buffer.ReadString(), *technologies );
 		if ( !( incoming == *units ) ) { throw std::runtime_error( "World snapshot predefined unit profile differs from the session" ); }
+	}
+	const auto& movement = settings.GetSmacMovementRules();
+	if ( buffer.ReadBool() != movement.has_value() ) { throw std::runtime_error( "World snapshot movement presence differs from the session" ); }
+	if ( movement ) {
+		const auto incoming = settings::SmacMovementRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		if ( !( incoming == *movement ) ) { throw std::runtime_error( "World snapshot movement profile differs from the session" ); }
 	}
 }
 

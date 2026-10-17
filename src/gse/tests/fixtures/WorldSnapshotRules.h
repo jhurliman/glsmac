@@ -29,7 +29,9 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const std::optional< bool > factions_present = std::nullopt,
 	const std::optional< std::string >& factions = std::nullopt,
 	const std::optional< bool > units_present = std::nullopt,
-	const std::optional< std::string >& units = std::nullopt ) {
+	const std::optional< std::string >& units = std::nullopt,
+	const std::optional< bool > movement_present = std::nullopt,
+	const std::optional< std::string >& movement = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
@@ -61,6 +63,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		const auto present_units = units_present.value_or( id == "smac" ); result.WriteBool( present_units );
 		if ( present_units ) { result.WriteString( units ? *units : smac_rules_fixture::PredefinedUnits().Serialize( smac_rules_fixture::Technologies() ).ToString() ); }
 	}
+	if ( version >= 12 ) {
+		const auto has_movement = movement_present.value_or( id == "smac" ); result.WriteBool( has_movement );
+		if ( has_movement ) { result.WriteString( movement ? *movement : smac_rules_fixture::Movement().Serialize().ToString() ); }
+	}
 	return result;
 }
 
@@ -76,7 +82,14 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 	if ( id == "smax" ) { result.emplace_back( "unexpected predefined profile", header( true ) ); return result; }
 	result.emplace_back( "absent predefined profile", header( false ) );
 	types::Buffer absent, present, wrong; absent.WriteBool( false ); present.WriteBool( true ); wrong.WriteInt( 1 );
-	const auto missing = header( false ); const auto prefix = missing.substr( 0, missing.size() - absent.lenw );
+	// Walk to predefined presence rather than trimming the new movement tail.
+	types::Buffer before_units( header( false ) );
+	before_units.ReadInt(); before_units.ReadInt(); before_units.ReadString(); before_units.ReadBool();
+	for ( size_t i = 0; i < 9; ++i ) { before_units.ReadInt(); }
+	for ( size_t i = 0; i < 2; ++i ) { before_units.ReadBool(); before_units.ReadString(); }
+	before_units.ReadBool(); before_units.ReadString(); before_units.ReadString();
+	before_units.ReadBool(); before_units.ReadString();
+	const auto prefix = before_units.ToString().substr( 0, before_units.lenr );
 	result.emplace_back( "missing predefined presence", prefix );
 	result.emplace_back( "mistyped predefined presence", prefix + wrong.ToString() );
 	result.emplace_back( "missing predefined payload", prefix + present.ToString() );
@@ -113,6 +126,38 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 		auto changed = profile; changes[ i ]( changed ); auto& c = changed.catalog;
 		c = game::backend::unit::SmacPredefinedUnitCatalog::Build( c.source, c.chassis, c.weapons, c.defenses, c.reactors, c.abilities, technologies );
 		add( "different valid predefined source/derived field " + std::to_string( i ), changed.Serialize( technologies ).ToString() );
+	}
+	return result;
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidMovementHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	const auto header = [ & ]( const bool present, const std::optional< std::string >& bytes = {} ) {
+		return Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+			game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version,
+			{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, present, bytes ).ToString();
+	};
+	result.emplace_back( "old V11", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+		game::backend::world_snapshot::rules_marker, 11 ).ToString() );
+	if ( id == "smax" ) { result.emplace_back( "unexpected movement profile", header( true ) ); return result; }
+	result.emplace_back( "absent movement profile", header( false ) );
+	types::Buffer absent, present, wrong; absent.WriteBool( false ); present.WriteBool( true ); wrong.WriteInt( 1 );
+	const auto missing = header( false ); const auto prefix = missing.substr( 0, missing.size() - absent.lenw );
+	result.emplace_back( "missing movement presence", prefix );
+	result.emplace_back( "mistyped movement presence", prefix + wrong.ToString() );
+	result.emplace_back( "missing movement payload", prefix + present.ToString() );
+	result.emplace_back( "mistyped movement payload", prefix + present.ToString() + wrong.ToString() );
+	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
+	const auto bytes = smac_rules_fixture::Movement().Serialize().ToString();
+	for ( const auto length : { size_t( 0 ), size_t( 1 ), bytes.size() - 1 } ) { add( "truncated movement payload", bytes.substr( 0, length ) ); }
+	add( "extra movement fields", bytes + wrong.ToString() );
+	for ( const int64_t value : { int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1 } ) {
+		types::Buffer bad; bad.WriteInt( 1 ); bad.WriteInt( value ); add( "out of range movement rule", bad.ToString() );
+	}
+	types::Buffer bad; bad.WriteInt( 1 ); bad.WriteString( "3" ); add( "mistyped movement rule", bad.ToString() );
+	types::Buffer version; version.WriteInt( 2 ); version.WriteInt( 3 ); add( "unknown movement version", version.ToString() );
+	for ( const int32_t value : { 0, 3, INT32_MIN, INT32_MAX } ) {
+		add( "different movement raw rule " + std::to_string( value ), game::backend::settings::SmacMovementRules( value ).Serialize().ToString() );
 	}
 	return result;
 }

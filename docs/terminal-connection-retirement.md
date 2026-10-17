@@ -89,3 +89,15 @@ non-PIE linker workaround remains a diagnostic setting, not a build-policy chang
 
 Commands, copied original source, fixture, logs and hash manifest are retained in
 `/home/jhurliman/src/glsmac-terminal-connection-retirement/`.
+
+## Focused publication
+
+The publication is stacked on faction-exclusion PR #106 at
+`b3e8ebaad54a5e4d9273a070c30efbe343d814f7`. Cherry-pick `8ef3050a` of source
+`4906ff19aac5fcf256d1b5eed3dc97857ecf86fb` applied without conflicts; the production
+State file and the four new test bodies are unchanged. This older stack has no
+native-filter CLI. Its normal CTest run passed all six registered tests in 25.59
+seconds, and the main-suite log explicitly contains all four terminal-cleanup
+case names followed by success. No test-tooling dependency or repeated sanitizer
+run was added solely for publication. The build used four jobs. Publication logs
+are retained in `/home/jhurliman/src/glsmac-terminal-connection-publication/`.

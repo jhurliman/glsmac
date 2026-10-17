@@ -41,8 +41,10 @@ not a second technology-side flag. Other acquisition side effects outside the
 admitted ordinary campaign are not represented by this slice.
 
 Technology V2 persists discount, deferred awards and pending Secrets exactly.
-Simulation V10, Resource V4, Global15 and World29 reject older incompatible
-records. New-world zeros and TECHCOST100 are grounded in
+Simulation V10 and Resource V4 accompany the initial Global15/World29 research
+format. The following TERRAIN catalog raises the outer formats to Global16 and
+World30 while retaining these research fields. Older incompatible records reject.
+New-world zeros and TECHCOST100 are grounded in
 RE-SMAC-RESEARCH-START-INPUTS-001. RULES physical row8 uses the measured unsigned
 hex/binary or decimal prefix reader and clamp0..1000; it does not broaden the
 separate strict parser for other RULES fields. Restoration never reruns reset.
@@ -55,5 +57,7 @@ by the projector. Production and the two new actual claimed-Start tests pass
 syntax checks; nine changed production TUs pass focused LLVM15 correctness
 analysis. The latter cover initial pause/reset, duplicate answers, a real
 second upkeep completing Secrets and revelation, once-only publication and
-stable-world restoration; their linked execution awaits the shared cached build.
-No full suite, platform matrix or original executable rerun is claimed here.
+stable-world restoration. Both now pass in the shared cached Linux build within
+the 82-group [research integration check](validation/research-terrain-2026-10-17.md).
+The separate required-choice script also passes. No full suite, platform matrix,
+interactive playthrough or original executable rerun is claimed here.

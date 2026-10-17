@@ -414,20 +414,29 @@ operation before its sign checks/clamps. The Release/UBSan probe matches all
 422 scenarios. This calculator result does not claim reachability of synthetic
 extreme social/resource inputs or a complete base economy.
 
-### Next three implementation slices
+### Current gameplay batch and next implementation slices
 
-1. Connect research income to an actual directed choice, cost, completion and
-   Secrets continuation. Suspend at the measured per-base phase, resume once by
-   stable IDs, and keep the required dialog usable. Finish faction debit
-   settlement without replaying a partially completed turn.
-2. Connect ordinary Former commands to saved orders, progress, cancellation and
-   terrain completion. Read durations and prerequisites from the frozen active
-   terrain catalog, using the original command/dispatch receipts to determine
-   when work advances. Refresh actual yields and terrain presentation together.
-3. Close the playable two-base conquest loop: conventional combat and base
-   capture, last-base disposition, victory, and scenario saves/network replay.
-   Extend founding/production beyond the current ordinary land and non-last-base
+The [research integration checkpoint](validation/research-terrain-2026-10-17.md)
+connects actual Base labs, required manual choice, completion, Secrets and map
+revelation to suspended native upkeep. An answer resumes credit and eventual
+faction debit settlement exactly once. The frozen TERRAIN catalog is also
+integrated. The cached Linux build passes 82 affected native groups and the
+research UI script; the subsequent preview-retirement and arithmetic-boundary
+changes pass their two affected groups. These are focused checks, not a new
+platform matrix or interactive playthrough.
+
+1. Finish ordinary Former work in the playable controller. Saved orders,
+   progress, cancellation, collaborative work and terrain/yield completion are
+   implemented. Connect the verified selected-unit continuation and publish
+   actual world graphics, including connected roads and coastal composition.
+2. Close the two-base conquest loop: conventional combat and Base capture,
+   last-base disposition, victory, and scenario saves/network replay. Extend
+   founding/production beyond the current ordinary land and non-last-base
    boundary using the accepted original caller evidence.
+3. Exercise that complete campaign interactively on the supported platforms,
+   address failures, then expand the rules/content and AI. Hurry spending and
+   maintenance-deficit disposal remain separate economy producers; the existing
+   research continuation already settles ordinary faction debit.
 
 The [worker-authority checkpoint](validation/worker-authority-2026-10-17.md) at
 `dacac744` passes all eight tests on Windows, Linux Debug, Linux sanitizers and

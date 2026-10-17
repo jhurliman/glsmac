@@ -10,7 +10,9 @@ borrowed pointer. Default worker mode already joins Game before MAIN cleanup.
 before the remaining reverse cleanup. Engine nominates Game only in single-thread
 mode. Start and Iterate order remain unchanged. The nomination must be made
 before the first Run, refer to exactly one registered module, and cannot replace
-another nomination. Invalid use throws in Release too. This is a setup API,
+another nomination. Later registration of the nominated module is also rejected,
+so duplicate Start calls cannot bypass the single early Stop. Invalid use throws
+in Release too. This is a setup API,
 not a concurrent module-reconfiguration interface.
 
 Cleanup considers only the prefix whose Start calls returned. The nominated

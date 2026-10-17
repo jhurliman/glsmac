@@ -6,7 +6,7 @@ const main = #include('../default/ui/parts/mainmenu/steps/main');
 const menu = #include('../default/ui/parts/game/menu/left_menu_game');
 
 let save_calls = [];
-let fail_save = true;
+let save_complete = null;
 let closed = 0;
 let save_input = null;
 let save_status = null;
@@ -17,11 +17,10 @@ const save_body = {
 	button: (properties) => { const label = properties.text; return {on: (name, callback) => {save_buttons[label] = callback;}}; },
 };
 save.init({
-	game: {save_campaign: (path) => {
-		save_calls :+path;
-		if (fail_save) { throw GameError('Save rejected without replacing the campaign file'); }
-		return '/campaigns/chosen.glsmac';
-	}},
+	game: {
+        on: (name, callback) => { test.assert(name == 'campaign_saved'); save_complete = callback; },
+        save_campaign: (path) => { save_calls :+path; return #sizeof(save_calls); },
+    },
 	create: (title, width, height, generator) => {
 		test.assert(title == 'SAVE GLSMAC CAMPAIGN');
 		generator(save_body, (result) => { closed++; });
@@ -35,13 +34,25 @@ test.assert(menu_entries[0].label == 'Save Campaign' && opened == 1 && save_inpu
 save_input.value = 'chosen.glsmac';
 save_buttons.Save({});
 test.assert(#sizeof(save_calls) == 1 && save_calls[0] == 'chosen.glsmac' && closed == 0);
-test.assert(save_status.text == 'Save rejected without replacing the campaign file' && save_input.value == 'chosen.glsmac');
-fail_save = false;
+test.assert(save_status.text == 'Saving campaign...' && save_input.value == 'chosen.glsmac');
 save_buttons.Save({});
-test.assert(#sizeof(save_calls) == 2 && closed == 0 && save_input.value == '/campaigns/chosen.glsmac');
+test.assert(#sizeof(save_calls) == 1); // no duplicate while queued
+save_complete({request_id: 99, path: '/stale.glsmac', error: ''});
+test.assert(save_status.text == 'Saving campaign...');
+save_complete({request_id: 1, path: '', error: 'Save rejected without replacing the campaign file'});
+test.assert(save_status.text == 'Save rejected without replacing the campaign file' && save_input.value == 'chosen.glsmac');
+save_buttons.Save({});
+test.assert(#sizeof(save_calls) == 2 && closed == 0 && save_input.value == 'chosen.glsmac');
+save_buttons.Close({}); // closing the panel does not falsely report success or cancel the write
+save.on_show();
+test.assert(closed == 1 && save_status.text == 'Saving campaign...');
+save_complete({request_id: 2, path: '/campaigns/chosen.glsmac', error: ''});
+test.assert(save_input.value == '/campaigns/chosen.glsmac');
 test.assert(save_status.text == 'Campaign saved. The full path is shown above.');
+save_complete({request_id: 1, path: '/stale.glsmac', error: ''});
+test.assert(save_input.value == '/campaigns/chosen.glsmac');
 save_buttons.Close({});
-test.assert(closed == 1 && #sizeof(save_calls) == 2);
+test.assert(closed == 2 && #sizeof(save_calls) == 2);
 save.on_show();
 test.assert(save_status.text == '' && save_input.value == '/campaigns/chosen.glsmac');
 

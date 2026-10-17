@@ -52,14 +52,22 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
             knowledge.remembered[1].resize(knowledge.tiles.size(),map::SmacWorkerKnowledge::Improvements{0,0,false,false});
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
             snapshot=fixture.Snapshot();
-            const auto saved=game->SaveCampaign(path);GT_ASSERT(std::filesystem::is_regular_file(saved),"campaign file was not written");
+            const auto saved=fixture.SaveCampaign(path);GT_ASSERT(std::filesystem::is_regular_file(saved),"campaign file was not written");
             GT_ASSERT(campaign::Read(path).world==snapshot,"file lost world bytes");
             // Replacing an existing file is the same atomic publication path.
-            game->SaveCampaign(path);GT_ASSERT(campaign::Read(path).world==snapshot,"replacement changed snapshot");GT_OK();
+            fixture.SaveCampaign(path);GT_ASSERT(campaign::Read(path).world==snapshot,"replacement changed snapshot");GT_OK();
         });if(!setup.empty()){return setup;}
         const auto restored=fixture.CheckCampaignRestore(path,snapshot);if(!restored.empty()){return restored;}
         return fixture.CheckCampaignCallbackFailure(path);
         });
+        });
+    });
+    task->AddTest("Campaign save waits for extracted events and retires old world completion",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]() -> std::string {
+            ConventionalUnitFixture fixture;fixture.Configure(true,3,true);fixture.ResourcePolicy(true);
+            const auto path=Temporary(),cancelled=Temporary();
+            util::FinallyGuard cleanup([&]{std::error_code ignored;std::filesystem::remove(path,ignored);std::filesystem::remove(cancelled,ignored);});
+            return fixture.CheckCampaignSaveOwnership(path,cancelled);
         });
     });
     task->AddTest("Campaign cancellation retires frontend resources before initialization",GT(){
@@ -73,7 +81,7 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture fixture;fixture.Configure(true,3,true);fixture.ResourcePolicy(true);
         const auto path=Temporary();util::FinallyGuard cleanup([&]{std::error_code ignored;std::filesystem::remove(path,ignored);});
         return fixture.Run([&](GSE_CALLABLE)->std::string {
-            auto* game=fixture.Game();const auto snapshot=fixture.Snapshot();game->SaveCampaign(path);
+            auto* game=fixture.Game();const auto snapshot=fixture.Snapshot();fixture.SaveCampaign(path);
             const auto saved=campaign::Read(path);const auto encoded=campaign::Encode(saved);
             auto truncated=encoded;truncated.pop_back();
             const auto bad_path=Temporary();util::FinallyGuard remove_bad([&]{std::error_code ignored;std::filesystem::remove(bad_path,ignored);});
@@ -83,9 +91,10 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
             auto invalid=saved;invalid.local_slot=1;GT_ASSERT(Rejects([&]{campaign::Write(path,invalid);}),"invalid replacement admitted");
             GT_ASSERT(campaign::Read(path).world==snapshot,"failed replacement damaged existing file");
             fixture.QueueProbeEvent(GSE_CALL,[]{});
-            GT_ASSERT(Rejects([&]{game->SaveCampaign(path);}),"save omitted queued gameplay command");
+            GT_ASSERT(Rejects([&]{fixture.SaveCampaign(path);}),"save omitted queued gameplay command");
             GT_ASSERT(campaign::Read(path).world==snapshot&&fixture.Snapshot()==snapshot,"rejected save changed file or current world");
-            fixture.DrainEvents();GT_OK();
+            fixture.DrainEvents();
+            fixture.SaveCampaign(path);GT_ASSERT(campaign::Read(path).world==snapshot,"rejected save retired the campaign or prevented retry");GT_OK();
         });
     });
 }

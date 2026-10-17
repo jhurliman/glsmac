@@ -304,7 +304,10 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	pending_initialization_t MT_RestoreCampaign(State* state, std::string world);
 	void BindLocalCampaignState(State* state); // empty controller, validated staged State
 	static void ValidateCampaignWorld(State* state, const std::string& world);
-	std::string SaveCampaign(const std::string& path);
+	// Path-only request from the UI; serialization is claimed at a native checkpoint.
+	uint64_t QueueCampaignSave(const State::game_session_t& session, const std::string& path);
+	struct CampaignSaveResult { uint64_t request_id; std::string path, error; };
+	std::optional<CampaignSaveResult> TakeCampaignSaveResult(world_ticket_t world);
 	pending_initialization_t MT_LoadMap( world_ticket_t world, const std::string& path );
 	MT_Response MT_GetResponse( common::mt_id_t request );
 	MT_Response MT_WaitResponse( common::mt_id_t request );
@@ -557,6 +560,16 @@ private:
 	bool MatchesActiveAdmission( world_ticket_t ticket ) const; // admission mutex held
 	void InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE );
 	bool OwnerBlocksNative() const;
+	struct CampaignSave {
+		enum Phase { Queued, Pending, Finished };
+		world_ticket_t world;
+		Phase phase = Queued;
+		CampaignSaveResult result;
+	};
+	std::shared_ptr<CampaignSave> m_campaign_save; // admission mutex; no world pointers
+	bool ProcessCampaignSave();
+	void RunCampaignSave(const std::shared_ptr<OwnerTransition>& owner, const std::shared_ptr<CampaignSave>& save);
+	std::string SaveCampaign(const std::string& path); // claimed owner only
 	bool HasInitializationFailure() const;
 	bool PublishInitializationFailure();
 	bool AdvanceInitialization();

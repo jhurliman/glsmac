@@ -2437,6 +2437,88 @@ public:
         return check(); // The fixture and restored Map retire before these borrowed sources.
     }
 
+    std::string SaveCampaign(const std::string& path) {
+        const auto ticket=FixtureWorldTicket();
+        const auto id=m_game.QueueCampaignSave(m_state->CaptureGameSession(),path);
+        m_game.ProcessCampaignSave(); // this fixture is already on the owner thread
+        auto result=m_game.TakeCampaignSaveResult(ticket);
+        if(!result || result->request_id!=id) {throw std::runtime_error("campaign owner request did not complete");}
+        if(!result->error.empty()) {throw std::runtime_error(result->error);}
+        return result->path;
+    }
+
+    std::string CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled_path) {
+        using namespace game::backend;
+        const auto ticket=FixtureWorldTicket();
+        const auto session=m_state->CaptureGameSession();
+        const auto owner_thread=std::this_thread::get_id();
+        uint64_t request_id=0;size_t completions=0;bool completion_on_owner=false,queued_only=false,blocked=false;
+        std::string expected,completed_path,completed_error;
+        std::exception_ptr worker_failure;
+        ::ui::UI* ui=nullptr;
+        std::unique_ptr<game::frontend::Game> frontend;
+        value::Callable* save_call=nullptr;
+        util::FinallyGuard cleanup([&]{
+            frontend.reset();
+            WithScriptValues([&](GSE_CALLABLE)->std::string{
+                m_game.ClearHandlers();
+                if(save_call){m_gse->RemoveRootObject(save_call);}
+                if(ui){ui->GetRoot()->Container::Destroy(GSE_CALL);}GT_OK();
+            });
+        });
+        const auto setup=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+            ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
+            frontend->m_game=&m_game;frontend->m_world_ticket=ticket;
+            auto* wrapped=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
+            save_call=static_cast<value::Callable*>(wrapped->value.at("save_campaign"));m_gse->AddRootObject(save_call);
+            m_game.On(GSE_CALL,"campaign_saved",NATIVE_CALL(&completions,&completion_on_owner,&completed_path,&completed_error,owner_thread,&request_id){
+                N_EXPECT_ARGS(1);N_GETVALUE(result,0,Object);++completions;completion_on_owner=std::this_thread::get_id()==owner_thread;
+                if(static_cast<value::Int*>(result.at("request_id"))->value!=static_cast<int64_t>(request_id)){throw std::runtime_error("save completion ID changed");}
+                completed_path=static_cast<value::String*>(result.at("path"))->value;
+                completed_error=static_cast<value::String*>(result.at("error"))->value;
+                return VALUE(value::Undefined);
+            }));
+            QueueKnowledgeProbeEvent(GSE_CALL,[&]{
+                m_game.GetRandom()->GetUInt(0,100); // first half of an actual extracted callback
+                request_id=static_cast<value::Int*>(save_call->Run(GSE_CALL,{VALUE(value::String,,path)}))->value;
+                queued_only=!std::filesystem::exists(path);
+                bool duplicate_rejected=false;try{m_game.QueueCampaignSave(session,path);}catch(const std::runtime_error&){duplicate_rejected=true;}
+                queued_only=queued_only && duplicate_rejected;
+                std::thread backend([&]{try{m_game.Iterate();m_game.Iterate();}catch(...){worker_failure=std::current_exception();}});
+                backend.join();
+                blocked=m_game.OwnerBlocksNative() && !m_game.TakeCampaignSaveResult(ticket) && !std::filesystem::exists(path);
+                m_game.GetRandom()->GetUInt(0,100); // snapshot must include this later write, too
+            });
+            ProcessEvents();
+            expected=m_game.SerializeWorldSnapshot();GT_OK();
+        });if(!setup.empty()){return setup;}
+        if(worker_failure){std::rethrow_exception(worker_failure);}
+        GT_ASSERT(queued_only && blocked,"save inspected the world inside the extracted event or bypassed owner handoff");
+        ProcessAccumulations();
+        GT_ASSERT(!m_game.OwnerBlocksNative() && campaign::Read(path).world==expected,"save captured partial event state or failed to release owner exclusion");
+        const auto notify=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+            frontend->PollCampaignSave();frontend->PollCampaignSave();
+            GT_ASSERT(completions==1 && completion_on_owner && completed_error.empty()
+                && std::filesystem::equivalent(completed_path,path),"save completion was missing, repeated, or delivered off the UI owner");
+            GT_OK();
+        });if(!notify.empty()){return notify;}
+        // A queued owner save must lose authority on reset before the callback
+        // is drained. It must not write or notify a replacement session.
+        m_game.QueueCampaignSave(session,cancelled_path);
+        std::thread backend([&]{try{m_game.Iterate();}catch(...){worker_failure=std::current_exception();}});backend.join();
+        if(worker_failure){std::rethrow_exception(worker_failure);}
+        GT_ASSERT(m_game.OwnerBlocksNative(),"cancellation fixture did not defer the save owner");
+        const auto reset=WithScriptValues([&](GSE_CALLABLE)->std::string{ResetRequest();m_state->SetGame(&m_game);GT_OK();});
+        if(!reset.empty()){return reset;}ProcessAccumulations();
+        GT_ASSERT(!std::filesystem::exists(cancelled_path) && !m_game.TakeCampaignSaveResult(ticket)
+            && completions==1,"retired save wrote a file or delivered old completion");
+        return WithScriptValues([&](GSE_CALLABLE)->std::string{
+            bool rejected=false;try{save_call->Run(GSE_CALL,{VALUE(value::String,,cancelled_path)});}catch(const gse::Exception&){rejected=true;}
+            GT_ASSERT(rejected,"retired save callable acquired a replacement session");GT_OK();
+        });
+    }
+
     std::string CheckCampaignFrontendCancellation() {
         return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
             auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
@@ -5172,6 +5254,8 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+std::string ConventionalUnitFixture::SaveCampaign(const std::string& path) {return fixture->SaveCampaign(path);}
+std::string ConventionalUnitFixture::CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled) {return fixture->CheckCampaignSaveOwnership(path,cancelled);}
 std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {return fixture->CheckCampaignRejectedLoad(GSE_CALL,path);}
 std::string ConventionalUnitFixture::WithCampaignMapSources(const std::function<std::string()>& check) { return BackendFixture::WithCampaignMapSources(check); }
 std::string ConventionalUnitFixture::CheckCampaignCallbackFailure(const std::string& path) { return fixture->CheckCampaignCallbackFailure(path); }

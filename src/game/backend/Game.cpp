@@ -406,6 +406,8 @@ void Game::Iterate() {
 		if ( m_active_admission && m_active_admission->cancelled ) { return; }
 	}
 
+	if ( ProcessCampaignSave() ) { return; }
+
 	if ( m_state ) {
 		m_state->Iterate();
 	}
@@ -622,9 +624,9 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
-        {"save_campaign", NATIVE_CALL(this) {
+        {"save_campaign", NATIVE_CALL(this, session = m_state->CaptureGameSession()) {
             N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
-            try {return VALUE(gse::value::String,,SaveCampaign(path));}
+            try {return VALUE(gse::value::Int,,QueueCampaignSave(session,path));}
             catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
         })},
 	WRAPIMPL_TRIGGERS
@@ -3061,6 +3063,7 @@ void Game::ResetGame() {
 			std::lock_guard guard( m_admission_mutex );
 			if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
 			m_active_admission.reset();
+			m_campaign_save.reset();
 		}
 
 		m_pending_snapshot_random.reset();

@@ -326,6 +326,7 @@ void Game::Iterate() {
 			CancelGame();
 		}
 	}
+	if ( !m_world_retired && m_world_ticket ) { PollCampaignSave(); }
 	if ( m_mt_ids.save_map ) {
 		auto response = game->MT_GetResponse( m_mt_ids.save_map );
 		if ( response.result != backend::R_NONE ) {
@@ -761,6 +762,21 @@ void Game::LoadMap( const std::string& path ) {
 	const auto initialization = game->MT_LoadMap( m_world_ticket, path );
 	m_mt_ids.init = initialization.request;
 	m_pending_world_ticket = initialization.ticket;
+}
+
+void Game::PollCampaignSave() {
+    auto* game=g_engine->GetGame();
+    auto result=game->TakeCampaignSaveResult(m_world_ticket);
+    if(!result) {return;}
+    // This is the UI thread. Only owned result strings cross from the owner
+    // operation; no callback or UI pointer is retained by the backend job.
+    Trigger(game,"campaign_saved",[result=std::move(*result)](GSE_CALLABLE, gse::value::object_properties_t& args) {
+        args={
+            {"request_id",VALUE(gse::value::Int,,result.request_id)},
+            {"path",VALUE(gse::value::String,,result.path)},
+            {"error",VALUE(gse::value::String,,result.error)}
+        };
+    });
 }
 
 void Game::SaveMap( const std::string& path ) {

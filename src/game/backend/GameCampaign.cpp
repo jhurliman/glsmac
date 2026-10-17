@@ -10,9 +10,93 @@
 #include "map/Map.h"
 #include "util/FinallyGuard.h"
 #include "types/Buffer.h"
+#include <algorithm>
+#include <limits>
 
 namespace game::backend {
+uint64_t Game::QueueCampaignSave(const State::game_session_t& session, const std::string& path) {
+    if(path.empty()) {THROW("Campaign path is empty");}
+    std::lock_guard lock(m_admission_mutex);
+    if(!m_active_admission || m_active_admission->cancelled ||
+        m_active_admission->stage!=StartupStage::Complete ||
+        m_active_admission->admitted_binding!=session || !session || !session->IsActive()) {
+        THROW("Save requires an active initialized campaign");
+    }
+    if(m_campaign_save) {THROW("A campaign save is already pending");}
+    // World tickets provide process-wide, nonreused identities across reset.
+    const auto id=ReserveWorldTicket();
+    if(id>static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {THROW("Campaign request IDs exhausted");}
+    m_campaign_save=std::make_shared<CampaignSave>(CampaignSave{
+        m_active_admission->ticket,CampaignSave::Queued,{id,path,{}}});
+    return id;
+}
+
+bool Game::ProcessCampaignSave() {
+    std::shared_ptr<CampaignSave> save;
+    std::shared_ptr<OwnerTransition> owner;
+    {
+        std::lock_guard lock(m_admission_mutex);
+        save=m_campaign_save;
+        if(!save || save->phase!=CampaignSave::Queued) {return false;}
+        if(!MatchesActiveAdmission(save->world)) {m_campaign_save.reset();return false;}
+        // Reuse the native/owner handoff: once published, native Iterate cannot
+        // touch the world until this session-bound accumulation has finished.
+        owner=std::make_shared<OwnerTransition>(m_active_admission,StartupStage::Complete,
+            std::vector<WorldAdmission::Ingress>{});
+        m_owner_transition_handoffs.push_back(owner);
+        m_owner_transition=owner;
+        save->phase=CampaignSave::Pending;
+    }
+    util::FinallyGuard handoff([this,owner]{
+        std::lock_guard lock(m_admission_mutex);
+        const auto it=std::find(m_owner_transition_handoffs.begin(),m_owner_transition_handoffs.end(),owner);
+        if(it!=m_owner_transition_handoffs.end()) {m_owner_transition_handoffs.erase(it);}
+    });
+    try {
+        owner->admission->state->WithGameSession(owner->admission->admitted_binding,owner.get(),
+            [this,owner,save](Game* const,GSE_CALLABLE){RunCampaignSave(owner,save);},
+            [this,owner]{FinishOwnerTransition(owner);});
+    } catch(...) {FinishOwnerTransition(owner);throw;}
+    return true;
+}
+
+void Game::RunCampaignSave(const std::shared_ptr<OwnerTransition>& owner,const std::shared_ptr<CampaignSave>& save) {
+    {
+        std::lock_guard lock(m_admission_mutex);
+        if(m_owner_transition!=owner || owner->phase!=OwnerTransition::Pending ||
+            m_campaign_save!=save || !MatchesActiveAdmission(save->world)) {return;}
+        owner->phase=OwnerTransition::Running;
+        owner->thread=std::this_thread::get_id();
+    }
+    util::FinallyGuard finish([this,owner]{FinishOwnerTransition(owner);});
+    std::string path,error;
+    try {path=SaveCampaign(save->result.path);}
+    catch(const std::exception& failure) {error=failure.what();}
+    std::lock_guard lock(m_admission_mutex);
+    if(m_campaign_save==save && MatchesActiveAdmission(save->world)) {
+        save->result.path=std::move(path);
+        save->result.error=std::move(error);
+        save->phase=CampaignSave::Finished;
+    }
+}
+
+std::optional<Game::CampaignSaveResult> Game::TakeCampaignSaveResult(const world_ticket_t world) {
+    std::lock_guard lock(m_admission_mutex);
+    if(!m_campaign_save || m_campaign_save->world!=world ||
+        m_campaign_save->phase!=CampaignSave::Finished || !MatchesActiveAdmission(world)) {return {};}
+    auto result=std::move(m_campaign_save->result);
+    m_campaign_save.reset();
+    return result;
+}
+
 std::string Game::SaveCampaign(const std::string& path) {
+    {
+        std::lock_guard lock(m_admission_mutex);
+        if(!m_owner_transition || m_owner_transition->stage!=StartupStage::Complete ||
+            m_owner_transition->phase!=OwnerTransition::Running || m_owner_transition->thread!=std::this_thread::get_id()) {
+            THROW("Save requires the claimed campaign owner checkpoint");
+        }
+    }
     if(!m_state || m_state->GetConnection() || m_game_state!=GS_RUNNING || !m_player || m_player->GetRole()!=Player::PR_SINGLE
         || m_state->m_settings.global.GetRulesetId()!="smac") {THROW("Save requires a running local SMAC campaign");}
     {std::lock_guard lock(m_pending_events_mutex); if(!m_pending_events.empty()) {THROW("Finish queued commands before saving");}}

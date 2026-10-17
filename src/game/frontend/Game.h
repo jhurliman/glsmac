@@ -442,6 +442,7 @@ private:
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
 	std::unordered_map< size_t, Animation* > m_animations;
 
+	void PollCampaignSave();
 	void CancelRequests();
 	void CancelGame();
 

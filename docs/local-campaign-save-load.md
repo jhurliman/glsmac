@@ -20,8 +20,25 @@ presentation policy rather than saved screen coordinates.
 Main-menu loading preserves the previous menu State until frontend initialization
 succeeds; cancellation/initialization failure returns through the existing reset
 path. Malformed file/prefix input throws before publication. Existing running-world
-load is refused. The save API returns the absolute path after successful replacement;
-the load API returns after acceptance, with normal asynchronous loading afterward.
+load is refused. The load API returns after acceptance, with normal asynchronous
+loading afterward.
+
+Saving is asynchronous: `game.save_campaign(path)` enqueues only owned path data
+and returns a nonreused request ID. The backend GAME-thread Iterate checkpoint
+claims the request and publishes an existing OwnerTransition. The session-bound
+GSE owner accumulation then validates and serializes the world and writes the
+file. While that accumulation is pending or running, OwnerBlocksNative prevents
+backend iteration from mutating the world; the accumulation also serializes with
+already-extracted script event callbacks. This is an ownership handoff, not just
+a lock around the pending-event container. Raw synchronous SaveCampaign is private
+and rejects calls outside the claimed operation.
+
+The frontend polls an owned result and emits `campaign_saved` with
+`{request_id, path, error}`; success includes the absolute path only after atomic
+replacement. The popup waits for that result, suppresses duplicate submits, and
+ignores unrelated or retired request IDs. Validation/write errors leave the
+campaign active and permit retry. Reset cancels the session-bound operation and
+clears its result, so a queued old-world save cannot write or notify a new world.
 
 Validation: affected production and test TUs syntax-checked. At integrated
 `d2fbf105`, the repository LLVM 15.0.7 correctness policy passed all four explicit
@@ -41,3 +58,10 @@ is unchanged at the final integration. The real GSE `campaign_file_ui.gls.js`
 module test passed at `20f06c31` and is also unchanged. The integrated cached
 build linked successfully. These are focused Linux receipts, without a full-suite,
 platform-matrix or rendered acceptance claim.
+
+Owner-request amendment: three production and two test TUs pass focused syntax
+checks, and the updated real Save/Load module script passes. The new native
+regression covers an actual extracted event, deferred backend claim, complete
+post-event bytes, exactly-once frontend delivery and pending-reset retirement.
+Linked execution of the four campaign groups is pending the coordinated cache run.
+Earlier receipts above describe the pre-amendment implementation.

@@ -19,7 +19,9 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const int64_t marker = game::backend::world_snapshot::rules_marker,
 	const int64_t version = game::backend::world_snapshot::rules_version,
 	const std::optional< bool > production_present = std::nullopt,
-	const std::optional< std::string >& production = std::nullopt ) {
+	const std::optional< std::string >& production = std::nullopt,
+	const std::optional< bool > technologies_present = std::nullopt,
+	const std::optional< std::string >& technologies = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
@@ -30,6 +32,11 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		const auto has_production = production_present.value_or( id == "smac" );
 		result.WriteBool( has_production );
 		if ( has_production ) { result.WriteString( production ? *production : smac_rules_fixture::Production().Serialize().ToString() ); }
+	}
+	if ( version >= 5 ) {
+		const auto has_technologies = technologies_present.value_or( id == "smac" );
+		result.WriteBool( has_technologies );
+		if ( has_technologies ) { result.WriteString( technologies ? *technologies : smac_rules_fixture::Technologies().Serialize().ToString() ); }
 	}
 	return result;
 }
@@ -52,6 +59,10 @@ inline std::vector< std::pair< std::string, std::string > > InvalidSmacHeaders()
 	game::backend::world_snapshot::WriteRandomState( old_v3, { 1, 2, 3, 4 } );
 	game::backend::world_snapshot::WriteTurnState( old_v3, { 37, { { 0, true }, { 2, false } } } );
 	old_v3.WriteString( "old map body" ); add( "old V3", old_v3 );
+	auto old_v4 = Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, 4 );
+	game::backend::world_snapshot::WriteRandomState( old_v4, { 1, 2, 3, 4 } );
+	game::backend::world_snapshot::WriteTurnState( old_v4, { 37, { { 0, true }, { 2, false } } } );
+	old_v4.WriteString( "old map body" ); add( "old V4", old_v4 );
 	add( "unknown version", Header( "smac", true, valid_rules, game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version + 1 ) );
 	add( "unknown identity", Header( "gog", false ) );
 	add( "different identity", Header( "smax", false ) );
@@ -99,7 +110,11 @@ inline std::vector< std::pair< std::string, std::string > > InvalidProductionHea
 	result.emplace_back( "missing SMAC production profile", header( false ) );
 	types::Buffer absent, present, wrong_type;
 	absent.WriteBool( false ); present.WriteBool( true ); wrong_type.WriteInt( 1 );
-	const auto prefix = header( false ).substr( 0, header( false ).size() - absent.lenw );
+	// Stop before production presence; later header versions append more fields.
+	types::Buffer before_production( header( false ) );
+	before_production.ReadInt(); before_production.ReadInt(); before_production.ReadString(); before_production.ReadBool();
+	for ( size_t field = 0; field < 9; ++field ) { before_production.ReadInt(); }
+	const auto prefix = before_production.ToString().substr( 0, before_production.lenr );
 	result.emplace_back( "missing production presence", prefix );
 	result.emplace_back( "mistyped production presence", prefix + wrong_type.ToString() );
 	result.emplace_back( "missing production payload", prefix + present.ToString() );
@@ -138,6 +153,76 @@ inline std::vector< std::pair< std::string, std::string > > InvalidProductionHea
 	add( "extra production fields", trailing.ToString() );
 	const auto valid = smac_rules_fixture::Production().Serialize().ToString();
 	for ( const auto length : { size_t( 0 ), size_t( 1 ), valid.size() - 1 } ) { add( "truncated production profile", valid.substr( 0, length ) ); }
+	return result;
+}
+
+inline std::string ReplaceTechnologyFrame( const size_t index, const types::Buffer& replacement ) {
+	auto original = smac_rules_fixture::Technologies().Serialize();
+	for ( size_t i = 0; i <= index; ++i ) {
+		const auto start = original.lenr;
+		const auto field = i >= 2 ? ( i - 2 ) % 10 : SIZE_MAX;
+		if ( field == 1 || field == 2 || field == 7 || field == 8 ) { original.ReadString(); }
+		else { original.ReadInt(); }
+		if ( i == index ) {
+			const auto bytes = original.ToString();
+			return bytes.substr( 0, start ) + replacement.ToString() + bytes.substr( original.lenr );
+		}
+	}
+	throw std::runtime_error( "technology test frame was not found" );
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidTechnologyHeaders( const std::string& id = "smac" ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	const std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
+	const auto header = [ & ]( const bool present, const std::optional< std::string >& bytes = std::nullopt ) {
+		return Header( id, id == "smac", values, game::backend::world_snapshot::rules_marker,
+			game::backend::world_snapshot::rules_version, {}, {}, present, bytes ).ToString();
+	};
+	if ( id == "smax" ) { result.emplace_back( "unexpected SMAX technology catalog", header( true ) ); return result; }
+	result.emplace_back( "missing SMAC technology catalog", header( false ) );
+	types::Buffer absent, present, wrong_type;
+	absent.WriteBool( false ); present.WriteBool( true ); wrong_type.WriteInt( 1 );
+	const auto prefix = header( false ).substr( 0, header( false ).size() - absent.lenw );
+	result.emplace_back( "missing technology presence", prefix );
+	result.emplace_back( "mistyped technology presence", prefix + wrong_type.ToString() );
+	result.emplace_back( "missing technology payload", prefix + present.ToString() );
+	result.emplace_back( "mistyped technology payload", prefix + present.ToString() + wrong_type.ToString() );
+	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
+	using game::backend::settings::SmacTechnologyRule;
+	for ( const auto member : { &SmacTechnologyRule::name, &SmacTechnologyRule::key } ) {
+		auto changed = smac_rules_fixture::Technologies(); changed.technologies.back().*member = "Changed";
+		add( "changed last technology text", changed.Serialize().ToString() );
+	}
+	for ( size_t field = 0; field < 4; ++field ) {
+		auto changed = smac_rules_fixture::Technologies(); changed.technologies.back().priorities[ field ] = 42;
+		add( "changed last technology priority", changed.Serialize().ToString() );
+	}
+	for ( size_t field = 0; field < 2; ++field ) {
+		auto changed = smac_rules_fixture::Technologies(); changed.technologies.back().prerequisites[ field ] = "Disable";
+		add( "changed last technology prerequisite", changed.Serialize().ToString() );
+	}
+	auto changed = smac_rules_fixture::Technologies(); changed.technologies.back().flags ^= 1;
+	add( "changed last technology flags", changed.Serialize().ToString() );
+	for ( const auto field : { size_t( 0 ), size_t( 1 ), size_t( 882 ), size_t( 885 ), size_t( 891 ) } ) {
+		for ( const auto value : { int64_t( -1 ), int64_t( INT32_MAX ) + 1 } ) {
+			// A negative priority is legitimate; use only out-of-range there.
+			if ( field == 885 && value == -1 ) { continue; }
+			types::Buffer wrong; wrong.WriteInt( value );
+			add( "invalid technology integer " + std::to_string( field ), ReplaceTechnologyFrame( field, wrong ) );
+		}
+		types::Buffer wrong; wrong.WriteBool( true );
+		add( "mistyped technology integer " + std::to_string( field ), ReplaceTechnologyFrame( field, wrong ) );
+	}
+	for ( const auto field : { size_t( 883 ), size_t( 884 ), size_t( 889 ), size_t( 890 ) } ) {
+		for ( const auto& text : { std::string{}, std::string( "bad\0text", 8 ) } ) {
+			types::Buffer wrong; wrong.WriteString( text );
+			add( "invalid last technology text " + std::to_string( field ), ReplaceTechnologyFrame( field, wrong ) );
+		}
+	}
+	auto trailing = smac_rules_fixture::Technologies().Serialize(); trailing.WriteInt( 99 );
+	add( "extra technology fields", trailing.ToString() );
+	const auto valid = smac_rules_fixture::Technologies().Serialize().ToString();
+	for ( const auto length : { size_t( 0 ), size_t( 1 ), valid.size() - 1 } ) { add( "truncated technology catalog", valid.substr( 0, length ) ); }
 	return result;
 }
 

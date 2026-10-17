@@ -51,13 +51,17 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 4 && wire.ReadString() == id, "writer omitted the V4 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 5 && wire.ReadString() == id, "writer omitted the V5 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
 			GT_ASSERT( wire.ReadBool() == smac, "production presence changed" );
 			if ( smac ) {
 				GT_ASSERT( wire.ReadString() == settings.GetSmacProductionRules()->Serialize().ToString(), "header changed the production codec payload" );
+			}
+			GT_ASSERT( wire.ReadBool() == smac, "technology presence changed" );
+			if ( smac ) {
+				GT_ASSERT( wire.ReadString() == settings.GetSmacTechnologyRules()->Serialize().ToString(), "header changed the technology codec payload" );
 			}
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
@@ -128,6 +132,48 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			for ( const auto member : { &SmacFacilityRule::name, &SmacFacilityRule::prerequisite } ) {
 				auto changed = smac_rules_fixture::Production(); changed.facilities[ row ].*member = "changed";
 				GT_ASSERT( reject( changed ), "world accepted a different frozen catalog text" );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header binds every frozen technology field without changing settings", GT() {
+		using game::backend::settings::SmacTechnologyRules;
+		using game::backend::settings::SmacTechnologyRule;
+		GlobalSettings source; source.SelectRuleset( "smac" ); source.InitializeHostRules( smac_rules_fixture::Source );
+		types::Buffer snapshot; WriteHeader( snapshot, source );
+		const auto reject = [ & ]( const SmacTechnologyRules& changed ) {
+			GlobalSettings destination;
+			destination.Deserialize( smac_rules_fixture::Payload( "smac", true,
+				{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, changed.Serialize().ToString() ) );
+			const auto before = destination.Serialize().ToString(); auto input = snapshot;
+			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
+		};
+		for ( size_t row = 0; row < 89; ++row ) {
+			for ( const auto member : { &SmacTechnologyRule::name, &SmacTechnologyRule::key } ) {
+				auto changed = smac_rules_fixture::Technologies(); changed.technologies[ row ].*member = "Changed";
+				GT_ASSERT( reject( changed ), "world accepted different technology identity text" );
+			}
+			for ( size_t field = 0; field < 4; ++field ) {
+				auto changed = smac_rules_fixture::Technologies(); auto& priority = changed.technologies[ row ].priorities[ field ]; priority = priority == 42 ? 43 : 42;
+				GT_ASSERT( reject( changed ), "world accepted different technology priority" );
+			}
+			for ( size_t field = 0; field < 2; ++field ) {
+				auto changed = smac_rules_fixture::Technologies(); changed.technologies[ row ].prerequisites[ field ] = "Disable";
+				GT_ASSERT( reject( changed ), "world accepted different technology prerequisite" );
+			}
+			auto changed = smac_rules_fixture::Technologies(); changed.technologies[ row ].flags ^= 1;
+			GT_ASSERT( reject( changed ), "world accepted different technology flags" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header rejects malformed technology catalogs without changing frozen settings", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& invalid : world_rules_fixture::InvalidTechnologyHeaders( id ) ) {
+				types::Buffer input( invalid.second ); input.WriteString( "unread world body" );
+				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				GT_ASSERT( settings.Serialize().ToString() == before, "technology rejection changed settings" );
 			}
 		}
 		GT_OK();

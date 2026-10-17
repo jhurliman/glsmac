@@ -15,7 +15,8 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 		throw std::runtime_error( "World snapshot requires a frozen gameplay ruleset" );
 	}
 	if ( ( id == "smac" ) != settings.GetSmacBaseSquareRules().has_value()
-		|| ( id == "smac" ) != settings.GetSmacProductionRules().has_value() ) {
+		|| ( id == "smac" ) != settings.GetSmacProductionRules().has_value()
+		|| ( id == "smac" ) != settings.GetSmacTechnologyRules().has_value() ) {
 		throw std::runtime_error( "World snapshot ruleset and numeric rules do not match" );
 	}
 }
@@ -25,8 +26,10 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
 	RequireFrozenProfile( settings );
 	const auto& production = settings.GetSmacProductionRules();
+	const auto& technologies = settings.GetSmacTechnologyRules();
 	// Validate and encode the entire owned profile before writing any header.
 	const auto production_bytes = production ? production->Serialize().ToString() : std::string{};
+	const auto technology_bytes = technologies ? technologies->Serialize().ToString() : std::string{};
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -39,6 +42,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	}
 	buffer.WriteBool( production.has_value() );
 	if ( production ) { buffer.WriteString( production_bytes ); }
+	buffer.WriteBool( technologies.has_value() );
+	if ( technologies ) { buffer.WriteString( technology_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -75,6 +80,16 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		const auto incoming = settings::SmacProductionRules::Deserialize( types::Buffer( buffer.ReadString() ) );
 		if ( !( incoming == *production ) ) {
 			throw std::runtime_error( "World snapshot production profile differs from the session" );
+		}
+	}
+	const auto& technologies = settings.GetSmacTechnologyRules();
+	if ( buffer.ReadBool() != technologies.has_value() ) {
+		throw std::runtime_error( "World snapshot technology catalog presence differs from the session" );
+	}
+	if ( technologies ) {
+		const auto incoming = settings::SmacTechnologyRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		if ( !( incoming == *technologies ) ) {
+			throw std::runtime_error( "World snapshot technology catalog differs from the session" );
 		}
 	}
 }

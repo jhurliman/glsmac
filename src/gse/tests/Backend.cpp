@@ -4893,6 +4893,11 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
 							? reference.status == Prerequisite::Status::TECHNOLOGY_ID && reference.technology_id == 2
 							: reference.status == Prerequisite::Status::UNAVAILABLE && !state->m_settings.global.GetSmacTechnologyRules() );
+						const auto& startup = state->m_settings.global.GetSmacFactionStartupRules();
+						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
+							? startup && startup->Find( "GAIANS" ) && startup->Find( "GAIANS" )->NamedTechnologyReferences() == std::vector< int32_t >{ 2, 2, -1, -2 }
+								&& startup->Find( "GAIANS" )->ExtraTechnologyCount() == -3
+							: !startup );
 					};
 					size_t script_callbacks = 0;
 					std::string script_ruleset;
@@ -4927,7 +4932,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 } ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 } ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -4940,10 +4945,11 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21;
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
 			std::optional< std::string > sizes;
+			std::optional< std::string > startup;
 			if ( scenario == 3 || scenario == 4 ) {
 				auto changed = smac_rules_fixture::Production();
 				if ( scenario == 3 ) { changed.facilities.front().cost = 123; }
@@ -4985,8 +4991,20 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 				sizes = bad.ToString();
 			}
 			if ( scenario == 19 ) { auto bad = smac_rules_fixture::WorldSizes().Serialize(); bad.WriteInt( 42 ); sizes = bad.ToString(); }
+			if ( scenario == 20 || scenario == 21 ) {
+				auto changed = smac_rules_fixture::Factions();
+				auto& bonuses = changed.factions.back().bonuses;
+				// Valid differences: a discarded ninth record and a non-record scalar.
+				bonuses[ scenario == 20 ? 8 : 11 ] = settings::SmacFactionStartupBonus::Parse(
+					scenario == 20 ? "VOTES" : "ENERGY", "17", smac_rules_fixture::Technologies() );
+				startup = changed.Serialize( smac_rules_fixture::Technologies() ).ToString();
+			}
+			if ( scenario == 22 ) { startup = ""; }
+			if ( scenario == 23 ) { startup = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ).ToString(); startup->pop_back(); }
+			if ( scenario == 24 ) { auto bad = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ); bad.WriteInt( 42 ); startup = bad.ToString(); }
+			if ( scenario == 25 ) { types::Buffer bad; bad.WriteInt( 2 ); startup = bad.ToString(); }
 			types::Buffer invalid_state;
-			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes ).ToString() );
+			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup ).ToString() );
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();
@@ -5018,7 +5036,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( state->GetFM()->Serialize().ToString() == before_factions, "rejected rules packet reached faction publication" );
 				GT_ASSERT( locked ? smac_rules_fixture::Matches( state->m_settings.global ) : state->m_settings.global.GetRulesetId() == "unselected"
 					&& !state->m_settings.global.GetSmacBaseSquareRules() && !state->m_settings.global.GetSmacProductionRules()
-					&& !state->m_settings.global.GetSmacTechnologyRules(), "rejected packet changed session identity or values" );
+					&& !state->m_settings.global.GetSmacTechnologyRules() && !state->m_settings.global.GetSmacFactionStartupRules(), "rejected packet changed session identity or values" );
 				GT_OK();
 			} );
 			GT_ASSERT( error.empty(), "host rules packet rejection failed: " + error );

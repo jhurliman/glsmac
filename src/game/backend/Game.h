@@ -1,10 +1,14 @@
 #pragma once
 
+#include <memory>
+
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <map>
 #include <vector>
+#include <optional>
+#include <mutex>
 
 #include "common/MTModule.h"
 #include "gse/GCWrappable.h"
@@ -17,6 +21,10 @@
 #include "game/FrontendRequest.h"
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
+#include "State.h"
+#include "util/random/Types.h"
+#include "WorldSnapshotTurn.h"
+#include "faction/SmacSimulationState.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -26,6 +34,7 @@ class GLSMAC;
 
 namespace gse::tests {
 class BackendFixture;
+class EngineShutdownFixture;
 }
 
 namespace types {
@@ -84,6 +93,7 @@ class Player;
 
 namespace connection {
 class Connection;
+class Client;
 }
 
 namespace bindings {
@@ -127,6 +137,12 @@ enum result_t {
 	R_PENDING,
 };
 
+using world_ticket_t = uint64_t;
+struct pending_initialization_t {
+	common::mt_id_t request = 0;
+	world_ticket_t ticket = 0;
+};
+
 typedef std::vector< types::mesh::Render* > data_tile_meshes_t;
 
 typedef union {
@@ -142,7 +158,12 @@ typedef union {
 
 struct MT_Request {
 	op_t op;
+	world_ticket_t world_ticket = 0;
 	union {
+		struct {
+			world_ticket_t pending_initialization;
+			bool controller;
+		} reset;
 		struct {
 			tile_query_purpose_t purpose;
 			size_t tile_x;
@@ -222,6 +243,7 @@ struct response_map_data_t {
 struct MT_Response {
 	op_t op;
 	result_t result;
+	world_ticket_t world_ticket = 0;
 	union {
 		struct {
 			size_t slot_index;
@@ -265,22 +287,33 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	common::mt_id_t MT_Ping();
 
 	// initialize map and other things
-	common::mt_id_t MT_Init( State* state );
+	pending_initialization_t MT_Init( State* state, world_ticket_t previous_world = 0 );
+	pending_initialization_t MT_LoadMap( world_ticket_t world, const std::string& path );
+	MT_Response MT_GetResponse( common::mt_id_t request );
+	MT_Response MT_WaitResponse( common::mt_id_t request );
+	void MT_Cancel( common::mt_id_t request );
 
 	// get map data for display
-	common::mt_id_t MT_GetMapData();
+	common::mt_id_t MT_GetMapData( world_ticket_t world );
 
 	// deinitialize everything
-	common::mt_id_t MT_Reset();
+	common::mt_id_t MT_Reset( world_ticket_t world, world_ticket_t pending_initialization = 0 );
+	void MT_RetireWorld( world_ticket_t world, world_ticket_t pending_initialization = 0 );
+	common::mt_id_t MT_ResetController();
+	world_ticket_t MT_BeginResetController();
+	common::mt_id_t MT_SubmitResetController( world_ticket_t barrier );
+	void MT_AbandonResetController( world_ticket_t barrier );
+	// Keep startup packet/message payloads owned until a post-network owner checkpoint.
+	void WithWorldIngress( State* state, gc::Object* owner, const State::game_func_t& callback );
 
 	// saves current map into file
-	common::mt_id_t MT_SaveMap( const std::string& path );
+	common::mt_id_t MT_SaveMap( world_ticket_t world, const std::string& path );
 
 	// get all pending frontend requests (will be cleared after)
-	common::mt_id_t MT_GetFrontendRequests();
+	common::mt_id_t MT_GetFrontendRequests( world_ticket_t world );
 
 	// send backend requests for processing
-	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
+	common::mt_id_t MT_SendBackendRequests( world_ticket_t world, const std::vector< BackendRequest >& requests );
 
 #ifdef DEBUG
 
@@ -386,12 +419,123 @@ private:
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 
-	void InitGame( MT_Response& response, MT_CANCELABLE );
+	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress };
+	struct WorldAdmission {
+		enum Kind { INITIALIZATION, CONTROLLER_RESET };
+		WorldAdmission( world_ticket_t ticket, Kind kind, State* state, State::game_session_t binding, world_ticket_t previous = 0, std::optional< std::string > map_path = {} )
+			: ticket( ticket ), kind( kind ), state( state ), binding( std::move( binding ) ), previous( previous ), map_path( std::move( map_path ) ) {}
+		const world_ticket_t ticket;
+		const Kind kind;
+		State* const state;
+		const State::game_session_t binding;
+		const world_ticket_t previous;
+		const std::optional< std::string > map_path;
+		common::mt_id_t request = 0;
+		State::game_session_t admitted_binding;
+		bool cancelled = false;
+		StartupStage stage = StartupStage::Complete;
+		connection::Connection* connection = nullptr;
+		size_t slot = 0;
+		std::string error;
+		struct Ingress { gc::Object* owner; State::game_func_t callback; };
+		std::vector< Ingress > ingress;
+	};
+	struct EventBatchHandoff;
+	struct OwnerTransition : gc::Object {
+		enum Phase { Pending, Running, Finished, Cancelled };
+		OwnerTransition( std::shared_ptr< WorldAdmission > admission, StartupStage stage, std::vector< WorldAdmission::Ingress > ingress );
+		void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+		const std::shared_ptr< WorldAdmission > admission;
+		const StartupStage stage;
+		const std::vector< WorldAdmission::Ingress > ingress;
+		std::unique_ptr< EventBatchHandoff > configure_events;
+		Phase phase = Pending;
+		std::thread::id thread;
+	};
+	mutable std::mutex m_admission_mutex;
+	std::unordered_map< world_ticket_t, std::shared_ptr< WorldAdmission > > m_admissions;
+	std::shared_ptr< WorldAdmission > m_active_admission;
+	std::shared_ptr< WorldAdmission > m_failed_admission;
+	std::shared_ptr< OwnerTransition > m_owner_transition;
+	std::vector< std::shared_ptr< OwnerTransition > > m_owner_transition_handoffs;
+	std::string m_failed_admission_error;
+	static world_ticket_t ReserveWorldTicket();
+	pending_initialization_t EnqueueInitialization( State* state, world_ticket_t previous, std::optional< std::string > map_path = {} ); // admission mutex held
+	void CancelAdmission( const std::shared_ptr< WorldAdmission >& admission ); // admission mutex held
+	void RetireWorld( world_ticket_t world, world_ticket_t pending_initialization ); // admission mutex held
+	void ReleaseAdmissionRequest( common::mt_id_t request );
+	bool MatchesActiveAdmission( world_ticket_t ticket ) const; // admission mutex held
+	void InitGame( const std::shared_ptr< WorldAdmission >& admission, MT_Response& response, MT_CANCELABLE );
+	bool OwnerBlocksNative() const;
+	bool HasInitializationFailure() const;
+	bool PublishInitializationFailure();
+	bool AdvanceInitialization();
+	void PublishOwnerTransition( const std::shared_ptr< WorldAdmission >& admission, StartupStage stage );
+	void RunOwnerTransition( GSE_CALLABLE, const std::shared_ptr< OwnerTransition >& transition );
+	void FinishOwnerTransition( const std::shared_ptr< OwnerTransition >& transition );
+	void SetStartupStage( const std::shared_ptr< WorldAdmission >& admission, StartupStage stage );
+	void RefreshInitializationContext( const std::shared_ptr< WorldAdmission >& admission );
+	void InitializeConfigure( GSE_CALLABLE );
+	void PrepareInitializationBindings();
+	void AcquireInitializationMap();
+	void PrepareInitializationMap();
+	void PublishInitializationMap( map::Map*& candidate );
+	void DiscardInitializationMap( map::Map*& candidate );
+	void InitializeMap();
+	void StartInitializedWorld( GSE_CALLABLE );
+	bool DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes );
+	std::string SerializeWorldSnapshot() const;
+	void ConfigureWorldDownload( connection::Client* connection );
+	struct BoundSimulation {
+		faction::SmacSimulationState value;
+		roster_epoch_t epoch;
+		State::game_session_t session;
+		std::vector< player_identity_t > players; // in value.roster order
+	};
+	// Accessed only under the existing owner/native exclusion. Identity tokens
+	// own no Player and require no GC roots; retirement makes them invalid.
+	std::optional< BoundSimulation > m_simulation, m_pending_simulation;
+	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
+	void ValidateSimulation( const BoundSimulation& value ) const;
+	void PrepareNewSimulation();
+	void PublishPendingSimulation();
+	void ValidateCurrentSimulation() const;
+	void WriteSimulationState( types::Buffer& buffer ) const;
+	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
+	void RefreshSimulationForTurn( size_t turn );
+	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
+	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
+	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
+	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation );
 	void ResetGame();
+	void ClearUntransferredMapData();
+	struct DetachedMapPresentation;
+	void DetachMapPresentation( map::Map* map, response_map_data_t*& response, DetachedMapPresentation& detached );
+	void RetireMap( map::Map*& map, DetachedMapPresentation& detached );
+	void RetireOldMap();
+	void WithNativeRetirement( const std::function< void() >& f );
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
+	// Install only after map presentation and deferred instance reconstruction.
+	std::optional< util::random::state_t > m_pending_snapshot_random;
+	struct PendingSnapshotTurn {
+		world_snapshot::TurnState state;
+		struct Binding { slot::Slot* slot; gse::value::Object* player; };
+		std::vector< Binding > bindings;
+	};
+	mutable std::mutex m_snapshot_turn_mutex;
+	std::optional< PendingSnapshotTurn > m_pending_snapshot_turn;
+	void StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& state );
+	void DiscardSnapshotTurn();
+	void ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const;
+	void ValidatePendingSnapshotTurn();
+	std::optional< size_t > ApplySnapshotTurn();
 	State* m_state = nullptr;
+	// Borrowed until Stop has invalidated every native wrapper, even when an
+	// initialization failure has cleared State and retained an old Map.
+	gc::Space* m_world_space = nullptr;
 
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
@@ -399,16 +543,21 @@ private:
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
+	turn::turn_status_t m_turn_status = turn::TS_PLEASE_WAIT;
+	bool IsLocalTurnComplete() const;
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
 	common::Mutex m_event_handlers_mutex;
 
 	std::vector< event::Event* > m_pending_events = {};
+	// Bridges extraction to the Space queue without holding this mutex while queueing.
+	std::vector< std::shared_ptr< gc::Object > > m_event_batch_handoffs;
 	common::Mutex m_pending_events_mutex;
 
 	struct event_waiting_for_response_t {
 		event::Event* event;
+		bool was_applied;
 		gse::Value* rollback_data;
 	};
 	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};
@@ -431,8 +580,23 @@ private:
 	void InitFailed( const std::string& error_text );
 
 	void SetTurnStatus( const backend::turn::turn_status_t status );
+	const std::string& GetTurnStatusString() const;
 
 	void ProcessEvents();
+	class EventBatchRoots;
+	struct EventBatchHandoff {
+		EventBatchHandoff( Game* game, State* state, State::game_session_t session, std::shared_ptr< EventBatchRoots > roots );
+		~EventBatchHandoff();
+		EventBatchHandoff( const EventBatchHandoff& ) = delete;
+		EventBatchHandoff& operator=( const EventBatchHandoff& ) = delete;
+		Game* const game;
+		State* const state;
+		const State::game_session_t session;
+		const std::shared_ptr< EventBatchRoots > roots;
+		bool published = false;
+	};
+	std::unique_ptr< EventBatchHandoff > ExtractEventBatch( State* state, const State::game_session_t& session );
+	void DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff );
 
 private:
 	friend class map::tile::TileManager;
@@ -451,6 +615,7 @@ private:
 
 private:
 	friend class ::GLSMAC;
+	friend class gse::tests::EngineShutdownFixture;
 	void SetState( State* const state );
 
 };

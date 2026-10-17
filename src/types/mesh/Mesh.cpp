@@ -99,7 +99,8 @@ void Mesh::Finalize() {
 
 void Mesh::GetVertexCoord( const index_t index, types::Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( ptr( coord, 0, sizeof( types::Vec3 ) ), ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
+	// Caller-owned output may be on the stack; only mesh storage is tracked.
+	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {

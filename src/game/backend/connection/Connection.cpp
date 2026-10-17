@@ -21,9 +21,11 @@ void Connection::SetState( State* state ) {
 		m_state->DetachConnection();
 	}*/
 	m_state = state;
+	if (!state) { m_player = nullptr; m_slot = 0; }
 }
 
 void Connection::ResetHandlers() {
+	DrainEventRequest();
 	if ( m_f_on_open ) {
 		Unpersist( m_f_on_open );
 		m_f_on_open = nullptr;
@@ -38,6 +40,9 @@ void Connection::ResetHandlers() {
 	m_on_global_settings_update = nullptr;
 	m_on_game_event_validate = nullptr;
 	m_on_game_event_apply = nullptr;
+}
+
+void Connection::DrainEventRequest() {
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
@@ -45,11 +50,14 @@ void Connection::ResetHandlers() {
 }
 
 Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
+	: Connection( gc_space, connection_mode, settings, g_engine->GetNetwork() ) {}
+
+Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings, network::Network* const network )
 	: gse::GCWrappable( gc_space )
 	, m_gc_space( gc_space )
 	, m_connection_mode( connection_mode )
 	, m_settings( settings )
-	, m_network( g_engine->GetNetwork() ) {}
+	, m_network( network ) {}
 
 Connection::~Connection() {
 	if ( m_mt_ids.disconnect ) {
@@ -267,6 +275,10 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 }
 
 void Connection::SendGameEvent( backend::event::Event* event ) {
+	SendGameEvent( event, event->Serialize().ToString() );
+}
+
+void Connection::SendGameEvent( backend::event::Event* event, const std::string& serialized_data ) {
 	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();
@@ -274,7 +286,7 @@ void Connection::SendGameEvent( backend::event::Event* event ) {
 	m_pending_game_events.push_back({
 		event->GetCaller(),
 		event->GetEventName(),
-		event->Serialize().ToString()
+		serialized_data
 	});
 }
 

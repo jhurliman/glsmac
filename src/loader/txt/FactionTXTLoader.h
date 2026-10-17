@@ -1,8 +1,10 @@
 #pragma once
 
 #include <unordered_map>
+#include <functional>
 
 #include "TXTLoader.h"
+#include "game/backend/settings/SmacFactionStartupRules.h"
 
 namespace loader {
 namespace txt {
@@ -17,6 +19,13 @@ CLASS( FactionTXTLoader, TXTLoader )
 	};
 	const faction_data_t& GetFactionData( resource::resource_t res );
 	const faction_data_t& GetFactionData( const std::string& filename );
+	// Pure, canonical SMAC startup metadata. No filesystem/cache access or
+	// gameplay effects; callers provide the host's selected source texts.
+	using StartupSource = std::function< std::string( const std::string& filename ) >;
+	static game::backend::settings::SmacFactionStartupRules ParseStartupRules( const std::string& alpha,
+		const StartupSource& read_source, const game::backend::settings::SmacTechnologyRules& technologies );
+	static std::vector< game::backend::settings::SmacFactionStartupBonus > ParseStartupBonuses( const std::string& source,
+		const std::string& section, const game::backend::settings::SmacTechnologyRules& technologies );
 
 protected:
 

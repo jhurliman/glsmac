@@ -3,15 +3,23 @@ return (i) => {
 	i.sliding.show({
 		entries: [
 			['Start Game', () => {
-				i.glsmac.init();
 				i.settings.local.game_mode = 'single';
-				i.steps.start_game(i);
+				i.settings.local.network_role = 'none';
+				i.steps.select_ruleset(i, () => {
+					i.glsmac.init();
+					i.steps.start_game(i);
+				});
 			}],
 			['Quick Start', () => {
-				i.glsmac.init();
 				i.settings.local.game_mode = 'single';
-				i.randomize_map();
-				i.glsmac.start_game();
+				i.settings.local.network_role = 'none';
+				i.steps.select_ruleset(i, () => {
+					i.glsmac.init();
+					i.randomize_map();
+					if (i.glsmac.game.get_ruleset() == 'smac') {
+						i.steps.select_mapsize(i, () => { i.glsmac.start_game(); });
+					} else { i.glsmac.start_game(); }
+				});
 			}],
 			['Scenario', () => {
 				i.steps.notimpl(i);
@@ -20,7 +28,6 @@ return (i) => {
 				i.steps.notimpl(i);
 			}],
 			['Multiplayer', () => {
-				i.glsmac.init();
 				i.settings.local.game_mode = 'multi';
 				i.steps.multiplayer_type(i);
 			}],

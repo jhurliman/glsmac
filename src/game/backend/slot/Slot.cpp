@@ -3,6 +3,7 @@
 #include "engine/Engine.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
+#include "gc/Space.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
 
@@ -56,11 +57,12 @@ const std::string& Slot::GetRemoteAddress() const {
 }
 
 void Slot::SetPlayerFlag( const player_flag_t flag ) {
-	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flag on non-player slot" );
-	if ( !( m_player_data.flags & flag ) ) {
-		m_player_data.flags |= flag;
-		Update();
-	}
+ bool changed=false;
+ m_state->m_gc_space->WithNativeMutation([&]() {
+  if (m_slot_state != SS_PLAYER) { throw std::runtime_error("Flags require an occupied Slot"); }
+  if (!(m_player_data.flags & flag)) { m_player_data.flags |= flag; changed=true; }
+ });
+ if (changed) { Update(); }
 }
 
 const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
@@ -69,11 +71,12 @@ const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
 }
 
 void Slot::UnsetPlayerFlag( const player_flag_t flag ) {
-	ASSERT( m_slot_state == SS_PLAYER, "attempted to unset player flag on non-player slot" );
-	if ( m_player_data.flags & flag ) {
-		m_player_data.flags &= ~flag;
-		Update();
-	}
+ bool changed=false;
+ m_state->m_gc_space->WithNativeMutation([&]() {
+  if (m_slot_state != SS_PLAYER) { throw std::runtime_error("Flags require an occupied Slot"); }
+  if (m_player_data.flags & flag) { m_player_data.flags &= ~flag; changed=true; }
+ });
+ if (changed) { Update(); }
 }
 
 Player* Slot::GetPlayerAndClose() {
@@ -134,42 +137,16 @@ const player_flag_t Slot::GetPlayerFlags() const {
 }
 
 void Slot::SetPlayerFlags( const player_flag_t flags ) {
-	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flags to non-player slot" );
-	if ( m_player_data.flags != flags ) {
-		m_player_data.flags = flags;
-		Update();
-	}
+ bool changed=false;
+ m_state->m_gc_space->WithNativeMutation([&]() {
+  if (m_slot_state != SS_PLAYER) { throw std::runtime_error("Flags require an occupied Slot"); }
+  if (m_player_data.flags != flags) { m_player_data.flags = flags; changed=true; }
+ });
+ if (changed) { Update(); }
 }
 
-const types::Buffer Slot::Serialize() const {
-	types::Buffer buf;
-
-	buf.WriteInt( m_slot_state );
-	if ( m_slot_state == SS_PLAYER ) {
-		buf.WriteString( m_player_data.player->Serialize().ToString() );
-		// not sending cid
-		// not sending remote address
-		buf.WriteInt( m_player_data.flags );
-	}
-	buf.WriteString( m_linked_gsid );
-
-	return buf;
-}
-
-void Slot::Deserialize( types::Buffer buf ) {
-	m_slot_state = (slot_state_t)buf.ReadInt();
-	if ( m_slot_state == SS_PLAYER ) {
-		if ( !m_player_data.player ) {
-			m_player_data.player = new Player( buf.ReadString() );
-			m_player_data.player->SetSlot( this );
-		}
-		else {
-			m_player_data.player->Deserialize( buf.ReadString() );
-		}
-		m_player_data.flags = buf.ReadInt();
-	}
-	m_linked_gsid = buf.ReadString();
-}
+const types::Buffer Slot::Serialize() const { return types::Buffer(roster::EncodeSlot(m_state->ExportSlot(m_index),State::ROSTER_LIMITS)); }
+void Slot::Deserialize(types::Buffer) { throw std::runtime_error("Slot metadata must be published through State"); }
 
 WRAPIMPL_BEGIN( Slot )
 	ASSERT( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
@@ -180,22 +157,7 @@ WRAPIMPL_BEGIN( Slot )
 
 UNWRAPIMPL_PTR( Slot )
 
-void Slot::Update() {
-	auto* const game = g_engine->GetGame();
-	ASSERT( game, "game not set" );
-	m_state->WithGSE(
-		m_state, [ this, game ]( GSE_CALLABLE ) {
-			game->Trigger(
-				GSE_CALL, "player_update", ARGS_F( this ) {
-					{
-						"player", Wrap( GSE_CALL )
-					}
-				}; }
-			);
-		}
-	);
-
-}
+void Slot::Update() { m_state->NotifyPlayerUpdate(m_index); }
 
 }
 }

@@ -30,6 +30,9 @@ CLASS( Thread, Class )
 
 	void SetIPS( const float ips );
 	void AddModule( Module* module );
+	// Before the first Run, nominate one registered module to stop before the
+	// remaining reverse-order cleanup. Startup and iteration order are unchanged.
+	void StopModuleFirst( Module* module );
 
 	void T_Start();
 	// Runs before_stop before module cleanup, even on failure. Cleanup failures
@@ -49,6 +52,8 @@ protected:
 	std::atomic< thread_state_t > m_state = STATE_INACTIVE;
 	std::atomic< thread_command_t > m_command = COMMAND_NONE;
 	modules_t m_modules = {};
+	Module* m_first_stop_module = nullptr;
+	bool m_has_run = false;
 	float m_ips = 10;
 
 #ifdef DEBUG

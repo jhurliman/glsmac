@@ -2,20 +2,34 @@
 
 #include "SimpleCondition.h"
 #include "Case.h"
+#include "Scope.h"
+#include "common/Assert.h"
 
 namespace gse {
 namespace program {
+namespace {
 
-Switch::Switch( const si_t& si, const SimpleCondition* condition, const std::vector< Case* >& cases )
+std::vector< Case* > GetCases( const Scope& body ) {
+	std::vector< Case* > cases;
+	cases.reserve( body.body.size() );
+	for ( const auto* control : body.body ) {
+		ASSERT( control->control_type == Control::CT_CONDITIONAL, "control type not conditional" );
+		ASSERT( static_cast< const Conditional* >( control )->conditional_type == Conditional::CT_CASE, "conditional type not case" );
+		cases.push_back( (Case*)control );
+	}
+	return cases;
+}
+
+}
+
+Switch::Switch( const si_t& si, const SimpleCondition* condition, std::unique_ptr< const Scope > body )
 	: Conditional( si, CT_SWITCH )
 	, condition( condition )
-	, cases( cases ) {}
+	, cases( GetCases( *body ) )
+	, m_body( std::move( body ) ) {}
 
 Switch::~Switch() {
 	delete condition;
-	for ( const auto& c : cases ) {
-		delete c;
-	}
 }
 
 const std::string Switch::Dump( const size_t depth ) const {

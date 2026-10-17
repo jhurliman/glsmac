@@ -2,6 +2,7 @@ SUBDIR( font )
 SUBDIR( texture )
 SUBDIR( sound )
 SUBDIR( txt )
+SUBDIR( cvr )
 
 SET( SRC ${SRC}
 

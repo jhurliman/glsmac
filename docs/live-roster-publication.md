@@ -1,0 +1,282 @@
+# Owned live roster publication
+
+The client and server now use the versioned owned records from
+[roster-value-records.md](roster-value-records.md) for their Player/Slot metadata.
+Previously, slot decoding created Players without consistently adopting them
+into State, full roster refresh replaced their addresses, and each Player
+decoded its own Faction allocation. The new native publication boundary keeps
+one State-owned Player per occupied Slot and resolves its selected faction from
+the current canonical FactionManager.
+
+This is protocol and lifetime integration, not research gameplay. No technology
+possession, progress, faction starting grants, or other research defaults are
+introduced. The preserved turn-completed field is a regression sentinel for
+non-wire Player state that continuous metadata updates must retain.
+
+## Identity and supported session policy
+
+Initial publication creates exactly seven Slots. Their addresses and count stay
+fixed until roster retirement. An occupied-to-occupied update preserves the
+Player and its wrappers only for the same slot, nonempty GSID, and role in the
+same roster epoch. A changed identity rejects until an actual vacancy. Vacancy
+invalidates the old Player identity and linked wrappers; rejoining with the same
+GSID creates a fresh Player. This is an explicit continuity rule, not proof of
+authenticated account ownership. Lobby slot indices 0..6 are not the original
+simulation faction IDs 1..7. No custom design ID or simulation faction identity
+is inferred from a slot index, faction template or display name.
+
+A roster epoch is separate from a Game session: startup may rebind the Game
+without replacing its lobby Players. Reset retires the epoch before deleting
+Players and clears a detached Connection's cached local Player binding. Decoded
+update calls carry the captured epoch into the guarded commit;
+reusing the same State and Connection objects cannot make an old update current.
+
+The live codec policy is seven slots, 32 KiB of aggregate text and 48 KiB of
+encoded roster data. Both exporters and decoders use it. Server authentication
+validates the proposed aggregate before adopting another Player. A native test
+fills the aggregate text budget, serializes the real PT_PLAYERS envelope, and
+checks that it plus the transport length prefix fits SimpleTCP's 65,536-byte
+buffer. These are port limits, not claims about every original-game or modded
+roster. The supported desktop targets use 64-bit size_t, retaining the full
+received flags integer until the checked 0..7 admission step.
+
+## Initial handshake and canonical factions
+
+Server packet order remains PT_PLAYERS, PT_GAME_STATE, PT_GLOBAL_SETTINGS.
+The client first stages owned metadata and the assigned local slot. It verifies
+the local GSID, then waits for valid settings and faction definitions before
+publishing any Players or opening the configured connection. Initial publication
+requires Host in slot zero, a nonzero occupied local Player slot, valid roles,
+known difficulties, unique GSIDs, and resolution of every selected faction ID.
+
+An absent faction ID remains the existing random/unselected choice. A present
+missing ID is an error. Players retain the ID and a checked State/epoch binding,
+not an independently allocated or cached Faction pointer. Same-ID manager
+replacement therefore resolves the new canonical object. This supports the
+authoritative random-faction refresh before startup without replacing ready
+Players or duplicating join notifications. Running disconnect/reconnect keeps
+the same Player and native state.
+
+The settings decoder retains its existing partial-failure behavior: completed
+settings or faction records may remain after a later field fails. An invalid
+initial handshake still leaves its roster unpublished. A selected faction
+missing after a later failed settings replacement reports a lookup error; it
+does not silently become random. This is not a whole-settings transaction.
+
+## Native commit and notifications
+
+Bytes decode into owned values before native publication. State's existing
+collect-only `WithNativeMutation` scope checks the current Connection, exact
+epoch, phase, identity, readiness and canonical references. It prepares fallible
+owned allocations before changing pointers, then updates State membership,
+Slot-to-Player and Player-to-Slot links, local Connection binding, and server
+CID bookkeeping. Retired native Players are destroyed while collection is
+excluded. No script callback, queue registration, transport operation or wait
+runs inside this commit scope.
+
+Notifications own scalar metadata and the captured epoch. A State handoff list
+keeps their State/Connection references visible between native publication and
+Space queue registration; the queued owner then supplies those roots. Dispatch
+checks retirement before native access and materializes a read-only Player-like
+value only inside owner accumulation. Its wrapper and retained methods expire
+when the callback returns or throws. It has no Slot pointer and cannot serialize
+as a live Player reference. Normal game Player wrappers remain writable through
+the existing game mutation checks.
+
+Entries are consumed before invoking handlers, so a throwing callback retained
+by the existing Space queue is not replayed on the next drain. Native and GSE
+errors leave an already committed roster committed. Subsequent packet callbacks
+check the exact epoch/current Connection before continuing after synchronous
+reset, including listen, ready clearing, initial publication, and slot updates.
+Immediate callbacks complete before later native callbacks; on a foreign thread,
+the existing queue preserves insertion order while native callbacks can run
+before the owner drains the queue. Tests assert both actual connection-open
+orders. Generic Connection::WTrigger and OnOpen are not redesigned here.
+
+## Validation and limits
+
+Twenty asset-free native groups in `src/gse/tests/LiveRoster.cpp` use real Client
+packet decoding, real Server authentication/update/disconnect paths and the
+Network MT event queue. They cover canonical initial publication, continuity,
+vacancy/rejoin, ready random-faction refresh, running reconnect, strict rejection,
+framing, stale exact-epoch commits, callback reentry, pending roots, scoped
+notification lifetime, and native/GSE exception retry.
+
+The collector test pauses an actual Player destructor notification after linked
+wrapper invalidation while a real foreign-thread packet is committing vacancy.
+A collector thread announces that it started, and a bounded 100 ms observation
+checks that it cannot enter traversal during retirement. Cleanup always releases
+the gates and joins workers. A callback-side collection checks that exclusion has
+ended before native notifications. This is observed overlap evidence, not a
+scheduler-fairness proof or an explanation of historical untraced timeouts.
+
+Existing backend fixtures now establish real settings/roster readiness instead
+of bypassing the handshake or serializing unowned legacy Players. Their startup,
+snapshot identity, packet-batch and collector assertions remain present. Legacy
+full Player/Slot/Slots metadata decode APIs reject direct use; live writers and
+readers switch together. The separate slot-based GSE Player-reference format is
+unchanged, apart from rejecting ephemeral notification references.
+
+The final source passed the following Linux/WSL Clang 15 checks:
+
+- All twenty focused native groups with `--memorydebug`: 1.09 seconds in both
+  normal and sanitizer builds, with no tracked leaks.
+- Normal CTest: 8/8 passed in 44.75 seconds.
+- ASan/UBSan/LSan CTest: 8/8 passed in 60.41 seconds with
+  `ASAN_OPTIONS=detect_leaks=1:halt_on_error=1` and
+  `UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1`.
+- Existing LLVM 15 correctness policy over the nine changed production
+  translation units: zero failures, 10.82 seconds. The final Client-only
+  captured-epoch consistency change was rechecked separately: zero failures,
+  2.11 seconds.
+
+The focused command is:
+
+```sh
+GLSMAC --gse-tests --gse-tests-native-filter '^live roster ' --memorydebug \
+  --prefix /path/to/a/dedicated/test-prefix
+ctest --test-dir /path/to/existing/build --output-on-failure
+```
+
+Seven independently compiled copies of production translation units each failed
+their targeted native group with exit 1: omitting retirement exclusion, resetting
+non-wire Player state on metadata update, allowing an occupied GSID change,
+replaying a consumed notification, omitting aggregate authentication admission,
+validating a newly sampled epoch instead of the captured one, and treating a
+missing selected faction as random. The aggregate-admission control first admits
+an oversized native roster and then fails its subsequent real export with
+`Roster record: budget exceeded`. These are mutation controls for the new
+protocol, not executions of the incompatible old wire protocol. The retirement
+control observes collection entering the paused destructor boundary; it does not
+depend on allocator reuse or dereferencing retired storage.
+
+Earlier failed runs are retained: old fixture handshakes and missing fixture
+roots were corrected, along with a reused test context constant and an incorrect
+assumption that State reset clears the FactionManager. One intermediate CTest
+run hit a ruleset-CLI executable permission error because its binary was being
+relinked concurrently; the final runs above had no build/test overlap. The local
+sanitizer build retains the previously documented no-PIE diagnostic workaround;
+no build policy was changed in this slice. These receipts do not claim Windows,
+macOS, rendered multiplayer, or hosted review coverage.
+
+Local commands, source hashes, copied controls, logs and receipts stay outside
+the repository in `/home/jhurliman/src/glsmac-canonical-live-roster`; the final
+index is `source-evidence-manifest.json`.
+
+The source branch is based on `bbdd871273382a4202824a4a4853866a7589926f`.
+It relies on the existing owned-record codec, native mutation exclusion,
+callback/collector teardown fixes and initialization coordinator. Publication
+onto an older branch must include those prerequisites and run its actual tests;
+source-branch results do not validate an adapted publication automatically.
+
+## Focused publication
+
+The publication starts from the refreshed retirement stack at
+`8b7914261ffd2679d9a923ff99bdbd71e10be1f8` and carries the unchanged
+[PR38 empty-buffer fix](https://github.com/jhurliman/glsmac/pull/38) as its explicit
+prerequisite (`ca77d201`, from source `06664076`). The roster source is
+`86e35fd002ae87d01ed28ccf8c63415659077dee`; its publication at `fe9c95e0`
+changes only the surrounding test registration context. All changed production
+files and the dedicated LiveRoster tests are byte-identical to the source.
+
+At that publication head, normal CTest passes 6/6 in 28.47 seconds and the full
+native/script suite with `--memorydebug` passes in 21.33 seconds with no tracked
+leaks. All twenty live-roster groups run in both. This ancestry does not have the
+native-filter CLI option shown in the source command above: use `--gse-tests`
+without a filter for its complete suite. No filter implementation was imported
+just for validation.
+
+The initial publication without PR38 passed normal CTest 6/6, but tracking
+rejected the old Buffer constructor's zero-byte allocation while decoding real
+empty settings records. That failed run is retained under `publication/`;
+the corrected checks are under `publication-buffer-prerequisite/` in the same
+local evidence directory. The fix is the existing reviewed Buffer change,
+not an altered handshake fixture. Publication still depends on the startup and
+retirement stack; its held PR77 findings remain open and are not waived by these
+roster results.
+
+This does not synchronize arbitrary gameplay or lobby readers, make all native
+roster methods safe from unrelated concurrent callers, redesign authentication,
+make generic Connection callbacks cancellation-safe, permit live-world occupant
+replacement, or resolve the held PR77 findings. Canonical lookup still requires
+the caller's existing owner accumulation/native exclusion. No new GC locking API
+or whole-State::Iterate lock is added.
+
+### Ready-lobby authentication follow-up
+
+PR126 review found an ordering defect in the new server authentication path:
+adopting the newcomer's connected CID before clearing existing ready flags made
+the readiness broadcast send `PT_FLAGS_UPDATE` before its initial `PT_PLAYERS`.
+The strict Client correctly rejected that update. The server now clears existing
+readiness, checks the captured roster epoch/current connection, and only then
+adopts the new CID. `CreatePlayerSlot` still revalidates the selected open slot.
+The initial Client publication guard and the running reconnect path are unchanged.
+
+The new native regression uses a ready host and an established ready remote
+player, actual Server authentication dispatch, and actual Client MT polling. It
+records every packet addressed to the newcomer and requires exactly the initial
+roster, game phase and settings sequence; existing recipients still receive both
+readiness clears. Both fixtures share one local account file, so the host Slot's
+fixture GSID is explicitly made distinct to represent separate processes.
+
+With the original production ordering, ASan/UBSan/LSan plus `--memorydebug`
+observed two premature flags packets and the Client's `Slot update before roster
+publication` rejection (0 passed, 1 failed, exit 1). Two earlier fixture setup
+failures involving the shared account/GSID setter are retained separately and
+are not counted as reproductions. With the correction, all 21 roster groups pass
+with tracking in normal and sanitizer builds; the existing synchronous reset
+during a readiness callback and running reconnect cases remain included. Normal
+CTest passes 8/8 in 47.90 seconds, leak-enabled sanitizer CTest 8/8 in 65.07 seconds,
+and Server.cpp passes the existing LLVM 15 correctness policy (one TU, zero
+failures, 3.46 seconds). Evidence is retained separately under
+`/home/jhurliman/src/glsmac-ready-lobby-handshake`.
+
+The follow-up source is `e65f385420088cc51fd4453c7be683c9a333fe95`;
+publication `7bc222389d1b1f94afeb7aea8d8b5fe698030925` applies it without source
+adaptation. Its actual older-ancestry CTest suite passes 6/6 in 29.54 seconds,
+and the full native/script tracking run passes in 20.14 seconds with no tracked
+leaks, including the new ready-lobby case and all 21 roster groups. This is
+separate publication evidence; the native-filter CLI remains absent there.
+
+### Main refresh and switch-ownership prerequisite
+
+The current publication preserves the reviewed `9b98af58` history, merges landed
+main `a84cc6dd` as `ce76d70f`, then merges the separately published
+[PR66 switch-scope ownership fix](https://github.com/jhurliman/glsmac/pull/66)
+at `46a26e3a`. The resulting implementation is
+`eef6bb977cf9a5b75cb26032e718c2947d6e74c1`. The second merge also includes the
+already-landed docs/workflow-only PR132. Roster, Player, State, Connection and
+Game production files and the dedicated LiveRoster tests are unchanged from
+the reviewed PR126 head. No production or technology metadata prerequisite is
+imported from PR111 or PR114.
+
+All 26 native test registrations and test translation units from both parents
+are retained; the Backend test-name union retains the already-established
+coordinator/RNG replacements, and the UUID regression appears once. This
+ancestry now includes main's native-filter CLI; the earlier six-test publication
+receipts above remain historical, rather than descriptions of this new head.
+
+The first main refresh at `ce76d70f` passed normal CTest 8/8 and full allocation
+tracking, but leak-enabled full sanitizer execution reported 1,545 bytes in 21
+parsed switch Scope allocations. That failure is retained. Its focused
+roster/checkpoint groups were leak-clean. The explicit PR66 prerequisite fixes
+the parser ownership rather than suppressing leaks or changing roster tests.
+
+Actual final publication validation on Clang 15 under Ubuntu WSL:
+
+- Normal CTest: 8/8, 54.23 seconds; entire native/script suite with
+  `--memorydebug`: passed in 40.40 seconds with no tracked leaks.
+- ASan/UBSan/LSan CTest: 8/8, 62.96 seconds, with leak detection and
+  halt-on-error enabled. Focused roster/completion/RNG/coordinator groups with
+  tracking also pass in 1.11 seconds.
+- All five actual snapshot checkpoint regressions are present in the final
+  execution logs; no new fixture adaptation was required by these merges.
+
+The local sanitizer linker retains the previously documented no-PIE workaround;
+no repository suppression or build policy changes. Logs and the source/command
+manifest are retained under
+`/home/jhurliman/src/glsmac-canonical-main-refresh`, with final checks in
+`switch-prerequisite/`. Native Windows/macOS hosted checks and exact-head review
+remain separate gates. The historical PR77/PR79 branches are not proposed for
+independent landing; the combined correction is described in
+[snapshot-owner-checkpoints.md](snapshot-owner-checkpoints.md).

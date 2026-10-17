@@ -4,6 +4,8 @@
 #include "gse/value/Bool.h"
 #include "gc/Space.h"
 
+#include <mutex>
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
 #include "engine/Engine.h"
 #endif
@@ -137,7 +139,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 }
 
 Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* const args_obj, const std::optional< value_type_t > expected_return_type ) {
-	std::lock_guard guard( m_callbacks_mutex );
+	std::unique_lock guard( m_callbacks_mutex );
 	ASSERT( args_obj, "args_obj is null" );
 	Value* result = nullptr;
 	const auto& it = m_callbacks.find( event );
@@ -148,15 +150,11 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 			if ( cb->type != VT_CALLABLE ) {
 				ASSERT( cb->type == VT_CALLABLE, "callback not callable" );
 			}
-			m_callbacks_mutex.unlock(); // TODO: improve?
-			try {
-				result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { args_obj } );
-			}
-			catch ( const gse::Exception& e ) {
-				m_callbacks_mutex.lock(); // to prevent error when guard exits
-				throw e;
-			}
-			m_callbacks_mutex.lock();
+			// Callbacks may change handlers or throw any C++ exception. Track the
+			// unlocked state so unwinding never unlocks an unowned mutex.
+			guard.unlock();
+			result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { args_obj } );
+			guard.lock();
 			if ( expected_return_type.has_value() ) {
 				if ( !result || result->type != expected_return_type.value() ) {
 					const auto returned = result ? result->GetTypeString() + ": " + result->ToString() : "no value";

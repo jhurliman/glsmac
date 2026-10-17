@@ -53,6 +53,7 @@ CLASS2( Slot, types::Serializable, gse::Wrappable )
 	WRAPDEFS_PTR( Slot );
 
 private:
+	friend class game::backend::State;
 
 	size_t m_index;
 	State* m_state;

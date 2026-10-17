@@ -11,6 +11,10 @@ class OpenGL;
 
 namespace gse {
 class GC;
+namespace tests {
+class BackendFixture;
+class WidgetGraphicsFixture;
+}
 }
 
 namespace gc {
@@ -42,6 +46,8 @@ CLASS( GC, common::Module )
 #endif
 
 private:
+	friend class gse::tests::BackendFixture;
+	friend class gse::tests::WidgetGraphicsFixture;
 	common::Mutex m_spaces_mutex;
 	std::unordered_set< Space* > m_spaces = {};
 

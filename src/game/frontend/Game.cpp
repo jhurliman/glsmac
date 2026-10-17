@@ -125,25 +125,21 @@ void Game::Start() {
 			return false;
 		}
 	);
-	m_mt_ids.init = game->MT_Init( m_state );
+	const auto initialization = game->MT_Init( m_state );
+	m_mt_ids.init = initialization.request;
+	m_pending_world_ticket = initialization.ticket;
+	m_world_retired = false;
 }
 
 void Game::Stop() {
 
-	if ( !m_is_initialized ) {
-		return;
-	}
-
 	// cancel incoming requests
 	auto* const game = g_engine->GetGame();
 	ASSERT( game, "game not set" );
-#define GAME_MT_ID_X( _x ) \
-    if ( m_mt_ids._x ) { \
-        game->MT_Cancel( m_mt_ids._x ); \
-        m_mt_ids._x = 0; \
-    }
-	GAME_MT_IDS_X
-#undef GAME_MT_ID_X
+	RetireBackendRequests();
+	if ( !m_is_initialized ) {
+		return;
+	}
 
 	if ( m_is_initialized ) {
 		Deinitialize();
@@ -228,12 +224,18 @@ void Game::Iterate() {
 		if ( response.result != backend::R_NONE ) {
 			m_mt_ids.init = 0;
 			if ( response.result == backend::R_SUCCESS ) {
+				if ( !m_pending_world_ticket || response.world_ticket != m_pending_world_ticket ) {
+					THROW( "initialization response has the wrong world ticket" );
+				}
+				m_world_ticket = response.world_ticket;
+				m_pending_world_ticket = 0;
+				m_world_retired = false;
 				// game thread will manage state from now on
 				m_state = nullptr;
 				// set own slot
 				m_slot_index = response.data.init.slot_index;
 				// get map data to display it
-				m_mt_ids.get_map_data = game->MT_GetMapData();
+				m_mt_ids.get_map_data = game->MT_GetMapData( m_world_ticket );
 			}
 			else {
 				f_handle_nonsuccess_init( response );
@@ -246,7 +248,7 @@ void Game::Iterate() {
 		if ( response.result != backend::R_NONE ) {
 			if ( response.result == backend::R_PENDING ) {
 				// still initializing, try later
-				m_mt_ids.get_map_data = game->MT_GetMapData();
+				m_mt_ids.get_map_data = game->MT_GetMapData( m_world_ticket );
 			}
 			else {
 				HideLoader();
@@ -300,6 +302,9 @@ void Game::Iterate() {
 
 			switch ( response.result ) {
 				case backend::R_SUCCESS: {
+					m_world_ticket = 0;
+					m_pending_world_ticket = 0;
+					m_world_retired = true;
 					ASSERT( m_on_game_exit, "game exit handler not set" );
 					const auto on_game_exit = m_on_game_exit;
 					m_on_game_exit = nullptr;
@@ -330,7 +335,8 @@ void Game::Iterate() {
 				m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
 				m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
 			}
-			else {
+			else if ( response.result != backend::R_ABORTED ) {
+				game->MT_DestroyResponse( response );
 				THROW( "TODO: Map saving failed" );
 			}
 			game->MT_DestroyResponse( response );
@@ -359,15 +365,16 @@ void Game::Iterate() {
 		}
 	}
 
-	if ( m_is_initialized ) { // do not check anything else if still starting or error
+	if ( m_is_initialized && !m_world_retired && !m_mt_ids.init && !m_mt_ids.get_map_data ) {
 
 		// poll backend for frontend requests
 		if ( m_mt_ids.get_frontend_requests ) {
 			auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
 			if ( response.result != backend::R_NONE ) {
-				ASSERT( response.result == backend::R_SUCCESS, "unexpected frontend requests response" );
 				m_mt_ids.get_frontend_requests = 0;
-				const auto* requests = response.data.get_frontend_requests.requests;
+				if ( response.result == backend::R_ABORTED ) { m_world_retired = true; }
+				else if ( response.result != backend::R_SUCCESS ) { THROW( "unexpected frontend requests response" ); }
+				const auto* requests = response.result == backend::R_SUCCESS ? response.data.get_frontend_requests.requests : nullptr;
 				if ( requests ) {
 					//Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
@@ -379,13 +386,13 @@ void Game::Iterate() {
 					}
 				}
 				game->MT_DestroyResponse( response );
-				if ( !m_on_game_exit ) {
-					m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+				if ( !m_on_game_exit && !m_world_retired ) {
+					m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests( m_world_ticket );
 				}
 			}
 		}
 		else {
-			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests( m_world_ticket );
 		}
 
 		// check if previous backend requests were sent successfully
@@ -394,12 +401,20 @@ void Game::Iterate() {
 			if ( response.result != backend::R_NONE ) {
 				//ASSERT( response.result == backend::R_SUCCESS, "backend requests result not successful" );
 				m_mt_ids.send_backend_requests = 0;
+				if ( response.result == backend::R_ABORTED ) { m_world_retired = true; }
+				game->MT_DestroyResponse( response );
 			}
 		}
 
 		// send pending backend requests if present and not sending already
-		if ( !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
-			m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_pending_backend_requests );
+		if ( m_world_retired ) {
+			m_pending_backend_requests.clear();
+			// ExitGame may have just enqueued the reset that owns completion.
+			if ( !m_on_game_exit ) { CancelRequests(); }
+			return;
+		}
+		if ( !m_world_retired && !m_mt_ids.send_backend_requests && !m_pending_backend_requests.empty() ) {
+			m_mt_ids.send_backend_requests = game->MT_SendBackendRequests( m_world_ticket, m_pending_backend_requests );
 			m_pending_backend_requests.clear();
 		}
 
@@ -736,23 +751,16 @@ void Game::LoadMap( const std::string& path ) {
 	auto* game = g_engine->GetGame();
 	ShowLoader(
 		"Loading map", [ this ]() {
-			CancelRequests();
+			CancelGame();
 			return false;
 		}
 	);
-	ASSERT( m_state, "state not set" );
-	m_state->m_settings.global.map.type = backend::settings::MapSettings::MT_MAPFILE;
-	m_state->m_settings.global.map.filename = path;
 	m_map_data.filename = util::FS::GetBaseName( path );
 	m_map_data.last_directory = util::FS::GetDirName( path );
-	if ( m_mt_ids.init ) {
-		game->MT_Cancel( m_mt_ids.init );
-	}
-	if ( m_mt_ids.get_map_data ) {
-		game->MT_Cancel( m_mt_ids.get_map_data );
-		m_mt_ids.get_map_data = 0;
-	}
-	m_mt_ids.init = game->MT_Init( m_state );
+	CancelRequests();
+	const auto initialization = game->MT_LoadMap( m_world_ticket, path );
+	m_mt_ids.init = initialization.request;
+	m_pending_world_ticket = initialization.ticket;
 }
 
 void Game::SaveMap( const std::string& path ) {
@@ -763,7 +771,7 @@ void Game::SaveMap( const std::string& path ) {
 		game->MT_Cancel( m_mt_ids.save_map );
 
 	}
-	m_mt_ids.save_map = game->MT_SaveMap( path );
+	m_mt_ids.save_map = game->MT_SaveMap( m_world_ticket, path );
 }
 
 types::texture::Texture* Game::GetTerrainTexture() const {
@@ -1058,7 +1066,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* unitdef = backend::unit::Def::Deserialize( buf );
+			const auto* unitdef = backend::unit::Def::Deserialize( buf, g_engine->GetGame()->GetUM() );
 			m_um->DefineUnit( unitdef );
 			delete unitdef;
 			break;
@@ -1792,6 +1800,11 @@ void Game::Deinitialize() {
 	}
 	m_actors_map.clear();
 
+	// The world scene survives map reloads; unlink before destroying its camera and lights.
+	m_world_scene->SetCamera( nullptr );
+	m_world_scene->RemoveLight( m_light_a );
+	m_world_scene->RemoveLight( m_light_b );
+
 #define x( _obj ) \
     if ( _obj ) { \
         DELETE( _obj ); \
@@ -2211,40 +2224,31 @@ void Game::ExitGame( const f_exit_game on_game_exit ) {
 	auto* game = g_engine->GetGame();
 	ShowLoader( "Exiting game" );
 	m_on_game_exit = on_game_exit;
-	CancelRequests();
+	RetireBackendRequests();
 	if ( !m_mt_ids.reset ) {
-		m_mt_ids.reset = game->MT_Reset();
+		m_mt_ids.reset = game->MT_Reset( m_world_ticket, m_pending_world_ticket );
 	}
 }
 
 void Game::CancelRequests() {
 	auto* game = g_engine->GetGame();
-	if ( m_mt_ids.init ) {
-		game->MT_Cancel( m_mt_ids.init );
-		m_mt_ids.init = 0;
-		// WHY?
-		// is it even needed?
-		/*ASSERT( !m_mt_ids.ping, "ping already active" );
-		g_engine->GetUI()->SetLoaderText( "Canceling" );
-		m_mt_ids.ping = game->MT_Ping();*/
-	}
-	if ( m_mt_ids.get_map_data ) {
-		game->MT_Cancel( m_mt_ids.get_map_data );
-		m_mt_ids.get_map_data = 0;
-	}
-	if ( m_mt_ids.reset ) {
-		game->MT_Cancel( m_mt_ids.reset );
-		m_mt_ids.reset = 0;
-	}
-	if ( m_mt_ids.get_frontend_requests ) {
-		game->MT_Cancel( m_mt_ids.get_frontend_requests );
-		m_mt_ids.get_frontend_requests = 0;
-	}
-	if ( m_mt_ids.send_backend_requests ) {
-		game->MT_Cancel( m_mt_ids.send_backend_requests );
-		m_mt_ids.send_backend_requests = 0;
-	}
-	// TODO: cancel other requests?
+#define GAME_MT_ID_X( _x ) \
+    if ( m_mt_ids._x ) { \
+        game->MT_Cancel( m_mt_ids._x ); \
+        m_mt_ids._x = 0; \
+    }
+	GAME_MT_IDS_X
+#ifdef DEBUG
+	GAME_MT_ID_X( save_dump )
+#endif
+#undef GAME_MT_ID_X
+	m_pending_backend_requests.clear();
+}
+
+void Game::RetireBackendRequests() {
+	g_engine->GetGame()->MT_RetireWorld( m_world_ticket, m_pending_world_ticket );
+	m_world_retired = true;
+	CancelRequests();
 }
 
 void Game::CancelGame() {
@@ -2321,6 +2325,7 @@ void Game::RenderTile( tile::Tile* tile, const unit::Unit* selected_unit ) {
 }
 
 void Game::SendAnimationFinished( const size_t animation_id ) {
+	if ( m_world_retired || m_mt_ids.init || m_mt_ids.get_map_data ) { return; }
 	auto br = BackendRequest( BackendRequest::BR_ANIMATION_FINISHED );
 	br.data.animation_finished.animation_id = animation_id;
 	SendBackendRequest( &br );

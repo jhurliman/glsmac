@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "common/Common.h"
+#include "common/MTTypes.h"
 #include "gse/Bindings.h"
 #include "gse/GCWrappable.h"
 
@@ -41,6 +42,7 @@ class Console;
 
 namespace gse::tests {
 class BackendFixture;
+class EngineShutdownFixture;
 }
 
 CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
@@ -66,6 +68,7 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 
 private:
 	friend class gse::tests::BackendFixture;
+	friend class gse::tests::EngineShutdownFixture;
 	// Own a script runtime for asset-free backend tests. This initializes only
 	// event dispatch: no singleton registration, bindings, main script, or UI.
 	explicit GLSMAC( gse::GSE* gse );
@@ -116,6 +119,12 @@ private:
 	game::frontend::Game* m_game = nullptr;
 
 	std::atomic< bool > m_reset_needed = false;
+	enum class ResetPhase { IDLE, WAITING, FAILED };
+	ResetPhase m_reset_phase = ResetPhase::IDLE;
+	uint64_t m_reset_barrier = 0;
+	common::mt_id_t m_reset_request = 0;
+	// Called only between owner-thread callback stages, outside accumulation.
+	bool ProcessReset();
 
 	void InitConsole();
 

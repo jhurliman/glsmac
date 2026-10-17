@@ -71,7 +71,7 @@ void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
 				auto rows = fixture::WorldSizes();
 				if ( field == 0 ) { rows.presets[ i ].name += " changed"; }
 				if ( field == 1 ) { ++rows.presets[ i ].source_x; }
-				if ( field == 2 ) { ++rows.presets[ i ].source_y; }
+				if ( field == 2 ) { rows.presets[ i ].source_y += 2; }
 				GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( fixture::Payload( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, rows.Serialize().ToString() ) ); } ), "locked source row changed" );
 				GT_ASSERT( settings.Serialize().ToString() == before, "rejected late field mutated settings" );
 			}

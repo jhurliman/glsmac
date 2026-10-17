@@ -31,6 +31,7 @@
 #include "game/backend/resource/ResourceManager.h"
 #include "game/frontend/Game.h"
 #include "graphics/Null.h"
+#include "game/frontend/resource/ResourceDisplay.h"
 #include "game/backend/State.h"
 #include "game/backend/connection/Client.h"
 #include "game/backend/connection/Server.h"
@@ -4836,6 +4837,203 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 	} );
 }
 
+static void AddInitialPopulationTests( task::gsetests::GSETests* task ) {
+	for ( const auto scenario : { std::pair< int64_t, bool >( std::numeric_limits< int64_t >::min(), false ), { std::numeric_limits< int64_t >::min() + 1, false }, { -2, false }, { 0, false }, { 2, false }, { 35, false }, { std::numeric_limits< int64_t >::max(), false }, { -2, true } } ) {
+		task->AddTest( "test initial population with center nutrients " + std::to_string( scenario.first ) + ( scenario.second ? " preserves populated starvation" : " grows an empty base" ), GT( scenario ) {
+			using namespace game::backend::base;
+			using namespace game::backend::event;
+			const auto next = Base::GetNextId();
+			util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+			BackendFixture fixture;
+			fixture.EnableYieldFixture(); fixture.EnableTurns(); fixture.SetRunning( true );
+			fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			fixture.DefinePop( "DOCTOR", "Doctor", PopDef::PF_NONE );
+			const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame();
+				for ( const auto* name : { "advance_turn", "add_base_pop", "remove_base_pop" } ) {
+					auto* handlers = static_cast< value::Object* >( fixture.RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
+					fixture.RegisterEvent( name, new EventHandler( gc_space, name,
+						static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+				}
+				game->GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL( scenario ) {
+					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+					N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+					return new value::Object( GSE_CALL, {
+						{ "NUTRIENTS", new value::Int( gc_space, tile->coord.x == 4 && tile->coord.y == 4 ? scenario.first : 1 ) },
+					} );
+				} ) );
+				auto* setup = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
+				setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
+				const value::object_properties_t no_args;
+				game->GetState()->TriggerObject( game, "start", ARGS( no_args ) );
+				std::map< size_t, Pop > pops;
+				if ( scenario.second ) {
+					pops.emplace( 7, Pop( nullptr, 7, game->GetBM()->GetPopDef( "DOCTOR" ), 0 ) );
+					pops.emplace( 8, Pop( nullptr, 8, game->GetBM()->GetPopDef( "DOCTOR" ), 0 ) );
+				}
+				auto* base = new Base( game, 703, &game->GetState()->m_slots->GetSlot( 2 ), game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 4, 4 ), "Initial population", {}, pops, 9 );
+				game->GetBM()->SpawnBase( GSE_CALL, base );
+				game->AddEvent( new Event( game, Event::ES_LOCAL, 0, GSE_CALL, "advance_turn", { { "turn_id", new value::Int( gc_space, 1 ) } } ) );
+				fixture.ProcessEvents();
+				GT_ASSERT( fixture.PendingEvents().size() == 1, "turn must queue exactly one population event" );
+				const auto name = fixture.PendingEvents().front()->GetEventName();
+				fixture.ProcessEvents(); // Before the guard this executes remove_base_pop(null).
+				GT_ASSERT( fixture.PendingEvents().empty() && base->m_pops.size() == 1, "first turn did not leave exactly one citizen" );
+				if ( scenario.second ) {
+					GT_ASSERT( name == "remove_base_pop" && base->m_pops.count( 8 ), "populated starvation no longer removes the selected existing citizen" );
+				} else {
+					GT_ASSERT( name == "add_base_pop", "empty base did not use its existing initial-growth path" );
+					const auto& pop = base->m_pops.begin()->second;
+					GT_ASSERT( pop.m_def->m_id == "WORKER" && pop.GetWorkedTileCoords(), "initial population lost the existing worker assignment behavior" );
+					GT_ASSERT( game->GetBM()->GetWorkingPop( *pop.GetWorkedTileCoords() ) == &pop, "initial worker reverse claim missing" );
+				}
+				const auto expected = scenario.first > 10 ? scenario.first - 10 : 0;
+				GT_ASSERT( base->GetAccumulatedNutrients() == expected, "initial population nutrient reset changed" );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "first-turn population processing: " + error ); GT_OK();
+		} );
+	}
+}
+
+static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test tile and base resource callbacks preserve signed integers", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture();
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			Value* result = nullptr;
+			auto* callback = NATIVE_CALL( &result ) { return result; } );
+			game->GetTM()->On( GSE_CALL, "get_tile_resources", callback );
+			game->GetBM()->On( GSE_CALL, "get_base_intake", callback );
+			auto* tile = game->GetMap()->GetTile( 4, 4 );
+			for ( const int64_t amount : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 8 ), int64_t( 300 ), std::numeric_limits< int64_t >::max() } ) {
+				result = new value::Object( GSE_CALL, { { "NUTRIENTS", new value::Int( gc_space, amount ) } } );
+				auto* wrapped = tile->GetResourcesAsValue( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) );
+				GT_ASSERT( static_cast< value::Int* >( wrapped->Get( "NUTRIENTS" ) )->value == amount, "script tile yield changed" );
+				const auto native = tile->GetResources( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) );
+				GT_ASSERT( native.at( "NUTRIENTS" ) == amount, "native tile yield narrowed or changed sign" );
+				GT_ASSERT( native.at( "MINERALS" ) == 0 && native.at( "ENERGY" ) == 0, "missing resources no longer default to zero" );
+				auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == amount, "base callback yield changed" );
+			}
+			const std::vector< Value* > invalid = {
+				new value::Object( GSE_CALL, { { "UNKNOWN_RESOURCE", new value::Int( gc_space, 1 ) } } ),
+				new value::Object( GSE_CALL, { { "NUTRIENTS", new value::String( gc_space, "-2" ) } } ),
+				new value::Array( gc_space ),
+			};
+			for ( auto* bad : invalid ) {
+				result = bad;
+				try { tile->GetResources( GSE_CALL, &game->GetState()->m_slots->GetSlot( 2 ) ); GT_FAIL( "invalid tile yield accepted" ); }
+				catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong invalid tile yield error" ); }
+				try { CallBase( GSE_CALL, base, "get_intake" ); GT_FAIL( "invalid base yield accepted" ); }
+				catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.GAME_ERROR, "wrong invalid base yield error" ); }
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "signed resource callbacks: " + error ); GT_OK();
+	} );
+	task->AddTest( "test production base intake sums signed and large tile yields", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 701, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			auto* getter = NATIVE_CALL() {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				return new value::Object( GSE_CALL, { { "NUTRIENTS", new value::Int( gc_space, tile->coord.x == 4 ? -2 : 300 ) } } );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+			auto* initial = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+			GT_ASSERT( static_cast< value::Int* >( initial->Get( "NUTRIENTS" ) )->value == -2, "negative center yield was lost" );
+			base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", game->GetMap()->GetTile( 2, 4 ) );
+			auto* actual = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+			GT_ASSERT( static_cast< value::Int* >( actual->Get( "NUTRIENTS" ) )->value == 298, "production intake narrowed, clamped, or ignored signed yields" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production signed intake: " + error ); GT_OK();
+	} );
+	task->AddTest( "test production base intake uses the base owner for center and worked tiles", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 702, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			auto* owner = base->m_owner->GetPlayer();
+			GT_ASSERT( owner != game->GetPlayer(), "fixture must distinguish the base owner from the active player" );
+			std::vector< std::pair< Tile*, game::backend::Player* > > calls;
+			auto* getter = NATIVE_CALL( &calls, owner ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				N_GETPROP_UNWRAP( player, event, "player", game::backend::Player );
+				calls.emplace_back( tile, player );
+				const bool center = tile->coord.x == 4;
+				const int64_t nutrients = player == owner ? ( center ? 3 : 7 ) : 101;
+				const int64_t minerals = player == owner ? ( center ? 4 : 11 ) : 103;
+				const int64_t energy = player == owner ? ( center ? 5 : 13 ) : 107;
+				return new value::Object( GSE_CALL, {
+					{ "NUTRIENTS", new value::Int( gc_space, nutrients ) },
+					{ "MINERALS", new value::Int( gc_space, minerals ) },
+					{ "ENERGY", new value::Int( gc_space, energy ) },
+				} );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+			for ( const bool worked : { false, true } ) {
+				if ( worked ) {
+					base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", game->GetMap()->GetTile( 2, 4 ) );
+				}
+				calls.clear();
+				auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+				GT_ASSERT( calls.size() == ( worked ? 2 : 1 ), "intake skipped or duplicated a tile callback" );
+				GT_ASSERT( calls.at( 0 ).first == game->GetMap()->GetTile( 4, 4 ) && calls.at( 0 ).second == owner, "base center yield used the active player instead of the base owner" );
+				if ( worked ) {
+					GT_ASSERT( calls.at( 1 ).first == game->GetMap()->GetTile( 2, 4 ) && calls.at( 1 ).second == owner, "worked tile yield used the active player instead of the base owner" );
+				}
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == ( worked ? 10 : 3 ), "owner-specific nutrient intake changed" );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "MINERALS" ) )->value == ( worked ? 15 : 4 ), "owner-specific mineral intake changed" );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "ENERGY" ) )->value == ( worked ? 18 : 5 ), "owner-specific energy intake changed" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production intake owner context: " + error ); GT_OK();
+	} );
+	task->AddTest( "test exceptional resource display preserves exact numbers with bounded icons", GT() {
+		using game::frontend::resource::ResourceDisplay;
+		for ( const size_t sprites : { 0, 1, 8 } ) {
+			for ( const int64_t amount : { std::numeric_limits< int64_t >::min(), int64_t( -2 ), int64_t( 0 ), int64_t( 1 ), int64_t( 8 ), int64_t( 9 ), int64_t( 300 ), std::numeric_limits< int64_t >::max() } ) {
+				const auto display = ResourceDisplay::For( amount, sprites );
+				GT_ASSERT( display.sprite_value <= sprites, "display would index a missing sprite" );
+				if ( !amount ) { GT_ASSERT( !display.sprite_value && display.label.empty(), "zero yield is not hidden" ); }
+				else if ( amount > 0 && static_cast< uint64_t >( amount ) <= sprites ) {
+					GT_ASSERT( display.sprite_value == amount && display.label.empty(), "ordinary icon appearance changed" );
+				}
+				else {
+					GT_ASSERT( display.sprite_value <= 1, "exceptional amount requested unbounded icons" );
+					GT_ASSERT( display.label == std::to_string( amount ), "fallback changed or truncated signed value" );
+				}
+			}
+		}
+		GT_OK();
+	} );
+}
+
 void AddBackendTests( task::gsetests::GSETests* task ) {
 	for ( const bool active : { false, true } ) {
 		for ( const bool reset_pending : { false, true } ) {
@@ -4909,6 +5107,8 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 		}
 	);
 	AddWorkerTests( task );
+	AddResourceYieldTests( task );
+	AddInitialPopulationTests( task );
 	for ( const bool immediate : { true, false } ) {
 		task->AddTest(
 			immediate

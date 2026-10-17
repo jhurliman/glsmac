@@ -23,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacFactionStartupRules.cpp
+	${PWD}/SmacTechnologyState.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp

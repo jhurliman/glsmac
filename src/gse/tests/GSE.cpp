@@ -66,6 +66,97 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 
+	for ( const bool fail_in_member : { false, true } ) {
+		for ( const bool catch_inside : { false, true } ) {
+			task->AddTest(
+				std::string( "test if GC cancels failed " ) + ( fail_in_member ? "member" : "derived" ) + " construction " + ( catch_inside ? "inside accumulation" : "escaping accumulation" ),
+				GT( fail_in_member, catch_inside ) {
+					std::atomic< size_t > discarded = 0, kept = 0;
+					size_t sentinel_unwinds = 0, member_unwinds = 0, derived_destructions = 0;
+					class TrackedObject : public gc::Object {
+					public:
+						TrackedObject( gc::Space* space, std::atomic< size_t >& destructions )
+							: gc::Object( space ), destructions( destructions ) {}
+						~TrackedObject() override { destructions++; }
+					private:
+						std::atomic< size_t >& destructions;
+					};
+					struct Sentinel {
+						size_t& unwinds;
+						~Sentinel() { unwinds++; }
+					};
+					struct Member {
+						Member( gc::Space* space, std::atomic< size_t >& discarded, size_t& unwinds, const bool fail )
+							: unwinds( unwinds ) {
+							// A completed child remains GC-owned even when its parent's construction fails.
+							new TrackedObject( space, discarded );
+							if ( fail ) { throw std::runtime_error( "member construction failure" ); }
+						}
+						~Member() { unwinds++; }
+						size_t& unwinds;
+					};
+					class FailingObject : public gc::Object {
+					public:
+						FailingObject( gc::Space* space, std::atomic< size_t >& discarded, size_t& sentinel_unwinds, size_t& member_unwinds, size_t& destructions, const bool fail_in_member )
+							: gc::Object( space ), sentinel{ sentinel_unwinds }, member( space, discarded, member_unwinds, fail_in_member ), destructions( destructions ) {
+							throw std::runtime_error( "derived construction failure" );
+						}
+						~FailingObject() override { destructions++; }
+					private:
+						Sentinel sentinel;
+						Member member;
+						size_t& destructions;
+					};
+					class Root : public gc::Object {
+					public:
+						Root() : gc::Object( nullptr ) {}
+						gc::Object* child = nullptr;
+						void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+							gc::Object::GetReachableObjects( reachable_objects );
+							if ( child ) { GC_REACHABLE( child ); }
+						}
+					} root;
+					gc::Space space( &root );
+					space.SetThreadId( std::this_thread::get_id() );
+					util::FinallyGuard release_root( [ & ]() {
+						space.Accumulate( &root, [ & ]() { root.child = nullptr; } );
+					} );
+					bool caught = false, still_accumulating = !catch_inside;
+					const auto record_error = [ & ]( const std::runtime_error& error ) {
+						caught = std::string( error.what() ) == ( fail_in_member ? "member construction failure" : "derived construction failure" );
+					};
+					const auto fail = [ & ]() {
+						new FailingObject( &space, discarded, sentinel_unwinds, member_unwinds, derived_destructions, fail_in_member );
+					};
+					try {
+						space.Accumulate( &root, [ & ]() {
+							root.child = new TrackedObject( &space, kept );
+							new TrackedObject( &space, discarded );
+							if ( catch_inside ) {
+								try { space.Accumulate( &root, fail ); }
+								catch ( const std::runtime_error& error ) { record_error( error ); }
+								still_accumulating = space.IsAccumulating();
+							}
+							else { fail(); }
+						} );
+					}
+					catch ( const std::runtime_error& error ) { record_error( error ); }
+					GT_ASSERT( caught && still_accumulating && !space.IsAccumulating(), "construction failure changed exception or accumulation scope" );
+					GT_ASSERT( sentinel_unwinds == 1 && member_unwinds == ( fail_in_member ? 0u : 1u ) && derived_destructions == 0, "construction failure did not unwind exactly once" );
+					g_engine->GetGC()->Iterate();
+					GT_ASSERT( discarded == 2 && kept == 0, "construction failure lost completed children or a rooted object" );
+					space.Accumulate( &root, [ & ]() {
+						new TrackedObject( &space, discarded );
+						root.child = nullptr;
+					} );
+					g_engine->GetGC()->Iterate();
+					GT_ASSERT( discarded == 3 && kept == 1 && derived_destructions == 0, "subsequent collection duplicated or lost destruction" );
+					GT_OK();
+				}
+			);
+		}
+	}
+
 	for ( const bool nested : { false, true } ) {
 		task->AddTest(
 			nested ? "test if nested native exceptions restore GC accumulation" : "test if native exceptions restore GC accumulation",

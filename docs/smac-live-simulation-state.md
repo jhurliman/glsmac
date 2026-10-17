@@ -149,3 +149,43 @@ both complete suites above were rerun. Those prior failed receipts remain
 retained. No original assets or reference executable outputs are included in
 this change, and the unchanged technology producer's earlier original-code
 comparison is not claimed as a new run.
+
+
+## Focused publication receipt
+
+The publication implementation `647b2482` applies this change to dedicated base
+`202eccf5`. That base preserves the histories of technology state PR131,
+frozen-unit world PR129, initial-turn PR113, and refreshed canonical-roster
+PR126 at `991b810a` (including the switch-scope ownership prerequisite PR66).
+It also applies the existing canonical settings-envelope admission correction
+from `9dc3c6d3`. These remain explicit review dependencies; this receipt does
+not assert that they have merged.
+
+The final feature delta remains 19 files. Production implementation files,
+the new codec/native tests and GSE script match source `7eb1fef3`; the Game
+header's existing State include and test registrations are placed to match
+this ancestry. Independent merge review confirmed all parent registrations
+and test groups are retained, apart from the two obsolete roster-failure
+cases already replaced by PR126's actual checkpoint regressions.
+
+On the actual publication implementation:
+
+- Full normal CTest: 8/8, 74.71 seconds.
+- All 21 new native groups pass with `--memorydebug`.
+- All five copied-production controls above fail their intended assertions,
+  exit 1; their objects/executables remain separate from the normal build.
+- Explicit correctness analysis of Game, GameSimulation, SmacSimulationState
+  and Buffer: four production translation units, LLVM 15, zero failures in
+  17.02 seconds. This targeted publication run is separate from the full
+  316-unit source analysis above.
+
+The same source was independently integrated as `39172a7d` for Windows
+CTest 8/8 (80.65 seconds), Linux ASan/UBSan/LSan CTest 8/8 (138.94 seconds),
+and native macOS CTest 8/8 (57.99 seconds). These are combined integration
+receipts, not an additional sanitizer or native-Mac run on this publication
+ancestry, and they make no rendered or socket-startup claim.
+
+Publication logs use the `simulation-publication-` prefix in the same retained
+validation directory, including `ctest.log`, `tracked.log`, `controls.log`,
+the `controls/results.json` directory and `analysis/summary.json`. Source
+receipts and earlier failed runs remain separate and unchanged.

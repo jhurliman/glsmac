@@ -189,7 +189,7 @@ return {
 				return '';
 			},
 		};
-		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map']) {
+		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map', 'unit_commands']) {
 			this.pp.sections[s] = #include(s);
 		}
 		for (s of this.pp.sections) {

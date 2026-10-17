@@ -180,7 +180,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto random=fixture.GameplayRandom(); const auto jsf=game->GetRandom()->GetStateString();
             auto* old_reserved=game->GetBM()->GetWorkingPop({4,2});
             old_record=Base::Serialize(base).ToString(); const auto scout=Unit::Serialize(um->GetUnit(91)).ToString();
-            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}}); fixture.DrainEvents();
+            const auto before_query=fixture.Snapshot();
+            GT_ASSERT(um->QueryConventionalCommands(pod).actions==std::vector<int32_t>{6},"available Pod lacks visible founding action");
+            GT_ASSERT(fixture.Snapshot()==before_query&&fixture.Updates().empty(),"Pod command query changed world or queued updates");
+            auto exhausted=pod->Conventional();exhausted.spent=3;um->UpdateConventionalUnit(GSE_CALL,pod,exhausted);
+            GT_ASSERT(um->QueryConventionalCommands(pod).actions.empty(),"exhausted Pod exposes founding action");
+            um->ResetConventionalSpent(GSE_CALL,pod);fixture.Updates();
+            auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_unit_commands"));
+            auto* ui=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            auto* pod_wrapper=pod->Wrap(GSE_CALL);
+            game->GetState()->TriggerObject(game,"unit_select",ARGS_F(&pod_wrapper){{"unit",pod_wrapper}};});
+            ui->Run(GSE_CALL,{VALUE(value::String,,"check"),VALUE(value::String,,"Found Base [B]"),VALUE(value::String,,"Colony Pod — Found a Base on an available site")});
+            ui->Run(GSE_CALL,{VALUE(value::String,,"click"),VALUE(value::String,,"Found Base [B]"),VALUE(value::String,,"")});fixture.DrainEvents();
             auto* founded=game->GetMap()->GetTile(6,2)->base;
             GT_ASSERT(founded && game->GetBM()->GetBases().size()==2 && !um->GetUnit(pod_id)
                 && um->GetUnitRecordOrder()==std::vector<size_t>{91},"actual founding event did not consume Pod or retain survivor order");

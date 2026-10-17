@@ -1,5 +1,7 @@
 #include "GSETests.h"
 
+#include "config/Config.h"
+
 #include "gse/GSE.h"
 #include "gse/Async.h"
 #include "gse/tests/Tests.h"
@@ -17,7 +19,22 @@ namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
+	const auto* c = g_engine->GetConfig();
+	if ( c->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		try {
+			m_native_filter.emplace( c->GetGSETestsNativeFilter() );
+		}
+		catch ( const std::regex_error& error ) {
+			LogTest( std::string( "Invalid native test filter: " ) + error.what() );
+			m_stats.failed++;
+			return;
+		}
+	}
 	gse::tests::AddTests( this );
+	if ( m_native_filter && m_tests.empty() ) {
+		LogTest( "No native tests matched filter: " + c->GetGSETestsNativeFilter() );
+		m_stats.failed++;
+	}
 }
 
 void GSETests::Stop() {
@@ -60,6 +77,9 @@ void GSETests::Iterate() {
 }
 
 void GSETests::AddTest( const std::string& name, const gse_test_t test ) {
+	if ( m_native_filter && !std::regex_search( name, *m_native_filter ) ) {
+		return;
+	}
 	m_tests.push_back(
 		{
 			name,

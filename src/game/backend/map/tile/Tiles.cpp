@@ -251,6 +251,7 @@ const size_t Tiles::GetDataCount() const {
 }
 
 void Tiles::FixTopBottomRows( util::random::Random* random ) {
+	if ( m_map && m_map->GetGame() ) { m_map->GetGame()->RequireWorkerKnowledgeMutation(); }
 	// set top and bottom rows to zero elevation, otherwise they can't be displayed correctly
 	Tile* tile;
 	elevation_t top_bottom_elevation;

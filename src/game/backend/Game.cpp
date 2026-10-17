@@ -592,6 +592,7 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	RequireWorkerKnowledgeMutation();
 	{
 		std::lock_guard guard( m_event_handlers_mutex );
 		const auto& it = m_event_handlers.find( name );
@@ -1401,6 +1402,7 @@ const bool Game::IsTurnChecksumValid( const util::crc32::crc_t checksum ) const 
 }
 
 void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
+	RequireWorkerKnowledgeMutation();
 	const auto& slot = m_state->m_slots->GetSlot( slot_num );
 	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();

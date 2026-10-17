@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -495,6 +496,8 @@ private:
 	// Accessed only under the existing owner/native exclusion. Identity tokens
 	// own no Player and require no GC roots; retirement makes them invalid.
 	std::optional< BoundSimulation > m_simulation, m_pending_simulation;
+	// Injectable word source for the GLSMAC new-world policy; never used by restore.
+	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
 	void ValidateSimulation( const BoundSimulation& value ) const;
 	void PrepareNewSimulation();

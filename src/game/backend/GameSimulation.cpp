@@ -79,7 +79,10 @@ void Game::PrepareNewSimulation() {
 	if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "New-world simulation was already admitted" ); }
 	const auto& settings = m_state->m_settings.global;
 	if ( !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() || !settings.GetSmacPredefinedUnitRules() ) { throw std::runtime_error( "Missing SMAC simulation profiles" ); }
-	faction::SmacSimulationState value;
+	std::vector< faction::SmacSimulationParticipant > roster;
+	faction::SmacTechnologyState technology;
+	faction::SmacSocialState social;
+	unit::SmacStartupDesignState designs;
 	std::vector< faction::SmacSimulationAdmission > admissions;
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
 		if ( slot.GetState() != slot::Slot::SS_PLAYER ) { continue; }
@@ -89,15 +92,22 @@ void Game::PrepareNewSimulation() {
 		// order. Restores use the explicit saved IDs and never call this path.
 		const auto id = static_cast< int32_t >( admissions.size() + 1 );
 		if ( slot.GetIndex() > 6 ) { throw std::runtime_error( "SMAC simulation slot exceeds supported roster" ); }
-		value.roster.push_back( { id, static_cast< int32_t >( slot.GetIndex() ), slot.GetLinkedGSID(), record.role, *record.faction_id } );
+		roster.push_back( { id, static_cast< int32_t >( slot.GetIndex() ), slot.GetLinkedGSID(), record.role, *record.faction_id } );
 		admissions.push_back( { id, *record.faction_id } );
 	}
 	try {
-		value.technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
-		value.social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
-		value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ) );
+		technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		designs = unit::SmacStartupDesignState::NewWorld( technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ) );
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
+	// GLSMAC policy, not an original startup seed reconstruction. Each word
+	// is sampled exactly once, in this order, without constructing/seeding JSF.
+	// A second-sample failure publishes neither word nor the staged simulation.
+	const auto shared = m_gameplay_entropy_word_source();
+	const auto crt = m_gameplay_entropy_word_source();
+	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ) );
+	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	m_simulation = BindSimulation( std::move( value ) );
 }
 

@@ -1,5 +1,9 @@
 # Live ordinary sight
 
+This records the World24/KnowledgeV2 sight slice. The later
+[ordinary ZOC integration](smac-live-ordinary-zoc.md) replaces the foreign-neighbor
+command fence described below and adds KnowledgeV3/World26 directed Pact state.
+
 The existing Map-owned `SmacWorkerKnowledge` now receives ordinary exploration
 and visibility updates from actual conventional Unit creation and successful
 native movement. It remains an explicitly supplied, authenticated world value;

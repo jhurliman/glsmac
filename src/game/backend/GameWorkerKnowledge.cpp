@@ -133,6 +133,71 @@ void Game::RequireConventionalSightWorld() const {
 	}
 }
 
+std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const unit::Unit& actor, const map::tile::Tile* destination ) const {
+	const auto* source = actor.GetTile();
+	const auto owner = actor.Conventional().owner_simulation_id;
+	bool foreign = false;
+	for ( const auto* endpoint : {source,destination} ) {
+		for ( const auto* neighbour : endpoint->neighbours ) {
+			for ( const auto& entry : neighbour->units ) {
+				if ( !entry.second || !entry.second->IsConventional() ) { throw std::runtime_error("ZOC requires actual conventional foreign units"); }
+				foreign |= entry.second->Conventional().owner_simulation_id != owner;
+			}
+		}
+	}
+	if ( !foreign ) { return {}; }
+	if ( !m_map->m_worker_knowledge || !m_map->m_worker_knowledge_ready ) { throw std::runtime_error("Foreign ZOC requires authenticated saved knowledge and directed Pact state"); }
+	auto data = m_map->m_worker_knowledge->CopyData();
+	if ( !data.observers[owner] || !data.observers[owner]->pact_with ) { throw std::runtime_error("Directed Pact state is unavailable for ZOC"); }
+	const auto pacts = *data.observers[owner]->pact_with;
+	const auto ordinary = [this](const map::tile::Tile* tile) {
+		if ( tile->is_water_tile || tile->rockiness != map::tile::ROCKINESS_FLAT || tile->features
+			|| (tile->terraforming & ~map::tile::TERRAFORMING_ROAD) || tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth()
+			|| tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight() ) {
+			throw std::runtime_error("Foreign ZOC requires measured ordinary interior land");
+		}
+	};
+	ordinary(source); ordinary(destination);
+	// Current conventional definitions admit ordinary, unconcealed Scout/Rover
+	// only. Validate every relevant stack before deciding a normal refusal.
+	for ( const auto* endpoint : {source,destination} ) { for ( const auto* neighbour : endpoint->neighbours ) {
+		for ( const auto& entry : neighbour->units ) {
+			const auto* other = entry.second;
+			if ( other->Conventional().owner_simulation_id == owner ) { continue; }
+			ordinary(neighbour);
+			if ( neighbour->units.size()!=1 ) { throw std::runtime_error("Foreign ZOC mixed or multiple stacks are not admitted"); }
+		}
+	} }
+	const auto controlled = [&](const map::tile::Tile* endpoint) {
+		if ( endpoint->base ) { return false; } // independently authenticated owned endpoint
+		for ( const auto* neighbour : endpoint->neighbours ) {
+			if ( neighbour->is_water_tile != endpoint->is_water_tile ) { continue; }
+			for ( const auto& entry : neighbour->units ) {
+				const auto faction = entry.second->Conventional().owner_simulation_id;
+				if ( faction != owner && !(pacts & (1u<<faction)) ) { return true; }
+			}
+		}
+		return false;
+	};
+	if ( !controlled(source) || !controlled(destination) ) { return {}; }
+	// This is an accepted command whose earlier ZOC stage refuses movement.
+	// Only its unseen non-Pact destination neighbors are revealed. Validation
+	// returns this owned candidate without publishing it or running ordinary sight.
+	for ( const auto* neighbour : destination->neighbours ) { for ( const auto& entry : neighbour->units ) {
+		const auto faction = entry.second->Conventional().owner_simulation_id;
+		if ( faction==owner || (pacts & (1u<<faction)) ) { continue; }
+		auto& observation = *std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
+		const auto bit = uint8_t(1u<<owner);
+		if ( observation.visible_to & bit ) { continue; }
+		observation.visible_to |= bit;
+		const auto index = static_cast<size_t>(neighbour->coord.y)*(data.width/2)+neighbour->coord.x/2;
+		data.tiles[index].explored_by |= bit;
+		auto& remembered = data.remembered[owner]; if ( remembered.empty() ) { remembered.resize(data.tiles.size()); }
+		remembered[index] = map::SmacWorkerKnowledge::Improvements{neighbour->features,neighbour->terraforming,neighbour->base!=nullptr,true};
+	} }
+	return map::SmacWorkerKnowledge::Create(data);
+}
+
 std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64_t id, int32_t owner,
 	const map::tile::Tile* destination, const map::tile::Tile* source ) const {
 	if ( !m_map || !m_map->m_worker_knowledge ) { return {}; }

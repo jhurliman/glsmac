@@ -23,7 +23,7 @@ void AddSize( size_t& size, size_t count, size_t stride, size_t cap ) {
 	size += count * stride;
 }
 size_t WireSize( size_t tiles, size_t units ) {
-	size_t size = HEADER_BYTES + 1; // remembered-row presence suffix
+	size_t size = HEADER_BYTES + 1 + 9; // memory presence, Pact presence and eight values
 	AddSize( size, tiles, TILE_BYTES, Knowledge::MAX_WIRE_BYTES );
 	AddSize( size, units, UNIT_BYTES, Knowledge::MAX_WIRE_BYTES );
 	return size;
@@ -76,7 +76,7 @@ bool SmacWorkerKnowledge::Improvements::operator==( const Improvements& o ) cons
 	return features == o.features && terraforming == o.terraforming && base_present == o.base_present && unit_present == o.unit_present;
 }
 bool SmacWorkerKnowledge::Tile::operator==( const Tile& o ) const noexcept { return explored_by == o.explored_by && claimant == o.claimant; }
-bool SmacWorkerKnowledge::Observer::operator==( const Observer& o ) const noexcept { return foreign_disclosure == o.foreign_disclosure && relations == o.relations; }
+bool SmacWorkerKnowledge::Observer::operator==( const Observer& o ) const noexcept { return foreign_disclosure == o.foreign_disclosure && relations == o.relations && pact_with == o.pact_with; }
 bool SmacWorkerKnowledge::UnitObservation::operator==( const UnitObservation& o ) const noexcept { return id == o.id && visible_to == o.visible_to && active_convoy == o.active_convoy; }
 bool SmacWorkerKnowledge::Data::operator==( const Data& o ) const noexcept {
 	return width == o.width && height == o.height && horizontal_wrap == o.horizontal_wrap && ordinary_local_mode == o.ordinary_local_mode
@@ -120,7 +120,7 @@ SmacWorkerMapFrame SmacWorkerKnowledge::Project( int32_t observer, const std::ve
 
 std::string SmacWorkerKnowledge::Serialize() const {
 	std::string wire( "SWKN" ); wire.resize( MemorySize( m_data ) );
-	Write( wire, 4, 2, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
+	Write( wire, 4, 3, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
 	wire[16] = m_data.horizontal_wrap; wire[17] = m_data.ordinary_local_mode; wire[18] = static_cast< char >( m_data.all_map_revealed );
 	uint8_t presence = 0;
 	for ( size_t i = 0; i < 8; ++i ) {
@@ -150,12 +150,19 @@ std::string SmacWorkerKnowledge::Serialize() const {
 			wire[offset+4] = ( value->base_present ? 1 : 0 ) | ( value->unit_present ? 2 : 0 ); offset += 5;
 		}
 	} }
+	uint8_t pact_rows = 0;
+	for ( size_t i = 0; i < 8; ++i ) {
+		if ( m_data.observers[i] && m_data.observers[i]->pact_with ) {
+			pact_rows |= uint8_t(1u<<i); wire[offset+1+i] = static_cast<char>(*m_data.observers[i]->pact_with);
+		}
+	}
+	wire[offset] = static_cast<char>(pact_rows);
 	return wire;
 }
 
 SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) {
 	Require( wire.size() >= HEADER_BYTES && wire.size() <= MAX_WIRE_BYTES, "Worker knowledge wire length exceeds budget" );
-	Require( wire.compare( 0, 4, "SWKN" ) == 0 && Read( wire, 4, 4 ) == 2, "Unsupported worker knowledge version" );
+	Require( wire.compare( 0, 4, "SWKN" ) == 0 && Read( wire, 4, 4 ) == 3, "Unsupported worker knowledge version" );
 	const auto width = Read( wire, 8, 4 ), height = Read( wire, 12, 4 );
 	Require( width <= 512 && height <= 256, "Worker knowledge dimensions exceed budget" );
 	const auto tiles = TileCount( static_cast< int32_t >( width ), static_cast< int32_t >( height ) );
@@ -173,7 +180,12 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 			Require( !(Read(wire,scan,2)&~uint64_t(0x7fff)) && !(Read(wire,scan+2,2)&~uint64_t(0x1fff)) && Byte(wire,scan+4)<=3, "Invalid remembered improvement fields" ); scan += 5;
 		}
 	} } }
-	Require( scan == wire.size(), "Trailing worker knowledge bytes" );
+	Require( wire.size()-scan == 9, "Truncated or trailing directed Pact suffix" );
+	const auto pact_rows = Byte(wire,scan);
+	Require( !(pact_rows & ~Byte(wire,19)), "Directed Pact row has no observer" );
+	for ( size_t i=0; i<8; ++i ) {
+		Require( (pact_rows & (1u<<i)) || Byte(wire,scan+1+i)==0, "Absent directed Pact row has nonzero fields" );
+	}
 	Data data{static_cast<int32_t>(width),static_cast<int32_t>(height),bool(Byte(wire,16)),true,Byte(wire,18),{},{},{}};
 	for ( size_t i = 0; i < 8; ++i ) {
 		const auto disclosure = Byte(wire,28+i*3), exemption = Byte(wire,29+i*3), recognition = Byte(wire,30+i*3);
@@ -184,6 +196,7 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 		Observer row{bool(disclosure),{}};
 		for ( size_t j = 0; j < 8; ++j ) { row.relations[j] = {bool(exemption&(1u<<j)),bool(recognition&(1u<<j))}; }
 		data.observers[i] = row;
+		if ( pact_rows & (1u<<i) ) { data.observers[i]->pact_with = Byte(wire,scan+1+i); }
 	}
 	// All aggregate extents and fixed header fields precede record allocation.
 	data.tiles.reserve( tiles ); data.units.reserve( units ); size_t offset = HEADER_BYTES;

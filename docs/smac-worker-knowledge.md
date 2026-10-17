@@ -12,8 +12,9 @@ This value contains no terrain sea copy, entity ownership/coordinates, Base
 records, population assignments, or generated-world producer. `Create` copies
 validated input; `CopyData` returns a detached copy. There are no mutation hooks.
 Map/Game persistence and entity authentication are supplied by the live adapter.
-See [live ordinary sight](smac-live-ordinary-sight.md) for the V2 remembered-copy
-extension and actual producer boundary; the original value-only receipt below
+See [live ordinary sight](smac-live-ordinary-sight.md) for the remembered-copy
+extension and [live ZOC](smac-live-ordinary-zoc.md) for V3 directed Pact state.
+The original value-only receipt below
 remains historical validation.
 
 ## Projection and identity
@@ -36,13 +37,13 @@ aliases remain the frame/collection contract.
 
 ## Wire contract
 
-The standalone V2 codec has a 4 MiB port budget. All unsigned multibyte values use
+The standalone V3 codec has a 4 MiB port budget. All unsigned multibyte values use
 explicit little-endian bytes. There is no native-struct serialization.
 
 | Offset | Field |
 | --- | --- |
 | 0 | Four bytes `SWKN` |
-| 4 | uint32 version 2 |
+| 4 | uint32 version 3 |
 | 8, 12 | uint32 width, height |
 | 16, 17, 18, 19 | wrap, ordinary-local, revelation, observer-presence bytes |
 | 20, 24 | uint32 tile and Unit counts |
@@ -50,13 +51,14 @@ explicit little-endian bytes. There is no native-struct serialization.
 | 52 | Two bytes per dense tile: explored bits, claimant (`255` means absent) |
 | after tiles | Ten bytes per observation: uint64 ID, visibility byte, convoy boolean |
 | after observations | Remembered-row presence byte, then one square-presence byte per tile in each present row; known squares append uint16 features, uint16 terraforming and Base/Unit marker bits |
+| after remembered rows | Directed Pact presence mask and eight bytes of directed Pact masks; absent rows encode zero and cannot belong to an absent observer |
 
 Dimensions are the existing frame's width 2..512 even and height 1..256. Tiles
 follow increasing Y and parity X, so the tile count is exactly width*height/2.
 Absent observer rows must encode three zero bytes. Boolean bytes are strict;
 claimants are absent/native0/playable1..7; arbitrary eight-bit knowledge masks
 remain intact. Exact counts, aggregate budget and header fields are checked
-before record reserves; V2 also scans the complete remembered suffix first.
+before record reserves; the complete remembered and Pact suffixes are scanned first.
 Truncation, trailing bytes, duplicate IDs and invalid
 domains reject. The projected frame has its own larger per-record budget and
 may reject a knowledge value that fits this codec.

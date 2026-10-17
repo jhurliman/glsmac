@@ -89,18 +89,6 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	}
 	const auto membership = source->units.find( unit->m_id );
 	if ( source->units.size() != 1 || membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact unstacked source membership" ); }
-	// No combat/ZOC/stack policy is inferred. Reject any foreign native owner
-	// in either endpoint or its neighborhood before invoking a movement kernel.
-	for ( const auto* endpoint : { source, destination } ) {
-		const auto foreign = [ & ]( const map::tile::Tile* tile ) {
-			for ( const auto& occupant : tile->units ) { if ( !occupant.second || occupant.second->m_owner != unit->m_owner ) { return true; } }
-			return false;
-		};
-		if ( foreign( endpoint ) ) { throw std::runtime_error( "Conventional movement does not admit foreign-unit interactions" ); }
-		for ( const auto* neighbour : endpoint->neighbours ) {
-			if ( foreign( neighbour ) ) { throw std::runtime_error( "Conventional movement does not admit possible enemy zones of control" ); }
-		}
-	}
 	const auto design = m_game->ResolveConventionalDesign( stored, *m_game->m_simulation );
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
@@ -170,6 +158,9 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			admitted_hq = hq;
 		}
 	}
+	if ( auto refusal=m_game->PrepareConventionalZoc(*unit,destination) ) {
+		return {unit,source,destination,stored,std::nullopt,std::nullopt,false,std::move(refusal)};
+	}
 	// Without an endpoint HQ the original nearest-base result may retain prior state,
 	// and destination fungus can enter the unsupported native-life/CRT encounter path.
 	if ( !admitted_hq && ( destination->features & map::tile::FEATURE_XENOFUNGUS ) ) {
@@ -222,6 +213,9 @@ void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destina
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->CheckRW( GSE_CALL );
 	auto prepared = PrepareConventionalMove( unit, destination, caller );
+	if ( !prepared.result ) {
+		m_game->CommitConventionalSight(prepared.sight); return;
+	}
 	const auto placement = PreparePlacementHistory( *unit, destination );
 	const auto update = m_unit_updates.find( unit->m_id );
 	if ( update != m_unit_updates.end() && ( update->second.unit != unit || ( update->second.ops & UUO_DESPAWN ) ) ) {
@@ -230,7 +224,7 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	// Same owner call, no callbacks/yields between preparation and commit.
 	// Allocate the destination node before touching any membership or authority.
 	std::map< size_t, Unit* > staged_destination;
-	const bool moved = prepared.result.outcome == smac_move::Outcome::Moved;
+	const bool moved = prepared.result->outcome == smac_move::Outcome::Moved;
 	if ( moved ) { staged_destination.emplace( unit->m_id, unit ); }
 	// try_emplace completes all update-node/bucket allocation first. With the
 	// existing std::less<size_t> map, node transfer below cannot allocate or run
@@ -247,7 +241,7 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	static_assert( std::is_nothrow_copy_assignable_v< ConventionalUnitState > );
 	static_assert( std::is_nothrow_copy_assignable_v< SmacGameplayRandomState > );
 	unit->CommitConventionalMove( prepared.state, moved ? destination : prepared.source );
-	m_game->m_simulation->value.gameplay_random = prepared.result.random;
+	m_game->m_simulation->value.gameplay_random = prepared.result->random;
 	m_game->CommitConventionalSight(prepared.sight);
 	pending.ops = static_cast< unit_update_op_t >( pending.ops | UUO_REFRESH );
 	// PushUpdates later publishes the committed record. No animation callback

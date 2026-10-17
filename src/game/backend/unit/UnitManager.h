@@ -92,7 +92,8 @@ private:
 		map::tile::Tile* source;
 		map::tile::Tile* destination;
 		ConventionalUnitState state;
-		smac_move::Result result;
+		// Absence is an earlier ZOC refusal, not a movement lottery outcome.
+		std::optional< smac_move::Result > result;
 		std::optional< int32_t > nearest_distance;
 		bool update_nearest = false;
 		std::optional< map::SmacWorkerKnowledge > sight;

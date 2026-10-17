@@ -23,6 +23,9 @@ public:
 	struct Observer {
 		bool foreign_disclosure;
 		std::array< SmacWorkerMapFrame::Relation, 8 > relations;
+		// Directed Pact state is distinct from the worker Pact-or-Treaty
+		// exemption. Absent means unknown; explicit zero means no Pacts.
+		std::optional< uint8_t > pact_with;
 		bool operator==( const Observer& other ) const noexcept;
 	};
 	struct UnitObservation {

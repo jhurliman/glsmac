@@ -1,5 +1,6 @@
 #include "SmacLiveWorkerKnowledge.h"
 #include "ConventionalUnits.h"
+#include "fixtures/SmacLiveZoc.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -118,6 +119,83 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC live ordinary ZOC preserves directed Pact and unknown distinction", GT() {
+		auto data=Data(); data.observers[1]->pact_with=4; data.observers[2]->pact_with=0;
+		const auto value=Knowledge::Create(data); const auto wire=value.Serialize();
+		GT_ASSERT(Knowledge::Deserialize(wire)==value && *value.CopyData().observers[2]->pact_with==0, "Pact direction or explicit zero lost");
+		data.observers[2]->pact_with.reset();
+		GT_ASSERT(!(Knowledge::Create(data)==value), "unknown Pact state collapsed into no Pacts");
+		for(int scenario=0;scenario<4;++scenario) {
+			auto bad=wire;
+			if(scenario==0){bad[bad.size()-9]|=1;}
+			if(scenario==1){bad.back()=1;}
+			if(scenario==2){bad.pop_back();}
+			if(scenario==3){bad[4]=2;}
+			GT_ASSERT(Rejects([&]{Knowledge::Deserialize(bad);}), "invalid directed Pact suffix admitted");
+		} GT_OK();
+	});
+	task->AddTest( "SMAC live ordinary ZOC matches ten original admission and refusal projections", GT() {
+		for(const auto& c:zoc_fixture::CASES) {
+			ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(c.rover);std::string restore_snapshot,restore_knowledge;
+			const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+				auto* game=fixture.Game();Definitions(game);
+				for(size_t y=0;y<64;++y){for(size_t x=y&1;x<128;x+=2){auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
+				auto* source=game->GetMap()->GetTile(c.sx,c.sy);auto* target=game->GetMap()->GetTile(c.dx,c.dy);
+				if(c.road){source->terraforming=target->terraforming=map::tile::TERRAFORMING_ROAD;}
+				if(c.base){MakeBase(GSE_CALL,game,901,0,1,c.sx,c.sy,3);}
+				Unit* actor=nullptr;
+				if(c.rover){
+					auto* um=game->GetUM();um->DefineUnit(new StaticDef("zoc-rover",um->GetMoraleSet("knowledge-morale"),"Rover",MT_LAND,999,new CvrScoutRender(2,0,100,100,{1,1},{128,128},CvrScoutRender::Composition::SpartanRover)));
+					auto* owner=&game->GetState()->m_slots->GetSlot(0);
+					auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_startup_designs",{owner->GetPlayer()->Wrap(GSE_CALL)}));
+					const auto design=static_cast<int32_t>(static_cast<value::Int*>(view->Get("starting_scout"))->value);
+					actor=um->SpawnConventionalUnit(GSE_CALL,71,um->GetUnitDef("zoc-rover"),owner,source,{design,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+				}else{actor=Spawn(GSE_CALL,game,71,0,1,c.sx,c.sy);}
+				Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{6,std::nullopt});data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+				data.observers[1]->pact_with=c.pact?4:0;data.observers[2]->pact_with=2; // opposite direction must not exempt actor
+				data.observers[1]->relations[2].foreign_unit_exemption=c.pact||c.treaty;
+				data.units.push_back({71,4,false});
+				for(int i=0;i<c.enemies;++i){Spawn(GSE_CALL,game,72+i,1,2,c.ex[i],c.ey[i]);const bool unseen=c.newly_revealed&(1u<<i);data.units.push_back({uint64_t(72+i),uint8_t(unseen?0:2),false});if(unseen){data.tiles[c.ey[i]*64+c.ex[i]/2].explored_by=4;}}
+				if(c.claim>=0){data.tiles[c.sy*64+c.sx/2].claimant=c.claim;data.tiles[c.dy*64+c.dx/2].claimant=c.claim;}
+				if(std::string(c.name)=="both_endpoints"){
+					auto unknown=data;unknown.observers[1]->pact_with.reset();game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(unknown));
+					const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto requests=fixture.QueuedFrontendRequests().size();
+					GT_ASSERT(Rejects([&]{game->GetUM()->ValidateConventionalMove(actor,target,0);}) && before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && requests==fixture.QueuedFrontendRequests().size(),"unknown Pact state silently became neutral or changed publication");
+				}
+				game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+				const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto pair=fixture.GameplayRandom();const auto bytes=Unit::Serialize(actor).ToString();const auto requests=fixture.QueuedFrontendRequests().size();
+				game->GetUM()->ValidateConventionalMove(actor,target,0);
+				GT_ASSERT(before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && pair==fixture.GameplayRandom() && bytes==Unit::Serialize(actor).ToString() && requests==fixture.QueuedFrontendRequests().size(),"ZOC validation published refusal side effects");
+				game->Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",target->Wrap(GSE_CALL)}});fixture.DrainEvents();
+				const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+				GT_ASSERT(actor->GetTile()==(c.moved?target:source) && actor->Conventional().spent==(c.moved?3:0) && fixture.GameplayRandom()==pair,"original ZOC outcome/spending/RNG differs");
+				for(int i=0;i<c.enemies;++i){GT_ASSERT(after.units[i+1].visible_to==2,"actual refusal/sight did not reveal foreign unit");}
+				GT_ASSERT(after.observers==data.observers,"movement changed directed diplomatic state");
+				if(!c.moved){
+					GT_ASSERT(Unit::Serialize(actor).ToString()==bytes && after.units[0].visible_to==4,"ZOC refusal entered normal mover clear/spending");
+					for(size_t i=0;i<data.tiles.size();++i){const bool reveal=c.enemies==2 && i==static_cast<size_t>(c.ey[1]*64+c.ex[1]/2);GT_ASSERT(after.tiles[i].explored_by==(reveal?6:data.tiles[i].explored_by),"refusal explored outside unseen destination stack");}
+					if(c.enemies==2){const auto index=c.ey[1]*64+c.ex[1]/2;GT_ASSERT(after.remembered[1][index] && after.remembered[1][index]->unit_present,"refusal omitted remembered improvements");}
+				}
+				if(c.enemies==2){restore_knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();restore_snapshot=fixture.Snapshot();}
+				if(std::string(c.name)=="source_only"){
+					for(int x:{28,30,32}){
+						game->GetUM()->ResetConventionalSpent(GSE_CALL,actor);
+						game->Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(x,16)->Wrap(GSE_CALL)}});fixture.DrainEvents();
+						const auto next=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+						GT_ASSERT(actor->GetTile()->coord.x==static_cast<size_t>(x) && next.units[0].visible_to==(x==32?4:0) && next.units[1].visible_to==2 && fixture.GameplayRandom()==pair,"continuous departure/return recomputed stationary visibility or failed mutual return");
+					}
+				}
+				GT_OK();
+			});GT_ASSERT(result.empty(),"ZOC case " + std::string(c.name)+": "+result);
+			if(!restore_snapshot.empty()){
+				ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+				const auto error=restored.Run([&](GSE_CALLABLE)->std::string{
+					restored.RestoreThroughStart(GSE_CALL,restore_snapshot,[](GSE_CALLABLE){});
+					GT_ASSERT(restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==restore_knowledge && restored.Game()->GetUM()->GetUnit(71)->GetTile()->coord.x==32,"refusal knowledge or directed Pact changed on actual restore");GT_OK();
+				});GT_ASSERT(error.empty(),"ZOC restore: " + error);
+			}
+		}GT_OK();
+	});
 	task->AddTest( "SMAC live ordinary sight preserves unknown memory and exact remembered copies", GT() {
 		auto data=Data(); data.remembered[1].resize(data.tiles.size());
 		data.remembered[1][0]=Knowledge::Improvements{0x7fff,0x1fff,true,false};

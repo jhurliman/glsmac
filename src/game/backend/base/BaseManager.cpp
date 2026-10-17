@@ -21,6 +21,7 @@
 #include <memory>
 #include <algorithm>
 #include <set>
+#include <type_traits>
 #include "util/FinallyGuard.h"
 
 namespace game {
@@ -327,18 +328,31 @@ void BaseManager::RegisterBase( Base* base ) {
 	if ( m_bases.find( base->m_id ) != m_bases.end() ) { THROW( "duplicate base ID" ); }
 	auto next_order = m_base_order;
 	next_order.push_back( base->m_id );
+	auto next_bases = m_bases;
+	auto next_assignments = m_work_assignments;
+	auto next_names = m_registered_base_names;
+	auto next_updates = m_base_updates;
 	for ( const auto& pop : base->m_pops ) {
 		const auto error = ValidateAssignment( base->m_id, base->GetTile()->coord, pop.first, pop.second.m_def, pop.second.GetWorkedTileCoords() );
 		if ( !error.empty() ) { THROW( error ); }
+		const auto& position = pop.second.GetWorkedTileCoords();
+		if ( position ) { next_assignments.emplace( tile_key_t(position->x,position->y), pop_key_t(base->m_id,pop.first) ); }
 	}
-	m_bases.insert_or_assign( base->m_id, base );
+	next_bases.emplace( base->m_id, base );
+	next_names.insert( base->m_name );
+	QueueBaseUpdateInto( next_updates, base, BUO_SPAWN );
+	QueueBaseUpdateInto( next_updates, base, BUO_REFRESH );
+	// All validation and allocation precedes registry publication. SpawnBase
+	// follows these no-throw swaps with the already prepared claim swap before
+	// invoking any script callback.
+	static_assert( std::is_nothrow_swappable_v<decltype(next_bases)> && std::is_nothrow_swappable_v<decltype(next_order)>
+		&& std::is_nothrow_swappable_v<decltype(next_assignments)> && std::is_nothrow_swappable_v<decltype(next_names)>
+		&& std::is_nothrow_swappable_v<decltype(next_updates)> );
+	m_bases.swap( next_bases );
 	m_base_order.swap( next_order );
-	for ( const auto& pop : base->m_pops ) {
-		ChangeAssignment( base->m_id, pop.first, {}, pop.second.GetWorkedTileCoords() );
-	}
-	m_registered_base_names.insert( base->m_name );
-	QueueBaseUpdate( base, BUO_SPAWN );
-	RefreshBase( base );
+	m_work_assignments.swap( next_assignments );
+	m_registered_base_names.swap( next_names );
+	m_base_updates.swap( next_updates );
 }
 
 void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
@@ -356,18 +370,17 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	auto territory = m_game->PrepareBaseTerritory( nullptr, base, false );
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
+	auto next_updates = m_base_updates;
+	QueueBaseUpdateInto( next_updates, base, BUO_DESPAWN );
+	auto* tile = base->GetTile();
+	if ( !tile || tile->base != base ) { THROW("Base center differs before removal"); }
 
 	{
 		std::lock_guard guard( m_updated_bases_mutex );
 		m_updated_bases.erase( base );
 	}
 
-	QueueBaseUpdate( base, BUO_DESPAWN );
-
-	auto* tile = base->GetTile();
-	ASSERT( tile, "base tile not set" );
-	ASSERT( tile->base, "base not found in tile" );
-	ASSERT( tile->base == base, "tile base mismatch" );
+	m_base_updates.swap( next_updates );
 	tile->base = nullptr;
 	RemoveAssignments( base );
 
@@ -840,9 +853,13 @@ void BaseManager::GetReachableObjects( std::unordered_set< Object* >& reachable_
 }
 
 void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op ) {
-	auto it = m_base_updates.find( base->m_id );
-	if ( it == m_base_updates.end() ) {
-		it = m_base_updates.insert(
+	QueueBaseUpdateInto( m_base_updates, base, op );
+}
+
+void BaseManager::QueueBaseUpdateInto( std::unordered_map<size_t,base_update_t>& updates, const Base* base, const base_update_op_t op ) {
+	auto it = updates.find( base->m_id );
+	if ( it == updates.end() ) {
+		it = updates.insert(
 			{
 				base->m_id,
 				{
@@ -856,7 +873,7 @@ void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op )
 	if ( op == BUO_DESPAWN ) {
 		if ( update.ops & BUO_SPAWN ) {
 			// if base is despawned immediately after spawning - frontend doesn't need to know
-			m_base_updates.erase( it );
+			updates.erase( it );
 			return;
 		}
 		update.ops = BUO_NONE; // clear other actions if base was despawned
@@ -867,7 +884,7 @@ void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op )
 			update.ops = (base_update_op_t)( (uint8_t)update.ops & ~BUO_DESPAWN);
 			if ( op == BUO_SPAWN ) {
 				// if there's pending despawn event it means unit was already spawned, nothing to do
-				m_base_updates.erase( it );
+				updates.erase( it );
 				return;
 			}
 		}

@@ -125,6 +125,7 @@ private:
 		const Base* base = nullptr;
 	};
 	std::unordered_map< size_t, base_update_t > m_base_updates = {};
+	static void QueueBaseUpdateInto( std::unordered_map< size_t, base_update_t >& updates, const Base* base, base_update_op_t op );
 
 	void QueueBaseUpdate( const Base* base, const base_update_op_t op );
 	// Register saved state and frontend updates without new-base gameplay hooks.

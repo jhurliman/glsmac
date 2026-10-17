@@ -43,7 +43,9 @@ rule across save and restore.
 
 Live construction checks a complete canonical context and allocation before
 claiming a center or advancing IDs. Spawn stages the complete claim replacement
-before registration; removal stages before membership changes and retains the
+before registration. Registry, reverse-index, name, order and frontend-update
+storage are prepared before no-throw swaps; removal stages its queue before
+membership changes and retains the
 existing prohibition on deleting a conventional home Base. The claim swap
 precedes the existing spawn/despawn callback. A private pending-center exception
 exists only for the candidate already constructed for native SpawnBase; it

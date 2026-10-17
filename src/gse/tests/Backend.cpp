@@ -1709,6 +1709,46 @@ public:
 			"post-reset iteration did not drain canceled roots and resume stages exactly once" );
 		GT_OK();
 	}
+	static std::string CheckTilePreviewUpdates() {
+		BackendFixture fixture;
+		auto* source = fixture.m_game.GetMap()->GetTile( 2, 2 );
+		game::backend::map::tile::TileState state{};
+		game::frontend::tile::Tile tile( { 2, 2 } );
+		source->is_water_tile = false;
+		source->rockiness = game::backend::map::tile::ROCKINESS_FLAT;
+		source->moisture = game::backend::map::tile::MOISTURE_ARID;
+		source->features = 0; source->terraforming = 0; source->bonus = game::backend::map::tile::BONUS_NONE;
+		tile.Update( *source, state );
+		// Widget::AddMeshAndTexture takes this same owned copy. It must remain
+		// usable after subsequent updates retire the tile's original mesh.
+		types::mesh::Render retained( *tile.GetRenderData().preview_meshes.front() );
+		const auto retained_bytes = retained.Serialize().ToString();
+		for ( size_t step = 0; step < 24; ++step ) {
+			source->is_water_tile = step % 2 != 0;
+			source->terraforming = game::backend::map::tile::TERRAFORMING_FARM | game::backend::map::tile::TERRAFORMING_SOLAR;
+			for ( auto& layer : state.layers ) {
+				layer.coords.center = { float( step ), 2, 3 };
+				layer.tex_coords.center = { float( step ), 0.5f };
+			}
+			state.sprites = { { "preview-" + std::to_string( step ), 0, "", {} } };
+			tile.Update( *source, state );
+			const auto& preview = tile.GetRenderData();
+			std::string lines; for ( const auto& line : preview.preview_lines ) { lines += line + " "; }
+			GT_ASSERT( tile.IsWater() == source->is_water_tile && preview.preview_meshes.size() == ( source->is_water_tile ? 4u : 1u )
+				&& preview.coords == types::Vec3( float( step ), 2, 3 ) && preview.sprites == std::vector< std::string >{ "preview-" + std::to_string( step ) },
+				"repeated tile publication retained stale layers or sprite metadata" );
+			GT_ASSERT( lines.find( source->is_water_tile ? "Kelp Farm" : "Farm" ) != std::string::npos
+				&& lines.find( source->is_water_tile ? "Tidal Harness" : "Solar Collector" ) != std::string::npos,
+				"terrain improvement preview did not change with actual terrain metadata" );
+			for ( const auto* mesh : preview.preview_meshes ) {
+				types::Vec2< float > uv; mesh->GetVertexTexCoord( 0, &uv );
+				GT_ASSERT( uv == types::Vec2< float >( float( step ), 0.5f ) && mesh->GetVertexCount() == 5 && mesh->GetSurfaceCount() == 4,
+					"published preview mesh did not use current source layer" );
+			}
+			GT_ASSERT( retained.Serialize().ToString() == retained_bytes, "copied widget mesh changed when source preview was replaced" );
+		}
+		GT_OK();
+	}
 	static std::string CheckScoutUnitPreview( const bool rover = false, const bool initialized = false ) {
 		class SizedNull final : public graphics::Null {
 		public:
@@ -9460,6 +9500,9 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 		} );
 	}
 
+	task->AddTest( "frontend tile repeated terrain preview update preserves owned copies", GT() {
+		return BackendFixture::CheckTilePreviewUpdates();
+	} );
 	task->AddTest( "CVR Scout real definition unit preview and retained texture teardown", GT() {
 		try { return BackendFixture::CheckScoutUnitPreview(); }
 		catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout unit/preview: " ) + error.what() ); }

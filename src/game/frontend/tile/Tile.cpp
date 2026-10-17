@@ -5,6 +5,7 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
 #include "types/mesh/Render.h"
+#include "util/FinallyGuard.h"
 
 namespace game {
 namespace frontend {
@@ -275,7 +276,6 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 
 void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts ) {
 
-	m_is_water = tile.is_water_tile;
 
 	backend::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
 		? backend::map::tile::LAYER_WATER
@@ -370,12 +370,16 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	const float tint_modifier = 0.7f;
 
 	std::vector< types::mesh::Render* > preview_meshes = {};
+	util::FinallyGuard retire_meshes( [ & ] {
+		for ( const auto* mesh : preview_meshes ) { DELETE( mesh ); }
+	} );
 
 	preview_meshes.reserve( layers.size() );
 	for ( auto i = 0 ; i < layers.size() ; i++ ) {
 		lt = layers[ i ];
 
 		NEWV( mesh, types::mesh::Render, 5, 4 );
+		preview_meshes.push_back( mesh ); // reserved; cleanup owns it before mesh work
 
 		const auto& l = ts.layers[ lt ];
 
@@ -400,7 +404,6 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 
 		mesh->Finalize();
 
-		preview_meshes.push_back( mesh );
 	}
 
 	std::vector< std::string > sprites = {};
@@ -559,9 +562,12 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 
 	m_render_data.coords = layer.coords.center;
 	m_render_data.selection_coords = selection_coords;
-	m_render_data.preview_meshes = preview_meshes;
-	m_render_data.preview_lines = preview_lines;
-	m_render_data.sprites = sprites;
+	// Widgets copy source meshes. Swapping publishes the complete new preview
+	// and leaves the old meshes with the same cleanup guard.
+	m_render_data.preview_meshes.swap( preview_meshes );
+	m_render_data.preview_lines.swap( preview_lines );
+	m_render_data.sprites.swap( sprites );
+	m_is_water = tile.is_water_tile;
 
 	for ( const auto& it : m_units ) {
 		it.second->UpdateFromTile();

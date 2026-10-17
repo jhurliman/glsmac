@@ -964,6 +964,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 
 				Log( "Updating tile: " + tile->GetCoords().ToString() );
 				tile->Update( *t, *ts );
+				RefreshSelectedTileIf( tile, m_um->GetSelectedUnit() );
 			}
 			break;
 		}

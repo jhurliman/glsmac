@@ -10,6 +10,7 @@
 #include "types/Buffer.h"
 #include "State.h"
 #include "WorldSnapshotRules.h"
+#include "WorldSnapshotWorkerKnowledge.h"
 #include "WorldSnapshotRandom.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
@@ -1424,6 +1425,7 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
+	RequireWorkerKnowledgeMutation();
 	// Stage the first-command social refresh before publishing the new turn or
 	// invoking any upkeep consumer. A malformed context leaves both unchanged.
 	RefreshSimulationForTurn( turn_id );
@@ -1495,6 +1497,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 }
 
 void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
+	RequireWorkerKnowledgeMutation();
 	ASSERT( m_state->IsMaster(), "not master" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
 	MTModule::Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
@@ -1503,6 +1506,7 @@ void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 }
 
 void Game::FirstTurn( GSE_CALLABLE ) {
+	RequireWorkerKnowledgeMutation();
 	ASSERT( m_state->IsMaster(), "not master" );
 
 	// Startup events already queued by create_world/start still belong to turn 0.
@@ -1606,6 +1610,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
 	ValidateCurrentSimulation();
+	CompleteSmacWorkerKnowledgeRestore();
 	std::optional< size_t > restored_turn;
 	try { restored_turn = ApplySnapshotTurn(); }
 	catch ( const std::runtime_error& error ) {
@@ -2590,6 +2595,10 @@ std::string Game::SerializeWorldSnapshot() const {
 		// map not generated yet
 		return "";
 	}
+	if ( m_map->m_worker_knowledge ) {
+		if ( !m_map->m_worker_knowledge_ready ) { THROW( "Worker knowledge restore is incomplete" ); }
+		ValidateSmacWorkerKnowledge( *m_map->m_worker_knowledge );
+	}
 	MTModule::Log( "Preparing snapshot for download" );
 	// Capture at the start of the existing synchronous world serialization.
 	// Reading/writing this state does not draw from the generator.
@@ -2607,6 +2616,7 @@ std::string Game::SerializeWorldSnapshot() const {
 	world_snapshot::WriteTurnState( buf, turn_state );
 	WriteSimulationState( buf );
 	map::GlsmacResourceMapPolicy::WriteOptional( buf, m_map->GetResourcePolicy(), m_state->m_settings.global.GetRulesetId() == "smac" );
+	world_snapshot::WriteWorkerKnowledge( buf, m_map->m_worker_knowledge, m_state->m_settings.global.GetRulesetId() == "smac" );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -2683,12 +2693,14 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 		const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
 		auto simulation = ReadSimulationState( buf, turn_state.id );
 		const auto map_policy = map::GlsmacResourceMapPolicy::ReadOptional( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
+		auto worker_knowledge = world_snapshot::ReadWorkerKnowledge( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
 
 		// map
 		const auto map_payload = buf.ReadString();
 		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
+		world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
 		NEW( m_map, map::Map, this );
-		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy );
+		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ) );
 		return true;
 	}
 	catch ( const std::runtime_error& error ) {
@@ -2703,8 +2715,9 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 	}
 }
 
-void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy ) {
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge ) {
 	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
+	world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
@@ -2714,6 +2727,8 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
 	}
 	m_map->m_resource_policy = map_policy; // decoded before Map allocation; raw loader never infers it
+	m_map->m_worker_knowledge = std::move( worker_knowledge );
+	m_map->m_worker_knowledge_ready = false; // only bind after both pending entity registries drain
 	{
 		auto resources = types::Buffer( body.ReadString() );
 		m_rm->Deserialize( resources );

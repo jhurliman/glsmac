@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "GlsmacResourceMapPolicy.h"
 #include "game/backend/map/generator/SimplePerlin.h"
 #include "ConventionalUnits.h"
@@ -327,6 +328,7 @@ public:
 		SetRunning( true );
 		m_game.GetUM()->ProcessUnprocessed( GSE_CALL );
 		m_game.GetBM()->ProcessUnprocessed( GSE_CALL );
+		m_game.CompleteSmacWorkerKnowledgeRestore();
 	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
@@ -3746,7 +3748,7 @@ public:
 		GT_OK();
 	}
 
-	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); game::backend::map::GlsmacResourceMapPolicy::ReadOptional( input, m_state->m_settings.global.GetRulesetId() == "smac" ); }
+	void ReadSimulationPrefix( types::Buffer& input ) const { m_game.ReadSimulationState( input, m_game.GetTurnId() ); game::backend::map::GlsmacResourceMapPolicy::ReadOptional( input, m_state->m_settings.global.GetRulesetId() == "smac" ); game::backend::world_snapshot::ReadWorkerKnowledge( input, m_state->m_settings.global.GetRulesetId() == "smac" ); }
 	std::string WorldSnapshot() const { return m_game.SerializeWorldSnapshot(); }
 	void SetSnapshotTurn( const size_t turn ) { m_game.m_current_turn.AdvanceTurn( turn ); }
 	void EnableTurnPlayers() {
@@ -3772,8 +3774,9 @@ public:
 		const auto turn = game::backend::world_snapshot::ReadTurnState( buffer, m_game.GetState()->m_slots->GetSlots() );
 		auto simulation = m_game.ReadSimulationState( buffer, turn.id );
 		const auto map_policy = game::backend::map::GlsmacResourceMapPolicy::ReadOptional( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
+		auto worker_knowledge = game::backend::world_snapshot::ReadWorkerKnowledge( buffer, m_state->m_settings.global.GetRulesetId() == "smac" );
 		const auto map = buffer.ReadString();
-		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ), map_policy );
+		m_game.DeserializeWorldSnapshotBody( GSE_CALL, buffer, map, random, turn, std::move( simulation ), map_policy, std::move( worker_knowledge ) );
 	}
 	void CompleteWorldRestore( GSE_CALLABLE, const bool dispatch_native_failure = false ) {
 		// Real InitComplete can call InitFailed/ResetGame, which owns deletion.

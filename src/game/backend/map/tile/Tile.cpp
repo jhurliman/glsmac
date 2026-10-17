@@ -82,6 +82,7 @@ void Tile::Update() {
 }
 
 void Tile::Clear() {
+	if ( tiles ) { tiles->GetMap()->GetGame()->RequireWorkerKnowledgeMutation(); }
 	for ( auto& c : elevation.corners ) {
 		*c = 0;
 	}
@@ -120,6 +121,7 @@ const types::Buffer Tile::Serialize() const {
 }
 
 void Tile::Deserialize( types::Buffer buf ) {
+	if ( tiles ) { tiles->GetMap()->GetGame()->RequireWorkerKnowledgeMutation(); }
 
 	coord.x = buf.ReadInt();
 	coord.y = buf.ReadInt();

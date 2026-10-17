@@ -6,6 +6,7 @@
 #include "game/backend/Player.h"
 #include "game/backend/Random.h"
 #include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "game/backend/WorldSnapshotRandom.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
@@ -124,7 +125,8 @@ std::string CanonicalResourceSnapshot( Game* game, const std::string& bytes ) {
 	world_snapshot::ValidateHeader( world, state->m_settings.global );
 	(void)world_snapshot::ReadRandomState( world ); (void)world_snapshot::ReadTurnState( world, state->m_slots->GetSlots() );
 	if ( world.ReadBool() ) { (void)world.ReadString(); }
-	(void)map::GlsmacResourceMapPolicy::ReadOptional( world, true ); (void)world.ReadString();
+	(void)map::GlsmacResourceMapPolicy::ReadOptional( world, true );
+	(void)world_snapshot::ReadWorkerKnowledge( world, true ); (void)world.ReadString();
 	types::Buffer result; result.WriteString( bytes.substr( 0, world.lenr ) );
 	const auto named = []( types::Buffer& input, types::Buffer& output ) {
 		const auto count = input.ReadInt(); if ( count < 0 || count > 1024 ) { throw std::runtime_error( "invalid fixture definition count" ); }

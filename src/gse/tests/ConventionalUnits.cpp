@@ -8,6 +8,7 @@
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "game/backend/WorldSnapshotRandom.h"
 #include "game/backend/WorldSnapshotTurn.h"
 #include "game/backend/Player.h"
@@ -178,6 +179,7 @@ std::string CanonicalMovementSnapshot( Game* game, const std::string& bytes ) {
 	(void)world_snapshot::ReadTurnState( world, state->m_slots->GetSlots() );
 	if ( world.ReadBool() ) { (void)world.ReadString(); } // exact simulation payload retained in prefix
 	(void)map::GlsmacResourceMapPolicy::ReadOptional( world, state->m_settings.global.GetRulesetId() == "smac" );
+	(void)world_snapshot::ReadWorkerKnowledge( world, state->m_settings.global.GetRulesetId() == "smac" );
 	(void)world.ReadString(); (void)world.ReadString(); // map and resources, likewise unchanged
 	const auto prefix = bytes.substr( 0, world.lenr ); types::Buffer units( world.ReadString() ), canonical;
 	canonical.WriteString( units.ReadString() );

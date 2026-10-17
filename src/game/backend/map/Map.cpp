@@ -220,6 +220,7 @@ const types::Buffer Map::Serialize() const {
 }
 
 void Map::Deserialize( types::Buffer buf ) {
+	m_game->RequireWorkerKnowledgeMutation();
 
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles, this );
@@ -646,6 +647,7 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 }
 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
+	m_game->RequireWorkerKnowledgeMutation();
 	m_resource_policy.reset();
 	auto* random = m_game->GetRandom();
 	const auto policy = m_game->GetState()->m_settings.global.GetRulesetId() == "smac"
@@ -700,6 +702,8 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 }
 
 const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
+	m_game->RequireWorkerKnowledgeMutation();
+	m_worker_knowledge_ready = false;
 	m_resource_policy.reset(); // raw/imported tile payloads never infer a policy
 	if ( m_tiles ) {
 		DELETE( m_tiles );

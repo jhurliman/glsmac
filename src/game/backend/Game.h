@@ -26,6 +26,7 @@
 #include "util/random/Types.h"
 #include "WorldSnapshotTurn.h"
 #include "map/GlsmacResourceMapPolicy.h"
+#include "map/SmacWorkerKnowledge.h"
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
 #include "State.h"
@@ -384,6 +385,11 @@ public:
 	enum class ResourceQueryPhase { Ordinary, Upkeep };
 	std::array< int64_t, 3 > GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& base, ResourceQueryPhase phase ) const;
 	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
+	// Explicit snapshot admission until sight/territory producers are integrated.
+	// No knowledge is inferred from current units, tiles or a transport slot.
+	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );
+	map::SmacWorkerMapFrame::Evaluation GetSmacWorkerAvailability( const base::Base& base ) const;
+	void RequireWorkerKnowledgeMutation() const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;
@@ -527,7 +533,10 @@ private:
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
-	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy );
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge );
+	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer ) const;
+	void ValidateSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge ) const;
+	void CompleteSmacWorkerKnowledgeRestore();
 	void ResetGame();
 	void ClearUntransferredMapData();
 	struct DetachedMapPresentation;

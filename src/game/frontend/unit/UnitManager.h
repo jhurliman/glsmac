@@ -13,6 +13,7 @@
 namespace game::backend::unit {
 class Def;
 }
+namespace gse::tests { class BackendFixture; }
 
 namespace game {
 namespace frontend {
@@ -77,6 +78,7 @@ CLASS( UnitManager, common::Class )
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	Game* m_game;
 	sprite::InstancedSpriteManager* m_ism;

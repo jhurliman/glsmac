@@ -23,7 +23,7 @@ int64_t Floor256( const int64_t value ) {
 
 using Steps = std::array< std::array< int64_t, 3 >, 26 >;
 
-Steps MakeSteps( const CvrIndexedDraw& draw ) {
+Steps MakeSteps( const CvrIndexedDraw& draw, const bool modulo_depth ) {
 	for ( size_t row = 0 ; row < 2 ; ++row ) {
 		for ( const auto component : draw.basis[ row ] ) {
 			if ( component < -32768 || component > 32767 ) { Invalid( " basis row exceeds signed16" ); }
@@ -37,7 +37,7 @@ Steps MakeSteps( const CvrIndexedDraw& draw ) {
 				if ( !a && !b && !c ) { continue; }
 				for ( size_t row = 0 ; row < 3 ; ++row ) {
 					steps[ index ][ row ] = int64_t( a ) * draw.basis[ row ][ 0 ] + int64_t( b ) * draw.basis[ row ][ 1 ] + int64_t( c ) * draw.basis[ row ][ 2 ];
-					Signed32( steps[ index ][ row ] * ( row == 2 ? 256 : 1 ) );
+					if ( row != 2 || !modulo_depth ) { Signed32( steps[ index ][ row ] * ( row == 2 ? 256 : 1 ) ); }
 				}
 				++index;
 			}
@@ -49,14 +49,15 @@ Steps MakeSteps( const CvrIndexedDraw& draw ) {
 // Both passes use checked int64 arithmetic. The first touches no output buffer;
 // the second has no allocations and applies only fully prevalidated samples.
 void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
-	const CvrIndexedDraw& draw, CvrIndexedResult* const output ) {
+	const CvrIndexedDraw& draw, CvrIndexedResult* const output, const bool modulo_depth ) {
 	if ( !draw.records ) { Invalid( " missing records" ); }
 	const auto& records = *draw.records;
 	if ( records.size() <= size_t( draw.terminal ) ) { Invalid( " empty effective draw" ); }
 	if ( draw.footprint != CvrSampleFootprint::Single && draw.footprint != CvrSampleFootprint::Square2 ) { Invalid( " unsupported footprint" ); }
-	const auto steps = MakeSteps( draw );
+	const auto steps = MakeSteps( draw, modulo_depth );
 	std::array< int64_t, 3 > position{ draw.initial[ 0 ], draw.initial[ 1 ], draw.initial[ 2 ] };
-	Signed32( position[ 2 ] * 256 );
+	uint32_t depth_position = static_cast< uint32_t >( draw.initial[ 2 ] ) << 8;
+	if ( !modulo_depth ) { Signed32( position[ 2 ] * 256 ); }
 	if ( draw.terminal && records.back().Code() != 26 ) { Invalid( " missing terminal code" ); }
 	const auto effective = records.size() - size_t( draw.terminal );
 	for ( size_t i = 0 ; i < effective ; ++i ) {
@@ -64,6 +65,10 @@ void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 		const auto code = record.Code();
 		if ( code >= steps.size() ) { Invalid( " unsupported sample code" ); }
 		for ( size_t row = 0 ; row < 3 ; ++row ) {
+			if ( row == 2 && modulo_depth ) {
+				depth_position += static_cast< uint32_t >( steps[ code ][ row ] ) << 8;
+				continue;
+			}
 			position[ row ] += steps[ code ][ row ];
 			Signed32( position[ row ] * ( row == 2 ? 256 : 1 ) );
 		}
@@ -76,7 +81,7 @@ void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 		if ( second_index >= lookups.second.size() ) { Invalid( " lookup outside supplied table" ); }
 		if ( output ) {
 			++output->processed_records;
-			const auto depth = static_cast< uint16_t >( Floor256( position[ 2 ] ) );
+			const auto depth = static_cast< uint16_t >( modulo_depth ? depth_position >> 16 : Floor256( position[ 2 ] ) );
 			const auto color = lookups.second[ second_index ];
 			for ( int dy = 0 ; dy <= extra ; ++dy ) {
 				for ( int dx = 0 ; dx <= extra ; ++dx ) {
@@ -92,24 +97,30 @@ void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 	}
 }
 
+CvrIndexedResult DrawBatch( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
+	const std::vector< CvrIndexedDraw >& draws, const bool modulo_depth ) {
+	const auto cells = uint64_t( initial.pitch ) * initial.height;
+	if ( !initial.width || !initial.height || initial.pitch < initial.width || cells > CvrIndexedRasterizer::MAX_SURFACE_SAMPLES ||
+		initial.color.size() != cells || initial.depth.size() != cells ) { Invalid( " invalid surface dimensions or buffers" ); }
+	if ( lookups.second.empty() || lookups.second.size() > 65536 || lookups.second.size() % 256 ) { Invalid( " invalid second lookup extent" ); }
+	if ( draws.size() > CvrIndexedRasterizer::MAX_DRAWS ) { Invalid( " too many draws" ); }
+	size_t count = 0;
+	for ( const auto& draw : draws ) {
+		if ( !draw.records || draw.records->size() > CvrIndexedRasterizer::MAX_RECORDS - count ) { Invalid( " missing or excessive records" ); }
+		count += draw.records->size();
+		Walk( initial, lookups, draw, nullptr, modulo_depth );
+	}
+	CvrIndexedResult result{ initial, 0, 0 };
+	for ( const auto& draw : draws ) { Walk( initial, lookups, draw, &result, modulo_depth ); }
+	return result;
+}
+
 }
 
 CvrIndexedResult CvrIndexedRasterizer::Draw( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
-	const std::vector< CvrIndexedDraw >& draws ) {
-	const auto cells = uint64_t( initial.pitch ) * initial.height;
-	if ( !initial.width || !initial.height || initial.pitch < initial.width || cells > MAX_SURFACE_SAMPLES ||
-		initial.color.size() != cells || initial.depth.size() != cells ) { Invalid( " invalid surface dimensions or buffers" ); }
-	if ( lookups.second.empty() || lookups.second.size() > 65536 || lookups.second.size() % 256 ) { Invalid( " invalid second lookup extent" ); }
-	if ( draws.size() > MAX_DRAWS ) { Invalid( " too many draws" ); }
-	size_t count = 0;
-	for ( const auto& draw : draws ) {
-		if ( !draw.records || draw.records->size() > MAX_RECORDS - count ) { Invalid( " missing or excessive records" ); }
-		count += draw.records->size();
-		Walk( initial, lookups, draw, nullptr );
-	}
-	CvrIndexedResult result{ initial, 0, 0 };
-	for ( const auto& draw : draws ) { Walk( initial, lookups, draw, &result ); }
-	return result;
-}
+	const std::vector< CvrIndexedDraw >& draws ) { return DrawBatch( initial, lookups, draws, false ); }
+
+CvrIndexedResult CvrIndexedRasterizer::DrawModuloDepth( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
+	const std::vector< CvrIndexedDraw >& draws ) { return DrawBatch( initial, lookups, draws, true ); }
 
 }

@@ -1,6 +1,34 @@
 // Actual menu/handler code, real native settings; only UI factories are supplied.
 return (game, settings, smac) => {
 	const check = (ok, message) => { if (!ok) { throw TestError(message); } };
+	const ready_handler = #include('../default/game/event/ready_or_not');
+	const ready_event = {caller: 0, game: game, data: {ready: true}};
+	const unready_event = {caller: 0, game: game, data: {ready: false}};
+	check(#is_defined(ready_handler.validate(ready_event)) == smac, 'unselected SMAC size permitted readiness or changed SMAX');
+	check(!#is_defined(ready_handler.validate(unready_event)), 'missing size prevented becoming unready');
+	const probe_lobby_start = (expected) => {
+		let description = null;
+		let state_callback = null;
+		let hidden = 0;
+		let started = 0;
+		let closed = 0;
+		let rejected = 0;
+		const connection = {open: (callback) => {}, close: () => { closed++; }};
+		#include('../default/ui/parts/mainmenu/steps/multiplayer_lobby')({
+			glsmac: {game: game, connect: () => { return connection; }, start_game: () => { started++; }},
+			popup: {show: (data) => { description = data; }, hide: () => { hidden++; },
+				error: (message) => { check(message != '', 'missing lobby error'); rejected++; }},
+		});
+		description.generator({listen: (object, event, callback) => {
+			if (event == 'game_state') { state_callback = callback; }
+			return 1;
+		}, unlisten: (id) => {}}, null);
+		state_callback({state: 'running'});
+		check(hidden == expected && started == expected && closed == 0 && rejected == 1 - expected, 'lobby hid or disconnected before world-size admission');
+		description.destructor();
+		check(closed == 1 - expected, 'rejected startup incorrectly retained game-starting state');
+	};
+	probe_lobby_start(smac ? 0 : 1);
 	let displayed = null;
 	let popup = null;
 	let continued = 0;
@@ -25,6 +53,8 @@ return (game, settings, smac) => {
 		check((settings.get_world_size())[0] == index, 'preset callback lost its row identity');
 	}
 	check(continued == 5, 'preset did not continue exactly once');
+	check(!#is_defined(ready_handler.validate(ready_event)), 'selected preset prevented readiness');
+	probe_lobby_start(1);
 	const before_cancel = settings.get_world_size();
 	((displayed.entries[5])[1])();
 	(popup.buttons[1]).onclick();
@@ -37,6 +67,7 @@ return (game, settings, smac) => {
 	(inputs[1]).value = '48';
 	(popup.buttons[0]).onclick();
 	check(settings.get_world_size() == [99, 48, 48] && continued == 6, 'custom matching preset became a preset');
+	check(!#is_defined(ready_handler.validate(ready_event)), 'accepted custom size prevented readiness');
 	const handler = #include('../default/game/event/game_settings');
 	for (changes of [
 		[['planet_size', '0'], ['planet_size', '1']],
@@ -71,4 +102,7 @@ return (game, settings, smac) => {
 	check(size_control.value == '99' && settings.get_world_size() == [99, 48, 48], 'placeholder visually replaced accepted size');
 	settings.map.size_x = 50;
 	check((settings.get_world_size())[0] == -1, 'raw dimension edit kept a forged preset/custom identity');
+	check(#is_defined(ready_handler.validate(ready_event)), 'raw edit allowed readiness without renewed size selection');
+	check(!#is_defined(ready_handler.validate(unready_event)), 'raw edit prevented becoming unready');
+	probe_lobby_start(0);
 };

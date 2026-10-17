@@ -1,13 +1,10 @@
 #include "SmacBaseSquareYield.h"
 
-#include "fixtures/SmacBaseSquareYields.h"
+#include "fixtures/SmacBaseSquareInteger.h"
 #include "task/gsetests/GSETests.h"
 
-#include <functional>
 #include <limits>
 #include <stdexcept>
-#include <utility>
-#include <vector>
 
 namespace gse::tests {
 namespace {
@@ -41,33 +38,13 @@ void AddSmacBaseSquareYieldTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "SMAC center calculator rejects unverified signed arithmetic overflow", GT() {
-		const auto maximum = std::numeric_limits< int32_t >::max();
-		const auto minimum = std::numeric_limits< int32_t >::min();
-		using Setup = std::function< void( BaseSquareRules&, BaseSquareInputs& ) >;
-		const std::vector< std::pair< std::string, Setup > > invalid = {
-			{ "nutrient doubling", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 0 ] = maximum; input.terrain.resource_bonus = ResourceBonus::Nutrients; } },
-			{ "nutrient negative doubling", [ minimum ]( auto& rules, auto& input ) { rules.base_square[ 0 ] = minimum; input.terrain.resource_bonus = ResourceBonus::Nutrients; } },
-			{ "mineral bonus", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 1 ] = maximum; input.terrain.resource_bonus = ResourceBonus::Minerals; } },
-			{ "nutrient landmark", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 0 ] = maximum; input.terrain.landmark_bonus[ 0 ] = true; } },
-			{ "recycling", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 0 ] = maximum; input.facilities.pressure_dome = true; } },
-			{ "local increase", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 0 ] = maximum; input.events.increase[ 0 ] = true; } },
-			{ "local decrease", [ minimum ]( auto& rules, auto& input ) { rules.base_square[ 1 ] = minimum; input.events.decrease[ 1 ] = true; } },
-			{ "HQ before energy clamp", [ maximum ]( auto& rules, auto& input ) { rules.base_square[ 2 ] = maximum; input.facilities.headquarters = true; } },
-			{ "negative economy before energy clamp", [ minimum ]( auto& rules, auto& input ) { rules.base_square[ 2 ] = minimum; input.faction.economy = -2; } },
-			{ "Golden Age economy", [ maximum ]( auto&, auto& input ) { input.faction.economy = maximum; input.faction.golden_age = true; } },
-		};
-		for ( const auto& test : invalid ) {
-			auto rules = smac_fixture::cases.front().rules;
-			auto input = smac_fixture::cases.front().inputs;
-			test.second( rules, input );
-			bool rejected = false;
-			try { CalculateBaseSquareYield( rules, input ); }
-			catch ( const std::overflow_error& ) { rejected = true; }
-			GT_ASSERT( rejected, "arithmetic overflow was not rejected: " + test.first );
-		}
-		GT_OK();
-	} );
+	for ( const auto& test : smac_fixture::integer_cases ) {
+		task->AddTest( std::string( "SMAC " ) + test.id + ": " + test.name, GT( test ) {
+			const auto actual = CalculateBaseSquareYield( test.rules, test.inputs );
+			GT_ASSERT( actual == test.expected, "original-x86 signed32 expectation " + Describe( test.expected ) + ", got " + Describe( actual ) );
+			GT_OK();
+		} );
+	}
 	task->AddTest( "SMAC center calculator accepts representable signed boundaries", GT() {
 		const auto maximum = std::numeric_limits< int32_t >::max();
 		const auto minimum = std::numeric_limits< int32_t >::min();

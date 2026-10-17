@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "game/frontend/TileObject.h"
 
@@ -109,6 +110,7 @@ public:
 	struct meshtex_t {
 		const types::mesh::Render* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
+		std::shared_ptr< types::texture::Texture > texture_owner;
 	};
 	struct render_data_t {
 		meshtex_t unit = {};

@@ -141,8 +141,12 @@ protected:
 	virtual void DestroyRequest( const REQUEST_TYPE& request ) = 0;
 	virtual void DestroyResponse( const RESPONSE_TYPE& response ) = 0;
 
-	void ProcessRequests() {
-		mt_request_map_t requests = MT_GetRequests();
+	// Runs under the request mutex: filters must only inspect the request,
+	// never acquire other locks, enqueue work, or invoke module callbacks.
+	using request_filter_t = bool ( * )( const REQUEST_TYPE& ) noexcept;
+
+	void ProcessRequests( const request_filter_t filter = nullptr ) {
+		mt_request_map_t requests = MT_GetRequests( filter );
 		if ( !requests.empty() ) {
 			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
 			mt_response_map_t responses = {};
@@ -180,11 +184,11 @@ private:
 	typedef std::map< mt_id_t, REQUEST_TYPE > mt_request_map_t;
 	typedef std::map< mt_id_t, RESPONSE_TYPE > mt_response_map_t;
 
-	mt_request_map_t MT_GetRequests() {
+	mt_request_map_t MT_GetRequests( const request_filter_t filter ) {
 		std::lock_guard guard( m_mt_states_mutex );
 		mt_request_map_t result = {};
 		for ( auto& it : m_mt_states ) {
-			if ( !it.second.is_executed && !it.second.is_processing ) {
+			if ( !it.second.is_executed && !it.second.is_processing && ( !filter || filter( it.second.request ) ) ) {
 				it.second.is_processing = true;
 				result[ it.first ] = it.second.request;
 			}

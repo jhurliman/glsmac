@@ -250,11 +250,11 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_EVENT: {
 							//Log( "Got game event packet" );
-							m_state->WithGSE(
+							m_state->WithGame(
 								this,
-								[ packet ]( GSE_CALLABLE ) {
+								[ this, state = m_state, packet ]( Game* const game, GSE_CALLABLE ) {
+									if ( state->GetConnection() != this ) { return; }
 									auto buf = types::Buffer( packet.data.str );
-									auto* const game = g_engine->GetGame();
 									game->AddEvent( event::Event::Deserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 								}
 							);
@@ -262,15 +262,16 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_EVENT_RESPONSE: {
 							//Log( "Got game event response packet" );
-							m_state->WithGSE(
+							m_state->WithGame(
 								this,
-								[ packet ]( GSE_CALLABLE ) {
+								[ this, state = m_state, packet ]( Game* const game, GSE_CALLABLE ) {
+									if ( state->GetConnection() != this ) { return; }
 									gse::Value* resolved = nullptr;
 									if ( !packet.data.str2.empty() ) {
 										auto buf = types::Buffer( packet.data.str2 );
-										resolved = gse::Value::Deserialize( GSE_CALL, &buf, g_engine->GetGame() );
+										resolved = gse::Value::Deserialize( GSE_CALL, &buf, game );
 									}
-									g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
+									game->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
 								}
 							);
 							break;

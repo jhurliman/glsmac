@@ -11,6 +11,24 @@
 
 namespace game {
 namespace backend {
+namespace {
+
+// This native owner is retained by the queued callable, not registered with
+// the collector. The pending queue traverses it while holding its own lock.
+class GameCallbackRoots final : public gc::Object {
+public:
+	GameCallbackRoots( State* state, gc::Object* owner ) : gc::Object( nullptr ), m_state( state ), m_owner( owner ) {}
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+		gc::Object::GetReachableObjects( reachable_objects );
+		GC_REACHABLE( m_state );
+		if ( m_owner ) { GC_REACHABLE( m_owner ); }
+	}
+private:
+	State* const m_state;
+	gc::Object* const m_owner;
+};
+
+}
 
 State::State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac )
 	: gse::GCWrappable( gc_space )
@@ -35,13 +53,24 @@ State::~State() {
 
 void State::SetGame( Game* game ) {
 	ASSERT( !m_game, "game already set" );
-	m_game = game;
+	const auto session = std::shared_ptr< GameSession >( new GameSession( this, game ) );
+	{
+		std::lock_guard guard( m_game_session_mutex );
+		m_game = game;
+		m_game_session = session;
+	}
 	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
 }
 
+void State::RetireGameCallbacks() {
+	std::lock_guard guard( m_game_session_mutex );
+	if ( m_game_session ) { m_game_session->active.store( false ); }
+}
+
 void State::UnsetGame() {
+	RetireGameCallbacks();
 	m_game = nullptr;
 	m_on_gse_error = nullptr;
 }
@@ -60,6 +89,30 @@ void State::WithGSE( gc::Object* const owner, const gse_func_t& f, const f_clean
 		f_cleanup,
 		need_now
 	);
+}
+
+void State::WithGame( gc::Object* const owner, const game_func_t& f, const f_cleanup_t& cleanup, const bool need_now ) {
+	WithGameSession( CaptureGameSession(), owner, f, cleanup, need_now );
+}
+
+State::game_session_t State::CaptureGameSession() {
+	std::lock_guard guard( m_game_session_mutex );
+	return m_game_session;
+}
+
+bool State::IsGameSessionActive( const game_session_t& session ) const {
+	return session && session->state == this && session->IsActive();
+}
+
+void State::WithGameSession( const game_session_t& session, gc::Object* const owner, const game_func_t& f, const f_cleanup_t& cleanup, const bool need_now ) {
+	const auto roots = std::make_shared< GameCallbackRoots >( this, owner );
+	m_gc_space->Accumulate( roots.get(), [ this, session, roots, f ]() {
+		// Check before any context, captured world object, or Game access. A new
+		// binding always gets another identity, even for the same State/Game.
+		if ( !IsGameSessionActive( session ) ) { return; }
+		gse::ExecutionPointer ep;
+		f( session->game, m_gc_space, m_ctx, {}, ep );
+	}, cleanup, need_now );
 }
 
 void State::Iterate() {
@@ -146,6 +199,7 @@ connection::Connection* State::GetConnection() {
 }
 
 void State::Reset() {
+	RetireGameCallbacks();
 	{
 		//std::lock_guard guard( m_connection_mutex );
 		if ( m_connection ) {

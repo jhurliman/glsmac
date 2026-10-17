@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
@@ -17,6 +19,7 @@
 #include "game/FrontendRequest.h"
 #include "game/BackendRequest.h"
 #include "game/backend/turn/Turn.h"
+#include "State.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -408,6 +411,8 @@ private:
 	common::Mutex m_event_handlers_mutex;
 
 	std::vector< event::Event* > m_pending_events = {};
+	// Bridges extraction to the Space queue without holding this mutex while queueing.
+	std::vector< std::shared_ptr< gc::Object > > m_event_batch_handoffs;
 	common::Mutex m_pending_events_mutex;
 
 	struct event_waiting_for_response_t {
@@ -437,6 +442,20 @@ private:
 	void SetTurnStatus( const backend::turn::turn_status_t status );
 
 	void ProcessEvents();
+	class EventBatchRoots;
+	struct EventBatchHandoff {
+		EventBatchHandoff( Game* game, State* state, State::game_session_t session, std::shared_ptr< EventBatchRoots > roots );
+		~EventBatchHandoff();
+		EventBatchHandoff( const EventBatchHandoff& ) = delete;
+		EventBatchHandoff& operator=( const EventBatchHandoff& ) = delete;
+		Game* const game;
+		State* const state;
+		const State::game_session_t session;
+		const std::shared_ptr< EventBatchRoots > roots;
+		bool published = false;
+	};
+	std::unique_ptr< EventBatchHandoff > ExtractEventBatch( State* state, const State::game_session_t& session );
+	void DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff );
 
 private:
 	friend class map::tile::TileManager;

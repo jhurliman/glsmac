@@ -16,6 +16,8 @@
 #include "StaticDef.h"
 #include "UnitManager.h"
 #include "gse/ExecutionPointer.h"
+#include <cmath>
+#include <limits>
 
 namespace game {
 namespace backend {
@@ -41,7 +43,7 @@ Unit::Unit(
 	const health_t health,
 	const bool moved_this_turn
 )
-	: MapObject( um->GetMap(), tile )
+	: MapObject( um->GetMap(), nullptr )
 	, m_um( um )
 	, m_id( id )
 	, m_def( def )
@@ -50,10 +52,17 @@ Unit::Unit(
 	, m_morale( morale )
 	, m_health( health )
 	, m_moved_this_turn( moved_this_turn ) {
+	if ( id == 0 || id >= static_cast< uint64_t >( std::numeric_limits< int64_t >::max() ) ||
+		id >= std::numeric_limits< size_t >::max() || um->HasUnitId( id ) || !tile || tile->units.count( id ) ) {
+		THROW( "invalid or duplicate unit ID" );
+	}
+	if ( !def || def != um->GetUnitDef( def->m_id ) ) {
+		THROW( "unit definition is not owned by its manager" );
+	}
+	SetTile( GSE_CALL, tile );
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
-	SetTile( GSE_CALL, tile );
 }
 
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;
@@ -84,7 +93,7 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 const types::Buffer Unit::Serialize( const Unit* unit ) {
 	types::Buffer buf;
 	buf.WriteInt( unit->m_id );
-	buf.WriteString( Def::Serialize( unit->m_def ).ToString() );
+	buf.WriteString( unit->m_def->m_id );
 	buf.WriteInt( unit->m_owner->GetIndex() );
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
@@ -96,19 +105,36 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 }
 
 Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
-	ASSERT( um, "um is null" );
+	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
 	const auto id = buf.ReadInt();
-	auto defbuf = types::Buffer( buf.ReadString() );
-	auto* def = Def::Deserialize( defbuf );
-	auto* slot = um->GetSlot( buf.ReadInt() );
+	const auto def_id = buf.ReadString();
+	const auto owner = buf.ReadInt();
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
-	auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
 	const auto movement = (movement_t)buf.ReadFloat();
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( GSE_CALL, um, id, def, slot, tile, movement, morale, health, moved_this_turn );
+	// Decode and validate the entire record before claiming a tile or advancing
+	// the ID allocator. Finite signed values are intentional: current setters
+	// permit them, and combat can leave negative health until its death callback.
+	if ( buf.lenr != buf.lenw || id <= 0 || static_cast< uint64_t >( id ) >= std::numeric_limits< size_t >::max() ) {
+		THROW( "invalid unit record or ID" );
+	}
+	auto* def = um->GetUnitDef( def_id );
+	if ( !def ) { THROW( "unit definition not found: " + def_id ); }
+	if ( owner < 0 || static_cast< uint64_t >( owner ) >= um->m_game->GetState()->m_slots->GetCount() ) {
+		THROW( "invalid unit owner" );
+	}
+	if ( pos_x < 0 || pos_y < 0 || static_cast< uint64_t >( pos_x ) >= um->GetMap()->GetWidth() ||
+		static_cast< uint64_t >( pos_y ) >= um->GetMap()->GetHeight() || ( pos_x & 1 ) != ( pos_y & 1 ) ) {
+		THROW( "invalid unit coordinates" );
+	}
+	if ( morale < MORALE_MIN || morale > MORALE_MAX || !std::isfinite( movement ) || !std::isfinite( health ) ) {
+		THROW( "invalid unit morale, movement or health" );
+	}
+	return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, um->GetSlot( owner ),
+		um->GetMap()->GetTile( pos_x, pos_y ), movement, morale, health, moved_this_turn );
 }
 
 WRAPIMPL_SERIALIZE( Unit )

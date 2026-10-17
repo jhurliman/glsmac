@@ -3,6 +3,7 @@
 #include "StaticDef.h"
 
 #include "MoraleSet.h"
+#include "UnitManager.h"
 
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
@@ -36,14 +37,18 @@ const types::Buffer Def::Serialize( const Def* def ) {
 	return buf;
 }
 
-Def* Def::Deserialize( types::Buffer& buf ) {
+Def* Def::Deserialize( types::Buffer& buf, const UnitManager* manager ) {
 	const auto id = buf.ReadString();
 	const auto moraleset = buf.ReadString();
 	const auto name = buf.ReadString();
-	const auto type = (def_type_t)buf.ReadInt();
+	const auto* morale = manager->GetMoraleSet( moraleset );
+	if ( id.empty() || !morale ) {
+		THROW( "invalid unit definition ID or morale set: " + id + " / " + moraleset );
+	}
+	const auto type = buf.ReadInt();
 	switch ( type ) {
 		case DT_STATIC:
-			return StaticDef::Deserialize( buf, id, moraleset, name );
+			return StaticDef::Deserialize( buf, id, morale, name );
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}

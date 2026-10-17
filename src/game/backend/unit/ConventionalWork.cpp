@@ -3,6 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/base/BaseManager.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/FrontendRequest.h"
@@ -44,6 +45,33 @@ bool Available(const settings::SmacTechnologyReference& reference,const settings
     if(first==Kind::UNKNOWN || second==Kind::UNKNOWN){throw std::runtime_error("Unresolved owned terraforming technology");}
     return first!=Kind::DISABLED && (second!=Kind::DISABLED || first==Kind::NONE);
 }
+}
+
+UnitManager::ConventionalCommands UnitManager::QueryConventionalCommands(Unit* actor) const {
+    ConventionalCommands result;
+    try {
+        if(!actor || GetUnit(actor->m_id)!=actor || !actor->IsConventional()){return result;}
+        actor->RequireConventionalReady();
+        result.package=ResolveConventional(actor->Conventional(),actor->m_owner).package;
+        if(!m_game->IsRunning() || m_game->m_canonical_turn_failed || m_game->m_canonical_turn_in_progress
+            || m_game->m_canonical_continuation || actor->m_owner->GetIndex()!=m_game->GetSlotNum()
+            || actor->m_owner->GetPlayer()!=m_game->GetPlayer()){return result;}
+        if(result.package==ConventionalUnitContext::Package::Former) {
+            for(const auto order:{Order::Farm,Order::Road,Order::Forest,Order::Solar,Order::Mine,Order::None}) {
+                if(order==Order::None && actor->Conventional().work_order==Order::None){continue;}
+                try {
+                    ValidateConventionalWork(actor,order,m_game->GetSlotNum(),false);
+                    result.actions.push_back(static_cast<int32_t>(order));
+                } catch(const std::runtime_error&) {} catch(const std::invalid_argument&) {}
+            }
+        } else if(result.package==ConventionalUnitContext::Package::Colony && m_game->GetBM()) {
+            m_game->GetBM()->ValidateSmacFounding(*actor);
+            (void)m_game->GetSmacBasePresentations();
+            result.actions.push_back(6);
+        }
+    } catch(const std::runtime_error&) {result.actions.clear();}
+      catch(const std::invalid_argument&) {result.actions.clear();}
+    return result;
 }
 
 UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit* actor,Order requested,size_t caller,bool dispatch) const {

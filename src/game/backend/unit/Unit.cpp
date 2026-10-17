@@ -7,6 +7,7 @@
 #include "gse/value/Bool.h"
 #include "gse/value/String.h"
 #include "gse/value/Ptr.h"
+#include "gse/value/Array.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -274,6 +275,20 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "hit_points", VALUE( gse::value::Int,, stats.hit_points ) }, { "maximum_hit_points", VALUE( gse::value::Int,, stats.maximum_hit_points ) },
 			{ "work_order", VALUE( gse::value::Int,, static_cast< int32_t >( Conventional().work_order ) ) },
 			{ "work_progress", VALUE( gse::value::Int,, Conventional().work_progress ) }
+		} ) );
+	} ) },
+	{ "query_conventional_commands", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 0 );
+		const auto commands = m_um->QueryConventionalCommands( this );
+		gse::value::array_elements_t actions;
+		for ( const auto action : commands.actions ) { actions.push_back( VALUE( gse::value::Int,, action ) ); }
+		const auto kind = commands.package == ConventionalUnitContext::Package::Former ? "former"
+			: commands.package == ConventionalUnitContext::Package::Colony ? "colony" : "none";
+		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+			{ "kind", VALUE( gse::value::String,, kind ) },
+			{ "actions", VALUE( gse::value::Array,, actions ) },
+			{ "work_order", VALUE( gse::value::Int,, IsConventional() ? static_cast<int32_t>(Conventional().work_order) : 0 ) },
+			{ "work_progress", VALUE( gse::value::Int,, IsConventional() ? Conventional().work_progress : 0 ) }
 		} ) );
 	} ) },
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )

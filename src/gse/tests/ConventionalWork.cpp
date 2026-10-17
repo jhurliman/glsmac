@@ -22,6 +22,7 @@
 #include "game/backend/unit/FormerMarkerRender.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "gse/value/Int.h"
+#include "gse/value/String.h"
 #include <sstream>
 
 namespace gse::tests {
@@ -85,6 +86,53 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Former command panel refreshes after actual frontend work and cancel updates",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            Unit* actor=nullptr;
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{actor=Populate(GSE_CALL,fixture,1);GT_OK();});
+            if(!error.empty()){return error;}
+            return fixture.CheckUnitCommandCompletion(actor,fixture.Game()->GetUM()->GetUnit(72));
+        });
+    });
+    task->AddTest("Former command panel displays saved work and rejects stale selection callbacks",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture,1);auto* game=fixture.Game();auto* um=game->GetUM();
+            auto* helper=um->GetUnit(72);
+            auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_unit_commands"));
+            auto* ui=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            const auto call=[&](const char* operation,const char* expected="",const char* heading=""){
+                ui->Run(GSE_CALL,{VALUE(value::String,,operation),VALUE(value::String,,expected),VALUE(value::String,,heading)});
+            };
+            const auto refresh=[&](Unit* unit,const char* event){
+                auto* wrapper=unit->Wrap(GSE_CALL);
+                if(std::string(event)=="unit_select") {game->GetState()->TriggerObject(game,event,ARGS_F(&wrapper){{"unit",wrapper}};});}
+                else {game->GetState()->TriggerObject(game->GetMap(),event,ARGS_F(&wrapper){{"unit",wrapper}};});}
+            };
+            const auto random=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+            const auto initial=fixture.Snapshot();refresh(actor,"unit_select");
+            call("check","Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]","Former — Order: None  |  Stored work: 0");
+            GT_ASSERT(fixture.Snapshot()==initial&&fixture.Updates().empty(),"command query mutated authority or queued updates");
+            call("remember","Farm [F]");call("click","Farm [F]");fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().work_order==Order::Farm&&actor->Conventional().work_progress==0,"button bypassed or failed native order event");
+            Event(GSE_CALL,fixture,actor,Order::None,true);fixture.Updates();refresh(actor,"unit_preview");
+            call("check","Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]","Former — Order: Farm  |  Stored work: 2");
+            call("click","Cancel [C]");fixture.DrainEvents();fixture.Updates();refresh(actor,"unit_preview");
+            call("check","Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]","Former — Order: None  |  Stored work: 2");
+            GT_ASSERT(actor->Conventional().work_order==Order::None&&actor->Conventional().work_progress==2&&actor->Conventional().spent==3,"cancel button refunded movement or discarded stored work");
+            refresh(helper,"unit_select");const auto before=fixture.Snapshot();call("remembered");fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==before&&fixture.Updates().empty(),"old selected Unit callback commanded another Unit");
+            refresh(actor,"unit_select");call("remember","Farm [F]");actor->GetTile()->features=map::tile::FEATURE_XENOFUNGUS;
+            refresh(actor,"unit_preview");call("check","","Former — Order: None  |  Stored work: 2");
+            const auto blocked=fixture.Snapshot();call("remembered");fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==blocked&&fixture.Updates().empty(),"stale offered action ignored current admission");
+            actor->GetTile()->features=0;
+            game->GetState()->TriggerObject(game,"unit_despawn",ARGS_F(){{"unit_id",VALUE(value::Int,,71)}};});call("hidden");
+            GT_ASSERT(fixture.GameplayRandom()==random&&game->GetRandom()->GetStateString()==jsf,"command projection or clicks spent unrelated RNG");
+            fixture.Early();GT_ASSERT(um->QueryConventionalCommands(actor).actions.empty(),"unavailable turn exposed commands");GT_OK();
+        });
+    });
     task->AddTest("Conventional native selection uses original wrap ties and current record order",GT(){
         // Literal positions/answers from LOCAL-UNIT-SELECTION: distance_tie_first,
         // distance_tie_current, reference_unit_origin, wrapped_nearest and equal_metric_different_axes.

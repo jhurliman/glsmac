@@ -2,6 +2,7 @@
 
 #include "fixtures/SmacFactionStartupSource.h"
 #include "fixtures/SmacFungalCapabilities.h"
+#include "fixtures/WorldSnapshotRules.h"
 #include "game/backend/faction/SmacTechnologyState.h"
 #include "game/backend/resource/SmacTileNutrients.h"
 #include "game/backend/resource/SmacTileMinerals.h"
@@ -56,7 +57,7 @@ std::array< int64_t, 3 > Yields( const SmacFungalCapabilities& caps, const fixtu
 }
 
 void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
-	task->AddTest( "SMAC fungal capabilities match twenty admitted original builder and tile cases", GT() {
+	task->AddTest( "SMAC fungal capabilities match twenty four admitted original builder and tile cases", GT() {
 		for ( const auto& row : fixture::Cases() ) {
 			auto catalog = Catalog(); auto profiles = Profiles( catalog ); profiles.factions[ 0 ].bonuses.clear();
 			for ( const auto& t : row.technologies ) {
@@ -65,7 +66,8 @@ void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
 					definition.prerequisites[ i ] = t.prerequisites[ i ] == -1 ? "None" : t.prerequisites[ i ] == -2 ? "Disable" : catalog.technologies[ t.prerequisites[ i ] ].key;
 				}
 			}
-			for ( const auto& modifier : row.modifiers ) { profiles.factions[ 0 ].bonuses.push_back( SmacFactionStartupBonus::Parse( modifier.nutrient ? "FUNGNUTRIENT" : "VOTES", std::to_string( modifier.amount ), catalog ) ); }
+			const std::array< const char*, 4 > kinds = { "FUNGNUTRIENT", "FUNGMINERALS", "FUNGENERGY", "VOTES" };
+			for ( const auto& modifier : row.modifiers ) { profiles.factions[ 0 ].bonuses.push_back( SmacFactionStartupBonus::Parse( kinds[ modifier.resource ], std::to_string( modifier.amount ), catalog ) ); }
 			auto state = SmacTechnologyState::NewWorld( { { row.simulation, "GAIANS" } }, catalog, profiles );
 			for ( const auto& t : row.technologies ) { state.factions[ 0 ].owned[ t.id ] = t.owned; }
 			const auto before = state.Serialize( catalog, profiles ).ToString();
@@ -150,7 +152,7 @@ void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( Rejects( [ & ] { state.FungalCapabilities( 1, catalog, profiles ); } ), "unknown relevant prerequisite silently admitted" );
 		}
 		catalog.technologies[ 6 ].prerequisites = { "None", "None" };
-		for ( const auto* keyword : { "FUNGMINERALS", "FUNGENERGY" } ) {
+		for ( const auto* keyword : { "FUNGUNKNOWN", "MORALE" } ) {
 			GT_ASSERT( Rejects( [ & ] { SmacFactionStartupBonus::Parse( keyword, "1", catalog ); } ), "unproved faction keyword admitted" );
 			std::string line; for ( size_t i = 0; i < 8; ++i ) { line += "SOCIAL,+PLANET,"; } line += std::string( keyword ) + ",1";
 			GT_ASSERT( Rejects( [ & ] { loader::txt::FactionTXTLoader::ParseStartupBonuses( source::Faction( "GAIANS", line ), "GAIANS", catalog ); } ), "unsupported discarded keyword escaped validation" );
@@ -159,6 +161,72 @@ void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects( [ & ] { state.FungalCapabilities( 1, catalog, invalid ); } ) && state == before, "invalid frozen profile mutated state" );
 		state.factions[ 0 ].target = 89;
 		GT_ASSERT( Rejects( [ & ] { state.FungalCapabilities( 1, catalog, profiles ); } ), "invalid owned technology state bypassed validation" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC fungal parser matches twelve original shared record and capability compositions", GT() {
+		for ( const auto& row : fixture::ParserCases() ) {
+			auto catalog = Catalog(); catalog.technologies[ 6 ].flags = 0x1c0; auto profiles = Profiles( catalog );
+			std::string line;
+			for ( const auto& pair : row.pairs ) { if ( !line.empty() ) { line += ','; } line += std::string( pair.first ) + ',' + pair.second; }
+			profiles.factions[ 0 ].bonuses = loader::txt::FactionTXTLoader::ParseStartupBonuses( source::Faction( "GAIANS", line ), "GAIANS", catalog );
+			const auto& profile = profiles.factions[ 0 ]; const auto records = profile.Records();
+			GT_ASSERT( records.size() == row.records.size() && profile.ExtraTechnologyCount() == row.extra, "original shared count or scalar TECH differs" );
+			for ( size_t i = 0; i < records.size(); ++i ) {
+				GT_ASSERT( static_cast< int32_t >( records[ i ].kind ) == row.records[ i ].tag && records[ i ].parameter == row.records[ i ].parameter && records[ i ].amount == row.records[ i ].amount,
+					"original ordered record differs: " + std::string( row.id ) );
+			}
+			auto state = SmacTechnologyState::NewWorld( { { 1, "GAIANS" } }, catalog, profiles ); state.ClearOwnershipForNewWorld();
+			const auto actual = state.FungalCapabilities( 1, catalog, profiles );
+			GT_ASSERT( Values( actual ) == row.capabilities, "parsed capability differs: " + std::string( row.id ) );
+			fixture::Case context{}; const auto yields = Yields( actual, context );
+			for ( size_t i = 0; i < 3; ++i ) { GT_ASSERT( yields[ i ] == row.yields[ i ], "parsed capability tile composition differs" ); }
+			const auto wire = profiles.Serialize( catalog ).ToString();
+			const auto restored = SmacFactionStartupRules::Deserialize( types::Buffer( wire ), catalog );
+			GT_ASSERT( restored == profiles && restored.Serialize( catalog ).ToString() == wire && state.FungalCapabilities( 1, catalog, restored ) == actual, "parser metadata or result changed after restore" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC fungal appended tags retain V2 numbers and checked mineral energy boundaries", GT() {
+		using Kind = SmacFactionStartupBonus::Kind;
+		const std::array< Kind, 16 > order = { Kind::NAMED_TECH, Kind::EXTRA_TECH, Kind::SOCIAL, Kind::FACILITY, Kind::IMMUNITY,
+			Kind::FUNGNUTRIENT, Kind::VOTES, Kind::ENERGY, Kind::DRONE, Kind::TALENT, Kind::POPULATION, Kind::COMMERCE, Kind::FREEPROTO, Kind::FANATIC, Kind::FUNGMINERALS, Kind::FUNGENERGY };
+		for ( size_t i = 0; i < order.size(); ++i ) { GT_ASSERT( static_cast< int32_t >( order[ i ] ) == static_cast< int32_t >( i ), "existing tag renumbered or append order differs" ); }
+		const auto catalog = Catalog(); auto profiles = Profiles( catalog ); auto state = SmacTechnologyState::NewWorld( { { 1, "GAIANS" } }, catalog, profiles );
+		for ( const auto* keyword : { "FUNGMINERALS", "FUNGENERGY" } ) {
+			auto& bonuses = profiles.factions[ 0 ].bonuses; const auto bonus = [ & ]( int32_t n ) { return SmacFactionStartupBonus::Parse( keyword, std::to_string( n ), catalog ); };
+			bonuses = { bonus( INT32_MAX ) }; auto wire = profiles.Serialize( catalog );
+			GT_ASSERT( wire.ReadInt() == 2, "appended tags changed structural codec version" );
+			SmacFactionStartupRules restored;
+			GT_ASSERT( !Rejects( [ & ] { restored = SmacFactionStartupRules::Deserialize( profiles.Serialize( catalog ), catalog ); } ), "appended V2 tag rejected by reader" );
+			GT_ASSERT( restored == profiles && state.FungalCapabilities( 1, catalog, restored ) == state.FungalCapabilities( 1, catalog, profiles ), "new tag failed exact V2 restoration" );
+			bonuses.push_back( bonus( 1 ) );
+			GT_ASSERT( Overflows( [ & ] { state.FungalCapabilities( 1, catalog, profiles ); } ), "new resource overflow accepted" );
+			bonuses = { bonus( INT32_MIN ), bonus( -1 ) };
+			GT_ASSERT( Overflows( [ & ] { state.FungalCapabilities( 1, catalog, profiles ); } ), "new resource underflow hidden by floor" );
+			bonuses = { bonus( INT32_MIN ) }; const auto caps = state.FungalCapabilities( 1, catalog, profiles );
+			GT_ASSERT( caps.minerals == 0 && caps.energy == 0, "new resource signed endpoint floor differs" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC fungal appended tags survive settings world restore and remain exactly frozen", GT() {
+		const auto catalog = smac_rules_fixture::Technologies(); auto profiles = smac_rules_fixture::Factions();
+		profiles.factions.back().bonuses.push_back( SmacFactionStartupBonus::Parse( "FUNGMINERALS", "2", catalog ) );
+		profiles.factions.back().bonuses.push_back( SmacFactionStartupBonus::Parse( "FUNGENERGY", "3", catalog ) );
+		const auto payload = [ & ]( const SmacFactionStartupRules& value ) { return smac_rules_fixture::Payload( "smac", true,
+			{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, {}, value.Serialize( catalog ).ToString() ); };
+		GlobalSettings settings; settings.Deserialize( payload( profiles ) ); smac_rules_fixture::AcceptWorldSize( settings );
+		const auto before = settings.Serialize().ToString(); GlobalSettings restored; restored.Deserialize( types::Buffer( before ) );
+		GT_ASSERT( *restored.GetSmacFactionStartupRules() == profiles && restored.Serialize().ToString() == before, "new tags lost across settings restore" );
+		types::Buffer world; game::backend::world_snapshot::WriteHeader( world, settings ); const auto header = world.ToString(); world.WriteString( "body sentinel" );
+		game::backend::world_snapshot::ValidateHeader( world, restored );
+		GT_ASSERT( world.lenr == header.size() && world.ReadString() == "body sentinel", "header validation consumed body" );
+		for ( size_t index = profiles.factions.back().bonuses.size() - 2; index < profiles.factions.back().bonuses.size(); ++index ) {
+			auto changed = profiles; auto& bonus = changed.factions.back().bonuses[ index ]; bonus = SmacFactionStartupBonus::Parse( bonus.keyword, "4", catalog );
+			GT_ASSERT( Rejects( [ & ] { settings.Deserialize( payload( changed ) ); } ) && settings.Serialize().ToString() == before, "frozen appended metadata changed" );
+			GlobalSettings other; other.Deserialize( payload( changed ) ); smac_rules_fixture::AcceptWorldSize( other );
+			types::Buffer different; game::backend::world_snapshot::WriteHeader( different, other ); const auto extent = different.lenw; different.WriteString( "body sentinel" );
+			GT_ASSERT( Rejects( [ & ] { game::backend::world_snapshot::ValidateHeader( different, restored ); } ) && different.lenr <= extent, "world accepted changed appended metadata or read its body" );
+		}
 		GT_OK();
 	} );
 }

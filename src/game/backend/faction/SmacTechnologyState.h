@@ -44,8 +44,8 @@ struct SmacTechnologyState {
 	// RE-SMAC-FUNGAL-001: admitted player simulation IDs only. Resolve owned
 	// ordinary flagged records, then the profile's shared eight-record list.
 	// Unknown relevant prerequisite tokens and evaluated signed32 overflow reject.
-	// FUNGMINERALS/FUNGENERGY remain unsupported by the source-profile parser;
-	// this does not infer their record-budget behavior or native-faction state.
+	// All three fungal modifiers share the source-profile record budget;
+	// native-faction state remains outside this owned player domain.
 	SmacFungalCapabilities FungalCapabilities( int32_t simulation_id, const settings::SmacTechnologyRules& technologies,
 		const settings::SmacFactionStartupRules& profiles ) const;
 

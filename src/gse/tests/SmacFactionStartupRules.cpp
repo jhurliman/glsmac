@@ -146,7 +146,7 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 			const auto bonus = SmacFactionStartupBonus::Parse( "TECH", row.key, disabled_catalog );
 			GT_ASSERT( bonus.kind == Kind::NAMED_TECH && bonus.parameter == row.source_id, "named startup reference was filtered by availability or excluded Future Tech" );
 		}
-		for ( const auto* scalar : { "ENERGY", "DRONE", "TALENT", "POPULATION", "COMMERCE", "FREEPROTO", "FANATIC", "FACILITY", "FUNGNUTRIENT", "VOTES" } ) {
+		for ( const auto* scalar : { "ENERGY", "DRONE", "TALENT", "POPULATION", "COMMERCE", "FREEPROTO", "FANATIC", "FACILITY", "FUNGNUTRIENT", "FUNGMINERALS", "FUNGENERGY", "VOTES" } ) {
 			GT_ASSERT( SmacFactionStartupBonus::Parse( scalar, "-2147483648tail", catalog ).parameter == INT32_MIN, "numeric metadata boundary lost" );
 			GT_ASSERT( Rejects( [ & ]() { SmacFactionStartupBonus::Parse( scalar, "2147483648", catalog ); } ), "numeric metadata overflow accepted" );
 		}
@@ -156,7 +156,7 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rule( "" ).bonuses.empty() && Rule( " \t" ).bonuses.empty(), "empty bonus row consumed ideology as bonus data" );
 		const auto trimmed = Rule( " \tTECH , Ecology \t, TECH , 1prefix ; comment" );
 		GT_ASSERT( trimmed.bonuses[ 0 ].value == "Ecology" && trimmed.bonuses[ 1 ].value == "1prefix" && trimmed.ExtraTechnologyCount() == 1, "declared lexical trimming failed" );
-		for ( const auto* keyword : { "MORALE", "PSI", "RESEARCH", "INTEREST", "HURRY", "UNIT", "TECHCOST", "SHARETECH", "TERRAFORM", "ROBUST", "IMPUNITY", "PENALTY", "FUNGMINERALS", "FUNGENERGY", "COMMFREQ", "MINDCONTROL", "UNKNOWN", "tech" } ) {
+		for ( const auto* keyword : { "MORALE", "PSI", "RESEARCH", "INTEREST", "HURRY", "UNIT", "TECHCOST", "SHARETECH", "TERRAFORM", "ROBUST", "IMPUNITY", "PENALTY", "COMMFREQ", "MINDCONTROL", "UNKNOWN", "tech" } ) {
 			GT_ASSERT( Rejects( [ & ]() { Rule( std::string( keyword ) + ",1" ); } ), "unsupported keyword skipped" );
 			std::string full; for ( size_t i = 0 ; i < 8 ; ++i ) { full += "SOCIAL,+SUPPORT,"; }
 			GT_ASSERT( Rejects( [ & ]() { Rule( full + keyword + ",1" ); } ), "unsupported post-cap keyword silently skipped" );
@@ -225,8 +225,8 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 			for ( const int64_t count : { int64_t( -1 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, number, count ) ), "invalid bonus count accepted" ); }
 			++number;
 			for ( const auto& bonus : row.bonuses ) {
-				for ( const int64_t tag : { int64_t( -1 ), int64_t( 14 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, number, tag ) ), "invalid raw tag narrowed" ); }
-				GT_ASSERT( rejects( Wire( original, number, ( static_cast< int32_t >( bonus.kind ) + 1 ) % 14 ) ), "valid tag disagrees with raw keyword/value" );
+				for ( const int64_t tag : { int64_t( -1 ), int64_t( 16 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, number, tag ) ), "invalid raw tag narrowed" ); }
+				GT_ASSERT( rejects( Wire( original, number, ( static_cast< int32_t >( bonus.kind ) + 1 ) % 16 ) ), "valid tag disagrees with raw keyword/value" );
 				for ( size_t field = 1 ; field < 3 ; ++field ) {
 					for ( const int64_t value : { int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1 } ) { GT_ASSERT( rejects( Wire( original, number + field, value ) ), "integer narrowed" ); }
 				}

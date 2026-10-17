@@ -91,6 +91,8 @@ SmacFungalCapabilities SmacTechnologyState::FungalCapabilities( int32_t simulati
 	}
 	for ( const auto& bonus : profiles.Find( faction->admission.faction_id )->Records() ) {
 		if ( bonus.kind == settings::SmacFactionStartupBonus::Kind::FUNGNUTRIENT ) { add( result.nutrients, bonus.parameter ); }
+		if ( bonus.kind == settings::SmacFactionStartupBonus::Kind::FUNGMINERALS ) { add( result.minerals, bonus.parameter ); }
+		if ( bonus.kind == settings::SmacFactionStartupBonus::Kind::FUNGENERGY ) { add( result.energy, bonus.parameter ); }
 	}
 	if ( result.nutrients < 0 ) { result.nutrients = 0; }
 	if ( result.minerals < 0 ) { result.minerals = 0; }

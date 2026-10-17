@@ -51,8 +51,8 @@ Duplicate/missing sections, incomplete or empty pairs, NUL, unsupported keys
 and invalid references fail ingestion before a profile is returned.
 
 The admitted record-producing tags are named TECH, SOCIAL, FACILITY, IMMUNITY,
-FUNGNUTRIENT and VOTES. `Records()` retains the first eight of these in source
-order. All other accepted pairs are metadata-only: numeric TECH, ENERGY,
+FUNGNUTRIENT, FUNGMINERALS, FUNGENERGY and VOTES. `Records()` retains the first
+eight of these in source order. All other accepted pairs are metadata-only: numeric TECH, ENERGY,
 DRONE, TALENT, POPULATION, COMMERCE, FREEPROTO and FANATIC. They consume no
 record slots. The profile retains supported pairs beyond capacity for exact
 equality, even though `Records()` omits them. All other original keywords are
@@ -96,6 +96,16 @@ canonical bindings, exact tag/parameter agreement with raw fields and the
 supplied technology catalog, and trailing bytes. Untrusted counts do not
 drive a reserve. All decoding is staged in a local value; publication is a
 later caller action. This is not whole-world transactional restoration.
+
+FUNGMINERALS and FUNGENERGY append typed values 14 and 15 to the V2 codec.
+Existing values 0..13, field order, structure and existing profile semantics
+are unchanged. An older V2 reader rejects these new tags; it must not silently
+drop them or downgrade their effects. Profiles containing only the earlier
+tags retain their encoding. No Settings or world version changes are required
+for this appended-variant extension. The shared-budget and ordered modifier
+provenance comes from the twelve original parser compositions in
+[FUNGAL-PARSER001](behavior/fungal-bonus-parsing.md), with the production
+comparison described in [the fungal producer receipt](smac-fungal-capabilities.md).
 
 ## Evidence and reproduction
 

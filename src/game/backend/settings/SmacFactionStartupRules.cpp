@@ -70,10 +70,11 @@ SmacFactionStartupBonus SmacFactionStartupBonus::Parse( const std::string& keywo
 		}
 		throw std::invalid_argument( "Unsupported SMAC social axis: " + value );
 	}
-	static const std::array< std::pair< const char*, Kind >, 10 > numeric = {{
+	static const std::array< std::pair< const char*, Kind >, 12 > numeric = {{
 		{ "FACILITY", Kind::FACILITY }, { "FUNGNUTRIENT", Kind::FUNGNUTRIENT }, { "VOTES", Kind::VOTES },
 		{ "ENERGY", Kind::ENERGY }, { "DRONE", Kind::DRONE }, { "TALENT", Kind::TALENT },
-		{ "POPULATION", Kind::POPULATION }, { "COMMERCE", Kind::COMMERCE }, { "FREEPROTO", Kind::FREEPROTO }, { "FANATIC", Kind::FANATIC }
+		{ "POPULATION", Kind::POPULATION }, { "COMMERCE", Kind::COMMERCE }, { "FREEPROTO", Kind::FREEPROTO }, { "FANATIC", Kind::FANATIC },
+		{ "FUNGMINERALS", Kind::FUNGMINERALS }, { "FUNGENERGY", Kind::FUNGENERGY }
 	}};
 	for ( const auto& entry : numeric ) {
 		if ( keyword == entry.first ) { result.kind = entry.second; result.parameter = DecimalPrefix( value ); return result; }
@@ -85,7 +86,8 @@ SmacFactionStartupBonus SmacFactionStartupBonus::Parse( const std::string& keywo
 
 bool SmacFactionStartupBonus::ConsumesRecord() const {
 	switch ( kind ) {
-		case Kind::NAMED_TECH: case Kind::SOCIAL: case Kind::FACILITY: case Kind::IMMUNITY: case Kind::FUNGNUTRIENT: case Kind::VOTES: return true;
+		case Kind::NAMED_TECH: case Kind::SOCIAL: case Kind::FACILITY: case Kind::IMMUNITY: case Kind::FUNGNUTRIENT: case Kind::VOTES:
+		case Kind::FUNGMINERALS: case Kind::FUNGENERGY: return true;
 		default: return false;
 	}
 }
@@ -196,7 +198,7 @@ SmacFactionStartupRules SmacFactionStartupRules::Deserialize( types::Buffer buff
 			SmacFactionStartupBonus bonus;
 			bonus.keyword = buffer.ReadString(); bonus.value = buffer.ReadString();
 			const auto kind = buffer.ReadInt();
-			if ( kind < 0 || kind > static_cast< int32_t >( Kind::FANATIC ) ) { throw std::runtime_error( "Invalid SMAC faction bonus tag" ); }
+			if ( kind < 0 || kind > static_cast< int32_t >( Kind::FUNGENERGY ) ) { throw std::runtime_error( "Invalid SMAC faction bonus tag" ); }
 			bonus.kind = static_cast< Kind >( kind ); bonus.parameter = Integer( buffer ); bonus.amount = Integer( buffer );
 			row.bonuses.push_back( std::move( bonus ) );
 		}

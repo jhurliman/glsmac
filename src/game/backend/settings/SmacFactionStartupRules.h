@@ -16,7 +16,8 @@ struct SmacFactionStartupBinding {
 struct SmacFactionStartupBonus {
 	enum class Kind : int32_t {
 		NAMED_TECH, EXTRA_TECH, SOCIAL, FACILITY, IMMUNITY, FUNGNUTRIENT, VOTES,
-		ENERGY, DRONE, TALENT, POPULATION, COMMERCE, FREEPROTO, FANATIC
+		ENERGY, DRONE, TALENT, POPULATION, COMMERCE, FREEPROTO, FANATIC,
+		FUNGMINERALS = 14, FUNGENERGY = 15 // appended V2 variants; existing wire values stay fixed
 	};
 	std::string keyword, value; // original fields after the file reader's lexical trimming
 	Kind kind;

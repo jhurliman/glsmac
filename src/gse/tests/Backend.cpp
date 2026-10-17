@@ -4624,23 +4624,30 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	for ( const bool queued : { false, true } ) {
-		task->AddTest( std::string( "real final download chunk rejects invalid world profile before map allocation " ) + ( queued ? "queued" : "immediate" ), GT( queued ) {
+	for ( const auto parameters : { std::pair< bool, const char* >{ false, "smac" }, { true, "smac" }, { false, "smax" }, { true, "smax" } } ) {
+		const bool queued = parameters.first;
+		const auto* ruleset = parameters.second;
+		task->AddTest( std::string( "real final download chunk rejects invalid world profile before map allocation " ) + ( queued ? "queued" : "immediate" ) + ( std::string( ruleset ) == "smax" ? " SMAX" : "" ), GT( queued, ruleset ) {
 			using namespace game::backend;
-			auto rejected = world_rules_fixture::InvalidSmacHeaders();
-			const auto rng_rejected = world_rules_fixture::InvalidRandomHeaders();
-			rejected.insert( rejected.end(), rng_rejected.begin(), rng_rejected.end() );
-			const auto turn_rejected = world_rules_fixture::InvalidTurnHeaders();
-			rejected.insert( rejected.end(), turn_rejected.begin(), turn_rejected.end() );
-			// Matching headers reach the actual body's first read, still before
-			// Map's asset-bearing constructor. Native errors there must also be
-			// caught when completion executes later on the accumulation thread.
-			const world_snapshot::TurnState turn{ 37, { { 0, true }, { 2, false } } };
-			rejected.emplace_back( "matching header without map frame", world_rules_fixture::WorldHeader( turn ).ToString() );
-			auto wrong_body = world_rules_fixture::WorldHeader( turn );
-			wrong_body.WriteInt( 0 );
-			rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
+			auto rejected = world_rules_fixture::InvalidProductionHeaders( ruleset );
+			if ( std::string( ruleset ) == "smac" ) {
+				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
+				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
+				const auto rng_rejected = world_rules_fixture::InvalidRandomHeaders();
+				rejected.insert( rejected.end(), rng_rejected.begin(), rng_rejected.end() );
+				const auto turn_rejected = world_rules_fixture::InvalidTurnHeaders();
+				rejected.insert( rejected.end(), turn_rejected.begin(), turn_rejected.end() );
+				// Matching headers reach the actual body's first read, still before
+				// Map's asset-bearing constructor. Native errors there must also be
+				// caught when completion executes later on the accumulation thread.
+				const world_snapshot::TurnState turn{ 37, { { 0, true }, { 2, false } } };
+				rejected.emplace_back( "matching header without map frame", world_rules_fixture::WorldHeader( turn ).ToString() );
+				auto wrong_body = world_rules_fixture::WorldHeader( turn );
+				wrong_body.WriteInt( 0 );
+				rejected.emplace_back( "matching header with wrong map frame type", wrong_body.ToString() );
+			}
 			for ( const auto& invalid : rejected ) {
+				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();
 				fixture.EnableTurnPlayers();
@@ -4663,8 +4670,11 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				packet.udata.download.offset = 0;
 				packet.udata.download.size = packet.data.str.size();
 				const auto setup_error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-					state->m_settings.global.SelectRuleset( "smac" );
+					state->m_settings.global.SelectRuleset( ruleset );
 					state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+					const auto on_callback = [ & ]() { return NATIVE_CALL( &callbacks ) { ++callbacks; return VALUE( value::Undefined ); } ); };
+					game->On( GSE_CALL, "start", on_callback() ); game->On( GSE_CALL, "turn", on_callback() );
+					game->GetUM()->On( GSE_CALL, "unit_spawn", on_callback() ); game->GetBM()->On( GSE_CALL, "base_spawn", on_callback() );
 					client = new RulesetClient( gc_space, &state->m_settings.local );
 					state->SetConnection( client );
 					fixture.PrepareWorldDownload( client, packet.data.str.size() );
@@ -4711,6 +4721,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( !fixture.HasPendingSnapshotTurn() && !state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "rejected header changed or staged completion flags" );
 					GT_ASSERT( state->m_settings.global.Serialize().ToString() == before_settings, "world profile changed frozen settings" );
 					GT_ASSERT( fixture.WorldManagers() == before_managers && game->GetTurnId() == before_turn && fixture.FrontendRequestCount() == before_frontend, "profile rejection changed managers, turn or frontend state" );
+					GT_ASSERT( !callbacks, "profile rejection ran world setup or gameplay callbacks" );
 					GT_OK();
 				} );
 				GT_ASSERT( error.empty(), "download rejection failed: " + invalid.first + ": " + error );
@@ -5967,7 +5978,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 	using game::backend::base::Base;
 	using game::backend::base::PopDef;
 	using namespace game::backend::turn;
-	for ( const int scenario : { 0, 1, 2 } ) {
+	for ( const int scenario : { 0, 1, 2, 3 } ) {
 		task->AddTest( "world turn restore preserves simulation and publishes after registration " + std::to_string( scenario ), GT( scenario ) {
 			const auto old_unit_id = Unit::GetNextId(), old_base_id = Base::GetNextId();
 			util::FinallyGuard restore_ids( [ = ]() { Unit::SetNextId( old_unit_id ); Base::SetNextId( old_base_id ); } );
@@ -5975,7 +5986,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 			for ( auto* fixture : { &source, &destination } ) {
 				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
 				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-				settings.SelectRuleset( "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
+				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source );
 			}
 			source.SetRunning( true ); source.SetSnapshotTurn( 37 );
 			source.GetGame()->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
@@ -6029,6 +6040,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( base->GetAccumulatedNutrients() == -123 && base->m_pops.size() == 1 && base->m_pops.count( 9 ), "restore changed nutrients or population" );
 				GT_ASSERT( remote->IsTurnCompleted() && local->IsTurnCompleted() == ( scenario == 2 ), "initialization cleared player completion flags" );
 				GT_ASSERT( game->GetRandom()->GetStateString() == source.GetGame()->GetRandom()->GetStateString(), "turn restore consumed saved RNG" );
+				GT_ASSERT( destination.WorldSnapshot() == snapshot, "complete restored snapshot changed frozen profile, map, managers, RNG or turn state" );
 				const auto expected_status = scenario == 2 ? TS_WAITING_FOR_PLAYERS : scenario == 1 ? TS_TURN_COMPLETE : TS_TURN_ACTIVE;
 				size_t advances = 0, updates = 0;
 				for ( const auto& request : destination.FrontendRequests() ) {

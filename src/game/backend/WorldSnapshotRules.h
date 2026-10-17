@@ -10,9 +10,9 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V3 requires JSF32 and turn/completion state before the map/manager body.
-// V2, V1 and unversioned world downloads are unsupported.
-inline constexpr int64_t rules_version = 3;
+// V4 binds the frozen production profile before the unchanged JSF32 and
+// turn/completion blocks. V1..V3 and unversioned downloads are unsupported.
+inline constexpr int64_t rules_version = 4;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

@@ -50,6 +50,16 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			const auto before = settings.Serialize().ToString();
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
+			auto wire = snapshot;
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 4 && wire.ReadString() == id, "writer omitted the V4 identity" );
+			const bool smac = std::string( id ) == "smac";
+			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
+			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
+			GT_ASSERT( wire.ReadBool() == smac, "production presence changed" );
+			if ( smac ) {
+				GT_ASSERT( wire.ReadString() == settings.GetSmacProductionRules()->Serialize().ToString(), "header changed the production codec payload" );
+			}
+			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );
 			snapshot.WriteString( body );
@@ -89,6 +99,49 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			auto input = world_rules_fixture::Header( id, std::string( id ) == "smac" );
 			GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "unfrozen profile accepted a world header" );
 			GT_ASSERT( !settings.IsRulesetLocked(), "validator froze the profile" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header binds every frozen production field including the last catalog row", GT() {
+		using game::backend::settings::SmacProductionRules;
+		using game::backend::settings::SmacFacilityRule;
+		GlobalSettings source; source.SelectRuleset( "smac" ); source.InitializeHostRules( smac_rules_fixture::Source );
+		types::Buffer snapshot; WriteHeader( snapshot, source );
+		const auto reject = [ & ]( const SmacProductionRules& changed ) {
+			GlobalSettings destination;
+			destination.Deserialize( smac_rules_fixture::Payload( "smac", true,
+				{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, changed.Serialize().ToString() ) );
+			const auto before = destination.Serialize().ToString();
+			auto input = snapshot;
+			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
+		};
+		for ( const auto member : { &SmacProductionRules::mineral_multiplier, &SmacProductionRules::retool_loss_percent,
+			&SmacProductionRules::retool_strictness, &SmacProductionRules::retool_exemption } ) {
+			auto changed = smac_rules_fixture::Production(); changed.*member = 42;
+			GT_ASSERT( reject( changed ), "world accepted a different frozen production rule" );
+		}
+		for ( size_t row = 0; row < 71; ++row ) {
+			for ( const auto member : { &SmacFacilityRule::cost, &SmacFacilityRule::maintenance } ) {
+				auto changed = smac_rules_fixture::Production(); changed.facilities[ row ].*member = 42;
+				GT_ASSERT( reject( changed ), "world accepted a different frozen catalog number" );
+			}
+			for ( const auto member : { &SmacFacilityRule::name, &SmacFacilityRule::prerequisite } ) {
+				auto changed = smac_rules_fixture::Production(); changed.facilities[ row ].*member = "changed";
+				GT_ASSERT( reject( changed ), "world accepted a different frozen catalog text" );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header rejects malformed production profiles without changing frozen settings", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& invalid : world_rules_fixture::InvalidProductionHeaders( id ) ) {
+				types::Buffer input( invalid.second );
+				input.WriteString( "unread world body" );
+				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				GT_ASSERT( settings.Serialize().ToString() == before, "production rejection changed settings" );
+			}
 		}
 		GT_OK();
 	} );

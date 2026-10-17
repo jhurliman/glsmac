@@ -3773,7 +3773,8 @@ public:
 					&& !m_game.m_simulation && m_game.m_next_research_request==request,"paused research reset retained authority or reused request identity");
 				GT_OK();
 			}
-			return WithScriptValues([&](GSE_CALLABLE)->std::string {
+			std::string saved;
+			const auto completed = WithScriptValues([&](GSE_CALLABLE)->std::string {
 				auto* base=m_game.GetBM()->GetBases().begin()->second;
 				const auto first_minerals=base->GetProductionState()->minerals;
 				const auto first_food=base->GetAccumulatedNutrients();
@@ -3814,17 +3815,21 @@ public:
 				GT_ASSERT(!m_game.m_canonical_continuation && turns==2 && after.score==4 && after.labs==0 && !after.pending_secrets
 					&& after.target==selected && base->GetProductionState()->minerals==second_minerals
 					&& m_game.m_simulation->value.gameplay_random==rng,"bonus/final answer replayed posting, lost score or consumed RNG");
-				const auto saved=m_game.SerializeWorldSnapshot();
-				BackendFixture destination;
-				const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
-				destination.ConfigureConventional(true,3,true,false,false,nullptr,source);
-				return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
-					destination.RestoreConventional(GSE_CALL,saved,true);
-					GT_ASSERT(destination.m_game.m_simulation->value.technology==m_game.m_simulation->value.technology
-						&& destination.m_game.m_simulation->value.economy==m_game.m_simulation->value.economy
-						&& !destination.m_game.m_canonical_continuation && !destination.m_game.m_research_request
-						&& destination.m_game.HasSmacTechnologyReveal(1),"stable restore replayed research or lost completed authority");GT_OK();
-				});
+				saved=m_game.SerializeWorldSnapshot();
+				GT_OK();
+			});
+			GT_ASSERT(completed.empty(), "research completion: "+completed);
+			// Register/retire a destination GC space only outside the source
+			// accumulation: the collector locks the space registry before collecting.
+			BackendFixture destination;
+			const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
+			destination.ConfigureConventional(true,3,true,false,false,nullptr,source);
+			return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
+				destination.RestoreConventional(GSE_CALL,saved,true);
+				GT_ASSERT(destination.m_game.m_simulation->value.technology==m_game.m_simulation->value.technology
+					&& destination.m_game.m_simulation->value.economy==m_game.m_simulation->value.economy
+					&& !destination.m_game.m_canonical_continuation && !destination.m_game.m_research_request
+					&& destination.m_game.HasSmacTechnologyReveal(1),"stable restore replayed research or lost completed authority");GT_OK();
 			});
 		}
 		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == (default_world?0u:1u) && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );

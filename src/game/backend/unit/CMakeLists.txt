@@ -8,5 +8,6 @@ SET( SRC ${SRC}
 	${PWD}/Unit.cpp
 	${PWD}/Morale.cpp
 	${PWD}/MoraleSet.cpp
+	${PWD}/SmacScoutCombat.cpp
 
 	PARENT_SCOPE )

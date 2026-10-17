@@ -8,8 +8,6 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slot.h"
-#include "game/backend/unit/Unit.h"
-#include "game/backend/unit/UnitManager.h"
 #include "gc/Space.h"
 
 namespace game::backend::base {
@@ -24,14 +22,21 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 		THROW( "SMAC worker recalculation requires its running owning accumulation" );
 	}
 	m_game->GetBM()->RequireSmacWorkerRecalculation();
-	const auto context = GetSmacResourceContext(); // validates registered Base/current owner before dereference
+	const auto context = GetSmacResourceContext();
+	const auto allocation = GetSmacAllocation();
+	if ( !allocation ) { THROW( "SMAC worker recalculation requires complete saved allocation authority" ); }
+	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context ), roles );
+}
+
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context ) const {
+	GetSmacResourceContext();
+	allocation.Validate();
+	context.Validate();
 	auto* state = m_game->GetState();
 	if ( state->GetConnection() || m_owner->GetPlayer() != m_game->GetPlayer()
 		|| m_owner->GetPlayer()->GetRole() != Player::PR_SINGLE || context.GovernorActive() ) {
 		THROW( "SMAC worker recalculation requires the local human with governor inactive" );
 	}
-	const auto allocation = GetSmacAllocation();
-	if ( !allocation ) { THROW( "SMAC worker recalculation requires complete saved allocation authority" ); }
 	if ( m_pops.size() > 127 || m_game->GetTurnId() > INT32_MAX ) {
 		THROW( "SMAC worker recalculation population/turn exceeds its signed domain" );
 	}
@@ -49,16 +54,7 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 	// This query authenticates the complete current Unit/Base/map projection.
 	// It retains raw selected32 on Base; only availability is taken from the frame.
 	const auto availability = m_game->GetSmacWorkerAvailability( *this );
-	for ( const auto& item : m_game->GetUM()->GetUnits() ) {
-		const auto* unit = item.second;
-		if ( !unit || unit->m_id != item.first || !unit->IsConventional()
-			|| unit->Conventional().home != unit::ConventionalUnitState::Home::None ) {
-			THROW( "SMAC worker recalculation requires authenticated homeless conventional units" );
-		}
-	}
-	// The measured support gate ignores every homeless unit, independent of
-	// package, cost or SUPPORT rating; no invented unit classification is needed.
-	const int32_t mineral_support = 0;
+	const int32_t mineral_support = m_game->GetCanonicalMineralSupport( *this );
 	const auto& global = state->m_settings.global;
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() || !global.GetSmacTechnologyRules() ) {
 		THROW( "SMAC worker recalculation requires frozen resource/specialist/technology rules" );
@@ -88,11 +84,11 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 		static_cast< int32_t >( m_pops.size() ), static_cast< int32_t >( m_game->GetTurnId() ),
 		global.GetSmacResourceRules()->nutrients_per_citizen, mineral_support, production,
 		{ true, false, false, false, false, false, {} }, context.ManageCitizens(), false,
-		allocation->selected, availability.unavailable, prefix, allocation->specialists, catalog, std::nullopt
+		allocation.selected, availability.unavailable, prefix, allocation.specialists, catalog, std::nullopt
 	}, query );
 	// Existing publication prepares reverse assignments/Pop projections/queues
 	// before one nonthrowing commit. No cache, turn, RNG or knowledge is changed.
-	PublishSmacAllocation( GSE_CALL, { result.workers.visited, result.specialists }, roles );
+	return { result.workers.visited, result.specialists };
 }
 
 }

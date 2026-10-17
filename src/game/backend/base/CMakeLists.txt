@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Base.cpp
 	${PWD}/BaseAllocation.cpp
 	${PWD}/BaseWorkers.cpp
+	${PWD}/BaseWorkerCommands.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacSpecialists.cpp

@@ -316,6 +316,10 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 	const auto technologies = smac_rules_fixture::Technologies();
 	const auto profile = smac_rules_fixture::Factions();
 	const auto bytes = profile.Serialize( technologies ).ToString();
+	for ( size_t field = 0; field < 5; ++field ) {
+		auto changed = profile; ++changed.factions.back().worker_priorities[ field ];
+		add( "changed late faction priority", changed.Serialize( technologies ).ToString() );
+	}
 	for ( const auto* keyword : { "FUNGMINERALS", "FUNGENERGY" } ) {
 		auto changed = profile;
 		changed.factions.back().bonuses.push_back( game::backend::settings::SmacFactionStartupBonus::Parse( keyword, "3", technologies ) );

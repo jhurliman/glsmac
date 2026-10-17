@@ -329,7 +329,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_movement_rules.has_value() ) { THROW( "Gameplay ruleset and movement profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_specialist_rules.has_value() ) { THROW( "Gameplay ruleset and specialist profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 11 );
+	buf.WriteInt( 12 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -356,8 +356,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 11 ) {
-		THROW( "Unsupported global settings format (expected version 11)" );
+	if ( buf.ReadInt() != 12 ) {
+		THROW( "Unsupported global settings format (expected version 12)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -424,7 +424,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		world_sizes->ValidateSelection( *next_selection );
 	}
 	const auto rules_data = buf.ReadString();
-	// Default rules currently serialize no fields; V11 must not silently drop
+	// Default rules currently serialize no fields; V12 must not silently drop
 	// unknown payload bytes. A future rules format requires an explicit version.
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();

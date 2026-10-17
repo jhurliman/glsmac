@@ -26,6 +26,24 @@ std::vector< std::string > Fields( const std::string& row ) {
 	}
 }
 
+std::array< int32_t, 5 > WorkerPriorities( const std::string& source, const std::string& section ) {
+	const auto rows = TXTLoader::ReadUniqueSection( source, section );
+	if ( rows.empty() ) { throw std::invalid_argument( "Missing SMAC faction header" ); }
+	auto fields = Fields( rows.front().substr( 0, rows.front().find( ';' ) ) );
+	if ( fields.size() == 13 && fields.back().empty() ) { fields.pop_back(); }
+	if ( fields.size() != 12 ) { throw std::invalid_argument( "SMAC faction header requires twelve fields" ); }
+	std::array< int32_t, 5 > result;
+	const size_t columns[] = { 7, 11, 9, 10, 8 };
+	for ( size_t i = 0; i < result.size(); ++i ) {
+		const auto& text = fields[ columns[ i ] ];
+		size_t used = 0;
+		const auto value = std::stoll( text, &used );
+		if ( used != text.size() || value < INT32_MIN || value > INT32_MAX ) { throw std::invalid_argument( "SMAC faction priority requires signed32 decimal" ); }
+		result[ i ] = static_cast< int32_t >( value );
+	}
+	return result;
+}
+
 std::array< game::backend::settings::SmacStartupSocialModel, 4 > ValidateLookupTables( const std::string& alpha ) {
 	const std::string names = "TECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO";
 	std::vector< std::string > actual;
@@ -108,8 +126,9 @@ game::backend::settings::SmacFactionStartupRules FactionTXTLoader::ParseStartupR
 	result.initial_social_models = models;
 	for ( size_t i = 0 ; i < bindings.size() ; ++i ) {
 		const auto& binding = bindings[ i ];
+		const auto source = read_source( binding.filename );
 		result.factions[ i ] = { binding.port_id, binding.filename, binding.section,
-			ParseStartupBonuses( read_source( binding.filename ), binding.section, technologies ) };
+			ParseStartupBonuses( source, binding.section, technologies ), WorkerPriorities( source, binding.section ) };
 	}
 	result.Validate( technologies );
 	return result;

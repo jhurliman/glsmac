@@ -16,7 +16,7 @@ inline game::backend::settings::SmacTechnologyRules Technologies() {
 inline std::string Alpha() { return smac_rules_fixture::FactionAlpha(); }
 
 inline std::string Faction( const std::string& section, const std::string& bonuses ) {
-	return "## synthetic faction source\r\n#" + section + "\r\nSynthetic faction header\r\n; ignored full-line comment\r\n"
+	return "## synthetic faction source\r\n#" + section + "\r\nSynthetic,Faction,Plural,F,1,Leader,F,-1,0,0,1,1,\r\n; ignored full-line comment\r\n"
 		+ bonuses + "\r\nUnused ideology, not bonus data\r\n#BASES\r\nSynthetic Base\r\n#END\r\n";
 }
 

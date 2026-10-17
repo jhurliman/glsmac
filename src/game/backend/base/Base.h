@@ -96,6 +96,9 @@ public:
 	// Retains complete valid selections; this is not an optimize/reset command,
 	// upkeep, or the full resource/citizen calculation and manual worker handler.
 	void RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles );
+	// Ordinary local tile click. The Game event dispatcher authenticates caller;
+	// all edits and the final allocation are staged before native publication.
+	void CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile );
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
 	void ValidateSmacAllocation() const;
@@ -139,6 +142,8 @@ private:
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation ) const;
 	void ValidateAllocationProjection( bool registered ) const;
 	void RequireGenericPopulationMutation() const;
+	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context ) const;
+	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

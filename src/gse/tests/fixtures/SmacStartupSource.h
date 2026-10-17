@@ -42,7 +42,7 @@ inline std::string FactionSource( const std::string& filename ) {
 			std::string bonuses = smac_faction_startup_fixture::BonusLines()[ i ];
 			const auto end = bonuses.find( ',', 5 );
 			bonuses.replace( 5, end - 5, "Tech" + std::to_string( grants[ i ] ) );
-			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic header\n" + bonuses + "\n#END\n";
+			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic,Faction,Plural,F,1,Leader,F,-1,0,0,1,1,\n" + bonuses + "\n#END\n";
 		}
 	}
 	throw std::runtime_error( "Unexpected startup faction source" );

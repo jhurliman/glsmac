@@ -592,6 +592,10 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	if ( HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
+		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
+		return;
+	}
 	RequireWorkerKnowledgeMutation();
 	{
 		std::lock_guard guard( m_event_handlers_mutex );
@@ -886,16 +890,16 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
-				{
-					std::lock_guard guard( m_event_handlers_mutex );
-					const auto& it = m_event_handlers.find( name );
-					if ( it == m_event_handlers.end() ) {
-						GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
-					}
-				}
 				N_GET( args, 1, Object );
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
+				}
+				if ( !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
+					RequireWorkerKnowledgeMutation();
+					std::lock_guard guard( m_event_handlers_mutex );
+					if ( m_event_handlers.find( name ) == m_event_handlers.end() ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+					}
 				}
 				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args->value ) );
 				return VALUE( gse::value::Undefined );
@@ -1760,6 +1764,13 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 		handoff->state->WithGameSession( handoff->session, batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
 			const std::string* errptr = nullptr;
 			for ( const auto& event : batch->events ) {
+				const auto& data = event->GetData();
+				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
 				// Also fence commands queued before explicit knowledge admission.
 				RequireWorkerKnowledgeMutation();
 #if defined(DEBUG) || defined(FASTDEBUG)

@@ -115,7 +115,7 @@ int32_t SmacFactionStartupRule::ExtraTechnologyCount() const {
 }
 
 bool SmacFactionStartupRule::operator==( const SmacFactionStartupRule& other ) const {
-	return port_id == other.port_id && filename == other.filename && section == other.section && bonuses == other.bonuses;
+	return port_id == other.port_id && filename == other.filename && section == other.section && bonuses == other.bonuses && worker_priorities == other.worker_priorities;
 }
 
 const std::array< SmacFactionStartupBinding, 7 >& SmacFactionStartupRules::Bindings() {
@@ -163,7 +163,7 @@ const SmacFactionStartupRule* SmacFactionStartupRules::Find( const std::string& 
 
 types::Buffer SmacFactionStartupRules::Serialize( const SmacTechnologyRules& technologies ) const {
 	Validate( technologies ); types::Buffer buffer;
-	buffer.WriteInt( 2 ); buffer.WriteInt( initial_social_models.size() );
+	buffer.WriteInt( 3 ); buffer.WriteInt( initial_social_models.size() );
 	for ( const auto& model : initial_social_models ) {
 		buffer.WriteString( model.name ); buffer.WriteString( model.prerequisite ); buffer.WriteString( model.modifiers );
 	}
@@ -176,11 +176,12 @@ types::Buffer SmacFactionStartupRules::Serialize( const SmacTechnologyRules& tec
 			buffer.WriteInt( bonus.parameter ); buffer.WriteInt( bonus.amount );
 		}
 	}
+	for ( const auto& row : factions ) { for ( const auto priority : row.worker_priorities ) { buffer.WriteInt( priority ); } }
 	return buffer;
 }
 
 SmacFactionStartupRules SmacFactionStartupRules::Deserialize( types::Buffer buffer, const SmacTechnologyRules& technologies ) {
-	if ( buffer.ReadInt() != 2 ) { throw std::runtime_error( "Unsupported SMAC faction startup profile version" ); }
+	if ( buffer.ReadInt() != 3 ) { throw std::runtime_error( "Unsupported SMAC faction startup profile version" ); }
 	SmacFactionStartupRules result;
 	if ( buffer.ReadInt() != static_cast< int64_t >( result.initial_social_models.size() ) ) { throw std::runtime_error( "SMAC startup requires four model-zero rows" ); }
 	for ( auto& model : result.initial_social_models ) {
@@ -203,6 +204,7 @@ SmacFactionStartupRules SmacFactionStartupRules::Deserialize( types::Buffer buff
 			row.bonuses.push_back( std::move( bonus ) );
 		}
 	}
+	for ( auto& row : result.factions ) { for ( auto& priority : row.worker_priorities ) { priority = Integer( buffer ); } }
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC faction startup fields" ); }
 	try { result.Validate( technologies ); }
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }

@@ -30,7 +30,7 @@ types::Buffer Wire( const SmacFactionStartupRules& rules, size_t changed_number 
 	size_t numbers = 0, texts = 0;
 	const auto number = [ & ]( int64_t value ) { buffer.WriteInt( numbers++ == changed_number ? number_value : value ); };
 	const auto text = [ & ]( const std::string& value ) { buffer.WriteString( texts++ == changed_text ? text_value : value ); };
-	number( 2 ); number( 4 );
+	number( 3 ); number( 4 );
 	for ( const auto& model : rules.initial_social_models ) { text( model.name ); text( model.prerequisite ); text( model.modifiers ); }
 	number( 7 );
 	for ( const auto& row : rules.factions ) {
@@ -39,11 +39,38 @@ types::Buffer Wire( const SmacFactionStartupRules& rules, size_t changed_number 
 			text( bonus.keyword ); text( bonus.value ); number( static_cast< int32_t >( bonus.kind ) ); number( bonus.parameter ); number( bonus.amount );
 		}
 	}
+	for ( const auto& row : rules.factions ) { for ( const auto priority : row.worker_priorities ) { number( priority ); } }
 	return buffer;
 }
 }
 
 void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC faction header worker priorities retain semantic order and wire bounds", GT() {
+		const auto catalog = fixture::Technologies();
+		const auto header = std::string( "Synthetic,Faction,Plural,F,1,Leader,F,-1,0,0,1,1," );
+		const auto parse = [ & ]( const std::string& replacement ) {
+			return FactionTXTLoader::ParseStartupRules( fixture::Alpha(), [ & ]( const std::string& filename ) {
+				auto text = fixture::Source( filename ); text.replace( text.find( header ), header.size(), replacement ); return text;
+			}, catalog );
+		};
+		const auto rules = parse( "Name,Adjective,Plural,F,1,Leader,F,-2,5,3,4,2," );
+		for ( const auto& row : rules.factions ) { GT_ASSERT( row.worker_priorities == ( std::array< int32_t, 5 >{ -2,2,3,4,5 } ), "header file order was mistaken for semantic priority order" ); }
+		GT_ASSERT( SmacFactionStartupRules::Deserialize( rules.Serialize( catalog ), catalog ) == rules, "priority codec roundtrip differs" );
+		for ( size_t field = 0; field < 5; ++field ) {
+			auto changed = rules; changed.factions.back().worker_priorities[ field ] = field & 1 ? INT32_MIN : INT32_MAX;
+			GT_ASSERT( !( changed == rules ) && SmacFactionStartupRules::Deserialize( changed.Serialize( catalog ), catalog ) == changed, "late signed priority was omitted from equality or codec" );
+		}
+		for ( const auto* invalid : { "", "1suffix", "2147483648", "-2147483649", "99999999999999999999999" } ) {
+			GT_ASSERT( Rejects( [ & ] { parse( "Name,Adjective,Plural,F,1,Leader,F,0,0,0,0," + std::string( invalid ) + "," ); } ), "invalid source priority accepted" );
+		}
+		const auto bytes = rules.Serialize( catalog ).ToString();
+		for ( const auto value : { int64_t( INT32_MAX ) + 1, int64_t( INT32_MIN ) - 1 } ) {
+			types::Buffer bad; bad.WriteInt( value );
+			GT_ASSERT( Rejects( [ & ] { SmacFactionStartupRules::Deserialize( types::Buffer( bytes.substr( 0, bytes.size() - bad.lenw ) + bad.ToString() ), catalog ); } ), "late wire priority narrowed before validation" );
+		}
+		types::Buffer old; old.WriteInt( 2 );
+		GT_ASSERT( Rejects( [ & ] { SmacFactionStartupRules::Deserialize( types::Buffer( old.ToString() + bytes.substr( old.lenw ) ), catalog ); } ), "old profile without priorities accepted" ); GT_OK();
+	} );
 	task->AddTest( "SMAC faction startup model-zero metadata owns positional neutral source rows", GT() {
 		const auto catalog = fixture::Technologies();
 		auto profile = Profile();
@@ -216,7 +243,7 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 			try { target = SmacFactionStartupRules::Deserialize( wire, catalog ); } catch ( const std::runtime_error& ) { return target == original; }
 			return false;
 		};
-		for ( const int64_t value : { int64_t( -1 ), int64_t( 0 ), int64_t( 1 ), int64_t( 3 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 0, value ) ), "unknown version accepted" ); }
+		for ( const int64_t value : { int64_t( -1 ), int64_t( 0 ), int64_t( 1 ), int64_t( 2 ), int64_t( 4 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 0, value ) ), "unknown version accepted" ); }
 		for ( const int64_t value : { int64_t( -1 ), int64_t( 6 ), int64_t( 8 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 2, value ) ), "wrong binding count accepted" ); }
 		size_t number = 3, text = 12;
 		for ( const auto& row : original.factions ) {
@@ -239,7 +266,7 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 		auto trailing = original.Serialize( catalog ); trailing.WriteInt( 0 ); GT_ASSERT( rejects( trailing ), "trailing payload accepted" );
 		const auto bytes = original.Serialize( catalog ).ToString();
 		for ( const auto length : { size_t( 0 ), size_t( 4 ), bytes.size() / 2, bytes.size() - 1 } ) { GT_ASSERT( rejects( types::Buffer( bytes.substr( 0, length ) ) ), "truncated payload accepted" ); }
-		types::Buffer wrong_type; wrong_type.WriteInt( 2 ); wrong_type.WriteString( "7" ); GT_ASSERT( rejects( wrong_type ), "wrong type accepted" );
+		types::Buffer wrong_type; wrong_type.WriteInt( 3 ); wrong_type.WriteString( "7" ); GT_ASSERT( rejects( wrong_type ), "wrong type accepted" );
 		auto changed_catalog = catalog; changed_catalog.technologies[ 6 ].key = "Other";
 		GT_ASSERT( Rejects( [ & ]() { SmacFactionStartupRules::Deserialize( original.Serialize( catalog ), changed_catalog ); } ), "named references not bound to supplied catalog" );
 		GT_OK();

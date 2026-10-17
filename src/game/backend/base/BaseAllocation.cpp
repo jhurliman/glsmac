@@ -95,11 +95,21 @@ void Base::RequireGenericPopulationMutation() const {
 }
 
 void Base::PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles ) {
+	PublishSmacWorkerState( GSE_CALL, allocation, roles, GetSmacResourceContext() );
+}
+
+void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "SMAC allocation publication requires its owning accumulation" ); }
 	auto* bm = m_game->GetBM();
 	if ( bm->m_dispatching_updates ) { THROW( "SMAC allocation publication cannot reenter update dispatch" ); }
-	GetSmacResourceContext();
+	const auto prior_context = GetSmacResourceContext();
+	context.Validate();
+	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
+	if ( !( unchanged_context == prior_context ) || ( context.governor_options != prior_context.governor_options
+		&& context.governor_options != ( prior_context.governor_options & ~SmacBaseResourceContext::MANAGE_CITIZENS ) ) ) {
+		THROW( "SMAC worker publication may only clear citizen management in Base context" );
+	}
 	ValidateAllocationProjection( true );
 	const auto coordinates = AllocationCoordinates( allocation );
 	std::array< const PopDef*, 7 > specialists{};
@@ -154,6 +164,8 @@ void Base::PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& a
 	auto triggers = bm->m_updated_bases;
 	triggers.insert( this );
 	std::optional< SmacBaseAllocationState > replacement = allocation;
+	std::optional< SmacBaseResourceContext > replacement_context = context;
+	static_assert( std::is_nothrow_swappable_v< decltype( replacement_context ) > );
 	// Vec2's scalar copy operations cannot throw; optional's copy assignment
 	// itself lacks a noexcept declaration in the supported C++17 library.
 	static_assert( std::is_nothrow_copy_constructible_v< map::tile::coords_t > );
@@ -162,6 +174,7 @@ void Base::PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& a
 	// Commit: no allocation, callbacks, IDs, node replacement or RNG draws.
 	for ( const auto& next : projection ) { next.pop->m_def = next.def; next.pop->m_worked_tile = next.coordinates; }
 	m_allocation.swap( replacement );
+	m_resource_context.swap( replacement_context );
 	bm->m_work_assignments.swap( assignments );
 	bm->m_base_updates.swap( updates );
 	bm->m_updated_bases.swap( triggers );

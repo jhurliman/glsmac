@@ -144,6 +144,13 @@ return {
 				for (t of existing_tiles) {
 					const distance = #abs(t.cx - mx) + #abs(t.cy - my) * tile_aspect_ratio;
 					if (distance <= twh) {
+						if (data.base.has_smac_resource_context) {
+							this.p.game.event(t != t_center && #is_defined(t.el_resources) ? 'unwork_base_tile' : 'work_base_tile', {
+								base: data.base,
+								tile: t.tile,
+							});
+							break;
+						}
 						if (t == t_center) {
 							let pops = data.base.get_pops();
 							const tiles = f_base_find_best_or_worst_tiles(data.base, data.base.get_workable_tiles(), #sizeof(pops), 1);

@@ -128,7 +128,7 @@ inline std::string FactionSource( const std::string& filename ) {
 	const auto& bindings = game::backend::settings::SmacFactionStartupRules::Bindings();
 	for ( size_t i = 0; i < bindings.size(); ++i ) {
 		if ( filename == bindings[ i ].filename ) {
-			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic header\n"
+			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic,Faction,Plural,F,1,Leader,F,-1,0,0,1,1,\n"
 				"TECH,Tech2,TECH,Tech2,TECH,None,TECH,Disable,SOCIAL,+SUPPORT,FACILITY,4,IMMUNITY,EFFIC,"
 				"FUNGNUTRIENT,1,VOTES,2,TECH,1,TECH,-3,ENERGY," + std::to_string( 10 + i ) + "\n#END\n";
 		}
@@ -153,7 +153,7 @@ inline game::backend::settings::SmacFactionStartupRules Factions(
 
 // Deliberately bypass profile validation to exercise late malformed wire input.
 inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFactionStartupRules& profile ) {
-	types::Buffer result; result.WriteInt( 2 ); result.WriteInt( profile.initial_social_models.size() );
+	types::Buffer result; result.WriteInt( 3 ); result.WriteInt( profile.initial_social_models.size() );
 	for ( const auto& model : profile.initial_social_models ) {
 		result.WriteString( model.name ); result.WriteString( model.prerequisite ); result.WriteString( model.modifiers );
 	}
@@ -166,6 +166,7 @@ inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFacti
 			result.WriteInt( bonus.parameter ); result.WriteInt( bonus.amount );
 		}
 	}
+	for ( const auto& faction : profile.factions ) { for ( const auto priority : faction.worker_priorities ) { result.WriteInt( priority ); } }
 	return result;
 }
 
@@ -232,7 +233,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& specialists = std::nullopt,
 	const std::optional< bool > specialists_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 11 );
+	result.WriteInt( 12 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {

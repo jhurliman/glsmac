@@ -68,7 +68,7 @@ ProductionState Production( ProductionItemKind kind = ProductionItemKind::Unit )
 	const ProductionItem item{ kind, kind == ProductionItemKind::Stockpile ? "" : "opaque-target" };
 	return { item, 17, { ProductionItemKind::Stockpile, "" }, 5 };
 }
-Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor ) {
+Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
@@ -86,14 +86,15 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor ) {
 	SmacBaseAllocationState allocation{ doctor ? 1u : 3u, { {}, doctor ? 1 : 0 } };
 	for ( size_t i = 0; i < 16; ++i ) { allocation.specialists.types[ i ] = i ? ( i + 2 ) % 7 : 1; }
 	base->PublishSmacAllocation( GSE_CALL, allocation, roles );
-	// An actual homogeneous no-home Unit, not an injected zero support total.
+	// An actual conventional Unit and optional saved home, not an injected support total.
 	using namespace game::backend::unit;
 	MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
 	auto* um = game->GetUM(); um->DefineMoraleSet( new MoraleSet( "live-morale", names ) );
 	um->DefineUnit( new StaticDef( "live-scout", um->GetMoraleSet( "live-morale" ), "Scout", MT_LAND, 999,
 		new CvrScoutRender( 2, 0, 100, 100, { 1, 1 }, { 128, 128 } ) ) );
-	um->SpawnConventionalUnit( GSE_CALL, 91, um->GetUnitDef( "live-scout" ), owner, game->GetMap()->GetTile( 6, 6 ),
-		{ 2, 1, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 } );
+	ConventionalUnitState record{ 2, 1, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+	if ( homed ) { record.home = ConventionalUnitState::Home::Base; record.home_base_id = base->m_id; }
+	um->SpawnConventionalUnit( GSE_CALL, 91, um->GetUnitDef( "live-scout" ), owner, game->GetMap()->GetTile( 6, 6 ), record );
 	fixture.PrepareBaseCallbacks();
 	auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
 	setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
@@ -189,6 +190,105 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( base->GetSmacAllocation()->selected == 3 && game->GetMap()->GetSmacWorkerKnowledge()->Serialize() == knowledge, "restore replayed allocation or knowledge producers" );
 			RecalculateViaWrapper( GSE_CALL, base );
 			GT_ASSERT( Base::Serialize( base ).ToString() == result && destination.GameplayRandom() == pair, "restored next live allocation differs" ); GT_OK();
+		} );
+	} );
+
+	task->AddTest( "SMAC manual worker events publish Pop index and presentation atomically", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false );
+			auto context = base->GetSmacResourceContext(); context.governor_options = 0x1000040; base->SetSmacResourceContext( GSE_CALL, context );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );
+			auto* pop = &base->m_pops.at( 19 ); auto* wrapper = pop->Wrap( GSE_CALL );
+			const auto padding = base->GetSmacAllocation()->specialists.types; const auto pair = fixture.GameplayRandom();
+			const auto rng = game->GetRandom()->GetStateString(); const auto knowledge = game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+			auto* initialize = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_canonical_worker_click" ) );
+			auto* click = static_cast< value::Callable* >( initialize->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ) } ) );
+			click->Run( GSE_CALL, { VALUE( value::Int,, 250 ), VALUE( value::Int,, 75 ) } ); fixture.DrainEvents();
+			GT_ASSERT( base->GetSmacAllocation()->selected == 1 && base->GetSmacAllocation()->specialists.total_count == 1
+				&& pop->m_def->m_smac_specialist_id == 1 && !game->GetBM()->GetWorkingPop( { 3, 1 } ), "event did not create and retain the actual automatic Doctor" );
+			GT_ASSERT( base->GetSmacResourceContext().governor_options == 0x1000000, "manual command cleared more than citizen management" );
+			click->Run( GSE_CALL, { VALUE( value::Int,, 300 ), VALUE( value::Int,, 100 ) } ); fixture.DrainEvents();
+			GT_ASSERT( base->GetSmacAllocation()->selected == 5 && base->GetSmacAllocation()->specialists.total_count == 0
+				&& game->GetBM()->GetWorkingPop( { 4, 2 } ) == pop && &base->m_pops.at( 19 ) == pop && Pop::Unwrap( wrapper ) == pop
+				&& base->GetSmacAllocation()->specialists.types == padding, "work event lost selection, stable Pop or unused specialist padding" );
+			GT_ASSERT( fixture.GameplayRandom() == pair && game->GetRandom()->GetStateString() == rng
+				&& game->GetMap()->GetSmacWorkerKnowledge()->Serialize() == knowledge, "manual event changed RNG or knowledge" );
+			bool refresh = false; for ( const auto& update : fixture.Updates() ) { if ( update.type == game::FrontendRequest::FR_BASE_UPDATE && update.data.base_update.base_id == 701 ) { refresh = true; } }
+			GT_ASSERT( refresh, "manual command did not publish Base presentation" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC manual worker click replacement center and unavailable semantics", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );
+			const auto click = [ & ]( size_t x, size_t y ) {
+				game->Event( GSE_CALL, "work_base_tile", { { "base", base->Wrap( GSE_CALL ) }, { "tile", game->GetMap()->GetTile( x, y )->Wrap( GSE_CALL ) } } ); fixture.DrainEvents();
+			};
+			click( 4, 2 ); GT_ASSERT( base->GetSmacAllocation()->selected == 5, "manual replacement did not replace an existing complete worker allocation" );
+			click( 3, 1 ); GT_ASSERT( base->GetSmacAllocation()->selected == 3, "manual replacement incorrectly optimized back to the better forest" );
+			click( 2, 2 ); GT_ASSERT( base->GetSmacAllocation()->selected == 5, "center click did not clear selection and perform new allocation" );
+			auto context = base->GetSmacResourceContext(); context.governor_options |= SmacBaseResourceContext::MANAGE_CITIZENS; base->SetSmacResourceContext( GSE_CALL, context );
+			const auto allocation = base->GetSmacAllocation(); click( 4, 0 );
+			GT_ASSERT( base->GetSmacAllocation() == allocation && !base->GetSmacResourceContext().ManageCitizens(), "unavailable click changed allocation or failed to clear citizen management" );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue() );
+			auto stale = *base->GetSmacAllocation(); stale.selected = 3; base->PublishSmacAllocation( GSE_CALL, stale, Roles() );
+			click( 4, 2 );
+			GT_ASSERT( base->GetSmacAllocation()->selected == 1 && base->GetSmacAllocation()->specialists.total_count == 1
+				&& base->m_pops.at( 19 ).m_def->m_smac_specialist_id == 1, "click did not inspect selection after preliminary repair" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC manual worker events consume actual homed support and frozen priorities", []( GSE*, context::Context* ) -> std::string {
+		for ( const bool homed : { false, true } ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureResources( []( const std::string& filename ) {
+				auto source = Source( filename );
+				if ( filename != "alpha.txt" ) {
+					const std::string original = "Leader,F,-1,0,0,1,1,";
+					source.replace( source.find( original ), original.size(), "Leader,F,500,0,0,0,0," );
+				}
+				return source;
+			}, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, homed );
+				auto allocation = *base->GetSmacAllocation(); allocation.selected = 5;
+				base->PublishSmacAllocation( GSE_CALL, allocation, Roles() );
+				fixture.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } );
+				auto* unit = game->GetUM()->GetUnit( 91 );
+				auto context = base->GetSmacResourceContext(); context.drone_riots = true; base->SetSmacResourceContext( GSE_CALL, context );
+				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );
+				GT_ASSERT( game->GetCanonicalMineralSupport( *base ) == ( homed ? 2 : 0 ), "actual home did not produce measured support" );
+				const auto record = unit->Conventional(); const auto pair = fixture.GameplayRandom(); const auto rng = game->GetRandom()->GetStateString();
+				const auto knowledge = game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+				RecalculateViaWrapper( GSE_CALL, base );
+				game->Event( GSE_CALL, "work_base_tile", { { "base", base->Wrap( GSE_CALL ) }, { "tile", game->GetMap()->GetTile( 3, 1 )->Wrap( GSE_CALL ) } } );
+				fixture.DrainEvents();
+				// Forest M=2, total M=3, F=500: mineral score is 336 without
+				// support, 1008 with support2. Only the former is below999.
+				GT_ASSERT( base->GetSmacAllocation()->selected == ( homed ? 5u : 3u ), "manual event ignored home support or current frozen aggression" );
+				GT_ASSERT( base->GetSmacResourceContext().drone_riots && !base->GetSmacResourceContext().ManageCitizens()
+					&& unit->Conventional() == record && fixture.GameplayRandom() == pair && game->GetRandom()->GetStateString() == rng
+					&& game->GetMap()->GetSmacWorkerKnowledge()->Serialize() == knowledge, "worker publication changed home, riots, RNG or knowledge" ); GT_OK();
+			} );
+			if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+
+	task->AddTest( "SMAC manual worker event failures preserve authority and broad fences", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );
+			const auto before = fixture.Snapshot();
+			GT_ASSERT( Rejects( [ & ] { game->Event( GSE_CALL, "unrelated", {} ); } ), "worker command opened arbitrary event dispatch" );
+			GT_ASSERT( Rejects( [ & ] { game->Event( GSE_CALL, "work_base_tile", { { "base", base->Wrap( GSE_CALL ) }, { "tile", game->GetMap()->GetTile( 4, 2 )->Wrap( GSE_CALL ) }, { "pop", base->m_pops.at( 19 ).Wrap( GSE_CALL ) } } ); } ), "canonical click accepted legacy Pop override" );
+			GT_ASSERT( fixture.Snapshot() == before, "early command rejection changed state" );
+			auto* target = game->GetMap()->GetTile( 4, 2 ); target->terraforming |= TERRAFORMING_MIRROR;
+			const auto rejected = fixture.Snapshot(); const auto requests = fixture.QueuedFrontendRequests().size();
+			game->Event( GSE_CALL, "work_base_tile", { { "base", base->Wrap( GSE_CALL ) }, { "tile", target->Wrap( GSE_CALL ) } } );
+			GT_ASSERT( Rejects( [ & ] { fixture.DrainEvents(); } ), "unsupported final tile query did not reject" );
+			GT_ASSERT( fixture.Snapshot() == rejected && fixture.QueuedFrontendRequests().size() == requests && base->GetSmacResourceContext().ManageCitizens()
+				&& !game->GetBM()->GetWorkingPop( { 4, 2 } ), "late command failure published allocation, context or reverse index" ); GT_OK();
 		} );
 	} );
 }

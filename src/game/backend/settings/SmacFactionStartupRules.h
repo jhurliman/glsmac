@@ -33,6 +33,9 @@ struct SmacFactionStartupRule {
 	// Keep even supported records beyond the original eight-record budget for
 	// exact frozen equality. Records() is the admitted, ordered projection.
 	std::vector< SmacFactionStartupBonus > bonuses;
+	// Frozen header fields in semantic aggression/Explore/Discover/Build/Conquer
+	// order. The admitted ordinary campaign does not edit personality at runtime.
+	std::array< int32_t, 5 > worker_priorities{};
 	std::vector< SmacFactionStartupBonus > Records() const;
 	std::vector< int32_t > NamedTechnologyReferences() const;
 	int32_t ExtraTechnologyCount() const;

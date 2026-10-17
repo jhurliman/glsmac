@@ -364,6 +364,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		};
 		for ( const auto& row : cases ) {
 			size_t refreshes = 0;
+			std::string saved;
+			std::optional< ProductionState > saved_production;
+			std::optional< SmacBaseResourceContext > saved_context;
 			ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); SelectionPresentations( fixture );
@@ -408,15 +411,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				}
 				GT_ASSERT( base->GetSmacAllocation() == allocation && fixture.GameplayRandom() == pair
 					&& game->GetState()->m_settings.global.Serialize().ToString() == global, "Base override changed allocation, RNG or frozen founding defaults" );
-				// Actual world restore consumes the saved governor record, not startup defaults.
-				const auto production = *base->GetProductionState(); const auto saved = fixture.Snapshot();
+				saved_production = base->GetProductionState(); saved_context = context; saved = fixture.Snapshot();
 				game->GetBM()->TriggerUpdates( GSE_CALL );
-				game->Off( GSE_CALL, "update_base", listener );
-				fixture.Restore( GSE_CALL, saved, true ); base = game->GetBM()->GetBase( 701 );
-				GT_ASSERT( base && base->GetSmacResourceContext() == context && *base->GetProductionState() == production,
-					"world restore lost pre-confirmation governor state or changed production" );
-				GT_OK();
+				game->Off( GSE_CALL, "update_base", listener ); GT_OK();
 			} ); GT_ASSERT( error.empty(), "governor loss composition: " + error );
+			// A real body restore begins with a fresh destination Map. Its terrain
+			// construction must not mutate the source's already-bound knowledge.
+			ConventionalUnitFixture restored; restored.ConfigureProduction( SelectionSource, "GAIANS" );
+			const auto restore_error = restored.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = restored.Game();
+				game->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->SetDifficultyLevel( row.difficulty );
+				restored.Restore( GSE_CALL, saved, true ); const auto* base = game->GetBM()->GetBase( 701 );
+				GT_ASSERT( base && base->GetSmacResourceContext() == *saved_context && base->GetProductionState() == saved_production,
+					"world restore lost pre-confirmation governor state or changed production" ); GT_OK();
+			} ); GT_ASSERT( restore_error.empty(), "governor loss restore: " + restore_error );
 		} GT_OK();
 	} );
 	task->AddTest( "SMAC active governor uses saved management and current phase in live allocation", []( GSE*, context::Context* ) -> std::string {

@@ -14,6 +14,11 @@ NAMES = ["Technician", "Doctor", "Librarian", "Engineer", "Empath", "Thinker", "
 OUTPUTS = [[3, 0, 0], [0, 2, 0], [0, 0, 3], [3, 0, 2], [2, 2, 0], [0, 1, 3], [2, 2, 4]]
 
 
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
 def cpp(v):
     if isinstance(v, bool):
         return str(v).lower()
@@ -51,7 +56,7 @@ def project(directory):
            "struct Cleanup { const char* id; SmacSpecialistSlots input; SmacSpecialistAllocationCatalog catalog; bool managed, upkeep; uint8_t overflow; int32_t split_r, split_q, final_r, final_q; std::array<uint8_t,16> prefix; size_t prefix_count; };",
            "inline const Cleanup cleanup[] = {"]
     source = sources["existing-specialist-cleanup-cases.json"]
-    assert len(source["cases"]) == 17
+    require(len(source["cases"]) == 17, "unexpected cleanup case count")
     for case in source["cases"]:
         v, e = source["defaults"] | case["overrides"], case["expected"]
         initial = types(v["stored_types"])
@@ -63,7 +68,7 @@ def project(directory):
             str(e["retained_count_after"]), str(e["provisional_count_after"]), cpp(prefix), str(len(prefix))]) + " },")
     out += ["};", "struct Competition { const char* id; SmacSpecialistAllocationCatalog catalog; SmacSpecialistCompetitionContext context; SmacSpecialistBookkeeping input; SmacWorkerStepState workers; int32_t winner, score; bool inserted, rescan; int32_t final_q; std::array<uint8_t,16> expected; };", "inline const Competition competition[] = {"]
     source = sources["specialist-tile-competition-cases.json"]
-    assert len(source["cases"]) == 28 and source["stock_outputs_economy_psych_labs"] == OUTPUTS
+    require(len(source["cases"]) == 28 and source["stock_outputs_economy_psych_labs"] == OUTPUTS, "unexpected competition count or outputs")
     for case in source["cases"]:
         v, e = source["defaults"] | case["overrides"], case["expected"]
         context = [v[k] for k in ["managed_allocation", "population", "turn", "nutrients_per_citizen", "current_nutrients", "current_energy", "new_specialists", "maximum_candidate_nutrients", "economy_priority", "labs_priority", "prior_tile_score"]]
@@ -73,7 +78,7 @@ def project(directory):
             str(e["new_specialists_after"]), cpp(types(e["stored_types_after"]))]) + " },")
     out += ["};", "struct Finalization { const char* id; int32_t population, turn, retained, nutrients; bool managed; int32_t insertions, before_r, before_q, final_count; std::array<uint8_t,16> prefix; size_t prefix_count; };", "inline const Finalization finalization[] = {"]
     source = sources["specialist-competition-finalization-cases.json"]
-    assert len(source["cases"]) == 7
+    require(len(source["cases"]) == 7, "unexpected finalization case count")
     for case in source["cases"]:
         v, e = source["defaults"] | case["overrides"], case["expected"]
         prefix = types(e["stored_types_after"])

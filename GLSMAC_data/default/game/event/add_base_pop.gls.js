@@ -20,24 +20,14 @@ return {
 			worked_tile: e.data.worked_tile,
 		});
 
-		let worked_tile = #undefined;
-		if (#is_defined(e.data.worked_tile)) {
-			worked_tile = e.data.worked_tile;
-			e.game.get('f_base_pop_work_tile')(base, pop, worked_tile);
-		}
-
 		return {
 			base: base,
 			pop: pop,
 			old_nutrients: old_nutrients,
-			worked_tile: worked_tile,
 		};
 	},
 
 	rollback: (e) => {
-		if (#is_defined(e.applied.worked_tile)) {
-			e.game.get('f_base_pop_unwork_tile')(e.applied.base, e.applied.pop);
-		}
 		e.data.base.destroy_pop(e.applied.pop);
 		e.data.base.set_accumulated_nutrients(e.applied.old_nutrients);
 	},

@@ -159,86 +159,55 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
 	std::lock_guard guard( m_process_timers_mutex );
 
-	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
+	// Callbacks may cancel this bucket, another timer, or every timer, and may
+	// create new timers at the same deadline. Keep only the original IDs;
+	// never retain a map iterator or a borrowed timer across a callback.
+	std::vector< timer_id_t > timer_ids;
+	for ( const auto& timer : it->second ) { timer_ids.push_back( timer.first ); }
 
-	const auto timers = it->second;
+	for ( const auto id : timer_ids ) {
+		m_gc_space->Accumulate( this, [ this, id, &ep ]() {
+			if ( m_timers_ms.find( id ) == m_timers_ms.end() ) { return; }
+			const auto timer = m_timers.at( m_timers_ms.at( id ) ).at( id );
+			auto* ctx = timer.ctx;
+			const auto si = timer.si;
+			size_t ms = 0;
+			bool repeat = false;
 
-	for ( const auto& it2 : timers ) {
-		const auto& timer = it2.second;
-
-		auto* ctx = timer.ctx;
-		const auto f = timer.callable;
-		const auto si = timer.si;
-
-		size_t ms = 0;
-		bool repeat = false;
-		m_gc_space->Accumulate(
-			this,
-			[ this, &ctx, &ep, &si, &f, &timer, &repeat, &ms ]() {
-
-				const auto result = f->Run( m_gc_space, GSE_CALL_NOGC, {} );
-
-				const auto& r = result;
-				if ( r ) {
-					switch ( r->type ) {
-						case VT_UNDEFINED:
-						case VT_NULL:
-							break;
-						case VT_BOOL: {
-							if ( ( (value::Bool*)r )->value ) {
-								repeat = true;
-								ms = timer.ms;
-							}
-							break;
-						}
-						case VT_INT: {
-							ms = ( (value::Int*)r )->value;
-							ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
+			const auto result = timer.callable->Run( m_gc_space, GSE_CALL_NOGC, {} );
+			if ( result ) {
+				switch ( result->type ) {
+					case VT_UNDEFINED:
+					case VT_NULL:
+						break;
+					case VT_BOOL:
+						if ( ( (value::Bool*)result )->value ) {
 							repeat = true;
-							break;
+							ms = timer.ms;
 						}
-						default:
-							GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
+						break;
+					case VT_INT: {
+						const auto next_ms = ( (value::Int*)result )->value;
+						ValidateMs( next_ms, m_gc_space, GSE_CALL_NOGC );
+						ms = next_ms;
+						repeat = true;
+						break;
 					}
+					default:
+						GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 				}
 			}
-		);
 
-		if ( repeat ) {
-			timers_new[ util::Time::Now() + ms ].insert(
-				{
-					it2.first,
-					{
-						ms,
-						f,
-						ctx,
-						si,
-					}
-				}
-			);
-		}
-
-		if ( m_timers_ms.find( it2.first ) == m_timers_ms.end() ) {
-			// timer was deleted in its own handler, should restart the whole cycle
-			return;
-		}
-
-		m_timers_ms.erase( it2.first );
-	}
-
-	{
-		m_timers.erase( it );
-		for ( const auto& it_new : timers_new ) {
-			for ( const auto& timer : it_new.second ) {
-				m_timers[ it_new.first ].insert( timer );
-				m_timers_ms.insert(
-					{
-						timer.first,
-						it_new.first
-					}
-				);
+			// Self-cancellation (including StopTimers) takes precedence over a
+			// repeat result. Publish a surviving repeat now so later callbacks
+			// can find and cancel it. Accumulation protects the callable during
+			// removal and reinsertion even if its handler removed its last root.
+			if ( StopTimer( id ) && repeat ) {
+				const auto time = util::Time::Now() + ms;
+				m_timers[ time ].insert( { id, { ms, timer.callable, ctx, si } } );
+				m_timers_ms.insert( { id, time } );
 			}
-		}
+		} );
 	}
 }
 

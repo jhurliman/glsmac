@@ -4,6 +4,7 @@ return (m) => {
 		'menu',
 		'popup',
 		'bottom_bar',
+		'research',
 	];
 
 	m.ui.class('default-panel').set({

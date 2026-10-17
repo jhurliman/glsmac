@@ -2499,6 +2499,7 @@ public:
         const auto before_rng=m_game.m_simulation->value.gameplay_random;
         const auto before_settings=m_state->Serialize().ToString();
         const auto before_roster=m_state->ExportRoster();
+        const auto presentations=m_game.m_smac_base_presentations;
         return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
             auto* old_state=m_state;
             auto* candidate=new State(gc_space,ctx,m_glsmac.get());m_gse->AddRootObject(candidate);
@@ -2512,7 +2513,7 @@ public:
             m_game.BindLocalCampaignState(candidate);m_state=candidate;
             m_gse->RemoveRootObject(old_state);
             size_t configure_calls=0,create_calls=0,start_calls=0;
-            m_game.On(GSE_CALL,"configure",NATIVE_CALL(&configure_calls){++configure_calls;return VALUE(value::Undefined); }));
+            m_game.On(GSE_CALL,"configure",NATIVE_CALL(this,&configure_calls,&presentations){++configure_calls;if(presentations){m_game.ConfigureSmacBasePresentations(GSE_CALL,*presentations);}return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
             util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
@@ -2529,7 +2530,12 @@ public:
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
-            GT_ASSERT(m_game.SerializeWorldSnapshot()==expected_world,"campaign restore did not preserve complete world bytes");
+            const auto restored_world=m_game.SerializeWorldSnapshot();
+            if(restored_world!=expected_world){
+                std::ofstream(std::filesystem::temp_directory_path()/"glsmac-campaign-expected.bin",std::ios::binary).write(expected_world.data(),expected_world.size());
+                std::ofstream(std::filesystem::temp_directory_path()/"glsmac-campaign-actual.bin",std::ios::binary).write(restored_world.data(),restored_world.size());
+            }
+            GT_ASSERT(restored_world==expected_world,"campaign restore did not preserve complete world bytes");
             m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
             GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
             GT_OK();

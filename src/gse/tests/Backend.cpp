@@ -214,7 +214,8 @@ public:
 		} );
 	}
 
-	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false ) {
+	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false,
+		const game::backend::settings::SmacSpecialistRules* specialists = nullptr ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -224,6 +225,18 @@ public:
 				if ( filename == "alpha.txt" ) {
 					const auto start = source.find( "#RULES\n" ) + 7;
 					source.replace( start, source.find( ',', start ) - start, std::to_string( road_rate ) );
+					if ( specialists ) {
+						const auto at = source.find( "#CITIZENS\n" );
+						std::string section = "#CITIZENS\n";
+						for ( const auto& row : specialists->specialists ) {
+							section += row.singular + "," + row.plural + "," + row.prerequisite + "," + row.obsolete + ","
+								+ std::to_string( row.economy ) + "," + std::to_string( row.psych ) + "," + std::to_string( row.labs ) + "," + row.trailing_token + "\n";
+						}
+						section += "Ordinary A,As,\nOrdinary B,Bs,\nOrdinary C,Cs,\n";
+						source.replace( at, source.find( "#END", at ) - at, section );
+						const auto old = std::string( "-3, ; synthetic annotation" );
+						source.replace( source.find( old ), old.size(), std::to_string( specialists->minimum_base_size ) + ", ; synthetic annotation" );
+					}
 				}
 				return source;
 			} );
@@ -247,6 +260,12 @@ public:
 	}
 	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
+	}
+	void SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned ) {
+		for ( auto& owner : m_game.m_simulation->value.technology.factions ) {
+			if ( owner.admission.simulation_id == simulation ) { owner.owned = owned; return; }
+		}
+		throw std::runtime_error( "missing specialist fixture owner" );
 	}
 	game::backend::SmacGameplayRandomState ConventionalRandom() const { return m_game.m_simulation->value.gameplay_random; }
 	void ConventionalRandom( game::backend::SmacGameplayRandomState value ) { m_game.m_simulation->value.gameplay_random = value; }
@@ -4242,6 +4261,8 @@ ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< 
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }
+void ConventionalUnitFixture::ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules ) { fixture->ConfigureConventional( true, 3, false, false, false, &rules ); }
+void ConventionalUnitFixture::SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned ) { fixture->SpecialistKnowledge( simulation, owned ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }

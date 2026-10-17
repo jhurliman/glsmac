@@ -7,6 +7,7 @@
 #include "gse/Value.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/faction/SmacSimulationState.h"
+#include "game/backend/settings/SmacSpecialistRules.h"
 
 namespace task::gsetests { class GSETests; }
 namespace game { class FrontendRequest; namespace backend { class Game; namespace unit { class Unit; } namespace map::tile { class Tile; } } }
@@ -20,6 +21,8 @@ public:
 	~ConventionalUnitFixture();
 	void Configure( bool refreshed = true, int32_t road_rate = 3, bool single = false, bool selected_rover = false );
 	void ConfigureMovementCampaign( bool selected_rover = true );
+	void ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules );
+	void SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned );
 	void SelectStartup( int32_t simulation, int32_t design );
 	void CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation = 2 );
 	game::backend::SmacGameplayRandomState GameplayRandom() const;

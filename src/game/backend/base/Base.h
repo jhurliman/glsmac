@@ -13,6 +13,7 @@
 #include "Pop.h"
 #include "ProductionState.h"
 #include "SmacBaseResourceContext.h"
+#include "SmacSpecialists.h"
 
 namespace gse::value {
 class Object;
@@ -76,6 +77,10 @@ public:
 	SmacBaseResourceContext GetSmacResourceContext() const;
 	// Explicit state replacement; cannot adopt a legacy Base or change ownership.
 	void SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& context );
+	// Read-only menu/initial-selector queries from this Base's actual population
+	// and bound owner. They do not run or mutate the manual worker handler.
+	SmacSpecialistMenu GetSmacSpecialistMenu( std::optional< size_t > pop_id = std::nullopt ) const;
+	uint8_t SelectAutomaticSmacSpecialist() const;
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -101,6 +106,8 @@ private:
 	std::optional< ProductionState > m_production;
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
+	uint32_t ValidateSmacSpecialistPopulation() const;
+	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;
 
 	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
 

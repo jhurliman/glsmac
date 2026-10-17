@@ -89,6 +89,7 @@ public:
 
 private:
 	friend class Base;
+	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;
 	using tile_key_t = std::pair< size_t, size_t >;
 	using pop_key_t = std::pair< size_t, size_t >;
 	// Derived lookup only. IDs/coordinates remain safe after the map is destroyed.

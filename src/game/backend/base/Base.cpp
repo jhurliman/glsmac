@@ -362,6 +362,24 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	WRAPIMPL_CUSTOM_SETTERS
 	{
+		"get_smac_specialist_menu",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 1 );
+			if ( arguments.at( 0 )->Deref()->type == gse::VT_UNDEFINED ) { return CopySmacSpecialistMenu( GSE_CALL, std::nullopt ); }
+			N_GETVALUE_UNWRAP( pop, 0, Pop );
+			const auto found = pop ? m_pops.find( pop->m_id ) : m_pops.end();
+			if ( found == m_pops.end() || &found->second != pop || pop->m_base != this ) { GSE_ERROR( gse::EC.INVALID_CALL, "Population does not belong to this Base" ); }
+			return CopySmacSpecialistMenu( GSE_CALL, pop->m_id );
+		} )
+	},
+	{
+		"get_smac_automatic_specialist",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Int,, SelectAutomaticSmacSpecialist() );
+		} )
+	},
+	{
 		"get_smac_resource_context",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

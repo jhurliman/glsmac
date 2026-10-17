@@ -98,6 +98,14 @@ game::backend::settings::SmacWorldSizeRules SmacRulesTXTLoader::ParseWorldSizeRu
 	return result;
 }
 
+game::backend::settings::SmacMovementRules SmacRulesTXTLoader::ParseMovementRules( const std::string& source ) {
+	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
+	if ( rules.size() != 70 ) { throw std::invalid_argument( "SMAC movement requires 70 positional RULES rows" ); }
+	auto field = util::String::TrimCopy( rules.front().substr( 0, rules.front().find( ';' ) ) );
+	if ( !field.empty() && field.back() == ',' ) { field.pop_back(); field = util::String::TrimCopy( field ); }
+	return game::backend::settings::SmacMovementRules( ParseField( field, "row 1", 1, "RULES" ) );
+}
+
 game::backend::settings::SmacProductionRules SmacRulesTXTLoader::ParseProductionRules( const std::string& source ) {
 	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
 	const auto facilities = TXTLoader::ReadUniqueSection( source, "FACILITIES" );

@@ -147,3 +147,28 @@ late technology parse error. No intended checkout source was replaced by a
 mutant. The initial normal compile exposed a test-only string/character delimiter
 typo, corrected before the reported runs. Receipts are retained under
 `/home/jhurliman/src/glsmac-technology-audit`.
+
+The first native Windows integration build exposed the existing Windows SDK's
+`TECHNOLOGY` macro colliding with the new enum names. The correction
+`77aa41bec751a0d507bb9e4cbbcd7d460cd474e6` names those enum entries
+`TECHNOLOGY_ID`; numeric values, source tokens and semantics are unchanged.
+The integrated Windows build at that exact commit, also containing the separate
+initial-turn fix, passed all eight CTests in 39.94 seconds. The original compile
+failure is retained as `out/technology-startup-windows-build-macro-failure.log`;
+the successful build and test receipts are
+`out/technology-startup-windows-{build,ctest}.log` in the integration checkout.
+These are integration results, not a claim that the narrower publication
+branch has the same eight test registrations.
+
+Focused publication starts at production-profile prerequisite #111,
+`f54d5f4e10343236fe13da0e64f3376adc9461fb`. Its implementation at
+`a99de1ae` retains the reviewed parser, settings, codec, pure tests and probe
+byte-for-byte, including the Windows correction. Only the test registrations
+were adapted to the smaller parent: one source, one include and one Add call.
+All five registered CTests passed in 24.91 seconds; the three changed production
+translation units passed analysis with zero failures in 1.71 seconds. The
+Release installed-file probe again matched all 89 records, 89 key resolutions
+and the 16 applicable retained original token cases; its CLI controls passed.
+These publication receipts are retained under
+`/home/jhurliman/src/glsmac-technology-publication`. The preceding sanitizer and
+Windows results describe the integrated sources, not additional publication runs.

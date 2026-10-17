@@ -26,6 +26,7 @@ SET( SRC ${SRC}
 	${PWD}/Game.cpp
 	${PWD}/GameSimulation.cpp
 	${PWD}/GameProduction.cpp
+	${PWD}/GamePopulation.cpp
 	${PWD}/GameTileResources.cpp
 	${PWD}/GameWorkerKnowledge.cpp
 	${PWD}/GameTerritory.cpp

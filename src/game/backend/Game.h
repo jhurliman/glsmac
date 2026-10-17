@@ -84,6 +84,7 @@ class UnitManager;
 
 namespace base {
 class BaseManager;
+struct SmacPopulationRules;
 }
 
 namespace animation {
@@ -389,6 +390,7 @@ public:
 	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
+	base::SmacPopulationRules GetCanonicalPopulationRules( const base::Base& base ) const;
 	// Positional source identity is explicit; opaque IDs are never parsed.
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
 	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;

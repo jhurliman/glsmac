@@ -15,10 +15,11 @@ Buffer::Buffer() {
 	dr = nullptr;
 }
 
-Buffer::Buffer( const std::string& val ) {
+Buffer::Buffer( const std::string& val )
+	: Buffer() {
+	if ( val.empty() ) { return; }
 	allocated_len = val.size();
 	lenw = val.size();
-	lenr = 0;
 	data = (data_t*)malloc( lenw );
 	memcpy( ptr( data, 0, lenw ), val.data(), lenw );
 	dw = data + lenw;
@@ -102,7 +103,7 @@ void Buffer::WriteImpl( type_t type, const char* s, const uint32_t sz ) {
 	//Log( "Written successfully" );
 }
 
-char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const std::optional< uint32_t > need_sz ) {
+char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const std::optional< uint32_t > need_sz, const std::optional< uint32_t > max_sz ) {
 	ASSERT( need_type > T_NONE && need_type < T_MAX, "invalid buffer read type " + std::to_string( need_type ) );
 	// Parse and validate the complete frame before allocating, changing the
 	// caller's output, or advancing the cursor. Subtract from bytes remaining
@@ -125,6 +126,8 @@ char* Buffer::ReadImpl( type_t need_type, char* s, uint32_t* sz, const std::opti
 	if ( need_sz && *need_sz != payload_size ) {
 		THROW( "buffer read size mismatch ( " + std::to_string( *need_sz ) + " != " + std::to_string( payload_size ) + " )" );
 	}
+
+	if ( max_sz && payload_size > *max_sz ) { THROW( "buffer read exceeds payload limit" ); }
 
 	const auto* payload = dr + header_size;
 	checksum_t need_c = 0;
@@ -196,9 +199,9 @@ void Buffer::WriteString( const std::string& val ) {
 	WriteImpl( T_STRING, val.data(), val.size() );
 }
 
-const std::string Buffer::ReadString() {
+const std::string Buffer::ReadString( const std::optional< uint32_t > max_size ) {
 	uint32_t sz = 0;
-	char* res_data = ReadImpl( T_STRING, nullptr, &sz );
+	char* res_data = ReadImpl( T_STRING, nullptr, &sz, std::nullopt, max_size );
 	if ( sz > 0 ) {
 		std::string result = std::string( res_data, sz );
 		free( res_data );

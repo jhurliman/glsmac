@@ -384,25 +384,27 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Extend the integrated conventional command/HQ route with the measured
-   startup-selected Spartan Rover and Gaian rating composition. Remove global
-   unit/base-count fences only where caller provenance and remote-record
-   controls establish independence. Preserve actual endpoint, occupancy and
-   ownership checks; distant fungus, repair and hostile interactions remain
-   separate consumers. Keep exact Unit/tile/RNG continuation.
-2. Complete initialized Infantry presentation from the fresh original capture:
-   VI/reactor scene shades, Infantry scale and attachment, initialized light,
-   and the separately initialized main palette. Preserve prior Scout/Rover
-   profiles. The actual Early-to-ready lifecycle is integrated; connect an
-   explicitly admitted default startup branch only when presentation and
-   commands support its real roster and terrain.
-3. Retain all nine resource rows, mine rules, demand and configured yield-tech
-   identities in the owned host/world profile, then connect the existing
-   canonical evaluating-base query to real worker intake. Preserve the measured
-   manual-handler calculation and rejection order. Follow with support,
-   posting, completion and queues, retaining independent stored minerals and
-   switching baseline. Founding and combat still need legal persistent commands
-   to complete the first-base to second-base loop.
+1. Complete the conventional bottom-bar/preview consumer of checked stats,
+   including current allowance and the definition's morale name. Initialized
+   Infantry presentation, Early-to-ready startup, selected Rover and Gaian HQ
+   movement, and remote-record independence are integrated. Queue an actual
+   selected starting unit only where the startup and movement route admit its
+   terrain. Ordinary moves away from HQ, native encounters, repair and hostile
+   interactions still need their callers. Destination fungus without an admitted
+   nearby HQ is now rejected: the old empty-world fixture supplied a zero
+   nearest-base distance and did not establish general encounter behavior.
+2. Connect the canonical evaluating-base query to real worker intake using the
+   integrated complete resource profile. Derive fungal capabilities from owned
+   technology and faction records; retain the specialist catalog, worker choices,
+   base options and resource modifiers. The seven-faction first-worker and reset
+   compositions supply the next acceptance cases. Preserve valid specialist
+   allocations through recalculation and the measured manual-handler order;
+   keep map-generation policy distinct from original generator equivalence.
+3. Complete support, production posting/completion/queues and research, retaining
+   independent stored minerals and switching baseline. Add legal persistent
+   Colony Pod founding and Former commands, then conventional combat, to close
+   the first-base to second-base conquest loop. Recalculation must not post an
+   extra turn of nutrients, minerals or treasury income.
 
 The host/world profile and startup-design foundations are implemented; focused
 publication and review remain separate from integration. Review quota delays

@@ -24,6 +24,12 @@ class ScopeTests(unittest.TestCase):
                      "resource/icon/glsmac.ico", "packaging/Info.plist", "cmake/toolchain.txt", "vcpkg.json", "deps/conan.lock"):
             self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": True}}, [path])[:2], (True, True), path)
 
+    def test_threaded_runtime_selects_full_platform_coverage(self):
+        root = Path(__file__).resolve().parents[2]
+        for path in ("src/GLSMAC.cpp", "src/GLSMAC.h"):
+            self.assertTrue((root / path).is_file(), path)
+            self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": True}}, [path])[:2], (True, True), path)
+
     def test_ready_main_and_queue_do_not_repeat_platform_matrix(self):
         paths = ["src/game/backend/base/Rule.cpp"]
         self.assertEqual(policy.select_scope("pull_request", {"pull_request": {"draft": False}}, paths)[:2], (True, False))

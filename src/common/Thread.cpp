@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cmath>
 #include <exception>
+#include <algorithm>
 
 #include "Thread.h"
 #include "common/Module.h"
@@ -30,7 +31,23 @@ void Thread::SetIPS( const float ips ) {
 }
 void Thread::AddModule( Module* module ) {
 	ASSERT( module, "null module added" );
+	if ( module == m_first_stop_module ) {
+		THROW( "early-stop module must be registered exactly once" );
+	}
 	m_modules.push_back( module );
+}
+
+void Thread::StopModuleFirst( Module* module ) {
+	if ( m_state != STATE_INACTIVE || m_thread || m_has_run ) {
+		THROW( "early-stop module must be configured before the first run" );
+	}
+	if ( !module || std::count( m_modules.begin(), m_modules.end(), module ) != 1 ) {
+		THROW( "early-stop module must be registered exactly once" );
+	}
+	if ( m_first_stop_module && m_first_stop_module != module ) {
+		THROW( "early-stop module already configured" );
+	}
+	m_first_stop_module = module;
 }
 
 void Thread::T_Start() {
@@ -76,6 +93,7 @@ void Thread::T_Stop() {
 void Thread::Run( const std::function< bool() >& should_stop, const std::function< void() >& before_stop ) {
 
 	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
+	m_has_run = true;
 	size_t started_modules = 0;
 	std::exception_ptr error;
 	try {
@@ -190,15 +208,23 @@ void Thread::Run( const std::function< bool() >& should_stop, const std::functio
 	}
 	// A failed Start must clean up its own partial initialization. Stop only
 	// modules whose Start returned, and continue even if one Stop fails.
-	while ( started_modules ) {
+	const auto stop_module = [ &error ]( Module* module ) {
 		try {
-			m_modules[ --started_modules ]->Stop();
+			module->Stop();
 		}
 		catch ( ... ) {
 			if ( !error ) {
 				error = std::current_exception();
 			}
 		}
+	};
+	const auto started_end = m_modules.begin() + started_modules;
+	if ( m_first_stop_module && std::find( m_modules.begin(), started_end, m_first_stop_module ) != started_end ) {
+		stop_module( m_first_stop_module );
+	}
+	while ( started_modules ) {
+		auto* module = m_modules[ --started_modules ];
+		if ( module != m_first_stop_module ) { stop_module( module ); }
 	}
 
 	m_state = STATE_INACTIVE;

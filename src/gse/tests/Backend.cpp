@@ -4,6 +4,8 @@
 #include "GLSMAC.h"
 #include "ui/UI.h"
 #include "ui/dom/Object.h"
+#include "ui/BaseResourcePresentation.h"
+#include <cmath>
 
 #include "task/gsetests/GSETests.h"
 #include "gse/GSE.h"
@@ -5674,6 +5676,169 @@ static void AddEvaluatingBaseTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test base resource presentation preserves signed progress and placeholder rounding", GT() {
+		for ( int64_t profit = -12; profit <= 12; ++profit ) {
+			for ( int64_t loss = -12; loss <= 12; ++loss ) {
+				const auto pending = profit - loss;
+				const auto energy = ::ui::PlaceholderEnergyAllocation::Format( profit, loss );
+				const auto labs = static_cast< int64_t >( std::round( static_cast< double >( pending ) * 0.4 ) );
+				const auto psych = static_cast< int64_t >( std::round( static_cast< double >( pending ) * 0.2 ) );
+				GT_ASSERT( energy.labs == labs && energy.psych == psych && energy.economy == pending - labs - psych, "ordinary placeholder allocation changed" );
+				for ( int64_t filled = -24; filled <= 24; ++filled ) {
+					for ( int64_t cap = 0; cap <= 24; cap += 6 ) {
+						const auto actual = ::ui::ResourceProgress::Format( profit, loss, filled, cap );
+						const auto turns = pending > 0 ? static_cast< int64_t >( std::ceil( static_cast< double >( cap - filled ) / static_cast< double >( pending ) ) ) : 0;
+						GT_ASSERT( actual.direction == ( pending > 0 ? 1 : pending < 0 ? -1 : 0 ) && actual.turns == std::to_string( turns ), "signed ceil progress changed" );
+						GT_ASSERT( actual.filled_cells == std::clamp< int64_t >( filled, 0, cap ) && actual.end_cells == std::clamp< int64_t >( filled + pending, 0, cap ), "visible cell clipping changed" );
+					}
+				}
+			}
+		}
+		const auto minimum = std::numeric_limits< int64_t >::min();
+		const auto maximum = std::numeric_limits< int64_t >::max();
+		const auto widest = ::ui::ResourceProgress::Format( 1, 0, minimum, maximum );
+		GT_ASSERT( widest.turns == "18446744073709551615" && widest.filled_cells == 0 && widest.end_cells == 0, "widest exact turn count narrowed" );
+		const auto zero = ::ui::ResourceProgress::Format( maximum, minimum, minimum, 0 );
+		GT_ASSERT( zero.turns == "1" && zero.filled_cells == 0 && zero.end_cells == 0, "zero capacity changed exact progress" );
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* progress = ::ui::UI::CreateResourceProgressFormatter( GSE_CALL );
+			auto* energy = ::ui::UI::CreatePlaceholderEnergyFormatter( GSE_CALL );
+			auto* zero = VALUE( value::Int,, 0 );
+			auto* wrong_type = VALUE( value::String,, "0" );
+			for ( auto* factory : { progress, energy } ) {
+				const size_t count = factory == progress ? 4 : 2;
+				std::vector< value::function_arguments_t > invalid = { {}, value::function_arguments_t( count - 1, zero ), value::function_arguments_t( count + 1, zero ) };
+				for ( size_t i = 0; i < count; ++i ) {
+					auto args = value::function_arguments_t( count, zero ); args[ i ] = wrong_type; invalid.push_back( args );
+				}
+				if ( factory == progress ) { invalid.push_back( { zero, zero, zero, VALUE( value::Int,, -1 ) } ); }
+				for ( const auto& args : invalid ) {
+					try { factory->Run( GSE_CALL, args ); GT_FAIL( "invalid base presentation arguments accepted" ); }
+					catch ( const Exception& e ) { GT_ASSERT( e.class_name == EC.INVALID_CALL, "wrong base presentation validation error" ); }
+				}
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "base resource presentation: " + error ); GT_OK();
+	} );
+	for ( const bool energy_case : { false, true } ) {
+		task->AddTest( std::string( "test complete base screen displays signed " ) + ( energy_case ? "energy" : "nutrient" ) + " endpoints", GT( energy_case ) {
+			using namespace game::backend::base;
+			const auto next = Base::GetNextId();
+			util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+			BackendFixture fixture;
+			fixture.EnableYieldFixture(); fixture.SetRunning( true );
+			fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+			auto* base = fixture.AddBaseWithPop( 701, 7 );
+			const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.GetGame();
+				int64_t nutrients = 6, nutrient_loss = 2, energy = 10, energy_loss = 0;
+				auto* getter = NATIVE_CALL( &nutrients, &energy ) {
+					return new value::Object( GSE_CALL, {
+						{ "NUTRIENTS", VALUE( value::Int,, nutrients ) }, { "MINERALS", VALUE( value::Int,, 300 ) }, { "ENERGY", VALUE( value::Int,, energy ) },
+					} );
+				} );
+				auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+				auto* services = script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+				if ( energy_case ) {
+					game->GetBM()->Off( GSE_CALL, "get_base_consumption", 0 );
+					game->GetBM()->On( GSE_CALL, "get_base_consumption", NATIVE_CALL( &energy_loss ) {
+						return new value::Object( GSE_CALL, { { "NUTRIENTS", VALUE( value::Int,, 2 ) }, { "ENERGY", VALUE( value::Int,, energy_loss ) } } );
+					} ) );
+				}
+				auto* ui = new value::Object( GSE_CALL, {
+					{ "format_resource_balance", ::ui::UI::CreateResourceBalanceFormatter( GSE_CALL ) },
+					{ "format_resource_progress", ::ui::UI::CreateResourceProgressFormatter( GSE_CALL ) },
+					{ "format_placeholder_energy", ::ui::UI::CreatePlaceholderEnergyFormatter( GSE_CALL ) },
+				} );
+				auto* initialize = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_screen_resources" ) );
+				auto* draw = static_cast< value::Callable* >( initialize->Run( GSE_CALL, { services, base->Wrap( GSE_CALL ), ui } ) );
+				const auto minimum = std::numeric_limits< int64_t >::min();
+				const auto maximum = std::numeric_limits< int64_t >::max();
+				struct Case {
+					int64_t profit, loss, filled;
+					const char* growth;
+					const char* balance;
+					int64_t full, pending, deficit, empty;
+					int64_t labs = 4, psych = 2, economy = 4;
+				};
+				const std::vector< Case > nutrient_cases = {
+					{ 6, 2, 0, "Growth: 5 turns", "+004", 0, 4, 0, 16 },
+					{ minimum, 2, 0, "Hunger!", "-9223372036854775810", 0, 0, 0, 20 },
+					{ minimum, 2, 8, "Hunger!", "-9223372036854775810", 0, 0, 8, 12 },
+					{ maximum, 2, 8, "Growth: 1 turn", "+9223372036854775805", 8, 12, 0, 0 },
+					{ minimum, 2, minimum, "Hunger!", "-9223372036854775810", 0, 0, 0, 20 },
+					{ maximum, 2, minimum, "Growth: 2 turns", "+9223372036854775805", 0, 0, 0, 20 },
+					{ 3, 2, minimum, "Growth: 9223372036854775828 turns", "+001", 0, 0, 0, 20 },
+					{ maximum, 2, maximum, "Growth: 0 turns", "+9223372036854775805", 20, 0, 0, 0 },
+					{ 3, 2, maximum, "Growth: -9223372036854775787 turns", "+001", 20, 0, 0, 0 },
+					{ 5, 2, 23, "Growth: -1 turns", "+003", 20, 0, 0, 0 },
+					{ 6, 2, 23, "Growth: 0 turns", "+004", 20, 0, 0, 0 },
+					{ 6, 2, -3, "Growth: 6 turns", "+004", 0, 1, 0, 19 },
+					{ 6, 2, -4, "Growth: 6 turns", "+004", 0, 0, 0, 20 },
+					{ 6, 2, -5, "Growth: 7 turns", "+004", 0, 0, 0, 20 },
+					{ 0, 2, 8, "Hunger!", "-002", 6, 0, 2, 12 },
+					{ 0, 2, -3, "Hunger!", "-002", 0, 0, 0, 20 },
+					{ 2, 2, 8, "Growth: -stagnant-", "000", 8, 0, 0, 12 },
+					{ 2, 2, minimum, "Growth: -stagnant-", "000", 0, 0, 0, 20 },
+					{ 22, 2, 0, "Growth: 1 turn", "+020", 0, 20, 0, 0 },
+					{ 3, 2, 19, "Growth: 1 turn", "+001", 19, 1, 0, 0 },
+					// Explicit callback consumption controls beyond the default2.
+					{ maximum, minimum, minimum, "Growth: 1 turn", "+18446744073709551615", 0, 20, 0, 0 },
+					{ minimum, maximum, maximum, "Hunger!", "-18446744073709551615", 0, 0, 20, 0 },
+					{ 0, minimum, minimum, "Growth: 2 turns", "+9223372036854775808", 0, 0, 0, 20 },
+				};
+				const std::vector< Case > energy_cases = {
+					{ 10, 0, 0, "Growth: 5 turns", "+010", 0, 4, 0, 16, 4, 2, 4 },
+					{ minimum, 2, 0, "Growth: 5 turns", "-9223372036854775810", 0, 4, 0, 16, -3689348814741910324LL, -1844674407370955162LL, -3689348814741910324LL },
+					{ minimum, maximum, 0, "Growth: 5 turns", "-18446744073709551615", 0, 4, 0, 16, -7378697629483820646LL, -3689348814741910323LL, -7378697629483820646LL },
+					{ maximum, minimum, 0, "Growth: 5 turns", "+18446744073709551615", 0, 4, 0, 16, 7378697629483820646LL, 3689348814741910323LL, 7378697629483820646LL },
+					{ maximum, 0, 0, "Growth: 5 turns", "+9223372036854775807", 0, 4, 0, 16, 3689348814741910323LL, 1844674407370955161LL, 3689348814741910323LL },
+					{ minimum, 0, 0, "Growth: 5 turns", "-9223372036854775808", 0, 4, 0, 16, -3689348814741910323LL, -1844674407370955162LL, -3689348814741910323LL },
+					{ minimum, minimum, 0, "Growth: 5 turns", "000", 0, 4, 0, 16, 0, 0, 0 },
+					{ maximum, maximum, 0, "Growth: 5 turns", "000", 0, 4, 0, 16, 0, 0, 0 },
+					{ -2, 0, 0, "Growth: 5 turns", "-002", 0, 4, 0, 16, -1, 0, -1 },
+					{ 3, 0, 0, "Growth: 5 turns", "+003", 0, 4, 0, 16, 1, 1, 1 },
+					{ 300, 0, 0, "Growth: 5 turns", "+300", 0, 4, 0, 16, 120, 60, 120 },
+					{ 0, 0, 0, "Growth: 5 turns", "000", 0, 4, 0, 16, 0, 0, 0 },
+				};
+				bool custom_nutrient_consumption = false;
+				for ( const auto& test : energy_case ? energy_cases : nutrient_cases ) {
+					if ( energy_case ) { energy = test.profit; energy_loss = test.loss; }
+					else {
+						nutrients = test.profit; nutrient_loss = test.loss;
+						if ( test.loss != 2 && !custom_nutrient_consumption ) {
+							game->GetBM()->Off( GSE_CALL, "get_base_consumption", 0 );
+							game->GetBM()->On( GSE_CALL, "get_base_consumption", NATIVE_CALL( &nutrient_loss ) {
+								return new value::Object( GSE_CALL, { { "NUTRIENTS", VALUE( value::Int,, nutrient_loss ) } } );
+							} ) );
+							custom_nutrient_consumption = true;
+						}
+					}
+					base->SetAccumulatedNutrients( test.filled );
+					const auto before = Base::Serialize( base ).ToString();
+					const auto rng = game->GetRandom()->GetStateString();
+					const auto frontend = fixture.FrontendRequestCount();
+					auto* expected = new value::Object( GSE_CALL, {
+						{ "growth", VALUE( value::String,, test.growth ) },
+						{ "nutrients", VALUE( value::String,, energy_case ? "+004" : test.balance ) },
+						{ "energy", VALUE( value::String,, energy_case ? test.balance : "+010" ) },
+						{ "labs", VALUE( value::Int,, test.labs ) }, { "psych", VALUE( value::Int,, test.psych ) }, { "economy", VALUE( value::Int,, test.economy ) },
+						{ "cells", new value::Object( GSE_CALL, {
+							{ "full", VALUE( value::Int,, test.full ) }, { "pending", VALUE( value::Int,, test.pending ) },
+							{ "deficit", VALUE( value::Int,, test.deficit ) }, { "empty", VALUE( value::Int,, test.empty ) },
+						} ) },
+					} );
+					draw->Run( GSE_CALL, { expected } );
+					GT_ASSERT( Base::Serialize( base ).ToString() == before && game->GetRandom()->GetStateString() == rng && fixture.FrontendRequestCount() == frontend,
+						"complete screen changed authoritative state" );
+				}
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "complete base screen: " + error ); GT_OK();
+		} );
+	}
 	task->AddTest( "test production tile scoring rejects overflowing resource arithmetic", GT() {
 		using namespace game::backend::base;
 		const auto next = Base::GetNextId();

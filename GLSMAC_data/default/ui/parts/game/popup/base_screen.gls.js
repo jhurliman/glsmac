@@ -361,9 +361,14 @@ return {
 					+ ' → ' + #to_string(choice.minerals) + ' minerals. OK to confirm; Cancel keeps production.';
 				return;
 			}
+			// GSE object literals bind this to the new object, so retain screen
+			// values before constructing the event payload.
+			const base = this.base;
+			const expected_state = this.production_data.expected_state;
+			const confirm = this.production_confirming;
 			this.p.game.event('select_smac_production', {
-				base: this.base, source_id: choice.source_id,
-				expected_state: this.production_data.expected_state, confirm: this.production_confirming,
+				base: base, source_id: choice.source_id,
+				expected_state: expected_state, confirm: confirm,
 				expected_minerals: choice.minerals,
 			});
 			this.hide_production_selection();

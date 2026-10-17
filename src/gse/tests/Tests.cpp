@@ -56,6 +56,7 @@
 #include "SmacMineralCostFactor.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
+#include "SmacWorkedSquareCollection.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
 #include "SmacBaseResourceContext.h"
@@ -251,6 +252,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddBufferTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacWorkerAllocationTests( task );
+		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );

@@ -9,6 +9,20 @@
 
 namespace gse::tests::smac_rules_fixture {
 
+inline game::backend::settings::SmacWorldSizeRules WorldSizes() {
+	return { { { { "Fixture tiny", 4, 8 }, { "Fixture small", 24, 48 }, { "Fixture standard", 32, 64 }, { "Fixture large", 40, 80 }, { "Fixture huge", 64, 128 } } } };
+}
+
+inline std::string WorldSizeSource() {
+	std::string source = "#WORLDSIZE\n5\n";
+	for ( const auto& row : WorldSizes().presets ) { source += row.name + ", " + std::to_string( row.source_x ) + ", " + std::to_string( row.source_y ) + "\n"; }
+	return source + "#END\n";
+}
+
+inline void AcceptWorldSize( game::backend::settings::GlobalSettings& settings ) {
+	if ( settings.GetRulesetId() == "smac" ) { settings.SelectSmacWorldSize( 0 ); }
+}
+
 inline game::backend::settings::SmacTechnologyRules Technologies() {
 	game::backend::settings::SmacTechnologyRules result;
 	for ( size_t i = 0 ; i < result.technologies.size() ; ++i ) {
@@ -58,7 +72,7 @@ inline std::string ProductionSource() {
 // Synthetic numeric values intentionally differ from installed defaults.
 inline std::string Source( const std::string& filename ) {
 	if ( filename != "alpha.txt" ) { throw std::runtime_error( "Unexpected rules filename: " + filename ); }
-	return ProductionSource() + TechnologySource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	return ProductionSource() + TechnologySource() + WorldSizeSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -69,21 +83,24 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 	return rules && rules->base_square == RuleTriple{ 17, INT32_MIN, INT32_MAX }
 		&& rules->bonus_square == RuleTriple{ -2, 300, 0 } && rules->recycling == RuleTriple{ -7, 8, 9 }
 		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production()
-		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies();
+		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies()
+		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::array< int64_t, 9 >& values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
 	const std::optional< std::string >& production = std::nullopt,
-	const std::optional< std::string >& technologies = std::nullopt ) {
+	const std::optional< std::string >& technologies = std::nullopt,
+	const std::optional< std::string >& sizes = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 4 );
+	result.WriteInt( 5 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
 		for ( const auto value : values ) { result.WriteInt( value ); }
 		result.WriteString( production ? *production : Production().Serialize().ToString() );
 		result.WriteString( technologies ? *technologies : Technologies().Serialize().ToString() );
+		result.WriteString( sizes ? *sizes : WorldSizes().Serialize().ToString() );
 	}
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;

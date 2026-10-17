@@ -12,6 +12,7 @@
 #include "game/backend/resource/SmacBaseSquareYield.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
+#include "SmacWorldSizeRules.h"
 
 #include "gse/Wrappable.h"
 
@@ -43,6 +44,10 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 	 */
 	int64_t size_x = 112;
 	int64_t size_y = 56;
+	const std::optional< SmacWorldSizeSelection >& GetSmacWorldSize() const;
+	void SetSmacWorldSize( const SmacWorldSizeSelection& selection );
+	void ClearSmacWorldSize();
+	void LockWorldSize();
 
 	/*
 	 	{ settings::MAP_CONFIG_OCEAN_LOW,    0.4f }, // '30-50% of surface'
@@ -76,6 +81,10 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
+private:
+	friend class GlobalSettings;
+	std::optional< SmacWorldSizeSelection > m_smac_world_size;
+	bool m_world_size_locked = false;
 };
 
 // settings that are synced between players (host has authority)
@@ -91,6 +100,12 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< resource::smac::BaseSquareRules >& GetSmacBaseSquareRules() const;
 	const std::optional< SmacProductionRules >& GetSmacProductionRules() const;
 	const std::optional< SmacTechnologyRules >& GetSmacTechnologyRules() const;
+	const std::optional< SmacWorldSizeRules >& GetSmacWorldSizeRules() const;
+	void SelectSmacWorldSize( int64_t category );
+	void SelectSmacCustomSize( int64_t width, int64_t height );
+	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
+	void ValidateWorldSize( bool require_selection = true ) const;
+	void LockWorldSize();
 	// Source facility slot 1..71. Missing profile/slot remains unavailable;
 	// this query does not establish faction ownership or buildability.
 	SmacProductionPrerequisite GetSmacFacilityPrerequisite( int32_t source_id ) const;
@@ -118,6 +133,7 @@ private:
 	std::optional< resource::smac::BaseSquareRules > m_smac_base_square_rules;
 	std::optional< SmacProductionRules > m_smac_production_rules;
 	std::optional< SmacTechnologyRules > m_smac_technology_rules;
+	std::optional< SmacWorldSizeRules > m_smac_world_size_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

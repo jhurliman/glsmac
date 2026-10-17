@@ -555,6 +555,15 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 		m_state->m_settings.local.network_role = game::backend::settings::LocalSettings::NR_NONE;
 		m_state->m_settings.global.SelectRuleset( c->GetRuleset() );
 		InitGameState( GSE_CALL );
+		if ( c->GetRuleset() == "smac" ) {
+			try {
+				if ( c->GetQuickstartWorldSize() >= 0 ) { m_state->m_settings.global.SelectSmacWorldSize( c->GetQuickstartWorldSize() ); }
+				else {
+					const auto size = c->GetQuickstartMapSize();
+					m_state->m_settings.global.SelectSmacCustomSize( size.x, size.y );
+				}
+			} catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+		}
 		m_state->m_settings.global.Initialize();
 		game::backend::faction::Faction* faction = nullptr;
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
@@ -657,7 +666,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 		&& !m_state->m_connection->AsClient()->HasGlobalSettings() ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Waiting for the host's gameplay settings" );
 	}
-	try { m_state->m_settings.global.LockRuleset(); }
+	try { m_state->m_settings.global.LockRuleset(); m_state->m_settings.global.LockWorldSize(); }
 	catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	// real state belongs to game task now
 	// save it as backup, then make temporary shallow copy (no connection, players etc)

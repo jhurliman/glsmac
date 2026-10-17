@@ -28,7 +28,8 @@ std::string Source(const std::string& filename) {
 		else {
 			++row;
 			if(section=="#RULES"&&(row==2||row==7||row==21)) {line.replace(0,line.find(','),row==2?"2":"10");}
-			if(section=="#RESOURCEINFO") {line=row==2?"Center,2,1,3":"Other,0,0,0";}
+			// Actual Headquarters adds one energy to this supplied center value.
+			if(section=="#RESOURCEINFO") {line=row==2?"Center,2,1,2":"Other,0,0,0";}
 			if(section=="#FACILITIES") {
 				const auto first=line.find(',');const auto second=line.find(',',first+1);const auto third=line.find(',',second+1);
 				line.replace(second+1,third-second-1,row==1?"0":"2");
@@ -61,6 +62,8 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"UNIVERSITY");
 		return fixture.Run([&](GSE_CALLABLE)->std::string {
 			auto* game=fixture.Game();auto* base=Create(GSE_CALL,game);
+			// Exercise positive first-turn research above the Citizen/Specialist gate.
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
 			fixture.ResourceState([](auto& state){auto& economy=state.economy.at(1);economy.credits=100;economy.pending_debit=7;economy.research_fraction=90;
 				state.social.factions[0].current[1]=0;state.social.factions[0].current[10]=2;
 				auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=1000;tech.labs=40;});

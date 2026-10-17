@@ -58,6 +58,46 @@ const SmacFactionTechnologyState* SmacTechnologyState::Find( int32_t simulation_
 	return nullptr;
 }
 
+bool SmacFungalCapabilities::operator==( const SmacFungalCapabilities& other ) const {
+	return nutrients == other.nutrients && minerals == other.minerals && energy == other.energy;
+}
+
+SmacFungalCapabilities SmacTechnologyState::FungalCapabilities( int32_t simulation_id, const settings::SmacTechnologyRules& technologies,
+	const settings::SmacFactionStartupRules& profiles ) const {
+	Validate( technologies, profiles );
+	const auto* faction = Find( simulation_id );
+	if ( !faction ) { throw std::invalid_argument( "SMAC fungal capabilities require an admitted simulation ID" ); }
+	SmacFungalCapabilities result{ 0, 0, 0 };
+	// Do not emulate unverified original overflow, even if a later floor or
+	// modifier would make the final value representable.
+	const auto add = []( int32_t& value, int32_t amount ) {
+		const int64_t sum = int64_t( value ) + amount;
+		if ( sum < INT32_MIN || sum > INT32_MAX ) { throw std::overflow_error( "SMAC fungal capability addition outside signed32" ); }
+		value = static_cast< int32_t >( sum );
+	};
+	using Reference = settings::SmacTechnologyReference::Kind;
+	for ( size_t id = 0; id < 88; ++id ) {
+		const auto& row = technologies.technologies[ id ];
+		if ( !faction->owned[ id ] || !( row.flags & 0x1c0 ) ) { continue; }
+		const auto first = technologies.ResolveToken( row.prerequisites[ 0 ] );
+		const auto second = technologies.ResolveToken( row.prerequisites[ 1 ] );
+		if ( first.kind == Reference::UNKNOWN || second.kind == Reference::UNKNOWN ) {
+			throw std::invalid_argument( "Unknown SMAC fungal technology prerequisite" );
+		}
+		if ( first.kind == Reference::DISABLED || ( second.kind == Reference::DISABLED && first.kind != Reference::NONE ) ) { continue; }
+		if ( row.flags & 0x100 ) { add( result.nutrients, 1 ); }
+		if ( row.flags & 0x80 ) { add( result.minerals, 1 ); }
+		if ( row.flags & 0x40 ) { add( result.energy, 1 ); }
+	}
+	for ( const auto& bonus : profiles.Find( faction->admission.faction_id )->Records() ) {
+		if ( bonus.kind == settings::SmacFactionStartupBonus::Kind::FUNGNUTRIENT ) { add( result.nutrients, bonus.parameter ); }
+	}
+	if ( result.nutrients < 0 ) { result.nutrients = 0; }
+	if ( result.minerals < 0 ) { result.minerals = 0; }
+	if ( result.energy < 0 ) { result.energy = 0; }
+	return result;
+}
+
 void SmacTechnologyState::ClearOwnershipForNewWorld() noexcept {
 	for ( auto& faction : factions ) { faction.owned.fill( false ); }
 }

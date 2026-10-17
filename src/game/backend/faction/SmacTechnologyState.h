@@ -25,6 +25,13 @@ struct SmacFactionTechnologyState {
 	bool operator==( const SmacFactionTechnologyState& other ) const;
 };
 
+// Derived from the owned technology set and frozen faction definition. These
+// are capabilities before the tile's PLANET/clamp/event calculation, not a cache.
+struct SmacFungalCapabilities {
+	int32_t nutrients, minerals, energy;
+	bool operator==( const SmacFungalCapabilities& other ) const;
+};
+
 // Owned mutable simulation values, separate from frozen definitions. This
 // first codec does not publish into Game or infer a simulation roster.
 struct SmacTechnologyState {
@@ -33,6 +40,14 @@ struct SmacTechnologyState {
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const;
 	bool operator==( const SmacTechnologyState& other ) const;
 	const SmacFactionTechnologyState* Find( int32_t simulation_id ) const;
+
+	// RE-SMAC-FUNGAL-001: admitted player simulation IDs only. Resolve owned
+	// ordinary flagged records, then the profile's shared eight-record list.
+	// Unknown relevant prerequisite tokens and evaluated signed32 overflow reject.
+	// FUNGMINERALS/FUNGENERGY remain unsupported by the source-profile parser;
+	// this does not infer their record-budget behavior or native-faction state.
+	SmacFungalCapabilities FungalCapabilities( int32_t simulation_id, const settings::SmacTechnologyRules& technologies,
+		const settings::SmacFactionStartupRules& profiles ) const;
 
 	// These explicit new-world stages are not research-acquisition APIs. The
 	// caller supplies turn-zero admission; restoration never calls them.

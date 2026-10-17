@@ -31,6 +31,7 @@
 #include "SmacTechnologyRules.h"
 #include "SmacFactionStartupRules.h"
 #include "SmacTechnologyState.h"
+#include "SmacFungalCapabilities.h"
 #include "SmacSocialState.h"
 #include "SmacSimulationState.h"
 #include "SmacStartupDesignState.h"
@@ -254,6 +255,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
+		tests::AddSmacFungalCapabilitiesTests( task );
 		tests::AddSmacSocialStateTests( task );
 	AddSmacSimulationStateTests( task );
 	AddSmacStartupDesignStateTests( task );

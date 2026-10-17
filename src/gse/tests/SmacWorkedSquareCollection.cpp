@@ -99,6 +99,10 @@ void AddSmacWorkedSquareCollectionTests( task::gsetests::GSETests* task ) {
 		const std::array<int32_t,2> west{126,0}; GT_ASSERT( Collection::Resolve( map, 6 ) == west, "negative X modulo" );
 		const std::array<int32_t,2> east{1,1};
 		GT_ASSERT( Collection::Resolve( {{2147483644,0},2147483646,2147483647,true}, 15 ) == east, "wide coordinate arithmetic overflowed" );
+		// Pinned collection instructions perform one adjustment, not modulo.
+		GT_ASSERT( !Collection::Resolve( {{0,4},2,9,true},18 ) && !Collection::Resolve( {{1,3},2,9,true},15 ), "narrow X received a second wrap" );
+		const std::array<int32_t,2> narrow_east{1,5}, narrow_west{0,4};
+		GT_ASSERT( Collection::Resolve( {{0,4},2,9,true},15 ) == narrow_east && Collection::Resolve( {{1,3},2,9,true},18 ) == narrow_west, "valid single narrow wrap clipped" );
 		for ( const auto bad : { SmacWorkerRadiusMap{{0,0},0,64,true}, {{0,0},3,64,true}, {{0,0},128,0,true}, {{-1,1},128,64,true}, {{1,0},128,64,true}, {{128,0},128,64,true}, {{0,64},128,64,true} } ) {
 			GT_ASSERT( Rejects( [ & ] { Collection::Resolve( bad, 0 ); } ), "invalid map admitted" );
 		}

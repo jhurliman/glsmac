@@ -742,6 +742,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} ),
 	},
 	{
+		"get_smac_orbital_intake",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			const auto intake = m_game->GetCanonicalOrbitalIntake( *this );
+			return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+				{ "NUTRIENTS", VALUE( gse::value::Int,, intake[ 0 ] ) },
+				{ "MINERALS", VALUE( gse::value::Int,, intake[ 1 ] ) },
+				{ "ENERGY", VALUE( gse::value::Int,, intake[ 2 ] ) },
+			} );
+		} ),
+	},
+	{
 		"get_smac_mineral_support",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

@@ -185,6 +185,9 @@ return (game) => {
 			MINERALS: 0,
 			ENERGY: 0,
 		};
+		if (#is_defined(e.base.has_smac_resource_context) && e.base.has_smac_resource_context) {
+			result = e.base.get_smac_orbital_intake();
+		}
 
 		const f_add_tile = (tile) => {
 			const r = tile.get_resources(e.base.get_owner(), e.base);

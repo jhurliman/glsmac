@@ -77,8 +77,9 @@ restore is not newly made transactional across all definitions and records.
 
 ## Validation checkpoint
 
-The source checkpoint is based on `dacac744371c01ec8c298e5f87576af68585f14c`.
-The normal build and focused memory-tracked selection pass (7.03 seconds).
+The source checkpoint `b105964ceb20cedda6cf91ea4cc1beb0445379b8` is based on
+`dacac744371c01ec8c298e5f87576af68585f14c`. The normal build and focused
+memory-tracked selection pass (7.03 seconds).
 Nine new live groups cover stable wrappers/variants/IDs, both deferred queues,
 cross-Base claims, both center-conflict orders, narrow-map alias rejection,
 generic mutation/read guards, late bounded decode, update callback reentry,
@@ -94,7 +95,33 @@ before that failure fails the intended preservation assertion. Tracked source
 was unchanged. Control manifest SHA-256:
 `fb4673c56e248bdcada7148c9f05e7ff929a6d353bfe03319d365bc9fb3c287a`.
 
-Production and fixture peer review is clean. Sanitizer, broader tests and
-analysis are pending at this source checkpoint; their measured receipt follows
-separately. No default activation, original executable rerun, UI/manual-worker
-handler equivalence, or cross-platform result is claimed here.
+Production and fixture peer review is clean. On `b105964c`, the Linux normal
+suite passed 8/8 (102.59 seconds) and ASan/UBSan/LSan passed 8/8 (214.94 seconds),
+with leak detection and halt-on-error enabled. The local sanitizer build uses
+the existing no-PIE workaround. These are source Linux checks, not hosted CI or
+another platform's checkpoint.
+
+Targeted LLVM 15 analysis initially checked five complete production TUs.
+Four were clean; the new explicit guard exposed an adjacent detached-Pop null
+path in `GetWorkedTile`. Follow-up source
+`071208b01505a846661c536af434d0499a096147` adds a release-visible rejection for
+a detached Pop with worked coordinates, with an actual two-branch test retaining
+the empty detached Pop's null result. That changed TU then passed analysis
+(1.60 seconds); the four unchanged TUs retain their earlier clean results.
+This is targeted analysis, not an all-header/all-production scan.
+
+After rebuilding the follow-up, all 56 selected groups, including all nine new
+live groups, passed with allocation tracking in normal (7.03 seconds) and
+ASan/UBSan/LSan (31.19 seconds). The full-suite receipt above deliberately remains
+pinned to `b105964c`; it is not relabeled as a full run of the small follow-up.
+That follow-up also received an independent read-only review. Initial build
+diagnostics concerned the C++17 optional assignment's missing noexcept
+annotation and test macro/include syntax; the scalar Vec2 copy operations are
+now explicitly checked, and failed diagnostic output was retained.
+
+Final local manifest: `base-allocation-final-manifest.json`, SHA-256
+`848d05d4d40d99e50db9d4b5966f2d7b1952f0cf9b1f18fd1fcbdb1feb7ae371`.
+It records source hashes, the separate full/focused source identities, logs,
+analysis amendment and independent copied-TU controls. No default activation,
+original executable rerun, UI/manual-worker handler equivalence, or cross-platform
+result is claimed here.

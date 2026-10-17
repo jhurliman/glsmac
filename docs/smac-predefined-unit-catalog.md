@@ -193,3 +193,19 @@ rules comparison passed before and after this fixture correction.
 
 These are local source-branch checks, not a claim about a future publication
 branch, Windows/macOS validation, full-game reproduction or live unit creation.
+
+The focused publication base `707c86bf6439671cd7091dd9beca901e78c1be4f` preserves
+the exact existing technology (`714bb937`), component-resolution (`78dc8f97`),
+and ability-parser (`ddda8e3e`) histories. It includes the existing timer
+cancellation fix through the component stack. On publication code commit
+`1c29b7f521e24e89325b7f274525000505a58870`, all five tests available in that
+ancestry passed in 27.85 seconds (GSE 21.43 seconds, including all six new native
+groups), and explicit production TU analysis passed with zero failures in 1.76
+seconds. The actual publication Release probe repeated every original comparison
+above; its report SHA-256 is
+`237b0879ec4ca35f5d10c1ce2494d6f9228929a2c98305be12baf7f1cc885853`.
+Only registration placement differs from the source implementation; no new
+production or test assertion was changed for publication. The earlier full
+sanitizer/tracking receipt belongs to the source ancestry, which includes more
+runtime fixes and test executables than this deliberately smaller dependency
+stack.

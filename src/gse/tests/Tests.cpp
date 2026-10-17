@@ -9,6 +9,7 @@
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
 
 #include "engine/Engine.h"
@@ -153,6 +154,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );
 		tests::AddBufferTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
 	tests::AddScriptsTests( task );
 

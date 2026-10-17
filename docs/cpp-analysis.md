@@ -1,8 +1,9 @@
 # C++ correctness checks
 
-Run analysis when preparing a C++ change for review. It is separate from the
-normal edit/build/test loop and does not require the original game assets.
-The `C++ correctness` pull-request workflow runs the same command as local use.
+Run analysis when preparing a C++ change for review. Use targeted production
+units and their known consumers for bounded gameplay changes. It is separate from
+the normal edit/build/test loop and does not require the original game assets.
+The `C++ correctness` pull-request workflow uses the branch selector below.
 
 The [CI coverage policy](ci-validation.md) keeps Linux regression coverage on
 code pull requests and selects full platform runs for explicit checkpoints, manual
@@ -75,18 +76,38 @@ compilation databases and MSVC arguments are not part of this Linux CI check.
 ## Scope and diagnostics
 
 The runner analyzes complete changed production translation units under `src/`.
-Generated `src/tmp/` files and `src/gse/tests/` test fixtures are excluded. A
-header, CMake file, analysis configuration, runner, or analysis workflow change
-widens the run to all production translation units. Deleted headers also widen
-the scan. This avoids incomplete include-dependency guesses; source deletion
-alone needs no analysis. A changed source missing from the compilation database
-fails with a reconfiguration request.
+Generated `src/tmp/` files and `src/gse/tests/` test fixtures, including their
+headers, are excluded. Production header changes select actual consumers,
+including transitive and conditional includes, using the compiler commands in
+the compilation database with dependency-only preprocessing (`-M`). This does
+not compile objects or run correctness analysis on unrelated units. The pass
+also handles included source fragments. It runs only when those inputs change;
+source-only edits need no dependency pass.
+
+Fresh compiler dependency output is used instead of trusting potentially stale
+Ninja/Make depfiles after include changes. No separate dependency cache is built.
+Every production compile command must produce valid dependencies before analysis
+starts. Missing compilers/generated headers, unresolved deleted includes, invalid
+dependency output and timeouts fail with a diagnostic and no partial pass. Fix or
+reconfigure the build, use `--source` for explicitly reviewed consumers, or
+request `--all` for conservative full analysis. Removing a header and all of its
+includes needs no header-consumer analysis; changed production sources still run.
+
+Edits to existing `src/**/CMakeLists.txt` which only add/remove literal
+`${PWD}/file.cpp` source-list entries do not force full analysis. Newly registered
+production units are selected even if their source bytes did not change; test
+registrations select no production units. Root CMake, new/unrecognized CMake
+structure, build-semantic edits, analysis configuration/runner/workflow changes
+and explicit `--all` retain full scope. The log names full-scope reasons or narrow
+registration edits, and reports dependency preprocessing separately. A changed
+or newly registered production source missing from the compilation database
+fails with a reconfiguration request. Source deletion alone needs no analysis.
 
 Two known `.cpp` files are not independent Linux translation units.
 `src/network/impl/Windows.cpp` is explicitly excluded from this Linux check;
 relevant runs report it in the console and `summary.json` as skipped.
 `src/ui/dom/Object.colormap.cpp` is included by `Object.cpp`, so its changes
-trigger a full scan just like a header. These are exact paths; other sources
+select its compiler-observed consumers just like a header. These are exact paths; other sources
 missing from the database still fail instead of being silently skipped.
 
 Diagnostics from project headers remain enabled. This policy introduces no

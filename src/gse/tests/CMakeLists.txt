@@ -16,6 +16,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp

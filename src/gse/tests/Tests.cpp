@@ -13,6 +13,7 @@
 #include "SmacHostRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
+#include "SmacFactionStartupRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
@@ -211,6 +212,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}

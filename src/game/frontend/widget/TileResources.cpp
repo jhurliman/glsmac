@@ -93,7 +93,7 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 				auto h = row_height * 0.8f;
 				auto w = h * icon->wh.x / icon->wh.y / aspect;
 				if ( w > 0.22f ) { h *= 0.22f / w; w = 0.22f; }
-				AddMeshAndTexture( widget, index++, sprite->GenerateMesh(), sprite->GetTexture(), false,
+				AddMeshAndTexture( widget, index++, sprite->GenerateMesh().get(), sprite->GetTexture(), false,
 					{ w, h }, { 0.03f + ( 0.22f - w ) / 2, center_y - h / 2 } );
 			}
 			if ( !entry.display.label.empty() ) {

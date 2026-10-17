@@ -142,3 +142,22 @@ production-path cases were linked and executed. This older ancestry does not gai
 the native-filter CLI solely for validation. The source's eight-test sanitizer and
 analysis receipts above remain distinct from this publication result. Audit and
 logs are retained under the source evidence directory's `publication/` subfolder.
+
+### Refresh onto landed startup dependencies
+
+The later main refresh retains the exact reviewed Game.cpp/h correction and all
+five production-path checkpoint cases. Reviewed PR126 `9b98af58` is merged with
+main `a84cc6dd`, followed by the independently published PR66 parser ownership
+prerequisite `46a26e3a`, producing implementation `eef6bb97`. There are no new
+snapshot/coordinator source edits or fixture adaptations in these merges.
+
+The actual final publication passes normal CTest 8/8 (54.23 seconds), the full
+native/script allocation-tracking suite (40.40 seconds, no tracked leaks), and
+leak-enabled ASan/UBSan/LSan CTest 8/8 (62.96 seconds). Focused tracked sanitizer
+roster/completion/RNG/coordinator groups also pass (1.11 seconds). The original
+main-refresh sanitizer failure in parsed switch scopes is retained separately;
+PR66 closes that ownership prerequisite without suppressions. See the
+[live-roster refresh receipt](live-roster-publication.md#main-refresh-and-switch-ownership-prerequisite)
+for exact ancestry, registration audit and evidence paths. These results do not
+replace fresh exact-head hosted review and CI or authorize the broken historical
+PR77/PR79 branches to land separately.

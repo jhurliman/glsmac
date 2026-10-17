@@ -237,3 +237,46 @@ adaptation. Its actual older-ancestry CTest suite passes 6/6 in 29.54 seconds,
 and the full native/script tracking run passes in 20.14 seconds with no tracked
 leaks, including the new ready-lobby case and all 21 roster groups. This is
 separate publication evidence; the native-filter CLI remains absent there.
+
+### Main refresh and switch-ownership prerequisite
+
+The current publication preserves the reviewed `9b98af58` history, merges landed
+main `a84cc6dd` as `ce76d70f`, then merges the separately published
+[PR66 switch-scope ownership fix](https://github.com/jhurliman/glsmac/pull/66)
+at `46a26e3a`. The resulting implementation is
+`eef6bb977cf9a5b75cb26032e718c2947d6e74c1`. The second merge also includes the
+already-landed docs/workflow-only PR132. Roster, Player, State, Connection and
+Game production files and the dedicated LiveRoster tests are unchanged from
+the reviewed PR126 head. No production or technology metadata prerequisite is
+imported from PR111 or PR114.
+
+All 26 native test registrations and test translation units from both parents
+are retained; the Backend test-name union retains the already-established
+coordinator/RNG replacements, and the UUID regression appears once. This
+ancestry now includes main's native-filter CLI; the earlier six-test publication
+receipts above remain historical, rather than descriptions of this new head.
+
+The first main refresh at `ce76d70f` passed normal CTest 8/8 and full allocation
+tracking, but leak-enabled full sanitizer execution reported 1,545 bytes in 21
+parsed switch Scope allocations. That failure is retained. Its focused
+roster/checkpoint groups were leak-clean. The explicit PR66 prerequisite fixes
+the parser ownership rather than suppressing leaks or changing roster tests.
+
+Actual final publication validation on Clang 15 under Ubuntu WSL:
+
+- Normal CTest: 8/8, 54.23 seconds; entire native/script suite with
+  `--memorydebug`: passed in 40.40 seconds with no tracked leaks.
+- ASan/UBSan/LSan CTest: 8/8, 62.96 seconds, with leak detection and
+  halt-on-error enabled. Focused roster/completion/RNG/coordinator groups with
+  tracking also pass in 1.11 seconds.
+- All five actual snapshot checkpoint regressions are present in the final
+  execution logs; no new fixture adaptation was required by these merges.
+
+The local sanitizer linker retains the previously documented no-PIE workaround;
+no repository suppression or build policy changes. Logs and the source/command
+manifest are retained under
+`/home/jhurliman/src/glsmac-canonical-main-refresh`, with final checks in
+`switch-prerequisite/`. Native Windows/macOS hosted checks and exact-head review
+remain separate gates. The historical PR77/PR79 branches are not proposed for
+independent landing; the combined correction is described in
+[snapshot-owner-checkpoints.md](snapshot-owner-checkpoints.md).

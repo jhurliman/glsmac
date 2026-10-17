@@ -2253,57 +2253,65 @@ public:
 		GT_OK();
 	}
 
-	std::string CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) {
-		auto* ui = new ::ui::UI( GSE_CALL ); m_gse->AddRootObject( ui );
-		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
-		game::frontend::Game frontend( m_glsmac.get(), m_state, ui, {}, {} );
-		frontend.m_is_initialized = true; frontend.m_turn_id = m_game.GetTurnId();
-		util::FinallyGuard clean_frontend( [ & ] { frontend.m_is_initialized = false; } );
+	std::string CheckSelectedWorkController( game::backend::unit::Unit* actor ) {
+		::ui::UI* ui = nullptr;
+		std::unique_ptr<game::frontend::Game> frontend;
 		scene::Scene controller_scene( "Selected work fixture", scene::SCENE_TYPE_WORLD );
 		game::frontend::sprite::InstancedSpriteManager sprites( &controller_scene );
-		frontend.m_ism = &sprites;
-		util::FinallyGuard detach_sprites( [ & ] { frontend.m_ism = nullptr; } );
-		game::frontend::unit::UnitManager controller( &frontend );
+		std::unique_ptr<game::frontend::unit::UnitManager> controller;
+		util::FinallyGuard cleanup( [ & ] {
+			controller.reset();
+			if (frontend) { frontend->m_is_initialized=false;frontend->m_ism=nullptr;frontend.reset(); }
+			if (ui) { WithScriptValues([&](GSE_CALLABLE)->std::string { ui->GetRoot()->Container::Destroy(GSE_CALL);GT_OK(); }); }
+		} );
 		const auto id = actor->m_id;
 		const auto count = [ & ] { return m_game.m_pending_events.size(); };
-		controller.PumpSelectedWork( id );
-		frontend.m_is_turn_active = true; controller.PumpSelectedWork( std::nullopt );
-		GT_ASSERT( count() == 0, "disabled or absent selection queued work" );
-		for ( int i = 0; i < 12; ++i ) { controller.PumpSelectedWork( id ); }
-		GT_ASSERT( count() == 1, "selected controller did not latch exactly one event" );
-		ProcessEvents();
-		GT_ASSERT( actor->Conventional().work_progress == 2 && actor->Conventional().spent == 3,
-			"selected controller did not advance actual saved work" );
-		controller.PumpSelectedWork( std::nullopt ); controller.PumpSelectedWork( id );
-		GT_ASSERT( count() == 0, "exhausted selection queued another work event" );
-		m_game.Event( GSE_CALL, "complete_turn", {} ); ProcessEvents();
-		frontend.m_turn_id = m_game.GetTurnId(); controller.PumpSelectedWork( id );
-		GT_ASSERT( count() == 1, "new turn did not release controller latch" );
-		ProcessEvents();
-		GT_ASSERT( actor->Conventional().work_progress == 4 && actor->Conventional().spent == 3,
-			"next selected visit did not retain work across real upkeep" );
-		m_game.GetUM()->ResetConventionalSpent( GSE_CALL, actor );
-		controller.PumpSelectedWork( std::nullopt );
-		m_game.m_canonical_turn_in_progress = true;
-		util::FinallyGuard restore_phase( [ & ] { m_game.m_canonical_turn_in_progress = false; } );
-		controller.PumpSelectedWork( id );
-		GT_ASSERT( count() == 0, "controller enqueued during native upkeep" );
-		m_game.m_canonical_turn_in_progress = false;
-		controller.PumpSelectedWork( std::nullopt );
+		const auto initial=WithScriptValues([&](GSE_CALLABLE)->std::string {
+			ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+			frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
+			frontend->m_is_initialized=true;frontend->m_turn_id=m_game.GetTurnId();frontend->m_ism=&sprites;
+			controller=std::make_unique<game::frontend::unit::UnitManager>(frontend.get());
+			controller->PumpSelectedWork( id );
+			frontend->m_is_turn_active = true; controller->PumpSelectedWork( std::nullopt );
+			GT_ASSERT( count() == 0, "disabled or absent selection queued work" );
+			for ( int i = 0; i < 12; ++i ) { controller->PumpSelectedWork( id ); }
+			GT_ASSERT( count() == 1, "selected controller did not latch exactly one event" );
+			ProcessEvents();
+			GT_ASSERT( actor->Conventional().work_progress == 2 && actor->Conventional().spent == 3,
+				"selected controller did not advance actual saved work" );
+			controller->PumpSelectedWork( std::nullopt ); controller->PumpSelectedWork( id );
+			GT_ASSERT( count() == 0, "exhausted selection queued another work event" );
+			m_game.Event( GSE_CALL, "complete_turn", {} ); ProcessEvents();
+			frontend->m_turn_id = m_game.GetTurnId(); controller->PumpSelectedWork( id );
+			GT_ASSERT( count() == 1, "new turn did not release controller latch" );
+			ProcessEvents();
+			GT_ASSERT( actor->Conventional().work_progress == 4 && actor->Conventional().spent == 3,
+				"next selected visit did not retain work across real upkeep" );
+			m_game.GetUM()->ResetConventionalSpent( GSE_CALL, actor );
+			controller->PumpSelectedWork( std::nullopt );
+			m_game.m_canonical_turn_in_progress = true;
+			util::FinallyGuard restore_phase( [ & ] { m_game.m_canonical_turn_in_progress = false; } );
+			controller->PumpSelectedWork( id );
+			GT_ASSERT( count() == 0, "controller enqueued during native upkeep" );
+			m_game.m_canonical_turn_in_progress = false;
+			controller->PumpSelectedWork( std::nullopt );
+			GT_OK();
+		});
+		if(!initial.empty()){return initial;}
 		// Force the real cross-thread accumulation path, then retire selection
 		// before that callback runs. It must not retain the frontend manager.
-		std::thread delayed( [ & ] { controller.PumpSelectedWork( id ); } ); delayed.join();
-		controller.PumpSelectedWork( std::nullopt ); ProcessAccumulations();
+		std::thread delayed( [ & ] { controller->PumpSelectedWork( id ); } ); delayed.join();
+		controller->PumpSelectedWork( std::nullopt ); ProcessAccumulations();
 		GT_ASSERT( count() == 0 && actor->Conventional().work_progress == 4,
 			"retired selection ran a delayed controller callback" );
 		{
-			auto retired = std::make_unique< game::frontend::unit::UnitManager >( &frontend );
+			auto retired = std::make_unique< game::frontend::unit::UnitManager >( frontend.get() );
 			std::thread queued( [ & ] { retired->PumpSelectedWork( id ); } ); queued.join();
 		}
 		ProcessAccumulations();
 		GT_ASSERT( count() == 0, "destroyed frontend controller left a live callback" );
 		// A real session retirement also cancels an otherwise still-selected visit.
-		std::thread old_session( [ & ] { controller.PumpSelectedWork( id ); } ); old_session.join();
+		std::thread old_session( [ & ] { controller->PumpSelectedWork( id ); } ); old_session.join();
 		m_state->RetireGameCallbacks(); ProcessAccumulations();
 		GT_ASSERT( count() == 0 && actor->Conventional().work_progress == 4,
 			"retired world ran a queued controller callback" );
@@ -4927,7 +4935,7 @@ void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::stri
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
-std::string ConventionalUnitFixture::CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( GSE_CALL, actor ); }
+std::string ConventionalUnitFixture::CheckSelectedWorkController( game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( actor ); }
 std::string ConventionalUnitFixture::CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) { return fixture->CheckRetainedWorkSelection( GSE_CALL, actor, scout ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }

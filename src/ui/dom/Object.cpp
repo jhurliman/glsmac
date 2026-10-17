@@ -420,12 +420,13 @@ void Object::Actor( scene::actor::Actor* actor ) {
 
 void Object::ClearActors() {
 	std::lock_guard guard( m_actors_mutex );
-	if ( m_ui ) {
-		auto* const scene = m_ui->GetScene();
-		for ( const auto& actor : m_actors ) {
+	// Root destruction detaches UI pointers before destroying its children.
+	// Actor ownership remains here, and the actor retains its live scene link.
+	for ( const auto& actor : m_actors ) {
+		if ( auto* const scene = actor->GetScene() ) {
 			scene->RemoveActor( actor );
-			delete actor;
 		}
+		delete actor;
 	}
 	m_actors.clear();
 }

@@ -7,8 +7,11 @@ SET( SRC ${SRC}
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
 	${PWD}/Buffer.cpp
+	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp
+	${PWD}/UnitRulesTXTLoader.cpp
+	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp

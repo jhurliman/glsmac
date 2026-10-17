@@ -67,6 +67,7 @@ CLASS( Config, common::Module )
 		DF_NOPINGS = 1 << 6,
 		DF_VERBOSE_GC = 1 << 7,
 		DF_NO_GC = 1 << 8,
+		DF_GSE_TESTS_NATIVE_FILTER = 1 << 12,
 #ifdef DEBUG
 		DF_MAPDUMP = 1 << 9,
 		DF_MEMORYDEBUG = 1 << 10,
@@ -111,6 +112,7 @@ CLASS( Config, common::Module )
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetGSETestsScript() const;
+	const std::string& GetGSETestsNativeFilter() const;
 
 #endif
 
@@ -160,6 +162,7 @@ private:
 	std::string m_quickstart_mapdump = "";
 
 	std::string m_gse_tests_script = "";
+	std::string m_gse_tests_native_filter = "";
 
 #endif
 

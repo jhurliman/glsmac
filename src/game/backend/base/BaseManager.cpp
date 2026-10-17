@@ -276,9 +276,6 @@ void BaseManager::UndefineFacility( const std::string& id ) {
 }
 
 void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
-	// Native legacy setup predates script mutation authority. Only the owned
-	// knowledge transaction adds this requirement; script wrappers check it too.
-	if ( const auto* map = m_game->GetMap(); map && map->GetSmacWorkerKnowledge() ) { m_game->CheckRW( GSE_CALL ); }
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
@@ -358,8 +355,6 @@ void BaseManager::RegisterBase( Base* base ) {
 }
 
 void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
-	if ( const auto* map = m_game->GetMap(); map && map->GetSmacWorkerKnowledge() ) { m_game->CheckRW( GSE_CALL ); }
-
 	const auto& it = m_bases.find( base_id );
 	if ( it == m_bases.end() ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Base id " + std::to_string( base_id ) + " not found" );

@@ -425,17 +425,25 @@ research UI script; the subsequent preview-retirement and arithmetic-boundary
 changes pass their two affected groups. These are focused checks, not a new
 platform matrix or interactive playthrough.
 
-1. Finish ordinary Former work in the playable controller. Saved orders,
-   progress, cancellation, collaborative work and terrain/yield completion are
-   implemented. Connect the verified selected-unit continuation and publish
-   actual world graphics, including connected roads and coastal composition.
-2. Close the two-base conquest loop: conventional combat and Base capture,
-   last-base disposition, victory, and scenario saves/network replay. Extend
-   founding/production beyond the current ordinary land and non-last-base
-   boundary using the accepted original caller evidence.
-3. Exercise that complete campaign interactively on the supported platforms,
-   address failures, then expand the rules/content and AI. Hurry spending and
-   maintenance-deficit disposal remain separate economy producers; the existing
+1. Finish the current integration of saved Former work, selected-unit
+   continuation, world atlas/sprite updates and selection ordering. Use the
+   cached Linux build and affected tests for this batch; do not repeat the
+   platform matrix for each gameplay edit.
+2. Deliver the [visually reviewed first session](first-session-checkpoint.md) before adding more gameplay
+   breadth. Acceptance covers start/new-game setup; correct unit placement,
+   movement/animation, selection and displayed stats; the Base screen;
+   production and research; close/reopen; and actual disk save/reload. Capture
+   screenshots or a short recording alongside the original and keep a concrete
+   visual-defect list. Fix defects on that path before expanding combat. Native
+   snapshot tests do not satisfy the disk-save acceptance criterion: Load Game
+   currently remains a menu stub. Earlier macOS smoke receipts validate their
+   recorded revisions, not this renderer. This combined renderer/session
+   checkpoint warrants supported-platform builds and interactive validation.
+3. Then close the two-base conquest loop: conventional combat and Base capture,
+   last-base disposition, victory, and network replay. Extend founding/production
+   beyond the current ordinary land and non-last-base boundary using accepted
+   original caller evidence, then expand rules/content and AI. Hurry spending
+   and maintenance-deficit disposal remain separate economy producers; the
    research continuation already settles ordinary faction debit.
 
 The [worker-authority checkpoint](validation/worker-authority-2026-10-17.md) at

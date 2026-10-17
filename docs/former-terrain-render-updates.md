@@ -45,4 +45,10 @@ interior plus ordered corner/neighbor coast copies and a second change; and
 discarded preparation, retained bonus instances and late invalid-patch rejection.
 They make no interactive/GPU or installed-asset pixel claim. Production and test
 syntax checks pass; targeted production analysis is recorded in the handoff.
-Linked native execution is pending the shared cached integration build.
+All three groups pass in the shared cached Linux Debug build with allocation
+tracking at `4e99da48`, with normal exit. The first linked attempt exposed an
+invalid expected-image fixture that passed no RNG to a Perlin operation; the
+corrected fixture uses independently reset captured RNG state. The runtime
+receipt is `first-session-render-tests.log` under
+`/home/jhurliman/src/glsmac-rover-runtime/`. This does not yet validate GPU upload
+or installed-asset pixels in a live session.

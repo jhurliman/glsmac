@@ -8,7 +8,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 8;
+constexpr int64_t VERSION = 9;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -58,7 +58,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	technology.Validate( technologies, profiles );
 	social.Validate( technologies, profiles );
 	units.Validate( technologies ); designs.Validate( units.catalog );
-	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() || roster.size() != social.factions.size() || roster.size() != satellites.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
+	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() || roster.size() != social.factions.size() || roster.size() != satellites.size() || roster.size() != economy.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
 	std::array< bool, 8 > ids{};
 	std::array< bool, 7 > slots{};
 	std::set< std::string > gsids;
@@ -68,6 +68,9 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 			|| participant.slot < 0 || participant.slot > 6 || slots[ participant.slot ] ) { throw std::runtime_error( "Duplicate or invalid SMAC simulation identity" ); }
 		ids[ participant.simulation_id ] = true; slots[ participant.slot ] = true;
 		if ( !satellites.count( participant.simulation_id ) ) { throw std::runtime_error( "Missing SMAC faction satellite assets" ); }
+		const auto finances = economy.find( participant.simulation_id );
+		if ( finances == economy.end() ) { throw std::runtime_error( "Missing SMAC faction economy" ); }
+		finances->second.Validate();
 		if ( ( participant.slot == 0 && participant.role != roster::Role::Single && participant.role != roster::Role::Host )
 			|| ( participant.slot != 0 && participant.role != roster::Role::Player ) ) { throw std::runtime_error( "Invalid SMAC simulation controller role" ); }
 		for ( const auto* value : { &participant.gsid, &participant.faction_id } ) {
@@ -84,7 +87,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -128,6 +131,8 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 		buffer.WriteInt( entry.first );
 		for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); }
 	}
+	buffer.WriteInt( economy.size() );
+	for ( const auto& entry : economy ) { buffer.WriteInt( entry.first ); buffer.WriteString( entry.second.Serialize().ToString() ); }
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -169,6 +174,13 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 			SmacSatelliteCounts assets;
 			for ( auto& resource : assets.resources ) { resource = ReadInt32( buffer ); }
 			if ( id < 1 || id > 7 || !result.satellites.emplace( id, assets ).second ) { throw std::runtime_error( "Invalid or duplicate SMAC satellite owner" ); }
+		}
+		const auto economy_owners = buffer.ReadInt();
+		if ( economy_owners < 1 || economy_owners > 7 || economy_owners != count ) { throw std::runtime_error( "Invalid SMAC economy owner count" ); }
+		for ( int64_t i = 0; i < economy_owners; ++i ) {
+			const auto id = ReadInt32( buffer );
+			auto finances = SmacEconomyState::Deserialize( buffer.ReadString( SmacEconomyState::MAX_WIRE_BYTES ) );
+			if ( id < 1 || id > 7 || !result.economy.emplace( id, std::move( finances ) ).second ) { throw std::runtime_error( "Invalid or duplicate SMAC economy owner" ); }
 		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

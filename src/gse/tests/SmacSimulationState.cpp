@@ -17,6 +17,7 @@ SmacSimulationState State() {
 	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain, faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	for ( const auto& owner : value.roster ) { value.satellites.emplace( owner.simulation_id, faction::SmacSatelliteCounts::NewWorld() ); }
+	for ( const auto& owner : value.roster ) { value.economy.emplace( owner.simulation_id, faction::SmacEconomyState::NewWorld( { 5, 0 }, 100, 0 ) ); }
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
 	value.social = faction::SmacSocialState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
@@ -31,7 +32,7 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 8 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 9 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -51,11 +52,29 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	if ( satellites ) { return buffer.ToString() + *satellites; }
 	buffer.WriteInt( value.satellites.size() );
 	for ( const auto& entry : value.satellites ) { buffer.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); } }
+	buffer.WriteInt( value.economy.size() );
+	for ( const auto& entry : value.economy ) { buffer.WriteInt( entry.first ); buffer.WriteString( entry.second.Serialize().ToString() ); }
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC simulation economy preserves owner rates and balances on restore", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		auto value = State();
+		value.economy.at( 7 ) = { { 1, 7 }, INT32_MIN, INT32_MAX, 99, 0xa5 };
+		const auto wire = value.Serialize( technologies, profiles, units ).ToString();
+		const auto restored = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
+		GT_ASSERT( restored == value && wire == Wire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "economy restore reset or lost supplied owner state" );
+		GT_ASSERT( Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( value, 1, 8 ), technologies, profiles, units ); } ), "old simulation without economy accepted" );
+		for ( int scenario = 0; scenario < 3; ++scenario ) {
+			auto bad = value; bad.economy.erase( 2 );
+			if ( scenario == 1 ) { bad.economy.emplace( 3, value.economy.at( 2 ) ); }
+			if ( scenario == 2 ) { bad.economy = value.economy; bad.economy.emplace( 3, value.economy.at( 2 ) ); }
+			GT_ASSERT( Rejects( [ & ] { bad.Serialize( technologies, profiles, units ); } ), "missing or foreign financial owner admitted" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "SMAC orbital intake matches sixteen original independent resource prefixes", GT() {
 		for ( const auto& c : fixtures::ORBITAL_INTAKE ) {
 			const faction::SmacSatelliteCounts counts{ c.counts };

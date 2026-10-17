@@ -10,7 +10,7 @@
 #include "game/backend/settings/SmacSpecialistRules.h"
 
 namespace task::gsetests { class GSETests; }
-namespace game { class FrontendRequest; namespace backend { class Game; namespace unit { class Unit; } namespace map::tile { class Tile; } } }
+namespace game { class FrontendRequest; namespace backend { class Game; namespace unit { class Unit; } namespace base { class Base; } namespace map::tile { class Tile; } } }
 namespace gse::tests {
 class BackendFixture;
 // Small adapter to the existing asset-free backend/runtime fixture. Assertions
@@ -28,6 +28,8 @@ public:
 	void ProductionPresentations( const std::array< std::string, 4 >& roles );
 	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
+	void PostEconomy( const game::backend::base::Base& base );
+	void SettleEconomy( int32_t owner );
 	void ResourcePolicy( bool present );
 	void BasePresentationRoles( const std::array<std::string,8>& roles );
 	void SelectStartup( int32_t simulation, int32_t design );

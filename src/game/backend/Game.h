@@ -87,6 +87,8 @@ namespace base {
 class BaseManager;
 struct SmacPopulationRules;
 struct SmacUnitSupportResult;
+struct SmacBaseResourceCalculation;
+struct SmacBaseEnergyCalculation;
 }
 
 namespace animation {
@@ -393,6 +395,8 @@ public:
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
 	base::SmacPopulationRules GetCanonicalPopulationRules( const base::Base& base ) const;
+	base::SmacBaseEnergyCalculation GetCanonicalBaseEnergy( const base::Base& base ) const;
+	faction::SmacEconomyState GetCanonicalEconomy( const slot::Slot* owner ) const;
 	// Positional source identity is explicit; opaque IDs are never parsed.
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
 	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;
@@ -694,6 +698,11 @@ private:
 		const unit::Unit* prepared_unit, const std::vector<size_t>& removed = {} ) const;
 	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
 	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;
+	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources ) const;
+	// Native controller stages these calls in its once-only Base/faction order.
+	// They are deliberately not script callbacks or independently queued events.
+	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );
+	void SettleCanonicalEconomy( int32_t simulation_id );
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 

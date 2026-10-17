@@ -36,20 +36,13 @@ passing executable result, and the analysis was rerun with LF shell text.
 
 ## Live posting boundary
 
-The next adapter must authenticate the Base's final allocation, current
-EFFICIENCY, actual facilities/HQ, and current/baseline production. Existing
-Base calculations already authenticate the supported no-project campaign and
-actual Unit packages; no energy convoy package is admitted there.
+The owned-state and authenticated Base adapter are documented in
+[smac-live-economy.md](smac-live-economy.md). They preserve the pure calculation's
+boundary: calculating energy does not itself credit a faction or choose/award
+technology. Normal upkeep posting remains disconnected until those consumers
+are complete.
 
-The current simulation has no owned allocation rates, treasury, pending debit,
-or flat-faction-labs input. Worker Pact-or-Treaty exemptions are not a complete
-commerce authority. The existing technology record owns research progress,
-target and cached threshold, but has no complete positive research submission
-operation (choice, completion and Secrets state remain separate). These inputs
-must not be silently inferred by an energy query.
-
-`RE-SMAC-TWO-BASE-POSTING-001` establishes final per-Base research submission
-(including zero) before economy credit/maintenance, followed by a once-only
-faction debit settlement. It supplies noncompleting research state and rates;
-it does not make raw energy or gross statistics spendable income. The new
-calculation alone does not activate this posting or claim complete upkeep.
+The later RE-SMAC-RESEARCH-SUBMIT-001 adjacent controls correct the initial
+projector mapping: Hologram Theatre is source11; source10 is Skunkworks and does
+not receive the psych multiplier. The regenerated existing fixtures and three
+literal adjacent controls pass the same four native helper groups.

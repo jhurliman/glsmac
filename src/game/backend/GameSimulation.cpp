@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include <stdexcept>
+#include <algorithm>
 #include <utility>
 
 #include "Player.h"
@@ -122,6 +123,21 @@ void Game::PrepareNewSimulation() {
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	for ( const auto& participant : value.roster ) {
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
+		const auto& resources = settings.GetSmacResourceRules();
+		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );
+		if ( !resources || !profile ) { throw std::runtime_error( "New-world economy requires frozen resource and faction inputs" ); }
+		int32_t bonus = 0;
+		// ENERGY is a scalar assignment, independent of the shared eight-record
+		// list (original definition+4e8); later supported entries replace it.
+		for ( const auto& entry : profile->bonuses ) {
+			if ( entry.kind == settings::SmacFactionStartupBonus::Kind::ENERGY ) { bonus = entry.parameter; }
+		}
+		const int64_t credits = int64_t( std::clamp( resources->initial_energy, 0, 1000 ) ) + bonus;
+		if ( credits < INT32_MIN || credits > INT32_MAX ) { throw std::overflow_error( "Starting treasury exceeds signed32" ); }
+		// STARTUP-ECONOMY001 supplies sliders, treasury, debit and no treaties.
+		// Original5c8d0e explicitly clears the same fractional research word
+		// used by submission. Restore retains its saved value without replay.
+		value.economy.emplace( participant.simulation_id, faction::SmacEconomyState::NewWorld( { 0, 5 }, static_cast< int32_t >( credits ), 0 ) );
 	}
 	if ( m_active_admission && m_active_admission->generated_map ) {
 		const auto& selected = settings.map.GetSmacWorldSize();

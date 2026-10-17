@@ -77,7 +77,7 @@ SmacEnergyTail FinishSmacEnergy( const SmacEnergyTailInputs& input ) {
 	q = { 4, 4, 4 };
 	for ( const auto id : { 7, 13, 14, 15, 16 } ) { if ( f[ id ] ) { q.economy += 2; } }
 	for ( const auto id : { 8, 17, 18, 15, 16 } ) { if ( f[ id ] ) { q.labs += 2; } }
-	if ( f[ 10 ] || ( f[ 8 ] && input.owns_virtual_world ) ) { q.psych += 2; }
+	if ( f[ 11 ] || ( f[ 8 ] && input.owns_virtual_world ) ) { q.psych += 2; }
 	for ( const auto id : { 17, 18 } ) { if ( f[ id ] ) { ++q.psych; } }
 	for ( const auto id : { 13, 14 } ) { if ( f[ id ] ) { q.psych += 2; } }
 	const auto labs = Checked( int64_t( Checked( int64_t( input.categories.labs ) + input.flat_labs ) ) + ( f[ 9 ] ? 2 : 0 ) );

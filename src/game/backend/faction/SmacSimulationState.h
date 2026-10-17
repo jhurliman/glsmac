@@ -2,6 +2,7 @@
 
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
+#include "SmacEconomyState.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
@@ -64,6 +65,9 @@ struct SmacSimulationState {
 	std::optional< SmacMovementHistory > movement_history;
 	// Exactly one record for each roster simulation ID; absence is not zero.
 	std::map< int32_t, SmacSatelliteCounts > satellites;
+	// Required per-owner financial authority. Absence never means neutral
+	// allocation rates or a zero treasury; restoration never posts income.
+	std::map< int32_t, SmacEconomyState > economy;
 	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;

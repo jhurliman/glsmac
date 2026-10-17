@@ -32,6 +32,13 @@ std::string CheckSmacEnergyAllocation() {
 		if ( !( allocation.allocation == row.expected.allocation ) || !( allocation.after_specialists == row.expected.after_specialists )
 			|| tail.multiplier_quarters.psych != row.quarters || tail.final.psych != row.psych ) { return row.id; }
 	}
+	// Original adjacent identity controls: RE-SMAC-RESEARCH-SUBMIT-001.
+	for ( const auto control : { std::pair<int,int>{ 0, 2 }, { 10, 2 }, { 11, 3 } } ) {
+		const auto categories = AllocateSmacEnergy( 4, { 5, 0 }, {} );
+		SmacEnergyTailInputs input{ categories.after_specialists, { 5, 0 }, 4, 0 };
+		if ( control.first ) { input.facilities[ control.first ] = true; }
+		if ( FinishSmacEnergy( input ).final.psych != control.second ) { return "Skunkworks/Theatre source identity differs"; }
+	}
 	return {};
 }
 

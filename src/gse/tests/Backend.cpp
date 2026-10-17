@@ -277,6 +277,10 @@ public:
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
+	void PostEconomy( const game::backend::base::Base& base ) {
+		m_game.PostCanonicalBaseEconomy( base, base.PrepareSmacResourceCalculation( game::backend::base::SmacBaseResourcePhase::Upkeep ) );
+	}
+	void SettleEconomy( int32_t owner ) { m_game.SettleCanonicalEconomy( owner ); }
 	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
 	}
@@ -4653,6 +4657,8 @@ void ConventionalUnitFixture::ConfigureResources( const std::function< std::stri
 }
 void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }
+void ConventionalUnitFixture::SettleEconomy( int32_t owner ) { fixture->SettleEconomy( owner ); }
 void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
 }

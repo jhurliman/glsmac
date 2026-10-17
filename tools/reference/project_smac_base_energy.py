@@ -10,7 +10,7 @@ PINS = {
     "psych-allocation-and-specialist-output-cases.json": "4e69ebcf121d085a39948b91cbac89620c645c6c423646c773696a757435e4c6",
     "energy-multipliers-and-allocation-penalty-cases.json": "d5a356cc87b1d0cf984c18b812c203d6d8a694e458a1eb43b8d59e190ca3e2ae",
 }
-FACILITIES = {"energy_bank": 7, "network_node": 8, "biology_lab": 9, "hologram_theatre": 10,
+FACILITIES = {"energy_bank": 7, "network_node": 8, "biology_lab": 9, "hologram_theatre": 11,
               "tree_farm": 13, "hybrid_forest": 14, "fusion_lab": 15, "quantum_lab": 16,
               "research_hospital": 17, "nanohospital": 18}
 

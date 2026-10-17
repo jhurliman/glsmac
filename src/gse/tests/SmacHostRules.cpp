@@ -102,7 +102,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				invalid.push_back( fixture::Payload( "smac", true, values ) );
 			}
 			types::Buffer short_rules;
-			short_rules.WriteInt( 13 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
+			short_rules.WriteInt( 14 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
 			types::Buffer prefix; prefix.WriteInt( 1 );
 			for ( size_t field = 0 ; field < i ; ++field ) { prefix.WriteInt( 1 ); }
 			short_rules.WriteString( prefix.ToString() );

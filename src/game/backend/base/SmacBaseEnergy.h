@@ -51,6 +51,12 @@ struct SmacEnergyTail {
 	SmacEnergyCategories multiplier_quarters, before_penalty, after_penalty, final;
 };
 
+struct SmacBaseEnergyCalculation {
+	int32_t raw_intake, headquarters_distance, waste, net, maintenance;
+	SmacEnergyAllocation allocation;
+	SmacEnergyTail tail;
+};
+
 // RE-SMAC-ENERGY-TAIL-001 nonnegative category domain. Evaluated signed32
 // overflow rejects explicitly; unmeasured original overflow is not emulated.
 SmacEnergyTail FinishSmacEnergy( const SmacEnergyTailInputs& input );

@@ -25,7 +25,7 @@ bool SmacResourceRules::operator==( const SmacResourceRules& other ) const {
 	return rows == other.rows && nutrients_per_citizen == other.nutrients_per_citizen
 		&& unroaded_mine_limit == other.unroaded_mine_limit && mine_nutrient_effect == other.mine_nutrient_effect
 		&& nutrient_multiplier == other.nutrient_multiplier && hab_complex_limit == other.hab_complex_limit
-		&& hab_dome_limit == other.hab_dome_limit
+		&& hab_dome_limit == other.hab_dome_limit && initial_energy == other.initial_energy
 		&& technology_tokens == other.technology_tokens;
 }
 
@@ -42,17 +42,18 @@ resource::smac::TileEnergyRules SmacResourceRules::TileEnergy() const {
 
 types::Buffer SmacResourceRules::Serialize( const SmacTechnologyRules& technologies ) const {
 	Validate( technologies );
-	types::Buffer buffer; buffer.WriteInt( 2 );
+	types::Buffer buffer; buffer.WriteInt( 3 );
 	for ( const auto& row : rows ) { for ( const auto value : row ) { buffer.WriteInt( value ); } }
 	buffer.WriteInt( nutrients_per_citizen ); buffer.WriteInt( unroaded_mine_limit ); buffer.WriteInt( mine_nutrient_effect );
 	buffer.WriteInt( nutrient_multiplier ); buffer.WriteInt( hab_complex_limit ); buffer.WriteInt( hab_dome_limit );
+	buffer.WriteInt( initial_energy );
 	for ( const auto& token : technology_tokens ) { buffer.WriteString( token ); }
 	return buffer;
 }
 
 SmacResourceRules SmacResourceRules::Deserialize( types::Buffer buffer, const SmacTechnologyRules& technologies ) {
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC resource profile exceeds wire budget" ); }
-	if ( buffer.ReadInt() != 2 ) { throw std::runtime_error( "Unsupported SMAC resource profile version" ); }
+	if ( buffer.ReadInt() != 3 ) { throw std::runtime_error( "Unsupported SMAC resource profile version" ); }
 	const auto integer = [ & ]() {
 		const auto value = buffer.ReadInt();
 		if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC resource rule exceeds signed32" ); }
@@ -62,6 +63,7 @@ SmacResourceRules SmacResourceRules::Deserialize( types::Buffer buffer, const Sm
 	for ( auto& row : result.rows ) { for ( auto& value : row ) { value = integer(); } }
 	result.nutrients_per_citizen = integer(); result.unroaded_mine_limit = integer(); result.mine_nutrient_effect = integer();
 	result.nutrient_multiplier = integer(); result.hab_complex_limit = integer(); result.hab_dome_limit = integer();
+	result.initial_energy = integer();
 	for ( auto& token : result.technology_tokens ) { token = buffer.ReadString( MAX_TOKEN_BYTES ); }
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC resource profile fields" ); }
 	try { result.Validate( technologies ); }

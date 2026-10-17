@@ -189,6 +189,7 @@ game::backend::settings::SmacResourceRules SmacRulesTXTLoader::ParseResourceRule
 		ParseField( field( 2 ), "row 2", 1, "RULES" ), ParseField( field( 9 ), "row 9", 1, "RULES" ),
 		ParseField( field( 10 ), "row 10", 1, "RULES" ), ParseField( field( 6 ), "row 6", 1, "RULES" ),
 		ParseField( field( 13 ), "row 13", 1, "RULES" ), ParseField( field( 14 ), "row 14", 1, "RULES" ),
+		ParseField( field( 21 ), "row 21", 1, "RULES" ),
 		{ field( 54 ), field( 55 ), field( 56 ), field( 58 ) } };
 	result.Validate( technologies );
 	return result;

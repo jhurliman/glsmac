@@ -150,6 +150,152 @@ public:
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
+	std::string CheckTerminalConnectionRetirement( const bool native_poll, const bool detached ) {
+		using namespace game::backend;
+		struct Gate {
+			std::mutex mutex; std::condition_variable cv; bool entered = false, released = false;
+			void Enter() { std::unique_lock lock( mutex ); entered = true; cv.notify_all(); cv.wait( lock, [ & ]() { return released; } ); }
+			bool Wait() { std::unique_lock lock( mutex ); return cv.wait_for( lock, std::chrono::seconds( 2 ), [ & ]() { return entered; } ); }
+			void Release() { std::lock_guard lock( mutex ); released = true; cv.notify_all(); }
+		} callback_gate, collect_gate;
+		struct Root final : gc::Object {
+			Root() : gc::Object( nullptr ) {}
+			std::function< void() > visit;
+			void GetReachableObjects( std::unordered_set< gc::Object* >& reachable ) override { gc::Object::GetReachableObjects( reachable ); visit(); }
+		} root;
+		struct Observer final : Wrappable {
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			std::atomic< size_t > retired{ 0 };
+			void NotifyDependencyDestruction( const Wrappable* ) override { ++retired; }
+		} observer;
+		class Transport final : public network::Network {
+		public:
+			explicit Transport( bool fail ) : fail( fail ) {}
+			~Transport() override { Stop(); }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return fail ? Error( "terminal test connect error" ) : Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { GetEvents(); }
+		private:
+			const bool fail;
+		} transport( !detached );
+		std::atomic< bool > client_destroyed{ false };
+		class Client final : public connection::Client {
+		public:
+			Client( gc::Space* space, settings::LocalSettings* settings, network::Network* network, std::atomic< bool >& destroyed )
+				: connection::Client( space, settings, network ), destroyed( destroyed ) {}
+			~Client() override { destroyed = true; }
+		private:
+			std::atomic< bool >& destroyed;
+		};
+		Player* player = nullptr; Value* wrapper = nullptr; Client* client = nullptr;
+		bool rooted = false, observing = false;
+		std::atomic< size_t > callbacks{ 0 };
+		std::thread collector, producer;
+		std::exception_ptr collect_error, poll_error;
+		std::mutex thread_mutex; std::thread::id collect_thread;
+		util::FinallyGuard cleanup( [ & ]() {
+			callback_gate.Release(); collect_gate.Release();
+			if ( producer.joinable() ) { producer.join(); }
+			if ( collector.joinable() ) { collector.join(); }
+			ProcessAccumulations();
+			m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
+				if ( observing && !observer.retired ) { player->Undepend( &observer ); }
+				if ( rooted ) { m_gse->RemoveRootObject( &root ); }
+				if ( client && !client_destroyed ) { client->ResetHandlers(); }
+				m_state->DetachConnection();
+				m_game.m_active_admission.reset();
+			} );
+			// Destroy the test Client before its transport/destruction observer.
+			g_engine->GetGC()->Iterate();
+		} );
+		root.visit = [ & ]() {
+			{ std::lock_guard lock( thread_mutex ); if ( collect_thread != std::this_thread::get_id() ) { return; } }
+			collect_gate.Enter();
+		};
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			NEW( player, Player, "Terminal player", Player::PR_PLAYER, nullptr, "" );
+			m_state->AddPlayer( player ); m_state->m_slots->GetSlot( 0 ).SetPlayer( player, 17, "fixture" ); m_state->AddCIDSlot( 17, 0 );
+			wrapper = player->Wrap( GSE_CALL ); ctx->CreateConst( "terminal_player", wrapper, si, ep );
+			player->Depend( &observer ); observing = true;
+			m_gse->AddRootObject( &root ); rooted = true;
+			m_state->m_settings.local.remote_address = "fixture";
+			client = new Client( gc_space, &m_state->m_settings.local, &transport, client_destroyed );
+			m_state->SetConnection( client ); client->Connect();
+			if ( detached ) {
+				transport.Iterate(); m_state->Iterate(); // actual successful connect response
+				const auto pending = m_game.MT_Init( m_state ); ProcessRequests();
+				GT_ASSERT( m_game.MT_GetResponse( pending.request ).result == R_SUCCESS && m_game.m_active_admission->connection == client,
+					"actual admission did not retain its connection" );
+				// Invoke the real native binding phase, without generating a world.
+				m_game.PrepareInitializationBindings();
+				const auto disconnect = client->m_on_disconnect;
+				client->m_on_disconnect = [ &, disconnect ]() {
+					disconnect(); ++callbacks;
+					if ( native_poll ) { callback_gate.Enter(); }
+				};
+				client->Disconnect();
+			}
+			else {
+				client->m_on_error = [ & ]( const std::string& message ) {
+					if ( message != "terminal test connect error" ) { throw std::runtime_error( "unexpected native error response" ); }
+					++callbacks;
+					if ( native_poll ) { callback_gate.Enter(); }
+					return true;
+				};
+			}
+			m_state->Iterate(); // terminal request has no response yet
+			GT_ASSERT( !observer.retired && callbacks == 0 && wrapper->type == VT_OBJECT && m_state->m_players.size() == 1 && m_state->m_slots->GetCount() == 3,
+				"pending connection response retired native state" );
+			transport.Iterate(); // real MT response, only socket operations are synthetic
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "terminal connection setup: " + setup );
+		bool retired_during_collect = false;
+		if ( native_poll ) {
+			producer = std::thread( [ & ]() { try { m_state->Iterate(); } catch ( ... ) { poll_error = std::current_exception(); } } );
+			GT_ASSERT( callback_gate.Wait(), "native terminal callback was not reached" );
+			// Remove the queued disconnect notification as a possible root. In the
+			// detached case only the actual Game admission retains the Client.
+			ProcessAccumulations();
+			GT_ASSERT( ( m_state->GetConnection() == nullptr ) == detached, "native callback did not preserve its real detach behavior" );
+			collector = std::thread( [ & ]() {
+				{ std::lock_guard lock( thread_mutex ); collect_thread = std::this_thread::get_id(); }
+				try { g_engine->GetGC()->Iterate(); } catch ( ... ) { collect_error = std::current_exception(); }
+			} );
+			GT_ASSERT( collect_gate.Wait(), "collector could not enter while native callback was paused outside retirement" );
+			callback_gate.Release();
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( 100 );
+			while ( !observer.retired && std::chrono::steady_clock::now() < deadline ) { std::this_thread::yield(); }
+			retired_during_collect = observer.retired != 0;
+			collect_gate.Release(); producer.join(); collector.join();
+			if ( poll_error ) { std::rethrow_exception( poll_error ); }
+			if ( collect_error ) { std::rethrow_exception( collect_error ); }
+		}
+		else {
+			const auto nested = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				m_state->Iterate(); GT_ASSERT( gc_space->IsAccumulating(), "nested terminal cleanup lost accumulation" ); GT_OK();
+			} );
+			GT_ASSERT( nested.empty(), "nested terminal cleanup: " + nested );
+		}
+		GT_ASSERT( observer.retired == 1 && wrapper->type == VT_UNDEFINED, "terminal cleanup did not invalidate retained Player wrapper exactly once" );
+		GT_ASSERT( !m_state->GetConnection() && m_state->m_players.empty() && m_state->m_slots->GetCount() == 0 && m_state->GetCidSlots().empty(),
+			"terminal cleanup left native connection/player/slot/CID ownership" );
+		GT_ASSERT( callbacks == 1, "terminal native callback count changed" );
+		if ( detached ) {
+			g_engine->GetGC()->Iterate();
+			GT_ASSERT( !client_destroyed && m_game.m_active_admission && m_game.m_active_admission->connection == client,
+				"detached Client was not retained by the actual admission" );
+		}
+		m_state->Iterate();
+		GT_ASSERT( observer.retired == 1 && callbacks == 1, "repeated terminal polling repeated retirement or callback" );
+		GT_ASSERT( !retired_during_collect, "terminal Player retirement crossed an active collection" );
+		GT_OK();
+	}
+
 	std::string CheckFactionReplacement( const bool native_packet, const bool malformed ) {
 		using namespace game::backend;
 		struct Gate {
@@ -4173,6 +4319,14 @@ static void AddSessionCallbackTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	for ( const bool native : { false, true } ) {
+		for ( const bool detached : { false, true } ) {
+			task->AddTest( "terminal connection cleanup native " + std::to_string( native ) + " detached " + std::to_string( detached ), GT( native, detached ) {
+				BackendFixture fixture; return fixture.CheckTerminalConnectionRetirement( native, detached );
+			} );
+		}
+	}
+
 	for ( const bool native : { false, true } ) {
 		for ( const bool malformed : { false, true } ) {
 			task->AddTest( "faction replacement excludes collection native " + std::to_string( native ) + " malformed " + std::to_string( malformed ), GT( native, malformed ) {

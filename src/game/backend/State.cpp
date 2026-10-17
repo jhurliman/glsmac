@@ -124,16 +124,20 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
-			if ( m_connection ) {
-				m_connection->SetState( nullptr );
-				m_connection = nullptr;
-			}
-			for ( auto& player : m_players ) {
-				DELETE( player );
-			}
-			m_players.clear();
-			m_slots->Clear();
-			m_cid_slots.clear();
+			// Polling and callbacks above can queue work; only the native
+			// terminal ownership cleanup may share collection exclusion.
+			m_gc_space->WithNativeMutation( [ & ]() {
+				if ( m_connection ) {
+					m_connection->SetState( nullptr );
+					m_connection = nullptr;
+				}
+				for ( auto& player : m_players ) {
+					DELETE( player );
+				}
+				m_players.clear();
+				m_slots->Clear();
+				m_cid_slots.clear();
+			} );
 		}
 	}
 }

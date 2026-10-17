@@ -186,7 +186,7 @@ void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "SMAC fungal appended tags retain V2 numbers and checked mineral energy boundaries", GT() {
+	task->AddTest( "SMAC fungal appended tags retain numeric values and checked mineral energy boundaries", GT() {
 		using Kind = SmacFactionStartupBonus::Kind;
 		const std::array< Kind, 16 > order = { Kind::NAMED_TECH, Kind::EXTRA_TECH, Kind::SOCIAL, Kind::FACILITY, Kind::IMMUNITY,
 			Kind::FUNGNUTRIENT, Kind::VOTES, Kind::ENERGY, Kind::DRONE, Kind::TALENT, Kind::POPULATION, Kind::COMMERCE, Kind::FREEPROTO, Kind::FANATIC, Kind::FUNGMINERALS, Kind::FUNGENERGY };
@@ -195,10 +195,10 @@ void AddSmacFungalCapabilitiesTests( task::gsetests::GSETests* task ) {
 		for ( const auto* keyword : { "FUNGMINERALS", "FUNGENERGY" } ) {
 			auto& bonuses = profiles.factions[ 0 ].bonuses; const auto bonus = [ & ]( int32_t n ) { return SmacFactionStartupBonus::Parse( keyword, std::to_string( n ), catalog ); };
 			bonuses = { bonus( INT32_MAX ) }; auto wire = profiles.Serialize( catalog );
-			GT_ASSERT( wire.ReadInt() == 2, "appended tags changed structural codec version" );
+			GT_ASSERT( wire.ReadInt() == 3, "faction header profile codec version differs" );
 			SmacFactionStartupRules restored;
-			GT_ASSERT( !Rejects( [ & ] { restored = SmacFactionStartupRules::Deserialize( profiles.Serialize( catalog ), catalog ); } ), "appended V2 tag rejected by reader" );
-			GT_ASSERT( restored == profiles && state.FungalCapabilities( 1, catalog, restored ) == state.FungalCapabilities( 1, catalog, profiles ), "new tag failed exact V2 restoration" );
+			GT_ASSERT( !Rejects( [ & ] { restored = SmacFactionStartupRules::Deserialize( profiles.Serialize( catalog ), catalog ); } ), "appended tag rejected by reader" );
+			GT_ASSERT( restored == profiles && state.FungalCapabilities( 1, catalog, restored ) == state.FungalCapabilities( 1, catalog, profiles ), "new tag failed exact restoration" );
 			bonuses.push_back( bonus( 1 ) );
 			GT_ASSERT( Overflows( [ & ] { state.FungalCapabilities( 1, catalog, profiles ); } ), "new resource overflow accepted" );
 			bonuses = { bonus( INT32_MIN ), bonus( -1 ) };

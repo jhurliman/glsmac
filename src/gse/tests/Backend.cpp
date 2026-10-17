@@ -8232,7 +8232,7 @@ struct UnitSnapshotRecord {
 	bool moved = true;
 	types::Buffer Encode() const {
 		types::Buffer buf;
-		buf.WriteInt( 2 ); buf.WriteInt( 0 ); buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
+		buf.WriteInt( 3 ); buf.WriteInt( 0 ); buf.WriteInt( id ); buf.WriteString( def ); buf.WriteInt( owner );
 		buf.WriteInt( x ); buf.WriteInt( y ); buf.WriteFloat( movement );
 		buf.WriteInt( morale ); buf.WriteFloat( health ); buf.WriteBool( moved );
 		return buf;

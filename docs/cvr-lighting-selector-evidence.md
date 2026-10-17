@@ -160,12 +160,12 @@ pixel write, and compare against an intentionally wrong unshifted-row oracle.
 Each control must fail at its intended boundary. Domain failures happen before
 emulation, while controls exercise the monitored original instructions.
 
-| Retained evidence | SHA-256 |
+| Historical composition evidence | SHA-256 |
 | --- | --- |
 | Probe source | `a1630f15fd1dc9d68c7b42eddac52c1d6a2c462de9fb80140289e6ccaf19954f` |
 | Image-reader helper | `5c97f8ebda930909d78896c48b764f5aea8ae5322cbdcf2a8dd2b9df1b59f201` |
-| Existing pixel helper | `dee511e774ffa42cce36c8e63c4ff4820b42b3b2cc2831dc5bbf80d8de55c167` |
-| Final report, 29,566,039 bytes | `8c09882c2e4296a363d6824f6081fa9c8a474dc747313d93e6497f4fd3167179` |
+| Pixel helper used for this historical run | `dee511e774ffa42cce36c8e63c4ff4820b42b3b2cc2831dc5bbf80d8de55c167` |
+| Historical report, 29,566,039 bytes | `8c09882c2e4296a363d6824f6081fa9c8a474dc747313d93e6497f4fd3167179` |
 
 The private report is retained at
 `out/validation-cvr-lighting-selector/lighting-selector-report.json`, with the
@@ -174,6 +174,17 @@ is separately preserved as `lighting-selector-core-report.json`; it is not the
 final source/composition receipt. Python byte-compilation and whitespace checks
 also pass. No C++ production code changed, so this evidence slice did not repeat
 unaffected application builds or platform suites.
+
+After refreshing dependencies, the same probe was run with the current pixel
+helper `502db5ce7cdd9e1538d1920992f31cab1293cb77beb8dbf2a872ba809209e750`.
+All 2,503 selector cases, 19 domain rejections, nine selector controls,
+100 composition cases and five composition controls passed again (122,674
+selector instructions). Probe and image-helper source hashes are unchanged.
+The new 29,566,039-byte report is retained in the primary integration checkout
+at `out/validation-cvr-lighting-selector-current/lighting-selector-report.json`,
+SHA-256 `593b2180a4b9cf5ee7cc7922018eb3ed39215a48df29f4bcb69b784ca351d8f7`.
+The preceding hash belongs to the historical helper stack; the two receipts
+are not interchangeable.
 
 ```sh
 python tools/reference/probe_cvr_lighting_selector.py \

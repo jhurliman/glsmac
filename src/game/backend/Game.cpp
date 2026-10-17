@@ -719,6 +719,20 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_smac_credits",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				// Treasury belongs to the actual local participant. This read does
+				// not accept another owner or post/settle any saved balance.
+				if ( !IsRunning() || !m_state || !m_simulation || !m_slot || !m_player
+					|| m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE ) {
+					return VALUE( gse::value::Undefined );
+				}
+				try { return VALUE( gse::value::Int,, GetCanonicalEconomy( m_slot ).credits ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
 			"get_turn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );

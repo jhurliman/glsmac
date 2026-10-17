@@ -8839,6 +8839,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				auto* read_ui = static_cast< value::Callable* >( factory->Run( GSE_CALL, { wrapper } ) );
 				auto* ui = static_cast< value::Object* >( read_ui->Run( GSE_CALL, {} ) );
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2137", "late minimap lost restored year" );
+				GT_ASSERT( static_cast< value::String* >( ui->Get( "energy" ) )->value == "Energy: N/A", "legacy minimap fabricated a treasury" );
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "text" ) )->value == ( scenario == 2 ? "WAITING FOR PLAYERS" : "TURN COMPLETE" ), "late minimap lost restored status" );
 				GT_ASSERT( static_cast< value::Int* >( ui->Get( "plays" ) )->value == ( scenario == 1 ? 1 : 0 ) && static_cast< value::Int* >( ui->Get( "timers" ) )->value == ( scenario == 1 ? 1 : 0 ), "late minimap readiness presentation differs" );
 				// Ordinary advancement must still invoke real unit-turn logic and all

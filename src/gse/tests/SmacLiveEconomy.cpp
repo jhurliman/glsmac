@@ -12,6 +12,9 @@
 #include "game/backend/resource/Resource.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/slot/Slots.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Int.h"
+#include "gse/value/Object.h"
 #include <sstream>
 
 namespace gse::tests {
@@ -86,7 +89,14 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 				const auto value=game->GetCanonicalEconomy(owner);
 				GT_ASSERT(value.credits==(std::string(binding.port_id)=="MORGANITES"?110:10)&&value.pending_debit==0
 					&&value.rates.psych==0&&value.rates.labs==5&&value.treaty_partners==0,"original startup rates/treasury/faction bonus differ");
-				auto copy=value;copy.credits=99;GT_ASSERT(game->GetCanonicalEconomy(owner)==value,"query aliases mutable economy");GT_OK();
+				auto copy=value;copy.credits=99;GT_ASSERT(game->GetCanonicalEconomy(owner)==value,"query aliases mutable economy");
+				auto* wrapped=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+				auto* credits=static_cast<value::Callable*>(wrapped->Get("get_smac_credits"));
+				const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+				for(int i=0;i<3;++i) {const auto* result=credits->Run(GSE_CALL,{});
+					GT_ASSERT(result->type==VT_INT&&static_cast<const value::Int*>(result)->value==value.credits,"local treasury wrapper lost actual saved credits");}
+				GT_ASSERT(Rejects([&]{credits->Run(GSE_CALL,{VALUE(value::Int,,1)});}),"treasury query accepted a caller-selected owner");
+				GT_ASSERT(fixture.Snapshot()==before&&fixture.GameplayRandom()==rng,"treasury UI read posted or changed state");GT_OK();
 			});if(!error.empty()){return error;}
 		}GT_OK();
 	});
@@ -113,6 +123,9 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 		return destination.Run([&](GSE_CALLABLE)->std::string {
 			destination.Restore(GSE_CALL,snapshot,true);auto* game=destination.Game();auto* base=game->GetBM()->GetBase(701);
 			const auto actual=game->GetCanonicalBaseEnergy(*base);const auto saved=game->GetCanonicalEconomy(base->m_owner);
+			auto* wrapped=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+			auto* credits=static_cast<value::Callable*>(wrapped->Get("get_smac_credits"));
+			GT_ASSERT(static_cast<value::Int*>(credits->Run(GSE_CALL,{}))->value==137,"restored local treasury wrapper replayed defaults");
 			GT_ASSERT(actual.tail.final==expected.tail.final&&actual.maintenance==expected.maintenance&&saved.credits==137&&saved.pending_debit==7&&saved.research_fraction==90,"restore replayed defaults or lost final energy inputs");GT_OK();
 		});
 	});

@@ -114,3 +114,23 @@ checkpoint also passed both suites and is retained separately.
 
 No native Windows/macOS run, rendered preview, hot-reload transaction, or live
 gameplay Scout replacement is claimed by this adapter receipt.
+
+## Focused publication validation
+
+The publication starts from main `7a47ca74` plus bounded-reader prerequisite
+`b493406c`; that base has the same tree as main's later `5a556ff6` merge.
+Source `cdfc2a51` applies with only the existing ownership-test selector context
+adjusted and an explicit `gse/value/Float.h` fixture include. The first build's
+missing-include diagnostic is retained separately. No production behavior was
+adapted for the publication.
+
+The corrected publication tree at `6b598142` passed all eight normal CTests in
+54.02 seconds, all three new tracked groups, and the opt-in installed Unit and
+registered-preview smoke. Its ownership selector contains eleven groups because
+this parent does not contain the separate Surface replacement test. Full
+LLVM 15 shared-header/CMake analysis passed all 313 production translation units
+with zero failures in 233.13 seconds. The later history-only merge `85ec62e8`
+has the identical tested tree (`bdf9ae5b2f3c8265f38ba23f8456e410a03b03cb`).
+These publication results are distinct from the source sanitizer receipts above.
+Logs use the `scout-cache-publication-*` prefix in the same retained evidence
+directory. No test fixture behavior or production code changed after these runs.

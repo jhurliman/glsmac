@@ -125,7 +125,7 @@ correctness.
 ## Base snapshot compatibility
 
 The base-manager section of a world snapshot starts with the typed string
-`GLSMAC_BASES_V2`. It contains population definitions, facility definitions, base
+`GLSMAC_BASES_V3`. It contains population definitions, facility definitions, base
 instances, and the next base ID, in that order. Definitions must be restored
 before a base can resolve its population and facility IDs. Each base record now
 stores accumulated nutrients as a signed 64-bit integer, initially zero. The
@@ -141,7 +141,12 @@ runtime result or a claim about SMAX. Storage accepts the full signed 64-bit
 range; tests at its limits verify representation, not original-game arithmetic
 or overflow behavior. Implementing the researched growth rules remains separate.
 
-Old unversioned and V1 base snapshots are unsupported. The unversioned integer
+Population records also retain optional worked-tile coordinates. Registration
+rebuilds the ID-based reverse index; production scripts derive worker links from
+that state. See [worker assignment state](worker-state.md) for validation,
+restore behavior and the remaining rollback identity limitation.
+
+Old unversioned, V1 and V2 base snapshots are unsupported. The unversioned integer
 population count fails the new reader's string-type check; the new string marker likewise
 fails an old reader's integer-type check. Unknown version markers are rejected
 before changing base-manager state. Mixed-version peers therefore cannot join

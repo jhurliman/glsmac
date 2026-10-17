@@ -58,5 +58,6 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
+	${PWD}/SmacBaseResourceContext.cpp
 
 	PARENT_SCOPE )

@@ -17,6 +17,7 @@
 #include "gse/callable/Native.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Array.h"
+#include <memory>
 
 namespace game {
 namespace backend {
@@ -24,7 +25,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V4";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V5";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -127,26 +128,78 @@ void BaseManager::RemoveAssignments( const Base* base ) {
 }
 
 void BaseManager::DefinePop( PopDef* pop_def ) {
+	ValidateSmacPopDef( pop_def );
 	Log( "Defining base pop ('" + pop_def->m_id + "')" );
 
-	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
-
-	m_base_popdefs.insert(
-		{
-			pop_def->m_id,
-			pop_def
-		}
-	);
-
+	// The caller keeps ownership until this method returns successfully. Build
+	// the owned notification before publication, then roll back the exact entry
+	// if the frontend queue cannot copy it. Its vector append has no callbacks.
 	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
 	NEW( fr.data.base_pop_define.serialized_popdef, std::string, PopDef::Serialize( pop_def ).ToString() );
-	m_game->AddFrontendRequest( fr );
+	const auto inserted = m_base_popdefs.emplace( pop_def->m_id, pop_def );
+	if ( !inserted.second ) { THROW( "Base pop def '" + pop_def->m_id + "' already exists" ); }
+	try { m_game->AddFrontendRequest( fr ); }
+	catch ( ... ) { m_base_popdefs.erase( inserted.first ); throw; }
+}
+
+void BaseManager::ValidateSmacPopDef( const PopDef* def ) const {
+	if ( !def || !def->m_smac_specialist_id ) { return; }
+	const auto& settings = m_game->GetState()->m_settings.global;
+	const auto& rules = settings.GetSmacSpecialistRules();
+	const auto& technology = settings.GetSmacTechnologyRules();
+	if ( settings.GetRulesetId() != "smac" || !settings.IsRulesetLocked() || !rules || !technology
+		|| *def->m_smac_specialist_id >= rules->specialists.size() || ( def->m_flags & PopDef::PF_TILE_WORKER ) ) {
+		THROW( "SMAC specialist role requires a frozen positional catalog" );
+	}
+	rules->Validate();
+	rules->TechnologyReferences( *technology );
+}
+
+void BaseManager::ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const {
+	context.Validate();
+	m_game->ValidateCurrentSimulation();
+	if ( !m_game->m_simulation ) { THROW( "SMAC base context requires an admitted simulation" ); }
+	const auto& global = m_game->GetState()->m_settings.global;
+	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() ) { THROW( "SMAC base context requires frozen resource and specialist profiles" ); }
+	for ( const auto& participant : m_game->m_simulation->value.roster ) {
+		if ( participant.simulation_id == context.owner_simulation_id
+			&& &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner
+			&& faction && participant.faction_id == faction->m_id ) { return; }
+	}
+	THROW( "SMAC base context owner/faction does not match its bound participant" );
+}
+
+SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot::Slot* owner ) const {
+	// Reuse the exact claimed new-world/turn-zero admission, not a script flag
+	// or a running-state approximation. This produces context only, not a full
+	// population, production, facility or citizen-allocation package.
+	m_game->RequireConventionalStartupClaim();
+	m_game->ValidateCurrentSimulation();
+	if ( m_game->m_simulation->value.designs.global_difficulty != 3 ) { THROW( "Starting base governor producer is admitted only at original difficulty 3" ); }
+	for ( const auto& item : m_bases ) {
+		if ( item.second->m_owner == owner ) { THROW( "Starting base resource producer requires the participant's first Base" ); }
+	}
+	for ( const auto& participant : m_game->m_simulation->value.roster ) {
+		if ( &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner ) {
+			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, 0x00dfbe41u };
+			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
+			return result;
+		}
+	}
+	THROW( "Starting base owner is not an admitted participant" );
 }
 
 void BaseManager::UndefinePop( const std::string& id ) {
 	Log( "Undefining base pop ('" + id + "')" );
 
 	ASSERT( m_base_popdefs.find( id ) != m_base_popdefs.end(), "Base pop def '" + id + "' does not exist" );
+	for ( const auto& item : m_bases ) {
+		if ( item.second->HasSmacResourceContext() ) {
+			for ( const auto& pop : item.second->m_pops ) {
+				if ( pop.second.m_def->m_id == id ) { THROW( "Cannot undefine a canonical population role in use" ); }
+			}
+		}
+	}
 
 	m_base_popdefs.erase( id );
 
@@ -419,7 +472,14 @@ WRAPIMPL_BEGIN( BaseManager )
 					flags |= PopDef::PF_TILE_WORKER;
 				}
 
-				DefinePop( new PopDef( id, name, rh, rp, flags ) );
+				std::optional< uint8_t > specialist;
+				if ( def.count( "smac_specialist_id" ) ) {
+					N_GETPROP( position, def, "smac_specialist_id", Int );
+					if ( position < 0 || position > 6 ) { GSE_ERROR( gse::EC.GAME_ERROR, "Specialist ID must be a CITIZENS position 0..6" ); }
+					specialist = static_cast< uint8_t >( position );
+				}
+				auto candidate = std::make_unique< PopDef >( id, name, rh, rp, flags, specialist );
+				DefinePop( candidate.get() ); candidate.release();
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -532,6 +592,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
+				N_GETPROP_OPT( bool, starting_context, info, "smac_starting_resource_context", Bool, false );
 
 				std::map< std::string, const FacilityDef* > facilities = {};
 				{
@@ -557,6 +618,7 @@ WRAPIMPL_BEGIN( BaseManager )
 					}
 				}
 
+				const auto resource_context = starting_context ? std::optional< SmacBaseResourceContext >( PrepareStartingResourceContext( owner->GetSlot() ) ) : std::nullopt;
 				auto* base = new Base(
 					m_game,
 					Base::GetNextId(),
@@ -565,7 +627,7 @@ WRAPIMPL_BEGIN( BaseManager )
 					tile,
 					m_name,
 					facilities,
-					{}
+					{}, 1, 0, std::nullopt, resource_context
 				);
 
 				SpawnBase( GSE_CALL, base );
@@ -668,7 +730,8 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefinePop( PopDef::Deserialize( b ) );
+		auto definition = std::unique_ptr< PopDef >( PopDef::Deserialize( b ) );
+		DefinePop( definition.get() ); definition.release();
 	}
 
 	sz = buf.ReadInt();

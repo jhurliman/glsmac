@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseManager.cpp
 	${PWD}/Base.cpp
 	${PWD}/ProductionState.cpp
+	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/PopDef.cpp
 	${PWD}/Pop.cpp

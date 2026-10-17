@@ -2,6 +2,7 @@
 #include "GlsmacResourceMapPolicy.h"
 #include "game/backend/map/generator/SimplePerlin.h"
 #include "ConventionalUnits.h"
+#include "SmacBaseResourceContext.h"
 #include "CvrScoutRenderer.h"
 #include "CvrSpartanRoverRenderer.h"
 #include "loader/cvr/CvrSpartanRoverRenderer.h"
@@ -280,15 +281,18 @@ public:
 		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.designs.push_back( copy ); return; } }
 		throw std::runtime_error( "missing fixture design owner" );
 	}
-	void RestoreConventional( GSE_CALLABLE, const std::string& snapshot ) {
+	void RestoreConventional( GSE_CALLABLE, const std::string& snapshot, const bool no_current_simulation = false ) {
 		m_game.GetUM()->Clear();
+		if ( no_current_simulation ) { m_game.m_simulation.reset(); }
 		// Keep a deliberately different current simulation during the real body
 		// decode. The unit decoder must use its private downloaded context.
 		RestoreWorldBody( GSE_CALL, snapshot );
+		if ( !m_game.GetBM()->GetBases().empty() ) { throw std::runtime_error( "Base restore published before the downloaded simulation" ); }
 		m_game.m_simulation.reset();
 		m_game.PublishPendingSimulation();
 		SetRunning( true );
 		m_game.GetUM()->ProcessUnprocessed( GSE_CALL );
+		m_game.GetBM()->ProcessUnprocessed( GSE_CALL );
 	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
@@ -3109,7 +3113,53 @@ public:
 		} );
 	}
 
-	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false ) {
+	std::string CheckStartingBaseContext( const bool queued, const bool wrong_difficulty ) {
+		using namespace game::backend;
+		size_t produced = 0;
+		const auto create = [ & ]( GSE_CALLABLE ) {
+			auto* bm = m_game.GetBM(); auto* wrapper = static_cast< value::Object* >( bm->Wrap( GSE_CALL ) );
+			const auto spawn = [ & ]( size_t slot, size_t x ) {
+				auto* info = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "smac_starting_resource_context", VALUE( value::Bool,, true ) } } ) );
+				return static_cast< value::Callable* >( wrapper->Get( "spawn_base" ) )->Run( GSE_CALL, {
+					m_state->m_slots->GetSlot( slot ).GetPlayer()->Wrap( GSE_CALL ), m_game.GetMap()->GetTile( x, 2 )->Wrap( GSE_CALL ), info } );
+			};
+			if ( wrong_difficulty ) {
+				const auto id = base::Base::GetNextId(); bool rejected = false;
+				try { spawn( 0, 0 ); } catch ( const std::exception& ) { rejected = true; }
+				if ( !rejected || base::Base::GetNextId() != id || !bm->GetBases().empty() || m_game.GetMap()->GetTile( 0, 2 )->base ) { throw std::runtime_error( "unsupported difficulty created a Base" ); }
+				return;
+			}
+			for ( size_t slot : { 0u, 2u, 6u } ) {
+				auto* value = spawn( slot, slot ); auto* base = base::Base::Unwrap( value ); const auto state = base->GetSmacResourceContext();
+				if ( m_game.GetTurnId() != 0 || state.golden_age || state.resource_events || state.resource_event_timer || state.governor_options != 0x00dfbe41u
+					|| state.GovernorActive() || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->retained ) {
+					throw std::runtime_error( "first-base context producer or Early event position differs" );
+				}
+				++produced;
+			}
+			const auto id = base::Base::GetNextId(); bool rejected = false;
+			try { spawn( 0, 4 ); } catch ( const std::exception& ) { rejected = true; }
+			if ( !rejected || base::Base::GetNextId() != id || bm->GetBases().size() != 3 || m_game.GetMap()->GetTile( 4, 2 )->base ) { throw std::runtime_error( "repeated first-base producer created effects" ); }
+		};
+		const auto result = CheckSimulationStartup( queued, 0, false, false, wrong_difficulty ? -3 : 0, false, 0, false, false, create );
+		GT_ASSERT( result.empty(), "Base actual claimed Start: " + result );
+		GT_ASSERT( produced == ( wrong_difficulty ? 0u : 3u ), "first-base event lost or duplicated" );
+		return WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			std::vector< size_t > retired;
+			for ( const auto& entry : m_game.GetBM()->GetBases() ) {
+				const auto context = entry.second->GetSmacResourceContext();
+				GT_ASSERT( !context.golden_age && !context.resource_events && context.resource_event_timer == 0 && context.governor_options == 0x00dfbe41u, "first turn reset or recomputed resource context" );
+				retired.push_back( entry.first );
+			}
+			// Isolate the claimed-Start guard from the independent first-Base gate.
+			for ( auto id : retired ) { m_game.GetBM()->DespawnBase( GSE_CALL, id ); }
+			bool rejected = false; try { m_game.GetBM()->PrepareStartingResourceContext( &m_state->m_slots->GetSlot( 0 ) ); } catch ( const std::exception& ) { rejected = true; }
+			GT_ASSERT( rejected, "late producer bypassed claimed Start" ); GT_OK();
+		} );
+	}
+
+	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false,
+		const std::function< void( GSE_CALLABLE ) >& create_base = {} ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
@@ -3150,6 +3200,13 @@ public:
 						&& m_game.m_simulation->value.resource_modifiers == faction::SmacGlobalResourceModifiers::NewWorld();
 					return VALUE( value::Undefined );
 				} ) );
+			}
+			if ( create_base ) {
+				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+				auto* create = NATIVE_CALL( create_base ) { create_base( GSE_CALL ); return VALUE( value::Undefined ); } );
+				RegisterEvent( "fixture_first_base", new event::EventHandler( gc_space, "fixture_first_base", noop, nullptr, create, noop ) );
+				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this ) { m_game.Event( GSE_CALL, "fixture_first_base", {} ); return VALUE( value::Undefined ); } ) );
+				PushBaseUpdates(); // real Base FR uses the fixture's synthetic coordinates
 			}
 			m_game.On( GSE_CALL, "turn", NATIVE_CALL( this, &social_turns, &social_hook_valid ) {
 				++social_turns;
@@ -4070,6 +4127,12 @@ public:
 	}
 
 	size_t FrontendRequestCount() const { return m_frontend_requests.size(); }
+	void PrepareBaseCallbacks() {
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			if ( !m_game.m_tm ) { m_game.m_tm = new game::backend::map::tile::TileManager( &m_game ); }
+			PushBaseUpdates();
+		} );
+	}
 
 	void DefinePop( const std::string& id, const std::string& name, const game::backend::base::PopDef::pop_flags_t flags ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this, &id, &name, flags ]() {
@@ -4132,6 +4195,10 @@ private:
 	std::unique_ptr< GLSMAC > m_glsmac;
 };
 
+std::string CheckSmacBaseStartupFixture( const bool queued, const bool wrong_difficulty ) {
+	BackendFixture fixture; return fixture.CheckStartingBaseContext( queued, wrong_difficulty );
+}
+
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
@@ -4149,8 +4216,10 @@ game::backend::Game* ConventionalUnitFixture::Game() const { return fixture->Get
 std::string ConventionalUnitFixture::Run( const std::function< std::string( GSE_CALLABLE ) >& check ) { return fixture->WithEngineGameScriptValues( check ); }
 Value* ConventionalUnitFixture::Script( GSE_CALLABLE, const std::string& path ) { return fixture->RunScript( GSE_CALL, path ); }
 const std::vector< game::FrontendRequest >& ConventionalUnitFixture::Updates() { return fixture->PushUnitUpdates(); }
+const std::vector< game::FrontendRequest >& ConventionalUnitFixture::QueuedFrontendRequests() const { return fixture->FrontendRequests(); }
+void ConventionalUnitFixture::PrepareBaseCallbacks() { fixture->PrepareBaseCallbacks(); }
 std::string ConventionalUnitFixture::Snapshot() const { return fixture->WorldSnapshot(); }
-void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot ) { fixture->RestoreConventional( GSE_CALL, snapshot ); }
+void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot, bool no_current_simulation ) { fixture->RestoreConventional( GSE_CALL, snapshot, no_current_simulation ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }
 std::string ConventionalUnitFixture::CheckEarlyStartup( int scenario ) { return fixture->CheckEarlyConventionalStartup( scenario ); }
@@ -4767,6 +4836,7 @@ types::Buffer WorkerRecord( const std::vector< SavedWorker >& pops, const int64_
 	}
 	buf.WriteInt( next_pop_id ); buf.WriteInt( 37 );
 	buf.WriteString( production );
+	buf.WriteString( game::backend::base::SerializeSmacBaseResourceContext( std::nullopt ).ToString() );
 	return buf;
 }
 
@@ -4949,7 +5019,7 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 						if ( scenario == 9 ) { production.WriteInt( 99 ); }
 					}
 					types::Buffer snapshot;
-					snapshot.WriteString( "GLSMAC_BASES_V4" ); snapshot.WriteInt( 2 );
+					snapshot.WriteString( "GLSMAC_BASES_V5" ); snapshot.WriteInt( 2 );
 					for ( const auto* id : { "WORKER", "DOCTOR" } ) { snapshot.WriteString( id ); snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() ); }
 					snapshot.WriteInt( 0 ); snapshot.WriteInt( prior_record ? 2 : 1 );
 					if ( prior_record ) { snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() ); }
@@ -5196,7 +5266,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
 			GT_ASSERT( setup.empty(), "worker setup: " + setup );
 			types::Buffer snapshot;
-			snapshot.WriteString( "GLSMAC_BASES_V4" ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( "GLSMAC_BASES_V5" ); snapshot.WriteInt( 2 );
 			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
 				snapshot.WriteString( id );
 				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );
@@ -9235,7 +9305,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			using namespace game::backend::base;
 			const auto previous_next_id = Base::GetNextId();
 			util::FinallyGuard restore_next_id( [ previous_next_id ]() { Base::SetNextId( previous_next_id ); } );
-			for ( const std::string format : { "", "GLSMAC_BASES_V1", "GLSMAC_BASES_V2", "GLSMAC_BASES_V3", "GLSMAC_BASES_UNSUPPORTED" } ) {
+			for ( const std::string format : { "", "GLSMAC_BASES_V1", "GLSMAC_BASES_V2", "GLSMAC_BASES_V3", "GLSMAC_BASES_V4", "GLSMAC_BASES_UNSUPPORTED" } ) {
 				BackendFixture restored;
 				types::Buffer snapshot;
 				if ( !format.empty() ) {

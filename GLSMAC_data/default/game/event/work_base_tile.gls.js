@@ -1,6 +1,9 @@
 return {
 
 	validate: (e) => {
+		if (e.data.base.has_smac_resource_context) {
+			return 'Canonical worker command admission is not implemented';
+		}
 		if (e.caller != e.data.base.get_owner().id) {
 			return 'Only base owner can control base pops';
 		}
@@ -14,6 +17,9 @@ return {
 	},
 
 	apply: (e) => {
+		if (e.data.base.has_smac_resource_context) {
+			throw Error('Canonical worker command admission is not implemented');
+		}
 		const old_type = e.data.pop.get_type();
 		const old_tile = e.data.pop.get_worked_tile();
 		e.game.get('f_base_pop_work_tile')(e.data.base, e.data.pop, e.data.tile);

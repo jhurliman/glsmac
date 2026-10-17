@@ -49,7 +49,8 @@ Base::Base(
 	const pops_t& pops,
 	const size_t next_pop_id,
 	const int64_t accumulated_nutrients,
-	const std::optional< ProductionState >& production
+	const std::optional< ProductionState >& production,
+	const std::optional< SmacBaseResourceContext >& resource_context
 )
 	: MapObject( game->GetMap(), tile )
 	, m_game( game )
@@ -61,8 +62,10 @@ Base::Base(
 	, m_pops( pops )
 	, m_next_pop_id( next_pop_id )
 	, m_accumulated_nutrients( accumulated_nutrients )
-	, m_production( production ) {
+	, m_production( production )
+	, m_resource_context( resource_context ) {
 	if ( m_production ) { m_production->Validate(); }
+	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );
@@ -74,6 +77,7 @@ Base::Base(
 			THROW( "invalid population identity in base record" );
 		}
 		const auto& pos = pop.GetWorkedTileCoords();
+		ValidatePopulationRole( pop.m_def, pos );
 		const auto error = game->GetBM()->ValidateAssignment( id, tile->coord, pop.m_id, pop.m_def, pos );
 		if ( !error.empty() ) { THROW( error ); }
 		if ( pos && !assigned.emplace( pos->x, pos->y ).second ) {
@@ -99,8 +103,10 @@ const Game* const Base::GetGame() const {
 }
 
 Pop* const Base::AddPop( const Pop& pop ) {
+	if ( m_resource_context ) { GetSmacResourceContext(); }
 	if ( m_pops.find( pop.m_id ) != m_pops.end() ) { THROW( "population ID already exists" ); }
 	if ( pop.m_base != this ) { THROW( "population belongs to another base" ); }
+	ValidatePopulationRole( pop.m_def, pop.m_worked_tile );
 	const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, pop.m_id, pop.m_def, pop.m_worked_tile );
 	if ( !error.empty() ) { THROW( error ); }
 	if ( pop.m_worked_tile && m_game->GetBM()->GetBase( m_id ) != this ) {
@@ -114,6 +120,7 @@ Pop* const Base::AddPop( const Pop& pop ) {
 }
 
 void Base::RemovePop( const size_t pop_id ) {
+	if ( m_resource_context ) { GetSmacResourceContext(); }
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id not found" );
 	m_game->GetBM()->ChangeAssignment( m_id, pop_id, m_pops.at( pop_id ).m_worked_tile, {} );
 	m_pops.erase( pop_id );
@@ -139,6 +146,8 @@ void Base::SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, 
 	}
 	const auto* def = GetPopDef( GSE_CALL, def_id );
 	const Pop::worked_tile_t position = tile ? Pop::worked_tile_t( tile->coord ) : std::nullopt;
+	if ( m_resource_context ) { GetSmacResourceContext(); }
+	ValidatePopulationRole( def, position );
 	const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, pop->m_id, def, position );
 	if ( !error.empty() ) { GSE_ERROR( gse::EC.GAME_ERROR, error ); }
 	if ( position && m_game->GetBM()->GetBase( m_id ) != this ) {
@@ -179,7 +188,43 @@ void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionStat
 	TriggerUpdate();
 }
 
+bool Base::HasSmacResourceContext() const { return m_resource_context.has_value(); }
+
+SmacBaseResourceContext Base::GetSmacResourceContext() const {
+	if ( !m_resource_context || m_game->GetBM()->GetBase( m_id ) != this || !m_tile || m_tile->base != this
+		|| m_tile->tiles->GetMap() != m_game->GetMap() ) {
+		THROW( "SMAC resource context requires a registered canonical Base" );
+	}
+	m_game->GetBM()->ValidateSmacResourceContext( *m_resource_context, m_owner, m_faction );
+	return *m_resource_context;
+}
+
+void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& context ) {
+	m_game->CheckRW( GSE_CALL );
+	const auto previous = GetSmacResourceContext();
+	context.Validate();
+	if ( context.owner_simulation_id != previous.owner_simulation_id ) { THROW( "Cannot rebind a base resource context" ); }
+	// Scalar replacement only. No status recomputation, event aging, governor
+	// allocation reset, faction remembered-settings write, or yield evaluation.
+	m_resource_context = context;
+	TriggerUpdate();
+}
+
+void Base::ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const {
+	if ( !m_resource_context ) { return; }
+	if ( !def || m_game->GetBM()->GetPopDef( def->m_id ) != def ) { THROW( "Canonical population definition is not registered" ); }
+	if ( tile ) {
+		if ( !( def->m_flags & PopDef::PF_TILE_WORKER ) || def->m_smac_specialist_id ) { THROW( "Canonical worker requires a tile-worker role" ); }
+	}
+	else {
+		if ( !def->m_smac_specialist_id || ( def->m_flags & PopDef::PF_TILE_WORKER ) ) { THROW( "Canonical specialist requires a positional CITIZENS role" ); }
+		m_game->GetBM()->ValidateSmacPopDef( def );
+	}
+}
+
 const types::Buffer Base::Serialize( const Base* base ) {
+	if ( base->m_resource_context ) { base->GetSmacResourceContext(); }
+	for ( const auto& entry : base->m_pops ) { base->ValidatePopulationRole( entry.second.m_def, entry.second.GetWorkedTileCoords() ); }
 	types::Buffer buf;
 	buf.WriteInt( base->m_id );
 	buf.WriteInt( base->m_owner->GetIndex() );
@@ -199,6 +244,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteInt( base->m_next_pop_id );
 	buf.WriteInt( base->m_accumulated_nutrients );
 	buf.WriteString( SerializeProductionState( base->m_production ).ToString() );
+	buf.WriteString( SerializeSmacBaseResourceContext( base->m_resource_context ).ToString() );
 	return buf;
 }
 
@@ -243,7 +289,9 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	const auto accumulated_nutrients = buf.ReadInt();
 	types::Buffer production_buffer( buf.ReadString() );
 	const auto production = DeserializeProductionState( production_buffer );
-	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production );
+	const auto resource_context = DeserializeSmacBaseResourceContext( types::Buffer( buf.ReadString( SmacBaseResourceContext::MAX_WIRE_BYTES ) ) );
+	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
+	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context );
 }
 
 WRAPIMPL_SERIALIZE( Base )
@@ -308,10 +356,27 @@ ProductionItem ReadProductionItem( GSE_CALLABLE, const gse::value::object_proper
 
 WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_GET_CUSTOM( "id", Int, m_id )
+	WRAPIMPL_GET_CUSTOM( "has_smac_resource_context", Bool, HasSmacResourceContext() )
 	WRAPIMPL_GET_CUSTOM( "name", String, m_name )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	WRAPIMPL_CUSTOM_SETTERS
+	{
+		"get_smac_resource_context",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			const auto state = GetSmacResourceContext();
+			return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+				{ "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
+				{ "golden_age", VALUE( gse::value::Bool,, state.golden_age ) },
+				{ "resource_events", VALUE( gse::value::Int,, state.resource_events ) },
+				{ "resource_event_timer", VALUE( gse::value::Int,, state.resource_event_timer ) },
+				{ "governor_options", VALUE( gse::value::Int,, state.governor_options ) },
+				{ "governor_active", VALUE( gse::value::Bool,, state.GovernorActive() ) },
+				{ "manage_citizens", VALUE( gse::value::Bool,, state.ManageCitizens() ) },
+			} );
+		} )
+	},
 	{
 		"get_production_state",
 		NATIVE_CALL( this ) {
@@ -387,6 +452,9 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				GSE_ERROR( gse::EC.GAME_ERROR, "Next population ID already exists" );
 			}
 			Pop candidate( this, m_next_pop_id, def, 0, worked_tile );
+			// The role/owner checks precede even the presentation-variant RNG draw.
+			if ( m_resource_context ) { GetSmacResourceContext(); }
+			ValidatePopulationRole( def, candidate.m_worked_tile );
 			const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, candidate.m_id, def, candidate.m_worked_tile );
 			if ( !error.empty() ) { GSE_ERROR( gse::EC.GAME_ERROR, error ); }
 			if ( worked_tile && m_game->GetBM()->GetBase( m_id ) != this ) {

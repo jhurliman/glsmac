@@ -41,6 +41,7 @@ const create_fixture = () => {
 	let next_pop_id = 1;
 	let accumulated_nutrients = 0;
 	const base = custom_properties();
+	base.has_smac_resource_context = false;
 	base.get_accumulated_nutrients = () => { return accumulated_nutrients; };
 	base.set_accumulated_nutrients = (value) => { accumulated_nutrients = value; };
 	base.get_owner = () => { return owner; };

@@ -65,6 +65,11 @@ const find_best_or_worst_tiles = (base, tiles, count, modifier) => { // modifier
 };
 
 const process_growth = (game, base) => {
+	// Canonical citizen choices are persistent. The legacy heuristic must not
+	// allocate an English-named specialist or query Early social state.
+	if (#is_defined(base.has_smac_resource_context) && base.has_smac_resource_context) {
+		return;
+	}
 	let grow = false;
 
 	let accumulated = base.get_accumulated_nutrients();

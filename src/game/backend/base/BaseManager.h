@@ -13,6 +13,7 @@
 
 #include "RenderInfo.h"
 #include "Pop.h"
+#include "SmacBaseResourceContext.h"
 
 namespace game {
 namespace backend {
@@ -29,6 +30,7 @@ class Tile;
 namespace slot {
 class Slot;
 }
+namespace faction { class Faction; }
 
 namespace base {
 
@@ -48,8 +50,10 @@ public:
 	void Clear();
 
 	PopDef* GetPopDef( const std::string& id ) const;
+	// Takes ownership only on successful return, including frontend publication.
 	void DefinePop( PopDef* pop_def );
 	void UndefinePop( const std::string& id );
+	void ValidateSmacPopDef( const PopDef* def ) const;
 
 	FacilityDef* GetFacilityDef( const std::string& id ) const;
 	void DefineFacility( FacilityDef* facility_def );
@@ -60,6 +64,8 @@ public:
 	std::string ValidateAssignment( const size_t base_id, const map::tile::coords_t& center, const size_t pop_id, const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	void SpawnBase( GSE_CALLABLE, Base* base );
 	void DespawnBase( GSE_CALLABLE, const size_t base_id );
+	SmacBaseResourceContext PrepareStartingResourceContext( const slot::Slot* owner ) const;
+	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 
 	const std::map< size_t, Base* >& GetBases() const;
 	const popdefs_t& GetBasePopDefs() const;

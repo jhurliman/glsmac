@@ -31,8 +31,10 @@ public:
 	std::string Run( const std::function< std::string( GSE_CALLABLE ) >& check );
 	Value* Script( GSE_CALLABLE, const std::string& path );
 	const std::vector< game::FrontendRequest >& Updates();
+	const std::vector< game::FrontendRequest >& QueuedFrontendRequests() const;
+	void PrepareBaseCallbacks();
 	std::string Snapshot() const;
-	void Restore( GSE_CALLABLE, const std::string& snapshot );
+	void Restore( GSE_CALLABLE, const std::string& snapshot, bool no_current_simulation = false );
 	void RetainedMorale( int32_t retained, int32_t current );
 	void Early();
 	std::string CheckEarlyStartup( int scenario );

@@ -1,4 +1,5 @@
 #include "PopDef.h"
+#include <stdexcept>
 
 namespace game {
 namespace backend {
@@ -9,14 +10,18 @@ PopDef::PopDef(
 	const std::string& name,
 	const render_infos_t& renders_human,
 	const render_infos_t& renders_progenitor,
-	const pop_flags_t flags
+	const pop_flags_t flags,
+	const std::optional< uint8_t > smac_specialist_id
 )
 	: m_id( id )
 	, m_name( name )
 	, m_renders_human( renders_human )
 	, m_renders_progenitor( renders_progenitor )
-	, m_flags( flags ) {
-	//
+	, m_flags( flags )
+	, m_smac_specialist_id( smac_specialist_id ) {
+	if ( m_smac_specialist_id && ( *m_smac_specialist_id > 6 || ( m_flags & PF_TILE_WORKER ) ) ) {
+		throw std::runtime_error( "SMAC specialist role must be a non-worker catalog position 0..6" );
+	}
 }
 
 const std::string PopDef::ToString( const std::string& prefix ) const {
@@ -47,6 +52,8 @@ const types::Buffer PopDef::Serialize( const PopDef* def ) {
 	X( m_renders_progenitor )
 #undef X
 	buf.WriteInt( def->m_flags );
+	buf.WriteBool( def->m_smac_specialist_id.has_value() );
+	if ( def->m_smac_specialist_id ) { buf.WriteInt( *def->m_smac_specialist_id ); }
 	return buf;
 }
 
@@ -67,7 +74,15 @@ PopDef* PopDef::Deserialize( types::Buffer& buf ) {
 	X( renders_progenitor )
 #undef X
 	const auto flags = buf.ReadInt();
-	return new PopDef( id, name, renders_human, renders_progenitor, flags );
+	if ( flags < 0 || flags > UINT8_MAX ) { throw std::runtime_error( "Population flags are out of range" ); }
+	std::optional< uint8_t > specialist;
+	if ( buf.ReadBool() ) {
+		const auto position = buf.ReadInt();
+		if ( position < 0 || position > 6 ) { throw std::runtime_error( "Invalid SMAC specialist position" ); }
+		specialist = static_cast< uint8_t >( position );
+	}
+	if ( buf.lenr != buf.lenw ) { throw std::runtime_error( "Trailing population definition" ); }
+	return new PopDef( id, name, renders_human, renders_progenitor, flags, specialist );
 }
 
 const std::string PopDef::InfosToString( const std::string& prefix, const std::string& name, const render_infos_t& infos ) const {

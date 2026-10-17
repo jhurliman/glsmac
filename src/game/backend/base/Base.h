@@ -12,6 +12,7 @@
 
 #include "Pop.h"
 #include "ProductionState.h"
+#include "SmacBaseResourceContext.h"
 
 namespace gse::value {
 class Object;
@@ -56,7 +57,8 @@ public:
 		const pops_t& pops,
 		const size_t next_pop_id = 1,
 		const int64_t accumulated_nutrients = 0,
-		const std::optional< ProductionState >& production = std::nullopt
+		const std::optional< ProductionState >& production = std::nullopt,
+		const std::optional< SmacBaseResourceContext >& resource_context = std::nullopt
 	);
 	virtual ~Base() = default;
 
@@ -70,6 +72,10 @@ public:
 	void SetAccumulatedNutrients( const int64_t nutrients );
 	const std::optional< ProductionState >& GetProductionState() const;
 	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
+	bool HasSmacResourceContext() const;
+	SmacBaseResourceContext GetSmacResourceContext() const;
+	// Explicit state replacement; cannot adopt a legacy Base or change ownership.
+	void SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& context );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -93,6 +99,8 @@ private:
 	size_t m_next_pop_id = 1;
 	int64_t m_accumulated_nutrients = 0;
 	std::optional< ProductionState > m_production;
+	std::optional< SmacBaseResourceContext > m_resource_context;
+	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 
 	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
 

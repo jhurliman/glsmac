@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include "RenderInfo.h"
 #include "types/Buffer.h"
@@ -22,7 +23,8 @@ public:
 		const std::string& name,
 		const render_infos_t& renders_human,
 		const render_infos_t& renders_progenitor,
-		const pop_flags_t flags
+		const pop_flags_t flags,
+		const std::optional< uint8_t > smac_specialist_id = std::nullopt
 	);
 	virtual ~PopDef() = default;
 
@@ -31,6 +33,8 @@ public:
 	const render_infos_t m_renders_human;
 	const render_infos_t m_renders_progenitor;
 	const pop_flags_t m_flags;
+	// Definition role, not a display-name lookup or a second Pop assignment.
+	const std::optional< uint8_t > m_smac_specialist_id;
 
 	const std::string ToString( const std::string& prefix = "" ) const;
 

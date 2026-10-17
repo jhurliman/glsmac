@@ -6,7 +6,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5453; // SMTS; separate from definition-profile codecs
-constexpr int64_t VERSION = 1;
+constexpr int64_t VERSION = 2;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -31,7 +31,8 @@ bool SmacSimulationAdmission::operator==( const SmacSimulationAdmission& other )
 
 bool SmacFactionTechnologyState::operator==( const SmacFactionTechnologyState& other ) const {
 	return admission == other.admission && owned == other.owned && score == other.score && future_count == other.future_count
-		&& labs == other.labs && target == other.target && cached_threshold == other.cached_threshold;
+		&& labs == other.labs && target == other.target && cached_threshold == other.cached_threshold
+		&& discount == other.discount && deferred == other.deferred && pending_secrets == other.pending_secrets;
 }
 
 void SmacTechnologyState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const {
@@ -113,6 +114,7 @@ void SmacTechnologyState::InitializeFactionAtTurnZero( int32_t simulation_id, co
 		// cleared, even when two recipients have the same named technology.
 		auto initialized = faction;
 		initialized.score = 0; initialized.future_count = 0; initialized.labs = 0;
+		initialized.discount = 0; initialized.deferred = 0; initialized.pending_secrets = false;
 		initialized.target.reset(); initialized.cached_threshold.reset();
 		const auto* profile = profiles.Find( initialized.admission.faction_id );
 		for ( const auto id : profile->NamedTechnologyReferences() ) {
@@ -146,6 +148,7 @@ types::Buffer SmacTechnologyState::Serialize( const settings::SmacTechnologyRule
 		for ( const auto owned : faction.owned ) { buffer.WriteBool( owned ); }
 		buffer.WriteInt( faction.score ); buffer.WriteInt( faction.future_count ); buffer.WriteInt( faction.labs );
 		WriteOptional( buffer, faction.target ); WriteOptional( buffer, faction.cached_threshold );
+		buffer.WriteInt( faction.discount ); buffer.WriteInt( faction.deferred ); buffer.WriteBool( faction.pending_secrets );
 	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC technology state exceeds wire budget" ); }
 	return buffer;
@@ -166,6 +169,7 @@ SmacTechnologyState SmacTechnologyState::Deserialize( const std::string& wire, c
 		for ( auto& owned : faction.owned ) { owned = buffer.ReadBool(); }
 		faction.score = ReadInt32( buffer ); faction.future_count = ReadInt32( buffer ); faction.labs = ReadInt32( buffer );
 		faction.target = ReadOptional( buffer ); faction.cached_threshold = ReadOptional( buffer );
+		faction.discount = ReadInt32( buffer ); faction.deferred = ReadInt32( buffer ); faction.pending_secrets = buffer.ReadBool();
 		result.factions.push_back( std::move( faction ) );
 	}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC technology state trailing fields" ); }

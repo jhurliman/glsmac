@@ -3022,7 +3022,7 @@ public:
 			if ( refreshed ) { m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() ); }
 		} );
 	}
-	static std::string CanonicalStartupSource(const std::string& filename,bool multiple) {
+	static std::string CanonicalStartupSource(const std::string& filename,bool multiple,bool research=false) {
 			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
 			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
 			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
@@ -3032,6 +3032,7 @@ public:
 				if(section=="#RULES") {
 					const auto value=row==0?"3":row==1?"2":row==5?"10":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":row==12?"7":row==13?"14":nullptr;
 					if(value) {line.replace(0,line.find(','),value);}
+					if(research && row==7) {line.replace(0,line.find(','),"100");}
 				}
 				if(multiple && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
 				if(section=="#RESOURCEINFO" && row<9) {line="Owned row";for(auto value:yields[row]) {line+=","+std::to_string(value);}}
@@ -3039,7 +3040,7 @@ public:
 					line="Role,Roles,"+std::string(row<2?"None":"Tech80")+",Disable";
 					for(auto value:specialists[row]) {line+=","+std::to_string(value);}line+=",tail";
 				}
-				if(section=="#TECHNOLOGY") {line.replace(line.rfind(',')+1,std::string::npos,"000000000");}
+				if(section=="#TECHNOLOGY") {line.replace(line.rfind(',')+1,std::string::npos,research && row==64?"000001001":"000000000");}
 				result+=line+"\n";++row;
 			}
 			return result;
@@ -3052,6 +3053,7 @@ public:
 		// profiles/map. Scenarios8/9 execute the actual default-world/definition scripts;
 		// rendering remains asset-free, while creation, movement and turn are real.
 		const bool default_world = scenario >= 8, local_rover = scenario == 9;
+		const bool research=scenario>=10;
 		const size_t expected_units = default_world ? 1 : 3;
 		EnableWorldSnapshot();
 		if(default_world) {
@@ -3061,12 +3063,13 @@ public:
 			});
 		}
 		auto& settings = m_state->m_settings.global;
-		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( [default_world]( const std::string& filename ) {
-			auto source = default_world?CanonicalStartupSource(filename,true):smac_startup_fixture::Source( filename );
+		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( [default_world,research]( const std::string& filename ) {
+			auto source = default_world?CanonicalStartupSource(filename,true,research):smac_startup_fixture::Source( filename );
 			if ( filename == "alpha.txt" ) { const auto start = source.find( "#RULES\n" ) + 7; source.replace( start, source.find( ',', start ) - start, "3" ); }
 			return source;
 		} ); smac_rules_fixture::AcceptWorldSize( settings );
 		EnableSimulationParticipants( default_world ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, !default_world );
+		if(research) {m_state->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");}
 		if(default_world) {GT_ASSERT(settings.difficulty_level==0,"new-campaign default is not the admitted Librarian difficulty");}
 		if ( local_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
 		const auto old_id = Unit::GetNextId(), old_base_id = base::Base::GetNextId();
@@ -3254,6 +3257,70 @@ public:
 			for ( auto* wrapper : wrappers ) { GT_ASSERT( !wrapper->wrapobj, "retired raw unit wrapper remained linked" ); }
 			if ( reset ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Early reset failed to make actual MT progress" ); }
 			GT_OK();
+		}
+		if(research) {
+			GT_ASSERT(errors==0 && m_game.IsRunning() && m_game.GetTurnId()==1 && m_game.m_research_request
+				&& m_game.m_canonical_continuation && turns==0 && !m_game.GetUM()->HasPendingConventionalUnits(),"actual claimed Start failed to pause with sealed Units before final turn notification: "+startup_error);
+			if(scenario==11) {
+				const auto request=m_game.m_research_request->id;
+				reset=m_game.MT_Reset(ticket);m_game.Iterate();ProcessAccumulations();
+				GT_ASSERT(m_game.MT_GetResponse(reset).result==R_SUCCESS && !m_game.m_research_request && !m_game.m_canonical_continuation
+					&& !m_game.m_simulation && m_game.m_next_research_request==request,"paused research reset retained authority or reused request identity");
+				GT_OK();
+			}
+			return WithScriptValues([&](GSE_CALLABLE)->std::string {
+				auto* base=m_game.GetBM()->GetBases().begin()->second;
+				const auto first_minerals=base->GetProductionState()->minerals;
+				const auto first_food=base->GetAccumulatedNutrients();
+				const auto first_credits=m_game.GetCanonicalEconomy(base->m_owner).credits;
+				const auto first_energy=m_game.m_canonical_continuation->energy->tail.final.economy;
+				const auto rng=m_game.m_simulation->value.gameplay_random;
+				bool save=false,mutation=false;
+				try {m_game.SerializeWorldSnapshot();}catch(const std::exception&){save=true;}
+				try {m_game.Event(GSE_CALL,"complete_turn",{});}catch(const std::exception&){mutation=true;}
+				GT_ASSERT(save && mutation,"suspended research admitted ordinary mutation or snapshot");
+				auto* wrapper=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
+				const auto request=static_cast<value::Object*>(static_cast<value::Callable*>(wrapper->Get("get_pending_smac_research"))->Run(GSE_CALL,{}));
+				GT_ASSERT(request->Get("request_id")->type==VT_INT && !static_cast<value::Bool*>(request->Get("bonus"))->value,"startup pending getter did not expose the ordinary request");
+				const auto answer=[&](int32_t selected,bool duplicate) {
+					const auto id=m_game.m_research_request->id;
+					const value::object_properties_t args{{"request_id",VALUE(value::Int,,id)},{"technology_id",VALUE(value::Int,,selected)}};
+					m_game.Event(GSE_CALL,"choose_research",args);
+					if(duplicate) {m_game.Event(GSE_CALL,"choose_research",args);}
+					m_game.ProcessEvents();
+				};
+				answer(64,true);
+				GT_ASSERT(!m_game.m_canonical_continuation && !m_game.m_research_request && turns==1
+					&& m_game.m_simulation->value.technology.Find(1)->target==64
+					&& base->GetProductionState()->minerals==first_minerals && base->GetAccumulatedNutrients()==first_food
+					&& m_game.GetCanonicalEconomy(base->m_owner).credits==first_credits+first_energy,"answer replayed upkeep or failed to post exactly one credit");
+				// Force only the saved threshold boundary; the next full native turn
+				// still calculates/submits its actual Base labs and acquires the flag9 tech.
+				auto& tech=m_game.m_simulation->value.technology.factions.front();tech.cached_threshold=1;tech.labs=0;
+				m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
+				GT_ASSERT(m_game.m_research_request && m_game.m_research_request->bonus && turns==1
+					&& m_game.m_simulation->value.technology.Find(1)->owned[64] && m_game.HasSmacTechnologyReveal(1),"ordinary completion did not stage Secrets and map revelation before pause");
+				const auto second_minerals=base->GetProductionState()->minerals;
+				answer(0,true);
+				GT_ASSERT(m_game.m_research_request && !m_game.m_research_request->bonus
+					&& m_game.m_simulation->value.technology.Find(1)->owned[0],"Secrets answer did not request the following target");
+				const auto selected=m_game.m_research_request->choices.front();answer(selected,true);
+				const auto& after=*m_game.m_simulation->value.technology.Find(1);
+				GT_ASSERT(!m_game.m_canonical_continuation && turns==2 && after.score==4 && after.labs==0 && !after.pending_secrets
+					&& after.target==selected && base->GetProductionState()->minerals==second_minerals
+					&& m_game.m_simulation->value.gameplay_random==rng,"bonus/final answer replayed posting, lost score or consumed RNG");
+				const auto saved=m_game.SerializeWorldSnapshot();
+				BackendFixture destination;
+				const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
+				destination.ConfigureConventional(true,3,true,false,false,nullptr,source);
+				return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
+					destination.RestoreConventional(GSE_CALL,saved,true);
+					GT_ASSERT(destination.m_game.m_simulation->value.technology==m_game.m_simulation->value.technology
+						&& destination.m_game.m_simulation->value.economy==m_game.m_simulation->value.economy
+						&& !destination.m_game.m_canonical_continuation && !destination.m_game.m_research_request
+						&& destination.m_game.HasSmacTechnologyReveal(1),"stable restore replayed research or lost completed authority");GT_OK();
+				});
+			});
 		}
 		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == (default_world?0u:1u) && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
 		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle consumed gameplay RNG" );
@@ -3953,7 +4020,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 8 : 9 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 9 : 10 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );

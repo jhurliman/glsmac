@@ -65,7 +65,7 @@ void Game::RequireCanonicalStartupTurn( size_t turn_id ) const {
 
 void Game::RequireCanonicalTurn(size_t turn_id) const {
 	if (!IsRunning() || !m_state || !m_map || !m_map->m_worker_knowledge || !m_map->m_worker_knowledge_ready
-		|| m_canonical_turn_failed || m_canonical_turn_in_progress || !GetGCSpace()->IsAccumulating()
+		|| m_canonical_turn_failed || m_canonical_turn_in_progress || m_canonical_continuation || !GetGCSpace()->IsAccumulating()
 		|| m_current_turn.GetId()>=INT32_MAX || turn_id!=m_current_turn.GetId()+1) {
 		throw std::runtime_error("Canonical transition requires its exact next turn and ready owning world");
 	}
@@ -118,9 +118,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	RequireCanonicalTurn(turn_id);
 	// Session bindings choose the worker presentation explicitly: default
 	// WORKER and TALENT both carry the tile-worker flag.
-	base::Base::SmacAllocationRoles roles;
-	const auto& configured=GetSmacBasePresentations(); roles.worker=configured[0];
-	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+	(void)GetSmacBasePresentations();
 	const auto records=m_bm->GetBaseRecordOrder();
 	for (const auto id:records) {
 		const auto* base=m_bm->GetBase(id);
@@ -134,11 +132,13 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	for (const auto& participant:m_simulation->value.roster) {
 		owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));
 	}
-	std::vector<size_t> order; order.reserve(records.size());
+	CanonicalTurnContinuation continuation{turn_id};
+	size_t count=0;
 	for (const auto& owner:owners) {
-		for (const auto id:records) { if (m_bm->GetBase(id)->m_owner==owner.second) {order.push_back(id);} }
+		continuation.owners.push_back({owner.first,{}});
+		for (const auto id:records) { if (m_bm->GetBase(id)->m_owner==owner.second) {continuation.owners.back().second.push_back(id);++count;} }
 	}
-	if (order.size()!=records.size()) { throw std::runtime_error("Canonical upkeep Base owner is outside the admitted roster"); }
+	if (count!=records.size()) { throw std::runtime_error("Canonical upkeep Base owner is outside the admitted roster"); }
 	m_canonical_turn_in_progress=true;
 	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
 	try {
@@ -147,33 +147,65 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		// the incoming turn. UI notification remains after successful upkeep.
 		m_current_turn.AdvanceTurn(turn_id);
 		m_is_turn_complete=false;
+		m_canonical_continuation=std::move(continuation);
 		for (const auto& entry:m_um->GetUnits()) {
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);
 		}
-		for (const auto id:order) {
-			auto* base=m_bm->GetBase(id);
-			const auto result=base->ProcessSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
-				return ResolveSmacProductionPresentation(base->m_owner,design);
-			},unit::SmacMoraleMode::Mode0);
-			if (result.removed_base) { continue; }
-			if (!result.final_calculation) { throw std::runtime_error("Canonical upkeep omitted its final resource pass"); }
-			m_bm->RefreshBase(base);
-		}
-		for (const auto& slot:m_state->m_slots->GetSlots()) {
-			if (slot.GetState()==slot::Slot::SS_PLAYER) { slot.GetPlayer()->UncompleteTurn(); }
-		}
-		auto fr=FrontendRequest(FrontendRequest::FR_TURN_ADVANCE); fr.data.turn_advance.turn_id=turn_id; AddFrontendRequest(fr);
-		m_state->TriggerObject(this,"turn",ARGS_F(this) {
-			{"year",VALUE(gse::value::Int,,m_current_turn.GetId()+2100)},
-		}; });
-		CheckTurnComplete();
-		if (!m_is_turn_complete) { SetTurnStatus(turn::TS_TURN_ACTIVE); }
+		ContinueCanonicalTurn(GSE_CALL);
 	} catch (const std::exception& error) {
 		FailCanonicalTurn(error.what()); throw;
 	} catch (...) {
 		FailCanonicalTurn("Unknown canonical upkeep failure"); throw;
 	}
+}
+
+void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
+	if(!m_canonical_turn_in_progress || !m_canonical_continuation || m_research_request) {
+		throw std::runtime_error("Canonical continuation is not owned or still awaits a choice");
+	}
+	using Stage=CanonicalTurnContinuation::Stage;
+	base::Base::SmacAllocationRoles roles;
+	const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
+	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+	auto& next=*m_canonical_continuation;
+	while(next.owner_index<next.owners.size()) {
+		const auto& owner=next.owners[next.owner_index];
+		if(next.base_index==owner.second.size()) {
+			SettleCanonicalEconomy(owner.first);
+			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
+			continue;
+		}
+		auto* base=m_bm->GetBase(owner.second[next.base_index]);
+		if(!base || base->GetSmacResourceContext().owner_simulation_id!=owner.first) {throw std::runtime_error("Canonical continuation Base identity changed");}
+		if(next.stage==Stage::Base) {
+			const auto result=base->ProcessSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
+				return ResolveSmacProductionPresentation(base->m_owner,design);
+			},unit::SmacMoraleMode::Mode0);
+			if(result.removed_base) {++next.base_index;continue;}
+			if(!result.final_calculation) {throw std::runtime_error("Canonical upkeep omitted its final resource pass");}
+			next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+			next.stage=Stage::ResearchStart;
+		}
+		if(!ContinueCanonicalResearch(GSE_CALL)) {return;}
+		if(next.stage!=Stage::Credit || !next.energy) {throw std::runtime_error("Canonical research omitted its credit stage");}
+		auto& saved=m_simulation->value.economy.at(owner.first);
+		const auto posted=saved.CreditBase(next.energy->tail.final.economy,next.energy->maintenance);
+		saved=posted;
+		m_bm->RefreshBase(base);
+		next.energy.reset();++next.base_index;next.stage=Stage::Base;
+	}
+	const auto turn_id=next.turn;
+	m_canonical_continuation.reset();
+	for(const auto& slot:m_state->m_slots->GetSlots()) {
+		if(slot.GetState()==slot::Slot::SS_PLAYER) {slot.GetPlayer()->UncompleteTurn();}
+	}
+	auto fr=FrontendRequest(FrontendRequest::FR_TURN_ADVANCE);fr.data.turn_advance.turn_id=turn_id;AddFrontendRequest(fr);
+	m_state->TriggerObject(this,"turn",ARGS_F(this) {
+		{"year",VALUE(gse::value::Int,,m_current_turn.GetId()+2100)},
+	}; });
+	CheckTurnComplete();
+	if(!m_is_turn_complete) {SetTurnStatus(turn::TS_TURN_ACTIVE);}
 }
 
 void Game::FailCanonicalTurn(const std::string& error) {

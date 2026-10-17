@@ -31,6 +31,7 @@
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
 #include "base/ProductionState.h"
+#include "base/SmacBaseEnergy.h"
 #include "State.h"
 
 // TODO: remove those
@@ -440,6 +441,30 @@ private:
 	void FailCanonicalTurn(const std::string& error);
 	bool m_canonical_turn_in_progress=false;
 	bool m_canonical_turn_failed=false;
+	struct CanonicalResearchRequest {
+		int64_t id;
+		int32_t owner;
+		bool bonus;
+		std::vector<int32_t> choices;
+	};
+	struct CanonicalTurnContinuation {
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit };
+		size_t turn, owner_index=0, base_index=0;
+		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
+		Stage stage=Stage::Base;
+		std::optional<base::SmacBaseEnergyCalculation> energy;
+	};
+	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
+	std::optional<CanonicalResearchRequest> m_research_request;
+	int64_t m_next_research_request=0; // never reused by ResetGame
+	void ContinueCanonicalTurn(GSE_CALLABLE);
+	bool ContinueCanonicalResearch(GSE_CALLABLE);
+	bool RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus);
+	bool HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	gse::Value* GetPendingSmacResearch(GSE_CALLABLE) const;
+	void NotifyCanonicalResearch(GSE_CALLABLE);
+	int32_t GetCanonicalResearchCost(int32_t owner,const faction::SmacTechnologyState& technology) const;
+	void GrantCanonicalResearch(int32_t owner,int32_t technology,bool clear_labs);
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

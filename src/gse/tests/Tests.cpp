@@ -59,6 +59,7 @@
 #include "SmacBaseEnergy.h"
 #include "SmacEconomyState.h"
 #include "SmacLiveEconomy.h"
+#include "SmacResearch.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
@@ -147,6 +148,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseEnergyTests( task );
 		tests::AddSmacEconomyStateTests( task );
 		tests::AddSmacLiveEconomyTests( task );
+		tests::AddSmacResearchTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );

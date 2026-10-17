@@ -176,6 +176,25 @@ BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& sou
 	return BaseSquareRules( values[ 1 ], values[ 2 ], values[ 4 ] );
 }
 
+static int32_t ResearchRate(const std::string& line) {
+	const auto token=util::String::TrimCopy(line.substr(0,line.find_first_of(",;")));
+	size_t offset=0; unsigned radix=10; bool negative=false;
+	if(token.size()>=2 && token[0]=='0') {
+		if(token[1]=='x' || token[1]=='X') {radix=16;offset=2;}
+		if(token[1]=='b' || token[1]=='B') {radix=2;offset=2;}
+	}
+	if(radix==10 && !token.empty() && (token[0]=='+' || token[0]=='-')) {negative=token[0]=='-';offset=1;}
+	int64_t value=0;
+	for(;offset<token.size();++offset) {
+		const auto c=token[offset];
+		const unsigned digit=c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:c>='A'&&c<='F'?c-'A'+10:16;
+		if(digit>=radix) {break;}
+		value=value*radix+digit;
+		if(value>int64_t(INT32_MAX)+(negative?1:0)) {throw std::invalid_argument("RULES discovery rate conversion exceeds signed32");}
+	}
+	return static_cast<int32_t>(std::clamp(negative?-value:value,int64_t(0),int64_t(1000)));
+}
+
 game::backend::settings::SmacResourceRules SmacRulesTXTLoader::ParseResourceRules( const std::string& source,
 	const game::backend::settings::SmacTechnologyRules& technologies ) {
 	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
@@ -190,6 +209,7 @@ game::backend::settings::SmacResourceRules SmacRulesTXTLoader::ParseResourceRule
 		ParseField( field( 10 ), "row 10", 1, "RULES" ), ParseField( field( 6 ), "row 6", 1, "RULES" ),
 		ParseField( field( 13 ), "row 13", 1, "RULES" ), ParseField( field( 14 ), "row 14", 1, "RULES" ),
 		ParseField( field( 21 ), "row 21", 1, "RULES" ),
+		ResearchRate( rules[7] ),
 		{ field( 54 ), field( 55 ), field( 56 ), field( 58 ) } };
 	result.Validate( technologies );
 	return result;

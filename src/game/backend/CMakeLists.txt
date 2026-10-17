@@ -28,6 +28,7 @@ SET( SRC ${SRC}
 	${PWD}/GameProduction.cpp
 	${PWD}/GamePopulation.cpp
 	${PWD}/GameEconomy.cpp
+	${PWD}/GameResearch.cpp
 	${PWD}/GameTileResources.cpp
 	${PWD}/GameWorkerKnowledge.cpp
 	${PWD}/GameTechnologyReveal.cpp

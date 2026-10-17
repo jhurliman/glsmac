@@ -593,6 +593,10 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false)) {
+		AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args));return;
+	}
+	if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
 	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
@@ -911,6 +915,10 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_pending_smac_research",
+			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacResearch(GSE_CALL);})
+		},
+		{
 			"event",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
@@ -919,6 +927,11 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
+				if(HandleSmacResearchEvent(GSE_CALL,name,args->value,m_slot_num,false)) {
+					AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args->value));
+					return VALUE(gse::value::Undefined);
+				}
+				if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
 				if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
@@ -1812,9 +1825,19 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 	{
 		handoff->state->WithGameSession( handoff->session, batch.get(), [ this, batch ]( Game* const, GSE_CALLABLE ) {
 			const std::string* errptr = nullptr;
+			bool encountered_pause=m_canonical_continuation.has_value();
 			for ( const auto& event : batch->events ) {
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
+				encountered_pause=encountered_pause || m_canonical_continuation.has_value();
+				if(event->GetSource()==event::Event::ES_LOCAL
+					&& HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+					WithRW([&]{HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
+					continue;
+				}
+				// Inputs accepted before the pause cannot run against a later resumed
+				// state, even if a research answer in this same batch finishes upkeep.
+				if(encountered_pause) {continue;}
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleCanonicalStartupEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false) ) {
 					WithRW([&]{HandleCanonicalStartupEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
@@ -1970,6 +1993,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 
 void Game::CheckRW( GSE_CALLABLE ) const {
 	if (m_canonical_turn_failed) { GSE_ERROR(gse::EC.GAME_ERROR,"Canonical transition failed; this world awaits cleanup"); }
+	if(m_canonical_continuation && !m_canonical_turn_in_progress) {GSE_ERROR(gse::EC.GAME_ERROR,"Canonical turn awaits a research choice");}
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
@@ -2681,7 +2705,7 @@ void Game::DiscardInitializationMap( map::Map*& candidate ) {
 }
 
 std::string Game::SerializeWorldSnapshot() const {
-	if (m_canonical_turn_in_progress || m_canonical_turn_failed) { THROW("Canonical transition is incomplete; snapshot unavailable"); }
+	if (m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) { THROW("Canonical transition is incomplete; snapshot unavailable"); }
 	if ( m_um ) { m_um->RequireConventionalUnitsReady(); }
 	if ( !m_map ) {
 		// map not generated yet
@@ -3007,6 +3031,7 @@ void Game::ResetGame() {
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
+		m_canonical_continuation.reset();m_research_request.reset();
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {
@@ -3072,6 +3097,7 @@ bool Game::IsLocalTurnComplete() const {
 }
 
 void Game::CheckTurnComplete() {
+	if(m_canonical_continuation || m_canonical_turn_failed) {return;}
 	if ( m_um->HasPendingConventionalUnits() ) { return; }
 	const bool is_turn_complete = IsLocalTurnComplete();
 	if ( m_is_turn_complete != is_turn_complete ) {

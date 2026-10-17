@@ -12,12 +12,13 @@ namespace game::backend::settings {
 // Labels, fourth numeric columns and annotations are not resource identities.
 struct SmacResourceRules {
 	static constexpr uint32_t MAX_TOKEN_BYTES = 256; // explicit port ingestion budget
-	static constexpr uint32_t MAX_WIRE_BYTES = 35 * 14 + 4 * ( 6 + MAX_TOKEN_BYTES );
+	static constexpr uint32_t MAX_WIRE_BYTES = 36 * 14 + 4 * ( 6 + MAX_TOKEN_BYTES );
 	std::array< resource::smac::RuleTriple, 9 > rows;
 	int32_t nutrients_per_citizen, unroaded_mine_limit, mine_nutrient_effect;
 	// RULES 6/13/14; retain raw signed values, with arithmetic admission at use.
 	int32_t nutrient_multiplier, hab_complex_limit, hab_dome_limit;
 	int32_t initial_energy; // RULES 21, before the faction ENERGY scalar
+	int32_t discovery_rate; // RULES8 stored percentage, clamped0..1000 by its loader
 	// RULES 54/55/56/58: nutrient/mineral/energy limit and advanced platform.
 	// Retain source tokens; resolved IDs are derived against the frozen catalog.
 	std::array< std::string, 4 > technology_tokens;

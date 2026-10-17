@@ -337,7 +337,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_specialist_rules.has_value() ) { THROW( "Gameplay ruleset and specialist profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_territory_rules.has_value() ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 14 );
+	buf.WriteInt( 15 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -366,8 +366,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 14 ) {
-		THROW( "Unsupported global settings format (expected version 14)" );
+	if ( buf.ReadInt() != 15 ) {
+		THROW( "Unsupported global settings format (expected version 15)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();

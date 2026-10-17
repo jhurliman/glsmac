@@ -21,6 +21,8 @@ struct SmacFactionTechnologyState {
 	SmacSimulationAdmission admission;
 	std::array< bool, 89 > owned{};
 	int32_t score = 0, future_count = 0, labs = 0;
+	int32_t discount = 0, deferred = 0;
+	bool pending_secrets = false;
 	std::optional< int32_t > target, cached_threshold;
 	bool operator==( const SmacFactionTechnologyState& other ) const;
 };

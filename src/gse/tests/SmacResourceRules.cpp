@@ -115,17 +115,17 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( wire == fixture::UncheckedResources( profile ).ToString(), "resource wire order differs from independent builder" );
 		GT_ASSERT( SmacResourceRules::Deserialize( types::Buffer( wire ), catalog ) == profile, "resource roundtrip changed owned authority" );
 		for ( size_t prefix = 0; prefix < wire.size(); ++prefix ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( types::Buffer( wire.substr( 0, prefix ) ), catalog ); } ), "truncated profile accepted" ); }
-		for ( size_t index = 1; index <= 34; ++index ) { for ( const auto value : { int64_t{ INT32_MIN } - 1, int64_t{ INT32_MAX } + 1 } ) {
+		for ( size_t index = 1; index <= 35; ++index ) { for ( const auto value : { int64_t{ INT32_MIN } - 1, int64_t{ INT32_MAX } + 1 } ) {
 			GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, index, value ), catalog ); } ), "out-of-range resource integer narrowed" );
 		} }
-		for ( const auto version : { 0, 1, 2, 4 } ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, 0, version ), catalog ); } ), "old/unknown resource version accepted" ); }
+		for ( const auto version : { 0, 1, 2, 3, 5 } ) { GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( IntegerFrame( profile, 0, version ), catalog ); } ), "old/unknown resource version accepted" ); }
 		types::Buffer wrong; wrong.WriteString( "1" );
 		GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( wrong, catalog ); } ), "wrong resource field type accepted" );
 		GT_ASSERT( Rejects( [ & ]() { SmacResourceRules::Deserialize( types::Buffer( wire + 'x' ), catalog ); } ), "trailing profile byte accepted" );
 		auto maximum = profile;
 		for ( auto& token : maximum.technology_tokens ) { token = "Tech0" + std::string( 251, ' ' ); }
 		const auto exact = maximum.Serialize( catalog ).ToString();
-		GT_ASSERT( SmacResourceRules::MAX_WIRE_BYTES == 1538 && exact.size() == 1538, "wire bound does not match exact admitted profile" );
+		GT_ASSERT( SmacResourceRules::MAX_WIRE_BYTES == 1552 && exact.size() == 1552, "wire bound does not match exact admitted profile" );
 		GT_ASSERT( SmacResourceRules::Deserialize( types::Buffer( exact ), catalog ) == maximum, "exact-cap semantic profile rejected" );
 		maximum.technology_tokens[ 3 ] += ' ';
 		GT_ASSERT( Rejects( [ & ]() { maximum.Serialize( catalog ); } ), "writer accepted over-budget token" );
@@ -141,7 +141,7 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 		GlobalSettings restored; restored.Deserialize( types::Buffer( before ) );
 		GT_ASSERT( restored.Serialize().ToString() == before, "settings restore changed full profile bytes" );
 		const auto profile = fixture::Resources();
-		for ( size_t index = 0; index < 38; ++index ) {
+		for ( size_t index = 0; index < 39; ++index ) {
 			auto changed = profile;
 			if ( index < 27 ) { auto& value = changed.rows[ index / 3 ][ index % 3 ]; value += value == INT32_MAX ? -1 : 1; }
 			else if ( index == 27 ) { ++changed.nutrients_per_citizen; }
@@ -151,7 +151,8 @@ void AddSmacResourceRulesTests( task::gsetests::GSETests* task ) {
 			else if ( index == 31 ) { ++changed.hab_complex_limit; }
 			else if ( index == 32 ) { ++changed.hab_dome_limit; }
 			else if ( index == 33 ) { ++changed.initial_energy; }
-			else { changed.technology_tokens[ index - 34 ] = "tECH" + std::to_string( index - 34 ); }
+			else if ( index == 34 ) { ++changed.discovery_rate; }
+			else { changed.technology_tokens[ index - 35 ] = "tECH" + std::to_string( index - 35 ); }
 			const auto bytes = changed.Serialize( fixture::Technologies() ).ToString();
 			GT_ASSERT( !( changed == profile ), "resource equality omitted a field or normalized spelling" );
 			GT_ASSERT( Rejects( [ & ]() { host.Deserialize( SettingsFrame( bytes ) ); } ), "locked settings accepted changed resource field" );

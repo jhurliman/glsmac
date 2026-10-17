@@ -26,6 +26,17 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 	const auto existing = m_textures.find( key );
 	if ( existing != m_textures.end() ) { return existing->second; }
 	if ( m_textures.size() >= MAX_VIEWS ) { throw std::runtime_error( "Scout scene view cache is full" ); }
+	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::SpartanRover ) {
+		if ( !m_rover ) {
+			// Only fixed composition filenames reach the installed/mod resolver.
+			m_rover.emplace( loader::cvr::CvrSpartanRoverRenderer::Load( [ & ]( const std::string& name ) {
+				return ReadAsset( resources.GetCustomPath( name ) );
+			} ) );
+		}
+		const auto image = m_rover->Render( descriptor.view );
+		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
+		return m_textures.emplace( key, std::move( texture ) ).first->second;
+	}
 	if ( !m_renderer ) {
 		// The serialized descriptor cannot choose paths. Use normal installed/mod resolution.
 		const auto infantry = ReadAsset( resources.GetCustomPath( "vi.cvr" ) );

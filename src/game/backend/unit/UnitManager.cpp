@@ -508,7 +508,7 @@ WRAPIMPL_BEGIN( UnitManager )
 
 						return VALUE( gse::value::Undefined );
 					}
-					else if ( render_type == "cvr_scout" ) {
+					else if ( render_type == "cvr_scout" || render_type == "cvr_spartan_rover" ) {
 						N_GETPROP( facing, render_def, "facing", Int );
 						N_GETPROP( zoom, render_def, "zoom", Int );
 						N_GETPROP( numerator, render_def, "scale_numerator", Int );
@@ -525,7 +525,8 @@ WRAPIMPL_BEGIN( UnitManager )
 						std::unique_ptr< unit::CvrScoutRender > render;
 						try {
 							render = std::make_unique< unit::CvrScoutRender >( static_cast< int32_t >( facing ), static_cast< int32_t >( zoom ),
-								static_cast< int32_t >( numerator ), static_cast< int32_t >( denominator ), types::Vec2< float >{ width, height }, types::Vec2< float >{ center_x, center_y } );
+								static_cast< int32_t >( numerator ), static_cast< int32_t >( denominator ), types::Vec2< float >{ width, height }, types::Vec2< float >{ center_x, center_y },
+								render_type == "cvr_scout" ? unit::CvrScoutRender::Composition::Scout : unit::CvrScoutRender::Composition::SpartanRover );
 						}
 						catch ( const std::invalid_argument& error ) { GSE_ERROR( gse::EC.INVALID_CALL, error.what() ); }
 						auto* def = new unit::StaticDef( id, moraleset, name, movement_type, movement_per_turn, render.get() );

@@ -1,6 +1,8 @@
 #include "Backend.h"
 #include "ConventionalUnits.h"
 #include "CvrScoutRenderer.h"
+#include "CvrSpartanRoverRenderer.h"
+#include "loader/cvr/CvrSpartanRoverRenderer.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/unit/Unit.h"
 #include "game/frontend/unit/UnitDef.h"
@@ -1517,7 +1519,7 @@ public:
 			"post-reset iteration did not drain canceled roots and resume stages exactly once" );
 		GT_OK();
 	}
-	static std::string CheckScoutUnitPreview() {
+	static std::string CheckScoutUnitPreview( const bool rover = false ) {
 		class SizedNull final : public graphics::Null {
 		public:
 			SizedNull() { OnWindowResize(); }
@@ -1564,7 +1566,13 @@ public:
 			std::ofstream file( directory / "default" / ( reactor ? "Viptr00.cvr" : "VI.cvr" ), std::ios::binary );
 			const auto bytes = MakeScoutTestAsset( reactor ); file.write( bytes.data(), bytes.size() );
 		}
-		const char* installed = std::getenv( "GLSMAC_SCOUT_ASSETS" );
+		const auto write_rover_asset = [ & ]( const std::string& name ) {
+			std::ofstream file( directory / "default" / name, std::ios::binary );
+			const auto bytes = MakeSpartanRoverTestAsset( name ); file.write( bytes.data(), bytes.size() );
+		};
+		for ( const auto* name : loader::cvr::CvrSpartanRoverRenderer::PartNames() ) { write_rover_asset( name ); }
+		for ( const auto* name : { "system.txt", "PALETTE.PCX", "spartans.pcx" } ) { write_rover_asset( name ); }
+		const char* installed = std::getenv( rover ? "GLSMAC_ROVER_ASSETS" : "GLSMAC_SCOUT_ASSETS" );
 		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
 		if ( installed && *installed ) { resources.m_smac_path = installed; }
 		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
@@ -1585,12 +1593,14 @@ public:
 		fixture.EnableTurns();
 		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
+			const auto render_tag = rover ? Render::RT_CVR_SPARTAN_ROVER : Render::RT_CVR_SCOUT;
+			const auto profile = rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout;
 			auto* manager = fixture.m_game.GetUM();
 			MoraleSet::morale_values_t morale;
 			for ( size_t i = 0; i < 7; ++i ) { morale.emplace_back( "Rank" ); }
 			manager->DefineMoraleSet( new MoraleSet( "SCOUT_TEST", morale ) );
 			auto* descriptor = new value::Object( GSE_CALL, {
-				{ "type", new value::String( gc_space, "cvr_scout" ) },
+				{ "type", new value::String( gc_space, rover ? "cvr_spartan_rover" : "cvr_scout" ) },
 				{ "facing", new value::Int( gc_space, 0 ) }, { "zoom", new value::Int( gc_space, 0 ) },
 				{ "scale_numerator", new value::Int( gc_space, 1 ) }, { "scale_denominator", new value::Int( gc_space, 1 ) },
 				{ "world_width", new value::Float( gc_space, 2 ) }, { "world_height", new value::Float( gc_space, 4 ) },
@@ -1617,12 +1627,12 @@ public:
 			// Construct raw wire independently: the public descriptor constructor
 			// must reject this record, so it cannot serve as the malformed writer.
 			types::Buffer bad_anchor;
-			for ( const int64_t field : { INT64_C( 0x43565253 ), INT64_C( 1 ), INT64_C( 0 ), INT64_C( 0 ), INT64_C( 0 ), int64_t( INT32_MAX ), INT64_C( 1 ) } ) { bad_anchor.WriteInt( field ); }
+			for ( const int64_t field : { INT64_C( 0x43565253 ), INT64_C( 1 ), int64_t( profile ), INT64_C( 0 ), INT64_C( 0 ), int64_t( INT32_MAX ), INT64_C( 1 ) } ) { bad_anchor.WriteInt( field ); }
 			for ( const float field : { 2.0f, 4.0f, 64.0f, 192.0f } ) { bad_anchor.WriteFloat( field ); }
 			types::Buffer bad_definition;
 			bad_definition.WriteString( "WIRE_ANCHOR_OVERFLOW" ); bad_definition.WriteString( "SCOUT_TEST" ); bad_definition.WriteString( "Invalid anchor" );
 			bad_definition.WriteInt( DT_STATIC ); bad_definition.WriteInt( MT_LAND ); bad_definition.WriteFloat( 1 );
-			bad_definition.WriteInt( Render::RT_CVR_SCOUT ); bad_definition.WriteString( bad_anchor.ToString() );
+			bad_definition.WriteInt( render_tag ); bad_definition.WriteString( bad_anchor.ToString() );
 			bool snapshot_anchor_rejected = false;
 			try { std::unique_ptr< Def > unexpected( Def::Deserialize( bad_definition, manager ) ); }
 			catch ( const std::runtime_error& ) { snapshot_anchor_rejected = true; }
@@ -1642,12 +1652,12 @@ public:
 			fixture.WithRW( [ & ] { call( "SCOUT_TEST" ); } );
 			auto def_bytes = Def::Serialize( manager->GetUnitDef( "SCOUT_TEST" ) );
 			std::unique_ptr< Def > copied( Def::Deserialize( def_bytes, manager ) );
-			GT_ASSERT( def_bytes.lenr == def_bytes.lenw && static_cast< StaticDef* >( copied.get() )->m_render->m_type == Render::RT_CVR_SCOUT,
+			GT_ASSERT( def_bytes.lenr == def_bytes.lenw && static_cast< StaticDef* >( copied.get() )->m_render->m_type == render_tag,
 				"actual UnitDef snapshot lost Scout descriptor" );
 			types::Buffer oversized;
 			oversized.WriteString( "TOO_LARGE" ); oversized.WriteString( "SCOUT_TEST" ); oversized.WriteString( "Rejected descriptor" );
 			oversized.WriteInt( DT_STATIC ); oversized.WriteInt( MT_LAND ); oversized.WriteFloat( 1 );
-			oversized.WriteInt( Render::RT_CVR_SCOUT );
+			oversized.WriteInt( render_tag );
 			const auto frame_begin = oversized.lenw;
 			oversized.WriteString( std::string( CvrScoutRender::MAX_WIRE_BYTES + 1, 'x' ) );
 			rejected = false;
@@ -1655,6 +1665,15 @@ public:
 			catch ( const std::runtime_error& ) { rejected = true; }
 			GT_ASSERT( rejected && oversized.lenr == frame_begin && !manager->GetUnitDef( "TOO_LARGE" ),
 				"actual Render dispatch materialized an oversized Scout frame" );
+			const auto& decoded = *static_cast< const CvrScoutRender* >( static_cast< StaticDef* >( copied.get() )->m_render );
+			GT_ASSERT( decoded.composition == profile, "definition roundtrip changed CVR composition" );
+			types::Buffer mismatched;
+			mismatched.WriteString( "MISMATCH" ); mismatched.WriteString( "SCOUT_TEST" ); mismatched.WriteString( "Wrong render tag" );
+			mismatched.WriteInt( DT_STATIC ); mismatched.WriteInt( MT_LAND ); mismatched.WriteFloat( 1 );
+			mismatched.WriteInt( rover ? Render::RT_CVR_SCOUT : Render::RT_CVR_SPARTAN_ROVER ); mismatched.WriteString( decoded.Encode() );
+			rejected = false;
+			try { std::unique_ptr< Def > unexpected( Def::Deserialize( mismatched, manager ) ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected, "definition wire confused Scout and Rover composition tags" );
 			auto* ui = new ::ui::UI( GSE_CALL );
 			fixture.m_gse->AddRootObject( ui );
 			auto* root = static_cast< value::Object* >( ui->GetRoot()->Wrap( GSE_CALL ) );
@@ -1680,6 +1699,14 @@ public:
 				new CvrScoutRender( *static_cast< const CvrScoutRender* >( static_cast< StaticDef* >( copied.get() )->m_render ) ) );
 			game::frontend::unit::UnitDef other_def( ism.get(), &other_source );
 			auto* other_sprite = other_def.GetSprite( 0 )->instanced_sprite;
+			if ( rover ) {
+				// Same name and placement must never reuse the Scout's actor/pixels.
+				CvrScoutRender scout_view( decoded.view.facing, decoded.view.zoom, decoded.view.scale_numerator,
+					decoded.view.scale_denominator, decoded.size, decoded.center );
+				auto* scout_sprite = ism->GetScoutSprite( "Unit_OTHER_SCOUT", scout_view );
+				GT_ASSERT( scout_view.PixelKey() != decoded.PixelKey() && scout_sprite->actor != other_sprite->actor &&
+					scout_sprite->texture_owner != other_sprite->texture_owner, "Scout and Rover cache entries aliased" );
+			}
 			copied.reset(); // frontend owns its descriptor, not a backend pointer
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
@@ -8403,6 +8430,10 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "CVR Scout real definition unit preview and retained texture teardown", GT() {
 		try { return BackendFixture::CheckScoutUnitPreview(); }
 		catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout unit/preview: " ) + error.what() ); }
+	} );
+	task->AddTest( "CVR Rover real definition unit preview and retained texture teardown", GT() {
+		try { return BackendFixture::CheckScoutUnitPreview( true ); }
+		catch ( const std::exception& error ) { GT_FAIL( std::string( "Rover unit/preview: " ) + error.what() ); }
 	} );
 	for ( const bool active : { false, true } ) {
 		for ( const bool reset_pending : { false, true } ) {

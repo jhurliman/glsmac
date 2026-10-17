@@ -161,3 +161,13 @@ comparison. Intended sources are never temporarily mutated. The initial image
 diagnostic that exposed this offset mistake is not counted as a passing result.
 No live Unit/actor or native Windows/macOS result is claimed by this source
 checkpoint.
+
+The focused publication reapplies only the Rover feature to pinned main
+`868b08bc1eed3c2fd93e134adf0e90cf40a1ab51`. The sole conflict is the native-test
+registration union; production, native fixture and probe/comparator files are
+byte-identical to source commit `92e4cc0c091b8fb37b5e3203089014b685173a6a`.
+On that publication stack, all 21 selected groups pass with allocation tracking,
+full normal CTest passes 8/8 (71.80s), and explicit LLVM15 analysis of the five
+affected production translation units has zero failures (2.85s). The broader
+source sanitizer and 331-TU receipts above remain distinct from this publication
+validation. No frozen movement-rule prerequisite is imported into the branch.

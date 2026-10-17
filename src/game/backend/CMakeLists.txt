@@ -29,6 +29,7 @@ SET( SRC ${SRC}
 	${PWD}/GameTileResources.cpp
 	${PWD}/GameWorkerKnowledge.cpp
 	${PWD}/GameTerritory.cpp
+	${PWD}/GameStartingBase.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp

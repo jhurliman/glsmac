@@ -123,9 +123,11 @@ public:
 
 private:
 	friend class backend::Game;
+	friend class BaseManager;
 	// Only complete native record decoding can request snapshot construction.
 	// A running/initializing phase or script callback is not restore authority.
-	enum class ConstructionKind { Live, Snapshot };
+	enum class ConstructionKind { Live, Snapshot, PreparedStartup };
+	void CommitStartupPlacement() noexcept;
 	Base(
 		ConstructionKind kind,
 		Game* game, size_t id, slot::Slot* owner, faction::Faction* faction,

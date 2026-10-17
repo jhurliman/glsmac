@@ -116,6 +116,7 @@ Base::Base(
 		THROW( "next population ID must follow existing IDs" );
 	}
 	ValidateAllocationProjection( false );
+	if ( kind == ConstructionKind::PreparedStartup ) { return; }
 	if ( kind == ConstructionKind::Live ) { (void)game->PrepareBaseTerritory( this, nullptr, false ); }
 	if ( next_id <= id ) {
 		next_id = id + 1;
@@ -126,6 +127,12 @@ Base::Base(
 	for ( auto& it : m_pops ) {
 		it.second.SetBase( this );
 	}
+}
+
+void Base::CommitStartupPlacement() noexcept {
+	if ( next_id <= m_id ) { next_id = m_id + 1; }
+	m_tile->base = this;
+	for ( auto& entry : m_pops ) { entry.second.m_base = this; }
 }
 
 const Game* const Base::GetGame() const {

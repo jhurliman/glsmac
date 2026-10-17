@@ -149,8 +149,20 @@ std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& eval
 }
 
 std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase ) const {
+	return CalculateCanonicalTileResources( tile, evaluating_base, phase, false );
+}
+
+std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase, bool startup ) const {
 	using namespace map::tile;
-	const auto context = evaluating_base.GetSmacResourceContext();
+	if ( startup ) {
+		RequireConventionalStartupClaim();
+		if ( !evaluating_base.m_resource_context || m_bm->GetBase( evaluating_base.m_id )
+			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.m_pops.size()!=1 ) {
+			throw std::runtime_error( "First-Base resources require a private uninstalled candidate" );
+		}
+		m_bm->ValidateSmacResourceContext( *evaluating_base.m_resource_context, evaluating_base.m_owner, evaluating_base.m_faction );
+	}
+	const auto context = startup ? *evaluating_base.m_resource_context : evaluating_base.GetSmacResourceContext();
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !m_map || !m_map->GetResourcePolicy()
 		|| m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
@@ -175,8 +187,8 @@ std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile&
 	rules->Validate( *technologies );
 	const auto* social = m_simulation->value.social.Find( context.owner_simulation_id );
 	const auto* owned = m_simulation->value.technology.Find( context.owner_simulation_id );
-	if ( !social || !owned || social->phase != faction::SmacFactionSocialState::Phase::Refreshed ) {
-		throw std::runtime_error( "Canonical resource query requires refreshed current faction ratings" );
+	if ( !social || !owned || social->phase != ( startup ? faction::SmacFactionSocialState::Phase::Early : faction::SmacFactionSocialState::Phase::Refreshed ) ) {
+		throw std::runtime_error( "Canonical resource query requires the current ratings for its admitted phase" );
 	}
 
 	// Read only current ratings. A query never performs the first-turn refresh
@@ -187,7 +199,7 @@ std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile&
 	const auto refs = rules->TechnologyReferences( *technologies );
 	const auto& global = m_simulation->value.resource_modifiers;
 	const auto facilities = ReadFacilityRoles( evaluating_base, *m_bm );
-	uint32_t base_count = 0;
+	uint32_t base_count = startup ? 1 : 0;
 	for ( const auto& entry : m_bm->GetBases() ) {
 		const auto* candidate = entry.second;
 		if ( !candidate || candidate->m_id != entry.first ) { throw std::runtime_error( "Invalid canonical base registry" ); }

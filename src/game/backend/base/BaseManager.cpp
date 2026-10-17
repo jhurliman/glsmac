@@ -279,6 +279,22 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
+	PrepareBaseName( base );
+	RegisterBase( base );
+	m_game->CommitBaseTerritory( territory );
+
+	auto* state = m_game->GetState();
+	if ( state->IsMaster() ) {
+		state->TriggerObject( this, "base_spawn", ARGS_F( &base ) {
+			{
+				"base",
+				base->Wrap( GSE_CALL )
+			},
+		}; } );
+	}
+}
+
+void BaseManager::PrepareBaseName( Base* base ) const {
 	auto* tile = base->GetTile();
 
 	// validate and fix name if needed (or assign if empty)
@@ -307,18 +323,6 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 				}
 			}
 		}
-	}
-	RegisterBase( base );
-	m_game->CommitBaseTerritory( territory );
-
-	auto* state = m_game->GetState();
-	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "base_spawn", ARGS_F( &base ) {
-			{
-				"base",
-				base->Wrap( GSE_CALL )
-			},
-		}; } );
 	}
 }
 
@@ -638,6 +642,25 @@ WRAPIMPL_BEGIN( BaseManager )
 			} )
 		},
 
+		{
+			"spawn_starting_smac_base",
+			NATIVE_CALL( this ) {
+				m_game->CheckRW( GSE_CALL );
+				N_EXPECT_ARGS( 3 );
+				N_GETVALUE_UNWRAP( owner, 0, Player );
+				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
+				N_GETVALUE( roles, 2, Object );
+				N_GETPROP( worker, roles, "worker", String );
+				N_GETPROP( entries, roles, "specialists", Array );
+				if ( entries.size() != 7 ) { GSE_ERROR( gse::EC.GAME_ERROR, "Expected seven positional specialist roles" ); }
+				std::array< std::string, 7 > specialists;
+				for ( size_t i = 0; i < specialists.size(); ++i ) {
+					if ( entries[i]->type != gse::VT_STRING ) { GSE_ERROR( gse::EC.GAME_ERROR, "Specialist role must be a string ID" ); }
+					specialists[i] = static_cast<gse::value::String*>(entries[i])->value;
+				}
+				return SpawnStartingSmacBase( GSE_CALL, owner->GetSlot(), tile, worker, specialists )->Wrap( GSE_CALL );
+			} )
+		},
 		{
 			"spawn_base",
 			NATIVE_CALL( this ) {

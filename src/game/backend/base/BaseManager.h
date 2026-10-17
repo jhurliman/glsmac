@@ -68,6 +68,8 @@ public:
 	void SpawnBase( GSE_CALLABLE, Base* base );
 	void DespawnBase( GSE_CALLABLE, const size_t base_id );
 	SmacBaseResourceContext PrepareStartingResourceContext( const slot::Slot* owner ) const;
+	Base* SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* tile,
+		const std::string& worker, const std::array< std::string, 7 >& specialists );
 	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 
 	const std::map< size_t, Base* >& GetBases() const;
@@ -130,6 +132,7 @@ private:
 	void QueueBaseUpdate( const Base* base, const base_update_op_t op );
 	// Register saved state and frontend updates without new-base gameplay hooks.
 	void RegisterBase( Base* base );
+	void PrepareBaseName( Base* base ) const;
 
 private:
 	std::mutex m_updated_bases_mutex;

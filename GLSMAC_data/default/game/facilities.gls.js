@@ -34,6 +34,11 @@ const result = {
 			'fac003.pcx', 3
 		);
 
+		if (game.get_ruleset() == 'smac') {
+			def(game, 'PERIMETER_DEFENSE', 'Perimeter Defense', 'Defense +100%', 50, 'fac004.pcx', 4);
+			def(game, 'NETWORK_NODE', 'Network Node', 'Labs Bonus', 80, 'fac008.pcx', 8);
+		}
+
 	},
 };
 

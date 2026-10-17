@@ -77,6 +77,7 @@
 #include "ConventionalUnits.h"
 #include "ManufacturedConventionalUnits.h"
 #include "SmacBaseResourceContext.h"
+#include "SmacFirstBase.h"
 #include "SmacSpecialists.h"
 
 #include "engine/Engine.h"
@@ -145,6 +146,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddConventionalUnitTests( task );
 		tests::AddManufacturedConventionalUnitTests( task );
 		tests::AddSmacBaseResourceContextTests( task );
+		tests::AddSmacFirstBaseTests( task );
 		tests::AddSmacSpecialistTests( task );
 		task->AddTest(
 			"test if tests work",

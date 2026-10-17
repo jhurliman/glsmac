@@ -80,6 +80,7 @@ SET( SRC ${SRC}
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/ManufacturedConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp
+	${PWD}/SmacFirstBase.cpp
 	${PWD}/SmacSpecialists.cpp
 
 	PARENT_SCOPE )

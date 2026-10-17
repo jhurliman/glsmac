@@ -13,7 +13,7 @@ using namespace game::backend;
 using faction::SmacSimulationState;
 
 SmacSimulationState State() {
-	SmacSimulationState value;
+	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ) );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
@@ -26,10 +26,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0 ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 3 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 4 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -37,11 +37,45 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	buffer.WriteString( value.technology.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	buffer.WriteString( value.designs.Serialize( smac_startup_fixture::Units().catalog ).ToString() );
 	buffer.WriteString( value.social.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
+	buffer.WriteString( random ? *random : value.gameplay_random.Serialize() );
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC simulation gameplay RNG pair is required bounded and exactly owned", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		auto value = State();
+		for ( const uint32_t shared : { uint32_t( 0 ), UINT32_MAX } ) {
+			for ( const uint32_t crt : { uint32_t( 0 ), UINT32_MAX } ) {
+				value.gameplay_random = SmacGameplayRandomState( shared, crt );
+				const auto wire = value.Serialize( technologies, profiles, units ).ToString();
+				auto decoded = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
+				GT_ASSERT( decoded == value && value.gameplay_random.Shared() == shared && value.gameplay_random.Crt() == crt, "writer/reader changed zero or endpoint words" );
+				const auto saved = value.gameplay_random; auto copy = decoded;
+				for ( size_t i = 0; i < 32; ++i ) {
+					GT_ASSERT( copy.gameplay_random.NextSharedLow16() == decoded.gameplay_random.NextSharedLow16() && copy.gameplay_random.NextCrtRaw15() == decoded.gameplay_random.NextCrtRaw15(), "owned pair continuation changed after copy" );
+				}
+				GT_ASSERT( value.gameplay_random == saved && copy == decoded, "copy borrowed original pair state" );
+			}
+		}
+		for ( size_t mode = 0; mode < 6; ++mode ) {
+			auto random = value.gameplay_random.Serialize();
+			if ( mode == 0 ) { random[ 0 ] = 'X'; }
+			if ( mode == 1 ) { random[ 4 ] = 2; }
+			if ( mode == 2 ) { random.pop_back(); }
+			if ( mode == 3 ) { random.push_back( 'x' ); }
+			if ( mode == 4 ) { random.assign( 4096, 'x' ); }
+			if ( mode == 5 ) { random.clear(); }
+			std::string message;
+			try { SmacSimulationState::Deserialize( Wire( value, SIZE_MAX, 0, &random ), technologies, profiles, units ); } catch ( const std::runtime_error& error ) { message = error.what(); }
+			GT_ASSERT( !message.empty() && ( ( message.find( "payload limit" ) != std::string::npos ) == ( mode == 3 || mode == 4 ) ), "pair rejection confused outer limit with nested codec validation" );
+		}
+		GT_ASSERT( Rejects( [ & ]() { SmacSimulationState::Deserialize( Wire( value, 1, 3 ), technologies, profiles, units ); } ), "old simulation V3 accepted without a gameplay continuation contract" );
+		types::Buffer large; large.WriteString( std::string( SmacGameplayRandomState::WIRE_SIZE + 1, 'x' ) ); const auto* cursor = large.dr;
+		GT_ASSERT( Rejects( [ & ]() { large.ReadString( SmacGameplayRandomState::WIRE_SIZE ); } ) && large.dr == cursor && large.lenr == 0, "over-budget pair was copied/consumed before admission" );
+		GT_OK();
+	} );
 	task->AddTest( "SMAC simulation codec owns explicit non-dense identities and exact technology continuation", GT() {
 		const auto expected = State();
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions();

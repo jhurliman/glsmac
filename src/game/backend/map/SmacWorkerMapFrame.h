@@ -44,6 +44,7 @@ public:
 		int32_t width, height, observer;
 		bool horizontal_wrap, ordinary_local_mode, foreign_disclosure;
 		uint8_t all_map_revealed;
+		// Native index0 has no diplomacy exemption; its recognition bit is retained.
 		std::array< Relation, 8 > observer_relations;
 		// Y ascending, X from row parity in steps of two, including unqueried tiles.
 		std::vector< Tile > tiles;

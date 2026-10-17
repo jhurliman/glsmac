@@ -22,6 +22,8 @@ public:
 	};
 	struct Observer {
 		bool foreign_disclosure;
+		// Every present observer must leave native index0 exemption false.
+		// Native visibility/recognition and the separate Pact storage are unchanged.
 		std::array< SmacWorkerMapFrame::Relation, 8 > relations;
 		// Directed Pact state is distinct from the worker Pact-or-Treaty
 		// exemption. Absent means unknown; explicit zero means no Pacts.

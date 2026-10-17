@@ -53,6 +53,9 @@ void Validate( const Knowledge::Data& data ) {
 	bool playable = false;
 	for ( size_t i = 1; i < 8; ++i ) { playable |= data.observers[i].has_value(); }
 	Require( playable, "Worker knowledge requires a playable observer row" );
+	for ( const auto& row : data.observers ) {
+		Require( !row || !row->relations[0].foreign_unit_exemption, "Native identity cannot have a worker diplomacy exemption" );
+	}
 	for ( const auto& tile : data.tiles ) {
 		Require( !tile.claimant || ( *tile.claimant >= 0 && *tile.claimant <= 7 ), "Worker knowledge has an invalid raw claimant" );
 	}
@@ -223,6 +226,7 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 			Require( disclosure == 0 && exemption == 0 && recognition == 0, "Absent worker observer has nonzero fields" ); continue;
 		}
 		Require( disclosure <= 1, "Worker observer has invalid disclosure flag" );
+		Require( !( exemption & 1u ), "Native identity cannot have a worker diplomacy exemption" );
 		Observer row{bool(disclosure),{}};
 		for ( size_t j = 0; j < 8; ++j ) { row.relations[j] = {bool(exemption&(1u<<j)),bool(recognition&(1u<<j))}; }
 		data.observers[i] = row;

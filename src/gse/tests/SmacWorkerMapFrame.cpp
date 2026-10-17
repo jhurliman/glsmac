@@ -95,7 +95,7 @@ void AddSmacWorkerMapFrameTests( task::gsetests::GSETests* task ) {
 		data.all_map_revealed = 2; data.units[0].visible_to = 0;
 		result = Frame::Create(data).Evaluate(0);
 		GT_ASSERT( result.unavailable == 1 && !result.squares[2]->explored, "revelation rewrote exploration or invisible native blocked" );
-		data.units[0].active_convoy = true; data.observer_relations[0].foreign_unit_exemption = true;
+		data.units[0] = {7,neighbor,0,true}; data.observer_relations[7].foreign_unit_exemption = true;
 		GT_ASSERT( Frame::Create(data).Evaluate(0).unavailable == 5, "convoy was exempted by visibility or relationship" );
 		data.units[0] = {2,neighbor,2,false}; data.observer_relations[2].foreign_unit_exemption = true;
 		GT_ASSERT( Frame::Create(data).Evaluate(0).unavailable == 1, "resolved foreign unit exemption lost" );
@@ -150,6 +150,10 @@ void AddSmacWorkerMapFrameTests( task::gsetests::GSETests* task ) {
 		auto original = Empty(); original.units.push_back({0,{10,8},2,false});
 		const auto frame = Frame::Create(original); const auto saved = frame.Serialize();
 		const size_t base = 56 + original.tiles.size()*3, unit = base + 13;
+		auto native = original; native.observer_relations[0].foreign_unit_exemption = true;
+		GT_ASSERT( Rejects([&]{Frame::Create(native);},"Native identity"), "native exemption admitted at frame creation" );
+		auto native_wire = saved; Word(native_wire,36,1);
+		GT_ASSERT( Rejects([&]{Frame::Deserialize(native_wire);},"Native identity"), "native exemption admitted at frame decode" );
 		for ( int scenario=0; scenario<27; ++scenario ) {
 			auto wire = saved;
 			if ( scenario == 0 ) { wire[0] = 'X'; }

@@ -39,6 +39,7 @@ void Validate( const Frame::Data& data ) {
 	Require( data.tiles.size() == TileCount( data.width, data.height ), "Worker frame tile count differs from dimensions" );
 	Owner( data.observer, false );
 	Require( data.ordinary_local_mode, "Worker frame requires the ordinary local worker query" );
+	Require( !data.observer_relations[0].foreign_unit_exemption, "Native identity cannot have a worker diplomacy exemption" );
 	(void)WireSize( data.tiles.size(), data.bases.size(), data.units.size() );
 	for ( const auto& tile : data.tiles ) { if ( tile.claimant ) { Owner( *tile.claimant, true ); } }
 	std::set< size_t > centers;
@@ -157,6 +158,7 @@ SmacWorkerMapFrame SmacWorkerMapFrame::Deserialize( const std::string& wire ) {
 	Require( ReadWord( wire, 16 ) <= 1 && ReadWord( wire, 20 ) >= 1 && ReadWord( wire, 20 ) <= 7
 		&& ReadWord( wire, 24 ) == 1 && ReadWord( wire, 28 ) <= 1 && ReadWord( wire, 32 ) <= 255
 		&& ReadWord( wire, 36 ) <= 255 && ReadWord( wire, 40 ) <= 255, "Worker frame has unsupported mode or flag bits" );
+	Require( !( ReadWord( wire, 36 ) & 1u ), "Native identity cannot have a worker diplomacy exemption" );
 	// Exact bounded framing and header checked before any owned record allocation.
 	Data data{static_cast<int32_t>(width),static_cast<int32_t>(height),static_cast<int32_t>(ReadWord(wire,20)),
 		bool(ReadWord(wire,16)),true,bool(ReadWord(wire,28)),static_cast<uint8_t>(ReadWord(wire,32)),{},{},{},{}};

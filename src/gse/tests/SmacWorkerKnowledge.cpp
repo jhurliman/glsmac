@@ -86,7 +86,7 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 		auto input=Small(); input.knowledge.tiles[0]={1,0}; input.knowledge.tiles[1]={128,{}};
 		input.knowledge.observers[0]=Knowledge::Observer{true,{}};
 		input.knowledge.observers[7]=Knowledge::Observer{false,{}};
-		input.knowledge.observers[7]->relations[0]={true,false}; input.knowledge.observers[7]->relations[1]={false,true};
+		input.knowledge.observers[7]->relations[7]={true,false}; input.knowledge.observers[7]->relations[1]={false,true};
 		input.knowledge.all_map_revealed=129; input.knowledge.units[0].id=uint64_t(std::numeric_limits<int64_t>::max());
 		const auto original=input.knowledge; const auto value=Knowledge::Create(original); const auto bytes=value.Serialize();
 		input.knowledge.tiles.clear(); auto detached=value.CopyData(); detached.observers[1].reset(); detached.units.clear();
@@ -115,7 +115,7 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "SMAC worker knowledge projects only the requested observer across narrow aliases", GT() {
 		Frame::Data frame{2,5,7,true,true,false,128,{},{},{{7,{0,2},0}}, {}};
 		frame.tiles.resize(5,{false,128,{}}); frame.tiles[2].claimant=0;
-		frame.observer_relations[0]={true,false}; frame.observer_relations[1]={false,true};
+		frame.observer_relations[7]={true,false}; frame.observer_relations[1]={false,true};
 		auto input=Split(frame); input.knowledge.observers[1]=Knowledge::Observer{true,{}};
 		input.knowledge.observers[1]->relations[0]={false,true};
 		const auto owned=Knowledge::Deserialize(Knowledge::Create(input.knowledge).Serialize());
@@ -130,6 +130,14 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "SMAC worker knowledge rejects malformed bounded portable frames", GT() {
 		const auto input=Small(); const auto value=Knowledge::Create(input.knowledge); const auto saved=value.Serialize();
 		const size_t unit=52+input.knowledge.tiles.size()*2;
+		for ( size_t observer : {size_t(0),size_t(1),size_t(7)} ) {
+			auto native=input.knowledge; native.observers[observer]=Knowledge::Observer{false,{}};
+			native.observers[observer]->relations[0].foreign_unit_exemption=true;
+			GT_ASSERT( Rejects([&]{Knowledge::Create(native);},"Native identity"), "native exemption admitted in an observer row" );
+			native.observers[observer]->relations[0].foreign_unit_exemption=false;
+			auto wire=Knowledge::Create(native).Serialize(); wire[29+observer*3]=1;
+			GT_ASSERT( Rejects([&]{Knowledge::Deserialize(wire);},"Native identity"), "native exemption admitted at knowledge decode" );
+		}
 		for(int scenario=0;scenario<22;++scenario){
 			auto wire=saved;
 			if(scenario==0){wire[0]='X';} if(scenario==1){Write(wire,4,1);} if(scenario==2){Write(wire,8,0);}

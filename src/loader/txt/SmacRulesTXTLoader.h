@@ -15,8 +15,12 @@ public:
 	// Nine positional SMAC RESOURCEINFO rows, not SMAX. Decode only the
 	// N/M/E triples at positions 2, 3 and 5, regardless of their labels. The caller
 	// supplies the selected rules file's contents; no I/O, cache or defaults.
-	// Missing/extra rows or invalid signed int32 fields throw
-	// std::invalid_argument. Other numeric columns and annotations are ignored.
+	// Consume nine physical lines: blanks/comments store zeros. Numeric
+	// prefixes use bounded decimal/hex/binary conversion and signed32 wrap.
+	// Missing/duplicate section, early EOF/section, quoted fixed fields or
+	// NUL/oversized rows, early inline comments,
+	// missing field delimiters or magnitude above 2^32 throw invalid_argument.
+	// Fourth numeric columns, annotations and later rows are not interpreted.
 	static game::backend::resource::smac::BaseSquareRules ParseBaseSquareRules( const std::string& source );
 	// Canonical SMAC: 70 positional RULES rows and 71 FACILITIES rows.
 	// Retains only production rules and facility name/cost/maintenance/prerequisite.

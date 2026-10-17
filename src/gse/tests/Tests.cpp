@@ -32,6 +32,7 @@
 #include "CvrIndexedRasterizer.h"
 #include "CvrBasisConverter.h"
 #include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -89,6 +90,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddValueTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );

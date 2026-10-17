@@ -160,18 +160,41 @@ From a checkout with Python, Capstone 5.0.7 and Unicorn 2.1.4:
 python tools/reference/probe_cvr_pixels.py --exe /private/terran.exe --assets /private/AlphaCentauri --report /private/pixel-report.json
 ```
 
+Installed filenames are resolved case-insensitively within the explicitly
+supplied asset directory, so the documented `VI.cvr` and `Vipta00.cvr` work on
+case-sensitive filesystems. Missing or ambiguous matches fail before loading;
+the required asset fingerprints still apply.
+
 The script imports only the local PE/chunk helpers in
 `tools/reference/probe_scout_composition.py`. It neither searches for nor
 downloads original files. Retain the report privately; it includes supplied raw
 record bytes derived from installed assets. No image, binary, asset, palette or
 raw executable bytes are committed by this change.
 
-The completed local run used
+The original completed local run used
 `out/validation-cvr-pixels/pixel-report.json` (75,660,207 bytes):
 
 - Probe SHA-256: `dee511e774ffa42cce36c8e63c4ff4820b42b3b2cc2831dc5bbf80d8de55c167`.
 - Imported helper SHA-256: `5c97f8ebda930909d78896c48b764f5aea8ae5322cbdcf2a8dd2b9df1b59f201`.
 - Report SHA-256: `f87e27980b2c0407e1c8f9218b70dabb1ee550c920c9b9c11ac31b2ce829f4db`.
+
+GitHub review identified the lowercase-path assumption on case-sensitive
+filesystems. After correcting that lookup, all 42 original cases and eight
+controls pass again. The current receipt is retained in the `camera-review-fix`
+managed tree at `out/validation-cvr-pixels-case/pixel-report.json` (75,660,207
+bytes), SHA-256 `f267438441123e5d41f5cc2a1834ad83f5e398453b469d5225217524ff14800c`.
+The current probe SHA-256 is
+`502db5ce7cdd9e1538d1920992f31cab1293cb77beb8dbf2a872ba809209e750`;
+the imported helper is unchanged.
+
+A separate WSL `/tmp` fixture uses mixed-case symlinks to the two installed
+files. The previous lowercase read fails for both, while the actual corrected
+extraction function validates the hashes and reads 1,386 and 9,162 records.
+Missing and ambiguous filename cases fail as intended. This fixture extracts
+the actual parsing functions with Python AST to avoid requiring emulator
+packages for a filesystem check; it does not execute original code. The full
+original execution above used Windows Python. Byte-compilation and whitespace
+checks also pass. The private fixture is retained as `out/validate_asset_case.py`.
 
 ## Next bounded implementation and reference gaps
 

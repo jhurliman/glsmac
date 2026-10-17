@@ -199,10 +199,12 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [technology/startup receipt](validation/technology-startup-2026-10-17.md)
+The latest [world-size/startup receipt](validation/world-size-startup-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
-at the same integrated commit, `445ee209`. It includes the technology catalog,
-V5 world-header binding, initial-turn ordering and Server departure retirement.
+at the same integrated commit, `060b4ca1`. It includes accepted world-size
+identity, V6 world-header binding, pure faction startup metadata and inactive
+roster codecs. The [technology/startup receipt](validation/technology-startup-2026-10-17.md)
+retains the earlier catalog, initial-turn and Server retirement checkpoint.
 The [preceding production-profile receipt](validation/production-profile-2026-10-17.md)
 retains the effective SSE rounding guard's focused Windows/Linux tests. On honey, the user confirmed
 map interaction, base inspection, a turn, a new world and close at `5cd78418`.
@@ -241,6 +243,17 @@ buildable items. Actual faction/design startup producers precede production
 activation. [#113](https://github.com/jhurliman/glsmac/pull/113) runs initial
 world events at turn zero, before the first turn advances.
 
+[#121](https://github.com/jhurliman/glsmac/pull/121) adds the five frozen SMAC
+world-size rows and explicit preset/custom acceptance to the actual setup and
+download paths. It preserves custom category 99 at preset geometry and checks
+the actual tile dimensions before map allocation. [#120](https://github.com/jhurliman/glsmac/pull/120)
+parses the seven canonical faction files against the technology catalog,
+preserving ordered bonuses and the original eight-record projection. It does
+not apply faction effects; host/world transport is the next separate change.
+The positional RESOURCEINFO correction landed in
+[#118](https://github.com/jhurliman/glsmac/pull/118): row position selects the
+numeric rule, while labels may be renamed or repeated.
+
 The wider lifetime stack preserves entity state, RNG continuation and turn
 metadata, stages map publication, and guards specific native replacement/cleanup
 paths from collection. Terminal-connection cleanup is
@@ -250,6 +263,9 @@ settle canonical Player/Slot/Connection ownership. Concurrent roster and
 failure/reset findings holding #77 remain open; sequential round-trips do not
 prove exclusion. Follow the
 [pinned roster plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md).
+The owned value codecs landed in [#119](https://github.com/jhurliman/glsmac/pull/119);
+they are inactive until both live writers, decoders and canonical publication
+switch together. The implementation of that boundary remains in progress.
 World downloads are still not disk savegames or deterministic replay.
 
 Conventional units have parsed component/design metadata and verified bounded
@@ -263,17 +279,19 @@ commands remain unfinished. Component results do not establish visual fidelity.
 
 ### Next three implementation slices
 
-1. Preserve the accepted SMAC world-size category separately from dimensions.
-   Parse the five original presets; explicit custom maps remain category 99
-   even when their dimensions equal a preset. Bind the frozen rows and accepted
-   selection to settings/world snapshots, and reject unsupported dimensions
-   before allocation. The original mineral-cost rule consumes this category.
-2. Parse canonical faction startup metadata against the frozen technology
-   catalog, preserving ordered bonuses, the shared eight-record capacity and
-   the distinct named versus deferred numeric TECH behavior. Pair this with
-   coherent Player/Slot/Connection publication before introducing live research
-   ownership. Metadata parsing must not prematurely apply intrinsic SOCIAL.
-3. Establish actual startup discoveries and predefined/active designs, then
+1. Finish canonical Player/Slot/Connection publication using the owned roster
+   codecs. Preserve occupant continuity and faction identity, exclude collection
+   during native replacement, and reject stale epoch callbacks. Real packet,
+   reset, collector and notification tests must resolve the ownership findings
+   before live research state is attached.
+2. Transport the frozen faction startup profiles in host settings and the world
+   header, preserving exact raw and derived equality. Stage all seven files
+   before publishing settings; clients consume host data. Apply no intrinsic
+   SOCIAL modifiers during this metadata step.
+3. Produce the fourteen predefined designs from owned component catalogs and
+   original cost, ability, capacity, automatic-plan and override rules. Keep
+   explicit unsupported-instance limits separate from a general workshop.
+   Establish actual startup discoveries and faction-generated designs, then
    connect founding to base creation. The observed first-base current SUPPORT
    and INDUSTRY are zero; late faction modifiers precede first upkeep and do
    not retroactively recompute starting minerals. Preserve independent target,

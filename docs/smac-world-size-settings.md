@@ -178,3 +178,17 @@ That actual publication tree passed all six registered CTests in 34.57 seconds
 This narrower parent does not contain all eight integration checks or imply the
 source parent's sanitizer/lifecycle coverage. Its separately identified async
 timer cancellation prerequisite must also be present for reliable hosted runs.
+
+The final publication base is
+`bebc643847291dc5eaed6bb05c3bc081105f55ed`: a history-preserving merge of that
+PR #116 head with refreshed timer PR #69 at
+`a5c3198d030a13fb5de6691c5f85386f804ca416`, which already includes stable main.
+The independently reviewed conflict resolutions retain both parents' test and
+include registrations. The timer production/tests are byte-identical to #69;
+the resulting PR delta remains world-size-only.
+On actual publication code head `505379e292c3718af193fecf90c5a9ff9edde4d4`, all six
+registered CTests passed in 31.56 seconds (full GSE 21.08 seconds), including the
+eight deterministic timer regressions. All eight changed production translation
+units passed focused correctness analysis with zero failures in 16.08 seconds.
+These checks use the publication tree itself; the earlier source-parent
+sanitizer receipts above remain separately scoped.

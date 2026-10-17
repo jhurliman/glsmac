@@ -152,6 +152,8 @@ inline std::vector< std::pair< std::string, std::string > > InvalidMovementHeade
 	result.emplace_back( "mistyped movement payload", prefix + present.ToString() + wrong.ToString() );
 	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
 	const auto bytes = smac_rules_fixture::Movement().Serialize().ToString();
+	add( "oversized movement cap+1", bytes + 'x' );
+	add( "oversized movement complete frame", bytes + std::string( 4096 - bytes.size(), 'x' ) );
 	for ( const auto length : { size_t( 0 ), size_t( 1 ), bytes.size() - 1 } ) { add( "truncated movement payload", bytes.substr( 0, length ) ); }
 	add( "extra movement fields", bytes + wrong.ToString() );
 	for ( const int64_t value : { int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1 } ) {

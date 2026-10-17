@@ -296,11 +296,22 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		for ( const auto* id : { "smac", "smax" } ) {
 			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			const auto before = settings.Serialize().ToString();
+			types::Buffer valid; WriteHeader( valid, settings ); const auto prefix_end = valid.lenw; valid.WriteString( "body" );
+			ValidateHeader( valid, settings );
+			GT_ASSERT( valid.lenr == prefix_end && valid.ReadString() == "body", "valid movement profile consumed body or exceeded its cap" );
 			for ( const auto& invalid : world_rules_fixture::InvalidMovementHeaders( id ) ) {
 				types::Buffer input( invalid.second ); const auto end = input.lenw; input.WriteString( "unread body" );
-				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				std::string error;
+				try { ValidateHeader( input, settings ); } catch ( const std::runtime_error& e ) { error = e.what(); }
+				GT_ASSERT( !error.empty(), "accepted " + invalid.first );
 				GT_ASSERT( settings.Serialize().ToString() == before, "movement rejection changed settings" );
 				if ( invalid.first.find( "different movement" ) == 0 ) { GT_ASSERT( input.lenr == end, "movement mismatch consumed body" ); }
+				if ( invalid.first.find( "oversized movement" ) == 0 ) {
+					const auto size = invalid.first == "oversized movement cap+1" ? game::backend::settings::SmacMovementRules::MAX_WIRE_BYTES + 1 : 4096;
+					types::Buffer frame; frame.WriteString( std::string( size, 'x' ) );
+					GT_ASSERT( error.find( "buffer read exceeds payload limit" ) != std::string::npos && input.lenr == end - frame.lenw,
+						"oversized movement advanced the outer cursor or reached nested world decode" );
+				}
 			}
 		}
 		GT_OK();

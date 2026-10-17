@@ -272,6 +272,39 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 		}
 		settings.PrepareRuleset( fixture::Source ); GT_ASSERT( fixture::Matches( settings.global ), "movement retry failed" ); GT_OK();
 	} );
+	task->AddTest( "SMAC movement settings reject oversized complete frames before nested decode", GT() {
+		const auto payload = []( const std::string& bytes ) {
+			return fixture::Payload( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, {}, {}, {}, bytes );
+		};
+		const auto valid = fixture::Movement().Serialize().ToString();
+		GT_ASSERT( valid.size() == SmacMovementRules::MAX_WIRE_BYTES, "valid movement frame is not at the cap" );
+		for ( const bool locked : { false, true } ) {
+			GlobalSettings settings; settings.SelectRuleset( "smax" );
+			if ( locked ) { settings.Deserialize( payload( valid ) ); }
+			const auto before = settings.Serialize().ToString();
+			for ( const size_t size : { size_t( SmacMovementRules::MAX_WIRE_BYTES ) + 1, size_t( 4096 ) } ) {
+				auto oversized = valid; oversized.append( size - valid.size(), 'x' );
+				std::string error;
+				try { settings.Deserialize( payload( oversized ) ); } catch ( const std::runtime_error& e ) { error = e.what(); }
+				GT_ASSERT( error.find( "buffer read exceeds payload limit" ) != std::string::npos, "oversized movement reached nested settings decode" );
+				GT_ASSERT( settings.Serialize().ToString() == before, "oversized movement partially published settings" );
+			}
+			settings.Deserialize( payload( valid ) );
+			GT_ASSERT( settings.GetSmacMovementRules() == fixture::Movement(), "exact-cap movement did not publish" );
+		}
+		// Exact-cap malformed contents reach the nested validator, distinguishing
+		// payload admission from version/checksum rejection after allocation.
+		for ( const bool checksum : { false, true } ) {
+			auto bytes = valid;
+			if ( checksum ) { bytes.back() ^= 1; }
+			else { types::Buffer version; version.WriteInt( 2 ); version.WriteInt( -1 ); bytes = version.ToString(); }
+			std::string error; GlobalSettings settings;
+			try { settings.Deserialize( payload( bytes ) ); } catch ( const std::runtime_error& e ) { error = e.what(); }
+			GT_ASSERT( error.find( checksum ? "checksum mismatch" : "Unsupported SMAC movement profile version" ) != std::string::npos,
+				"exact-cap malformed contents failed at the wrong boundary" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "SMAC movement settings reject same-Q raw changes and malformed late frames atomically", GT() {
 		const auto payload = []( const std::string& bytes, const bool present = true, const std::string& id = "smac" ) {
 			return fixture::Payload( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, {}, {}, {}, bytes, present );

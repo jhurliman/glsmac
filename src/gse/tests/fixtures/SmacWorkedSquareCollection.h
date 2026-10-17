@@ -1,9 +1,10 @@
 #pragma once
 // Literal projections: tools/reference/project_smac_worked_collection.py.
 #include <array>
+#include <cstddef>
 #include <cstdint>
 namespace gse::tests::smac_worked_fixture {
-struct CollectionCase { const char* id; int32_t population; uint32_t selected, unavailable; std::array<int32_t,2> center; bool wrap; std::array<int32_t,3> seed; uint32_t sea_indices, cleaned; bool repair; std::array<int32_t,3> intake; int32_t remaining; uint32_t visited; std::array<std::array<int32_t,2>,21> coordinates; size_t coordinate_count; bool sea; };
+struct CollectionCase { const char* id; int32_t population; uint32_t selected, unavailable; std::array<int32_t,2> center; bool wrap; std::array<int32_t,3> seed; uint32_t sea_indices, cleaned; bool repair; std::array<int32_t,3> intake; int32_t remaining; uint32_t visited; std::array<std::array<int32_t,2>,21> coordinates; std::size_t coordinate_count; bool sea; };
 inline const CollectionCase collection[] = {
 	{ "WORKED-COLLECT-001", 2, 7u, 0u, { 64, 32 }, true, { 0, 0, 0 }, 0u, 7u, false, { 6, 7, 9 }, 0, 7u, {{ { 64, 32 }, { 65, 31 }, { 66, 32 } }}, 3, false },
 	{ "WORKED-COLLECT-002", 0, 0u, 0u, { 64, 32 }, true, { 0, 0, 0 }, 0u, 0u, false, { 2, 1, 1 }, 0, 1u, {{ { 64, 32 } }}, 1, false },

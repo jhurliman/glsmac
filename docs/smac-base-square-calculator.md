@@ -54,7 +54,8 @@ fixture. Additional tests check invalid contexts, rejected arithmetic overflow,
 and representable boundaries; these extra safety cases are port-domain tests,
 not new original-game observations. CI needs no original executable or assets.
 
-Live integration still requires active rules ingestion/synchronization and an
-adapter supplying authoritative owner, economy, facilities, eligible terrain
+The [host-rules integration](smac-host-rules.md) now ingests the SMAC triples
+and synchronizes them through global settings. Live calculation still requires
+an adapter supplying authoritative owner, economy, facilities, eligible terrain
 bonuses and event state. Passing this suite establishes the bounded calculation
 contract, not complete base income, original map behavior or SMAX parity.

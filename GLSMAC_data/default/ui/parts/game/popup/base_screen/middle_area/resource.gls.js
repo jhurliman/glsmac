@@ -150,7 +150,7 @@ return {
 							// TODO: optimize excessive unwork/work events
 							// unwork all tiles
 							for (pop of pops) {
-								const worked_tile = pop.get('worked_tile');
+								const worked_tile = pop.get_worked_tile();
 								if (#is_defined(worked_tile)) {
 									this.p.game.event('unwork_base_tile', {
 										base: data.base,
@@ -187,7 +187,7 @@ return {
 								// find worst worked tile
 								const tile = (f_base_find_best_or_worst_tiles(data.base, data.base.get_worked_tiles(), 1, 0 - 1))[0]; // TODO: 0 - 1
 								if (#is_defined(tile)) {
-									target_pop = tile.get('working_pop');
+									target_pop = tile.get_working_pop();
 								}
 							}
 							if (target_pop != null) {

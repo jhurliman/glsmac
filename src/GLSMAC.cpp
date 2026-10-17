@@ -225,6 +225,19 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} )
 		},
 		{
+			"select_ruleset",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+				if ( !m_state || m_is_game_running || m_state->m_connection ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Select the gameplay ruleset before initializing a session" );
+				}
+				try { m_state->m_settings.global.SelectRuleset( id ); }
+				catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
 			"init",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -491,8 +504,11 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 	}
 
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		InitGameState( GSE_CALL );
+		DeinitGameState( GSE_CALL );
 		m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+		m_state->m_settings.local.network_role = game::backend::settings::LocalSettings::NR_NONE;
+		m_state->m_settings.global.SelectRuleset( c->GetRuleset() );
+		InitGameState( GSE_CALL );
 		m_state->m_settings.global.Initialize();
 		game::backend::faction::Faction* faction = nullptr;
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
@@ -528,6 +544,7 @@ void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
 		}
 		m_state->Reset();
+		m_state->m_settings.global.ResetRuleset();
 	}
 }
 
@@ -535,15 +552,27 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
+	const bool joining = m_state->m_settings.local.network_role == game::backend::settings::LocalSettings::NR_CLIENT;
+	try {
+		m_state->m_settings.PrepareRuleset( []( const std::string& filename ) {
+			return util::FS::ReadTextFile( g_engine->GetResourceManager()->GetCustomPath( filename ) );
+		} );
+	}
+	catch ( const std::exception& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	auto* game = g_engine->GetGame();
 	m_state->Reset();
 	m_state->SetGame( game );
 	game->SetState( m_state );
+	m_state->GetFM()->Clear();
+	// Joining clients receive their faction definitions with the host's settings.
+	if ( joining ) { return; }
 	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		TriggerObject( this, "configure_state", ARGS_F( this ) {
 			{
 				"fm",
 				m_state->GetFM()->Wrap( GSE_CALL ),
+			}, {
+				"ruleset", VALUE( gse::value::String,, m_state->m_settings.global.GetRulesetId() )
 			}
 		}; } );
 	});
@@ -578,6 +607,12 @@ void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {
+	if ( m_state->m_connection && m_state->m_connection->IsClient()
+		&& !m_state->m_connection->AsClient()->HasGlobalSettings() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Waiting for the host's gameplay settings" );
+	}
+	try { m_state->m_settings.global.LockRuleset(); }
+	catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	// real state belongs to game task now
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu

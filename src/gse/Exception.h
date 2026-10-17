@@ -52,6 +52,7 @@ public:
 
 private:
 	stacktrace_t m_stacktrace = {};
+	std::string m_formatted_message;
 
 };
 

@@ -2679,6 +2679,55 @@ static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 		} );
 		GT_ASSERT( error.empty(), "production signed intake: " + error ); GT_OK();
 	} );
+	task->AddTest( "test production base intake uses the base owner for center and worked tiles", GT() {
+		using namespace game::backend::base;
+		const auto next = Base::GetNextId();
+		util::FinallyGuard reset( [ next ]() { Base::SetNextId( next ); } );
+		BackendFixture fixture;
+		fixture.EnableYieldFixture(); fixture.SetRunning( true );
+		fixture.DefinePop( "WORKER", "Worker", PopDef::PF_TILE_WORKER );
+		auto* base = fixture.AddBaseWithPop( 702, 7 );
+		const auto error = fixture.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.GetGame();
+			auto* owner = base->m_owner->GetPlayer();
+			GT_ASSERT( owner != game->GetPlayer(), "fixture must distinguish the base owner from the active player" );
+			std::vector< std::pair< Tile*, game::backend::Player* > > calls;
+			auto* getter = NATIVE_CALL( &calls, owner ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object );
+				N_GETPROP_UNWRAP( tile, event, "tile", Tile );
+				N_GETPROP_UNWRAP( player, event, "player", game::backend::Player );
+				calls.emplace_back( tile, player );
+				const bool center = tile->coord.x == 4;
+				const int64_t nutrients = player == owner ? ( center ? 3 : 7 ) : 101;
+				const int64_t minerals = player == owner ? ( center ? 4 : 11 ) : 103;
+				const int64_t energy = player == owner ? ( center ? 5 : 13 ) : 107;
+				return new value::Object( GSE_CALL, {
+					{ "NUTRIENTS", new value::Int( gc_space, nutrients ) },
+					{ "MINERALS", new value::Int( gc_space, minerals ) },
+					{ "ENERGY", new value::Int( gc_space, energy ) },
+				} );
+			} );
+			auto* script = static_cast< value::Callable* >( fixture.RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_workers" ) );
+			script->Run( GSE_CALL, { game->GetBM()->Wrap( GSE_CALL ), game->GetTM()->Wrap( GSE_CALL ), getter } );
+			for ( const bool worked : { false, true } ) {
+				if ( worked ) {
+					base->SetPopAssignment( GSE_CALL, &base->m_pops.at( 7 ), "WORKER", game->GetMap()->GetTile( 2, 4 ) );
+				}
+				calls.clear();
+				auto* intake = static_cast< value::Object* >( CallBase( GSE_CALL, base, "get_intake" ) );
+				GT_ASSERT( calls.size() == ( worked ? 2 : 1 ), "intake skipped or duplicated a tile callback" );
+				GT_ASSERT( calls.at( 0 ).first == game->GetMap()->GetTile( 4, 4 ) && calls.at( 0 ).second == owner, "base center yield used the active player instead of the base owner" );
+				if ( worked ) {
+					GT_ASSERT( calls.at( 1 ).first == game->GetMap()->GetTile( 2, 4 ) && calls.at( 1 ).second == owner, "worked tile yield used the active player instead of the base owner" );
+				}
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "NUTRIENTS" ) )->value == ( worked ? 10 : 3 ), "owner-specific nutrient intake changed" );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "MINERALS" ) )->value == ( worked ? 15 : 4 ), "owner-specific mineral intake changed" );
+				GT_ASSERT( static_cast< value::Int* >( intake->Get( "ENERGY" ) )->value == ( worked ? 18 : 5 ), "owner-specific energy intake changed" );
+			}
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "production intake owner context: " + error ); GT_OK();
+	} );
 	task->AddTest( "test exceptional resource display preserves exact numbers with bounded icons", GT() {
 		using game::frontend::resource::ResourceDisplay;
 		for ( const size_t sprites : { 0, 1, 8 } ) {

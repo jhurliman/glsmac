@@ -7,6 +7,7 @@
 #include "SmacRulesSource.h"
 
 #include <array>
+#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -26,7 +27,9 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const std::optional< std::string >& sizes = std::nullopt,
 	const std::optional< std::string >& selection = std::nullopt,
 	const std::optional< bool > factions_present = std::nullopt,
-	const std::optional< std::string >& factions = std::nullopt ) {
+	const std::optional< std::string >& factions = std::nullopt,
+	const std::optional< bool > units_present = std::nullopt,
+	const std::optional< std::string >& units = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
@@ -54,6 +57,64 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		const auto present_factions = factions_present.value_or( id == "smac" ); result.WriteBool( present_factions );
 		if ( present_factions ) { result.WriteString( factions ? *factions : smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ).ToString() ); }
 	}
+	if ( version >= 8 ) {
+		const auto present_units = units_present.value_or( id == "smac" ); result.WriteBool( present_units );
+		if ( present_units ) { result.WriteString( units ? *units : smac_rules_fixture::PredefinedUnits().Serialize( smac_rules_fixture::Technologies() ).ToString() ); }
+	}
+	return result;
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	const auto header = [ & ]( const bool present, const std::optional< std::string >& bytes = {} ) {
+		return Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+			game::backend::world_snapshot::rules_marker, game::backend::world_snapshot::rules_version,
+			{}, {}, {}, {}, {}, {}, {}, {}, {}, present, bytes ).ToString();
+	};
+	result.emplace_back( "old V7", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+		game::backend::world_snapshot::rules_marker, 7 ).ToString() );
+	if ( id == "smax" ) { result.emplace_back( "unexpected predefined profile", header( true ) ); return result; }
+	result.emplace_back( "absent predefined profile", header( false ) );
+	types::Buffer absent, present, wrong; absent.WriteBool( false ); present.WriteBool( true ); wrong.WriteInt( 1 );
+	const auto missing = header( false ); const auto prefix = missing.substr( 0, missing.size() - absent.lenw );
+	result.emplace_back( "missing predefined presence", prefix );
+	result.emplace_back( "mistyped predefined presence", prefix + wrong.ToString() );
+	result.emplace_back( "missing predefined payload", prefix + present.ToString() );
+	result.emplace_back( "mistyped predefined payload", prefix + present.ToString() + wrong.ToString() );
+	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
+	const auto technologies = smac_rules_fixture::Technologies();
+	const auto profile = smac_rules_fixture::PredefinedUnits();
+	const auto bytes = profile.Serialize( technologies ).ToString();
+	for ( const auto length : { size_t( 0 ), size_t( 1 ), bytes.size() - 1 } ) { add( "truncated predefined payload", bytes.substr( 0, length ) ); }
+	add( "extra predefined fields", bytes + wrong.ToString() );
+	add( "oversized predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ) );
+	add( "oversized downloaded predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES * 4, 'x' ) );
+	types::Buffer bad_version; bad_version.WriteInt( 2 );
+	add( "unknown predefined version", bad_version.ToString() + bytes.substr( bad_version.lenw ) );
+	for ( const auto value : { int64_t( 1 ), INT64_MAX } ) {
+		types::Buffer bad; bad.WriteInt( value ); add( "forged last derived exclusion", bytes.substr( 0, bytes.size() - bad.lenw ) + bad.ToString() );
+	}
+	add( "mistyped last derived exclusion", bytes.substr( 0, bytes.size() - wrong.lenw ) + present.ToString() );
+	using Profile = game::backend::settings::SmacPredefinedUnitRules;
+	const std::vector< std::function< void( Profile& ) > > changes = {
+		[]( auto& p ) { p.catalog.chassis.chassis.back().names[ 5 ].name += " changed"; },
+		[]( auto& p ) { p.catalog.chassis.chassis.back().range = INT32_MIN; },
+		[]( auto& p ) { p.catalog.weapons.weapons.back().name += " changed"; },
+		[]( auto& p ) { p.catalog.defenses.defenses.back().name += " changed"; },
+		[]( auto& p ) { p.catalog.reactors.reactors.back().power = INT32_MIN; },
+		[]( auto& p ) { p.catalog.abilities.abilities.back().description += "; changed"; },
+		[]( auto& p ) { p.catalog.source.units.back().name += " changed"; },
+		[]( auto& p ) { p.catalog.source.units.back().cost = 17; },
+		[]( auto& p ) { p.catalog.source.units.back().carry = 17; },
+		[]( auto& p ) { p.catalog.source.units.back().icon = 17; },
+		[]( auto& p ) { p.catalog.source.units.back().prerequisite = "Unknown"; },
+		[]( auto& p ) { p.catalog.source.units.pop_back(); }
+	};
+	for ( size_t i = 0; i < changes.size(); ++i ) {
+		auto changed = profile; changes[ i ]( changed ); auto& c = changed.catalog;
+		c = game::backend::unit::SmacPredefinedUnitCatalog::Build( c.source, c.chassis, c.weapons, c.defenses, c.reactors, c.abilities, technologies );
+		add( "different valid predefined source/derived field " + std::to_string( i ), changed.Serialize( technologies ).ToString() );
+	}
 	return result;
 }
 
@@ -68,9 +129,13 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
 	result.emplace_back( "absent faction profile", header( false ) );
 	types::Buffer present, wrong; present.WriteBool( true ); wrong.WriteInt( 1 );
-	// In V7 faction presence is the last frame when it is false.
-	types::Buffer absent; absent.WriteBool( false );
-	const auto prefix = header( false ).substr( 0, header( false ).size() - absent.lenw );
+	// Stop before faction presence; later versions append additional profiles.
+	types::Buffer before_faction( header( false ) );
+	before_faction.ReadInt(); before_faction.ReadInt(); before_faction.ReadString(); before_faction.ReadBool();
+	for ( size_t i = 0; i < 9; ++i ) { before_faction.ReadInt(); }
+	for ( size_t i = 0; i < 2; ++i ) { before_faction.ReadBool(); before_faction.ReadString(); }
+	before_faction.ReadBool(); before_faction.ReadString(); before_faction.ReadString();
+	const auto prefix = before_faction.ToString().substr( 0, before_faction.lenr );
 	result.emplace_back( "missing faction presence", prefix );
 	result.emplace_back( "mistyped faction presence", prefix + wrong.ToString() );
 	result.emplace_back( "missing faction payload", prefix + present.ToString() );

@@ -5,6 +5,8 @@
 #include "task/gsetests/GSETests.h"
 #include "util/random/Random.h"
 
+#include <algorithm>
+
 namespace gse::tests {
 namespace {
 bool Rejects( const std::function< void() >& f ) {
@@ -17,6 +19,65 @@ bool Rejects( const std::function< void() >& f ) {
 void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 	using game::backend::settings::GlobalSettings;
 	using namespace game::backend::world_snapshot;
+	task->AddTest( "world rules header bounds predefined frame before copying and preserves its cursor", GT() {
+		using Profile = game::backend::settings::SmacPredefinedUnitRules;
+		GlobalSettings settings; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+		const auto before = settings.Serialize().ToString();
+		types::Buffer header; WriteHeader( header, settings );
+		// Keep all preceding production fields valid and locate the predefined
+		// payload itself, independently of any later header/body extensions.
+		header.ReadInt(); header.ReadInt(); header.ReadString();
+		GT_ASSERT( header.ReadBool(), "missing numeric profile in test header" );
+		for ( size_t i = 0; i < 9; ++i ) { header.ReadInt(); }
+		for ( size_t i = 0; i < 2; ++i ) { GT_ASSERT( header.ReadBool(), "missing profile in test header" ); header.ReadString(); }
+		GT_ASSERT( header.ReadBool(), "missing size profile in test header" ); header.ReadString(); header.ReadString();
+		GT_ASSERT( header.ReadBool(), "missing faction profile in test header" ); header.ReadString();
+		GT_ASSERT( header.ReadBool(), "missing predefined profile in test header" );
+		const auto prefix = header.ToString().substr( 0, header.lenr );
+		for ( const auto length : { Profile::MAX_WIRE_BYTES + 1, Profile::MAX_WIRE_BYTES * 4 } ) {
+			const std::string payload( length, 'x' );
+			for ( const bool corrupt_checksum : { false, true } ) {
+				types::Buffer frame; frame.WriteString( payload );
+				auto bytes = prefix + frame.ToString();
+				if ( corrupt_checksum ) { bytes.back() ^= 1; }
+				types::Buffer input( bytes ); input.WriteString( "unread world body" );
+				std::string error;
+				try { ValidateHeader( input, settings ); }
+				catch ( const std::runtime_error& caught ) { error = caught.what(); }
+				GT_ASSERT( error.find( "buffer read exceeds payload limit" ) != std::string::npos, "oversized profile reached codec/checksum processing instead of bounded frame admission" );
+				GT_ASSERT( input.lenr == prefix.size(), "rejected profile was copied/consumed before its wire limit" );
+				GT_ASSERT( settings.Serialize().ToString() == before, "frame rejection changed frozen settings" );
+				if ( !corrupt_checksum ) {
+					// The rejected frame is complete, with a valid checksum; the
+					// separate unbounded test read proves it was not truncation.
+					GT_ASSERT( input.ReadString() == payload && input.ReadString() == "unread world body", "failed frame read changed bytes or body cursor" );
+				}
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world predefined profile exact byte cap remains a valid codec domain", GT() {
+		using Profile = game::backend::settings::SmacPredefinedUnitRules;
+		const auto technologies = smac_rules_fixture::Technologies();
+		auto profile = smac_rules_fixture::PredefinedUnits();
+		const auto initial_size = profile.Serialize( technologies ).lenw;
+		GT_ASSERT( initial_size < Profile::MAX_WIRE_BYTES, "fixture no longer has room below the cap" );
+		size_t remaining = Profile::MAX_WIRE_BYTES - initial_size;
+		const auto grow = [ & ]( std::string& text, const size_t limit ) {
+			const auto count = std::min( remaining, limit - text.size() ); text.append( count, 'x' ); remaining -= count;
+		};
+		// Display text is owned metadata and does not change resolved IDs or
+		// derived costs. Respect each existing codec text limit while padding.
+		for ( auto& ability : profile.catalog.abilities.abilities ) { grow( ability.description, 512 ); }
+		for ( auto& weapon : profile.catalog.weapons.weapons ) { grow( weapon.name, 128 ); }
+		for ( auto& unit : profile.catalog.source.units ) { grow( unit.name, 128 ); }
+		GT_ASSERT( remaining == 0, "fixture cannot reach the exact profile byte cap" );
+		const auto bytes = profile.Serialize( technologies ).ToString();
+		GT_ASSERT( bytes.size() == Profile::MAX_WIRE_BYTES && Profile::Deserialize( bytes, technologies ) == profile, "exact-cap valid profile failed semantic codec validation" );
+		types::Buffer frame; frame.WriteString( bytes ); const auto end = frame.lenw; frame.WriteString( "body" );
+		GT_ASSERT( frame.ReadString( Profile::MAX_WIRE_BYTES ) == bytes && frame.lenr == end && frame.ReadString() == "body", "exact-cap bounded frame read consumed the body or rejected equality" );
+		GT_OK();
+	} );
 	task->AddTest( "world RNG codec preserves all four JSF32 words and its zero state", GT() {
 		for ( const auto state : { util::random::state_t{ 0, 0, 0, 0 }, util::random::state_t{ 0, UINT32_MAX, 1, 2147483648u }, util::random::state_t{ UINT32_MAX, 0, 2147483648u, 1 } } ) {
 			types::Buffer buffer; WriteRandomState( buffer, state );
@@ -51,7 +112,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 7 && wire.ReadString() == id, "writer omitted the V7 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 8 && wire.ReadString() == id, "writer omitted the V8 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
@@ -70,6 +131,8 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			}
 			GT_ASSERT( wire.ReadBool() == smac, "faction startup presence changed" );
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacFactionStartupRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "faction startup metadata changed" ); }
+			GT_ASSERT( wire.ReadBool() == smac, "predefined unit presence changed" );
+			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacPredefinedUnitRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "predefined source/derived metadata changed" ); }
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );
@@ -205,6 +268,21 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( reject( changed ), "world accepted omitted numeric metadata" );
 			changed = smac_rules_fixture::Factions(); changed.factions[ faction ].bonuses.back() = SmacFactionStartupBonus::Parse( "DRONE", "16", technologies );
 			GT_ASSERT( reject( changed ), "world accepted changed scalar keyword/tag" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header binds complete predefined sources and derived records before body", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& invalid : world_rules_fixture::InvalidPredefinedHeaders( id ) ) {
+				types::Buffer input( invalid.second ); const auto end = input.lenw; input.WriteString( "unread world body" );
+				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				GT_ASSERT( settings.Serialize().ToString() == before, "unit rejection changed frozen settings" );
+				// Missing/mistyped fields can consume a replacement body frame while
+				// rejecting its type. Complete framed mismatches stop at the prefix.
+				if ( invalid.first.find( "different valid" ) == 0 ) { GT_ASSERT( input.lenr == end, "profile mismatch consumed world body" ); }
+			}
 		}
 		GT_OK();
 	} );

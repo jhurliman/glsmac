@@ -113,6 +113,19 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 			GT_ASSERT(result.tail.final.labs==3&&result.maintenance==0,"University Node multiplier or actual free-facility waiver differs");
 			base->m_facilities.emplace("role9",game->GetBM()->GetFacilityDef("role9"));result=game->GetCanonicalBaseEnergy(*base);
 			GT_ASSERT(result.tail.final.labs==6&&result.maintenance==2,"Bio labs must precede Node multiplier; unrelated maintenance is not free");
+			const auto before_display=fixture.Snapshot();
+			auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+			const auto display=[&](){return static_cast<value::Object*>(static_cast<value::Callable*>(wrapper->Get("get_smac_energy_calculation"))->Run(GSE_CALL,{}));};
+			const auto number=[](value::Object* object,const std::string& key){return static_cast<value::Int*>(object->Get(key))->value;};
+			auto* copied=display();
+			GT_ASSERT(number(copied,"raw_intake")==3&&number(copied,"waste")==0&&number(copied,"net")==3
+				&&number(copied,"credits")==137&&number(copied,"maintenance")==2,"Base UI projection substituted energy or treasury");
+			GT_ASSERT(number(static_cast<value::Object*>(copied->Get("rates")),"labs")==5
+				&&number(static_cast<value::Object*>(copied->Get("allocated")),"labs")==2
+				&&number(static_cast<value::Object*>(copied->Get("final")),"labs")==6,"Base UI projection lost rates, specialists or facility output");
+			static_cast<value::Int*>(copied->Get("credits"))->value=-999;
+			GT_ASSERT(number(display(),"credits")==137&&fixture.Snapshot()==before_display&&fixture.GameplayRandom()==rng,
+				"Base UI read posted economy or returned mutable authority");
 			const auto stable=fixture.Snapshot();fixture.ResourceState([](auto& state){state.economy.at(1).treaty_partners=4;});
 			GT_ASSERT(Rejects([&]{game->GetCanonicalBaseEnergy(*base);}),"missing commerce producer became zero for a real treaty");
 			fixture.ResourceState([](auto& state){state.economy.at(1).treaty_partners=0;});

@@ -8868,8 +8868,11 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 				size_t hook_calls = 0;
 				const auto source_error = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 					DefineSnapshotUnit( source_manager );
-					SpawnSnapshotUnit( GSE_CALL, source, 71 );
 					auto* second = SpawnSnapshotUnit( GSE_CALL, source, 88, 4 );
+					SpawnSnapshotUnit( GSE_CALL, source, 99, 6 );
+					SpawnSnapshotUnit( GSE_CALL, source, 71 );
+					source_manager->DespawnUnit( GSE_CALL, 99 );
+					GT_ASSERT( source_manager->GetUnitRecordOrder() == std::vector< size_t >( { 88, 71 } ), "removal reordered surviving Unit records" );
 					second->Legacy().movement = -0.0f; second->Legacy().morale = 6;
 					second->Legacy().health = -0.125f; second->Legacy().moved_this_turn = false;
 					GT_OK();
@@ -8895,6 +8898,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 						manager->ProcessUnprocessed( GSE_CALL );
 					}
 					GT_ASSERT( manager->GetUnits().size() == 2 && Unit::GetNextId() == 123, "unit count or next ID changed" );
+					GT_ASSERT( manager->GetUnitRecordOrder() == source_manager->GetUnitRecordOrder(), "restore sorted Unit records by numeric identity" );
 					for ( const auto& entry : source_manager->GetUnits() ) {
 						const auto* unit = manager->GetUnit( entry.first );
 						GT_ASSERT( unit && unit->m_def == manager->GetUnitDef( "TEST_UNIT" ), "restored unit does not borrow its manager's definition" );
@@ -8935,6 +8939,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( ( restored.GetGame()->GetRandom()->GetStateString() != rng ) == !client, "ordinary spawn RNG behavior changed" );
 					SpawnSnapshotUnit( GSE_CALL, restored, Unit::GetNextId(), 6 );
 					GT_ASSERT( hook_calls == ( client ? 0 : 2 ), "ordinary immediate spawn lost master/client hook behavior" );
+					GT_ASSERT( manager->GetUnitRecordOrder() == std::vector< size_t >( { 88, 71, 123, 124 } ), "new units did not append to restored record order" );
 					GT_OK();
 				} );
 				GT_ASSERT( spawn_error.empty(), "ordinary spawn after restore failed: " + spawn_error );
@@ -9035,7 +9040,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 0 ) { input.WriteInt( 0 ); } // legacy unversioned manager
 				else if ( scenario == 1 ) { input.WriteString( "GLSMAC_UNITS_V999" ); }
 				else {
-					input.WriteString( "GLSMAC_UNITS_V2" );
+					input.WriteString( "GLSMAC_UNITS_V4" );
 					if ( scenario == 2 || scenario == 3 ) { input.WriteInt( scenario == 2 ? -1 : std::numeric_limits< int64_t >::max() ); }
 					else {
 						input.WriteInt( scenario == 5 ? 2 : 1 );

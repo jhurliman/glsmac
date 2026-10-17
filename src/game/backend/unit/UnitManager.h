@@ -11,6 +11,7 @@
 
 #include <deque>
 #include <memory>
+#include <vector>
 
 namespace game {
 namespace backend {
@@ -82,6 +83,9 @@ public:
 	Unit* GetUnit( const size_t id ) const;
 	Def* GetUnitDef( const std::string& name ) const;
 	const std::map< size_t, Unit* >& GetUnits() const;
+	// Live record order, preserved by removal and save/restore. Numeric IDs are
+	// identities and must not choose free support or equal-distance casualties.
+	const std::vector< size_t >& GetUnitRecordOrder() const { return m_unit_order; }
 
 	void ProcessUnprocessed( GSE_CALLABLE );
 	void PushUpdates();
@@ -125,6 +129,7 @@ private:
 	std::unordered_map< std::string, MoraleSet* > m_unit_moralesets = {};
 	std::unordered_map< std::string, Def* > m_unit_defs = {};
 	std::map< size_t, Unit* > m_units = {};
+	std::vector< size_t > m_unit_order;
 	struct pending_unit_t {
 		Unit* unit;
 		bool is_new;

@@ -119,6 +119,7 @@ void AddManufacturedConventionalUnitTests( task::gsetests::GSETests* task ) {
 		return fixture.Run([&](GSE_CALLABLE)->std::string{
 			const auto world=Populate(GSE_CALL,fixture);auto* game=fixture.Game();Unit* first=nullptr;
 			for(int i=0;i<3;++i){auto* unit=Manufacture(GSE_CALL,fixture,world);if(!first){first=unit;}
+				GT_ASSERT(game->GetUM()->GetUnitRecordOrder().back()==unit->m_id,"manufactured unit did not append to live record order");
 				GT_ASSERT(unit->Conventional().design_id==1&&unit->Conventional().home_base_id==901&&unit->Conventional().stored_morale==1
 					&&unit->Conventional().damage==0&&unit->Conventional().spent==0&&!unit->Conventional().failed_move
 					&&unit->QueryStats(SmacMoraleMode::Mode0).effective_morale==0&&unit->QueryStats(SmacMoraleMode::Mode0).full_allowance==3,"original untrained Former creator fields differ");

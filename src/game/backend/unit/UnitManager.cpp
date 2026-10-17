@@ -31,12 +31,13 @@
 #include <memory>
 #include <cmath>
 #include <limits>
+#include <algorithm>
 
 namespace game {
 namespace backend {
 namespace unit {
 
-static const std::string s_snapshot_format = "GLSMAC_UNITS_V3";
+static const std::string s_snapshot_format = "GLSMAC_UNITS_V4";
 
 static size_t ReadSnapshotCount( types::Buffer& buf ) {
 	const auto count = buf.ReadInt();
@@ -67,6 +68,7 @@ void UnitManager::Clear() {
 		delete it.second;
 	}
 	m_units.clear();
+	m_unit_order.clear();
 
 	for ( auto& it : m_unit_defs ) {
 		delete it.second;
@@ -208,6 +210,7 @@ struct UnitManager::PreparedConventionalUnit::Data {
 	map::tile::Tile* tile;
 	std::unique_ptr< Unit > candidate;
 	std::map< size_t, Unit* > units, occupants;
+	std::vector< size_t > order;
 	std::unordered_map< size_t, unit_update_t > updates;
 	std::optional< map::SmacWorkerKnowledge > sight;
 	std::pair< SmacMovementHistory*, size_t > history;
@@ -228,6 +231,7 @@ Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	auto& data = *m_data;
 	data.published = data.candidate.release();
 	data.manager->m_units.swap( data.units ); data.manager->m_unit_updates.swap( data.updates ); data.tile->units.swap( data.occupants );
+	data.manager->m_unit_order.swap( data.order );
 	data.published->CommitInitialPlacement( data.tile );
 	if ( data.history.first ) { data.history.first->MarkPlaced( data.history.second ); }
 	data.manager->m_game->CommitConventionalSight( data.sight );
@@ -257,6 +261,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	data->candidate.reset( new Unit( Unit::Unplaced{}, this, id, def, owner, state ) );
 	data->history = PreparePlacementHistory( *data->candidate, tile );
 	data->units = m_units; data->updates = m_unit_updates; data->occupants = tile->units;
+	data->order = m_unit_order; data->order.push_back( id );
 	if ( !data->units.emplace( id, data->candidate.get() ).second || !data->occupants.emplace( id, data->candidate.get() ).second
 		|| !data->updates.emplace( id, unit_update_t{ UUO_SPAWN, data->candidate.get() } ).second ) {
 		THROW( "Prepared unit creation has conflicting identity publication" );
@@ -340,6 +345,7 @@ Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::
 		data->candidate->m_early_startup=true;
 		data->history=PreparePlacementHistory(*data->candidate,tile);
 		data->units=m_units; data->updates=m_unit_updates; data->occupants=tile->units;
+		data->order=m_unit_order; data->order.push_back(id);
 		if(!data->units.emplace(id,data->candidate.get()).second||!data->occupants.emplace(id,data->candidate.get()).second
 			||!data->updates.emplace(id,unit_update_t{UUO_SPAWN,data->candidate.get()}).second){THROW("Starting unit identity publication conflicts");}
 		PreparedConventionalUnit prepared(std::move(data)); auto* unit=prepared.Commit(); prepared.Notify(GSE_CALL); return unit;
@@ -412,9 +418,11 @@ void UnitManager::TriggerSpawnHook( GSE_CALLABLE, Unit* unit ) {
 }
 
 void UnitManager::RegisterUnit( Unit* unit ) {
+	m_unit_order.reserve( m_unit_order.size() + 1 );
 	if ( !m_units.emplace( unit->m_id, unit ).second ) {
 		THROW( "duplicate unit ID" );
 	}
+	m_unit_order.push_back( unit->m_id );
 	QueueUnitUpdate( unit, UUO_SPAWN );
 }
 
@@ -435,6 +443,8 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	}
 
 	auto* unit = it->second;
+	const auto ordered = std::find( m_unit_order.begin(), m_unit_order.end(), unit_id );
+	if ( ordered == m_unit_order.end() ) { THROW( "Unit is missing its record order" ); }
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
 
@@ -447,6 +457,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	tile->units.erase( tile_it );
 
 	m_units.erase( it );
+	m_unit_order.erase( ordered );
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -972,9 +983,10 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 	}
 
 	Log( "Serializing " + std::to_string( m_units.size() ) + " units" );
+	if ( m_unit_order.size() != m_units.size() ) { THROW( "Unit record order differs from registry" ); }
 	buf.WriteInt( m_units.size() );
-	for ( const auto& it : m_units ) {
-		buf.WriteString( Unit::Serialize( it.second ).ToString() );
+	for ( const auto id : m_unit_order ) {
+		buf.WriteString( Unit::Serialize( m_units.at( id ) ).ToString() );
 	}
 	buf.WriteInt( Unit::GetNextId() );
 
@@ -986,7 +998,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 }
 
 void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home ) {
-	if ( !m_unit_moralesets.empty() || !m_unit_defs.empty() || !m_units.empty() || !m_unprocessed_units.empty() ) {
+	if ( !m_unit_moralesets.empty() || !m_unit_defs.empty() || !m_units.empty() || !m_unit_order.empty() || !m_unprocessed_units.empty() ) {
 		THROW( "unit snapshot requires an empty manager" );
 	}
 	// Old unversioned snapshots begin with an integer and fail the typed read.

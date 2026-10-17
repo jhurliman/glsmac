@@ -129,13 +129,13 @@ int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_bas
 			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,
 			tile->is_water_tile ? base::SmacSupportTerrain::DeepOcean : base::SmacSupportTerrain::Land } );
 	};
-	for ( const auto& item : m_um->GetUnits() ) {
-		if ( !item.second || item.second->m_id != item.first ) { throw std::runtime_error( "Invalid support Unit registry" ); }
-		append( item.second, false );
+	for ( const auto id : m_um->GetUnitRecordOrder() ) {
+		const auto* unit = m_um->GetUnit( id );
+		if ( !unit || unit->m_id != id ) { throw std::runtime_error( "Invalid support Unit registry" ); }
+		append( unit, false );
 	}
 	if ( prepared_unit ) { append( prepared_unit, true ); }
-	// Map order is only a traversal choice. The aggregate is invariant to order;
-	// do not expose or persist the helper's per-unit free/paid classifications.
+	// The order is saved authority; free allowances precede paid units in it.
 	return base::SmacUnitSupport::Recalculate( social->retained->at( 2 ), static_cast< int32_t >( population ), units ).mineral_support;
 }
 

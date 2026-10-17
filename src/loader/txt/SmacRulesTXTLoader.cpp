@@ -32,6 +32,40 @@ static int32_t ParseField( const std::string& field, const std::string& row, con
 	return value;
 }
 
+game::backend::settings::SmacSpecialistRules SmacRulesTXTLoader::ParseSpecialistRules( const std::string& source ) {
+	using game::backend::settings::SmacSpecialistRules;
+	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
+	const auto rows = TXTLoader::ReadUniqueSection( source, "CITIZENS" );
+	if ( rules.size() != 70 || rows.size() != 10 ) { throw std::invalid_argument( "SMAC specialists require 70 RULES and ten CITIZENS rows" ); }
+	const auto scalar_line = util::String::TrimCopy( rules[ 10 ].substr( 0, rules[ 10 ].find( ';' ) ) );
+	const auto scalar = util::String::Split( scalar_line, ',' );
+	if ( scalar.size() != 1 || std::count( scalar_line.begin(), scalar_line.end(), ',' ) > 1 ) { throw std::invalid_argument( "RULES row 11 requires one specialist size field" ); }
+	SmacSpecialistRules result;
+	result.minimum_base_size = ParseField( scalar[ 0 ], "row 11", 1, "RULES" );
+	for ( size_t i = 0; i < rows.size(); ++i ) {
+		const auto line = rows[ i ].substr( 0, rows[ i ].find( ';' ) );
+		if ( line.find('"') != std::string::npos ) { throw std::invalid_argument( "Quoted CITIZENS fields are unsupported" ); }
+		const auto fields = util::String::Split( line, ',' );
+		const auto commas = std::count( line.begin(), line.end(), ',' );
+		if ( i >= result.specialists.size() ) {
+			// Ordinary citizen names establish the supported section shape only.
+			if ( fields.size() != 2 || commas < 1 || commas > 2 ) { throw std::invalid_argument( "CITIZENS ordinary rows require two names" ); }
+			for ( const auto& field : fields ) {
+				if ( field.empty() || field.size() > SmacSpecialistRules::MAX_TEXT_BYTES || field.find( '\0' ) != std::string::npos ) { throw std::invalid_argument( "Invalid ordinary citizen name" ); }
+			}
+			continue;
+		}
+		if ( fields.size() != 8 || commas != 7 ) { throw std::invalid_argument( "CITIZENS specialist rows require eight columns" ); }
+		auto& row = result.specialists[ i ];
+		row.source_id = static_cast< int32_t >( i ); row.singular = fields[ 0 ]; row.plural = fields[ 1 ];
+		row.prerequisite = fields[ 2 ]; row.obsolete = fields[ 3 ];
+		row.economy = ParseField( fields[ 4 ], "specialist", 5, "CITIZENS" );
+		row.psych = ParseField( fields[ 5 ], "specialist", 6, "CITIZENS" );
+		row.labs = ParseField( fields[ 6 ], "specialist", 7, "CITIZENS" ); row.trailing_token = fields[ 7 ];
+	}
+	result.Validate(); return result;
+}
+
 BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& source ) {
 	const auto rows = TXTLoader::ReadUniqueSection( source, "RESOURCEINFO" );
 	// RE-SMAC-BASE-ROWS-001: positions select the stored rule rows. Labels

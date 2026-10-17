@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacRulesTXTLoader.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
+	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp

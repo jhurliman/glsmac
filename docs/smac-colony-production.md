@@ -18,11 +18,21 @@ one prepared transaction. Empty human queues repeat the current Pod target.
 
 The queue permits Colony only in the existing ordinary generated local human
 campaign. Scenario/mapfile no-colony restrictions require their own producer
-before admission. Size-one completion (including easy-difficulty protection,
-delay, screen and abandonment choices) and the production-only intermediate
-entry reject before any publication; only the full upkeep path handles Colony
-population effects. These are explicit remaining boundaries, not substituted
-choices or refunds attributed to the original.
+before admission. Size-one completion now checks the owner's stored difficulty:
+Citizen and Specialist complete without population debit, including when the
+production governor is active. Larger Bases still lose one population. At other
+difficulties, governor activation plus production-management bit `0x1` defers
+completion: minerals post, the queue stays unchanged, baselines update and the
+ordinary food/growth tail runs. Neither a presentation resolver nor a Unit ID is
+needed by deferral. Growth cannot retroactively complete that deferred attempt.
+
+An explicit player choice (Delay, Base Screen or Accept abandonment) remains
+unconnected and rejects before publication. The production-only intermediate
+entry also rejects Colony; only full upkeep handles its population effects.
+Automatic governor target selection is not implemented: the existing empty
+human queue keeps its target, without inferring a universal Former replacement
+from the captured Citizen case. No UI choice, saved pending-choice record,
+network branch or protection setting is introduced by this automatic-branch fix.
 
 Ordinary nonfungus movement uses the existing edge-cost and command pipeline.
 Its validator now admits the Colony tuple; fungus encounters and foreign
@@ -39,4 +49,19 @@ Sixteen affected groups passed before the discovered Colony edge-admission
 fix; all three Colony and five edge groups pass after it. Twelve changed
 production TUs plus the final edge TU analyze clean. No platform matrix or
 new original-executable run was performed. Running second-site founding and
-Pod consumption are the next separate transaction.
+Pod consumption use their separate transaction.
+
+The automatic branches use `docs/behavior/colony-choice-continuation.md` and its
+13 semantic contexts. Three new live groups check stored difficulty 0/1 versus
+global 3, population-one versus population-two debit, independent governor bits,
+queue retention and no factory during deferral. These literal replays explicitly
+set the source mineral multiplier and completion exemption to the installed value 10,
+replacing the shared synthetic fixture's deliberate 123/INT_MIN values while
+retaining the actual owned three-unit Colony design and fixed 30-mineral checks.
+The repeated governor-deferral test composes the measured automatic branch with the established population
+ordering: food19/minerals27 becomes size1/food20/minerals30, then
+size2/food0/minerals33, then a Pod and size1/food0/minerals5. The original
+three-upkeep replay supplied explicit Delay; this composition does not claim a
+separately captured three-turn governor run. Both changed C++ translation units
+pass focused syntax checks. Linked validation of this amendment is pending the
+shared affected-test batch; its native filter is `^SMAC Colony` (six groups).

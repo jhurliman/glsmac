@@ -119,3 +119,26 @@ native Player methods, transactional world rollback, network event catch-up or
 full save/load. No protocol format, gameplay completion rule or initial-roster
 acceptance rule changes here. The original PR77 and later dependency branches
 remain held until the combined publication receives its own checks and review.
+
+## Combined PR126 publication
+
+The publication preserves PR126 head `9cd39969`, merges the pinned refreshed
+retirement chain `53f931a6`, and applies source `d3127600` as `73f30c15`. The
+prerequisite merge contributes only the reviewed Engine duplicate-registration
+guard, its lifecycle case, UUID test deduplication and related receipt. The only
+cherry-pick conflict was this older world's historical validation prose; its
+native-filter/prerequisite caveats and pinned receipts were retained.
+
+The Game.cpp/h correction has identical patch IDs to the source change. All new
+checkpoint helpers and the completion-test registration block are byte-identical.
+The full Game files retain only their pre-existing FirstTurn ordering and include
+position differences; neither is changed by this correction. Host predefined-unit
+profile/settings-envelope work is deliberately not imported into this branch.
+
+Actual publication validation at `73f30c15` passed all six CTest entries in
+30.64 seconds and the entire native/script suite with `--memorydebug` in
+21.42 seconds, with no tracked leaks. The log confirms that all five new
+production-path cases were linked and executed. This older ancestry does not gain
+the native-filter CLI solely for validation. The source's eight-test sanitizer and
+analysis receipts above remain distinct from this publication result. Audit and
+logs are retained under the source evidence directory's `publication/` subfolder.

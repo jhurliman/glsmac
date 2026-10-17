@@ -55,4 +55,7 @@ support/stack departure/reset, deferred home restore, owned marker lifetime and
 package edge pricing. Nine changed production translation units passed LLVM15
 analysis (0 failures). Existing eight Early groups passed; the first-Base
 integration owns the additional knowledge-present claimed-Start composition.
+The same 29 groups passed the focused ASan/UBSan/LSan run with memory tracking
+(5.175s), leak detection and halt-on-error enabled. This includes deferred
+home restore, abandoned prepared ownership and retained marker texture lifetime.
 No full platform or full-suite run is claimed.

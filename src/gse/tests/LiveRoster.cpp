@@ -186,7 +186,7 @@ public:
 							  "peer-gsid" };
 		return record;
 	}
-	std::string Settings() {
+	std::string Settings( const size_t faction_name_padding = 0 ) {
 		settings::GlobalSettings global;
 		global.Initialize();
 		global.SelectRuleset( "smax" );
@@ -194,7 +194,7 @@ public:
 			throw std::runtime_error( "SMAX read assets" );
 		} );
 		faction::FactionManager factions;
-		factions.Add( new faction::Faction( "GAIANS", "Canonical Gaian" ) );
+		factions.Add( new faction::Faction( "GAIANS", "Canonical Gaian" + std::string( faction_name_padding, 'x' ) ) );
 		types::Buffer data;
 		data.WriteString( global.Serialize().ToString() );
 		data.WriteString( factions.Serialize().ToString() );
@@ -701,6 +701,35 @@ void AddLiveRosterTests( task::gsetests::GSETests* task ) {
 			}
 			f.Drain();
 			g_engine->GetGC()->Iterate();
+		}
+	} );
+	add( "initial and refreshed settings enforce the complete packet budget", []() {
+		for ( const bool refresh : { false, true } ) {
+			for ( const size_t excess : { size_t( 0 ), size_t( 1 ) } ) {
+				Fixture f;
+				if ( refresh ) { f.Init(); }
+				else { f.Players( f.Roster() ); f.Phase( connection::Connection::GS_LOBBY ); }
+				const auto before = f.state->Serialize().ToString();
+				const auto roster_before = f.state->ExportRoster();
+				size_t published = 0;
+				f.client->m_on_global_settings_update = [ & ]() { ++published; };
+				types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
+				packet.data.str = f.Settings();
+				const auto padding = network::Network::MAX_PACKET_BYTES - packet.Serialize().lenw;
+				packet.data.str = f.Settings( padding + excess );
+				Check( packet.Serialize().lenw + sizeof( int ) == Transport::FrameLimit + excess,
+					"settings fixture missed the actual framed packet boundary" );
+				f.client->Receive( packet );
+				if ( excess ) {
+					Check( !f.client->ErrorReason().empty() && !published
+						&& f.state->Serialize().ToString() == before && f.state->ExportRoster() == roster_before,
+						"oversized initial/refresh settings changed accepted state or published callbacks" );
+				} else {
+					Check( f.client->ErrorReason().empty() && published == 1 && f.client->HasGlobalSettings()
+						&& f.state->Serialize().ToString() == packet.data.str,
+						"exact-cap initial/refresh settings failed canonical publication" );
+				}
+			}
 		}
 	} );
 	add( "invalid initial identity and late settings keep roster private", []() {

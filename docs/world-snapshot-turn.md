@@ -1,10 +1,10 @@
 # Downloaded turn and player completion
 
-World-download V3 follows the frozen profile and JSF32 state with the typed
+World-download V4 follows the frozen profile and JSF32 state with the typed
 string `turn-state-v1`, a signed integer turn ID, a signed occupied-player
 count, and ascending `(integer slot ID, Boolean completed)` records. The old
 trailing turn field is removed; map/resource/unit/base/animation frames retain
-their order and bytes. V2, V1 and unversioned downloads are rejected before map
+their order and bytes. V3, V2, V1 and unversioned downloads are rejected before map
 allocation. Mixed versions cannot join through this format. Disk map files are
 not changed.
 

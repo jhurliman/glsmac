@@ -1,11 +1,11 @@
 # Backend RNG continuation in world downloads
 
-World-download version 3 carries the ongoing backend generator's state. After
+World-download version 4 carries the ongoing backend generator's state. After
 the existing frozen rules profile, it writes a typed string `jsf32-v1` and four
 typed integer frames containing JSF32 words `a`, `b`, `c`, `d`, in that order.
 Each word must be between zero and UINT32_MAX before conversion. Algorithm
 mismatch, wrong frame types, truncated frames and out-of-range words are
-rejected. The existing Buffer frame checks still apply. Versions 2, 1 and
+rejected. The existing Buffer frame checks still apply. Versions 3, 2, 1 and
 unversioned downloads are rejected before map allocation; mixed versions cannot
 join through this world-download format. This does not version disk map files.
 

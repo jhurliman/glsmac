@@ -5,9 +5,9 @@ A separate hidden-window diagnostic also created and used an Apple OpenGL 4.1
 core context. The user subsequently confirmed the map/base/turn/new-game/close
 checklist worked and supplied before/after screenshots. Screenshots and logs
 corroborate a rendered game and successful restart into a different world.
-Clean process shutdown remains unmeasured: the process was still running at the
-follow-up despite that checklist response. This is one native interactive smoke
-run, not evidence of pixel fidelity or general race freedom.
+The final follow-up on October 17 confirmed exit status 0 and a clean tracked
+memory/OpenGL shutdown. This is one native interactive smoke run, not evidence
+of pixel fidelity or general race freedom.
 
 ## Revision and isolation
 
@@ -168,12 +168,20 @@ was rejected because the source and destination were the same tile; subsequent
 movement, turn and restart events continued. The earlier Apple GL texture
 diagnostic remains the only stderr message and is not explained by these checks.
 
-At the process follow-up, both launcher 27144 and GLSMAC 27145 were still alive
+At the initial process follow-up, both launcher 27144 and GLSMAC 27145 were still alive
 with reported elapsed time **06:58**, and `windowed-smac-exit-status.txt` did not
 exist. The logs contained no shutdown sequence. Thus the user-reported checklist
-success and the still-running process are recorded separately; no successful
-exit status or clean memory-tracking shutdown is claimed. No kill, relaunch or
+success and the still-running process were recorded separately; no successful
+exit status or clean memory-tracking shutdown was established then. No kill, relaunch or
 additional input was performed to resolve that discrepancy.
+
+At approximately **2026-10-17 05:40 UTC**, a read-only follow-up found that
+GLSMAC 27145 was no longer running and the launcher's exit-status file contained
+**0**. Final stdout records OpenGL/window/SDL teardown, the main thread stopping,
+`Shutting down`, and `No memory/opengl leaks detected.` The launch command used
+`--memorydebug`; this completes the normal-exit and final tracker checks for
+this one process. Its final stderr still contains only the earlier Apple texture
+diagnostic. No process was stopped or relaunched to obtain this result.
 
 Restart latency remains **untimed**. The log prefixes are relative values from
 the unsynchronized shared `last_time` in `src/common/Common.cpp`, not a pair of
@@ -196,4 +204,12 @@ worktree's ignored `out/validation-honey/` directory. The follow-up stdout/stder
 snapshots are preserved as `windowed-smac-manual-followup-{stdout,stderr}.log`;
 the table above refers to that stdout snapshot. The supplied screenshots remain
 in the task's attachments and are not copied into the repository. Original assets
-are not redistributed. Clean exit and final tracker totals remain open checks.
+are not redistributed.
+
+The final stdout, stderr and exit-status files were copied without modification
+into the integration checkout's ignored `out/validation-honey-exit-20261017/`.
+Their SHA-256 values are, respectively:
+
+- `3cb75dee8023ab0bfd83b0c5995ae6992e636596b87d43627e734d507d3aecd0`
+- `72d8a1e4cadf6abfa1001e42f838538410be57addaa3136175e4579de73cb1f9`
+- `9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa`

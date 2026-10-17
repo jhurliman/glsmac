@@ -1,6 +1,8 @@
 #include "Player.h"
 
 #include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
+#include <stdexcept>
 #include "game/backend/slot/Slot.h"
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
@@ -14,31 +16,32 @@
 namespace game {
 namespace backend {
 
-Player::Player( types::Buffer buf ) {
-	Player::Deserialize( buf );
+Player::~Player() { m_identity->active.store(false); }
+Player::Player(const std::string& name, const role_t role, faction::Faction* faction, const std::string& difficulty)
+ : m_name(name), m_role(role), m_faction_id(faction ? std::optional<std::string>(faction->m_id) : std::nullopt), m_difficulty_level(difficulty) {}
+Player::Player(roster::PlayerRecord record, State* state, roster_epoch_t epoch)
+ : Player(record.name, static_cast<role_t>(record.role), nullptr, record.difficulty_id) {
+ m_faction_id = std::move(record.faction_id); BindRoster(state, epoch);
 }
-
-Player::Player(
-	const std::string& name,
-	const role_t role,
-	faction::Faction* faction,
-	const std::string& difficulty_level
-)
-	: m_name( name )
-	, m_role( role )
-	, m_faction( faction )
-	, m_difficulty_level( difficulty_level ) {}
-
-Player::Player( const Player* const other ) {
-	*this = *other;
+void Player::BindRoster(State* state, const roster_epoch_t& epoch) {
+ if (!epoch || !epoch->active || epoch->state != state) { throw std::runtime_error("Inactive Player roster binding"); }
+ if (m_roster_epoch && m_roster_epoch != epoch) { throw std::runtime_error("Player cannot be rebound to a new roster"); }
+ m_roster_state = state; m_roster_epoch = epoch;
 }
+player_identity_t Player::GetIdentity() const { return m_identity; }
+roster::PlayerRecord Player::GetRecord() const { return {m_name, static_cast<roster::Role>(m_role), m_faction_id, m_difficulty_level}; }
+void Player::ApplyRecord(roster::PlayerRecord& record) noexcept {
+ m_name.swap(record.name); m_difficulty_level.swap(record.difficulty_id); m_faction_id.swap(record.faction_id);
+}
+void Player::RequireMutable() const { if (m_notification) { throw std::runtime_error("Player notification is read-only"); } }
 
 const std::string& Player::GetPlayerName() const {
 	return m_name;
 }
 
 const std::string Player::GetFullName() const {
-	return GetPlayerName() + " (" + m_faction->m_name + ")";
+	auto* faction = const_cast<Player*>(this)->GetFaction();
+	return GetPlayerName() + (faction ? " (" + faction->m_name + ")" : "");
 }
 
 void Player::Connect() {
@@ -55,21 +58,25 @@ const bool Player::IsConnected() const {
 	return m_is_connected;
 }
 
-void Player::SetFaction( faction::Faction* faction ) {
-	// TODO: validate?
-	m_faction = faction;
+void Player::SetFaction(faction::Faction* faction) {
+ RequireMutable();
+ if (!faction) { ClearFaction(); return; }
+ auto* manager = m_roster_state ? m_roster_state->RequireRoster(m_roster_epoch) : nullptr;
+ if (!manager || manager->Get(faction->m_id) != faction) { throw std::runtime_error("Player faction is not canonical in its roster"); }
+ m_faction_id = faction->m_id;
 }
-
-void Player::ClearFaction() {
-	m_faction = nullptr;
-}
-
+void Player::ClearFaction() { RequireMutable(); m_faction_id.reset(); }
 faction::Faction* Player::GetFaction() {
-	return m_faction;
+ if (!m_roster_epoch || !m_roster_epoch->active) { throw std::runtime_error("Player roster is no longer active"); }
+ auto* manager = m_roster_state->RequireRoster(m_roster_epoch);
+ if (!m_faction_id) { return nullptr; }
+ auto* faction = manager->Get(*m_faction_id);
+ if (!faction) { throw std::runtime_error("Player faction is missing from its roster: " + *m_faction_id); }
+ return faction;
 }
 
 void Player::SetDifficultyLevel( const std::string& difficulty_level ) {
-	// TODO: validate?
+	RequireMutable();
 	m_difficulty_level = difficulty_level;
 }
 
@@ -106,6 +113,8 @@ void Player::UncompleteTurn() {
 
 WRAPIMPL_BEGIN( Player )
 	auto* const game = g_engine->GetGame();
+	const auto identity = GetIdentity();
+	const bool notification = m_notification;
 	WRAPIMPL_PROPS
 			{
 				"id",
@@ -121,14 +130,16 @@ WRAPIMPL_BEGIN( Player )
 			},
 			{
 				"is_ready",
-				NATIVE_CALL( this ) {
+				NATIVE_CALL( this, identity ) {
+                    if (!identity->active) { GSE_ERROR(gse::EC.GAME_ERROR, "Player no longer exists"); }
 					N_EXPECT_ARGS( 0 );
-					return VALUE( gse::value::Bool, , m_slot->HasPlayerFlag( ::game::backend::slot::PF_READY ) );
+					return VALUE( gse::value::Bool, , m_notification ? m_notification_ready : (m_slot && m_slot->HasPlayerFlag( ::game::backend::slot::PF_READY )) );
 				} )
 			},
 			{
 				"set_ready",
-				NATIVE_CALL( this, game ) {
+				NATIVE_CALL( this, game, identity, notification ) {
+                    if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
 					game->CheckRW( GSE_CALL );
 
@@ -147,16 +158,17 @@ WRAPIMPL_BEGIN( Player )
 			},
 			{
 				"get_faction",
-				NATIVE_CALL( this ) {
+				NATIVE_CALL( this, identity ) {
+                    if (!identity->active) { GSE_ERROR(gse::EC.GAME_ERROR, "Player no longer exists"); }
 					N_EXPECT_ARGS( 0 );
-					return m_faction
-						? m_faction->Wrap( GSE_CALL )
-						: VALUE( gse::value::Undefined );
+					try { auto* faction = GetFaction(); return faction ? faction->Wrap(GSE_CALL) : VALUE(gse::value::Undefined); }
+                    catch (const std::runtime_error& error) { GSE_ERROR(gse::EC.GAME_ERROR, error.what()); }
 				} )
 			},
 			{
 				"set_faction_by_id",
-				NATIVE_CALL( this, game ) {
+				NATIVE_CALL( this, game, identity, notification ) {
+                    if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
 					game->CheckRW( GSE_CALL );
 
@@ -169,19 +181,20 @@ WRAPIMPL_BEGIN( Player )
 					if ( !faction ) {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Faction not found: " + faction_id );
 					}
-					m_faction = faction;
+					SetFaction(faction);
 
 					return VALUE( gse::value::Undefined );
 				} )
 			},
 			{
 				"unset_faction",
-				NATIVE_CALL( this, game ) {
+				NATIVE_CALL( this, game, identity, notification ) {
+                    if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
 					game->CheckRW( GSE_CALL );
 
 					N_EXPECT_ARGS( 0 );
-					m_faction = nullptr;
+					ClearFaction();
 
 					return VALUE( gse::value::Undefined );
 				} )
@@ -196,33 +209,14 @@ WRAPIMPL_END_PTR()
 UNWRAPIMPL_PTR( Player )
 
 const types::Buffer Player::Serialize() const {
-	types::Buffer buf;
-
-	buf.WriteString( m_name );
-	buf.WriteInt( m_role );
-	buf.WriteBool( m_faction != nullptr );
-	if ( m_faction ) {
-		buf.WriteString( m_faction->Serialize().ToString() );
-	}
-	buf.WriteString( m_difficulty_level );
-
-	return buf;
+ return types::Buffer(roster::EncodePlayer(GetRecord(), State::ROSTER_LIMITS));
 }
-
-void Player::Deserialize( types::Buffer buf ) {
-
-	m_name = buf.ReadString();
-	m_role = (role_t)buf.ReadInt();
-	m_faction = {};
-	if ( buf.ReadBool() ) {
-		m_faction = new faction::Faction();
-		m_faction->Deserialize( buf.ReadString() );
-	}
-	m_difficulty_level = buf.ReadString();
-
+void Player::Deserialize(types::Buffer) {
+ throw std::runtime_error("Player metadata must be published through State");
 }
 
 WRAPIMPL_SERIALIZE( Player )
+ if (obj->m_notification) { throw std::runtime_error("Ephemeral Player notifications cannot be serialized as live references"); }
 	buf->WriteInt( obj->m_slotnum );
 }
 

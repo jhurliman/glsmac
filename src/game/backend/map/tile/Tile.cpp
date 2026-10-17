@@ -13,6 +13,7 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/BaseManager.h"
 #include "game/backend/map/tile/TileManager.h"
 #include "game/backend/resource/ResourceManager.h"
 #include "game/backend/slot/Slot.h"
@@ -248,6 +249,15 @@ WRAPIMPL_BEGIN( Tile )
 				else {
 					return VALUE( gse::value::Null );
 				}
+			} )
+		},
+		{
+			"get_working_pop",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				auto* manager = tiles->GetMap()->GetGame()->GetBM();
+				auto* pop = manager ? manager->GetWorkingPop( coord ) : nullptr;
+				return pop ? pop->Wrap( GSE_CALL ) : VALUE( gse::value::Undefined );
 			} )
 		},
 		{

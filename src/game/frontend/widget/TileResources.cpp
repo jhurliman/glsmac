@@ -1,9 +1,17 @@
 #include "TileResources.h"
 
 #include <vector>
+#include <algorithm>
 
 #include "ui/UI.h"
 #include "ui/dom/Widget.h"
+#include "ui/geometry/Geometry.h"
+#include "types/texture/Texture.h"
+#include "game/frontend/text/InstancedTextManager.h"
+#include "engine/Engine.h"
+#include "loader/font/FontLoader.h"
+#include "game/frontend/text/InstancedFont.h"
+#include "game/frontend/resource/ResourceDisplay.h"
 #include "scene/actor/Mesh.h"
 #include "game/frontend/Game.h"
 #include "game/backend/map/tile/Tile.h"
@@ -55,8 +63,58 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 
 	size_t count = 0;
 	auto* const rm = m_game->GetRM();
+	struct displayed_resource_t {
+		std::string id;
+		resource::ResourceDisplay display;
+	};
+	std::vector< displayed_resource_t > displayed;
+	bool needs_numbers = false;
+	for ( const auto& id : backend->GetRM()->GetDefinedResourcesOrder() ) {
+		const auto it = resources.find( id );
+		if ( it == resources.end() || it->second == 0 ) { continue; }
+		auto display = resource::ResourceDisplay::For( it->second, rm->GetResourceSpriteCount( id ) );
+		needs_numbers |= !display.label.empty();
+		displayed.push_back( { id, display } );
+	}
+	if ( needs_numbers ) {
+		// Keep exceptional values readable without allocating one icon per unit.
+		// Ordinary values still use their exact stacked icon in this mixed view.
+		const auto& area = widget->GetGeometry()->m_area;
+		const auto aspect = std::max( 1.0f, area.width ) / std::max( 1.0f, area.height );
+		const auto row_height = 0.9f / displayed.size();
+		auto* font = m_game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->GetBuiltinFont( 16 ) );
+		size_t index = 0;
+		for ( size_t row = 0; row < displayed.size(); row++ ) {
+			const auto& entry = displayed.at( row );
+			const auto center_y = 0.05f + row_height * ( row + 0.5f );
+			if ( entry.display.sprite_value ) {
+				const auto* icon = rm->GetResourceSprite( entry.id, entry.display.sprite_value );
+				auto* sprite = icon->actor->GetSpriteActor();
+				auto h = row_height * 0.8f;
+				auto w = h * icon->wh.x / icon->wh.y / aspect;
+				if ( w > 0.22f ) { h *= 0.22f / w; w = 0.22f; }
+				AddMeshAndTexture( widget, index++, sprite->GenerateMesh().get(), sprite->GetTexture(), false,
+					{ w, h }, { 0.03f + ( 0.22f - w ) / 2, center_y - h / 2 } );
+			}
+			if ( !entry.display.label.empty() ) {
+				const auto text = entry.display.sprite_value ? entry.display.label : entry.id + " " + entry.display.label;
+				// GetTextTexture returns a fresh owned texture, not a cached font atlas.
+				auto* texture = font->GetTextTexture(
+					text, { 0, 0, 0, 0 }, { 1, 1, 1, 1 }, { 0, 0, 0, 1 }, 1
+				);
+				auto h = row_height * 0.8f;
+				auto w = h * texture->GetWidth() / texture->GetHeight() / aspect;
+				const auto left = entry.display.sprite_value ? 0.3f : 0.03f;
+				const auto max_width = 0.97f - left;
+				if ( w > max_width ) { h *= max_width / w; w = max_width; }
+				widget->SetTexture( texture, index, false );
+				AddMeshAndTexture( widget, index++, nullptr, texture, false, { w, h }, { left, center_y - h / 2 } );
+			}
+		}
+		return;
+	}
 	for ( const auto& it : resources ) {
-		if ( it.second > 0 ) {
+		if ( it.second != 0 ) {
 			count++;
 		}
 	}

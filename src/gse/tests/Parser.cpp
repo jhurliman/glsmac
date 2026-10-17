@@ -23,6 +23,8 @@
 #include "gse/program/While.h"
 #include "gse/program/Try.h"
 #include "gse/program/Catch.h"
+#include "gse/program/Switch.h"
+#include "gse/program/Case.h"
 #include "gse/parser/JS.h"
 
 namespace gse {
@@ -30,6 +32,38 @@ using namespace program;
 namespace tests {
 
 void AddParserTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test switch owns its parsed scope and borrows its case view", GT() {
+		class CountedScope : public Scope {
+		public:
+			CountedScope( size_t& destroyed, const std::vector< const Control* >& body ) : Scope( {}, body ), m_destroyed( destroyed ) {}
+			~CountedScope() override { ++m_destroyed; }
+		private:
+			size_t& m_destroyed;
+		};
+		class CountedCase : public Case {
+		public:
+			explicit CountedCase( size_t& destroyed ) : Case( {}, nullptr, new Scope( {}, {} ) ), m_destroyed( destroyed ) {}
+			~CountedCase() override { ++m_destroyed; }
+		private:
+			size_t& m_destroyed;
+		};
+		for ( const size_t count : { 0, 1, 6 } ) {
+			size_t scopes_destroyed = 0, cases_destroyed = 0;
+			std::vector< const Control* > controls;
+			for ( size_t i = 0 ; i < count ; ++i ) { controls.push_back( new CountedCase( cases_destroyed ) ); }
+			{
+				auto body = std::make_unique< CountedScope >( scopes_destroyed, controls );
+				Switch statement( {}, nullptr, std::move( body ) );
+				GT_ASSERT( statement.cases.size() == count, "switch case view changed size" );
+				for ( size_t i = 0 ; i < count ; ++i ) {
+					GT_ASSERT( statement.cases[ i ] == controls[ i ], "switch copied or reordered a case" );
+				}
+				GT_ASSERT( scopes_destroyed == 0 && cases_destroyed == 0, "switch did not retain its parsed body" );
+			}
+			GT_ASSERT( scopes_destroyed == 1 && cases_destroyed == count, "switch did not destroy its scope and cases exactly once" );
+		}
+		GT_OK();
+	} );
 
 	const auto validate_program = []( const Program* program, const Program* reference_program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );

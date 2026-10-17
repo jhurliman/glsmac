@@ -113,6 +113,14 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"ruleset", "smac|smax", "Select gameplay rules for quickstart or hosting (both are in development)", AH( this ) {
+			if ( value != "smac" && value != "smax" ) {
+				Error( "Invalid --ruleset value; expected smac or smax" );
+			}
+			m_ruleset = value;
+		}
+	);
+	m_manager->AddRule(
 		"version", "Show version of GLSMAC", AH() {
 			util::LogHelper::Println(
 				(std::string)
@@ -180,6 +188,11 @@ Config::Config( const std::string& path )
 			m_launch_flags |= LF_QUICKSTART_MAP_SIZE;
 		}
 	);
+	m_manager->AddRule( "quickstart-world-size", "0..4", "Select a frozen SMAC world-size preset", AH( this, s_quickstart_argument_missing ) {
+		if ( !HasLaunchFlag( LF_QUICKSTART ) ) { Error( s_quickstart_argument_missing ); }
+		if ( value.size() != 1 || value[ 0 ] < '0' || value[ 0 ] > '4' ) { Error( "--quickstart-world-size requires a preset from 0 through 4" ); }
+		m_quickstart_world_size = value[ 0 ] - '0';
+	} );
 	const auto f_add_map_parameter_option =
 		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::string& desc, launch_flag_t flag, float* out_param )
 			-> void {
@@ -402,6 +415,23 @@ void Config::Init( const int argc, char* const argv[] ) {
 	try {
 		m_manager->ParseArgs( argc, argv );
 		m_manager->ParseFile();
+		if ( ( HasLaunchFlag( LF_QUICKSTART ) || HasLaunchFlag( LF_HOST ) ) && m_ruleset.empty() ) {
+			Error( "--quickstart and --host require --ruleset smac or --ruleset smax" );
+		}
+		if ( HasLaunchFlag( LF_JOIN ) && !m_ruleset.empty() ) {
+			Error( "--join uses the host's ruleset; omit --ruleset" );
+		}
+		if ( m_quickstart_world_size >= 0 && ( m_ruleset != "smac" || HasLaunchFlag( LF_QUICKSTART_MAP_SIZE ) ) ) {
+			Error( "--quickstart-world-size requires SMAC and cannot be combined with --quickstart-mapsize" );
+		}
+		if ( HasLaunchFlag( LF_QUICKSTART ) && m_ruleset == "smac" && ( HasLaunchFlag( LF_QUICKSTART_MAP_FILE )
+#ifdef DEBUG
+			|| HasDebugFlag( DF_QUICKSTART_MAP_DUMP )
+#endif
+		) ) { Error( "SMAC map files do not contain an accepted world-size category" ); }
+		if ( HasLaunchFlag( LF_QUICKSTART ) && m_ruleset == "smac" && m_quickstart_world_size < 0 && !HasLaunchFlag( LF_QUICKSTART_MAP_SIZE ) ) {
+			Error( "SMAC quickstart requires --quickstart-world-size 0..4 or --quickstart-mapsize WxH" );
+		}
 	}
 	catch ( std::runtime_error& e ) {
 		Error( e.what() );
@@ -449,6 +479,10 @@ const smac_type_t Config::GetSMACType() const {
 	return m_smac_type;
 }
 
+const std::string& Config::GetRuleset() const {
+	return m_ruleset;
+}
+
 void Config::SetSMACPath( const std::string& path ) const {
 	m_manager->UpdateSetting( "smacpath", path );
 }
@@ -472,6 +506,7 @@ const std::string& Config::GetQuickstartMapFile() const {
 const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
+int Config::GetQuickstartWorldSize() const { return m_quickstart_world_size; }
 
 const float Config::GetQuickstartMapOceanCoverage() const {
 	return m_quickstart_map_ocean_coverage;

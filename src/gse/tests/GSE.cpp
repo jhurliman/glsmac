@@ -11,6 +11,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/Exception.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/GC.h"
 #include "gc/Space.h"
@@ -18,6 +19,8 @@
 #include "util/FinallyGuard.h"
 
 #include <atomic>
+#include <exception>
+#include <memory>
 #include <stdexcept>
 #include <thread>
 
@@ -25,6 +28,227 @@ namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+	for ( const int kind : { 1, 2, 0 } ) {
+		task->AddTest( std::string( "test event callbacks recover after " ) + ( kind == 1 ? "native exceptions" : kind == 2 ? "nonstandard exceptions" : "GSE exceptions" ), GT( kind ) {
+			class EventSource : public Wrappable {
+			public:
+				Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+			} source;
+			auto* gc_space = gse->GetGCSpace();
+			const si_t si;
+			ExecutionPointer ep;
+			std::string error;
+			gc_space->Accumulate( nullptr, [ & ]() {
+				error = [ & ]() -> std::string {
+					std::vector< int > order;
+					bool fail = true;
+					size_t arguments_built = 0;
+					const auto first = source.On( GSE_CALL, "event", NATIVE_CALL( &order, &fail, kind ) {
+						order.push_back( 1 );
+						if ( fail ) {
+							fail = false;
+							if ( kind == 1 ) { throw std::runtime_error( "native event failure" ); }
+							if ( kind == 2 ) { throw 73; }
+							GSE_ERROR( EC.GAME_ERROR, "GSE event failure" );
+						}
+						return VALUE( value::Int,, 11 );
+					} ) );
+					source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 2 ); return VALUE( value::Int,, 22 ); } ) );
+					const f_args_t args = [ & ]( GSE_CALLABLE, value::object_properties_t& properties ) {
+						++arguments_built;
+						properties.emplace( "argument", VALUE( value::Int,, 41 ) );
+					};
+					bool caught = false;
+					try { source.Trigger( GSE_CALL, "event", args, VT_INT ); }
+					catch ( const Exception& exception ) { caught = kind == 0 && exception.class_name == EC.GAME_ERROR && exception.reason == "GSE event failure"; }
+					catch ( const std::runtime_error& exception ) { caught = kind == 1 && std::string( exception.what() ) == "native event failure"; }
+					catch ( const int value ) { caught = kind == 2 && value == 73; }
+					GT_ASSERT( caught && order == std::vector< int >{ 1 } && arguments_built == 1, "callback exception or stop order changed" );
+					// This real second dispatch hangs with the old unlocked lock_guard.
+					auto* result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+					GT_ASSERT( VALUE_GET( value::Int, result ) == 22 && order == ( std::vector< int >{ 1, 1, 2 } ) && arguments_built == 2, "subsequent callback order/result changed" );
+					source.Off( GSE_CALL, "event", first );
+					source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 3 ); return VALUE( value::Int,, 33 ); } ) );
+					result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+					GT_ASSERT( VALUE_GET( value::Int, result ) == 33 && order == ( std::vector< int >{ 1, 1, 2, 2, 3 } ) && arguments_built == 3, "handler changes after failure did not take effect" );
+					source.ClearHandlers();
+					GT_ASSERT( !source.HasHandlers( "event" ), "handler cleanup failed after callback exception" );
+					GT_OK();
+				}();
+			} );
+			GT_ASSERT( error.empty(), "event recovery failed: " + error );
+			GT_OK();
+		} );
+	}
+	task->AddTest( "test event callbacks keep snapshot order and unlock during reentrant changes", GT() {
+		class EventSource : public Wrappable {
+		public:
+			Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+		} source;
+		auto* gc_space = gse->GetGCSpace();
+		const si_t si;
+		ExecutionPointer ep;
+		std::string error;
+		gc_space->Accumulate( nullptr, [ & ]() {
+			error = [ & ]() -> std::string {
+				std::vector< int > order;
+				Wrappable::callback_id_t second;
+				bool changed = false;
+				auto* third = NATIVE_CALL( &order ) { order.push_back( 3 ); return VALUE( value::Int,, 33 ); } );
+				source.On( GSE_CALL, "event", NATIVE_CALL( &source, &order, &changed, &second, third ) {
+					order.push_back( 1 );
+					if ( !changed ) {
+						changed = true;
+						source.Off( GSE_CALL, "event", second );
+						source.On( GSE_CALL, "event", third );
+					}
+					return VALUE( value::Int,, 11 );
+				} ) );
+				second = source.On( GSE_CALL, "event", NATIVE_CALL( &order ) { order.push_back( 2 ); return VALUE( value::Int,, 22 ); } ) );
+				auto* args = VALUEEXT( value::Object, GSE_CALL );
+				auto* result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+				GT_ASSERT( VALUE_GET( value::Int, result ) == 22 && order == ( std::vector< int >{ 1, 2 } ), "callback changes altered the active snapshot" );
+				bool rejected = false;
+				try { source.Trigger( GSE_CALL, "event", args, VT_STRING ); }
+				catch ( const Exception& exception ) { rejected = exception.class_name == EC.INVALID_HANDLER; }
+				GT_ASSERT( rejected && order == ( std::vector< int >{ 1, 2, 1 } ), "return-type failure changed callback order" );
+				result = source.Trigger( GSE_CALL, "event", args, VT_INT );
+				GT_ASSERT( VALUE_GET( value::Int, result ) == 33 && order == ( std::vector< int >{ 1, 2, 1, 1, 3 } ), "callback registry did not survive return-type failure" );
+				source.ClearHandlers();
+				GT_OK();
+			}();
+		} );
+		GT_ASSERT( error.empty(), "event snapshot validation failed: " + error );
+		GT_OK();
+	} );
+	task->AddTest( "test GSE exception what owns stable formatted storage across copies", GT() {
+		std::unique_ptr< Exception > copied;
+		std::exception_ptr thrown;
+		std::string expected;
+		{
+			ExecutionPointer ep;
+			const si_t outer = { "", { 7, 1 }, { 7, 2 } }, inner = { "", { 11, 2 }, { 11, 3 } };
+			ep.WithSI( outer, [ & ]() {
+				Exception original( "OwnershipError", "A sufficiently long diagnostic message to exercise allocated storage", nullptr, inner, ep );
+				expected = original.ToString();
+				copied = std::make_unique< Exception >( original );
+				try { throw original; } catch ( ... ) { thrown = std::current_exception(); }
+			} );
+		}
+		GT_ASSERT( expected.find( "OwnershipError" ) != std::string::npos && expected.find( "\tat :11:" ) != std::string::npos && expected.find( "\tat :7:" ) != std::string::npos, "fixture lost its diagnostic or captured stack" );
+		const auto check = [ & ]( const std::exception& error ) -> std::string {
+			const auto* first = error.what();
+			GT_ASSERT( first && std::string( first ) == expected, "what changed the formatted exception text" );
+			for ( size_t i = 0 ; i < 32 ; ++i ) {
+				GT_ASSERT( error.what() == first, "what allocated another unowned message" );
+				GT_ASSERT( std::string( first ) == expected, "what invalidated its earlier result" );
+			}
+			GT_OK();
+		};
+		const auto copied_error = check( *copied );
+		GT_ASSERT( copied_error.empty(), "copied exception: " + copied_error );
+		copied.reset();
+		bool caught = false;
+		try { std::rethrow_exception( thrown ); }
+		catch ( const Exception& error ) {
+			caught = true;
+			const auto result = check( error ); GT_ASSERT( result.empty(), "retained exception: " + result );
+			GT_ASSERT( error.ToString() == expected, "exception copy lost its structured diagnostic" );
+		}
+		GT_ASSERT( caught, "exception_ptr lost its concrete exception" );
+		GT_OK();
+	} );
+
+	for ( const bool fail_in_member : { false, true } ) {
+		for ( const bool catch_inside : { false, true } ) {
+			task->AddTest(
+				std::string( "test if GC cancels failed " ) + ( fail_in_member ? "member" : "derived" ) + " construction " + ( catch_inside ? "inside accumulation" : "escaping accumulation" ),
+				GT( fail_in_member, catch_inside ) {
+					std::atomic< size_t > discarded = 0, kept = 0;
+					size_t sentinel_unwinds = 0, member_unwinds = 0, derived_destructions = 0;
+					class TrackedObject : public gc::Object {
+					public:
+						TrackedObject( gc::Space* space, std::atomic< size_t >& destructions )
+							: gc::Object( space ), destructions( destructions ) {}
+						~TrackedObject() override { destructions++; }
+					private:
+						std::atomic< size_t >& destructions;
+					};
+					struct Sentinel {
+						size_t& unwinds;
+						~Sentinel() { unwinds++; }
+					};
+					struct Member {
+						Member( gc::Space* space, std::atomic< size_t >& discarded, size_t& unwinds, const bool fail )
+							: unwinds( unwinds ) {
+							// A completed child remains GC-owned even when its parent's construction fails.
+							new TrackedObject( space, discarded );
+							if ( fail ) { throw std::runtime_error( "member construction failure" ); }
+						}
+						~Member() { unwinds++; }
+						size_t& unwinds;
+					};
+					class FailingObject : public gc::Object {
+					public:
+						FailingObject( gc::Space* space, std::atomic< size_t >& discarded, size_t& sentinel_unwinds, size_t& member_unwinds, size_t& destructions, const bool fail_in_member )
+							: gc::Object( space ), sentinel{ sentinel_unwinds }, member( space, discarded, member_unwinds, fail_in_member ), destructions( destructions ) {
+							throw std::runtime_error( "derived construction failure" );
+						}
+						~FailingObject() override { destructions++; }
+					private:
+						Sentinel sentinel;
+						Member member;
+						size_t& destructions;
+					};
+					class Root : public gc::Object {
+					public:
+						Root() : gc::Object( nullptr ) {}
+						gc::Object* child = nullptr;
+						void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override {
+							gc::Object::GetReachableObjects( reachable_objects );
+							if ( child ) { GC_REACHABLE( child ); }
+						}
+					} root;
+					gc::Space space( &root );
+					space.SetThreadId( std::this_thread::get_id() );
+					util::FinallyGuard release_root( [ & ]() {
+						space.Accumulate( &root, [ & ]() { root.child = nullptr; } );
+					} );
+					bool caught = false, still_accumulating = !catch_inside;
+					const auto record_error = [ & ]( const std::runtime_error& error ) {
+						caught = std::string( error.what() ) == ( fail_in_member ? "member construction failure" : "derived construction failure" );
+					};
+					const auto fail = [ & ]() {
+						new FailingObject( &space, discarded, sentinel_unwinds, member_unwinds, derived_destructions, fail_in_member );
+					};
+					try {
+						space.Accumulate( &root, [ & ]() {
+							root.child = new TrackedObject( &space, kept );
+							new TrackedObject( &space, discarded );
+							if ( catch_inside ) {
+								try { space.Accumulate( &root, fail ); }
+								catch ( const std::runtime_error& error ) { record_error( error ); }
+								still_accumulating = space.IsAccumulating();
+							}
+							else { fail(); }
+						} );
+					}
+					catch ( const std::runtime_error& error ) { record_error( error ); }
+					GT_ASSERT( caught && still_accumulating && !space.IsAccumulating(), "construction failure changed exception or accumulation scope" );
+					GT_ASSERT( sentinel_unwinds == 1 && member_unwinds == ( fail_in_member ? 0u : 1u ) && derived_destructions == 0, "construction failure did not unwind exactly once" );
+					g_engine->GetGC()->Iterate();
+					GT_ASSERT( discarded == 2 && kept == 0, "construction failure lost completed children or a rooted object" );
+					space.Accumulate( &root, [ & ]() {
+						new TrackedObject( &space, discarded );
+						root.child = nullptr;
+					} );
+					g_engine->GetGC()->Iterate();
+					GT_ASSERT( discarded == 3 && kept == 1 && derived_destructions == 0, "subsequent collection duplicated or lost destruction" );
+					GT_OK();
+				}
+			);
+		}
+	}
 
 	for ( const bool nested : { false, true } ) {
 		task->AddTest(

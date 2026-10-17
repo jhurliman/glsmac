@@ -1,4 +1,6 @@
+#include "SmacTerritoryRules.h"
 #include "Tests.h"
+#include "SmacOrdinaryLandExploration.h"
 #include "Async.h"
 
 #include "Backend.h"
@@ -84,12 +86,14 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
+		tests::AddSmacTerritoryRulesTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );

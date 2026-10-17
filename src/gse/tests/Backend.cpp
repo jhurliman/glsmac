@@ -6954,7 +6954,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 			for ( auto* fixture : { &source, &destination } ) {
 				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
 				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 				if ( scenario == 3 ) { fixture->EnableSimulationParticipants( { 0, 2 }, 2 ); }
 			}
 			if ( scenario == 3 ) { source.AdmitSimulationForSnapshotFixture(); }
@@ -7119,7 +7119,7 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 				for ( auto* fixture : { &source, &destination } ) {
 					fixture->EnableWorldSnapshot();
 					auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 					if ( std::string( ruleset ) == "smac" ) { fixture->EnableSimulationParticipants(); }
 				}
 				if ( std::string( ruleset ) == "smac" ) { source.AdmitSimulationForSnapshotFixture(); }

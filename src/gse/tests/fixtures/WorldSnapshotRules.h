@@ -82,6 +82,32 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		result.WriteBool(id == "smac");
 		if (id == "smac") { result.WriteString(smac_rules_fixture::Territory().Serialize().ToString()); }
 	}
+	if (version >= 30) {
+		result.WriteBool(id == "smac");
+		if (id == "smac") { result.WriteString(terraforming_rules_fixture::Wire(terraforming_rules_fixture::Profile()).ToString()); }
+	}
+	return result;
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidTerraformingHeaders( const std::string& id ) {
+	auto wire = Header( id, id == "smac" ); wire.ReadInt(); wire.ReadInt(); wire.ReadString();
+	for ( size_t i = 0; i < 9; ++i ) { if ( wire.ReadBool() ) { wire.ReadString(); if ( i == 3 ) { wire.ReadString(); } } }
+	const auto prefix = wire.ToString().substr( 0, wire.lenr );
+	std::vector< std::pair< std::string, std::string > > result{ { "missing presence", prefix } };
+	const auto add = [ & ]( const std::string& label, bool present, const std::string& bytes ) {
+		types::Buffer tail; tail.WriteBool( present ); if ( present ) { tail.WriteString( bytes ); }
+		result.emplace_back( label, prefix + tail.ToString() );
+	};
+	add( "wrong presence", id != "smac", terraforming_rules_fixture::Wire( terraforming_rules_fixture::Profile() ).ToString() );
+	if ( id == "smac" ) {
+		auto changed = terraforming_rules_fixture::Profile(); ++changed.actions.back().work_time;
+		add( "late work time", true, terraforming_rules_fixture::Wire( changed ).ToString() );
+		changed = terraforming_rules_fixture::Profile(); changed.actions.back().sea_prerequisite = "None";
+		add( "late prerequisite", true, terraforming_rules_fixture::Wire( changed ).ToString() );
+		const auto bytes = terraforming_rules_fixture::Wire( terraforming_rules_fixture::Profile() ).ToString();
+		add( "truncated annotation", true, bytes.substr( 0, bytes.size() - 1 ) );
+		add( "oversized outer frame", true, std::string( game::backend::settings::SmacTerraformingRules::MAX_WIRE_BYTES + 1, 'x' ) );
+	}
 	return result;
 }
 

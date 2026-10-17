@@ -28,6 +28,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacResourceRules.cpp
 	${PWD}/SmacSpecialistRules.cpp
+	${PWD}/SmacTerraformingRules.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp
 	${PWD}/CanonicalResourceIntake.cpp
 	${PWD}/SmacFacilityIdentity.cpp

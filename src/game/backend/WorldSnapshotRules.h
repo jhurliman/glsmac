@@ -11,7 +11,7 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V29 requires research history/Secrets, discovery rules and revelation memory.
+// V30 binds the frozen TERRAIN action catalog. V29 reserves research state.
 // V28 requires saved faction economy state (Simulation9). V27 preserves Unit
 // record order (Unit manager V4) for support and casualties.
 // V26 adds separately supplied directed Pact state to worker knowledge.
@@ -21,8 +21,8 @@ inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
 // home Base links (Unit manager V3) and saved Base riots (Base manager V8).
 // Satellite assets and movement caller history remain unchanged.
 // The World18 optional map-resource policy remains before the map body.
-// V1..V28 downloads are unsupported.
-inline constexpr int64_t rules_version = 29;
+// V1..V29 downloads are unsupported.
+inline constexpr int64_t rules_version = 30;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

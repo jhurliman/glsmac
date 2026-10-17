@@ -5,6 +5,7 @@
 #include "game/backend/resource/SmacBaseSquareYield.h"
 #include "game/backend/settings/SmacResourceRules.h"
 #include "game/backend/settings/SmacSpecialistRules.h"
+#include "game/backend/settings/SmacTerraformingRules.h"
 #include "game/backend/settings/SmacProductionRules.h"
 #include "game/backend/settings/SmacMovementRules.h"
 #include "game/backend/settings/SmacTerritoryRules.h"
@@ -15,6 +16,9 @@ namespace loader::txt {
 
 class SmacRulesTXTLoader {
 public:
+	// Strict bounded port ingestion of twenty positional TERRAIN rows. Eight
+	// fixed columns plus optional opaque annotation; no live command semantics.
+	static game::backend::settings::SmacTerraformingRules ParseTerraformingRules( const std::string& source );
 	// Strict port ingestion: seven positional eight-column CITIZENS specialist
 	// rows, three ordinary-citizen name rows, and RULES row 11 from 70 rows.
 	// Preserve signed metadata and opaque trailing token; no selection/effects.

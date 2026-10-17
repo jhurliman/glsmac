@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/SmacResourceRules.cpp
 	${PWD}/SmacSpecialistRules.cpp
+	${PWD}/SmacTerraformingRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp

@@ -33,6 +33,30 @@ static int32_t ParseField( const std::string& field, const std::string& row, con
 	return value;
 }
 
+game::backend::settings::SmacTerraformingRules SmacRulesTXTLoader::ParseTerraformingRules( const std::string& source ) {
+	using game::backend::settings::SmacTerraformingRules;
+	const auto rows = TXTLoader::ReadUniqueSection( source, "TERRAIN" );
+	SmacTerraformingRules result;
+	if ( rows.size() != result.actions.size() ) { throw std::invalid_argument( "SMAC terraforming requires twenty TERRAIN rows" ); }
+	for ( size_t i = 0; i < rows.size(); ++i ) {
+		if ( rows[ i ].size() > 4096 || rows[ i ].find( '\0' ) != std::string::npos ) { throw std::invalid_argument( "TERRAIN row exceeds admitted text domain" ); }
+		const auto line = rows[ i ].substr( 0, rows[ i ].find( ';' ) );
+		if ( line.find( '"' ) != std::string::npos ) { throw std::invalid_argument( "Quoted TERRAIN fields are unsupported" ); }
+		const auto fields = util::String::Split( line, ',' );
+		const auto commas = std::count( line.begin(), line.end(), ',' );
+		if ( ( fields.size() != 8 && fields.size() != 9 ) || commas != static_cast< int >( fields.size() - 1 ) ) {
+			throw std::invalid_argument( "TERRAIN requires eight columns and optional annotation" );
+		}
+		auto& row = result.actions[ i ];
+		row.source_id = static_cast< int32_t >( i ); row.land_name = fields[ 0 ]; row.land_prerequisite = fields[ 1 ];
+		row.sea_name = fields[ 2 ]; row.sea_prerequisite = fields[ 3 ];
+		row.work_time = ParseField( fields[ 4 ], "row " + std::to_string( i ), 5, "TERRAIN" );
+		row.order_text = fields[ 5 ]; row.order_letter = fields[ 6 ]; row.keystroke = fields[ 7 ];
+		row.trailing_annotation = fields.size() == 9 ? fields[ 8 ] : "";
+	}
+	result.Validate(); return result;
+}
+
 game::backend::settings::SmacSpecialistRules SmacRulesTXTLoader::ParseSpecialistRules( const std::string& source ) {
 	using game::backend::settings::SmacSpecialistRules;
 	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );

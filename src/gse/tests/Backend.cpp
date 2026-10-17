@@ -7522,6 +7522,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			for ( const auto& invalid : world_rules_fixture::InvalidMovementHeaders( ruleset ) ) { rejected.emplace_back( "movement: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidResourceHeaders( ruleset ) ) { rejected.emplace_back( "resource: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidSpecialistHeaders( ruleset ) ) { rejected.emplace_back( "specialist: " + invalid.first, invalid.second ); }
+			for ( const auto& invalid : world_rules_fixture::InvalidTerraformingHeaders( ruleset ) ) { rejected.emplace_back( "terraforming: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );

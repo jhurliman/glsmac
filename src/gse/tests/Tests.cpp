@@ -25,6 +25,7 @@
 #include "SmacMovementRules.h"
 #include "SmacResourceRules.h"
 #include "SmacSpecialistRules.h"
+#include "SmacTerraformingRules.h"
 #include "GlsmacResourceMapPolicy.h"
 #include "CanonicalResourceIntake.h"
 #include "SmacFacilityIdentity.h"
@@ -311,6 +312,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacResourceRulesTests( task );
 		tests::AddSmacSpecialistRulesTests( task );
+		tests::AddSmacTerraformingRulesTests( task );
 	AddGlsmacResourceMapPolicyTests( task );
 	AddCanonicalResourceIntakeTests( task );
 		tests::AddSmacFacilityIdentityTests( task );

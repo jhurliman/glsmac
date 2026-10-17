@@ -37,6 +37,7 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( ( id == "smac" ) != settings.GetSmacMovementRules().has_value() ) { throw std::runtime_error( "World snapshot movement profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacSpecialistRules().has_value() ) { throw std::runtime_error( "World snapshot specialist profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacTerritoryRules().has_value() ) { throw std::runtime_error( "World snapshot territory profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacTerraformingRules().has_value() ) { throw std::runtime_error( "World snapshot terraforming profile does not match ruleset" ); }
 	settings.ValidateWorldSize();
 }
 
@@ -64,6 +65,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto specialist_bytes = specialists ? specialists->Serialize().ToString() : std::string{};
 	const auto& territory = settings.GetSmacTerritoryRules();
 	const auto territory_bytes = territory ? territory->Serialize().ToString() : std::string{};
+	const auto& terraforming = settings.GetSmacTerraformingRules();
+	const auto terraforming_bytes = terraforming ? terraforming->Serialize().ToString() : std::string{};
 	RequireFrameSize( settings.GetRulesetId(), max_ruleset_bytes );
 	for ( const auto* bytes : { &production_bytes, &technology_bytes, &size_bytes, &faction_bytes } ) {
 		RequireFrameSize( *bytes, max_profile_bytes );
@@ -74,6 +77,7 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	RequireFrameSize( specialist_bytes, settings::SmacSpecialistRules::MAX_WIRE_BYTES );
 	RequireFrameSize( resource_bytes, settings::SmacResourceRules::MAX_WIRE_BYTES );
 	RequireFrameSize( territory_bytes, settings::SmacTerritoryRules::MAX_WIRE_BYTES );
+	RequireFrameSize( terraforming_bytes, settings::SmacTerraformingRules::MAX_WIRE_BYTES );
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -95,6 +99,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	if ( specialists ) { buffer.WriteString( specialist_bytes ); }
 	buffer.WriteBool( territory.has_value() );
 	if ( territory ) { buffer.WriteString( territory_bytes ); }
+	buffer.WriteBool( terraforming.has_value() );
+	if ( terraforming ) { buffer.WriteString( terraforming_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -172,6 +178,13 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		const auto incoming = settings::SmacTerritoryRules::Deserialize( types::Buffer(buffer.ReadString(settings::SmacTerritoryRules::MAX_WIRE_BYTES)) );
 		if (!(incoming == *territory)) { throw std::runtime_error("World snapshot territory profile differs"); }
 	}
+	const auto& terraforming = settings.GetSmacTerraformingRules();
+	if ( buffer.ReadBool() != terraforming.has_value() ) { throw std::runtime_error( "World snapshot terraforming presence differs" ); }
+	if ( terraforming ) {
+		const auto incoming = settings::SmacTerraformingRules::Deserialize( types::Buffer( buffer.ReadString( settings::SmacTerraformingRules::MAX_WIRE_BYTES ) ) );
+		if ( !( incoming == *terraforming ) ) { throw std::runtime_error( "World snapshot terraforming profile differs" ); }
+	}
+
 }
 
 void ValidateMapDimensions( const std::string& payload, const settings::GlobalSettings& settings ) {

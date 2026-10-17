@@ -1,4 +1,6 @@
 #pragma once
+
+#include "SmacTerraformingRules.h"
 #include "SmacPredefinedUnitSource.h"
 
 #include "game/backend/settings/Settings.h"
@@ -178,7 +180,7 @@ inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits( const g
 
 inline std::string Source( const std::string& filename ) {
 	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
-	return ProductionSource() + SpecialistSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	return terraforming_rules_fixture::Source() + ProductionSource() + SpecialistSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -220,7 +222,8 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions()
 		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits()
 		&& settings.GetSmacMovementRules() && *settings.GetSmacMovementRules() == Movement()
-		&& settings.GetSmacSpecialistRules() && *settings.GetSmacSpecialistRules() == Specialists();
+		&& settings.GetSmacSpecialistRules() && *settings.GetSmacSpecialistRules() == Specialists()
+		&& settings.GetSmacTerraformingRules() && *settings.GetSmacTerraformingRules() == terraforming_rules_fixture::Profile();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
@@ -236,7 +239,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& specialists = std::nullopt,
 	const std::optional< bool > specialists_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 15 );
+	result.WriteInt( 16 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -265,6 +268,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const auto has_specialists = specialists_present.value_or( present ); result.WriteBool( has_specialists );
 	if ( has_specialists ) { result.WriteString( specialists ? *specialists : Specialists().Serialize().ToString() ); }
 	result.WriteBool(present); if(present) { result.WriteString(Territory().Serialize().ToString()); }
+	result.WriteBool(present); if(present) { result.WriteString(terraforming_rules_fixture::Wire(terraforming_rules_fixture::Profile()).ToString()); }
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;
 	result.WriteString( map.Serialize().ToString() );

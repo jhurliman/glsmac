@@ -11,6 +11,7 @@
 #include "game/backend/Account.h"
 #include "SmacResourceRules.h"
 #include "SmacSpecialistRules.h"
+#include "SmacTerraformingRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
@@ -111,6 +112,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< SmacMovementRules >& GetSmacMovementRules() const;
 	const std::optional< SmacSpecialistRules >& GetSmacSpecialistRules() const;
 	const std::optional< SmacTerritoryRules >& GetSmacTerritoryRules() const;
+	const std::optional< SmacTerraformingRules >& GetSmacTerraformingRules() const;
 	void SelectSmacWorldSize( int64_t category );
 	void SelectSmacCustomSize( int64_t width, int64_t height );
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
@@ -149,6 +151,7 @@ private:
 	std::optional< SmacMovementRules > m_smac_movement_rules;
 	std::optional< SmacSpecialistRules > m_smac_specialist_rules;
 	std::optional< SmacTerritoryRules > m_smac_territory_rules;
+	std::optional< SmacTerraformingRules > m_smac_terraforming_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "slot/Slot.h"
 #include "slot/Slots.h"
+#include "unit/UnitManager.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 
@@ -163,13 +164,22 @@ void Game::RefreshSimulationForTurn( const size_t turn ) {
 	const auto& settings = m_state->m_settings.global;
 	try {
 		m_simulation->value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
-		auto staged = m_simulation->value.social;
+		auto staged = *m_simulation;
 		if ( m_current_turn.GetId() == 0 ) {
 			if ( turn != 1 ) { throw std::runtime_error( "SMAC early social state requires the first turn transition" ); }
-			staged.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+			staged.value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 		}
-		staged.ValidateTurn( turn );
-		m_simulation->value.social = std::move( staged );
+		staged.value.social.ValidateTurn( turn );
+		if ( m_um->HasPendingConventionalUnits() ) {
+			RequireConventionalStartupClaim();
+			m_um->PreflightConventionalStartup( [ & ]( const auto& unit, const auto* owner ) {
+				return ResolveConventionalUnit( unit, owner, staged );
+			} );
+		}
+		// All validation/allocation is complete. These transfers have no callbacks;
+		// AdvanceTurn publishes the scalar turn immediately afterward, before hooks.
+		m_simulation->value.social = std::move( staged.value.social );
+		m_um->SealConventionalStartup();
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
 }
@@ -203,6 +213,41 @@ unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::Conventional
 	throw std::runtime_error( "Conventional design not found in its owner's catalog" );
 }
 
+void Game::RequireConventionalStartupClaim() const {
+	std::lock_guard< std::mutex > lock( m_admission_mutex );
+	if ( !m_state || !m_state->IsMaster() || m_game_state != GS_RUNNING || !m_owner_transition
+		|| m_owner_transition->phase != OwnerTransition::Phase::Running
+		|| m_owner_transition->thread != std::this_thread::get_id()
+		|| m_owner_transition->stage != StartupStage::Start
+		|| !m_active_admission || m_owner_transition->admission != m_active_admission
+		|| m_active_admission->cancelled || m_active_admission->kind != WorldAdmission::Kind::INITIALIZATION
+		|| m_active_admission->previous || m_active_admission->map_path
+		|| m_active_admission->state != m_state || !m_state->IsGameSessionActive( m_active_admission->admitted_binding )
+		|| m_current_turn.GetId() != 0 || !m_simulation || m_pending_simulation ) {
+		throw std::runtime_error( "Early conventional admission requires the claimed new-world Start at turn zero" );
+	}
+}
+
+unit::ConventionalUnitState Game::PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const {
+	RequireConventionalStartupClaim();
+	ValidateCurrentSimulation();
+	// The raw initializer has no retained-social dependency. It does not query
+	// effective morale or full movement, and it accepts no caller float stats.
+	for ( const auto& participant : m_simulation->value.roster ) {
+		if ( &m_state->m_slots->GetSlot( participant.slot ) != owner ) { continue; }
+		const auto* social = m_simulation->value.social.Find( participant.simulation_id );
+		const auto* designs = m_simulation->value.designs.Find( participant.simulation_id );
+		if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Early || social->retained || !designs ) {
+			throw std::runtime_error( "Starting conventional unit requires unrefreshed admitted startup state" );
+		}
+		unit::ConventionalUnitState result{ designs->starting_scout, participant.simulation_id, 1, 0, 0, false,
+			unit::ConventionalUnitState::Home::None, mode };
+		ResolveConventionalIdentity( result, owner, *m_simulation );
+		return result;
+	}
+	throw std::runtime_error( "Starting conventional owner is not an admitted participant" );
+}
+
 unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner ) const {
 	ValidateCurrentSimulation();
 	if ( !m_simulation ) { throw std::runtime_error( "Conventional units require an admitted SMAC simulation" ); }
@@ -210,6 +255,17 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 }
 
 unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation ) const {
+	auto result = ResolveConventionalIdentity( state, owner, simulation );
+	const auto* social = simulation.value.social.Find( state.owner_simulation_id );
+	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
+		throw std::runtime_error( "Conventional units require refreshed retained social state" );
+	}
+	result.retained_morale = social->retained->at( 4 );
+	unit::QueryConventionalUnit( state, result, state.render_morale_mode );
+	return result;
+}
+
+unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation ) const {
 	state.Validate();
 	ValidateSimulation( simulation );
 	const auto& global = m_state->m_settings.global;
@@ -230,10 +286,6 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 		}
 	}
 	if ( !participant || !profiles->Find( participant->faction_id ) ) { throw std::runtime_error( "Conventional owner does not match its simulation participant" ); }
-	const auto* social = simulation.value.social.Find( state.owner_simulation_id );
-	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
-		throw std::runtime_error( "Conventional units require refreshed retained social state" );
-	}
 	const auto& catalog = units->catalog;
 	simulation.value.designs.Validate( catalog );
 	const auto design = ResolveConventionalDesign( state, simulation );
@@ -254,7 +306,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 	using Ground = settings::SmacMovementRules::GroundChassis;
 	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
 	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),
-		social->retained->at( 4 ), design.reactor };
+		std::nullopt, design.reactor };
 	if ( ground == Ground::Speeder ) {
 		const auto* selected = simulation.value.designs.Find( state.owner_simulation_id );
 		// This renderer has fixed Spartan source material. An arbitrary Speeder,
@@ -264,7 +316,6 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 		}
 		result.presentation = unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
 	}
-	unit::QueryConventionalUnit( state, result, state.render_morale_mode );
 	return result;
 }
 

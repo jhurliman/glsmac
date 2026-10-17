@@ -28,7 +28,9 @@ struct ConventionalUnitState {
 // simulation. No pointers into profiles, Players, designs or social state.
 struct ConventionalUnitContext {
 	settings::SmacMovementRules::GroundChassis chassis;
-	int32_t quantum, basic_allowance, retained_morale;
+	int32_t quantum, basic_allowance;
+	// Absent during checked raw startup admission; never substitutes a rating.
+	std::optional< int32_t > retained_morale;
 	uint8_t reactor;
 	// Checked against the bound participant and owned selection; never inferred
 	// from the presentation Def or a transport slot number.

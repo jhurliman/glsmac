@@ -2847,6 +2847,191 @@ public:
 			if ( refreshed ) { m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() ); }
 		} );
 	}
+	std::string CheckEarlyConventionalStartup( const int scenario ) {
+		using namespace game::backend;
+		using namespace game::backend::unit;
+		// Actual claimed Start and real event dispatch, with synthetic frozen
+		// profiles/map/definitions. No default-world or original art activation.
+		EnableWorldSnapshot();
+		auto& settings = m_state->m_settings.global;
+		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( []( const std::string& filename ) {
+			auto source = smac_startup_fixture::Source( filename );
+			if ( filename == "alpha.txt" ) { const auto start = source.find( "#RULES\n" ) + 7; source.replace( start, source.find( ',', start ) - start, "3" ); }
+			return source;
+		} ); smac_rules_fixture::AcceptWorldSize( settings );
+		EnableSimulationParticipants( { 0, 2, 6 }, 0, true );
+		const auto old_id = Unit::GetNextId(), old_base_id = base::Base::GetNextId();
+		util::FinallyGuard ids( [ = ] { Unit::SetNextId( old_id ); base::Base::SetNextId( old_base_id ); } );
+		auto* previous_game = g_engine->m_game;
+		{ std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = &m_game; }
+		util::FinallyGuard engine( [ & ] { std::lock_guard lock( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = previous_game; } );
+		std::vector< value::Object* > wrappers;
+		std::vector< size_t > identities;
+		std::vector< std::string > order;
+		size_t errors = 0, spawn_hooks = 0, base_hooks = 0, turns = 0;
+		bool partial_seal = false, raw_valid = true; std::string startup_error;
+		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
+		const SmacGameplayRandomState expected_random( 11, 29 ); size_t entropy = 0;
+		m_game.m_gameplay_entropy_word_source = [ & ]() { return ++entropy == 1 ? 11u : 29u; };
+		const auto call = [ & ]( GSE_CALLABLE, value::Object* object, const std::string& name, const value::function_arguments_t& args = {} ) {
+			return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
+		};
+		const auto require = []( bool condition, const char* message ) { if ( !condition ) { throw std::runtime_error( message ); } };
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_game.m_tm = new map::tile::TileManager( &m_game );
+			DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
+			MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
+			auto* um = m_game.GetUM(); um->DefineMoraleSet( new MoraleSet( "EARLY_MORALE", names ) );
+			for ( bool rover : { false, true } ) {
+				um->DefineUnit( new StaticDef( rover ? "EARLY_ROVER" : "EARLY_SCOUT", um->GetMoraleSet( "EARLY_MORALE" ), "Early fixture", MT_LAND, 999.0f,
+					new CvrScoutRender( 2, 0, 100, 100, { 1.0f, 1.0f }, { 128.0f, 128.0f }, rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout ) ) );
+			}
+			const auto spawn = [ &, um ]( GSE_CALLABLE, size_t slot ) {
+				auto* input = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{
+					{ "def", VALUE( value::String,, slot == 2 ? "EARLY_ROVER" : "EARLY_SCOUT" ) },
+					{ "owner", m_state->m_slots->GetSlot( slot ).GetPlayer()->Wrap( GSE_CALL ) },
+					{ "tile", m_game.GetMap()->GetTile( 2, 2 )->Wrap( GSE_CALL ) }, { "render_morale_mode", VALUE( value::Int,, 0 ) }
+				} ) );
+				return call( GSE_CALL, static_cast< value::Object* >( um->Wrap( GSE_CALL ) ), "spawn_starting_conventional_unit", { input } );
+			};
+			// Even with complete Early state, direct calls outside a claimed Start
+			// cannot acquire IDs/tile membership. Nor can generic spawn bypass it.
+			if ( scenario == 7 ) {
+				m_game.PrepareNewSimulation(); m_game.m_game_state = Game::GS_RUNNING;
+				bool rejected = false; WithRW( [ & ] { try { spawn( GSE_CALL, 0 ); } catch ( const std::exception& ) { rejected = true; } } );
+				GT_ASSERT( rejected && Unit::GetNextId() == old_id && um->GetUnits().empty() && m_game.GetMap()->GetTile( 2, 2 )->units.empty(), "unclaimed Early spawn produced effects" );
+				GT_OK();
+			}
+			um->On( GSE_CALL, "unit_spawn", NATIVE_CALL( this, &wrappers, &identities, &order, &spawn_hooks, &raw_valid, call, require ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( unit, event, "unit", Unit );
+				++spawn_hooks; identities.push_back( unit->m_id ); order.push_back( "unit" );
+				auto* wrapper = static_cast< value::Object* >( unit->Wrap( GSE_CALL ) ); wrappers.push_back( wrapper ); m_gse->AddRootObject( wrapper );
+				const auto& raw = unit->Conventional();
+				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnit( unit->m_id ) == unit && unit->GetTile()->units.at( unit->m_id ) == unit
+					&& unit->IsConventionalPending() && raw.stored_morale == 1 && raw.damage == 0 && raw.spent == 0 && !raw.failed_move
+					&& raw.home == ConventionalUnitState::Home::None, "Early raw identity/state was delayed or fabricated" );
+				require( !m_game.m_simulation->value.social.Find( raw.owner_simulation_id )->retained, "Early raw unit invented retained morale" );
+				const auto reject = [ & ]( const auto& operation ) { try { operation(); } catch ( const std::exception& ) { return true; } return false; };
+				require( reject( [ & ] { unit->QueryStats( SmacMoraleMode::Mode0 ); } ) && reject( [ & ] { unit->GetPresentation(); } )
+					&& reject( [ & ] { unit->HasMovesLeft(); } ) && reject( [ & ] { Unit::Serialize( unit ); } )
+					&& reject( [ & ] { types::Buffer out; m_game.GetUM()->Serialize( out ); } ) && reject( [ & ] { WorldSnapshot(); } )
+					&& reject( [ & ] { call( GSE_CALL, static_cast< value::Object* >( m_game.Wrap( GSE_CALL ) ), "select_unit", { wrapper } ); } )
+					&& reject( [ & ] { m_game.GetUM()->UpdateConventionalUnit( GSE_CALL, unit, raw ); } ), "Early unit escaped a derived/publication guard" );
+				// Social becoming available alone cannot make the object commandable.
+				auto prior = m_game.m_simulation->value.social;
+				m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() );
+				SetSnapshotTurn( 1 ); // isolate object readiness from the independent social/turn guard
+				raw_valid = raw_valid && reject( [ & ] { unit->QueryStats( SmacMoraleMode::Mode1 ); } );
+				// Movement resolves a copied context directly, so exercise its own
+				// readiness fence even after the social inputs have become available.
+				for ( bool apply : { false, true } ) {
+					bool guarded = false;
+					try {
+						auto* manager = m_game.GetUM(); auto* target = unit->GetTile()->E;
+						if ( apply ) { manager->MoveConventionalUnit( GSE_CALL, unit, target, unit->m_owner->GetIndex() ); }
+						else { manager->ValidateConventionalMove( unit, target, unit->m_owner->GetIndex() ); }
+					} catch ( const std::exception& error ) { guarded = std::string( error.what() ).find( "before first-turn seal" ) != std::string::npos; }
+					raw_valid = raw_valid && guarded;
+				}
+				SetSnapshotTurn( 0 );
+				m_game.m_simulation->value.social = std::move( prior );
+				const auto before = m_frontend_requests.size(); m_game.GetUM()->PushUpdates();
+				require( m_frontend_requests.size() == before, "Early unit emitted frontend state" );
+				return VALUE( value::Undefined );
+			} ) );
+			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+			auto* hq = NATIVE_CALL( this, &order, require ) {
+				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnits().empty() && !m_game.m_simulation->value.social.factions.front().retained, "HQ event was reordered" );
+				AddBaseWithPop( 601, 7 ); order.push_back( "hq" ); return VALUE( value::Undefined );
+			} );
+			auto* raw = NATIVE_CALL( this, scenario, spawn, &reset, &ticket, require ) {
+				for ( size_t slot : { 0u, 2u, 6u } ) { spawn( GSE_CALL, slot ); }
+				if ( scenario == 3 ) { ConventionalSelectStartup( 2, 2 ); } // valid later participant, incompatible saved selection
+				if ( scenario == 5 ) { std::thread worker( [ & ] { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); } ); worker.join(); require( m_game.m_map && m_game.GetUM()->GetUnits().size() == 3, "Running reset destroyed raw units" ); }
+				if ( scenario == 6 ) { throw std::runtime_error( "fixture raw event failure" ); }
+				return VALUE( value::Undefined );
+			} );
+			RegisterEvent( "early_hq", new event::EventHandler( gc_space, "early_hq", noop, nullptr, hq, noop ) );
+			RegisterEvent( "early_unit", new event::EventHandler( gc_space, "early_unit", noop, nullptr, raw, noop ) );
+			m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this ) { m_game.Event( GSE_CALL, "early_hq", {} ); m_game.Event( GSE_CALL, "early_unit", {} ); return VALUE( value::Undefined ); } ) );
+			const auto sealed = [ &, require ]() {
+				require( m_game.GetTurnId() == 1 && !m_game.GetUM()->HasPendingConventionalUnits(), "hook observed a partial first-turn seal" );
+				const int morale[] = { 1, 2, 0 }; const int allowance[] = { 3, 6, 3 }; // Morgan/Sparta/Gaia synthetic participants
+				for ( size_t i = 0; i < identities.size(); ++i ) {
+					auto* unit = m_game.GetUM()->GetUnit( identities[ i ] ); const auto stats = unit->QueryStats( SmacMoraleMode::Mode0 );
+					require( unit->Conventional().stored_morale == 1 && stats.effective_morale == morale[ i ] && stats.full_allowance == allowance[ i ], "seal used fake retained values or replaced raw fields" );
+				}
+			};
+			m_game.GetBM()->On( GSE_CALL, "base_turn", NATIVE_CALL( &base_hooks, sealed ) { ++base_hooks; sealed(); return VALUE( value::Undefined ); } ) );
+			m_game.On( GSE_CALL, "turn", NATIVE_CALL( &turns, sealed ) { ++turns; sealed(); return VALUE( value::Undefined ); } ) );
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( this, &errors, &partial_seal, &startup_error ) {
+				++errors; if ( !arguments.empty() ) { startup_error = static_cast< value::String* >( static_cast< value::Object* >( arguments.front() )->Get( "error" ) )->value; }
+				if ( m_game.m_simulation && m_game.GetUM()->HasPendingConventionalUnits() ) {
+					partial_seal = m_game.GetTurnId() != 0;
+					for ( const auto& owner : m_game.m_simulation->value.social.factions ) { partial_seal = partial_seal || owner.retained.has_value(); }
+					for ( const auto& entry : m_game.GetUM()->GetUnits() ) { partial_seal = partial_seal || !entry.second->IsConventionalPending(); }
+				}
+				return VALUE( value::Undefined );
+			} ) );
+			if ( scenario != 2 ) {
+				auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/advance_turn" ) );
+				RegisterEvent( "advance_turn", new event::EventHandler( gc_space, "advance_turn", static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+					static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+			}
+			PushBaseUpdates(); // seed synthetic frontend coordinates while the fixture still owns Map
+			ticket = FixtureWorldTicket(); m_game.m_active_admission->stage = Game::StartupStage::Start; m_game.m_game_state = Game::GS_STARTING;
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "Early setup: " + setup );
+		if ( scenario == 7 ) { GT_OK(); }
+		util::FinallyGuard roots( [ & ] { m_gse->GetGCSpace()->Accumulate( m_gse, [ & ] { for ( auto* wrapper : wrappers ) { m_gse->RemoveRootObject( wrapper ); } } ); } );
+		m_map.release(); util::FinallyGuard recover( [ & ] { m_map.reset( m_game.m_map ); } );
+		if ( scenario == 1 ) { m_game.Iterate(); }
+		else {
+			std::exception_ptr error; std::thread producer( [ & ] { try { m_game.Iterate(); } catch ( ... ) { error = std::current_exception(); } } ); producer.join();
+			if ( error ) { std::rethrow_exception( error ); }
+			GT_ASSERT( m_game.OwnerBlocksNative() && !m_game.m_simulation && !spawn_hooks, "Pending Start exposed raw units" );
+			if ( scenario == 4 ) { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); }
+			ProcessAccumulations();
+		}
+		if ( scenario == 5 ) { m_game.Iterate(); }
+		if ( scenario >= 2 ) {
+			GT_ASSERT( !m_game.m_map && !m_game.m_simulation && !partial_seal && !base_hooks && !turns, "failed/canceled Early world leaked a partially sealed unit or upkeep" );
+			GT_ASSERT( errors == ( scenario == 4 ? 0u : 1u ), "Early failure was lost or duplicated" );
+			g_engine->GetGC()->Iterate();
+			for ( auto* wrapper : wrappers ) { GT_ASSERT( !wrapper->wrapobj, "retired raw unit wrapper remained linked" ); }
+			if ( reset ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Early reset failed to make actual MT progress" ); }
+			GT_OK();
+		}
+		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == 3 && base_hooks == 1 && turns == 1 && order == std::vector< std::string >( { "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
+		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle consumed gameplay RNG" );
+		std::string saved; std::vector< std::string > saved_units;
+		const auto published = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_game.GetUM()->PushUpdates(); const auto& updates = m_frontend_requests; size_t spawns = 0;
+			for ( const auto& fr : updates ) { if ( fr.type == game::FrontendRequest::FR_UNIT_SPAWN ) { ++spawns; GT_ASSERT( fr.data.unit_spawn.conventional && fr.data.unit_spawn.has_moves, "sealed spawn was not actionable" ); } }
+			saved = WorldSnapshot();
+			for ( const auto id : identities ) { saved_units.push_back( Unit::Serialize( m_game.GetUM()->GetUnit( id ) ).ToString() ); }
+			GT_ASSERT( spawns == 3 && !saved.empty(), "seal lost pending frontend/snapshot publication" );
+			for ( auto* wrapper : wrappers ) { auto* unit = static_cast< Unit* >( wrapper->wrapobj ); GT_ASSERT( unit && !unit->IsConventionalPending(), "seal replaced a raw identity" ); }
+			GT_OK();
+		} );
+		GT_ASSERT( published.empty(), "sealed publication: " + published );
+		// The actual world-body reader gets its staged BoundSimulation and must
+		// restore Ready records directly, without replaying startup or entropy.
+		BackendFixture destination; destination.ConfigureConventional( true, 3, false, true );
+		return destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			size_t new_hooks = 0;
+			destination.GetGame()->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &new_hooks ) { ++new_hooks; return VALUE( value::Undefined ); } ) );
+			destination.RestoreConventional( GSE_CALL, saved );
+			GT_ASSERT( new_hooks == 0 && !destination.GetGame()->GetUM()->HasPendingConventionalUnits() && destination.m_game.m_simulation->value.gameplay_random == expected_random, "restore replayed Early lifecycle or changed gameplay continuation" );
+			for ( size_t i = 0; i < identities.size(); ++i ) {
+				auto* unit = destination.GetGame()->GetUM()->GetUnit( identities[ i ] );
+				GT_ASSERT( unit && unit->QueryStats( SmacMoraleMode::Mode0 ).remaining_allowance > 0 && Unit::Serialize( unit ).ToString() == saved_units[ i ], "restored ready unit lost exact raw state or derived availability" );
+			}
+			GT_OK();
+		} );
+	}
+
 	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
@@ -3855,6 +4040,7 @@ std::string ConventionalUnitFixture::Snapshot() const { return fixture->WorldSna
 void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot ) { fixture->RestoreConventional( GSE_CALL, snapshot ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }
+std::string ConventionalUnitFixture::CheckEarlyStartup( int scenario ) { return fixture->CheckEarlyConventionalStartup( scenario ); }
 
 namespace {
 

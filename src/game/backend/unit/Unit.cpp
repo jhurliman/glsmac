@@ -53,8 +53,8 @@ Unit::Unit(
 	Publish( GSE_CALL, tile );
 }
 
-Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state )
-	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ) {
+Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup )
+	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ), m_early_startup( early_startup ) {
 	// The manager has already resolved all context and presentation admission.
 	Publish( GSE_CALL, tile );
 }
@@ -74,6 +74,10 @@ void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile ) {
 }
 
 bool Unit::IsConventional() const { return std::holds_alternative< ConventionalUnitState >( m_state ); }
+bool Unit::IsConventionalPending() const { return m_early_startup; }
+void Unit::RequireConventionalReady() const {
+	if ( m_early_startup ) { THROW( "Conventional startup unit has no derived state before first-turn seal" ); }
+}
 Unit::LegacyState& Unit::Legacy() {
 	if ( IsConventional() ) { THROW( "Conventional units do not have mutable legacy float state" ); }
 	return std::get< LegacyState >( m_state );
@@ -87,6 +91,7 @@ const ConventionalUnitState& Unit::Conventional() const {
 	return std::get< ConventionalUnitState >( m_state );
 }
 ConventionalUnitStats Unit::QueryStats( const SmacMoraleMode mode ) const {
+	RequireConventionalReady();
 	const auto& state = Conventional();
 	return QueryConventionalUnit( state, m_um->ResolveConventional( state, m_owner ), mode );
 }

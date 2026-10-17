@@ -44,6 +44,9 @@ public:
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
 	Unit* SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
+	Unit* SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode );
+	bool HasPendingConventionalUnits() const;
+	void RequireConventionalUnitsReady() const;
 	void UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state );
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
@@ -77,7 +80,7 @@ private:
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver );
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
-		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver ) const;
+		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false ) const;
 	struct PreparedConventionalMove {
 		Unit* unit;
 		map::tile::Tile* source;
@@ -86,6 +89,8 @@ private:
 		smac_move::Result result;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
+	void PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const;
+	void SealConventionalStartup() noexcept;
 	Game* m_game = nullptr;
 
 	std::unordered_map< std::string, MoraleSet* > m_unit_moralesets = {};

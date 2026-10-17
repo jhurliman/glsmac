@@ -53,6 +53,8 @@ public:
 	struct LegacyState { movement_t movement; morale_t morale; health_t health; bool moved_this_turn; };
 	struct Presentation { movement_t movement; morale_t morale; health_t health; movement_t full_movement = 0; };
 	bool IsConventional() const;
+	bool IsConventionalPending() const;
+	void RequireConventionalReady() const;
 	LegacyState& Legacy();
 	const LegacyState& Legacy() const;
 	const ConventionalUnitState& Conventional() const;
@@ -78,12 +80,15 @@ public:
 
 private:
 	friend class UnitManager;
-	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state );
+	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false );
 	void Publish( GSE_CALLABLE, map::tile::Tile* tile );
 	// Called only after manager validation and membership/update allocation.
 	void CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept;
 	std::variant< LegacyState, ConventionalUnitState > m_state;
 	UnitManager* const m_um;
+	// Transient and deliberately not serializable. Only the claimed new-world
+	// Start producer may create it; the first-turn preflight seals all at once.
+	bool m_early_startup = false;
 
 };
 

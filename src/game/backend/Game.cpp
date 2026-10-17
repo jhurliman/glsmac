@@ -949,6 +949,7 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
+				unit->RequireConventionalReady();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SELECT );
 				fr.data.unit_select.unit_id = unit->m_id;
 				AddFrontendRequest( fr );
@@ -2232,6 +2233,7 @@ void Game::StartInitializedWorld( GSE_CALLABLE ) {
 
 	if ( m_game_state == GS_RUNNING ) {
 		ProcessEvents();
+		m_um->RequireConventionalUnitsReady();
 		CheckTurnComplete();
 	}
 }
@@ -2580,6 +2582,7 @@ void Game::DiscardInitializationMap( map::Map*& candidate ) {
 }
 
 std::string Game::SerializeWorldSnapshot() const {
+	if ( m_um ) { m_um->RequireConventionalUnitsReady(); }
 	if ( !m_map ) {
 		// map not generated yet
 		return "";
@@ -2945,6 +2948,7 @@ bool Game::IsLocalTurnComplete() const {
 }
 
 void Game::CheckTurnComplete() {
+	if ( m_um->HasPendingConventionalUnits() ) { return; }
 	const bool is_turn_complete = IsLocalTurnComplete();
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;

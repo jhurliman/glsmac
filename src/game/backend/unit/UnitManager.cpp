@@ -148,7 +148,7 @@ ConventionalUnitContext UnitManager::ResolveConventional( const ConventionalUnit
 }
 
 void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
-	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver ) const {
+	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup ) const {
 	if ( !resolver || id == 0 || id >= static_cast< uint64_t >( INT64_MAX ) || id >= std::numeric_limits< size_t >::max()
 		|| HasUnitId( id ) || !tile || tile->units.count( id ) || !GetMap()
 		|| tile->coord.x >= GetMap()->GetWidth() || tile->coord.y >= GetMap()->GetHeight()
@@ -161,7 +161,7 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 		THROW( "Conventional presentation definition is not canonical" );
 	}
 	const auto context = resolver( state, owner );
-	QueryConventionalUnit( state, context, state.render_morale_mode );
+	if ( !early_startup ) { QueryConventionalUnit( state, context, state.render_morale_mode ); }
 	const auto* presentation = static_cast< const StaticDef* >( def );
 	const auto* render = dynamic_cast< const CvrScoutRender* >( presentation->m_render );
 	using Ground = settings::SmacMovementRules::GroundChassis;
@@ -184,9 +184,47 @@ Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slo
 	return unit;
 }
 
+Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode ) {
+	m_game->CheckRW( GSE_CALL );
+	const auto state = m_game->PrepareStartingConventionalUnit( owner, mode );
+	for ( const auto& entry : m_units ) {
+		if ( entry.second->IsConventional() && entry.second->m_owner == owner ) { THROW( "Starting conventional unit already exists" ); }
+	}
+	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) {
+		return m_game->ResolveConventionalIdentity( value, slot, *m_game->m_simulation );
+	};
+	const auto id = Unit::GetNextId();
+	ValidateConventionalCreation( id, def, owner, tile, state, resolver, true );
+	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state, true );
+	SpawnUnit( GSE_CALL, unit );
+	return unit;
+}
+
+bool UnitManager::HasPendingConventionalUnits() const {
+	for ( const auto& entry : m_units ) { if ( entry.second->IsConventionalPending() ) { return true; } }
+	for ( const auto& entry : m_unprocessed_units ) { if ( entry.unit->IsConventionalPending() ) { return true; } }
+	return false;
+}
+void UnitManager::RequireConventionalUnitsReady() const {
+	if ( HasPendingConventionalUnits() ) { THROW( "Conventional startup units have not reached first-turn seal" ); }
+}
+void UnitManager::PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const {
+	if ( !m_unprocessed_units.empty() && HasPendingConventionalUnits() ) { THROW( "Startup unit is not registered" ); }
+	for ( const auto& entry : m_units ) {
+		const auto* unit = entry.second;
+		if ( unit->IsConventionalPending() ) {
+			QueryConventionalUnit( unit->Conventional(), resolver( unit->Conventional(), unit->m_owner ), unit->Conventional().render_morale_mode );
+		}
+	}
+}
+void UnitManager::SealConventionalStartup() noexcept {
+	for ( const auto& entry : m_units ) { entry.second->m_early_startup = false; }
+}
+
 void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
+	unit->RequireConventionalReady();
 	const auto& prior = unit->Conventional();
 	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home
 		|| state.render_morale_mode != prior.render_morale_mode ) { THROW( "Conventional update cannot replace identity or presentation policy" ); }
@@ -299,6 +337,8 @@ void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 }
 
 void UnitManager::PushUpdates() {
+	// Keep queued spawn/update ownership until the whole first-turn seal.
+	if ( HasPendingConventionalUnits() ) { return; }
 	if ( m_game->IsRunning() && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
 			const auto unit_id = it.first;
@@ -628,6 +668,16 @@ WRAPIMPL_BEGIN( UnitManager )
 			})
 		},
 		{
+			"spawn_starting_conventional_unit", NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 ); N_GETVALUE( obj, 0, Object );
+				N_GETPROP( def_id, obj, "def", String );
+				N_GETPROP_UNWRAP( owner, obj, "owner", Player ); N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
+				N_GETPROP( mode, obj, "render_morale_mode", Int );
+				if ( mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Explicit conventional render morale mode required" ); }
+				return SpawnStartingConventionalUnit( GSE_CALL, GetUnitDef( def_id ), owner->GetSlot(), tile, static_cast< SmacMoraleMode >( mode ) )->Wrap( GSE_CALL );
+			} )
+		},
+		{
 			"spawn_conventional_unit", NATIVE_CALL( this ) {
 				m_game->CheckRW( GSE_CALL ); N_EXPECT_ARGS( 1 ); N_GETVALUE( obj, 0, Object );
 				N_GETPROP( id, obj, "id", Int ); N_GETPROP( def_id, obj, "def", String );
@@ -721,6 +771,7 @@ WRAPIMPL_END_PTR()
 UNWRAPIMPL_PTR( UnitManager )
 
 void UnitManager::Serialize( types::Buffer& buf ) const {
+	RequireConventionalUnitsReady();
 	if ( !m_unprocessed_units.empty() ) { THROW( "cannot snapshot units before startup registration" ); }
 	buf.WriteString( s_snapshot_format );
 

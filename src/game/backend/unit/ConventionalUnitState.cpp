@@ -47,13 +47,13 @@ ConventionalUnitStats QueryConventionalUnit( const ConventionalUnitState& state,
 	using Chassis = settings::SmacMovementRules::GroundChassis;
 	if ( ( context.chassis != Chassis::Infantry && context.chassis != Chassis::Speeder )
 		|| context.quantum < 1 || context.quantum > 100 || context.basic_allowance < 0 || context.basic_allowance > 9900
-		|| context.reactor < 1 || context.reactor > 4 || state.damage >= 10 * context.reactor ) {
+		|| !context.retained_morale || context.reactor < 1 || context.reactor > 4 || state.damage >= 10 * context.reactor ) {
 		throw std::runtime_error( "Unsupported conventional living-unit context" );
 	}
 	// The producer validates the complete supported faction profile: direct
 	// MORALE is absent (0/OFF), including raw records after the eight-slot cap.
 	const auto morale = [ & ]( SmacMoraleMode requested ) {
-		return SmacConventionalMorale( { state.stored_morale, context.retained_morale, 0, false, {}, requested } );
+		return SmacConventionalMorale( { state.stored_morale, *context.retained_morale, 0, false, {}, requested } );
 	};
 	const auto allowance_morale = morale( SmacMoraleMode::Mode1 );
 	const auto full = SmacConventionalAllowance( { context.basic_allowance, context.quantum, SmacMovementDomain::Land,

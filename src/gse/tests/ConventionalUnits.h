@@ -34,6 +34,7 @@ public:
 	void Restore( GSE_CALLABLE, const std::string& snapshot );
 	void RetainedMorale( int32_t retained, int32_t current );
 	void Early();
+	std::string CheckEarlyStartup( int scenario );
 private:
 	std::unique_ptr< BackendFixture > fixture;
 };

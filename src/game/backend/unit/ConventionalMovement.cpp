@@ -44,6 +44,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) {
 		throw std::runtime_error( "Conventional movement requires a registered conventional unit" );
 	}
+	unit->RequireConventionalReady();
 	const auto* state = m_game->GetState();
 	const auto& local = state->m_settings.local;
 	if ( !m_game->IsRunning() || state->m_connection || local.game_mode != settings::LocalSettings::GM_SINGLEPLAYER

@@ -11,6 +11,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/Exception.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/GC.h"
 #include "gc/Space.h"
@@ -18,6 +19,8 @@
 #include "util/FinallyGuard.h"
 
 #include <atomic>
+#include <exception>
+#include <memory>
 #include <stdexcept>
 #include <thread>
 
@@ -116,6 +119,44 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			}();
 		} );
 		GT_ASSERT( error.empty(), "event snapshot validation failed: " + error );
+		GT_OK();
+	} );
+
+	task->AddTest( "test GSE exception what owns stable formatted storage across copies", GT() {
+		std::unique_ptr< Exception > copied;
+		std::exception_ptr thrown;
+		std::string expected;
+		{
+			ExecutionPointer ep;
+			const si_t outer = { "", { 7, 1 }, { 7, 2 } }, inner = { "", { 11, 2 }, { 11, 3 } };
+			ep.WithSI( outer, [ & ]() {
+				Exception original( "OwnershipError", "A sufficiently long diagnostic message to exercise allocated storage", nullptr, inner, ep );
+				expected = original.ToString();
+				copied = std::make_unique< Exception >( original );
+				try { throw original; } catch ( ... ) { thrown = std::current_exception(); }
+			} );
+		}
+		GT_ASSERT( expected.find( "OwnershipError" ) != std::string::npos && expected.find( "\tat :11:" ) != std::string::npos && expected.find( "\tat :7:" ) != std::string::npos, "fixture lost its diagnostic or captured stack" );
+		const auto check = [ & ]( const std::exception& error ) -> std::string {
+			const auto* first = error.what();
+			GT_ASSERT( first && std::string( first ) == expected, "what changed the formatted exception text" );
+			for ( size_t i = 0 ; i < 32 ; ++i ) {
+				GT_ASSERT( error.what() == first, "what allocated another unowned message" );
+				GT_ASSERT( std::string( first ) == expected, "what invalidated its earlier result" );
+			}
+			GT_OK();
+		};
+		const auto copied_error = check( *copied );
+		GT_ASSERT( copied_error.empty(), "copied exception: " + copied_error );
+		copied.reset();
+		bool caught = false;
+		try { std::rethrow_exception( thrown ); }
+		catch ( const Exception& error ) {
+			caught = true;
+			const auto result = check( error ); GT_ASSERT( result.empty(), "retained exception: " + result );
+			GT_ASSERT( error.ToString() == expected, "exception copy lost its structured diagnostic" );
+		}
+		GT_ASSERT( caught, "exception_ptr lost its concrete exception" );
 		GT_OK();
 	} );
 

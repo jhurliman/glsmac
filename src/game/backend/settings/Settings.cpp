@@ -89,17 +89,22 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 	}
 	m_ruleset = selected;
 	m_smac_base_square_rules.reset();
+	m_smac_production_rules.reset();
 }
 
 void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	if ( m_ruleset_locked ) { return; } // Already frozen for this session.
 	if ( m_ruleset == RULESET_UNSELECTED ) { THROW( "Select a gameplay ruleset before starting a game" ); }
 	std::optional< resource::smac::BaseSquareRules > parsed;
+	std::optional< SmacProductionRules > production;
 	if ( m_ruleset == RULESET_SMAC ) {
-		parsed = loader::txt::SmacRulesTXTLoader::ParseBaseSquareRules( read_source( "alpha.txt" ) );
+		const auto source = read_source( "alpha.txt" );
+		parsed = loader::txt::SmacRulesTXTLoader::ParseBaseSquareRules( source );
+		production = loader::txt::SmacRulesTXTLoader::ParseProductionRules( source );
 	}
 	// Only publish after file reading and all parsing succeeded.
 	m_smac_base_square_rules = parsed;
+	m_smac_production_rules = std::move( production );
 	LockRuleset();
 }
 
@@ -107,12 +112,16 @@ const std::optional< resource::smac::BaseSquareRules >& GlobalSettings::GetSmacB
 	return m_smac_base_square_rules;
 }
 
+const std::optional< SmacProductionRules >& GlobalSettings::GetSmacProductionRules() const {
+	return m_smac_production_rules;
+}
+
 void GlobalSettings::LockRuleset() {
 	if ( m_ruleset == RULESET_UNSELECTED ) {
 		THROW( "Select a gameplay ruleset before starting a game" );
 	}
-	if ( m_ruleset == RULESET_SMAC && !m_smac_base_square_rules ) {
-		THROW( "SMAC base-square rules have not been loaded" );
+	if ( m_ruleset == RULESET_SMAC && ( !m_smac_base_square_rules || !m_smac_production_rules ) ) {
+		THROW( "SMAC base-square and production rules have not been loaded" );
 	}
 	m_ruleset_locked = true;
 }
@@ -125,6 +134,7 @@ void GlobalSettings::ResetRuleset() {
 	m_ruleset = RULESET_UNSELECTED;
 	m_ruleset_locked = false;
 	m_smac_base_square_rules.reset();
+	m_smac_production_rules.reset();
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
@@ -145,17 +155,19 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( m_ruleset == RULESET_UNSELECTED ) {
 		THROW( "Cannot serialize global settings without a gameplay ruleset" );
 	}
-	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_base_square_rules.has_value() ) {
+	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_base_square_rules.has_value()
+		|| ( m_ruleset == RULESET_SMAC ) != m_smac_production_rules.has_value() ) {
 		THROW( "Gameplay ruleset and SMAC base-square rules do not match" );
 	}
 	// The integer prefix rejects the old string-first format in both directions.
-	buf.WriteInt( 2 );
+	buf.WriteInt( 3 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_base_square_rules.has_value() );
 	if ( m_smac_base_square_rules ) {
 		for ( const auto& row : { m_smac_base_square_rules->base_square, m_smac_base_square_rules->bonus_square, m_smac_base_square_rules->recycling } ) {
 			for ( const auto value : row ) { buf.WriteInt( value ); }
 		}
+		buf.WriteString( m_smac_production_rules->Serialize().ToString() );
 	}
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
@@ -170,8 +182,8 @@ static bool SameSmacRules( const std::optional< resource::smac::BaseSquareRules 
 }
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
-	if ( buf.ReadInt() != 2 ) {
-		THROW( "Unsupported global settings format (expected version 2)" );
+	if ( buf.ReadInt() != 3 ) {
+		THROW( "Unsupported global settings format (expected version 3)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -179,6 +191,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		THROW( "Gameplay ruleset and SMAC base-square rules do not match" );
 	}
 	std::optional< resource::smac::BaseSquareRules > parsed;
+	std::optional< SmacProductionRules > production;
 	if ( has_smac_rules ) {
 		std::array< resource::smac::RuleTriple, 3 > rows;
 		for ( auto& row : rows ) {
@@ -191,6 +204,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 			}
 		}
 		parsed.emplace( rows[ 0 ], rows[ 1 ], rows[ 2 ] );
+		production = SmacProductionRules::Deserialize( types::Buffer( buf.ReadString() ) );
 	}
 	if ( m_ruleset_locked && m_ruleset != ruleset ) {
 		THROW( "Host changed the gameplay ruleset of an initialized session" );
@@ -198,10 +212,14 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( m_ruleset_locked && !SameSmacRules( m_smac_base_square_rules, parsed ) ) {
 		THROW( "Host changed the numeric rules of an initialized session" );
 	}
+	if ( m_ruleset_locked && ( m_smac_production_rules.has_value() != production.has_value()
+		|| ( production && !( *m_smac_production_rules == *production ) ) ) ) {
+		THROW( "Host changed the production profile of an initialized session" );
+	}
 	MapSettings next_map;
 	next_map.Deserialize( buf.ReadString() );
 	const auto rules_data = buf.ReadString();
-	// Default rules currently serialize no fields; V2 must not silently drop
+	// Default rules currently serialize no fields; V3 must not silently drop
 	// unknown payload bytes. A future rules format requires an explicit version.
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();
@@ -216,6 +234,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	game_name = next_name;
 	m_ruleset = ruleset;
 	m_smac_base_square_rules = parsed;
+	m_smac_production_rules = std::move( production );
 	m_ruleset_locked = true;
 }
 

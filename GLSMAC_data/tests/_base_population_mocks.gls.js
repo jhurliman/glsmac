@@ -22,6 +22,7 @@ const create_tile = (x, nutrients) => {
 		y: 0,
 	};
 	tile.set('nutrients', nutrients);
+	tile.get_working_pop = () => { return tile.get('working_pop'); };
 	tile.get_resources = () => {
 		return {NUTRIENTS: tile.get('nutrients'), MINERALS: 0, ENERGY: 0};
 	};
@@ -50,7 +51,7 @@ const create_fixture = () => {
 	base.get_unworked_tiles = () => {
 		let result = [];
 		for (tile of tiles) {
-			if (!tile.has('working_pop')) {
+			if (!#is_defined(tile.get_working_pop())) {
 				result :+ tile;
 			}
 		}
@@ -73,16 +74,34 @@ const create_fixture = () => {
 		}
 		test.assert(found, 'Cannot remove a tile that is not worked');
 	};
+	base.set_pop_assignment = (pop, type, tile) => {
+		const old_tile = pop.get_worked_tile();
+		if (#is_defined(old_tile)) {
+			old_tile.unset('working_pop');
+			base.remove_worked_tile(old_tile);
+		}
+		pop.set('worked_tile', tile);
+		pop.type = type;
+		if (#is_defined(tile)) {
+			tile.set('working_pop', pop);
+			base.add_worked_tile(tile);
+		}
+	};
 	base.create_pop = (data) => {
 		const pop = custom_properties() + {id: next_pop_id, type: data.type};
 		next_pop_id++;
 		pop.get_type = () => { return pop.type; };
-		pop.set_type = (type) => { pop.type = type; };
+		pop.get_base = () => { return base; };
+		pop.get_worked_tile = () => { return pop.get('worked_tile'); };
+		pop.set_type = (type) => { base.set_pop_assignment(pop, type, type == 'WORKER' ? pop.get_worked_tile() : #undefined); };
 		pops :+ pop;
+		if (#is_defined(data.worked_tile)) {
+			base.set_pop_assignment(pop, data.type, data.worked_tile);
+		}
 		return pop;
 	};
 	base.destroy_pop = (pop) => {
-		test.assert(!pop.has('worked_tile'), 'Release tile ownership before destroying a population');
+		base.set_pop_assignment(pop, pop.get_type(), #undefined);
 		let found = false;
 		for (let i = 0; i < #sizeof(pops); i++) {
 			if (pops[i] == pop) {

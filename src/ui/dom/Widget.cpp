@@ -47,7 +47,9 @@ Widget::Widget( DOM_ARGS )
 
 	m_on_resize = [ this ]( const size_t width, const size_t height ) {
 		for ( const auto& it : m_textures ) {
-			it.second->Resize( width, height );
+			if ( m_fixed_size_textures.find( it.first ) == m_fixed_size_textures.end() ) {
+				it.second->Resize( width, height );
+			}
 		}
 	};
 }
@@ -81,6 +83,9 @@ void Widget::Destroy( GSE_CALLABLE ) {
 		m_on_widget_remove( this );
 	}
 	Area::Destroy( GSE_CALL );
+	// Preserve remove/deinit callback ordering, then release anything retained
+	// when root destruction detached the UI before widget unregistration.
+	Clear();
 }
 
 const bool Widget::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
@@ -94,9 +99,10 @@ const bool Widget::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	return Area::ProcessEvent( GSE_CALL, event );
 }
 
-void Widget::SetTexture( types::texture::Texture* const texture, const size_t index ) {
+void Widget::SetTexture( types::texture::Texture* const texture, const size_t index, const bool resize_with_widget ) {
 	ASSERT( m_textures.find( index ) == m_textures.end(), "texture id " + std::to_string( index ) + " already set" );
 	m_textures.insert( { index, texture } );
+	if ( !resize_with_widget ) { m_fixed_size_textures.insert( index ); }
 }
 
 void Widget::SetActor( scene::actor::Actor* const actor, const size_t index ) {
@@ -109,7 +115,7 @@ void Widget::Clear() {
 	m_event_handlers.clear();
 	m_global_event_handlers.clear();
 	if ( m_global_handler_id ) {
-		m_ui->RemoveGlobalHandler( m_global_handler_id );
+		if ( m_ui ) { m_ui->RemoveGlobalHandler( m_global_handler_id ); }
 		m_global_handler_id = 0;
 	}
 	m_geometry->AsRectangle()->Clear();
@@ -119,6 +125,7 @@ void Widget::Clear() {
 		DELETE( it.second );
 	}
 	m_textures.clear();
+	m_fixed_size_textures.clear();
 }
 
 types::texture::Texture* const Widget::GetTexture( const size_t index ) const {

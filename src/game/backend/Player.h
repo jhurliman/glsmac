@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include "RosterRecords.h"
+#include "RosterIdentity.h"
 
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
@@ -9,6 +11,7 @@ namespace game {
 namespace backend {
 
 class Game;
+class State;
 
 namespace faction {
 class Faction;
@@ -27,14 +30,17 @@ CLASS2( Player, types::Serializable, gse::Wrappable )
 		PR_PLAYER,
 	};
 
-	Player( types::Buffer buf );
+	~Player() override;
 	Player(
 		const std::string& name,
 		const role_t role,
 		faction::Faction* faction,
 		const std::string& difficulty_level
 	);
-	Player( const Player* const other );
+	Player( const Player& ) = delete;
+	Player& operator=( const Player& ) = delete;
+	player_identity_t GetIdentity() const;
+	roster::PlayerRecord GetRecord() const;
 
 	const std::string& GetPlayerName() const;
 	const std::string GetFullName() const;
@@ -76,7 +82,17 @@ private:
 	slot::Slot* m_slot = nullptr;
 	size_t m_slotnum = 0;
 
-	faction::Faction* m_faction = {};
+ friend class State;
+ Player(roster::PlayerRecord record, State* state, roster_epoch_t epoch);
+ void BindRoster(State* state, const roster_epoch_t& epoch);
+ void ApplyRecord(roster::PlayerRecord& record) noexcept;
+ void RequireMutable() const;
+ State* m_roster_state = nullptr;
+ roster_epoch_t m_roster_epoch;
+ std::optional<std::string> m_faction_id;
+ std::shared_ptr<PlayerIdentity> m_identity = std::make_shared<PlayerIdentity>();
+ bool m_notification = false;
+ bool m_notification_ready = false;
 	std::string m_difficulty_level = "";
 
 	bool m_is_turn_completed = false;

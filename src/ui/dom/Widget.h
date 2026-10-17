@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "Area.h"
 
@@ -33,7 +34,8 @@ public:
 	void Destroy( GSE_CALLABLE ) override;
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
-	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
+	// Takes ownership. Fixed-size textures retain their pixels when the widget resizes.
+	void SetTexture( types::texture::Texture* const texture, const size_t index = 0, const bool resize_with_widget = true );
 	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
 	void Clear();
 
@@ -64,6 +66,7 @@ private:
 	bool m_data_update_needed = false;
 
 	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
+	std::unordered_set< size_t > m_fixed_size_textures;
 	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
 
 	f_widget_update_t m_on_widget_update = nullptr;

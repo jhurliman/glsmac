@@ -125,6 +125,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidSpecialistHea
 	std::vector< std::pair< std::string, std::string > > result;
 	result.emplace_back( "old V16", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 16 ).ToString() );
 	result.emplace_back( "old V17", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 17 ).ToString() );
+	result.emplace_back( "old V18 without movement caller history", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 18 ).ToString() );
 	const auto valid = smac_rules_fixture::Specialists().Serialize().ToString();
 	result.emplace_back( "wrong presence", SpecialistHeader( id, id != "smac", valid ).ToString() );
 	if ( id != "smac" ) { return result; }

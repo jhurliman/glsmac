@@ -174,6 +174,28 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	if ( !admitted_hq && ( destination->features & map::tile::FEATURE_XENOFUNGUS ) ) {
 		throw std::runtime_error( "Conventional destination fungus requires admitted nearest-base context" );
 	}
+	std::optional< int32_t > nearest_distance;
+	const bool update_nearest = simulation.movement_history && ( destination->features & map::tile::FEATURE_XENOFUNGUS );
+	if ( update_nearest ) {
+		const auto& history = *simulation.movement_history;
+		history.ValidateDimensions( map->GetWidth(), map->GetHeight() );
+		if ( bases.size() > map->GetWidth() * map->GetHeight() / 2 ) { throw std::runtime_error( "Too many canonical nearest-base records" ); }
+		std::vector< SmacMovementHistory::BasePosition > positions;
+		positions.reserve( bases.size() );
+		for ( const auto& entry : bases ) {
+			const auto* base = entry.second;
+			const auto* center = base ? base->GetTile() : nullptr;
+			if ( !base || base->m_id != entry.first || base->GetGame() != m_game || !canonical( center ) || center->base != base ) {
+				throw std::runtime_error( "Nearest-base history requires canonical registered Base centers" );
+			}
+			positions.push_back( { entry.first, static_cast< int32_t >( center->coord.x ), static_cast< int32_t >( center->coord.y ) } );
+		}
+		nearest_distance = SmacMovementHistory::NearestAnyBase( destination->coord.x, destination->coord.y,
+			static_cast< int32_t >( map->GetWidth() ), true, positions, history.NearestDistance() ).distance;
+		// This is only the existing endpoint-HQ bypass. Distant encounter entry
+		// remains unavailable; no CRT roll or native insertion is activated.
+		if ( !nearest_distance || *nearest_distance > 1 ) { throw std::runtime_error( "Admitted HQ does not establish the fungus encounter bypass" ); }
+	}
 	const auto edge_source = EdgeTile( *source, admitted_hq ), edge_destination = EdgeTile( *destination, admitted_hq );
 	const smac_edge::Query query{
 		{ design.id, static_cast< smac_edge::Chassis >( design.chassis ), static_cast< int32_t >( catalog.chassis.chassis.at( design.chassis ).triad ),
@@ -186,7 +208,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	auto changed = stored;
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
-	return { unit, source, destination, changed, std::move( result ) };
+	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest };
 }
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
@@ -196,6 +218,7 @@ void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destina
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->CheckRW( GSE_CALL );
 	const auto prepared = PrepareConventionalMove( unit, destination, caller );
+	const auto placement = PreparePlacementHistory( *unit, destination );
 	const auto update = m_unit_updates.find( unit->m_id );
 	if ( update != m_unit_updates.end() && ( update->second.unit != unit || ( update->second.ops & UUO_DESPAWN ) ) ) {
 		throw std::runtime_error( "Conventional movement has a stale pending presentation record" );
@@ -209,9 +232,13 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	// existing std::less<size_t> map, node transfer below cannot allocate or run
 	// user code. Every remaining authority write is a trivial nonthrowing copy.
 	auto& pending = m_unit_updates.try_emplace( unit->m_id, unit_update_t{ UUO_NONE, unit } ).first->second;
+	// An accepted failed partial attempt also retains the caller query result.
+	// Validation above was side-effect free; no unsupported request gets here.
+	if ( prepared.update_nearest ) { m_game->m_simulation->value.movement_history->RetainNearest( prepared.nearest_distance ); }
 	if ( moved ) {
 		destination->units.insert( staged_destination.extract( unit->m_id ) );
 		prepared.source->units.erase( unit->m_id );
+		if ( placement.first ) { placement.first->MarkPlaced( placement.second ); }
 	}
 	static_assert( std::is_nothrow_copy_assignable_v< ConventionalUnitState > );
 	static_assert( std::is_nothrow_copy_assignable_v< SmacGameplayRandomState > );

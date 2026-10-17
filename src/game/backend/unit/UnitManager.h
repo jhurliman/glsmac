@@ -14,6 +14,7 @@ namespace game {
 namespace backend {
 
 class Game;
+class SmacMovementHistory;
 
 namespace map {
 class Map;
@@ -87,6 +88,8 @@ private:
 		map::tile::Tile* destination;
 		ConventionalUnitState state;
 		smac_move::Result result;
+		std::optional< int32_t > nearest_distance;
+		bool update_nearest = false;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const;
@@ -124,6 +127,7 @@ private:
 
 private:
 	friend class Unit;
+	std::pair< SmacMovementHistory*, size_t > PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const;
 	map::Map* GetMap() const;
 	slot::Slot* GetSlot( const size_t slot_num ) const;
 };

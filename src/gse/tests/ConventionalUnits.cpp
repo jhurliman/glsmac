@@ -4,6 +4,7 @@
 #include "fixtures/GaianHQMovement.h"
 #include "fixtures/RemoteHQMovement.h"
 #include "fixtures/RemoteOrdinaryGround.h"
+#include "fixtures/NearestAnyBase.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/WorldSnapshotRules.h"
@@ -219,6 +220,128 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "movement history nearest base preserves original metric ties and empty output", GT() {
+		for ( size_t i = 0; i < nearest_any_fixture::cases.size(); ++i ) {
+			const auto& row = nearest_any_fixture::cases[ i ];
+			const auto result = SmacMovementHistory::NearestAnyBase( row.x, row.y, row.width, row.wrap, row.bases, 777 );
+			GT_ASSERT( result.base == ( row.expected < 0 ? std::optional< uint64_t >{} : std::optional< uint64_t >( row.expected ) )
+				&& result.distance == row.distance, "original nearest-base output differs at case " + std::to_string( i + 1 ) );
+		}
+		GT_ASSERT( !SmacMovementHistory::NearestAnyBase( 0, 0, 128, true, {}, {} ).distance, "empty world invented zero distance" );
+		for ( int invalid = 0; invalid < 5; ++invalid ) {
+			bool rejected = false;
+			try { SmacMovementHistory::NearestAnyBase( invalid == 0 ? -1 : 0, 0, invalid == 1 ? 0 : 128, true,
+				invalid == 2 ? std::vector< SmacMovementHistory::BasePosition >{{2,0,0},{1,2,0}} : std::vector< SmacMovementHistory::BasePosition >{},
+				invalid == 3 ? -1 : invalid == 4 ? 10000 : 777 ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected, "invalid nearest-base input admitted" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "movement history codec bounds dimensions packed bits and optional nearest result", GT() {
+		auto value = SmacMovementHistory::NewGeneratedWorld( 6, 6 );
+		GT_ASSERT( !value.NearestDistance() && !value.WasPlaced( 5, 5 ), "generated policy did not use explicit clean placement and unknown distance" );
+		value.RetainNearest( 9999 );
+		const auto valid = value.Serialize();
+		GT_ASSERT( SmacMovementHistory::Deserialize( valid ) == value, "movement history roundtrip changed authority" );
+		const auto largest = SmacMovementHistory::NewGeneratedWorld( 512, 256 ).Serialize();
+		GT_ASSERT( largest.size() == SmacMovementHistory::MAX_WIRE_BYTES && SmacMovementHistory::Deserialize( largest ).Serialize() == largest, "exact map history budget rejected" );
+		for ( int scenario = 0; scenario < 12; ++scenario ) {
+			auto wire = valid;
+			if ( scenario == 0 ) { wire[0] = 'X'; }
+			if ( scenario == 1 ) { wire[4] = 2; }
+			if ( scenario == 2 ) { wire[8] = 0; }
+			if ( scenario == 3 ) { wire[12] = 5; }
+			if ( scenario == 4 ) { wire[15] = 127; }
+			if ( scenario == 5 ) { wire[16] = 0; }
+			if ( scenario == 6 ) { wire[20] = 2; }
+			if ( scenario == 7 ) { wire[20] = 0; } // absent must carry canonical zero, not9999
+			if ( scenario == 8 ) { wire[27] = 127; }
+			if ( scenario == 9 ) { wire.back() = char( 128 ); }
+			if ( scenario == 10 ) { wire.pop_back(); }
+			if ( scenario == 11 ) { wire.resize( SmacMovementHistory::MAX_WIRE_BYTES + 1 ); }
+			bool rejected = false; try { (void)SmacMovementHistory::Deserialize( wire ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected && value.Serialize() == valid, "invalid movement history changed source or decoded at case " + std::to_string( scenario ) );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "movement history actual placement departure and ordinary command preserve visits", GT() {
+		ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+		GT_ASSERT( !fixture.MovementHistory(), "synthetic non-generated simulation invented clean movement history" );
+		fixture.MovementHistory( SmacMovementHistory::NewGeneratedWorld( 8, 8 ) );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* manager = game->GetUM(); auto* def = Define( manager ); Land( game );
+			auto* unit = Spawn( GSE_CALL, fixture, Record() ); auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 );
+			GT_ASSERT( fixture.MovementHistory()->WasPlaced( 2, 2 ) && !fixture.MovementHistory()->WasPlaced( 3, 3 ), "actual initial placement missing" );
+			fixture.MoveEvent( GSE_CALL, unit, destination );
+			GT_ASSERT( unit->GetTile() == destination && fixture.MovementHistory()->WasPlaced( 2, 2 ) && fixture.MovementHistory()->WasPlaced( 3, 3 )
+				&& !fixture.MovementHistory()->NearestDistance(), "ordinary command lost source visit or invented nearest query" );
+			manager->ResetConventionalSpent( GSE_CALL, unit ); fixture.MoveEvent( GSE_CALL, unit, source );
+			GT_ASSERT( fixture.MovementHistory()->WasPlaced( 3, 3 ) && destination->units.empty(), "departure cleared the placement marker" );
+			// The same placement producer covers legacy non-air units, but air
+			// occupancy must not create the original non-air history marker.
+			auto* airdef = new StaticDef( "HISTORY_AIR", def->m_moraleset, "air", MT_AIR, 1,
+				new CvrScoutRender( 2, 0, 0, 1, {1,1}, {128,128} ) ); manager->DefineUnit( airdef );
+			auto* air = new Unit( GSE_CALL, manager, 72, airdef, unit->m_owner, game->GetMap()->GetTile( 4, 4 ), 1, 1, 1, false ); manager->SpawnUnit( GSE_CALL, air );
+			auto* land = new Unit( GSE_CALL, manager, 73, def, unit->m_owner, game->GetMap()->GetTile( 6, 6 ), 1, 1, 1, false ); manager->SpawnUnit( GSE_CALL, land );
+			GT_ASSERT( !fixture.MovementHistory()->WasPlaced( 4, 4 ) && fixture.MovementHistory()->WasPlaced( 6, 6 ), "air/non-air placement classification differs" );
+			manager->DespawnUnit( GSE_CALL, land->m_id );
+			GT_ASSERT( fixture.MovementHistory()->WasPlaced( 6, 6 ), "despawn cleared placement history" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "movement history HQ failed attempt commits nearest but unsupported requests remain atomic", GT() {
+		ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+		fixture.MovementHistory( SmacMovementHistory::NewGeneratedWorld( 8, 8 ) );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Land( game );
+			auto raw = Record(); raw.spent = 1; auto* unit = Spawn( GSE_CALL, fixture, raw ); auto* destination = game->GetMap()->GetTile( 3, 3 );
+			HQ( GSE_CALL, game, unit, unit->GetTile() ); destination->features = map::tile::FEATURE_XENOFUNGUS;
+			fixture.GameplayRandom( { 0, 0xa1b2c3d4 } ); // remaining2, captured shared draw2 refuses
+			const auto before = fixture.MovementHistory(); manager->ValidateConventionalMove( unit, destination, 0 );
+			GT_ASSERT( fixture.MovementHistory() == before, "event validation mutated history" );
+			fixture.MoveEvent( GSE_CALL, unit, destination );
+			GT_ASSERT( unit->GetTile() != destination && unit->Conventional().failed_move && unit->Conventional().spent == 3
+				&& fixture.MovementHistory()->NearestDistance() == 1 && !fixture.MovementHistory()->WasPlaced( 3, 3 )
+				&& fixture.GameplayRandom().Crt() == 0xa1b2c3d4, "accepted failed fungus attempt lost nearest result or replayed placement/CRT" );
+			const auto saved = fixture.MovementHistory(); const auto random = fixture.GameplayRandom();
+			bool rejected = false; try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& ) { rejected = true; }
+			fixture.MoveEvent( GSE_CALL, unit, destination );
+			GT_ASSERT( rejected && fixture.MovementHistory() == saved && fixture.GameplayRandom() == random, "exhausted human request entered lower encounter wrapper" );
+			manager->ResetConventionalSpent( GSE_CALL, unit ); destination->terraforming = map::tile::TERRAFORMING_FOREST;
+			rejected = false; try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& ) { rejected = true; }
+			fixture.MoveEvent( GSE_CALL, unit, destination );
+			GT_ASSERT( rejected && fixture.MovementHistory() == saved && fixture.GameplayRandom() == random, "unsupported terrain mutated caller history" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "movement history actual world restore never replays placement and retains late-failure authority", GT() {
+		ConventionalUnitFixture source, restored, failed; source.Configure( true, 3, true ); restored.Configure( true, 3, true ); failed.Configure( true, 3, true );
+		std::string bytes; std::optional< SmacMovementHistory > expected;
+		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Define( game->GetUM() ); Land( game ); auto* unit = Spawn( GSE_CALL, source, Record() );
+			// Explicit opt-in AFTER an existing unit. A restore must preserve the
+			// saved false bit, rather than reconstructing it from occupancy.
+			source.MovementHistory( SmacMovementHistory::NewGeneratedWorld( 8, 8 ) );
+			unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 3, 3 ) ); unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 4, 4 ) );
+			auto history = *source.MovementHistory(); history.RetainNearest( 777 ); source.MovementHistory( history );
+			// Saved independent bitmap with no occupied-square bit is legal port
+			// state and isolates restore replay from saved current occupancy.
+			auto wire = history.Serialize(); const auto index = history.PlacementIndex( 4, 4 ); wire[28 + index/8] &= char( ~( 1 << ( index%8 ) ) );
+			source.MovementHistory( SmacMovementHistory::Deserialize( wire ) ); expected = source.MovementHistory(); bytes = source.Snapshot(); GT_OK();
+		} ); if ( !setup.empty() ) { return setup; }
+		const auto success = restored.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			restored.MovementHistory( SmacMovementHistory::NewGeneratedWorld( 8, 8 ) ); restored.Restore( GSE_CALL, bytes );
+			GT_ASSERT( restored.MovementHistory() == expected && !restored.MovementHistory()->WasPlaced( 4, 4 ) && restored.Snapshot() == bytes, "restore replayed placement or changed history" );
+			auto* unit = restored.Game()->GetUM()->GetUnit( 71 ); restored.MoveEvent( GSE_CALL, unit, restored.Game()->GetMap()->GetTile( 5, 5 ) );
+			GT_ASSERT( restored.MovementHistory()->WasPlaced( 5, 5 ) && restored.MovementHistory()->NearestDistance() == 777, "restored ordinary continuation reset nearest history" ); GT_OK();
+		} ); if ( !success.empty() ) { return success; }
+		return failed.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto prior = SmacMovementHistory::NewGeneratedWorld( 8, 8 ); prior.RetainNearest( 23 ); failed.MovementHistory( prior );
+			bool rejected = false; try { failed.Restore( GSE_CALL, bytes.substr( 0, bytes.size() - 1 ) ); } catch ( const std::exception& ) { rejected = true; }
+			GT_ASSERT( rejected && failed.MovementHistory() == prior, "late body failure published or mutated staged history" );
+			// This asserts only movement-history retention; it does not claim
+			// rollback of the already decoded map/manager body.
+			GT_OK();
+		} );
+	} );
 	for ( const bool rover : { false, true } ) {
 		task->AddTest( rover ? "conventional bottom bar refreshes selected Rover checked stats" : "conventional bottom bar preserves native previews and refreshes checked Infantry stats", GT( rover ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, 3, false, rover );

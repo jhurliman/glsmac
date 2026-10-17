@@ -26,10 +26,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 6 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 7 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -39,16 +39,35 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	buffer.WriteString( value.social.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	buffer.WriteString( random ? *random : value.gameplay_random.Serialize() );
 	write( static_cast< int64_t >( value.movement_capability ) );
-	if ( modifiers ) { return buffer.ToString() + *modifiers; }
+	if ( modifiers ) { types::Buffer tail; tail.WriteBool( false ); return buffer.ToString() + *modifiers + tail.ToString(); }
 	buffer.WriteInt( value.resource_modifiers.atmospheric_dust_countdown );
 	buffer.WriteBool( value.resource_modifiers.solar_ordinary ); buffer.WriteBool( value.resource_modifiers.solar_upkeep );
 	buffer.WriteBool( value.resource_modifiers.planetary_governor.has_value() );
 	if ( value.resource_modifiers.planetary_governor ) { buffer.WriteInt( *value.resource_modifiers.planetary_governor ); }
+	buffer.WriteBool( history || value.movement_history.has_value() );
+	if ( history || value.movement_history ) { buffer.WriteString( history ? *history : value.movement_history->Serialize() ); }
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "movement history simulation optional maximum bitmap survives exact codec copy", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		auto value = State();
+		for ( const bool present : { false, true } ) {
+			if ( present ) { value.movement_history = SmacMovementHistory::NewGeneratedWorld( 512, 256 ); value.movement_history->RetainNearest( 9999 ); }
+			const auto wire = value.Serialize( technologies, profiles, units ).ToString();
+			auto decoded = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
+			GT_ASSERT( wire == Wire( value ) && wire.size() <= SmacSimulationState::MAX_WIRE_BYTES && decoded == value, "independent simulation framing or history restore differs" );
+			if ( present ) { decoded.movement_history->RetainNearest( {} ); GT_ASSERT( value.movement_history->NearestDistance() == 9999 && !( decoded == value ), "history copy aliases nearest authority" ); }
+		}
+		GT_ASSERT( Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( value, 1, 6 ), technologies, profiles, units ); } ), "pre-history V6 accepted" );
+		std::string large( SmacMovementHistory::MAX_WIRE_BYTES + 1, 'x' ), message;
+		try { SmacSimulationState::Deserialize( Wire( value, SIZE_MAX, 0, nullptr, nullptr, &large ), technologies, profiles, units ); }
+		catch ( const std::runtime_error& error ) { message = error.what(); }
+		GT_ASSERT( message.find( "payload limit" ) != std::string::npos, "history oversized frame reached nested allocation instead of outer admission" );
+		GT_OK();
+	} );
 	task->AddTest( "SMAC simulation resource modifiers retain independent phases and council identity", GT() {
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
 		const faction::SmacGlobalResourceModifiers reset{ 0, false, false, {} };

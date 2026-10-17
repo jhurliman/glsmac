@@ -2467,6 +2467,7 @@ void Game::AcquireInitializationMap() {
 #endif
 
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
+		bool generated_map = false;
 
 #ifdef DEBUG
 		if ( !connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
@@ -2492,6 +2493,7 @@ void Game::AcquireInitializationMap() {
 				}
 				else {
 					ec = candidate->Generate( &map_settings, m_init_cancel );
+					generated_map = ec == map::Map::EC_NONE;
 				}
 			}
 
@@ -2503,6 +2505,7 @@ void Game::AcquireInitializationMap() {
 
 		if ( !ec ) {
 			PublishInitializationMap( candidate );
+			if ( m_active_admission ) { m_active_admission->generated_map = generated_map; }
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
 			if ( connection ) {
 				connection->UpdateSlot( m_slot_num, m_slot, true );

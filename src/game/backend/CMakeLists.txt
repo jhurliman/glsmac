@@ -15,6 +15,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Random.cpp
 	${PWD}/SmacGameplayRandomState.cpp
+	${PWD}/SmacMovementHistory.cpp
 	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
 	${PWD}/WorldSnapshotRules.cpp

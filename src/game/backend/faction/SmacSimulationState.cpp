@@ -7,7 +7,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 6;
+constexpr int64_t VERSION = 7;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -68,7 +68,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history; }
 
 const SmacSimulationParticipant* SmacSimulationState::FindSlot( size_t slot ) const {
 	for ( const auto& participant : roster ) { if ( static_cast< size_t >( participant.slot ) == slot ) { return &participant; } }
@@ -95,6 +95,8 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	buffer.WriteBool( resource_modifiers.solar_ordinary ); buffer.WriteBool( resource_modifiers.solar_upkeep );
 	buffer.WriteBool( resource_modifiers.planetary_governor.has_value() );
 	if ( resource_modifiers.planetary_governor ) { buffer.WriteInt( *resource_modifiers.planetary_governor ); }
+	buffer.WriteBool( movement_history.has_value() );
+	if ( movement_history ) { buffer.WriteString( movement_history->Serialize() ); }
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -128,6 +130,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		std::optional< int32_t > governor;
 		if ( buffer.ReadBool() ) { governor = ReadInt32( buffer ); }
 		SmacSimulationState result( random, static_cast< MovementCapability >( capability ), { dust, ordinary, upkeep, governor } );
+		if ( buffer.ReadBool() ) { result.movement_history = SmacMovementHistory::Deserialize( buffer.ReadString( SmacMovementHistory::MAX_WIRE_BYTES ) ); }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

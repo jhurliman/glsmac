@@ -3,6 +3,7 @@
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
 #include "game/backend/SmacGameplayRandomState.h"
+#include "game/backend/SmacMovementHistory.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "game/backend/RosterRecords.h"
 
@@ -47,6 +48,7 @@ struct SmacSimulationState {
 	SmacGameplayRandomState gameplay_random;
 	MovementCapability movement_capability;
 	SmacGlobalResourceModifiers resource_modifiers;
+	std::optional< SmacMovementHistory > movement_history;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;
 	const SmacSimulationParticipant* FindSlot( size_t slot ) const;

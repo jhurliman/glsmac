@@ -50,6 +50,11 @@ void Game::ValidateSimulation( const BoundSimulation& simulation ) const {
 		throw std::runtime_error( "SMAC simulation controller roster was retired" );
 	}
 	m_state->RequireRoster( simulation.epoch );
+	if ( simulation.value.movement_history ) {
+		const auto& selected = m_state->m_settings.global.map.GetSmacWorldSize();
+		if ( !selected ) { throw std::runtime_error( "Movement history requires an accepted world geometry" ); }
+		simulation.value.movement_history->ValidateDimensions( selected->width, selected->height );
+	}
 	if ( simulation.value.designs.global_difficulty != OriginalGlobalDifficulty( m_state->m_settings.global ) ) {
 		throw std::runtime_error( "SMAC saved global difficulty differs from accepted settings" );
 	}
@@ -112,6 +117,11 @@ void Game::PrepareNewSimulation() {
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
 		faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
+	if ( m_active_admission && m_active_admission->generated_map ) {
+		const auto& selected = settings.map.GetSmacWorldSize();
+		if ( !selected ) { throw std::runtime_error( "Generated movement history requires accepted world geometry" ); }
+		value.movement_history = SmacMovementHistory::NewGeneratedWorld( selected->width, selected->height );
+	}
 	m_simulation = BindSimulation( std::move( value ) );
 }
 

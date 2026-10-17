@@ -42,7 +42,8 @@ Unit::Unit(
 	const movement_t movement,
 	const morale_t morale,
 	const health_t health,
-	const bool moved_this_turn
+	const bool moved_this_turn,
+	const bool record_placement
 )
 	: MapObject( um->GetMap(), nullptr )
 	, m_id( id )
@@ -50,16 +51,16 @@ Unit::Unit(
 	, m_owner( owner )
 	, m_state( LegacyState{ movement, morale, health, moved_this_turn } )
 	, m_um( um ) {
-	Publish( GSE_CALL, tile );
+	Publish( GSE_CALL, tile, record_placement );
 }
 
-Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup )
+Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup, bool record_placement )
 	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ), m_early_startup( early_startup ) {
 	// The manager has already resolved all context and presentation admission.
-	Publish( GSE_CALL, tile );
+	Publish( GSE_CALL, tile, record_placement );
 }
 
-void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile ) {
+void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 	if ( m_id == 0 || m_id >= static_cast< uint64_t >( std::numeric_limits< int64_t >::max() ) ||
 		m_id >= std::numeric_limits< size_t >::max() || m_um->HasUnitId( m_id ) || !tile || tile->units.count( m_id ) ) {
 		THROW( "invalid or duplicate unit ID" );
@@ -67,7 +68,7 @@ void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile ) {
 	if ( !m_def || m_def != m_um->GetUnitDef( m_def->m_id ) ) {
 		THROW( "unit definition is not owned by its manager" );
 	}
-	SetTile( GSE_CALL, tile );
+	Place( GSE_CALL, tile, record_placement );
 	if ( next_id <= m_id ) {
 		next_id = m_id + 1;
 	}
@@ -119,6 +120,11 @@ void Unit::CommitConventionalMove( const ConventionalUnitState& state, map::tile
 }
 
 void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
+	Place( GSE_CALL, tile, true );
+}
+
+void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
+	const auto placement = record_placement ? m_um->PreparePlacementHistory( *this, tile ) : std::pair< SmacMovementHistory*, size_t >{ nullptr, 0 };
 	if ( m_tile ) {
 		m_tile->units.erase( m_id );
 	}
@@ -130,6 +136,7 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 		}
 	);
 	m_tile = tile;
+	if ( placement.first ) { placement.first->MarkPlaced( placement.second ); }
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -186,13 +193,13 @@ Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, cons
 	auto* slot = um->GetSlot( owner ); auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
 	if ( conventional ) {
 		um->ValidateConventionalCreation( static_cast< size_t >( id ), def, slot, tile, *conventional, resolver );
-		return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile, *conventional );
+		return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile, *conventional, false, false );
 	}
 	if ( legacy.morale < MORALE_MIN || legacy.morale > MORALE_MAX || !std::isfinite( legacy.movement ) || !std::isfinite( legacy.health ) ) {
 		THROW( "invalid unit morale, movement or health" );
 	}
 	return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile,
-		legacy.movement, legacy.morale, legacy.health, legacy.moved_this_turn );
+		legacy.movement, legacy.morale, legacy.health, legacy.moved_this_turn, false );
 }
 
 WRAPIMPL_SERIALIZE( Unit )

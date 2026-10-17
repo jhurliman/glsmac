@@ -42,7 +42,8 @@ public:
 		const movement_t movement,
 		const morale_t morale,
 		const health_t health,
-		const bool moved_this_turn
+		const bool moved_this_turn,
+		bool record_placement = true
 	);
 	virtual ~Unit() = default;
 
@@ -80,8 +81,9 @@ public:
 
 private:
 	friend class UnitManager;
-	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false );
-	void Publish( GSE_CALLABLE, map::tile::Tile* tile );
+	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true );
+	void Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
+	void Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	// Called only after manager validation and membership/update allocation.
 	void CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept;
 	std::variant< LegacyState, ConventionalUnitState > m_state;

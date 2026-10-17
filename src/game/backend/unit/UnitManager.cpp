@@ -147,6 +147,17 @@ ConventionalUnitContext UnitManager::ResolveConventional( const ConventionalUnit
 	return m_game->ResolveConventionalUnit( state, owner );
 }
 
+std::pair< SmacMovementHistory*, size_t > UnitManager::PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const {
+	if ( !m_game->m_simulation || !m_game->m_simulation->value.movement_history || unit.m_def->GetMovementType() == MT_AIR ) { return { nullptr, 0 }; }
+	m_game->ValidateSimulation( *m_game->m_simulation );
+	auto& history = *m_game->m_simulation->value.movement_history;
+	const auto* map = GetMap();
+	if ( !map || !tile || tile->coord.x >= map->GetWidth() || tile->coord.y >= map->GetHeight()
+		|| map->GetTile( tile->coord.x, tile->coord.y ) != tile ) { THROW( "Placement history requires a canonical world tile" ); }
+	history.ValidateDimensions( map->GetWidth(), map->GetHeight() );
+	return { &history, history.PlacementIndex( static_cast< int32_t >( tile->coord.x ), static_cast< int32_t >( tile->coord.y ) ) };
+}
+
 void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
 	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup ) const {
 	if ( !resolver || id == 0 || id >= static_cast< uint64_t >( INT64_MAX ) || id >= std::numeric_limits< size_t >::max()

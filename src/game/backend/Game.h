@@ -436,6 +436,9 @@ private:
 		common::mt_id_t request = 0;
 		State::game_session_t admitted_binding;
 		bool cancelled = false;
+		// Set only after this admission's actual Generate call succeeds. File,
+		// debug-dump and downloaded map paths never infer fresh placement history.
+		bool generated_map = false;
 		StartupStage stage = StartupStage::Complete;
 		connection::Connection* connection = nullptr;
 		size_t slot = 0;

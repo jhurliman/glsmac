@@ -254,6 +254,8 @@ public:
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 7 ) = retained; owner.current[ 7 ] = current; }
 	}
 	void ConventionalCapability( game::backend::faction::SmacSimulationState::MovementCapability capability ) { m_game.m_simulation->value.movement_capability = capability; }
+	void ConventionalHistory( std::optional< game::backend::SmacMovementHistory > history ) { m_game.m_simulation->value.movement_history = std::move( history ); }
+	std::optional< game::backend::SmacMovementHistory > ConventionalHistory() const { return m_game.m_simulation->value.movement_history; }
 	void ConventionalMoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller ) {
 		using namespace game::backend::event;
 		if ( !m_game.m_event_handlers.count( "move_unit" ) ) {
@@ -1033,6 +1035,15 @@ public:
 		BackendFixture fixture;
 		fixture.EnableTurnPlayers();
 		if ( mode ) {
+			// Modes3/4 use the real generated-map path; modes1/2 load a file.
+			// Only a successfully published generated map may opt into history.
+			const bool generated = mode >= 3, canceled = mode == 2 || mode == 4;
+			auto& settings = fixture.m_state->m_settings.global;
+			if ( generated ) {
+				settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_startup_fixture::Source );
+				smac_rules_fixture::AcceptWorldSize( settings ); fixture.EnableSimulationParticipants();
+			}
+			fixture.FixtureWorldTicket();
 			// Slot::Update uses the actual Engine backend during acquisition.
 			// The queued notification captures that backend before restoration.
 			auto* const previous_game = g_engine->m_game;
@@ -1045,7 +1056,7 @@ public:
 			util::FinallyGuard remove_file( [ & ]() { std::error_code ignored; std::filesystem::remove( path, ignored ); } );
 			const auto bytes = old->GetTilesPtr()->Serialize().ToString();
 			{ std::ofstream file( path, std::ios::binary ); file.write( bytes.data(), bytes.size() ); if ( !file ) { throw std::runtime_error( "could not write synthetic map" ); } }
-			fixture.m_state->m_settings.global.map.type = settings::MapSettings::MT_MAPFILE;
+			if ( !generated ) { fixture.m_state->m_settings.global.map.type = settings::MapSettings::MT_MAPFILE; }
 			fixture.m_state->m_settings.global.map.filename = path.string();
 			fixture.m_game.m_slot = &fixture.m_state->m_slots->GetSlot( 0 );
 			fixture.m_game.m_player = fixture.m_game.m_slot->GetPlayer();
@@ -1053,7 +1064,7 @@ public:
 			textures.on_load = [ & ]() {
 				unpublished = unpublished && !fixture.m_game.m_map && fixture.m_game.m_old_map == old;
 				g_engine->GetGC()->Iterate(); // actual collection while construction is private
-				if ( mode == 2 ) { fixture.m_game.m_init_cancel = true; }
+				if ( canceled ) { fixture.m_game.m_init_cancel = true; }
 			};
 			fixture.m_map.release();
 			util::FinallyGuard recover( [ & ]() {
@@ -1065,14 +1076,23 @@ public:
 			std::thread native( [ & ]() { try { fixture.m_game.AcquireInitializationMap(); } catch ( ... ) { error = std::current_exception(); } } );
 			native.join();
 			GT_ASSERT( unpublished && textures.loads == 2, "actual acquisition exposed current/partial map during constructor source loads" );
-			if ( mode == 1 ) {
+			if ( !canceled ) {
 				if ( error ) { std::rethrow_exception( error ); }
 				GT_ASSERT( fixture.m_game.m_map && fixture.m_game.m_map != old && fixture.m_game.m_old_map == old &&
-					fixture.m_game.m_map->GetTilesPtr()->Serialize().ToString() == bytes && fixture.m_game.m_game_state == Game::GS_INITIALIZING,
+					( generated || fixture.m_game.m_map->GetTilesPtr()->Serialize().ToString() == bytes ) && fixture.m_game.m_game_state == Game::GS_INITIALIZING,
 					"actual file acquisition did not commit complete equivalent tile storage" );
 				fixture.ProcessAccumulations();
+				GT_ASSERT( fixture.m_game.m_active_admission->generated_map == generated, "map source provenance differs" );
+				if ( generated ) {
+					fixture.AdmitSimulationForSnapshotFixture();
+					const auto& history = fixture.m_game.m_simulation->value.movement_history;
+					GT_ASSERT( history.has_value(), "new generated simulation omitted history policy" );
+					history->ValidateDimensions( fixture.m_game.m_map->GetWidth(), fixture.m_game.m_map->GetHeight() );
+					GT_ASSERT( !history->NearestDistance() && !history->WasPlaced( 0, 0 ), "new generated policy invented nearest or placement" );
+				}
 			} else {
 				GT_ASSERT( error && !fixture.m_game.m_map && fixture.m_game.m_old_map == old, "actual canceled acquisition published a candidate" );
+				GT_ASSERT( !fixture.m_game.m_active_admission->generated_map, "canceled generation published movement-history admission" );
 				fixture.m_game.m_init_cancel = false;
 				const auto failure = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.m_game.InitFailed( "canceled candidate" ); GT_OK(); } );
 				GT_ASSERT( failure.empty() && fixture.m_game.m_map == old && !fixture.m_game.m_old_map, "actual canceled acquisition lost old map: " + failure );
@@ -3525,7 +3545,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 63; ++scenario ) {
+		for ( int scenario = 0; scenario < 71; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3541,6 +3561,11 @@ public:
 				GT_OK();
 			} );
 			GT_ASSERT( configured.empty(), "invalid runtime configure: " + configured );
+			std::optional< faction::SmacSimulationState > prior_simulation;
+			if ( scenario >= 63 ) {
+				auto prior = expected; prior.movement_history = SmacMovementHistory::NewGeneratedWorld( 8, 8 ); prior.movement_history->RetainNearest( 23 );
+				destination.m_game.m_simulation = destination.m_game.BindSimulation( prior ); prior_simulation = prior;
+			}
 			auto value = expected;
 			if ( scenario == 0 ) { value.roster[ 2 ].simulation_id = 1; }
 			if ( scenario == 1 ) { value.roster[ 2 ].slot = 2; }
@@ -3548,7 +3573,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 5 : 6 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 6 : 7 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -3600,6 +3625,19 @@ public:
 				if ( scenario >= 51 && scenario <= 53 ) { raw.WriteInt( scenario == 51 ? 0 : scenario == 52 ? 8 : INT64_MAX ); }
 				else if ( value.resource_modifiers.planetary_governor ) { raw.WriteInt( *value.resource_modifiers.planetary_governor ); }
 			}
+			if ( scenario == 64 ) { raw.WriteInt( 1 ); }
+			else if ( scenario != 63 ) {
+				raw.WriteBool( scenario >= 65 );
+				if ( scenario >= 65 ) {
+					auto history = SmacMovementHistory::NewGeneratedWorld( scenario == 68 ? 16 : scenario == 70 ? 6 : 8, scenario == 70 ? 6 : 8 ).Serialize();
+					if ( scenario == 65 ) { history.pop_back(); }
+					if ( scenario == 66 ) { history.resize( SmacMovementHistory::MAX_WIRE_BYTES + 1, 'x' ); }
+					if ( scenario == 67 ) { history[8] = 2; }
+					if ( scenario == 69 ) { history[20] = 1; history[24] = 0x10; history[25] = 0x27; } //10000
+					if ( scenario == 70 ) { history.back() = char( 128 ); }
+					raw.WriteString( history );
+				}
+			}
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }
@@ -3621,10 +3659,10 @@ public:
 					world_snapshot::ReadRandomState( input ); const auto turn = world_snapshot::ReadTurnState( input, destination.m_state->m_slots->GetSlots() );
 					destination.m_game.ReadSimulationState( input, turn.id );
 				} catch ( const std::runtime_error& ) { rejected = true; }
-				GT_ASSERT( rejected == ( scenario < 11 || ( scenario >= 17 && scenario < 55 ) ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
+				GT_ASSERT( rejected == ( scenario < 11 || ( scenario >= 17 && scenario < 55 ) || scenario >= 63 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
 			} );
 			GT_ASSERT( prefix_check.empty(), "runtime prefix: " + prefix_check );
-			if ( scenario < 55 ) { bytes.WriteBool( false ); } // explicit unavailable resource policy
+			if ( scenario < 55 || scenario >= 63 ) { bytes.WriteBool( false ); } // explicit unavailable resource policy
 			else {
 				using Policy = map::GlsmacResourceMapPolicy;
 				const auto policy_offset = bytes.lenw;
@@ -3667,7 +3705,8 @@ public:
 			if ( escaped ) { std::rethrow_exception( escaped ); }
 			types::Buffer after_tiles; destination.m_game.m_map->SaveToBuffer( after_tiles );
 			GT_ASSERT( client->ErrorReason() == "Snapshot format mismatch" && destination.m_game.m_map == prior_map && after_tiles.ToString() == prior_tiles.ToString(), "runtime rejection reached map construction or escaped safe disconnect" );
-			GT_ASSERT( !callbacks && !destination.m_game.m_simulation && !destination.m_game.m_pending_simulation
+			const bool retained_simulation = prior_simulation ? destination.m_game.m_simulation && destination.m_game.m_simulation->value == *prior_simulation : !destination.m_game.m_simulation;
+			GT_ASSERT( !callbacks && retained_simulation && !destination.m_game.m_pending_simulation
 				&& !destination.HasPendingSnapshotTurn() && !destination.HasPendingSnapshotRandom() && destination.m_game.GetRandom()->GetStateString() == prior_rng
 				&& destination.m_game.GetTurnId() == prior_turn && destination.WorldManagers() == prior_managers && destination.m_frontend_requests.size() == prior_frontend,
 				"rejected runtime changed world, callbacks or continuation" );
@@ -4209,6 +4248,8 @@ game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom()
 void ConventionalUnitFixture::GameplayRandom( game::backend::SmacGameplayRandomState value ) { fixture->ConventionalRandom( value ); }
 void ConventionalUnitFixture::RetainedPlanet( int32_t retained, int32_t current ) { fixture->ConventionalPlanet( retained, current ); }
 void ConventionalUnitFixture::MovementCapability( game::backend::faction::SmacSimulationState::MovementCapability value ) { fixture->ConventionalCapability( value ); }
+void ConventionalUnitFixture::MovementHistory( std::optional< game::backend::SmacMovementHistory > value ) { fixture->ConventionalHistory( std::move( value ) ); }
+std::optional< game::backend::SmacMovementHistory > ConventionalUnitFixture::MovementHistory() const { return fixture->ConventionalHistory(); }
 void ConventionalUnitFixture::MoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller ) { fixture->ConventionalMoveEvent( GSE_CALL, unit, tile, caller ); }
 std::string CheckResourceMapPolicyBackend( const int scenario ) { BackendFixture fixture; return fixture.CheckResourceMapPolicy( scenario ); }
 
@@ -6316,6 +6357,11 @@ static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
 	for ( const int mode : { 1, 2 } ) {
 		task->AddTest( "map publication actual native file acquisition " + std::to_string( mode ), GT( mode ) {
 			const auto error = BackendFixture::CheckMapAcquisition( mode ); GT_ASSERT( error.empty(), "acquisition: " + error ); GT_OK();
+		} );
+	}
+	for ( const int mode : { 3, 4 } ) {
+		task->AddTest( "movement history actual generated map admission " + std::to_string( mode ), GT( mode ) {
+			const auto error = BackendFixture::CheckMapAcquisition( mode ); GT_ASSERT( error.empty(), "generation: " + error ); GT_OK();
 		} );
 	}
 	task->AddTest( "map publication collects rejected final chunk between Ingress and Failure", GT() {

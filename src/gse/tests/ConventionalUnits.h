@@ -26,6 +26,8 @@ public:
 	void GameplayRandom( game::backend::SmacGameplayRandomState value );
 	void RetainedPlanet( int32_t retained, int32_t current );
 	void MovementCapability( game::backend::faction::SmacSimulationState::MovementCapability capability );
+	void MovementHistory( std::optional< game::backend::SmacMovementHistory > history );
+	std::optional< game::backend::SmacMovementHistory > MovementHistory() const;
 	void MoveEvent( GSE_CALLABLE, game::backend::unit::Unit* unit, game::backend::map::tile::Tile* tile, size_t caller = 0 );
 	game::backend::Game* Game() const;
 	std::string Run( const std::function< std::string( GSE_CALLABLE ) >& check );

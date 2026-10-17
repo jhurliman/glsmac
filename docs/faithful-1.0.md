@@ -215,6 +215,10 @@ at `5ed286fd` adds the restricted Infantry/HQ route and actual raw-startup
 readiness lifecycle. Windows, leak-enabled Linux and native macOS pass CTest
 8/8; 50 tracked groups pass and the full 337-unit analysis has zero failures.
 Default conventional startup remains a follow-up.
+The [Rover/HQ follow-up](validation/rover-hq-2026-10-17.md) at `b2deeaca`
+adds the measured selected Spartan Rover route; 53 tracked groups pass on
+Windows and leak-enabled Linux, with zero failures in the changed-source scan.
+It does not claim a new three-platform full-suite checkpoint.
 
 The preceding [social and movement receipt](validation/social-movement-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at

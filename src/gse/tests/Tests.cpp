@@ -3,6 +3,7 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -14,6 +15,8 @@
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
+#include "SmacPredefinedUnitCatalog.h"
+#include "SmacFactionStartupRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
@@ -73,6 +76,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
@@ -213,6 +217,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
+		tests::AddSmacPredefinedUnitCatalogTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}

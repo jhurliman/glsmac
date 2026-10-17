@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Mesh.cpp
@@ -17,6 +18,8 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
+	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp

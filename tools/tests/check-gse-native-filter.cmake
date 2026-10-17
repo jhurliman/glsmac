@@ -2,6 +2,7 @@
 # Each invocation gets its own prefix and executes at most one native test or
 # one script. In particular, none of these checks starts the full suite.
 FUNCTION( CHECK_FILTER CASE EXPECTED_RESULT EXPECTED_OUTPUT EXPECTED_NATIVE_COUNT )
+	MESSAGE( STATUS "Checking native filter case: ${CASE}" )
 	EXECUTE_PROCESS(
 		COMMAND "${GLSMAC_EXECUTABLE}" --quiet --prefix "${GLSMAC_TEST_PREFIX}-${CASE}" ${ARGN}
 		WORKING_DIRECTORY "${GLSMAC_SOURCE_DIR}"

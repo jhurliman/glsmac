@@ -66,3 +66,19 @@ Evidence is retained locally under
 The final filter also names the two pending renderer ownership tests; they are
 not registered in this isolated base and are not part of its six-test evidence.
 Native Windows and the combined eight-fixture run remain integration checks.
+
+### Wrapper timeout accounting
+
+At integration `55636ab5`, native Windows passed seven CTest entries, including
+the full GSE suite, but the filter wrapper reached its 30-second aggregate limit
+after 30.82 seconds without case-level output. An unchanged focused retry passed
+in 9.82 seconds; no engine hang or production-state defect was established.
+The wrapper runs eight subprocesses sequentially, each with its own 10-second
+limit. Its CTest limit is now 90 seconds so that those individual limits can
+report failures before the aggregate watchdog fires. Every case announces its
+name before launching; passing CTest output remains quiet. No sleep, retry or
+child-process timeout increase was added. The initial run and unchanged retry
+are retained in `out/production-state-windows-ctest.log` and
+`out/production-state-windows-filter-retry.log` in the integration checkout.
+The updated focused CTest passed in 9.19 seconds; its verbose log confirms the
+90-second outer limit and all eight case names (`out/filter-timeout-validation.log`).

@@ -65,11 +65,12 @@ return {
 			data.rows,
 			data.filled,
 			data.pending,
+			0,
 			this.production_cells,
 			'base-screen-bottombar-production-cell',
 			this.production_label,
-			(progress_in) => {
-				return #to_string(progress_in) + ' TURNS';
+			(progress) => {
+				return progress.turns + ' TURNS';
 			},
 		);
 

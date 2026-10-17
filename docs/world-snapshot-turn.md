@@ -41,15 +41,15 @@ all lifetime bindings are revalidated. Captured old Player or Slot addresses
 are never dereferenced. A replaced player, even in the same numeric slot or
 at the same address, is a terminal initialization failure.
 
-Early validation can run on the backend thread outside accumulation. A failed
-check immediately parks initialization in its existing waiting state and queues
-error handling on the Space owner, retaining State as the queued owner. Repeated
-backend iterations still service MT reset requests, then skip ordinary State,
-event and manager work while failure is pending. Already-queued ordinary
-iteration callbacks also check that pending-failure flag before running. A private
-snapshot generation plus current-State/state checks retire stale queued errors
-after reset or a replacement download. No synchronous wait or cross-thread
-script execution is introduced.
+Early validation can run on the backend thread outside accumulation. It now
+uses the existing native collection exclusion and only validates or throws;
+it never queues an independent error callback. The admitted startup coordinator
+records that error and publishes its claimed Failure checkpoint before the next
+MT request extraction. Pending cancellation permits the real reset request to
+complete without owner drain; Running cancellation waits for the full owner
+operation to finish. Already-queued ordinary iteration work skips a known
+admission failure. See [the owner-checkpoint correction](snapshot-owner-checkpoints.md)
+for the concurrency boundary and tests that replace the earlier generation gate.
 
 Only after all records validate does initialization apply every saved flag
 through the scalar Player setters. It then restores the turn/RNG continuation
@@ -90,12 +90,13 @@ the same slot, deterministic destruction/reconstruction at the same address,
 and replacement during deferred spawn processing. Rejection leaves the first
 player unchanged when a later binding fails.
 
-The early-rejection fixture also invokes real `Game::Iterate` outside accumulation
-on both the owner and a separate backend thread. It checks deferred owner-only
-notification, repeated iterations, reset, successful replacement, and two queued
-failures from different generations before owner drain. Another case queues an
-actual event before the failed download and verifies that it is discarded,
-rather than applied ahead of the owner-thread error callback.
+Current admitted-checkpoint tests drive actual MT initialization and failure,
+Pending/Running reset, a completed Client disconnect response during full Start,
+and actual collector exclusion. Decoder-layer fixtures that directly construct a
+world still invoke validation/completion under owner accumulation, and explicitly
+dispatch their synchronous failure. They do not establish production scheduling.
+The earlier unadmitted generation/parking fixtures are superseded; their historical
+results below are not evidence that the held concurrency findings were solved.
 
 Malformed records run both directly through the production decoder and through
 real Client final-chunk dispatch, immediately and queued from a worker. Those
@@ -114,6 +115,8 @@ On integration with the separately reviewed tracked native-test support (#57), a
 `--gse-tests-native-filter 'world completion|world turn restore|world RNG|real final download' --memorydebug`
 to select these cases with allocation tracking.
 
+## Historical validation before owner-checkpoint correction
+
 Local Clang 15 / Ubuntu WSL integration validation passed all eight normal CTest entries
 (34.47 seconds), all eight ASan/UBSan/LSan entries (41.32 seconds, leak detection
 enabled), and 24 focused cases with allocation tracking in both builds.
@@ -128,8 +131,9 @@ regressions (three flag cases and one case for each other guard). The earlier
 outside-accumulation test also reproduced `GC not in accumulation mode` before
 owner-thread failure dispatch was added. Final intended sources stayed intact
 during copied-TU controls. Independent read-only production and test reviews
-found no remaining blocking issue. Native Windows and rendered join validation
-are left to integration.
+found no blocker at that time; later PR77 concurrency findings required the
+separate owner-checkpoint correction linked above. Native Windows and rendered
+join validation were left to integration.
 
 The focused publication ancestry does not include every ownership repair or
 tracked-test facility used by the integration validation above. In particular,

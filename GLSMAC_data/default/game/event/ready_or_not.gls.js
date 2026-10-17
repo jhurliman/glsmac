@@ -4,6 +4,11 @@ return {
 		if (e.game.is_started()) {
 			return 'Game has already started';
 		}
+		if (e.data.ready && e.game.get_ruleset() == 'smac') {
+			if (((e.game.get_settings().global.get_world_size())[0]) == -1) {
+				return 'Select a planet size before getting ready';
+			}
+		}
 	},
 
 	apply: (e) => {

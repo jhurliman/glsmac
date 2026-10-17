@@ -144,6 +144,7 @@ protected:
 private:
 	friend class gse::tests::BackendFixture;
 	friend class game::backend::Game;
+	friend class game::backend::State;
 	// No concurrent connection iteration may create a new events request.
 	// Separate the transport wait from collector-visible handler retirement.
 	void DrainEventRequest();

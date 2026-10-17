@@ -24,9 +24,11 @@ bool SmacWorldSizeRules::operator==( const SmacWorldSizeRules& other ) const { r
 void SmacWorldSizeRules::Validate() const {
 	for ( const auto& row : presets ) {
 		if ( row.name.empty() || row.name.find( '\0' ) != std::string::npos ) { throw std::runtime_error( "SMAC world-size name must be nonempty without NUL" ); }
-		// Bounded port ingestion domain. Odd source Y remains represented, but
-		// cannot be selected until the backend supports odd-height maps.
+		// Every frozen preset is exposed by both setup menus and lobby events.
+		// Reject unsupported geometry before publishing the catalog, so selecting
+		// any admitted category cannot fail after a settings event is broadcast.
 		if ( row.source_x < 2 || row.source_x > 256 || row.source_y < 4 || row.source_y > 256 ) { throw std::runtime_error( "SMAC world-size source dimensions outside supported bounds" ); }
+		if ( row.source_y & 1 ) { throw std::runtime_error( "GLSMAC requires even world-size preset heights" ); }
 	}
 }
 

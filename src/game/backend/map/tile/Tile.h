@@ -40,7 +40,7 @@ class Tiles;
 class Tile : public gse::Wrappable, public ResourceRelated {
 public:
 
-	typedef std::unordered_map< std::string, uint8_t > resources_t;
+	typedef std::unordered_map< std::string, int64_t > resources_t;
 
 	Tiles* tiles = nullptr;
 

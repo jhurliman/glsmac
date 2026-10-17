@@ -52,6 +52,12 @@ public:
 	// No camera, scalar, RGB palette, group-origin or matrix defaults.
 	static CvrIndexedResult Draw( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 		const std::vector< CvrIndexedDraw >& draws );
+	// The complete Scout caller uses the original modulo32 shifted depth
+	// accumulator, including initial values outside Draw's signed shifted
+	// subset. Only depth changes policy: x/y bounds, owned output and complete
+	// prevalidation remain identical. High16 bits are compared as unsigned.
+	static CvrIndexedResult DrawModuloDepth( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
+		const std::vector< CvrIndexedDraw >& draws );
 };
 
 }

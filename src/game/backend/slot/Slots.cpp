@@ -1,4 +1,5 @@
 #include "Slots.h"
+#include "game/backend/State.h"
 
 namespace game {
 namespace backend {
@@ -38,26 +39,9 @@ void Slots::Clear() {
 	m_slots.clear();
 }
 
-const types::Buffer Slots::Serialize() const {
-	types::Buffer buf;
+const types::Buffer Slots::Serialize() const { return types::Buffer(roster::EncodeRoster(m_state->ExportRoster(),State::ROSTER_LIMITS)); }
+void Slots::Deserialize(types::Buffer) { throw std::runtime_error("Roster metadata must be published through State"); }
 
-	buf.WriteInt( m_slots.size() );
-
-	for ( auto& slot : m_slots ) {
-		buf.WriteString( slot.Serialize().ToString() );
-	}
-
-	return buf;
-}
-
-void Slots::Deserialize( types::Buffer buf ) {
-	ASSERT( m_slots.empty(), "deserialize on non-empty slots" );
-	Resize( buf.ReadInt() );
-
-	for ( auto& slot : m_slots ) {
-		slot.Deserialize( buf.ReadString() );
-	}
-}
 
 }
 }

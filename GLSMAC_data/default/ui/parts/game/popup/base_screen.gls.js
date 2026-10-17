@@ -131,7 +131,10 @@ return {
 		const canonical = base.has_smac_resource_context;
 		let consumption = undefined;
 		if (canonical) {
-			consumption = { NUTRIENTS: base.get_smac_nutrient_demand() };
+			consumption = {
+				NUTRIENTS: base.get_smac_nutrient_demand(),
+				MINERALS: base.get_smac_mineral_support(),
+			};
 		} else {
 			consumption = base.get_consumption();
 		}

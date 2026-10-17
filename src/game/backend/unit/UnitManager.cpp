@@ -32,6 +32,7 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <type_traits>
 
 namespace game {
 namespace backend {
@@ -214,6 +215,7 @@ struct UnitManager::PreparedConventionalUnit::Data {
 	std::unordered_map< size_t, unit_update_t > updates;
 	std::optional< map::SmacWorkerKnowledge > sight;
 	std::pair< SmacMovementHistory*, size_t > history;
+	std::vector< std::pair<Unit*,ConventionalUnitState> > homes;
 	Unit* published = nullptr;
 	size_t id = 0;
 	bool notified = false;
@@ -226,9 +228,55 @@ const Unit& UnitManager::PreparedConventionalUnit::Candidate() const {
 	if ( !m_data || !m_data->candidate ) { THROW( "Prepared unit candidate is unavailable" ); }
 	return *m_data->candidate;
 }
+void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::Base& abandoned,
+    const base::Base& replacement, const map::SmacWorkerKnowledge& territory ) {
+    if ( !m_data || !m_data->candidate || m_data->published || !m_data->homes.empty() ) {
+        THROW( "Abandonment requires its uncommitted newborn" );
+    }
+    auto& data=*m_data;
+    auto* game=data.manager->m_game;
+    auto& newborn=*data.candidate;
+    auto state=newborn.Conventional();
+    if ( newborn.m_owner!=abandoned.m_owner || replacement.m_owner!=abandoned.m_owner
+        || data.tile!=abandoned.GetTile() || state.home_base_id!=abandoned.m_id
+        || game->ResolveConventionalUnit(state,newborn.m_owner).package!=ConventionalUnitContext::Package::Colony
+        || !data.sight ) { THROW( "Abandonment requires the actual Colony factory and territory" ); }
+    state.home=ConventionalUnitState::Home::None;
+    state.home_base_id.reset();
+    (void)game->ResolveConventionalUnit(state,newborn.m_owner);
+    data.homes.reserve(data.manager->m_units.size());
+    for ( const auto id:data.manager->m_unit_order ) {
+        auto* current=data.manager->GetUnit(id);
+        if ( !current || !current->IsConventional() ) { THROW( "Abandonment requires current conventional Unit records" ); }
+        auto home=current->Conventional();
+        if ( home.home_base_id!=abandoned.m_id ) { continue; }
+        if ( current->m_owner!=abandoned.m_owner ) { THROW( "Foreign captured home repair is not admitted" ); }
+        home.home=ConventionalUnitState::Home::Base;
+        home.home_base_id=replacement.m_id;
+        (void)game->ResolveConventionalUnit(home,current->m_owner);
+        data.homes.emplace_back(current,home);
+        auto& update=data.updates.try_emplace(id,unit_update_t{UUO_NONE,current}).first->second;
+        if ( update.ops&UUO_DESPAWN ) { THROW( "Rehomed Unit has a pending removal" ); }
+        update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+    }
+    auto knowledge=data.sight->CopyData();
+    const auto claims=territory.CopyData();
+    if ( knowledge.width!=claims.width || knowledge.height!=claims.height
+        || knowledge.tiles.size()!=claims.tiles.size() ) { THROW( "Abandonment territory geometry differs" ); }
+    for ( size_t i=0;i<knowledge.tiles.size();++i ) { knowledge.tiles[i].claimant=claims.tiles[i].claimant; }
+    knowledge.bases.erase(std::remove_if(knowledge.bases.begin(),knowledge.bases.end(),[&](const auto& base) {
+        return base.id==abandoned.m_id;
+    }),knowledge.bases.end());
+    // Preserve the factory's visibility, exploration, remembered terrain and
+    // new Unit observation. The territory producer changes claims only.
+    data.sight=map::SmacWorkerKnowledge::Create(knowledge);
+    std::get<ConventionalUnitState>(newborn.m_state)=state;
+}
 Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	if ( !m_data || !m_data->candidate ) { return nullptr; }
 	auto& data = *m_data;
+	static_assert( std::is_nothrow_copy_assignable_v<ConventionalUnitState> );
+	for ( const auto& home : data.homes ) { std::get<ConventionalUnitState>( home.first->m_state ) = home.second; }
 	data.published = data.candidate.release();
 	data.manager->m_units.swap( data.units ); data.manager->m_unit_updates.swap( data.updates ); data.tile->units.swap( data.occupants );
 	data.manager->m_unit_order.swap( data.order );

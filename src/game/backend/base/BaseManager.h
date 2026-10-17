@@ -14,6 +14,7 @@
 #include "RenderInfo.h"
 #include "Pop.h"
 #include "SmacBaseResourceContext.h"
+#include "SmacBaseUpkeepCache.h"
 
 namespace gse::tests { class BaseAllocationFixture; }
 
@@ -33,7 +34,7 @@ namespace slot {
 class Slot;
 }
 namespace faction { class Faction; }
-namespace unit { class Unit; }
+namespace unit { class Unit; class Def; enum class SmacMoraleMode : uint8_t; }
 
 namespace base {
 
@@ -73,6 +74,14 @@ public:
 		const std::string& worker, const std::array< std::string, 7 >& specialists );
 	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles );
 	void ValidateSmacFounding( const unit::Unit& colony ) const;
+	struct SmacAbandonmentResult {
+		size_t newborn_id;
+		std::optional<size_t> successor_id;
+		std::optional<SmacBaseUpkeepCache> successor_cache;
+	};
+	// Native accepted-choice continuation only. Completes the current Colony,
+	// retires its size-one Base and returns the compacted record's retained tail.
+	SmacAbandonmentResult AbandonSmacBase( GSE_CALLABLE, Base& base, unit::Def* definition, unit::SmacMoraleMode mode );
 	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 
 	const std::map< size_t, Base* >& GetBases() const;

@@ -6,9 +6,13 @@ SET( SRC ${SRC}
 	${PWD}/Backend.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/SmacBaseSquareYield.cpp
+	${PWD}/CvrContainerReader.cpp
+	${PWD}/CvrSceneReader.cpp
+	${PWD}/CvrGeometryReader.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp
 	${PWD}/Scripts.cpp
+	${PWD}/SmacMineralCostFactor.cpp
 
 	PARENT_SCOPE )

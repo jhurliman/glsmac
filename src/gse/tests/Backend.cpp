@@ -3076,7 +3076,8 @@ public:
 			m_game.m_tm = new map::tile::TileManager( &m_game );
 			for ( const auto* phase : { "create_world", "start" } ) {
 				m_game.On( GSE_CALL, phase, NATIVE_CALL( this, &random_observations, &random_valid, &entropy_calls, expected_random ) {
-					++random_observations; random_valid = random_valid && entropy_calls == 2 && m_game.m_simulation && m_game.m_simulation->value.gameplay_random == expected_random;
+					++random_observations; random_valid = random_valid && entropy_calls == 2 && m_game.m_simulation && m_game.m_simulation->value.gameplay_random == expected_random
+						&& m_game.m_simulation->value.resource_modifiers == faction::SmacGlobalResourceModifiers::NewWorld();
 					return VALUE( value::Undefined );
 				} ) );
 			}
@@ -3219,6 +3220,7 @@ public:
 			source.m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 			auto& value = source.m_game.m_simulation->value;
 			value.gameplay_random = SmacGameplayRandomState( UINT32_MAX, 0 );
+			value.resource_modifiers = { -7, true, false, 7 };
 			for ( size_t i = 0; i < 7; ++i ) { value.gameplay_random.NextSharedLow16(); value.gameplay_random.NextCrtRaw15(); }
 			const int32_t ids[] = { 7, 2, 5 };
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
@@ -3396,7 +3398,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 45; ++scenario ) {
+		for ( int scenario = 0; scenario < 55; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3419,7 +3421,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 4 : 5 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 5 : 6 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -3463,6 +3465,14 @@ public:
 			else if ( scenario == 42 ) { raw.WriteInt( 2 ); }
 			else if ( scenario == 43 ) { raw.WriteInt( INT64_MAX ); }
 			else if ( scenario != 44 ) { raw.WriteInt( static_cast< int64_t >( value.movement_capability ) ); }
+			if ( scenario != 45 ) {
+				raw.WriteInt( scenario == 46 ? int64_t( INT32_MAX ) + 1 : scenario == 47 ? int64_t( INT32_MIN ) - 1 : value.resource_modifiers.atmospheric_dust_countdown );
+				if ( scenario == 48 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( value.resource_modifiers.solar_ordinary ); }
+				if ( scenario == 49 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( value.resource_modifiers.solar_upkeep ); }
+				if ( scenario == 50 ) { raw.WriteInt( 1 ); } else { raw.WriteBool( scenario >= 51 || value.resource_modifiers.planetary_governor.has_value() ); }
+				if ( scenario >= 51 && scenario != 54 ) { raw.WriteInt( scenario == 51 ? 0 : scenario == 52 ? 8 : INT64_MAX ); }
+				else if ( value.resource_modifiers.planetary_governor ) { raw.WriteInt( *value.resource_modifiers.planetary_governor ); }
+			}
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }

@@ -13,7 +13,7 @@ using namespace game::backend;
 using faction::SmacSimulationState;
 
 SmacSimulationState State() {
-	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain );
+	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain, faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
@@ -26,10 +26,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 5 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 6 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -39,11 +39,58 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	buffer.WriteString( value.social.Serialize( smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() ).ToString() );
 	buffer.WriteString( random ? *random : value.gameplay_random.Serialize() );
 	write( static_cast< int64_t >( value.movement_capability ) );
+	if ( modifiers ) { return buffer.ToString() + *modifiers; }
+	buffer.WriteInt( value.resource_modifiers.atmospheric_dust_countdown );
+	buffer.WriteBool( value.resource_modifiers.solar_ordinary ); buffer.WriteBool( value.resource_modifiers.solar_upkeep );
+	buffer.WriteBool( value.resource_modifiers.planetary_governor.has_value() );
+	if ( value.resource_modifiers.planetary_governor ) { buffer.WriteInt( *value.resource_modifiers.planetary_governor ); }
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC simulation resource modifiers retain independent phases and council identity", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		const faction::SmacGlobalResourceModifiers reset{ 0, false, false, {} };
+		GT_ASSERT( faction::SmacGlobalResourceModifiers::NewWorld() == reset, "new-world resource modifiers differ from original reset" );
+		for ( const auto dust : { INT32_MIN, -1, 0, 1, INT32_MAX } ) {
+			for ( const bool ordinary : { false, true } ) { for ( const bool upkeep : { false, true } ) {
+				for ( const std::optional< int32_t > governor : { std::optional< int32_t >{}, { 1 }, { 2 }, { 7 } } ) {
+					auto value = State(); value.resource_modifiers = { dust, ordinary, upkeep, governor };
+					const auto wire = value.Serialize( technologies, profiles, units ).ToString();
+					auto decoded = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
+					GT_ASSERT( decoded == value && decoded.Serialize( technologies, profiles, units ).ToString() == wire, "restore aged events collapsed phases or rebound council ID" );
+					decoded.resource_modifiers = reset;
+					GT_ASSERT( value.resource_modifiers == ( faction::SmacGlobalResourceModifiers{ dust, ordinary, upkeep, governor } ), "copied modifier state aliases original" );
+				}
+			} }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC simulation resource modifiers reject missing malformed and oversized late fields", GT() {
+		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
+		const auto decode = [ & ]( const std::string& wire ) { SmacSimulationState::Deserialize( wire, technologies, profiles, units ); };
+		for ( int scenario = 0; scenario < 13; ++scenario ) {
+			types::Buffer suffix;
+			suffix.WriteInt( scenario == 1 ? int64_t( INT32_MAX ) + 1 : scenario == 2 ? int64_t( INT32_MIN ) - 1 : 10 );
+			if ( scenario == 3 ) { suffix.WriteInt( 1 ); } else { suffix.WriteBool( true ); }
+			if ( scenario == 4 ) { suffix.WriteInt( 0 ); } else { suffix.WriteBool( false ); }
+			if ( scenario == 5 ) { suffix.WriteInt( 1 ); } else { suffix.WriteBool( true ); }
+			suffix.WriteInt( scenario == 6 ? 0 : scenario == 7 ? 8 : scenario == 8 ? -1 : scenario == 9 ? INT64_MAX : 7 );
+			auto raw = suffix.ToString();
+			if ( scenario == 0 ) { raw.clear(); }
+			if ( scenario == 10 ) { raw.pop_back(); }
+			if ( scenario == 11 ) { raw += "x"; }
+			if ( scenario == 12 ) { raw[ 19 ] = 2; raw[ 20 ] = 2; } // invalid first Bool payload with matching checksum
+			GT_ASSERT( Rejects( [ & ] { decode( Wire( State(), SIZE_MAX, 0, nullptr, &raw ) ); } ), "invalid resource suffix accepted" );
+		}
+		for ( const auto id : { INT32_MIN, -1, 0, 8, INT32_MAX } ) {
+			auto bad = State(); bad.resource_modifiers.planetary_governor = id;
+			GT_ASSERT( Rejects( [ & ] { bad.Serialize( technologies, profiles, units ); } ), "invalid council identity serialized" );
+		}
+		GT_ASSERT( Rejects( [ & ] { decode( Wire( State(), 1, 5 ) ); } ), "pre-modifier V5 accepted" );
+		GT_OK();
+	} );
 	task->AddTest( "SMAC simulation movement capability is explicit bounded and preserved on restore", GT() {
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
 		for ( const auto capability : { SmacSimulationState::MovementCapability::Unavailable, SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain } ) {

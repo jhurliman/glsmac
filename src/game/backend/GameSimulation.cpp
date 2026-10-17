@@ -109,7 +109,8 @@ void Game::PrepareNewSimulation() {
 	const auto crt = m_gameplay_entropy_word_source();
 	// Explicit GLSMAC supported campaign: project effects are not activated.
 	// This is not a claim about original setup or a missing-project fallback.
-	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain );
+	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
+		faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	m_simulation = BindSimulation( std::move( value ) );
 }

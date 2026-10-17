@@ -7,13 +7,28 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 5;
+constexpr int64_t VERSION = 6;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC simulation integer outside signed32" ); }
 	return static_cast< int32_t >( value );
 }
+}
+
+SmacGlobalResourceModifiers SmacGlobalResourceModifiers::NewWorld() noexcept { return { 0, false, false, {} }; }
+
+void SmacGlobalResourceModifiers::Validate() const {
+	// Preserve signed countdowns and both flags exactly; aging is a separate
+	// turn-boundary operation. A council role is a faction ID, never a slot.
+	if ( planetary_governor && ( *planetary_governor < 1 || *planetary_governor > 7 ) ) {
+		throw std::runtime_error( "Invalid SMAC Planetary Governor simulation ID" );
+	}
+}
+
+bool SmacGlobalResourceModifiers::operator==( const SmacGlobalResourceModifiers& other ) const noexcept {
+	return atmospheric_dust_countdown == other.atmospheric_dust_countdown && solar_ordinary == other.solar_ordinary
+		&& solar_upkeep == other.solar_upkeep && planetary_governor == other.planetary_governor;
 }
 
 bool SmacSimulationParticipant::operator==( const SmacSimulationParticipant& other ) const {
@@ -24,6 +39,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	if ( movement_capability != MovementCapability::Unavailable && movement_capability != MovementCapability::NoProjectsOrdinaryTerrain ) {
 		throw std::runtime_error( "Unknown SMAC supported-campaign movement capability" );
 	}
+	resource_modifiers.Validate();
 	technology.Validate( technologies, profiles );
 	social.Validate( technologies, profiles );
 	units.Validate( technologies ); designs.Validate( units.catalog );
@@ -52,7 +68,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers; }
 
 const SmacSimulationParticipant* SmacSimulationState::FindSlot( size_t slot ) const {
 	for ( const auto& participant : roster ) { if ( static_cast< size_t >( participant.slot ) == slot ) { return &participant; } }
@@ -75,6 +91,10 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	buffer.WriteString( social_state.ToString() );
 	buffer.WriteString( gameplay_random.Serialize() );
 	buffer.WriteInt( static_cast< int64_t >( movement_capability ) );
+	buffer.WriteInt( resource_modifiers.atmospheric_dust_countdown );
+	buffer.WriteBool( resource_modifiers.solar_ordinary ); buffer.WriteBool( resource_modifiers.solar_upkeep );
+	buffer.WriteBool( resource_modifiers.planetary_governor.has_value() );
+	if ( resource_modifiers.planetary_governor ) { buffer.WriteInt( *resource_modifiers.planetary_governor ); }
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -103,7 +123,11 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		const auto random = SmacGameplayRandomState::Deserialize( buffer.ReadString( SmacGameplayRandomState::WIRE_SIZE ) );
 		const auto capability = buffer.ReadInt();
 		if ( capability != 0 && capability != 1 ) { throw std::runtime_error( "Unknown SMAC supported-campaign movement capability" ); }
-		SmacSimulationState result( random, static_cast< MovementCapability >( capability ) );
+		const auto dust = ReadInt32( buffer );
+		const auto ordinary = buffer.ReadBool(); const auto upkeep = buffer.ReadBool();
+		std::optional< int32_t > governor;
+		if ( buffer.ReadBool() ) { governor = ReadInt32( buffer ); }
+		SmacSimulationState result( random, static_cast< MovementCapability >( capability ), { dust, ordinary, upkeep, governor } );
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

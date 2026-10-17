@@ -27,7 +27,7 @@ designs. The actual first turn refreshes every admitted owner before turn
 publication and entity/game upkeep hooks. Early retained snapshots remain
 explicitly unknown; restored values are preserved without replay. The scoped
 neutral-model implementation and its original-output boundaries are documented
-in [smac-owned-social-state.md](../smac-owned-social-state.md).
+in [smac-owned-social-state.md](https://github.com/jhurliman/glsmac/blob/f0b1ee2e7802b984e60c5de1116ae74afea4a8dd/docs/smac-owned-social-state.md).
 
 Host settings and worlds freeze the raw movement road rate, with Q derived
 from that single authority. Oversized movement and predefined-unit profile

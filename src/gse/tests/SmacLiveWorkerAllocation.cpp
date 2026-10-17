@@ -573,7 +573,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				}
 				fixture.ResourceState( [ & ]( auto& state ) { auto& social = state.social.factions.front(); social.current[2] = rating; social.retained->at(2) = rating == 0 ? -4 : 0; } );
 				game->PublishSmacWorkerKnowledge( GSE_CALL, Knowledge::Create( data ) );
-				const ProductionItem stock{ ProductionItemKind::Stockpile, "" };
+				const auto stock = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Stockpile, 38 );
 				base->SetProductionState( GSE_CALL, ProductionState{ stock, 10, stock, 10, std::vector<ProductionItem>{} } );
 				const auto before = fixture.GameplayRandom();
 				const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), {}, SmacMoraleMode::Mode0 );

@@ -4,15 +4,12 @@ Run analysis when preparing a C++ change for review. It is separate from the
 normal edit/build/test loop and does not require the original game assets.
 The `C++ correctness` pull-request workflow runs the same command as local use.
 
-Pull requests that change only Markdown skip the engine build, regression and
-thread lifecycle workflows. Any non-Markdown change still triggers those checks,
-including scripts, data, fixtures and workflow edits. Pushes to `main`/`stable`
-and manual runs keep their existing full coverage. The correctness and reference
-inventory workflows retain their own path filters. This avoids rebuilding the
-engine for evidence receipts while preserving checks for executable changes.
-If these workflows become required branch checks, use an always-reporting gate
-before enabling that protection; a workflow skipped by a path filter does not
-produce a successful check.
+The [CI coverage policy](ci-validation.md) keeps Linux regression coverage on
+code pull requests and selects full platform runs for explicit checkpoints, manual
+runs, releases and platform-sensitive changes. Ready status alone does not
+expand coverage. The correctness and reference inventory workflows retain
+their existing path filters; unlike the regression/lifecycle gates, these
+path-filtered workflows are not unconditional always-reporting branch checks.
 
 ## Local use
 
@@ -120,7 +117,8 @@ trial, `bugprone-string-constructor` mostly identified an overridden member
 initializer, and `bugprone-undefined-memory-manipulation` flagged the existing
 numeric vector/color buffer copies. Those entire categories are omitted rather
 than accumulating local suppressions or requiring unrelated representation
-changes. The older broad `scan-build` artifact job remains separate.
+changes. The older broad `scan-build` artifact job runs separately on stable
+release pushes or explicit autobuild dispatch, not on each PR/main revision.
 Leak-only checks such as `clang-analyzer-cplusplus.NewDeleteLeaks` have not been
 validated and remain disabled; the manual GC ownership model needs particular
 care when evaluating those categories.

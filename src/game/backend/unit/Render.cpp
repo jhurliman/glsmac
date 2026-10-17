@@ -20,6 +20,7 @@ void Render::Serialize( types::Buffer& buf, const Render* render ) {
 			break;
 		}
 		case RT_CVR_SCOUT:
+		case RT_CVR_SPARTAN_ROVER:
 			buf.WriteString( static_cast< const CvrScoutRender* >( render )->Encode() );
 			break;
 		default:
@@ -33,7 +34,8 @@ Render* Render::Deserialize( types::Buffer& buf ) {
 		case RT_SPRITE:
 			return SpriteRender::Deserialize( buf );
 		case RT_CVR_SCOUT:
-			return new CvrScoutRender( CvrScoutRender::Decode( buf.ReadString( CvrScoutRender::MAX_WIRE_BYTES ) ) );
+		case RT_CVR_SPARTAN_ROVER:
+			return new CvrScoutRender( CvrScoutRender::Decode( buf.ReadString( CvrScoutRender::MAX_WIRE_BYTES ), static_cast< render_type_t >( render_type ) ) );
 		default:
 			THROW( "unknown render type on read: " + std::to_string( render_type ) );
 	}

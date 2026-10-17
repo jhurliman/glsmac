@@ -22,6 +22,7 @@ public:
 	enum render_type_t {
 		RT_SPRITE,
 		RT_CVR_SCOUT,
+		RT_CVR_SPARTAN_ROVER,
 	};
 
 	Render( const render_type_t type );

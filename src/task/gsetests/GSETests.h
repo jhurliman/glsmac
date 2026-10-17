@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <optional>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -47,6 +49,7 @@ CLASS( GSETests, common::Task )
 
 private:
 	size_t current_test_index = 0;
+	std::optional< std::regex > m_native_filter;
 	std::vector< std::pair< std::string, gse_test_t >> m_tests = {};
 
 	struct {

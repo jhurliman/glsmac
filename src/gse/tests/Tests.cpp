@@ -16,6 +16,9 @@
 #include "CvrGeometryReader.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
+#include "SmacPredefinedUnitCatalog.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
@@ -69,6 +72,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -201,6 +206,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
+		tests::AddSmacPredefinedUnitCatalogTests( task );
 	}
 	tests::AddScriptsTests( task );
 

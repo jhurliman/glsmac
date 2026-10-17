@@ -10,6 +10,7 @@
 #include "game/backend/rules/default/Default.h" // only default rules for now
 #include "game/backend/Account.h"
 #include "game/backend/resource/SmacBaseSquareYield.h"
+#include "SmacProductionRules.h"
 
 #include "gse/Wrappable.h"
 
@@ -87,7 +88,9 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	using RulesSource = std::function< std::string( const std::string& filename ) >;
 	void InitializeHostRules( const RulesSource& read_source );
 	const std::optional< resource::smac::BaseSquareRules >& GetSmacBaseSquareRules() const;
+	const std::optional< SmacProductionRules >& GetSmacProductionRules() const;
 	void LockRuleset();
+	bool IsRulesetLocked() const;
 	void ResetRuleset();
 
 	MapSettings map = {};
@@ -108,6 +111,7 @@ private:
 	ruleset_t m_ruleset = RULESET_UNSELECTED;
 	bool m_ruleset_locked = false; // lifecycle guard, not saved state
 	std::optional< resource::smac::BaseSquareRules > m_smac_base_square_rules;
+	std::optional< SmacProductionRules > m_smac_production_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

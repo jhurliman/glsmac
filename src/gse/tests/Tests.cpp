@@ -5,6 +5,7 @@
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
 #include "SmacHostRules.h"
+#include "SmacProductionRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -159,6 +160,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
+		tests::AddSmacProductionRulesTests( task );
 	}
 	tests::AddScriptsTests( task );
 

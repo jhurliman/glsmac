@@ -79,6 +79,7 @@ return {
 				class: 'base-screen-middle-area-tile',
 				data: {
 					tile: t.tile,
+					base: data.base,
 				},
 				left: c_left + t.cx,
 				top: c_top + t.cy,

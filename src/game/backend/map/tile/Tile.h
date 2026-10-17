@@ -117,8 +117,10 @@ public:
 	const bool IsLocked() const;
 	const bool IsLockedBy( const size_t initiator_slot ) const;
 
-	const resources_t GetResources( GSE_CALLABLE, slot::Slot* const slot );
-	gse::value::Object* const GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot );
+	// With an evaluating base, a null slot selects its owner. An explicit slot
+	// must match that owner. The base must be registered in this tile's world.
+	const resources_t GetResources( GSE_CALLABLE, slot::Slot* const slot, base::Base* const evaluating_base = nullptr );
+	gse::value::Object* const GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot, base::Base* const evaluating_base = nullptr );
 
 private:
 	bool m_is_locked = false;

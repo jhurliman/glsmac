@@ -1,4 +1,5 @@
 #include "Tests.h"
+#include "Async.h"
 
 #include "Backend.h"
 #include "Buffer.h"
@@ -10,10 +11,13 @@
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
+#include "CvrFrameAssembler.h"
+#include "CvrIndexedRasterizer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
+#include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
 
 #include "engine/Engine.h"
@@ -58,6 +62,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
+		tests::AddCvrFrameAssemblerTests( task );
+		tests::AddCvrIndexedRasterizerTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
 		task->AddTest(
 			"test if tests work",
@@ -66,6 +72,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 			}
 		);
 		tests::AddGSETests( task );
+		tests::AddAsyncTests( task );
 		task->AddTest(
 			"test if an empty scene accepts clearing its camera",
 			GT() {
@@ -163,6 +170,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
 	tests::AddScriptsTests( task );
 

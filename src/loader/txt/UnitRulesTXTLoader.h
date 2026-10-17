@@ -75,6 +75,27 @@ struct ChassisTable {
 	std::vector< ChassisComponent > chassis;
 };
 
+enum class UnitPlan : int32_t {
+	AutoCalculate = -1, Offensive = 0, Combat = 1, Defensive = 2,
+	Reconnaissance = 3, AirSuperiority = 4, PlanetBuster = 5,
+	NavalSuperiority = 6, NavalTransport = 7, Colonization = 8,
+	Terraforming = 9, SupplyConvoy = 10, InfoWarfare = 11, AlienArtifact = 12
+};
+
+struct UnitDesignRecord {
+	std::string name, chassis, weapon, defense; // unresolved exact source references
+	UnitPlan plan;
+	int32_t cost, carry;
+	std::string prerequisite;
+	int32_t icon;
+	std::string ability_bits; // raw binary spelling, including width/leading zeros
+};
+
+struct UnitTable {
+	std::string ruleset_id;
+	std::vector< UnitDesignRecord > units; // source order; display names may repeat
+};
+
 class UnitRulesTXTLoader {
 public:
 	// Pure #WEAPONS decoder. The caller supplies contents and an explicit
@@ -92,6 +113,10 @@ public:
 	// Nineteen columns; six name/grammar pairs, triad 0..2 and missile 0/1.
 	// Signed speed/range/cargo/cost are metadata, not design eligibility.
 	static ChassisTable ParseChassis( const std::string& source, const std::string& ruleset_id );
+	// #UNITS starts with a nonnegative count followed by exactly that many
+	// ten-column records. Plans are -1..12; cost/carry/icon remain signed int32.
+	// References and ability bits are not resolved; no reactor is inferred.
+	static UnitTable ParseUnits( const std::string& source, const std::string& ruleset_id );
 };
 
 }

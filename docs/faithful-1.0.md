@@ -211,27 +211,25 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The current live integration at `50d43f9f` connects actual Base worker
-recalculation to owned availability, frozen specialist rules, saved production
-category and faction satellite counts. Base screens use actual intake, nutrient
-demand and stored resources; unfinished consumption and forecasts display as
-unavailable. A combined cached build passes 16 affected native groups with
-allocation tracking, including the complete screen, worker recalculation and
-restore, orbital intake/state, and ordinary exploration. Component analysis
-results are reused for unchanged production source. This is focused Linux
-validation, not a new platform checkpoint or a playable campaign claim.
+The [campaign-upkeep checkpoint](validation/campaign-upkeep-2026-10-17.md)
+connects editable workers, actual production selection and manufacture, Colony
+movement and second-base founding, current SUPPORT and mineral-shortage losses,
+and non-last-base starvation with home reassignment. The affected Linux run
+passes 112 native groups with allocation tracking. The working branch also owns
+saved faction economy and actual energy calculations; default treasury/research
+posting awaits the research-choice continuation. Component analysis is reused
+for unchanged source. This is a gameplay integration receipt, not a full platform
+checkpoint or a complete campaign claim.
 
-The following integration at `fa159ff8` adds ordinary nonfungus terrain movement
-around owned Bases, saved same-owner home links and actual mineral support in
-the Base screen. A cached build passes 59 affected tracked native groups.
-The home-reference source separately passes 32 focused normal and sanitizer
-groups, and nine changed production units pass correctness analysis. The movement
-unit's targeted analysis also passes. No new full platform run was required.
+Research choice and discovery, saved Former orders and terrain work, and their
+player commands are the next parallel consumers. Full conventional combat,
+conquest, networking and complete disk-save acceptance still need integrated
+campaign evidence. Small reviewed PRs continue landing separately from this
+working integration branch.
 
-Manual worker clicks are being connected next. Exploration is implemented as a
-checked rule; sight, remembered terrain and territory still need their live producers.
-The next functional gate is a real first base and Scout with editable workers
-and a coherent turn, followed by production, founding and a second base.
+The earlier live-worker and movement integrations at `50d43f9f` and `fa159ff8`
+retain their 16-group and 59-group focused Linux results. Their later production,
+founding and upkeep consumers are covered by the campaign-upkeep receipt above.
 
 The latest [unit, Rover and resource receipt](validation/unit-rover-resources-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
@@ -418,43 +416,18 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. The conventional bottom-bar/preview now consumes checked allowance and the
-   definition's morale name, refreshing existing list labels. Initialized
-   Infantry presentation, Early-to-ready startup, selected Rover and Gaian HQ
-   movement, and remote-record independence are integrated. Ordinary flat,
-   matching road and matching tube movement now admits distant bases within
-   its measured boundary. Queue an actual
-   selected starting unit only where the startup and movement route admit its
-   terrain. Broader terrain, native encounters, repair and hostile interactions
-   still need their callers. Nearest-base and placement history now persist
-   explicitly across restore. Establish native initialization, optional regional
-   assignment and caller RNG ordering before extending encounter admission.
-   Destination fungus without an admitted
-   nearby HQ is now rejected: the old empty-world fixture supplied a zero
-   nearest-base distance and did not establish general encounter behavior.
-2. Canonical tile/Base gross intake, the separate nutrient-demand scalar and
-   actual-owner specialist eligibility now consume the integrated profiles and
-   contexts. The detached automatic allocator now composes existing collection,
-   repair, scoring, tile add/swap and specialist competition/final fill. A separate
-   unavailable-square builder consumes explicit map and relationship knowledge.
-   Saved inputs and atomic live publication now drive ordinary recalculation.
-   Connect manual worker commands; gross intake alone cannot substitute for the handler's full
-   forced calculation. Preserve valid allocations through the measured early exit,
-   including shortages, and keep recalculation separate from turn posting.
-   Initial exploration, territorial recognition and unit visibility still need
-   persistent world inputs. Original startup and expansion compositions now cover
-   the 21-square reveal, Scout movement, Colony placement, overlapping second-base
-   founding and native visibility without a later explored/owned overlay. The
-   saved worker-consumer frame and full Base allocation authority now have
-   checked lossless codecs. The next reference priorities are ordinary sight and
-   visibility lifetime, followed by territorial rebuilding; the user's separate
-   base-yield investigation takes precedence when directed. Keep the declared
-   GLSMAC map policy distinct from original map-generator equivalence.
-3. Complete support, production posting/completion/queues and research, retaining
-   independent stored minerals and switching baseline. Add legal persistent
-   Colony Pod founding and Former commands, then conventional combat, to close
-   the first-base to second-base conquest loop. Recalculation must not post an
-   extra turn of nutrients, minerals or treasury income.
+1. Connect research income to an actual directed choice, cost, completion and
+   Secrets continuation. Suspend at the measured per-base phase, resume once by
+   stable IDs, and keep the required dialog usable. Finish faction debit
+   settlement without replaying a partially completed turn.
+2. Connect ordinary Former commands to saved orders, progress, cancellation and
+   terrain completion. Read durations and prerequisites from the frozen active
+   terrain catalog, using the original command/dispatch receipts to determine
+   when work advances. Refresh actual yields and terrain presentation together.
+3. Close the playable two-base conquest loop: conventional combat and base
+   capture, last-base disposition, victory, and scenario saves/network replay.
+   Extend founding/production beyond the current ordinary land and non-last-base
+   boundary using the accepted original caller evidence.
 
 The [worker-authority checkpoint](validation/worker-authority-2026-10-17.md) at
 `dacac744` passes all eight tests on Windows, Linux Debug, Linux sanitizers and

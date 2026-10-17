@@ -20,6 +20,7 @@ public:
 	std::shared_ptr< types::texture::Texture > Get( resource::ResourceManager& resources, const backend::unit::CvrScoutRender& descriptor );
 private:
 	std::optional< loader::cvr::CvrScoutRenderer > m_renderer;
+	std::optional< loader::cvr::CvrScoutRenderer > m_initialized;
 	std::optional< loader::cvr::CvrSpartanRoverRenderer > m_rover;
 	std::unordered_map< std::string, std::shared_ptr< types::texture::Texture > > m_textures;
 };

@@ -1,5 +1,6 @@
 // Opt-in production renderer probe. Inputs are user-owned installed assets.
 #include "loader/cvr/CvrPaletteReader.h"
+#include "loader/cvr/CvrActorMaterial.h"
 #include "loader/cvr/CvrScoutRenderer.h"
 #include "loader/cvr/ScoutLighting.h"
 
@@ -35,9 +36,11 @@ int32_t Integer( const char* text ) {
 int main( const int argc, const char* const* argv ) {
 	const bool lighting = argc == 3 && std::string( argv[ 1 ] ) == "--lighting";
 	const bool palette = argc == 4 && std::string( argv[ 1 ] ) == "--palette";
-	const bool render = argc == 11 && std::string( argv[ 1 ] ) == "--render";
-	if ( !lighting && !palette && !render ) {
-		std::cerr << "usage: cvr_scout_probe --lighting output | --palette asset output | --render infantry reactor output facing zoom numerator denominator anchor_x anchor_y\n";
+	const bool initialized = argc == 13 && std::string( argv[ 1 ] ) == "--render-initialized";
+	const bool main_palette = argc == 4 && std::string( argv[ 1 ] ) == "--software-palette";
+	const bool render = ( argc == 11 && std::string( argv[ 1 ] ) == "--render" ) || initialized;
+	if ( !lighting && !palette && !main_palette && !render ) {
+		std::cerr << "usage: cvr_scout_probe --lighting output | --palette asset output | --render infantry reactor output facing zoom numerator denominator anchor_x anchor_y | --render-initialized infantry reactor palette system output facing zoom numerator denominator anchor_x anchor_y | --software-palette asset output\n";
 		return 2;
 	}
 	try {
@@ -46,6 +49,9 @@ int main( const int argc, const char* const* argv ) {
 			const auto table = loader::cvr::scout::GenerateLightingTable();
 			for ( const auto& row : table ) { bytes.append( reinterpret_cast< const char* >( row.data() ), row.size() ); }
 		}
+		else if ( main_palette ) {
+			for ( const auto& color : loader::cvr::CvrActorMaterial::ReadSoftwareColors( Read( argv[ 2 ] ) ) ) { bytes.append( reinterpret_cast< const char* >( color.data() ), color.size() ); }
+		}
 		else if ( palette ) {
 			const auto result = loader::cvr::CvrPaletteReader::Read( loader::cvr::CvrContainerReader::Read( Read( argv[ 2 ] ) ) );
 			bytes.push_back( static_cast< char >( result.first ) ); bytes.push_back( static_cast< char >( result.end ) );
@@ -53,14 +59,16 @@ int main( const int argc, const char* const* argv ) {
 			bytes.append( reinterpret_cast< const char* >( result.shades.data() ), result.shades.size() );
 		}
 		else {
-			const auto renderer = loader::cvr::CvrScoutRenderer::Load( Read( argv[ 2 ] ), Read( argv[ 3 ] ) );
-			const auto result = renderer.Render( { Integer( argv[ 5 ] ), Integer( argv[ 6 ] ), Integer( argv[ 7 ] ), Integer( argv[ 8 ] ), { Integer( argv[ 9 ] ), Integer( argv[ 10 ] ) } } );
+			const auto renderer = initialized ? loader::cvr::CvrScoutRenderer::LoadInitialized( Read( argv[ 2 ] ), Read( argv[ 3 ] ), Read( argv[ 4 ] ), Read( argv[ 5 ] ) ) :
+				loader::cvr::CvrScoutRenderer::Load( Read( argv[ 2 ] ), Read( argv[ 3 ] ) );
+			const size_t first = initialized ? 7 : 5;
+			const auto result = renderer.Render( { Integer( argv[ first ] ), Integer( argv[ first + 1 ] ), Integer( argv[ first + 2 ] ), Integer( argv[ first + 3 ] ), { Integer( argv[ first + 4 ] ), Integer( argv[ first + 5 ] ) } } );
 			bytes.append( reinterpret_cast< const char* >( result.indexed.color.data() ), result.indexed.color.size() );
 			for ( const auto value : result.indexed.depth ) { bytes.push_back( static_cast< char >( value ) ); bytes.push_back( static_cast< char >( value >> 8 ) ); }
 			bytes.append( reinterpret_cast< const char* >( result.rgba.data() ), result.rgba.size() );
 			std::cout << result.draw_count << ' ' << result.processed_records << ' ' << result.written_samples << ' ' << result.target_anchor[ 0 ] << ' ' << result.target_anchor[ 1 ] << '\n';
 		}
-		std::ofstream output( argv[ lighting ? 2 : render ? 4 : 3 ], std::ios::binary | std::ios::trunc );
+		std::ofstream output( argv[ lighting ? 2 : render ? ( initialized ? 6 : 4 ) : 3 ], std::ios::binary | std::ios::trunc );
 		output.write( bytes.data(), static_cast< std::streamsize >( bytes.size() ) );
 		output.close();
 		if ( !output ) { throw std::runtime_error( "cannot write output" ); }

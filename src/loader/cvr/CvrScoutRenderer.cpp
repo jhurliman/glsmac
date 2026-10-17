@@ -34,6 +34,16 @@ CvrScoutRenderer CvrScoutRenderer::Load( const std::string_view infantry, const 
 	return LoadParts( { infantry, reactor }, Profile::Infantry, nullptr );
 }
 
+CvrScoutRenderer CvrScoutRenderer::LoadInitialized( const std::string_view infantry, const std::string_view reactor,
+	const std::string_view palette_pcx, const std::string_view system ) {
+	scout::ValidateMapLight( system );
+	CvrActorMaterial palette{};
+	palette.colors = CvrActorMaterial::ReadSoftwareColors( palette_pcx );
+	// Initialized Infantry uses only main RGB. Its two original scene shade
+	// tables remain independent of every faction's actor body remap.
+	return LoadParts( { infantry, reactor }, Profile::InitializedInfantry, &palette );
+}
+
 CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
@@ -108,7 +118,9 @@ template< size_t N > std::array< uint32_t, N > Bits( const std::array< float, N 
 CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	using namespace scout;
 	const bool speeder = m_assets->profile == Profile::SpartanSpeeder;
-	const auto view = MakeView( input, speeder ? IdleProfile::SpartanSpeeder : IdleProfile::Infantry );
+	const auto profile = speeder ? IdleProfile::SpartanSpeeder :
+		m_assets->profile == Profile::InitializedInfantry ? IdleProfile::InitializedInfantry : IdleProfile::Infantry;
+	const auto view = MakeView( input, profile );
 	std::vector< CvrFrameSelection > requests;
 	// Speeder assembly uses each part's asset location directly. The Infantry
 	// attachment offset belongs only to its distinct VI/reactor composition.

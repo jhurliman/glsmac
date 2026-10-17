@@ -37,6 +37,18 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
 		return m_textures.emplace( key, std::move( texture ) ).first->second;
 	}
+	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::InitializedScout ) {
+		if ( !m_initialized ) {
+			const auto infantry = ReadAsset( resources.GetCustomPath( "vi.cvr" ) );
+			const auto reactor = ReadAsset( resources.GetCustomPath( "viptr00.cvr" ) );
+			const auto palette = ReadAsset( resources.GetCustomPath( "PALETTE.PCX" ) );
+			const auto system = ReadAsset( resources.GetCustomPath( "system.txt" ) );
+			m_initialized.emplace( loader::cvr::CvrScoutRenderer::LoadInitialized( infantry, reactor, palette, system ) );
+		}
+		const auto image = m_initialized->Render( descriptor.view );
+		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
+		return m_textures.emplace( key, std::move( texture ) ).first->second;
+	}
 	if ( !m_renderer ) {
 		// The serialized descriptor cannot choose paths. Use normal installed/mod resolution.
 		const auto infantry = ReadAsset( resources.GetCustomPath( "vi.cvr" ) );

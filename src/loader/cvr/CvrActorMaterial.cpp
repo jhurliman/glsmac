@@ -59,12 +59,9 @@ Pcx ReadPcx( const std::string_view bytes ) {
 
 }
 
-CvrActorMaterial CvrActorMaterial::Read( const std::string_view palette_pcx, const std::string_view faction_pcx,
-	const std::array< uint8_t, 24 * 256 >& body_shades ) {
+std::array< CvrPalette::Color, 256 > CvrActorMaterial::ReadSoftwareColors( const std::string_view palette_pcx ) {
 	const auto palette = ReadPcx( palette_pcx );
-	const auto faction = ReadPcx( faction_pcx );
-	if ( faction.width <= 435 || faction.height <= 745 ) { throw std::invalid_argument( "CVR actor PCX: tint sample unavailable" ); }
-	CvrActorMaterial result{};
+	std::array< CvrPalette::Color, 256 > colors{};
 	static constexpr std::array< CvrPalette::Color, 20 > RESERVED{{
 		{ 0, 0, 0 }, { 128, 0, 0 }, { 0, 128, 0 }, { 128, 128, 0 },
 		{ 0, 0, 128 }, { 128, 0, 128 }, { 0, 128, 128 }, { 192, 192, 192 },
@@ -72,8 +69,17 @@ CvrActorMaterial CvrActorMaterial::Read( const std::string_view palette_pcx, con
 		{ 128, 128, 128 }, { 255, 0, 0 }, { 0, 255, 0 }, { 255, 255, 0 },
 		{ 0, 0, 255 }, { 255, 0, 255 }, { 0, 255, 255 }, { 255, 255, 255 }
 	}};
-	for ( size_t i = 0; i < 10; ++i ) { result.colors[ i ] = RESERVED[ i ]; result.colors[ i + 246 ] = RESERVED[ i + 10 ]; }
-	std::copy_n( palette.palette.begin(), 236, result.colors.begin() + 10 );
+	for ( size_t i = 0; i < 10; ++i ) { colors[ i ] = RESERVED[ i ]; colors[ i + 246 ] = RESERVED[ i + 10 ]; }
+	std::copy_n( palette.palette.begin(), 236, colors.begin() + 10 );
+	return colors;
+}
+
+CvrActorMaterial CvrActorMaterial::Read( const std::string_view palette_pcx, const std::string_view faction_pcx,
+	const std::array< uint8_t, 24 * 256 >& body_shades ) {
+	CvrActorMaterial result{};
+	result.colors = ReadSoftwareColors( palette_pcx );
+	const auto faction = ReadPcx( faction_pcx );
+	if ( faction.width <= 435 || faction.height <= 745 ) { throw std::invalid_argument( "CVR actor PCX: tint sample unavailable" ); }
 	result.tint_index = static_cast< uint8_t >( uint32_t( faction.pixels[ 745 * faction.width + 435 ] ) + 10 );
 	const auto& tint = result.colors[ result.tint_index ];
 	std::array< uint8_t, 256 > nearest{};

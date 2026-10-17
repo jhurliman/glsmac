@@ -11,7 +11,7 @@ namespace game::backend::unit {
 // Placement is explicit port world units; it does not assert original screen scale.
 class CvrScoutRender final : public Render {
 public:
-	enum class Composition : int32_t { Scout = 0, SpartanRover = 1 };
+	enum class Composition : int32_t { Scout = 0, SpartanRover = 1, InitializedScout = 2 };
 	static constexpr size_t MAX_WIRE_BYTES = 256;
 	CvrScoutRender( int32_t facing, int32_t zoom, int32_t numerator, int32_t denominator,
 		const types::Vec2< float >& size, const types::Vec2< float >& center, Composition composition = Composition::Scout );

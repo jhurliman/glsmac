@@ -1549,7 +1549,7 @@ public:
 			"post-reset iteration did not drain canceled roots and resume stages exactly once" );
 		GT_OK();
 	}
-	static std::string CheckScoutUnitPreview( const bool rover = false ) {
+	static std::string CheckScoutUnitPreview( const bool rover = false, const bool initialized = false ) {
 		class SizedNull final : public graphics::Null {
 		public:
 			SizedNull() { OnWindowResize(); }
@@ -1602,7 +1602,7 @@ public:
 		};
 		for ( const auto* name : loader::cvr::CvrSpartanRoverRenderer::PartNames() ) { write_rover_asset( name ); }
 		for ( const auto* name : { "system.txt", "PALETTE.PCX", "spartans.pcx" } ) { write_rover_asset( name ); }
-		const char* installed = std::getenv( rover ? "GLSMAC_ROVER_ASSETS" : "GLSMAC_SCOUT_ASSETS" );
+		const char* installed = std::getenv( rover ? "GLSMAC_ROVER_ASSETS" : initialized ? "GLSMAC_INITIALIZED_SCOUT_ASSETS" : "GLSMAC_SCOUT_ASSETS" );
 		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
 		if ( installed && *installed ) { resources.m_smac_path = installed; }
 		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
@@ -1620,18 +1620,18 @@ public:
 			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
 		} );
 		BackendFixture fixture; // runtime dies before services are restored
-		if ( rover ) { fixture.ConfigureConventional( true, 3, false, true ); }
+		if ( rover || initialized ) { fixture.ConfigureConventional( true, 3, false, rover ); }
 		else { fixture.EnableTurns(); }
 		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
-			const auto render_tag = rover ? Render::RT_CVR_SPARTAN_ROVER : Render::RT_CVR_SCOUT;
-			const auto profile = rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout;
+			const auto render_tag = rover ? Render::RT_CVR_SPARTAN_ROVER : initialized ? Render::RT_CVR_INITIALIZED_SCOUT : Render::RT_CVR_SCOUT;
+			const auto profile = rover ? CvrScoutRender::Composition::SpartanRover : initialized ? CvrScoutRender::Composition::InitializedScout : CvrScoutRender::Composition::Scout;
 			auto* manager = fixture.m_game.GetUM();
 			MoraleSet::morale_values_t morale;
 			for ( size_t i = 0; i < 7; ++i ) { morale.emplace_back( "Rank" ); }
 			manager->DefineMoraleSet( new MoraleSet( "SCOUT_TEST", morale ) );
 			auto* descriptor = new value::Object( GSE_CALL, {
-				{ "type", new value::String( gc_space, rover ? "cvr_spartan_rover" : "cvr_scout" ) },
+				{ "type", new value::String( gc_space, rover ? "cvr_spartan_rover" : initialized ? "cvr_initialized_scout" : "cvr_scout" ) },
 				{ "facing", new value::Int( gc_space, 0 ) }, { "zoom", new value::Int( gc_space, 0 ) },
 				{ "scale_numerator", new value::Int( gc_space, 1 ) }, { "scale_denominator", new value::Int( gc_space, 1 ) },
 				{ "world_width", new value::Float( gc_space, 2 ) }, { "world_height", new value::Float( gc_space, 4 ) },
@@ -1731,7 +1731,7 @@ public:
 				new CvrScoutRender( *static_cast< const CvrScoutRender* >( static_cast< StaticDef* >( copied.get() )->m_render ) ) );
 			game::frontend::unit::UnitDef other_def( ism.get(), &other_source );
 			auto* other_sprite = other_def.GetSprite( 0 )->instanced_sprite;
-			if ( rover ) {
+			if ( rover || initialized ) {
 				// Same name and placement must never reuse the Scout's actor/pixels.
 				CvrScoutRender scout_view( decoded.view.facing, decoded.view.zoom, decoded.view.scale_numerator,
 					decoded.view.scale_denominator, decoded.size, decoded.center );
@@ -1787,20 +1787,20 @@ public:
 			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
 			frontend.m_widgets.UnitPreview = presenter.get();
 			Unit* backend_unit = nullptr;
-			if ( rover ) {
-				ConventionalUnitState state{ 128, 2, 1, 0, 1, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+			if ( rover || initialized ) {
+				ConventionalUnitState state{ rover ? 128 : 2, uint8_t( rover ? 2 : 1 ), 1, 0, 1, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 				fixture.WithRW( [ & ] {
 					backend_unit = manager->SpawnConventionalUnit( GSE_CALL, 1, manager->GetUnitDef( "SCOUT_TEST" ),
-						&fixture.m_state->m_slots->GetSlot( 2 ), fixture.m_game.GetMap()->GetTile( 2, 2 ), state );
+						&fixture.m_state->m_slots->GetSlot( owner_slot ), fixture.m_game.GetMap()->GetTile( 2, 2 ), state );
 				} );
 				fixture.PushUnitUpdates(); // complete the genuine spawn queue first
-				state.spent = 5; // still actionable, despite less than a whole point
+				state.spent = rover ? 5 : 2; // still actionable, despite less than a whole point
 				fixture.WithRW( [ & ] { manager->UpdateConventionalUnit( GSE_CALL, backend_unit, state ); } );
 				const auto& updates = fixture.PushUnitUpdates();
 				const auto refresh = std::find_if( updates.begin(), updates.end(), []( const auto& fr ) { return fr.type == game::FrontendRequest::FR_UNIT_UPDATE; } );
 				GT_ASSERT( refresh != updates.end(), "selected Rover did not publish its actual refresh" );
 				frontend.ProcessRequest( &*refresh );
-				GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2" && refresh->data.unit_update.morale == 2
+				GT_ASSERT( unit->CanMove() && unit->GetStatsString() == ( rover ? "? - ? - 2" : "? - ? - 1" ) && refresh->data.unit_update.morale == ( rover ? 2 : 0 )
 					&& unit->GetSprite()->instanced_sprite->texture_owner == instanced->texture_owner,
 					"actual selected Rover refresh lost stats or changed composition pixels" );
 			}
@@ -8695,6 +8695,10 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "CVR Scout real definition unit preview and retained texture teardown", GT() {
 		try { return BackendFixture::CheckScoutUnitPreview(); }
 		catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout unit/preview: " ) + error.what() ); }
+	} );
+	task->AddTest( "CVR initialized Scout real definition conventional unit and retained preview teardown", GT() {
+		try { return BackendFixture::CheckScoutUnitPreview( false, true ); }
+		catch ( const std::exception& error ) { GT_FAIL( std::string( "Initialized Scout unit/preview: " ) + error.what() ); }
 	} );
 	task->AddTest( "CVR Rover real definition unit preview and retained texture teardown", GT() {
 		try { return BackendFixture::CheckScoutUnitPreview( true ); }

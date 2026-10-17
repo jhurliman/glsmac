@@ -167,7 +167,8 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 	using Ground = settings::SmacMovementRules::GroundChassis;
 	using Profile = ConventionalUnitContext::Presentation;
 	const bool scout = context.chassis == Ground::Infantry && context.presentation == Profile::Scout && render
-		&& render->m_type == Render::RT_CVR_SCOUT && render->composition == CvrScoutRender::Composition::Scout;
+		&& ( ( render->m_type == Render::RT_CVR_SCOUT && render->composition == CvrScoutRender::Composition::Scout )
+			|| ( render->m_type == Render::RT_CVR_INITIALIZED_SCOUT && render->composition == CvrScoutRender::Composition::InitializedScout ) );
 	const bool rover = context.chassis == Ground::Speeder && context.presentation == Profile::SelectedSpartanRover && render
 		&& render->m_type == Render::RT_CVR_SPARTAN_ROVER && render->composition == CvrScoutRender::Composition::SpartanRover;
 	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover ) ) {
@@ -554,7 +555,7 @@ WRAPIMPL_BEGIN( UnitManager )
 
 						return VALUE( gse::value::Undefined );
 					}
-					else if ( render_type == "cvr_scout" || render_type == "cvr_spartan_rover" ) {
+					else if ( render_type == "cvr_scout" || render_type == "cvr_spartan_rover" || render_type == "cvr_initialized_scout" ) {
 						N_GETPROP( facing, render_def, "facing", Int );
 						N_GETPROP( zoom, render_def, "zoom", Int );
 						N_GETPROP( numerator, render_def, "scale_numerator", Int );
@@ -572,7 +573,8 @@ WRAPIMPL_BEGIN( UnitManager )
 						try {
 							render = std::make_unique< unit::CvrScoutRender >( static_cast< int32_t >( facing ), static_cast< int32_t >( zoom ),
 								static_cast< int32_t >( numerator ), static_cast< int32_t >( denominator ), types::Vec2< float >{ width, height }, types::Vec2< float >{ center_x, center_y },
-								render_type == "cvr_scout" ? unit::CvrScoutRender::Composition::Scout : unit::CvrScoutRender::Composition::SpartanRover );
+								render_type == "cvr_scout" ? unit::CvrScoutRender::Composition::Scout :
+								render_type == "cvr_spartan_rover" ? unit::CvrScoutRender::Composition::SpartanRover : unit::CvrScoutRender::Composition::InitializedScout );
 						}
 						catch ( const std::invalid_argument& error ) { GSE_ERROR( gse::EC.INVALID_CALL, error.what() ); }
 						auto* def = new unit::StaticDef( id, moraleset, name, movement_type, movement_per_turn, render.get() );

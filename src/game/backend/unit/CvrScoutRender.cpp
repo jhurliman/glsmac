@@ -12,6 +12,7 @@ Render::render_type_t RenderType( const CvrScoutRender::Composition composition 
 	switch ( composition ) {
 		case CvrScoutRender::Composition::Scout: return Render::RT_CVR_SCOUT;
 		case CvrScoutRender::Composition::SpartanRover: return Render::RT_CVR_SPARTAN_ROVER;
+		case CvrScoutRender::Composition::InitializedScout: return Render::RT_CVR_INITIALIZED_SCOUT;
 	}
 	throw std::invalid_argument( "Unsupported CVR idle composition" );
 }
@@ -85,7 +86,7 @@ CvrScoutRender CvrScoutRender::Decode( const std::string& bytes, const render_ty
 			throw std::invalid_argument( "Unsupported CVR descriptor profile" );
 		}
 		const auto profile = buffer.ReadInt();
-		if ( profile < 0 || profile > 1 ) { throw std::invalid_argument( "Unsupported CVR descriptor composition" ); }
+		if ( profile < 0 || profile > 2 ) { throw std::invalid_argument( "Unsupported CVR descriptor composition" ); }
 		const auto composition = static_cast< Composition >( profile );
 		if ( RenderType( composition ) != expected_type ) { throw std::invalid_argument( "CVR descriptor composition differs from render tag" ); }
 		const auto facing = Integer( buffer ); const auto zoom = Integer( buffer );

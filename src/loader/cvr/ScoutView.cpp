@@ -1,5 +1,7 @@
 #include "ScoutView.h"
 
+#include <charconv>
+
 #include "ScoutArithmetic.h"
 #include "ScoutLighting.h"
 
@@ -53,6 +55,42 @@ uint32_t Trig( const uint32_t input, const bool cosine ) {
 	return bits;
 }
 
+std::string_view Trim( std::string_view value ) {
+	const auto whitespace = []( const char c ) { return c == ' ' || c == '\t' || c == '\r'; };
+	while ( !value.empty() && whitespace( value.front() ) ) { value.remove_prefix( 1 ); }
+	while ( !value.empty() && whitespace( value.back() ) ) { value.remove_suffix( 1 ); }
+	return value;
+}
+
+}
+
+void ValidateMapLight( const std::string_view source ) {
+	if ( source.size() > 64 * 1024 || source.find( '\0' ) != std::string_view::npos ) { throw std::invalid_argument( "CVR Rover: invalid system source" ); }
+	bool active = false, found = false, have_row = false;
+	std::array< int32_t, 3 > light{};
+	for ( size_t start = 0; start < source.size(); ) {
+		auto end = source.find( '\n', start ); if ( end == std::string_view::npos ) { end = source.size(); }
+		auto line = Trim( source.substr( start, end - start ) ); start = end == source.size() ? end : end + 1;
+		line = Trim( line.substr( 0, line.find( ';' ) ) );
+		if ( line.empty() ) { continue; }
+		if ( line.front() == '#' ) {
+			active = line == "#VEH_LIGHT_DIR_MAP";
+			if ( active && found ) { throw std::invalid_argument( "CVR Rover: duplicate map light section" ); }
+			found = found || active; continue;
+		}
+		if ( !active ) { continue; }
+		if ( have_row ) { throw std::invalid_argument( "CVR Rover: extra map light row" ); }
+		for ( size_t i = 0; i < light.size(); ++i ) {
+			const auto comma = line.find( ',' );
+			if ( ( i < 2 ) != ( comma != std::string_view::npos ) ) { throw std::invalid_argument( "CVR Rover: map light requires three integers" ); }
+			const auto field = Trim( line.substr( 0, comma ) );
+			const auto parsed = std::from_chars( field.data(), field.data() + field.size(), light[ i ] );
+			if ( parsed.ec != std::errc{} || parsed.ptr != field.data() + field.size() ) { throw std::invalid_argument( "CVR Rover: invalid map light integer" ); }
+			if ( comma != std::string_view::npos ) { line.remove_prefix( comma + 1 ); }
+		}
+		have_row = true;
+	}
+	if ( !have_row || light != std::array< int32_t, 3 >{ 6, 4, 15 } ) { throw std::invalid_argument( "CVR Rover: map light outside the admitted system profile" ); }
 }
 
 View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
@@ -83,7 +121,7 @@ View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 	for ( size_t i = 0; i < 9; ++i ) { result.projection[ i ] = Store( Multiply( Decode( result.projection[ i ] ), Decode( result.scales[ i < 6 ? 0 : 1 ] ) ) ); }
 	result.translation = { 0x43008000, 0x43008000, 0x47138780 };
 	result.light = { 0xbf13cd36, 0x3f13cd36, 0x3f13cd36 };
-	if ( profile == IdleProfile::SpartanSpeeder ) {
+	if ( profile != IdleProfile::Infantry ) {
 		// Load validates the installed map-light tuple6,4,15. Normalize those
 		// integers here; no captured normalized vector or lighting window.
 		const float inverse_length = static_cast< float >( 1.0 / std::sqrt( 6.0 * 6.0 + 4.0 * 4.0 + 15.0 * 15.0 ) );

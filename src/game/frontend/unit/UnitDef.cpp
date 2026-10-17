@@ -24,7 +24,8 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def*
 
 			switch ( def->m_render->m_type ) {
 				case backend::unit::Render::RT_CVR_SCOUT:
-				case backend::unit::Render::RT_CVR_SPARTAN_ROVER: {
+				case backend::unit::Render::RT_CVR_SPARTAN_ROVER:
+				case backend::unit::Render::RT_CVR_INITIALIZED_SCOUT: {
 					m_scout_render.emplace( *static_cast< const backend::unit::CvrScoutRender* >( def->m_render ) );
 					static_.movement_type = def->m_movement_type;
 					static_.movement_per_turn = def->m_movement_per_turn;

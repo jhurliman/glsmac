@@ -18,7 +18,9 @@ struct View {
 	std::array< int32_t, 2 > target_anchor;
 };
 
-enum class IdleProfile { Infantry, SpartanSpeeder };
+enum class IdleProfile { Infantry, SpartanSpeeder, InitializedInfantry };
+// Fixed measured installed map-light profile, shared by initialized compositions.
+void ValidateMapLight( std::string_view system );
 View MakeView( const CvrScoutViewInput& input, IdleProfile profile = IdleProfile::Infantry );
 
 }

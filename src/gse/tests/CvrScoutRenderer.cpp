@@ -1,4 +1,5 @@
 #include "CvrScoutRenderer.h"
+#include "CvrSpartanRoverRenderer.h"
 
 #include "loader/cvr/CvrPaletteReader.h"
 #include "loader/cvr/CvrScoutRenderer.h"
@@ -142,6 +143,76 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "CVR initialized Infantry preserves geometry uses main RGB and owns source values", GT() {
+		auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
+		auto palette = MakeSpartanRoverTestAsset( "PALETTE.PCX" ), system = MakeSpartanRoverTestAsset( "system.txt" );
+		const auto colors = CvrActorMaterial::ReadSoftwareColors( palette );
+		const auto renderer = CvrScoutRenderer::LoadInitialized( body, reactor, palette, system );
+		body.clear(); reactor.clear(); palette.clear(); system.clear();
+		const auto image = renderer.Render( VIEW );
+		GT_ASSERT( image.draw_count == 2 && image.indexed.color.size() == 65536, "initialized Infantry lost its two synthetic scene draws" );
+		for ( size_t i = 0; i < image.indexed.color.size(); ++i ) {
+			const auto index = image.indexed.color[ i ];
+			GT_ASSERT( std::equal( colors[ index ].begin(), colors[ index ].end(), image.rgba.begin() + i * 4 ) &&
+				image.rgba[ i * 4 + 3 ] == ( index == 9 ? 0 : 255 ), "initialized Infantry changed main RGB or keyed alpha" );
+		}
+		const CvrScoutViewInput input{ 2, 0, 0, 1, { 128, 128 } };
+		const auto old = scout::MakeView( input ), initialized = scout::MakeView( input, scout::IdleProfile::InitializedInfantry ), rover = scout::MakeView( input, scout::IdleProfile::SpartanSpeeder );
+		GT_ASSERT( old.projection == initialized.projection && old.translation == initialized.translation && old.auxiliary == initialized.auxiliary
+			&& old.scales == initialized.scales && old.target_anchor == initialized.target_anchor && initialized.scales[ 0 ] == 0x3db33333
+			&& initialized.light == rover.light && initialized.light != old.light && initialized.scales != rover.scales,
+			"initialized light changed Infantry geometry or retained preinitialization lighting" );
+		GT_OK();
+	} );
+	task->AddTest( "CVR initialized Infantry rejects unsupported palette and system before reuse", GT() {
+		const auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
+		const auto palette = MakeSpartanRoverTestAsset( "PALETTE.PCX" ), system = MakeSpartanRoverTestAsset( "system.txt" );
+		const auto valid = CvrScoutRenderer::LoadInitialized( body, reactor, palette, system );
+		const auto before = valid.Render( VIEW ).rgba;
+		for ( const auto& bad : { std::string{}, std::string( "#VEH_LIGHT_DIR_MAP\n6,4,14\n" ), system + "\n#VEH_LIGHT_DIR_MAP\n6,4,15\n", std::string( 65537, 'x' ), system + std::string( 1, '\0' ) } ) {
+			GT_ASSERT( Rejects( [ & ] { CvrScoutRenderer::LoadInitialized( body, reactor, palette, bad ); } ), "unsupported initialized light accepted" );
+		}
+		for ( const auto& bad : { std::string{}, palette.substr( 0, palette.size() - 1 ), palette + "x" } ) {
+			GT_ASSERT( Rejects( [ & ] { CvrScoutRenderer::LoadInitialized( body, reactor, bad, system ); } ), "unsupported main palette accepted" );
+		}
+		GT_ASSERT( valid.Render( VIEW ).rgba == before, "rejected replacement changed owned initialized renderer" );
+		GT_OK();
+	} );
+	task->AddTest( "CVR initialized descriptor cache separates baseline and retains failed reload owners", GT() {
+		try {
+		using game::backend::unit::CvrScoutRender;
+		using game::backend::unit::Render;
+		using game::frontend::sprite::ScoutSpriteCache;
+		const auto rejects_wire = []( const auto& action ) { try { action(); } catch ( const std::runtime_error& ) { return true; } return false; };
+		const CvrScoutRender current( 2, 0, 0, 1, { 2, 2 }, { 128, 128 }, CvrScoutRender::Composition::InitializedScout );
+		const CvrScoutRender baseline( 2, 0, 0, 1, { 2, 2 }, { 128, 128 } );
+		GT_ASSERT( current.m_type == Render::RT_CVR_INITIALIZED_SCOUT && current.PixelKey() != baseline.PixelKey() &&
+			CvrScoutRender::Decode( current.Encode(), Render::RT_CVR_INITIALIZED_SCOUT ).PlacementKey() == current.PlacementKey(), "initialized descriptor lost separate wire or cache identity" );
+		GT_ASSERT( rejects_wire( [ & ] { CvrScoutRender::Decode( current.Encode() ); } ) &&
+			rejects_wire( [ & ] { CvrScoutRender::Decode( baseline.Encode(), Render::RT_CVR_INITIALIZED_SCOUT ); } ), "initialized descriptor accepted mismatched outer tag" );
+		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-initialized-cache-" + util::UUID::Generate() );
+		std::filesystem::create_directories( directory / "default" );
+		util::FinallyGuard cleanup( [ & ] { std::filesystem::remove_all( directory ); } );
+		const auto write = [ & ]( const char* name, const std::string& bytes ) { std::ofstream file( directory / "default" / name, std::ios::binary ); file.write( bytes.data(), bytes.size() ); };
+		write( "VI.cvr", MakeScoutTestAsset( false ) ); write( "Viptr00.cvr", MakeScoutTestAsset( true ) );
+		write( "PALETTE.PCX", MakeSpartanRoverTestAsset( "PALETTE.PCX" ) ); write( "system.txt", MakeSpartanRoverTestAsset( "system.txt" ) );
+		resource::ResourceManager resources( directory.string() );
+		std::shared_ptr< types::texture::Texture > held;
+		std::string pixels;
+		{
+			ScoutSpriteCache cache;
+			auto old = cache.Get( resources, baseline ); held = cache.Get( resources, current );
+			GT_ASSERT( old != held && old->GetBitmapSize() == held->GetBitmapSize() &&
+				std::memcmp( old->GetBitmap(), held->GetBitmap(), held->GetBitmapSize() ) != 0, "initialized cache aliased or reused baseline RGB" );
+			pixels.assign( reinterpret_cast< const char* >( held->GetBitmap() ), held->GetBitmapSize() );
+			write( "PALETTE.PCX", "invalid replacement" ); ScoutSpriteCache replacement;
+			GT_ASSERT( Rejects( [ & ] { replacement.Get( resources, current ); } ) && cache.Get( resources, current ) == held,
+				"failed initialized reload replaced a borrowed texture" );
+		}
+		GT_ASSERT( std::string( reinterpret_cast< const char* >( held->GetBitmap() ), held->GetBitmapSize() ) == pixels, "cache teardown destroyed a retained initialized texture" );
+		GT_OK();
+		} catch ( const std::exception& error ) { GT_FAIL( std::string( "initialized cache: " ) + error.what() ); }
+	} );
 	task->AddTest( "CVR Infantry geometry and scene shades are independent of owned software colors", GT() {
 		const auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
 		const auto baseline = loader::cvr::CvrScoutRenderer::Load( body, reactor );

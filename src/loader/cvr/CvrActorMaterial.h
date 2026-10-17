@@ -18,6 +18,7 @@ struct CvrActorMaterial {
 	// the observed software constructor constants. Faction pixels use offset10
 	// modulo256; its own PCX palette never replaces the active palette.
 	// Sample435,745 supplies the material tint. No name/blend/UI behavior.
+	static std::array< CvrPalette::Color, 256 > ReadSoftwareColors( std::string_view palette_pcx );
 	static CvrActorMaterial Read( std::string_view palette_pcx, std::string_view faction_pcx,
 		const std::array< uint8_t, 24 * 256 >& body_shades );
 };

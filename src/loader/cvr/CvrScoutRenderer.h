@@ -39,6 +39,9 @@ public:
 	// captured palette/window/frame bytes are runtime inputs. This entry point
 	// does not infer design identity or locate files in an installation.
 	static CvrScoutRenderer Load( std::string_view infantry, std::string_view reactor );
+	// Explicit initialized main-palette/light path; no faction tint or remap.
+	static CvrScoutRenderer LoadInitialized( std::string_view infantry, std::string_view reactor,
+		std::string_view palette_pcx, std::string_view system );
 	// Reactor1 flat idle/frame0 adapter. Unsupported geometry/frame/group flags,
 	// arithmetic, footprint and out-of-surface samples reject with invalid_argument.
 	// Produces a256-square internal image; final target clipping/blitting and
@@ -49,7 +52,7 @@ private:
 	friend class CvrSpartanRoverRenderer;
 	friend class gse::tests::CvrRenderPolicyFixture;
 	// Fixed composition policy is independent of optional palette/material data.
-	enum class Profile { Infantry, SpartanSpeeder };
+	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry };
 	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material );
 	struct Assets;
 	explicit CvrScoutRenderer( std::shared_ptr< const Assets > assets );

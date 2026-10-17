@@ -1,10 +1,11 @@
 # Live worker integration after the detached allocator
 
-The checked values at `dacac744` are prerequisites, not an active canonical
-campaign. The next observable target is a real Base whose worker query and
-allocation survive a world save/restore, using its actual population, owner,
-terrain and frozen rules. Generated-world startup follows the missing knowledge
-producers rather than manufacturing explored or owned squares.
+The checked values at `dacac744` now have native Base publication and an
+[explicit live worker knowledge adapter](smac-live-worker-knowledge.md). They
+support a real Base query and allocation that survive world restoration using
+actual population, owners and terrain. This remains a controlled native
+integration surface; generated-world startup still needs sight and territory
+producers. Combined validation is recorded separately from component receipts.
 
 ## Base authority and publication
 
@@ -64,7 +65,9 @@ its actual consumer is implemented.
 Support, prepared orbital intake, production category and priorities also need
 authenticated inputs. Current conventional Units explicitly retain home=None;
 that supports their unhomed case, not a universal zero-support rule. Ordered
-unit-support recalculation is the next independent arithmetic slice. Current
+unit-support recalculation is now an independent checked arithmetic slice in
+[draft PR #166](https://github.com/jhurliman/glsmac/pull/166). Its live home and
+ordered-unit bindings still need implementation. Current
 resource queries require refreshed social state, so the first live preview must
 not be presented as the original early founding calculation.
 
@@ -85,6 +88,11 @@ than repeating allocator research.
 
 Keep each implementation slice in a focused PR. Drafts #159–#165 cover scoring,
 collection, specialist bookkeeping, availability, complete allocation and the
-two owned state codecs. Their publication trees have separate validation from
+two owned state codecs; all applicable CI checks on those seven draft heads
+have passed. Their publication trees have separate validation from
 the integration branch. Current GitHub Codex review quota failures do not count
-as completed reviews; unreviewed heads remain unmerged.
+as completed reviews; unreviewed heads remain unmerged. Live Base publication
+also depends on source-profile and canonical-context foundations that are not
+all published yet. Publish those as coherent dependency PRs before the live
+consumer, preserving its typed validation rather than removing it to shorten
+the diff.

@@ -14,6 +14,7 @@
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
+#include "SmacPredefinedUnitCatalog.h"
 #include "SmacFactionStartupRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
@@ -214,6 +215,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
+		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );

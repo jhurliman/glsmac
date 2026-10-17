@@ -126,7 +126,7 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	const auto& units = settings.GetSmacPredefinedUnitRules();
 	if ( buffer.ReadBool() != units.has_value() ) { throw std::runtime_error( "World snapshot predefined unit presence differs from the session" ); }
 	if ( units ) {
-		const auto incoming = settings::SmacPredefinedUnitRules::Deserialize( buffer.ReadString(), *technologies );
+		const auto incoming = settings::SmacPredefinedUnitRules::Deserialize( buffer.ReadString( settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES ), *technologies );
 		if ( !( incoming == *units ) ) { throw std::runtime_error( "World snapshot predefined unit profile differs from the session" ); }
 	}
 }

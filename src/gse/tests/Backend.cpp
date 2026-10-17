@@ -927,6 +927,143 @@ public:
 			"generated/late events were recursively drained or map acquisition ran inline" );
 		GT_OK();
 	}
+	std::string CheckInitialWorldTurn( const int scenario ) {
+		using namespace game::backend;
+		const bool queued = scenario == 1 || scenario == 2 || scenario == 6;
+		const bool cancel_pending = scenario == 2, cancel_running = scenario == 3;
+		const bool restart = scenario == 4, restored = scenario >= 5;
+		const auto previous_base_id = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ]() { base::Base::SetNextId( previous_base_id ); } );
+		EnableWorldSnapshot(); EnableTurnPlayers();
+		if ( restart ) {
+			SetSnapshotTurn( 37 );
+			m_map.release(); // ResetGame owns and deletes the preceding real map.
+			m_game.ResetGame();
+			GT_ASSERT( m_game.GetTurnId() == 0 && !m_game.m_map && !m_state->GetGame(), "reset retained the preceding world's turn or binding" );
+			const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				m_state->SetGame( &m_game );
+				NEWV( map, map::Map, &m_game, 8, 8 );
+				m_map.reset( map ); m_game.m_map = map;
+				map->GetTilesPtr()->Clear();
+				for ( size_t y = 0 ; y < 8 ; ++y ) { for ( size_t x = y & 1 ; x < 8 ; x += 2 ) { map->GetTile( x, y )->Update(); } }
+				m_game.m_bm = new base::BaseManager( &m_game );
+				GT_OK();
+			} );
+			GT_ASSERT( error.empty(), "restart setup failed: " + error );
+			EnableWorldSnapshot();
+		}
+		BackendFixture source;
+		source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
+		for ( auto* state : { m_state, source.m_state } ) {
+			state->m_settings.global.SelectRuleset( "smax" );
+			state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
+		}
+		std::vector< std::string > order;
+		common::mt_id_t reset = 0;
+		world_ticket_t ticket = 0;
+		bool reset_parked = true;
+		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			m_game.m_tm = new map::tile::TileManager( &m_game );
+			if ( restored ) {
+				m_state->SetConnection( new RecordingConnection( gc_space ) );
+				RestoreWorldBody( GSE_CALL, source.WorldSnapshot() );
+			}
+			else {
+				for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { m_game.GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
+				DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER ); DefinePop( "DOCTOR", "Doctor", base::PopDef::PF_NONE );
+				m_game.GetTM()->On( GSE_CALL, "get_tile_resources", NATIVE_CALL() {
+					return new value::Object( GSE_CALL, {
+						{ "NUTRIENTS", VALUE( value::Int,, 1 ) }, { "MINERALS", VALUE( value::Int,, 1 ) }, { "ENERGY", VALUE( value::Int,, 1 ) },
+					} );
+				} ) );
+			}
+			for ( const auto* name : { "spawn_base", "advance_turn", "add_base_pop", "remove_base_pop" } ) {
+				auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
+				RegisterEvent( name, new event::EventHandler( gc_space, name, static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+					static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+			}
+			if ( !restored ) {
+				auto* setup_bases = static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
+				setup_bases->Run( GSE_CALL, { m_game.Wrap( GSE_CALL ) } );
+			}
+			for ( const std::string name : { "create_marker", "start_marker", "nested_marker" } ) {
+				auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
+				auto* apply = NATIVE_CALL( this, &order, name ) { order.push_back( name + ":" + std::to_string( m_game.GetTurnId() ) ); return VALUE( value::Undefined ); } );
+				RegisterEvent( name, new event::EventHandler( gc_space, name, noop, nullptr, apply, noop ) );
+			}
+			m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, &order ) {
+				order.push_back( "create:" + std::to_string( m_game.GetTurnId() ) );
+				m_game.Event( GSE_CALL, "spawn_base", {
+					{ "owner", m_state->m_slots->GetSlot( 0 ).GetPlayer()->Wrap( GSE_CALL ) },
+					{ "tile", m_game.GetMap()->GetTile( 4, 4 )->Wrap( GSE_CALL ) }, { "facilities", VALUE( value::Array,, {} ) },
+				} );
+				m_game.Event( GSE_CALL, "create_marker", {} );
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.On( GSE_CALL, "start", NATIVE_CALL( this, &order, restored ) {
+				order.push_back( "start:" + std::to_string( m_game.GetTurnId() ) );
+				if ( !restored ) { m_game.Event( GSE_CALL, "start_marker", {} ); }
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, &ticket, &reset, &reset_parked, cancel_running ) {
+				order.push_back( "base:" + std::to_string( m_game.GetTurnId() ) );
+				m_game.Event( GSE_CALL, "nested_marker", {} );
+				if ( cancel_running ) {
+					std::thread native( [ & ]() { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); reset_parked = m_game.MT_GetResponse( reset ).result == R_NONE && m_game.m_map; } );
+					native.join();
+				}
+				return VALUE( value::Undefined );
+			} ) );
+			m_game.GetBM()->On( GSE_CALL, "base_turn", NATIVE_CALL( this, &order ) { order.push_back( "base_turn:" + std::to_string( m_game.GetTurnId() ) ); return VALUE( value::Undefined ); } ) );
+			m_game.On( GSE_CALL, "turn", NATIVE_CALL( this, &order ) { order.push_back( "turn:" + std::to_string( m_game.GetTurnId() ) ); return VALUE( value::Undefined ); } ) );
+			ticket = FixtureWorldTicket();
+			m_game.m_active_admission->connection = m_state->GetConnection();
+			m_game.m_active_admission->slot = 0;
+			m_game.m_active_admission->stage = Game::StartupStage::Start;
+			m_game.m_game_state = Game::GS_STARTING;
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "initial-world setup failed: " + setup );
+		m_map.release();
+		util::FinallyGuard recover( [ this ]() { m_map.reset( m_game.m_map ); } );
+		if ( queued ) {
+			std::exception_ptr escaped;
+			std::thread native( [ & ]() { try { m_game.Iterate(); } catch ( ... ) { escaped = std::current_exception(); } } );
+			native.join(); if ( escaped ) { std::rethrow_exception( escaped ); }
+			GT_ASSERT( order.empty() && m_game.OwnerBlocksNative(), "queued startup ran before owner drain" );
+			if ( cancel_pending ) { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); }
+			ProcessAccumulations();
+		}
+		else { m_game.Iterate(); }
+		if ( cancel_pending ) {
+			GT_ASSERT( order.empty() && m_game.GetTurnId() == 0 && !m_game.m_map && m_game.m_pending_events.empty(), "canceled pending startup created a world or advanced a turn" );
+			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "pending startup reset did not complete" );
+			GT_OK();
+		}
+		const std::vector< std::string > expected = restored ? std::vector< std::string >{ "start:37" }
+			: std::vector< std::string >{ "create:0", "start:0", "base:0", "create_marker:0", "start_marker:0", "base_turn:1", "turn:1" };
+		GT_ASSERT( order == expected, "initial base or queued startup event observed the first live turn too early" );
+		GT_ASSERT( reset_parked && m_game.GetTurnId() == ( restored ? 37u : 1u ), "first turn or running reset changed startup completion" );
+		size_t advances = 0;
+		for ( const auto& request : m_frontend_requests ) { if ( request.type == game::FrontendRequest::FR_TURN_ADVANCE ) { ++advances; GT_ASSERT( request.data.turn_advance.turn_id == ( restored ? 37u : 1u ), "wrong visible initial turn" ); } }
+		GT_ASSERT( advances == 1, "initial turn presentation was not published exactly once" );
+		if ( cancel_running ) {
+			m_game.Iterate();
+			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_map && m_game.GetTurnId() == 0 && m_game.m_pending_events.empty(), "running startup reset did not clear the completed world" );
+			GT_ASSERT( order == expected, "reset executed nested startup events" );
+		}
+		else if ( !restored ) {
+			GT_ASSERT( m_game.GetBM()->GetBases().size() == 1 && m_game.GetBM()->GetBases().begin()->second->m_pops.empty(), "first upkeep did not leave initial population queued" );
+			GT_ASSERT( m_game.m_pending_events.size() == 2 && m_game.m_pending_events[ 0 ]->GetEventName() == "nested_marker"
+				&& m_game.m_pending_events[ 1 ]->GetEventName() == "add_base_pop", "nested events were reordered or recursively drained" );
+			const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.ProcessEvents(); GT_OK(); } );
+			GT_ASSERT( error.empty(), "nested startup events failed: " + error );
+			GT_ASSERT( order.size() == expected.size() + 1 && order.back() == "nested_marker:1" && m_game.m_pending_events.empty()
+				&& m_game.GetBM()->GetBases().begin()->second->m_pops.size() == 1, "real first upkeep/population did not execute exactly once" );
+		}
+		else { GT_ASSERT( m_game.m_pending_events.empty() && m_game.GetBM()->GetBases().empty(), "restored startup ran founding or first upkeep" ); }
+		GT_OK();
+	}
 	std::string CheckStartupFinish( const bool restored, const bool cancel ) {
 		using namespace game::backend;
 		EnableWorldSnapshot(); EnableTurnPlayers();
@@ -2285,6 +2422,11 @@ static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
 				BackendFixture fixture; return fixture.CheckStartupFinish( restored, cancel );
 			} );
 		}
+	}
+	for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6 } ) {
+		task->AddTest( "initial world events precede first live turn " + std::to_string( scenario ), GT( scenario ) {
+			BackendFixture fixture; return fixture.CheckInitialWorldTurn( scenario );
+		} );
 	}
 	for ( const auto& scenario : std::vector< std::pair< int, std::string > >{
 		{ 0, "terminal admission then inline initialize configure" }, { 1, "Pending cancellation resets without owner drain" },

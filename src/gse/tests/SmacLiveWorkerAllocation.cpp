@@ -7,6 +7,7 @@
 #include "game/backend/Random.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/base/SmacBaseUpkeepCache.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/map/Map.h"
@@ -28,7 +29,9 @@
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
+#include "types/Buffer.h"
 #include <sstream>
+#include <stdexcept>
 
 namespace gse::tests {
 namespace {
@@ -38,6 +41,33 @@ using namespace game::backend::map::tile;
 using Knowledge = map::SmacWorkerKnowledge;
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
+
+// Independent typed fixture: deliberately retained history, not a query of any
+// current world. Marking order is unrelated to numeric Unit identity.
+struct UpkeepCacheWire {
+    int64_t version = 1;
+    bool present = true;
+    std::array<int64_t,13> calculation{4,3,2, 4,2,2,19,19, 2,3,2,1,1};
+    std::array<int64_t,5> support{1,2,2,1,2};
+    int64_t count = 4;
+    std::vector<std::pair<int64_t,int64_t>> units{{93,0},{7,3},{51,1},{4,2}};
+    types::Buffer Encode() const {
+        types::Buffer out; out.WriteInt(version); out.WriteBool(present);
+        if (present) {
+            for (const auto value : calculation) { out.WriteInt(value); }
+            for (const auto value : support) { out.WriteInt(value); }
+            out.WriteInt(count);
+            for (const auto& unit : units) { out.WriteInt(unit.first); out.WriteInt(unit.second); }
+        }
+        return out;
+    }
+};
+bool CacheError(types::Buffer bytes, const std::string& message) {
+    try { (void)DeserializeSmacBaseUpkeepCache(bytes); }
+    catch (const std::runtime_error& error) { return std::string(error.what()).find(message) != std::string::npos; }
+    return false; // bad_alloc is not accepted as a count/bounds rejection
+}
+
 Value* Call( GSE_CALLABLE, value::Object* object, const std::string& name, const value::function_arguments_t& args = {} ) {
 	return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
 }
@@ -169,6 +199,93 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC Base upkeep cache preserves historical values order and absent state", [](GSE*,context::Context*) -> std::string {
+        UpkeepCacheWire wire;
+        auto decoded = DeserializeSmacBaseUpkeepCache(wire.Encode());
+        GT_ASSERT(decoded && decoded->calculation.raw_intake == (std::array<int64_t,3>{4,3,2})
+            && decoded->calculation.nutrients.intake == 4 && decoded->calculation.nutrients.demand == 2
+            && decoded->calculation.nutrients.surplus == 2 && decoded->calculation.nutrients.stored_before == 19
+            && decoded->calculation.nutrients.normalized_stored == 19 && decoded->calculation.minerals.multiplier_steps == 2
+            && decoded->calculation.minerals.intake == 3 && decoded->calculation.minerals.demand == 2
+            && decoded->calculation.minerals.surplus == 1 && decoded->calculation.minerals.pre_orbital_surplus == 1,
+            "cache lost or recomputed a retained resource field");
+        GT_ASSERT(decoded->support.free_allowance == 1 && decoded->support.minerals_per_paid_unit == 2
+            && decoded->support.eligible_count == 2 && decoded->support.paid_count == 1 && decoded->support.mineral_support == 2
+            && decoded->support.units.size() == 4, "cache changed retained support totals");
+        for (size_t i=0; i<wire.units.size(); ++i) {
+            GT_ASSERT(decoded->support.units[i].id == static_cast<uint64_t>(wire.units[i].first)
+                && static_cast<int64_t>(decoded->support.units[i].disposition) == wire.units[i].second,
+                "cache reordered paid/support history by Unit ID");
+        }
+        GT_ASSERT(SerializeSmacBaseUpkeepCache(decoded).ToString() == wire.Encode().ToString(), "cache writer changed independent typed fixture");
+        const auto copy = DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(decoded));
+        decoded->support.units.front().id = 99;
+        GT_ASSERT(copy->support.units.front().id == 93, "decoded caches share record storage");
+        wire.present = false;
+        GT_ASSERT(!DeserializeSmacBaseUpkeepCache(wire.Encode())
+            && SerializeSmacBaseUpkeepCache(std::nullopt).ToString() == wire.Encode().ToString(),
+            "absent cache became a zero/current calculation"); GT_OK();
+    });
+    task->AddTest("SMAC Base upkeep cache preserves signed boundaries and rejects narrowing", [](GSE*,context::Context*) -> std::string {
+        UpkeepCacheWire wire;
+        wire.calculation = {INT64_MIN,INT64_MAX,-7, INT32_MIN,INT32_MAX,-2,INT64_MIN,INT64_MAX,
+            INT32_MIN,INT32_MAX,-3,INT32_MIN,INT32_MAX};
+        const auto decoded = DeserializeSmacBaseUpkeepCache(wire.Encode());
+        GT_ASSERT(decoded && decoded->calculation.raw_intake == (std::array<int64_t,3>{INT64_MIN,INT64_MAX,-7})
+            && decoded->calculation.nutrients.intake == INT32_MIN && decoded->calculation.nutrients.demand == INT32_MAX
+            && decoded->calculation.nutrients.surplus == -2 && decoded->calculation.nutrients.stored_before == INT64_MIN
+            && decoded->calculation.nutrients.normalized_stored == INT64_MAX
+            && decoded->calculation.minerals.multiplier_steps == INT32_MIN && decoded->calculation.minerals.intake == INT32_MAX
+            && decoded->calculation.minerals.demand == -3 && decoded->calculation.minerals.surplus == INT32_MIN
+            && decoded->calculation.minerals.pre_orbital_surplus == INT32_MAX
+            && SerializeSmacBaseUpkeepCache(decoded).ToString() == wire.Encode().ToString(),
+            "cache narrowed historical signed fields or imposed current-world arithmetic");
+        wire.calculation[3] = int64_t(INT32_MAX)+1;
+        GT_ASSERT(CacheError(wire.Encode(),"signed32"), "nutrient overflow was narrowed");
+        wire = UpkeepCacheWire{}; wire.calculation[12] = int64_t(INT32_MIN)-1;
+        GT_ASSERT(CacheError(wire.Encode(),"signed32"), "mineral underflow was narrowed");
+        wire = UpkeepCacheWire{}; wire.support[2] = int64_t(INT32_MAX)+1;
+        GT_ASSERT(CacheError(wire.Encode(),"signed32"), "support count overflow was narrowed"); GT_OK();
+    });
+    task->AddTest("SMAC Base upkeep cache rejects malformed framing counts and markings", [](GSE*,context::Context*) -> std::string {
+        UpkeepCacheWire wire;
+        const auto valid = wire.Encode().ToString();
+        GT_ASSERT(Rejects([&]{DeserializeSmacBaseUpkeepCache(types::Buffer(valid.substr(0,valid.size()-1)));}),
+            "truncated final marking admitted");
+        auto trailing = wire.Encode(); trailing.WriteInt(0);
+        GT_ASSERT(CacheError(trailing,"Trailing"), "trailing cache data admitted");
+        wire.present = false; trailing = wire.Encode(); trailing.WriteInt(0);
+        GT_ASSERT(CacheError(trailing,"Trailing"), "absent cache ignored trailing fields");
+        wire.version = 2;
+        GT_ASSERT(CacheError(wire.Encode(),"Unsupported"), "unknown cache version admitted");
+        for (const auto count : {int64_t(-1), int64_t(SmacUnitSupport::MAX_ORDERED_UNITS)+1,
+                int64_t(SmacUnitSupport::MAX_ORDERED_UNITS), int64_t(5)}) {
+            wire = UpkeepCacheWire{}; wire.count = count;
+            GT_ASSERT(CacheError(wire.Encode(),"cache count"), "wire count reached allocation/records before extent validation");
+        }
+        wire = UpkeepCacheWire{}; wire.units[1].first = 93;
+        GT_ASSERT(CacheError(wire.Encode(),"identity"), "duplicate cached Unit identity admitted");
+        wire = UpkeepCacheWire{}; wire.units[0].first = -1;
+        GT_ASSERT(CacheError(wire.Encode(),"record"), "negative cached Unit identity admitted");
+        wire = UpkeepCacheWire{}; wire.units[0].second = 4;
+        GT_ASSERT(CacheError(wire.Encode(),"record"), "unknown support disposition admitted");
+        for (const size_t field : {2u,3u,4u}) {
+            wire = UpkeepCacheWire{}; ++wire.support[field];
+            GT_ASSERT(CacheError(wire.Encode(),"totals"), "support totals detached from saved markings");
+        }
+        wire = UpkeepCacheWire{}; wire.support[1] = 3;
+        GT_ASSERT(CacheError(wire.Encode(),"support cache"), "unsupported paid cost admitted");
+        auto invalid = DeserializeSmacBaseUpkeepCache(UpkeepCacheWire{}.Encode());
+        invalid->support.units[0].id = uint64_t(INT64_MAX)+1;
+        GT_ASSERT(Rejects([&]{SerializeSmacBaseUpkeepCache(invalid);}), "writer narrowed unsigned Unit ID");
+        invalid = DeserializeSmacBaseUpkeepCache(UpkeepCacheWire{}.Encode());
+        invalid->support.units[0].disposition = static_cast<SmacSupportDisposition>(4);
+        GT_ASSERT(Rejects([&]{SerializeSmacBaseUpkeepCache(invalid);}), "writer admitted unknown disposition");
+        invalid = DeserializeSmacBaseUpkeepCache(UpkeepCacheWire{}.Encode()); ++invalid->support.paid_count;
+        GT_ASSERT(Rejects([&]{SerializeSmacBaseUpkeepCache(invalid);}), "writer admitted inconsistent paid count"); GT_OK();
+    });
+
 
     task->AddTest("SMAC running founding consumes the manufactured moved Pod and preserves knowledge",[](GSE*,context::Context*) -> std::string {
         std::string saved, new_record, old_record; size_t founded_id=0, pod_id=0;
@@ -811,6 +928,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			const auto fresh=base->PrepareSmacResourceCalculation();
 			GT_ASSERT(fresh.nutrients.surplus==0 && base->GetSmacUpkeepCache()->calculation.nutrients.surplus==1,
 				"query or terrain edit replaced the retained successor surplus");
+			const auto restored_cache=DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(base->GetSmacUpkeepCache()));
+			GT_ASSERT(restored_cache && restored_cache->calculation.nutrients.surplus==1
+				&& restored_cache->calculation.raw_intake==before.calculation.raw_intake
+				&& restored_cache->support.mineral_support==before.support.mineral_support,
+				"cache codec replaced stale history with fresh changed-terrain values");
 			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
 			GT_ASSERT(base->GetSmacUpkeepCache()->calculation.nutrients.surplus==0,"actual later calculation did not replace retained surplus");GT_OK();
 		});

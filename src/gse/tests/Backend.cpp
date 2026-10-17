@@ -5950,6 +5950,7 @@ types::Buffer WorkerRecord( const std::vector< SavedWorker >& pops, const int64_
 	buf.WriteString( production );
 	buf.WriteString( game::backend::base::SerializeSmacBaseResourceContext( std::nullopt ).ToString() );
 	buf.WriteBool( false );
+	buf.WriteString( game::backend::base::SerializeSmacBaseUpkeepCache( std::nullopt ).ToString() );
 	return buf;
 }
 
@@ -6133,7 +6134,7 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 						if ( scenario == 9 ) { production.WriteInt( 99 ); }
 					}
 					types::Buffer snapshot;
-					snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
+					snapshot.WriteString( "GLSMAC_BASES_V11" ); snapshot.WriteInt( 2 );
 					for ( const auto* id : { "WORKER", "DOCTOR" } ) { snapshot.WriteString( id ); snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() ); }
 					snapshot.WriteInt( 0 ); snapshot.WriteInt( prior_record ? 2 : 1 );
 					if ( prior_record ) { snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() ); }
@@ -6380,7 +6381,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
 			GT_ASSERT( setup.empty(), "worker setup: " + setup );
 			types::Buffer snapshot;
-			snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( "GLSMAC_BASES_V11" ); snapshot.WriteInt( 2 );
 			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
 				snapshot.WriteString( id );
 				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );

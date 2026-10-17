@@ -5,6 +5,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -35,11 +36,20 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(selected, [self.sources[0]])
         self.assertFalse(full)
 
-    def test_headers_and_build_policy_widen_to_all_sources_even_when_deleted(self):
-        for path in ["src/deleted.h", "src/template.inl", "CMakeLists.txt", "cmake/options.cmake",
+    def test_build_policy_widens_to_all_sources(self):
+        for path in ["CMakeLists.txt", "cmake/options.cmake",
                      ".clang-tidy", "tools/analyze_cpp.py", ".github/workflows/cpp-analysis.yml"]:
             with self.subTest(path=path):
                 self.assertEqual(analysis.select_sources(self.root, self.sources, [path]), (self.sources, True))
+
+    def test_header_without_complete_dependencies_fails_explicitly(self):
+        for path in ["src/deleted.h", "src/template.inl"]:
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "dependencies are unavailable.*--all"):
+                analysis.select_sources(self.root, self.sources, [path])
+
+    def test_test_only_headers_do_not_select_production(self):
+        self.assertEqual(analysis.select_sources(self.root, self.sources,
+                                                ["src/gse/tests/Test.h", "tools/tests/mock.h"]), ([], False))
 
     def test_new_source_missing_from_database_fails_instead_of_skipping(self):
         self.touch("src/new.cpp")
@@ -62,9 +72,81 @@ class AnalysisTests(unittest.TestCase):
         self.touch(fragment)
         self.touch(owner)
         sources = sorted(self.sources + [owner])
-        self.assertEqual(analysis.select_sources(self.root, sources, [fragment]), (sources, True))
+        dependencies = {source: set() for source in sources}
+        dependencies[owner] = {self.root / fragment}
+        self.assertEqual(analysis.select_sources(self.root, sources, [fragment], dependencies=dependencies), ([owner], False))
         (self.root / fragment).unlink()
-        self.assertEqual(analysis.select_sources(self.root, sources, [fragment]), (sources, True))
+        self.assertEqual(analysis.select_sources(self.root, sources, [fragment], dependencies=dependencies), ([owner], False))
+
+    def write_compiler_database(self):
+        compiler = shutil.which("clang++") or shutil.which("g++")
+        if not compiler:
+            self.skipTest("A C++ preprocessor is needed for real dependency selection")
+        entries = [{"directory": str(self.root), "file": source,
+                    "arguments": [compiler, "-I" + str(self.root / "src"), "-c", source,
+                                  "-MD", "-MF", str(self.root / "must-not-write.d"), "-o", str(self.root / "must-not-write.o")]}
+                   for source in self.sources]
+        (self.root / "compile_commands.json").write_text(json.dumps(entries))
+
+    def test_actual_preprocessor_selects_transitive_and_conditional_consumers(self):
+        self.touch("src/shared header.h")
+        (self.root / "src/shared header.h").write_text("#define VALUE 1\n")
+        (self.root / "src/outer.h").write_text('#include "shared header.h"\n')
+        (self.root / self.sources[0]).write_text('#include "outer.h"\nint first = VALUE;\n')
+        (self.root / self.sources[1]).write_text('#if 0\n#include "outer.h"\n#endif\nint second;\n')
+        self.write_compiler_database()
+        dependencies = analysis.compiler_dependencies(self.root, self.root, 2, 10)
+        self.assertEqual(analysis.select_sources(self.root, self.sources, ["src/shared header.h"],
+                                                dependencies=dependencies), ([self.sources[0]], False))
+        self.assertFalse((self.root / "must-not-write.o").exists())
+        self.assertFalse((self.root / "must-not-write.d").exists())
+        # Removing the last include alongside a header is a valid no-consumer change.
+        (self.root / self.sources[0]).write_text("int first;\n")
+        (self.root / "src/shared header.h").unlink()
+        dependencies = analysis.compiler_dependencies(self.root, self.root, 1, 10)
+        self.assertEqual(analysis.select_sources(self.root, self.sources, ["src/shared header.h"],
+                                                dependencies=dependencies), ([], False))
+
+    def test_removed_header_still_included_fails_before_partial_analysis(self):
+        (self.root / self.sources[0]).write_text('#include "removed.h"\n')
+        self.write_compiler_database()
+        with self.assertRaisesRegex(ValueError, "Cannot resolve dependencies for src/first.cpp") as failure:
+            analysis.compiler_dependencies(self.root, self.root, 2, 10)
+        self.assertIn("removed.h", str(failure.exception))
+        self.assertIn("No partial analysis result is accepted", str(failure.exception))
+        self.assertIn("--all", str(failure.exception))
+
+    def test_dependency_failure_and_invalid_output_are_not_empty_coverage(self):
+        self.write_compiler_database()
+        for result in [subprocess.CompletedProcess([], 0, "", ""),
+                       subprocess.CompletedProcess([], 0, "glsmac_dependencies: unrelated.cpp\n", ""),
+                       subprocess.CompletedProcess([], 1, "", "missing generated header")]:
+            with self.subTest(result=result), patch.object(analysis.subprocess, "run", return_value=result), \
+                    self.assertRaisesRegex(ValueError, "No partial analysis result is accepted"):
+                analysis.compiler_dependencies(self.root, self.root, 1, 10)
+
+    def test_actual_git_cmake_registration_narrows_but_build_semantics_do_not(self):
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(self.root), *args], stderr=subprocess.STDOUT)
+        paths = ["src/gse/tests/CMakeLists.txt", "src/nested/CMakeLists.txt"]
+        for path in paths:
+            self.touch(path)
+            (self.root / path).write_text("SET( SRC ${SRC}\n\t${PWD}/old.cpp\n\tPARENT_SCOPE )\n")
+        git("init", "-q")
+        git("add", ".")
+        git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "base")
+        for path in paths:
+            (self.root / path).write_text("SET( SRC ${SRC}\n\t${PWD}/old.cpp\n\t${PWD}/second.cpp\n\tPARENT_SCOPE )\n")
+        registrations = analysis.source_registrations(self.root, paths, "HEAD")
+        self.assertEqual(analysis.select_sources(self.root, self.sources, [paths[0]],
+                                                registrations={paths[0]: registrations[paths[0]]}), ([], False))
+        self.assertEqual(analysis.select_sources(self.root, self.sources, paths, registrations=registrations),
+                         ([self.sources[1]], False))
+        with (self.root / paths[1]).open("a") as output:
+            output.write("ADD_COMPILE_DEFINITIONS(CHANGED_BEHAVIOR)\n")
+        registrations = analysis.source_registrations(self.root, paths, "HEAD")
+        self.assertEqual(analysis.select_sources(self.root, self.sources, paths, registrations=registrations),
+                         (self.sources, True))
 
     def test_cli_reports_the_windows_exclusion_without_analyzing_it(self):
         path = "src/network/impl/Windows.cpp"

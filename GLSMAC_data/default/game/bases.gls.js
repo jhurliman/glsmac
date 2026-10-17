@@ -15,7 +15,7 @@ const get_pending_growth = (base) => {
 
 const reset_nutrients = (game, base) => {
 	const nfg = get_nutrients_for_growth(game, base);
-	let accumulated = base.get('accumulated_nutrients');
+	let accumulated = base.get_accumulated_nutrients();
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
@@ -23,7 +23,7 @@ const reset_nutrients = (game, base) => {
 	if (updated < 0) {
 		updated = 0;
 	}
-	base.set('accumulated_nutrients', updated);
+	base.set_accumulated_nutrients(updated);
 };
 
 const get_tile_score = (base, tile) => {
@@ -66,7 +66,7 @@ const find_best_or_worst_tiles = (base, tiles, count, modifier) => { // modifier
 const process_growth = (game, base) => {
 	let grow = false;
 
-	let accumulated = base.get('accumulated_nutrients');
+	let accumulated = base.get_accumulated_nutrients();
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
@@ -75,7 +75,7 @@ const process_growth = (game, base) => {
 		let pop = null;
 		// try to remove non-worker pop first
 		for (p of base.get_pops()) {
-			if (!p.has('worked_tile')) {
+			if (!#is_defined(p.get_worked_tile())) {
 				pop = p;
 				break;
 			}
@@ -83,7 +83,7 @@ const process_growth = (game, base) => {
 		if (pop == null) {
 			const worst_tile = (find_best_or_worst_tiles(base, base.get_worked_tiles(), 1, 0 - 1))[0];
 			if (#is_defined(worst_tile)) {
-				const p = worst_tile.get('working_pop');
+				const p = worst_tile.get_working_pop();
 				if (#is_defined(p)) {
 					pop = p;
 				} else {
@@ -99,7 +99,7 @@ const process_growth = (game, base) => {
 		});
 		return;
 	}
-	base.set('accumulated_nutrients', accumulated);
+	base.set_accumulated_nutrients(accumulated);
 	if (base.get_size() == 0) {
 		grow = true; // always grow new bases to 1
 	}
@@ -158,22 +158,13 @@ const calculate_growth_base = (game) => {
 };
 
 const pop_work_tile = (base, pop, tile) => {
-	pop_unwork(base, pop);
-	pop.set_type('WORKER');
-	pop.set('worked_tile', tile);
-	tile.set('working_pop', pop);
-	base.add_worked_tile(tile);
+	base.set_pop_assignment(pop, 'WORKER', tile);
 };
 
 const pop_unwork = (base, pop, new_type) => {
-	const tile = pop.get('worked_tile');
+	const tile = pop.get_worked_tile();
 	if (#is_defined(tile)) {
-		tile.unset('working_pop');
-		pop.unset('worked_tile');
-		base.remove_worked_tile(tile);
-		if (#is_defined(new_type)) {
-			pop.set_type(new_type);
-		}
+		base.set_pop_assignment(pop, #is_defined(new_type) ? new_type : pop.get_type(), #undefined);
 	}
 };
 

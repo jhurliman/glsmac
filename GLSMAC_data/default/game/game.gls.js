@@ -12,7 +12,7 @@ return (glsmac) => {
 	}
 
 	glsmac.on('configure_state', (e) => {
-		factions.configure(e.fm);
+		factions.configure(e.fm, e.ruleset);
 	});
 
 	#include('events')(glsmac.game);

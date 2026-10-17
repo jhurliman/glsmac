@@ -199,7 +199,14 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [live-roster/startup receipt](validation/live-roster-startup-2026-10-17.md)
+The latest [unit-profile/screen receipt](validation/world-unit-profile-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at `58197e64`, plus zero failures across 313 Linux analysis translation units.
+It adds frozen predefined-unit profiles in GlobalSettings V7/world header V8,
+the canonical Client packet-budget guard, ready-lobby packet ordering, and the
+complete base-screen signed-endpoint repair. The subsequent admitted snapshot
+Failure/Start correction has its own validation and publication gate.
+The preceding [live-roster/startup receipt](validation/live-roster-startup-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
 at the same integrated commit, `75c280c8`. It includes live canonical roster
 publication, frozen faction profiles in the V7 world header, the owned predefined
@@ -290,19 +297,24 @@ separate evidence in [#109](https://github.com/jhurliman/glsmac/pull/109).
 The reverse-engineering handoff now captures a complete original internal
 reactor-1 Scout draw, including grouped geometry and indexed/depth buffers.
 Twelve complete original draw/copy/cleanup cases also establish palette index 9
-as the transparency key. The live rendering adapter and independent construction
-of its lighting lookups remain open.
+as the transparency key. Independent generation now reproduces all 51,456
+first-lookup bytes, and bounded original cases establish palette decoding,
+view construction and the per-cell extended-precision matrix schedule. The
+coherent Scout image producer is being implemented; live rendering integration
+remains open.
 Actual conventional-unit gameplay definitions and commands are unfinished.
 Component results do not establish visual fidelity.
 
 ### Next three implementation slices
 
-1. Publish the validated live roster and finish the remaining admitted startup,
-   failure/reset and MT request guards. Use actual pending/running owner
-   checkpoints and collector overlap tests before closing the held findings.
-2. Freeze the complete owned predefined-unit catalog into host settings and the
-   world header. Revalidate raw/derived equality, bound the complete settings
-   packet including factions, and make clients consume accepted host data.
+1. Publish the validated live roster together with the admitted snapshot
+   failure/reset and MT request correction. Actual pending/running owner and
+   collector cases now pass locally; the combined publication still needs its
+   own checks and review before closing the held findings.
+2. Land the frozen predefined-unit host/world profiles with their reviewed
+   prerequisites, and finish the coherent installed-asset Scout image producer.
+   Connect rendering only after the full indexed/depth/palette result matches
+   the admitted original cases and texture ownership is explicit.
 3. Establish owned runtime faction state with explicit simulation IDs distinct
    from transport slots, startup discoveries and faction-generated designs, then
    connect founding to base creation. The observed first-base current SUPPORT

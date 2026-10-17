@@ -19,9 +19,10 @@ const reset_nutrients = (game, base) => {
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
-	let updated = accumulated - nfg;
-	if (updated < 0) {
-		updated = 0;
+	let updated = 0;
+	// Compare first: subtracting growth cost from a signed deficit can underflow.
+	if (accumulated > nfg) {
+		updated = accumulated - nfg;
 	}
 	base.set_accumulated_nutrients(updated);
 };
@@ -71,7 +72,8 @@ const process_growth = (game, base) => {
 		accumulated = 0;
 	}
 	accumulated += get_pending_growth(base);
-	if (accumulated < 0) {
+	// Empty bases must reach their initial-population branch below.
+	if (accumulated < 0 && base.get_size() > 0) {
 		let pop = null;
 		// try to remove non-worker pop first
 		for (p of base.get_pops()) {
@@ -180,7 +182,7 @@ return (game) => {
 		};
 
 		const f_add_tile = (tile) => {
-			const r = tile.get_resources();
+			const r = tile.get_resources(e.base.get_owner());
 			result.NUTRIENTS = result.NUTRIENTS + r.NUTRIENTS;
 			result.MINERALS = result.MINERALS + r.MINERALS;
 			result.ENERGY = result.ENERGY + r.ENERGY;

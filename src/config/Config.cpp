@@ -357,8 +357,23 @@ Config::Config( const std::string& path )
 			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
 				Error( "Gse-tests-related options can only be used after --gse-tests!" );
 			}
+			if ( HasDebugFlag( DF_GSE_TESTS_NATIVE_FILTER ) ) {
+				Error( "--gse-tests-script and --gse-tests-native-filter are mutually exclusive!" );
+			}
 			m_debug_flags |= DF_GSE_TESTS_SCRIPT;
 			m_gse_tests_script = value;
+		}
+	);
+	m_manager->AddRule(
+		"gse-tests-native-filter", "REGEX", "Run native GSE tests whose names contain a regex match", AH( this ) {
+			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
+				Error( "Gse-tests-related options can only be used after --gse-tests!" );
+			}
+			if ( HasDebugFlag( DF_GSE_TESTS_SCRIPT ) ) {
+				Error( "--gse-tests-script and --gse-tests-native-filter are mutually exclusive!" );
+			}
+			m_debug_flags |= DF_GSE_TESTS_NATIVE_FILTER;
+			m_gse_tests_native_filter = value;
 		}
 	);
 
@@ -545,6 +560,10 @@ const std::string& Config::GetQuickstartMapDump() const {
 
 const std::string& Config::GetGSETestsScript() const {
 	return m_gse_tests_script;
+}
+
+const std::string& Config::GetGSETestsNativeFilter() const {
+	return m_gse_tests_native_filter;
 }
 
 #endif

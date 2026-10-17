@@ -199,10 +199,31 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [technology/startup receipt](validation/technology-startup-2026-10-17.md)
+The latest [live simulation receipt](validation/live-simulation-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
-at the same integrated commit, `445ee209`. It includes the technology catalog,
-V5 world-header binding, initial-turn ordering and Server departure retirement.
+at `39172a7d`. The actual claimed Game startup and restore paths now own explicit
+simulation faction identities and mutable technology state; callbacks receive
+copies, and world V9 preserves exact saved IDs and progress. This checkpoint
+also contains the owned Scout image producer and the original signed32
+base-center correction. Live Scout actors/previews and conventional gameplay
+remain separate work, and these integrated changes have their own PR gates.
+
+The preceding [unit-profile/screen receipt](validation/world-unit-profile-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at `58197e64`, plus zero failures across 313 Linux analysis translation units.
+It adds frozen predefined-unit profiles in GlobalSettings V7/world header V8,
+the canonical Client packet-budget guard, ready-lobby packet ordering, and the
+complete base-screen signed-endpoint repair. The subsequent admitted snapshot
+Failure/Start correction has its own validation and publication gate.
+The preceding [live-roster/startup receipt](validation/live-roster-startup-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at the same integrated commit, `75c280c8`. It includes live canonical roster
+publication, frozen faction profiles in the V7 world header, the owned predefined
+unit producer and production resource-overflow regressions. The preceding
+[world-size receipt](validation/world-size-startup-2026-10-17.md) retains the
+accepted preset/custom identity checkpoint. The
+[technology/startup receipt](validation/technology-startup-2026-10-17.md)
+retains the earlier catalog, initial-turn and Server retirement checkpoint.
 The [preceding production-profile receipt](validation/production-profile-2026-10-17.md)
 retains the effective SSE rounding guard's focused Windows/Linux tests. On honey, the user confirmed
 map interaction, base inspection, a turn, a new world and close at `5cd78418`.
@@ -241,40 +262,101 @@ buildable items. Actual faction/design startup producers precede production
 activation. [#113](https://github.com/jhurliman/glsmac/pull/113) runs initial
 world events at turn zero, before the first turn advances.
 
+[#121](https://github.com/jhurliman/glsmac/pull/121) adds the five frozen SMAC
+world-size rows and explicit preset/custom acceptance to the actual setup and
+download paths. It preserves custom category 99 at preset geometry and checks
+the actual tile dimensions before map allocation. [#120](https://github.com/jhurliman/glsmac/pull/120)
+parses the seven canonical faction files against the technology catalog,
+preserving ordered bonuses and the original eight-record projection. It does
+not apply faction effects. [#123](https://github.com/jhurliman/glsmac/pull/123)
+freezes these profiles in host settings, and
+[#124](https://github.com/jhurliman/glsmac/pull/124) binds them to downloaded
+worlds. Both are integrated and published for dependency review.
+The positional RESOURCEINFO correction landed in
+[#118](https://github.com/jhurliman/glsmac/pull/118): row position selects the
+numeric rule, while labels may be renamed or repeated.
+
 The wider lifetime stack preserves entity state, RNG continuation and turn
 metadata, stages map publication, and guards specific native replacement/cleanup
 paths from collection. Terminal-connection cleanup is
 [#110](https://github.com/jhurliman/glsmac/pull/110), followed by Server departure
-retirement in [#115](https://github.com/jhurliman/glsmac/pull/115). These bounded fixes do not
-settle canonical Player/Slot/Connection ownership. Concurrent roster and
-failure/reset findings holding #77 remain open; sequential round-trips do not
-prove exclusion. Follow the
+retirement in [#115](https://github.com/jhurliman/glsmac/pull/115). The integrated
+live roster now keeps State-owned Players stable through metadata refreshes,
+resolves selected factions canonically and copies bounded notifications with
+captured epochs. Twenty real packet/notification/collector tests exercise that
+boundary. The combined canonical-roster/startup correction is published in
+[#126](https://github.com/jhurliman/glsmac/pull/126), including real claimed
+Failure/Start and pending/running cancellation checks. Its refreshed publication
+passes normal and leak-enabled sanitizer suites after the separate
+[#66](https://github.com/jhurliman/glsmac/pull/66) switch-scope ownership fix.
+Those PRs still require their current-head review and CI gates; #77 and #79
+remain held individually. Follow the
 [pinned roster plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md).
+The owned value codecs landed in [#119](https://github.com/jhurliman/glsmac/pull/119);
+both live writers and decoders now switch together in the integration. Its
+[pinned publication contract](https://github.com/jhurliman/glsmac/blob/75c280c857d16a40c3651c8a06b5cd8d89480012/docs/live-roster-publication.md)
+records exact identity, lifetime, protocol and concurrency limits.
 World downloads are still not disk savegames or deterministic replay.
 
-Conventional units have parsed component/design metadata and verified bounded
+[#125](https://github.com/jhurliman/glsmac/pull/125) constructs owned predefined
+SMAC designs from source components, abilities and technology references. It
+matches the retained original final records and calculated cost/capacity outputs;
+it does not create live unit definitions or faction custom designs.
+Conventional units also have verified bounded
 CVR decoding, composition, projection and raster calculations. Frame assembly
 matches 30 installed-input cases and 1,755 records. The corrected explicit
 transform calculator matches 44 cases, 660 binary32 words and 528 integers;
 indexed rasterization matches 42 cases. Original lighting selection has
 separate evidence in [#109](https://github.com/jhurliman/glsmac/pull/109).
-Actual conventional-unit rendering, caller inputs, gameplay definitions and
-commands remain unfinished. Component results do not establish visual fidelity.
+The reverse-engineering handoff now captures a complete original internal
+reactor-1 Scout draw, including grouped geometry and indexed/depth buffers.
+Twelve complete original draw/copy/cleanup cases also establish palette index 9
+as the transparency key. Independent generation now reproduces all 51,456
+first-lookup bytes, and bounded original cases establish palette decoding,
+view construction and the per-cell extended-precision matrix schedule. The
+owned Scout image producer is implemented in
+[#133](https://github.com/jhurliman/glsmac/pull/133). Native Windows Release and
+macOS Release with UBSan each match all 19 original drawing views, including
+indexed/depth buffers, generated lighting and the baseline keyed RGBA image.
+The twentieth original case is target-culled and excluded from pixel matching.
+Live actor/cache/preview integration remains in progress, including retained
+texture and presenter callback lifetimes.
+Actual conventional-unit gameplay definitions and commands are unfinished.
+Component results do not establish visual fidelity.
+
+Owned technology state is published in
+[#131](https://github.com/jhurliman/glsmac/pull/131). Its
+[live binding](https://github.com/jhurliman/glsmac/blob/39172a7d4df8b79d46224cafb45b1d3970469859/docs/smac-live-simulation-state.md)
+is now integrated: authoritative startup allocates IDs once before create-world
+callbacks; restores preserve explicit saved IDs, ownership and progress without
+replaying grants. Canonical Player tokens, the roster epoch and Game session
+guard access. Tests cover sparse slots, permuted/non-dense saved IDs, retained
+reconnect, replacement rejection, cancellation and real Client prefix failures.
+This does not activate research upkeep or create conventional units.
+
+The base-center signed32 correction landed in
+[#134](https://github.com/jhurliman/glsmac/pull/134): wrap each original ordered
+operation before its sign checks/clamps. The Release/UBSan probe matches all
+4,167 values in 1,389 retained original scenarios; removing wrapping differs in
+422 scenarios. This calculator result does not claim reachability of synthetic
+extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Preserve the accepted SMAC world-size category separately from dimensions.
-   Parse the five original presets; explicit custom maps remain category 99
-   even when their dimensions equal a preset. Bind the frozen rows and accepted
-   selection to settings/world snapshots, and reject unsupported dimensions
-   before allocation. The original mineral-cost rule consumes this category.
-2. Parse canonical faction startup metadata against the frozen technology
-   catalog, preserving ordered bonuses, the shared eight-record capacity and
-   the distinct named versus deferred numeric TECH behavior. Pair this with
-   coherent Player/Slot/Connection publication before introducing live research
-   ownership. Metadata parsing must not prematurely apply intrinsic SOCIAL.
-3. Establish actual startup discoveries and predefined/active designs, then
-   connect founding to base creation. The observed first-base current SUPPORT
+1. Land the refreshed canonical-roster/startup publication with its separate
+   switch-scope prerequisite after exact-head GitHub review and CI. Then land
+   the already reviewed host/world profile chain and live simulation binding
+   without dropping shared test registrations during dependency merges.
+2. Connect the installed-asset Scout image to real Unit/GetSprite and preview
+   consumers. Retain the image and copied badge textures through preview actor
+   destruction; retire presenter callbacks safely and verify actual registration,
+   teardown and reattachment. Keep the existing native-unit path operational.
+3. Add owned faction custom-design blocks keyed by the admitted simulation IDs,
+   with persistence and exact restore rather than regeneration. Extend original
+   startup evidence across difficulty/network/owner contexts before wiring the
+   generator into ordinary quickstart. Map the port's canonical difficulty
+   identities explicitly to original indices, not its current -3..2 values.
+   Then connect founding to base creation. The observed first-base current SUPPORT
    and INDUSTRY are zero; late faction modifiers precede first upkeep and do
    not retroactively recompute starting minerals. Preserve independent target,
    stored minerals and switching baseline, then connect support/intake,
@@ -292,6 +374,15 @@ generated-world setup, rendered first-input parity or a complete campaign. The
 first base → Scout/Former/Colony → second base loop still needs real producers,
 legal commands and persistence checks. Native lifetime repairs and conventional
 rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
+
+The new conventional Scout reference covers complete battle-core returns in
+187 supplied-world cases, including 3,073 rounds and promotion draws. Combat
+uses a distinct CRT stream with ordered attacker/defender modulo draws and
+ties against the attacker; ordinary movement uses a separate shared range
+stream. Both must be persisted independently from map JSF32 state. Remaining
+movement-tail position/selection, command admission and original new-game/save
+RNG provenance are still being investigated. These are reference findings,
+not implemented combat or a claim of full live-game fidelity.
 
 ### Review and evidence discipline
 

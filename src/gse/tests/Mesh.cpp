@@ -15,6 +15,9 @@
 #include "gse/GSE.h"
 #include "gse/ExecutionPointer.h"
 #include "gse/context/GlobalContext.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Object.h"
+#include "gse/value/String.h"
 #include "scene/Scene.h"
 #include "scene/actor/Mesh.h"
 #include "types/texture/Texture.h"
@@ -222,6 +225,83 @@ static std::string CheckWidgetMeshOwnership() {
 	return result;
 }
 
+static std::string CheckDetachedUIOwnership( const bool detached ) {
+	class CountedTexture : public types::texture::Texture {
+	public:
+		explicit CountedTexture( size_t& destroyed ) : m_destroyed( destroyed ) { Resize( 2, 2 ); }
+		~CountedTexture() override { ++m_destroyed; }
+	private:
+		size_t& m_destroyed;
+	};
+	std::string result;
+	try {
+		WidgetGraphicsFixture graphics;
+		size_t textures_destroyed = 0;
+		GSE runtime;
+		auto* gc_space = runtime.GetGCSpace();
+		gc_space->Accumulate( &runtime, [ & ]() {
+			auto* ctx = runtime.CreateGlobalContext();
+			const si_t si;
+			ExecutionPointer ep;
+			auto* ui = new ::ui::UI( GSE_CALL );
+			auto* root = static_cast< value::Object* >( ui->GetRoot()->Wrap( GSE_CALL ) );
+			// The public factories register actual children with the real root.
+			static_cast< value::Callable* >( root->Get( "surface" ) )->Run( GSE_CALL, {} );
+			size_t deinit_calls = 0;
+			bool deinit_saw_texture = false;
+			types::texture::Texture* expected_texture = nullptr;
+			ui->RegisterWidget( ::ui::WT_TILE_PREVIEW, { "ownership-test", {},
+				[]( ::ui::dom::Widget* ) {},
+				[ & ]( ::ui::dom::Widget* w ) {
+					++deinit_calls;
+					deinit_saw_texture = textures_destroyed == 0 && w->GetTexture() == expected_texture;
+				} } );
+			auto* properties = new value::Object( GSE_CALL, {
+				{ "type", new value::String( gc_space, "ownership-test" ) },
+				{ "data", new value::Object( GSE_CALL ) },
+			} );
+			auto* widget = static_cast< ::ui::dom::Widget* >( ::ui::dom::Object::Unwrap(
+				static_cast< value::Callable* >( root->Get( "widget" ) )->Run( GSE_CALL, { properties } ) ) );
+			NEWV( texture, CountedTexture, textures_destroyed );
+			expected_texture = texture;
+			widget->SetTexture( texture, 0 );
+			NEWV( mesh, types::mesh::Rectangle );
+			auto* actor = new scene::actor::Mesh( "detached-widget-test", mesh );
+			widget->SetActor( actor, 0 );
+			auto* scene = actor->GetScene();
+			// An unrelated actor must remain registered and alive.
+			auto unrelated = std::make_unique< scene::actor::Mesh >( "unrelated", nullptr );
+			scene->AddActor( unrelated.get() );
+			util::FinallyGuard unrelated_cleanup( [ & ]() { scene->RemoveActor( unrelated.get() ); } );
+			if ( !detached ) {
+				auto* wrapped = static_cast< value::Object* >( widget->Wrap( GSE_CALL ) );
+				static_cast< value::Callable* >( wrapped->Get( "remove" ) )->Run( GSE_CALL, {} );
+			}
+			ui->Destroy( GSE_CALL );
+			std::vector< scene::actor::Actor* > remaining;
+			scene->WithActors( [ & ]( const auto& actors ) { remaining = actors; } );
+			const bool exact_actors = remaining == std::vector< scene::actor::Actor* >{ unrelated.get() };
+			const bool exact_textures = textures_destroyed == 1;
+			// Clean the old-code negative control without hiding its observed result.
+			for ( auto* retained : remaining ) {
+				scene->RemoveActor( retained );
+				if ( retained != unrelated.get() ) { delete retained; }
+			}
+			widget->Clear(); // repeated clearing is safe after destruction
+			result = [ & ]() -> std::string {
+				GT_ASSERT( exact_actors, "detached UI retained its scene actors" );
+				GT_ASSERT( exact_textures && textures_destroyed == 1, "detached widget did not release its texture exactly once" );
+				GT_ASSERT( detached ? deinit_calls == 0 : deinit_calls == 1 && deinit_saw_texture, "widget deinit resource visibility or call count changed" );
+				GT_OK();
+			}();
+		} );
+	}
+	catch ( const std::exception& error ) {
+		GT_FAIL( std::string( "detached UI ownership check failed: " ) + error.what() );
+	}
+	return result;
+}
+
 std::string CheckMeshCoordinateOutputs() {
 	std::string errors;
 	// Script callbacks hold their Space accumulation lock. UI fixtures create a
@@ -252,6 +332,14 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test widget clear releases its actor, mesh and texture ownership",
 		GT() { return CheckWidgetMeshOwnership(); }
+	);
+	task->AddTest(
+		"test detached UI destruction releases actors and widget textures",
+		GT() { return CheckDetachedUIOwnership( true ); }
+	);
+	task->AddTest(
+		"test attached widget deinit observes resources before cleanup",
+		GT() { return CheckDetachedUIOwnership( false ); }
 	);
 }
 

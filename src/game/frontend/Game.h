@@ -142,7 +142,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start = 0, const std::function< void() > on_cancel = 0 );
+	Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start = 0, const std::function< void() > on_cancel = 0, std::optional<std::string> campaign_world = {} );
 	~Game();
 
 	void Start() override;
@@ -281,6 +281,7 @@ private:
 
 	void SetCameraPosition( const ::types::Vec3 camera_position );
 
+	std::optional<std::string> m_campaign_world;
 	GLSMAC* m_glsmac = nullptr;
 	backend::State* m_state = nullptr;
 	uint64_t m_world_ticket = 0;
@@ -441,6 +442,7 @@ private:
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
 	std::unordered_map< size_t, Animation* > m_animations;
 
+	void PollCampaignSave();
 	void CancelRequests();
 	void CancelGame();
 

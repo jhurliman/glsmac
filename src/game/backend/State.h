@@ -92,6 +92,7 @@ CLASS( State, gse::GCWrappable )
  roster_epoch_t CaptureRosterEpoch() const;
  faction::FactionManager* RequireRoster(const roster_epoch_t& epoch) const;
  roster::RosterRecord ExportRoster();
+ void RestoreLocalCampaignRoster(const roster::RosterRecord& record); // fresh, unpublished State only
  roster::SlotRecord ExportSlot(size_t index);
  void ApplyInitialRoster(const roster::RosterRecord& record, connection::Connection* expected, const roster_epoch_t& epoch, size_t local_slot, const std::function<void()>& on_commit = nullptr);
  void ApplyRosterRefresh(const roster::RosterRecord& record, connection::Connection* expected, const roster_epoch_t& epoch);

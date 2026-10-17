@@ -142,6 +142,7 @@ return (m) => {
 		for (step of [
 			'notimpl',
 			'main',
+			'load_campaign',
 			'start_game',
 			'select_ruleset',
 			'select_mapsize',

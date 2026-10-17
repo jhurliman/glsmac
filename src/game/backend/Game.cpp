@@ -141,9 +141,9 @@ pending_initialization_t Game::MT_LoadMap( const world_ticket_t world, const std
 	return EnqueueInitialization( m_active_admission->state, world, path );
 }
 
-pending_initialization_t Game::EnqueueInitialization( State* state, const world_ticket_t previous_world, std::optional< std::string > map_path ) {
+pending_initialization_t Game::EnqueueInitialization( State* state, const world_ticket_t previous_world, std::optional< std::string > map_path, std::optional<std::string> campaign_world ) {
 	const auto ticket = ReserveWorldTicket();
-	const auto admission = std::make_shared< WorldAdmission >( ticket, WorldAdmission::INITIALIZATION, state, state->CaptureGameSession(), previous_world, std::move( map_path ) );
+	const auto admission = std::make_shared< WorldAdmission >( ticket, WorldAdmission::INITIALIZATION, state, state->CaptureGameSession(), previous_world, std::move( map_path ), std::move(campaign_world) );
 	// Publish the real State root before the request can be consumed. The
 	// immutable session token identifies a binding, but is not itself a GC root.
 	m_admissions.emplace( ticket, admission );
@@ -406,6 +406,8 @@ void Game::Iterate() {
 		if ( m_active_admission && m_active_admission->cancelled ) { return; }
 	}
 
+	if ( ProcessCampaignSave() ) { return; }
+
 	if ( m_state ) {
 		m_state->Iterate();
 	}
@@ -622,6 +624,11 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+        {"save_campaign", NATIVE_CALL(this, session = m_state ? m_state->CaptureGameSession() : State::game_session_t{}) {
+            N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
+            try {return VALUE(gse::value::Int,,QueueCampaignSave(session,path));}
+            catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+        })},
 	WRAPIMPL_TRIGGERS
 	WRAPIMPL_CUSTOM_SETTERS
 		{
@@ -2204,9 +2211,14 @@ void Game::RunOwnerTransition( GSE_CALLABLE, const std::shared_ptr< OwnerTransit
 				break;
 			case StartupStage::ConfigureEvents:
 				DispatchEventBatch( std::move( transition->configure_events ) );
-				SetStartupStage( admission, StartupStage::AcquireMap );
+				SetStartupStage( admission, admission->campaign_world ? StartupStage::RestoreCampaign : StartupStage::AcquireMap );
 				break;
-			case StartupStage::Ingress:
+			case StartupStage::RestoreCampaign:
+                if(!admission->campaign_world || admission->connection || m_map) {THROW("Invalid local campaign restore admission");}
+                DecodeWorldSnapshot(GSE_CALL,*admission->campaign_world);
+                SetStartupStage(admission,StartupStage::InitializeMap);
+                break;
+            case StartupStage::Ingress:
 				for ( const auto& entry : transition->ingress ) {
 					entry.callback( this, GSE_CALL );
 					std::lock_guard guard( m_admission_mutex );
@@ -2345,8 +2357,10 @@ void Game::InitializeMap() {
 
 void Game::StartInitializedWorld( GSE_CALLABLE ) {
 
-
-	if ( m_state->IsMaster() ) {
+	if ( m_active_admission && m_active_admission->campaign_world ) {
+		InitComplete(GSE_CALL);
+	}
+	else if ( m_state->IsMaster() ) {
 		try {
 			PrepareNewSimulation();
 			m_state->TriggerObject(
@@ -2825,24 +2839,29 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	};
 }
 
+void Game::DecodeWorldSnapshot(GSE_CALLABLE,const std::string& bytes) {
+	auto buf = types::Buffer( bytes );
+	world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
+	const auto random_state = world_snapshot::ReadRandomState( buf );
+	const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
+	auto simulation = ReadSimulationState( buf, turn_state.id );
+	const auto map_policy = map::GlsmacResourceMapPolicy::ReadOptional( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
+	auto worker_knowledge = world_snapshot::ReadWorkerKnowledge( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
+	auto territory = world_snapshot::ReadTerritoryTopology( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
+
+	// map
+	const auto map_payload = buf.ReadString();
+	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
+	world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
+	world_snapshot::ValidateTerritoryGeometry( territory, map_payload, worker_knowledge.has_value() );
+	NEW( m_map, map::Map, this );
+	DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ), std::move( territory ) );
+    if(buf.lenr!=buf.lenw) {THROW("Trailing world snapshot bytes");}
+}
+
 bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes ) {
 	try {
-		auto buf = types::Buffer( bytes );
-		world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
-		const auto random_state = world_snapshot::ReadRandomState( buf );
-		const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
-		auto simulation = ReadSimulationState( buf, turn_state.id );
-		const auto map_policy = map::GlsmacResourceMapPolicy::ReadOptional( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
-		auto worker_knowledge = world_snapshot::ReadWorkerKnowledge( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
-		auto territory = world_snapshot::ReadTerritoryTopology( buf, m_state->m_settings.global.GetRulesetId() == "smac" );
-
-		// map
-		const auto map_payload = buf.ReadString();
-		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
-		world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
-		world_snapshot::ValidateTerritoryGeometry( territory, map_payload, worker_knowledge.has_value() );
-		NEW( m_map, map::Map, this );
-		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ), std::move( territory ) );
+		DecodeWorldSnapshot(GSE_CALL,bytes);
 		return true;
 	}
 	catch ( const std::runtime_error& error ) {
@@ -3044,6 +3063,7 @@ void Game::ResetGame() {
 			std::lock_guard guard( m_admission_mutex );
 			if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
 			m_active_admission.reset();
+			m_campaign_save.reset();
 		}
 
 		m_pending_snapshot_random.reset();

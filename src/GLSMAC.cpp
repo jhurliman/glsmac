@@ -20,6 +20,7 @@
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
+#include "game/backend/CampaignFile.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
@@ -221,6 +222,10 @@ bool GLSMAC::ProcessReset() {
 	m_reset_phase = ResetPhase::IDLE;
 	m_is_game_running = false;
 	m_reset_needed = false;
+	if(m_campaign_previous_state) {
+		if(m_game) {m_game->Stop();}
+		m_state=m_campaign_previous_state;m_campaign_previous_state=nullptr;game->BindLocalCampaignState(m_state);
+	}
 	RunMain();
 	return true;
 }
@@ -228,6 +233,10 @@ bool GLSMAC::ProcessReset() {
 WRAPIMPL_BEGIN( GLSMAC )
 	auto* game = g_engine->GetGame();
 	WRAPIMPL_PROPS
+		{"load_campaign",NATIVE_CALL(this) {
+			N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
+			LoadCampaign(GSE_CALL,path);return VALUE(gse::value::Undefined);
+		})},
 	WRAPIMPL_TRIGGERS
 		{
 			"config",
@@ -426,6 +435,7 @@ void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	if ( m_state ) {
 		GC_DEBUG_BEGIN( "state" );
 		GC_REACHABLE( m_state );
+	if(m_campaign_previous_state) {GC_REACHABLE(m_campaign_previous_state);}
 		GC_DEBUG_END();
 	}
 
@@ -661,7 +671,28 @@ void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id
 
 }
 
-void GLSMAC::StartGame( GSE_CALLABLE ) {
+void GLSMAC::LoadCampaign(GSE_CALLABLE,const std::string& path) {
+    if(!m_state || m_is_game_running || m_is_loading || m_reset_needed || m_campaign_previous_state) {GSE_ERROR(gse::EC.GAME_ERROR,"Return to the main menu before loading a campaign");}
+    try {
+        const auto saved=game::backend::campaign::Read(path);
+        auto* candidate=new game::backend::State(m_gc_space,m_ctx,this);
+        // Candidate remains private within accumulation until all envelope,
+        // roster/profile and world-prefix validation succeeds. GC owns failure.
+        candidate->Deserialize(types::Buffer(saved.settings));
+        candidate->RestoreLocalCampaignRoster(saved.roster);
+        candidate->m_settings.local.game_mode=game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+        candidate->m_settings.local.network_role=game::backend::settings::LocalSettings::NR_NONE;
+        candidate->m_settings.local.player_name=saved.roster.slots[saved.local_slot].player->name;
+        game::backend::Game::ValidateCampaignWorld(candidate,saved.world);
+        auto* backend=g_engine->GetGame();
+        backend->BindLocalCampaignState(candidate);
+        m_campaign_previous_state=m_state;m_state=candidate;
+        try { StartGame(GSE_CALL,saved.world); }
+        catch(...) { m_reset_needed=true; throw; }
+    } catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+}
+
+void GLSMAC::StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world ) {
 	if ( m_state->m_connection && m_state->m_connection->IsClient()
 		&& !m_state->m_connection->AsClient()->HasGlobalSettings() ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Waiting for the host's gameplay settings" );
@@ -683,6 +714,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	if ( m_game ) {
 		m_game->Stop();
 		delete m_game;
+		m_game = nullptr;
 	}
 	m_game = new ::game::frontend::Game(
 		this, real_state, m_ui, [ this, si, ep ] () {
@@ -691,9 +723,9 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 					TriggerObject( this, "start_game" );
 				}
 			);
-		}, [] () {
-			// THROW( "TODO: cancel" );
-		}
+		}, [this] () {
+            if(m_campaign_previous_state) {m_reset_needed=true;}
+		}, std::move(campaign_world)
 	);
 
 	S_Game( GSE_CALL );

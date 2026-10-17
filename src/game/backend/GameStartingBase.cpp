@@ -30,7 +30,7 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
             && m_owner_transition->stage==StartupStage::Start && m_active_admission
             && m_owner_transition->admission==m_active_admission && !m_active_admission->cancelled
             && m_active_admission->kind==WorldAdmission::Kind::INITIALIZATION
-            && !m_active_admission->previous && !m_active_admission->map_path
+            && !m_active_admission->previous && !m_active_admission->map_path && !m_active_admission->campaign_world
             && m_active_admission->state==m_state && m_state->IsGameSessionActive(m_active_admission->admitted_binding);
     }
     if(!claimed || caller!=m_slot_num || m_current_turn.GetId()!=0 || gc_space!=GetGCSpace()

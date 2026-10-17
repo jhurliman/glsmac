@@ -366,6 +366,30 @@ void State::NotifyPlayerJoin( size_t index ) {
 	} );
 	DispatchRosterNotifications( batch );
 }
+void State::RestoreLocalCampaignRoster(const roster::RosterRecord& record) {
+    Require(!m_connection && !m_game && m_slots->GetCount()==0, "Campaign roster requires a fresh unpublished State");
+    roster::EncodeRoster(record,ROSTER_LIMITS);
+    Require(record.slots.size()==7,"Campaign requires seven slots");
+    for(size_t i=0;i<record.slots.size();++i) {
+        const auto& row=record.slots[i];
+        if(row.state==roster::SlotState::Occupied) {
+            Require(row.player && row.player->faction_id && row.player->role==(i==0?roster::Role::Single:roster::Role::Player),"Invalid local campaign role");
+            ValidatePlayerRecord(*row.player);
+        } else { Require(i!=0,"Campaign local player is absent"); }
+    }
+    // The candidate State is not yet published; creation retains the standard
+    // Player identity/reverse-link path without network notifications.
+    for(size_t i=0;i<record.slots.size();++i) {
+        const auto& row=record.slots[i];
+        if(row.player) {CreatePlayerSlot(i,*row.player,row.linked_gsid,static_cast<network::cid_t>(i),"",false);}
+    }
+    for(size_t i=0;i<record.slots.size();++i) {
+        auto& slot=m_slots->m_slots[i]; const auto& row=record.slots[i];
+        slot.m_slot_state=row.state==roster::SlotState::Occupied?slot::Slot::SS_PLAYER:row.state==roster::SlotState::Closed?slot::Slot::SS_CLOSED:slot::Slot::SS_OPEN;
+        slot.m_player_data.flags=static_cast<slot::player_flag_t>(row.flags);
+    }
+}
+
 Player* State::CreatePlayerSlot( size_t index, roster::PlayerRecord record, std::string gsid, network::cid_t cid, std::string address,
 								 bool connected ) {
 	Player* result = nullptr;

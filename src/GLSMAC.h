@@ -67,6 +67,7 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+	friend class game::frontend::Game;
 	friend class gse::tests::BackendFixture;
 	friend class gse::tests::EngineShutdownFixture;
 	// Own a script runtime for asset-free backend tests. This initializes only
@@ -114,7 +115,10 @@ private:
 	void RandomizeSettings( GSE_CALLABLE );
 
 	void AddSinglePlayerSlot( const std::optional< std::string >& faction_id );
-	void StartGame( GSE_CALLABLE );
+	void StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world = {} );
+	void LoadCampaign(GSE_CALLABLE,const std::string& path);
+	game::backend::State* m_campaign_previous_state = nullptr;
+	void CompleteCampaignLoad() { if(!m_reset_needed) {m_campaign_previous_state = nullptr;} }
 
 	game::frontend::Game* m_game = nullptr;
 

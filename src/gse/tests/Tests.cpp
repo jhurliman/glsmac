@@ -83,6 +83,7 @@
 #include "ConventionalUnits.h"
 #include "ManufacturedConventionalUnits.h"
 #include "ConventionalWork.h"
+#include "CampaignPersistence.h"
 #include "SmacPopulationRules.h"
 #include "SmacBaseResourceContext.h"
 #include "SmacFirstBase.h"
@@ -159,6 +160,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddConventionalUnitTests( task );
 		tests::AddManufacturedConventionalUnitTests( task );
 		tests::AddConventionalWorkTests( task );
+		tests::AddCampaignPersistenceTests( task );
 		tests::AddSmacPopulationRulesTests( task );
 		tests::AddSmacBaseResourceContextTests( task );
 		tests::AddSmacFirstBaseTests( task );

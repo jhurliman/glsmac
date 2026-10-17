@@ -389,7 +389,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( has_units ) { units = SmacPredefinedUnitRules::Deserialize( buf.ReadString(), *technologies ); }
 	const auto has_movement = buf.ReadBool();
 	if ( ( ruleset == RULESET_SMAC ) != has_movement ) { THROW( "Gameplay ruleset and movement profile do not match" ); }
-	if ( has_movement ) { movement = SmacMovementRules::Deserialize( types::Buffer( buf.ReadString() ) ); }
+	if ( has_movement ) { movement = SmacMovementRules::Deserialize( types::Buffer( buf.ReadString( SmacMovementRules::MAX_WIRE_BYTES ) ) ); }
 	if ( m_ruleset_locked && ( movement.has_value() != m_smac_movement_rules.has_value()
 		|| ( movement && !( *movement == *m_smac_movement_rules ) ) ) ) { THROW( "Host changed the frozen movement profile" ); }
 	if ( m_ruleset_locked && ( units.has_value() != m_smac_predefined_unit_rules.has_value()

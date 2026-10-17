@@ -29,3 +29,38 @@ The final normal Linux suite passes all 8 CTests (82.28s). The complete ASan/UBS
 Three copied production-TU controls fail their intended assertions: skip frozen settings raw equality, skip world movement equality, and write false movement presence. The first two distinguish raw authority from its derived Q; the last checks the independent actual writer layout. Intended sources are never mutated for these controls.
 
 Full LLVM 15 correctness analysis passes all 329 production translation units with zero failures (246.46s, two workers). The Windows-only network implementation is outside that Linux analysis. No native Windows/macOS or rendered gameplay result is claimed here.
+
+## Follow-up: bound the enclosing movement frame
+
+Movement V1 is exactly 28 bytes: two integer frames, each containing a one-byte
+type, four-byte length, eight-byte integer and one-byte checksum. The named
+`SmacMovementRules::MAX_WIRE_BYTES` now limits the enclosing `ReadString` in
+both GlobalSettings and the world header before payload allocation or cursor
+advance. Nested decode still validates types, checksums, version and signed32
+range. This changes neither the codec nor the wire versions; subsequent world
+versions retain the same movement field.
+
+The regression accepts the exact-cap record and distinguishes complete
+29-byte/4096-byte outer frames from exact-cap invalid version/checksum contents.
+The world reader must leave its cursor at the rejected movement frame, with
+the following body untouched. Settings rejection preserves locked and unlocked
+state. Actual Client host initial/refresh and immediate/queued world rejection
+matrices include both oversized frames; host packets are explicitly checked to
+fit the aggregate packet budget so that another limit cannot mask this path.
+
+Two copied-production controls remove only the corresponding outer limit. They
+must fail the early-rejection assertions even though the nested decoder still
+rejects trailing data. This distinguishes the allocation boundary from a
+generic malformed-record rejection. No unrelated decoder bounds are changed.
+
+The bounded-frame follow-up is validated on source parent
+`78723e35dfcc00f3b9e0cf634f8c91d385282d48`: final normal CTest 8/8
+(80.22 seconds), 13 focused groups with allocation tracking, both copied-reader
+controls failing the intended assertions, and LLVM 15 analysis of the two
+changed production translation units with zero failures (1.80 seconds).
+Receipts are `/home/jhurliman/src/glsmac-unit-weapon-parser/movement-bound-*`.
+An earlier full run passed seven tests but its last CLI driver could not launch
+the executable during a concurrent local relink; that failed receipt is retained.
+The final complete run used the finished, unchanged binary. The earlier full
+sanitizer and 329-TU results above belong to the original Q freeze, not this
+follow-up.

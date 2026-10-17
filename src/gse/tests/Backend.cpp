@@ -6121,7 +6121,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46 } ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 } ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -6134,7 +6134,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26 || ( scenario >= 30 && scenario <= 33 ) || scenario == 39 || scenario == 40;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26 || ( scenario >= 30 && scenario <= 33 ) || scenario == 39 || scenario == 40 || scenario >= 49;
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
 			std::optional< std::string > sizes;
@@ -6209,6 +6209,10 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 42 ) { movement = smac_rules_fixture::Movement().Serialize().ToString(); movement->pop_back(); }
 			if ( scenario == 43 ) { types::Buffer bad; bad.WriteInt( 1 ); bad.WriteInt( int64_t( INT32_MAX ) + 1 ); movement = bad.ToString(); }
 			if ( scenario == 44 ) { auto bad = smac_rules_fixture::Movement().Serialize(); bad.WriteInt( 0 ); movement = bad.ToString(); }
+			if ( scenario >= 47 ) {
+				movement = smac_rules_fixture::Movement().Serialize().ToString();
+				movement->append( ( scenario % 2 ? settings::SmacMovementRules::MAX_WIRE_BYTES + 1 : 4096 ) - movement->size(), 'x' );
+			}
 			auto global_payload = smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units, movement, scenario == 45 ? std::optional< bool >( false ) : std::nullopt ).ToString();
 			if ( scenario == 46 ) { types::Buffer old; old.WriteInt( 8 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
 			if ( scenario == 38 ) { types::Buffer old; old.WriteInt( 7 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
@@ -6217,6 +6221,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();
+			if ( scenario >= 47 ) { GT_ASSERT( invalid.Serialize().lenw <= network::Network::MAX_PACKET_BYTES, "movement test was rejected by aggregate framing instead" ); }
 			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* state = destination.GetGame()->GetState();
 				state->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT;

@@ -9,6 +9,7 @@
 #include "SmacGroundEdgeCost.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
+#include "Value.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
@@ -83,6 +84,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddValueTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );

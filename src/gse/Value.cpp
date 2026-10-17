@@ -576,8 +576,20 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 	}
 }
 
+static size_t ReadCollectionCount( types::Buffer* buf, const size_t minimum_bytes_per_entry ) {
+	const auto count = buf->ReadInt();
+	// Conservative bound: a child value needs at least one byte; an object
+	// property also needs a key. Do not allocate from an untrusted wire count.
+	if ( count < 0 || buf->lenr > buf->lenw || static_cast< uint64_t >( count ) > ( buf->lenw - buf->lenr ) / minimum_bytes_per_entry ) {
+		THROW( "invalid collection count for value unserialization" );
+	}
+	return static_cast< size_t >( count );
+}
+
 Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game ) {
-	auto type = (value_type_t)buf->ReadInt();
+	// Keep the wire integer until validation: narrowing to the uint8 enum could
+	// turn malformed values such as 256 into VT_NULLPTR.
+	const auto type = buf->ReadInt();
 	switch ( type ) {
 		case VT_NULLPTR:
 			return nullptr;
@@ -595,8 +607,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 			return VALUE( value::String, , buf->ReadString() );
 		case VT_ARRAY: {
 			value::array_elements_t elements = {};
-			const auto size = buf->ReadInt();
-			elements.reserve( size );
+			const auto size = ReadCollectionCount( buf, 1 );
 			for ( size_t i = 0 ; i < size ; i++ ) {
 				elements.push_back( Value::Deserialize( GSE_CALL, buf, game ) );
 			}
@@ -606,7 +617,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 			const auto object_class = buf->ReadString();
 			if ( object_class.empty() ) {
 				value::object_properties_t properties = {};
-				const auto size = buf->ReadInt();
+				const auto size = ReadCollectionCount( buf, 2 );
 				for ( size_t i = 0 ; i < size ; i++ ) {
 					const auto k = buf->ReadString();
 					properties.insert(
@@ -619,14 +630,18 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 				return VALUEEXT( value::Object, GSE_CALL, properties );
 			}
 			else {
-				ASSERT( game, "game not available for custom object deserialization" );
 				const auto& it = s_custom_object_deserializers.find( object_class );
-				ASSERT( it != s_custom_object_deserializers.end(), "custom object deserializer not found: " + object_class );
+				if ( it == s_custom_object_deserializers.end() ) {
+					THROW( "custom object deserializer not found: " + object_class );
+				}
+				if ( !game ) {
+					THROW( "game not available for custom object deserialization" );
+				}
 				return it->second( GSE_CALL, game, buf );
 			}
 		}
 		default:
-			THROW( "invalid/unsupported type for unserialization: " + GetTypeStringStatic( type ) );
+			THROW( "invalid/unsupported type for unserialization: " + std::to_string( type ) );
 	}
 }
 

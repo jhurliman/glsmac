@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacEmptyGroundMovement.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
+	${PWD}/Value.cpp
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacRulesTXTLoader.cpp

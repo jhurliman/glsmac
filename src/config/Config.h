@@ -82,6 +82,7 @@ CLASS( Config, common::Module )
 	const std::vector< std::string > GetPossibleSMACPaths() const;
 
 	const smac_type_t GetSMACType() const;
+	const std::string& GetRuleset() const;
 
 	void SetSMACPath( const std::string& path ) const;
 
@@ -136,6 +137,7 @@ private:
 	std::string m_data_path;
 	std::string m_smac_path;
 	smac_type_t m_smac_type = ST_AUTO;
+	std::string m_ruleset;
 
 	uint32_t m_launch_flags = LF_NONE;
 	types::Vec2< size_t > m_window_size = {};

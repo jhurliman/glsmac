@@ -392,15 +392,21 @@ extreme social/resource inputs or a complete base economy.
    its measured boundary. Queue an actual
    selected starting unit only where the startup and movement route admit its
    terrain. Broader terrain, native encounters, repair and hostile interactions
-   still need their callers. Retain nearest-base and placement history before
-   extending encounter admission. Destination fungus without an admitted
+   still need their callers. Nearest-base and placement history now persist
+   explicitly across restore. Establish native initialization, optional regional
+   assignment and caller RNG ordering before extending encounter admission.
+   Destination fungus without an admitted
    nearby HQ is now rejected: the old empty-world fixture supplied a zero
    nearest-base distance and did not establish general encounter behavior.
 2. Connect the canonical evaluating-base query to real worker intake using the
    integrated complete resource profile, fungal capability producer, specialist
-   catalog and global resource modifier state. Add canonical per-base context
-   and saved map-resource semantics while preserving worker choices and
-   specialist identity. The seven-faction first-worker and reset
+   catalog and global resource modifier state. Canonical per-base context,
+   positional facility/specialist identities and saved map-resource semantics
+   are integrated. Preserve worker choices while connecting live intake and a
+   separately named nutrient-demand scalar. Complete allocation/repair and
+   specialist eligibility before activating manual worker commands; intake alone
+   cannot substitute for the handler's full forced calculation.
+   The seven-faction first-worker and reset
    compositions supply the next acceptance cases. Preserve valid specialist
    allocations through recalculation and the measured manual-handler order;
    keep map-generation policy distinct from original generator equivalence.
@@ -410,11 +416,14 @@ extreme social/resource inputs or a complete base economy.
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
 
-The [resource-context checkpoint](validation/resource-context-2026-10-17.md)
-passes the full Windows, Linux sanitizer and native macOS suites, with the same
-146 allocation-tracked groups on Windows and Linux and zero failures in the
-full 339-unit correctness scan. Default spawning and live resource callbacks
-remain unchanged.
+The [base-intake foundation checkpoint](validation/base-intake-foundation-2026-10-17.md)
+at `990cc59a` passes all eight tests on Windows, Linux sanitizer and native macOS,
+with the same 87 affected allocation-tracked groups on Windows and Linux and zero
+failures in the full 342-unit correctness scan. It adds Base context, facility
+identity, generated-map resource semantics and movement history. Default
+canonical base economy and native encounter activation remain pending. The
+[preceding resource-context checkpoint](validation/resource-context-2026-10-17.md)
+retains its separate 146-group regression receipt.
 
 The host/world profile and startup-design foundations are implemented; focused
 publication and review remain separate from integration. Review quota delays

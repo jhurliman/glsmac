@@ -131,6 +131,27 @@ static void AddFramedReadTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBufferTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test empty serialized buffers retain the default empty storage contract",
+		GT() {
+			types::Buffer empty( "" );
+			GT_ASSERT( empty.data == nullptr && empty.dr == nullptr && empty.dw == nullptr, "empty serialized buffer allocated storage" );
+			GT_ASSERT( empty.allocated_len == 0 && empty.lenw == 0 && empty.lenr == 0, "empty serialized buffer retained byte counts" );
+			const auto error = ExpectReadFailure( empty, [ & ]() { empty.ReadInt(); }, "prematurely" );
+			GT_ASSERT( error.empty(), "empty buffer read rejection changed: " + error );
+			types::Buffer copy( empty );
+			types::Buffer assigned;
+			assigned.WriteString( "replaced storage" );
+			assigned = empty;
+			GT_ASSERT( copy.data == nullptr && assigned.data == nullptr, "copying an empty snapshot allocated storage" );
+			GT_ASSERT( copy.ToString().empty() && assigned.ToString().empty(), "empty copy or assignment retained bytes" );
+			empty.WriteInt( 37 );
+			copy.WriteString( "copy" );
+			assigned.WriteBool( true );
+			GT_ASSERT( empty.ReadInt() == 37 && copy.ReadString() == "copy" && assigned.ReadBool(), "empty snapshots cannot be reused independently" );
+			GT_OK();
+		}
+	);
 	AddFramedReadTests( task );
 	task->AddTest(
 		"test buffer booleans preserve the canonical one-byte format",

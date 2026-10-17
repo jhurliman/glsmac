@@ -1,10 +1,12 @@
-# SMAC faction startup source profile, version 1
+# SMAC faction startup source profile, version 2
 
 `FactionTXTLoader::ParseStartupRules` produces an owned seven-faction profile
 from explicit host source texts and a supplied SMAC technology catalog. This
-first slice provides a pure parser, checked codec and exact equality. It does
-not yet connect the profile to frozen settings, packets, world headers or
-gameplay. Existing faction base-name loading and its cache are unchanged.
+profile provides a pure parser, checked codec and exact equality. Subsequent
+host/settings and world-header slices freeze and bind it; this version adds
+the four startup-selected neutral social model source rows. Existing faction
+base-name loading and its cache are unchanged. Runtime social ratings are a
+separate consumer.
 
 The canonical source bindings are explicit:
 
@@ -20,8 +22,21 @@ The canonical source bindings are explicit:
 
 The parser validates all seven `#FACTIONS` filename/search-key pairs before
 requesting a faction file. It also requires the canonical 29 `#BONUSNAMES`
-labels and first `#SOCIO` row's eleven axis labels in order; it does not parse
-social models. Unknown/custom bindings and lookup tables are unsupported,
+labels and first `#SOCIO` row's eleven axis labels in order. Version 2 also
+requires the 19-row SOCIO layout and canonical Politics/Economics/Values/Future
+Society order. It owns the model-zero row at positions 3, 7, 11 and 15 (zero
+based, after comment/blank removal). Each retained row contains its normalized
+name, prerequisite and modifier fields. Names are source data, not faction or
+model classifiers. This bounded startup domain requires prerequisite `None`
+and empty modifiers. Other model rows are counted but not interpreted; no
+general social model switching or nonneutral model parser is implied.
+
+Each selected row must have exactly three comma fields, including the empty
+modifier field; optional trailing comments use the existing lexical policy.
+Names are nonempty, at most 256 bytes, and exclude NUL, newline, comma and
+semicolon. The limit and neutral-only admission are GLSMAC policy, not a claim
+about the original loader's malformed-input behavior. All four rows validate
+before any faction file is read. Unknown/custom bindings and lookup tables are unsupported,
 not guessed from slot number or display name. The caller-supplied reader
 controls file access. No local-client read or SMAX interpretation is added.
 
@@ -72,8 +87,11 @@ profile even where the original would not inspect that record's parameter.
 No calculation-domain restrictions, ownership defaults or startup state are
 inferred from accepted signed metadata.
 
-The typed version-1 codec writes the fixed seven identities followed by each
-ordered raw/derived list. Decode checks count, field types, signed ranges,
+The typed version-2 codec writes a count of four followed by the three owned
+source strings for each selected model, then the fixed seven identities and
+each ordered raw/derived list. Model name/prerequisite/modifier lengths are
+bounded before allocation (256/4/0 bytes). Version 1 is explicitly unsupported;
+the receiver does not synthesize default model data. Decode checks count, field types, signed ranges,
 canonical bindings, exact tag/parameter agreement with raw fields and the
 supplied technology catalog, and trailing bytes. Untrusted counts do not
 drive a reserve. All decoding is staged in a local value; publication is a
@@ -116,7 +134,8 @@ An opt-in local probe uses the actual production parser, without graphics:
 
 ```sh
 clang++-15 -std=c++17 -O2 -DNDEBUG -ffunction-sections -fdata-sections \
-  -Wl,--gc-sections -Isrc src/game/backend/settings/SmacFactionStartupRules.cpp \
+  -Wl,--gc-sections -Isrc src/common/Common.cpp src/types/Buffer.cpp \
+  src/game/backend/settings/SmacFactionStartupRules.cpp \
   src/game/backend/settings/SmacTechnologyRules.cpp src/loader/txt/FactionTXTLoader.cpp \
   src/loader/txt/SmacRulesTXTLoader.cpp src/loader/txt/TXTLoader.cpp src/util/String.cpp \
   tools/tests/smac_faction_startup_probe.cpp -o /tmp/faction-startup-probe
@@ -130,7 +149,8 @@ record tuples/counts from the C++ parser. It does not execute the original or
 claim its downstream ownership/social results. `--installed` reads the seven
 canonical files; both tools require exactly one case-insensitive filename
 match, rejecting missing/ambiguous files. `--lines` projects explicit synthetic bonus lines from stdin.
-Probe argument errors exit 2; file/parse errors exit 1 without partial output.
+`--models` reads those same installed sources and prints the four retained
+model rows after an actual production codec roundtrip. Probe argument errors exit 2; file/parse errors exit 1 without partial output.
 
 Native regression command in the integrated development branch (asset-free):
 
@@ -138,12 +158,7 @@ Native regression command in the integrated development branch (asset-free):
 ./build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^SMAC faction startup' --memorydebug
 ```
 
-The focused publication base predates that filter and the later native tracking
-repairs. On that branch, run `./build/bin/GLSMAC --gse-tests --quiet` for its full
-suite. Its isolated validation uses a copied test-registration translation unit
-containing only these seven cases; no production path or test body is changed.
-
-Local validation used Linux x86-64, Clang/LLVM 15.0.7 and source parent
+Historical V1 validation used Linux x86-64, Clang/LLVM 15.0.7 and source parent
 `445ee2094331babdab7e82528eb00f028a65ff26`:
 
 - Full normal CTest: 8/8, 47.40 seconds. Subsequent test-only assertions
@@ -164,11 +179,11 @@ Local validation used Linux x86-64, Clang/LLVM 15.0.7 and source parent
   raw/derived validation. Each real native regression exited 1 at its intended
   assertion; the production source was never mutated for these controls.
 
-These are local receipts, not cross-platform runtime promises. Shared frozen
-settings and world-header integration must follow the separately owned
-world-size profile change before clients can consume this metadata.
+These are historical local receipts, not cross-platform runtime promises.
+The subsequent host/world bindings and V2 model-row changes are documented in
+[the startup social profile checkpoint](smac-startup-social-profile.md).
 
-## Focused publication receipt
+## Historical focused publication receipts
 
 The publication is based on technology-catalog PR #114 at
 `714bb937f8c7a4e47a5b0bd687ea38aee20483ef`. Applying source

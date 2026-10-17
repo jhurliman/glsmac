@@ -38,7 +38,17 @@ struct SmacFactionStartupRule {
 	bool operator==( const SmacFactionStartupRule& other ) const;
 };
 
+// The selected model-zero row for each canonical SOCIO category. This
+// bounded startup profile admits neutral effects only; names remain source data.
+struct SmacStartupSocialModel {
+	static constexpr size_t MAX_NAME_BYTES = 256;
+	std::string name, prerequisite, modifiers;
+	void Validate() const;
+	bool operator==( const SmacStartupSocialModel& other ) const;
+};
+
 struct SmacFactionStartupRules {
+	std::array< SmacStartupSocialModel, 4 > initial_social_models;
 	std::array< SmacFactionStartupRule, 7 > factions;
 	static const std::array< SmacFactionStartupBinding, 7 >& Bindings();
 	void Validate( const SmacTechnologyRules& technologies ) const;

@@ -108,7 +108,8 @@ clang++-15 -std=c++17 -O2 -DNDEBUG -ffunction-sections -fdata-sections \
   src/game/backend/faction/SmacTechnologyState.cpp \
   src/game/backend/settings/SmacTechnologyRules.cpp \
   src/game/backend/settings/SmacFactionStartupRules.cpp \
-  src/loader/txt/SmacRulesTXTLoader.cpp src/loader/txt/TXTLoader.cpp \
+  src/loader/txt/SmacRulesTXTLoader.cpp src/loader/txt/FactionTXTLoader.cpp \
+  src/loader/txt/TXTLoader.cpp \
   src/util/String.cpp tools/tests/smac_technology_state_probe.cpp \
   -o /tmp/smac-technology-state-probe
 python3 tools/reference/compare_smac_technology_state.py \

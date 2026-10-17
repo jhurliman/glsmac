@@ -5107,7 +5107,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 } ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38 } ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -5120,7 +5120,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26 || ( scenario >= 30 && scenario <= 33 );
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
 			std::optional< std::string > sizes;
@@ -5178,13 +5178,21 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 22 ) { startup = ""; }
 			if ( scenario == 23 ) { startup = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ).ToString(); startup->pop_back(); }
 			if ( scenario == 24 ) { auto bad = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ); bad.WriteInt( 42 ); startup = bad.ToString(); }
-			if ( scenario == 25 ) { types::Buffer bad; bad.WriteInt( 2 ); startup = bad.ToString(); }
+			if ( scenario == 25 ) { types::Buffer bad; bad.WriteInt( 1 ); startup = bad.ToString(); }
 			if ( scenario == 26 ) { auto changed = smac_rules_fixture::PredefinedUnits(); changed.catalog.abilities.abilities.back().description += " changed"; units = changed.Serialize( smac_rules_fixture::Technologies() ).ToString(); }
 			if ( scenario == 27 ) { units = smac_rules_fixture::PredefinedUnits().Serialize( smac_rules_fixture::Technologies() ).ToString(); units->pop_back(); }
 			if ( scenario == 28 ) { types::Buffer bad; bad.WriteInt( 2 ); units = bad.ToString(); }
 			if ( scenario == 29 ) { units = std::string( settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ); }
+			if ( scenario >= 30 && scenario <= 37 ) {
+				auto changed = smac_rules_fixture::Factions(); auto& model = changed.initial_social_models[ ( scenario - 30 ) % 4 ];
+				if ( scenario <= 33 ) { model.name += " changed"; }
+				else { model.modifiers = "+MORALE"; }
+				startup = smac_rules_fixture::UncheckedFactions( changed ).ToString();
+			}
+			auto global_payload = smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units ).ToString();
+			if ( scenario == 38 ) { types::Buffer old; old.WriteInt( 7 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
 			types::Buffer invalid_state;
-			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units ).ToString() );
+			invalid_state.WriteString( global_payload );
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();

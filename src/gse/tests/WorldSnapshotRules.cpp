@@ -51,7 +51,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 10 && wire.ReadString() == id, "writer omitted the V10 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 11 && wire.ReadString() == id, "writer omitted the V11 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
@@ -194,6 +194,10 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			const auto before = destination.Serialize().ToString(); auto input = snapshot;
 			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
 		};
+		for ( size_t i = 0; i < 4; ++i ) {
+			auto changed = smac_rules_fixture::Factions(); changed.initial_social_models[ i ].name += " changed";
+			GT_ASSERT( reject( changed ), "world accepted different frozen model-zero metadata" );
+		}
 		const std::array< const char*, 12 > values = { "Tech3", "tech2 ", "Disable", "None", "--SUPPORT", "17", "POLICE", "2", "3", "+1suffix", "7", "23" };
 		for ( size_t faction = 0; faction < 7; ++faction ) {
 			for ( size_t index = 0; index < values.size(); ++index ) {

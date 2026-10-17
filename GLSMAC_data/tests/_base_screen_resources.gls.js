@@ -2,11 +2,13 @@
 // pointer-event registration are replaced; Base/Tile/resource callbacks are real.
 const screen = #include('../default/ui/parts/game/popup/base_screen');
 return (game, base, ui) => {
+	const listeners = {};
+	let hidden = 0;
 	const node = (properties) => {
 		const result = properties;
 		result.children = [];
 		result.on = (name, callback) => {};
-		result.listen = (object, name, callback) => {};
+		result.listen = (object, name, callback) => { listeners[name] = callback; };
 		result.show = () => {};
 		result.hide = () => {};
 		result.clear = () => { result.children = []; };
@@ -30,10 +32,20 @@ return (game, base, ui) => {
 	ui.root = node({});
 	game.get_year = () => { return 2100; };
 	screen.init({
-		ui: ui, game: game, hide: () => {}, modules: { bottom_bar: { height: 200 } },
+		ui: ui, game: game, hide: () => { hidden++; screen.on_hide(); }, modules: { bottom_bar: { height: 200 } },
 		create: (title, width, height, initialize) => { initialize(node({}), () => {}); },
 	});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
+	const check_retirement = () => {
+		screen.on_show();
+		const before = hidden;
+		listeners.base_despawn({base_id: base.id + 1});
+		check(screen.is_open && hidden == before, 'unrelated Base closed this screen');
+		listeners.base_despawn({base_id: base.id});
+		check(!screen.is_open && hidden == before + 1 && screen.base == null && screen.base_id == null, 'removed Base screen or retained wrapper survived');
+		listeners.base_despawn({base_id: base.id});
+		check(hidden == before + 1, 'duplicate retirement hid another screen');
+	};
 	const check_cells = (cells, prefix, expected) => {
 		const counts = { full: 0, pending: 0, deficit: 0, empty: 0 };
 		for (cell of cells.children) {
@@ -79,6 +91,7 @@ return (game, base, ui) => {
 			check(#sizeof(queue) == 1 && queue[0].text == 'Unavailable', 'canonical placeholder production queue survived');
 			check(screen.sections.game_state.info_energy.text == 'N/A' && screen.sections.game_state.info_ecodamage.text == 'Eco-Damage: N/A', 'canonical placeholder account or ecodamage survived');
 			check(screen.sections.bottom_bar.parts.middle_area.basename.text == base.name, 'canonical screen did not finish');
+			check_retirement();
 			return screen;
 		}
 		check(screen.sections.nutrients.growth_label.text == expected.growth, 'wrong growth label: ' + screen.sections.nutrients.growth_label.text);
@@ -97,6 +110,7 @@ return (game, base, ui) => {
 		check(production.production_label.text == '6 TURNS', 'placeholder production rounding changed');
 		check_cells(production.production_cells, 'base-screen-bottombar-production-cell-', { full: 8, pending: 4, deficit: 0, empty: 18 });
 		check(screen.sections.bottom_bar.parts.middle_area.basename.text == base.name, 'screen did not finish its final section');
+		check_retirement();
 		return screen;
 	};
 };

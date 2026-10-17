@@ -20,6 +20,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/map/Map.h"
+#include "gse/value/Int.h"
 
 namespace game {
 namespace frontend {
@@ -145,10 +146,18 @@ void BaseManager::DespawnBase( const size_t base_id ) {
 	ASSERT( it != m_bases.end(), "base id not found" );
 
 	auto* base = it->second;
+	const auto faction = m_faction_base_ids.find( base->GetFaction() );
+	ASSERT( faction != m_faction_base_ids.end() && faction->second.count( base_id ), "base not in faction ids" );
+	faction->second.erase( base_id );
+	if ( faction->second.empty() ) { m_faction_base_ids.erase( faction ); }
 
 	m_bases.erase( it );
 
 	delete base;
+	// The backend wrapper has already retired. Notify UI by stable scalar ID.
+	m_game->Trigger( m_game->GetGame(), "base_despawn", ARGS_F( base_id ) {
+		{ "base_id", VALUE( gse::value::Int,, base_id ) },
+	}; } );
 
 	m_game->RefreshSelectedTile();
 }

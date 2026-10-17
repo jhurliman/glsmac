@@ -220,6 +220,7 @@ return {
 		this.frame.listen(p.game, 'base_select', (e) => {
 			this.set_active_item(null);
 			#async(0, () => { // workaround for objects list active border getting messed up, TODO: investigate and fix properly
+				if (!#is_defined(e.base)) { return; } // removed before the deferred open
 				const key = #to_string(e.base.id);
 				this.set_active_item(this.bases[key].item);
 				const last_selected_object = this.selected_object;
@@ -229,7 +230,7 @@ return {
 				});
 				this.p.modules.popup.show('base_screen', (result) => {
 					this.selected_object = null;
-					if (last_selected_object != null) {
+					if (#is_defined(last_selected_object) && last_selected_object != null) {
 						switch (#classof(last_selected_object)) {
 							case 'Unit': {
 								this.set_active_item(null);
@@ -242,6 +243,16 @@ return {
 					}
 				});
 			});
+		});
+
+		this.frame.listen(p.game, 'base_despawn', (e) => {
+			const key = #to_string(e.base_id);
+			if (#is_defined(this.bases[key])) {
+				if (this.selected_object == this.bases[key].object) { this.selected_object = null; }
+				// Same-tile preview refresh normally retains the existing list.
+				// Rebuild it now so Enter/click cannot select the retired wrapper.
+				this.update_tile(this.selected_tile);
+			}
 		});
 
 		this.frame.listen(p.game, 'tile_select', (e) => {

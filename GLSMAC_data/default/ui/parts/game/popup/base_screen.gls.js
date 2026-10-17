@@ -94,6 +94,13 @@ return {
 					});
 				}
 			});
+			body.listen(p.game, 'base_despawn', (e) => {
+				if (this.base_id == e.base_id) {
+					if (this.is_open) { this.p.hide(); }
+					this.base = null;
+					this.base_id = null;
+				}
+			});
 
 			const pp = {
 				body: body,

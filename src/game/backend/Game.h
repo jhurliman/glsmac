@@ -424,6 +424,12 @@ private:
 	std::optional<std::array<std::string,4>> m_smac_presentations;
 	bool HandleCanonicalStartupTurnEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void RequireCanonicalStartupTurn( size_t turn_id ) const;
+	void RequireCanonicalTurn(size_t turn_id) const;
+	bool QueueCanonicalCompleteTurn(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args);
+	void AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id);
+	void FailCanonicalTurn(const std::string& error);
+	bool m_canonical_turn_in_progress=false;
+	bool m_canonical_turn_failed=false;
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

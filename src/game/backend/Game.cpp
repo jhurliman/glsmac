@@ -593,6 +593,8 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
+	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
@@ -914,6 +916,8 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
+				if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
+				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
@@ -1453,7 +1457,7 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
-	RequireCanonicalStartupTurn( turn_id );
+	if (m_map && m_map->m_worker_knowledge) { THROW("Canonical turn advancement requires its native event dispatcher"); }
 	// Stage the first-command social refresh before publishing the new turn or
 	// invoking any upkeep consumer. A malformed context leaves both unchanged.
 	RefreshSimulationForTurn( turn_id );
@@ -1930,6 +1934,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 }
 
 void Game::CheckRW( GSE_CALLABLE ) const {
+	if (m_canonical_turn_failed) { GSE_ERROR(gse::EC.GAME_ERROR,"Canonical transition failed; this world awaits cleanup"); }
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
@@ -2641,6 +2646,7 @@ void Game::DiscardInitializationMap( map::Map*& candidate ) {
 }
 
 std::string Game::SerializeWorldSnapshot() const {
+	if (m_canonical_turn_in_progress || m_canonical_turn_failed) { THROW("Canonical transition is incomplete; snapshot unavailable"); }
 	if ( m_um ) { m_um->RequireConventionalUnitsReady(); }
 	if ( !m_map ) {
 		// map not generated yet
@@ -2964,6 +2970,7 @@ void Game::ResetGame() {
 		DiscardSnapshotTurn();
 		m_pending_simulation.reset(); m_simulation.reset();
 		m_smac_presentations.reset();
+		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

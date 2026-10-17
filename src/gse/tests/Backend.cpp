@@ -3261,7 +3261,8 @@ public:
 	std::string CheckCanonicalFirstBase( int scenario, bool queued ) {
 		using namespace game::backend;
 		using namespace game::backend::base;
-		if (scenario==9) {
+		const bool multiple=scenario>=9;
+		if (multiple) {
 			// This scenario exercises actual Scout sight, whose admitted minimum
 			// width is ten. Keep the owned map and accepted preset consistent.
 			m_gse->GetGCSpace()->Accumulate(m_gse,[&]() {
@@ -3270,7 +3271,7 @@ public:
 				for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<10;x+=2) {map->GetTile(x,y)->Update();}}
 			});
 		}
-		const auto source=[scenario](const std::string& filename) {
+		const auto source=[scenario,multiple](const std::string& filename) {
 			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
 			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
 			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
@@ -3278,10 +3279,10 @@ public:
 			while(std::getline(input,line)) {
 				if(!line.empty() && line[0]=='#') {section=line;row=0;result+=line+"\n";continue;}
 				if(section=="#RULES") {
-					const auto value=row==0?"3":row==1?"2":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":nullptr;
+					const auto value=row==0?"3":row==1?"2":row==5?"10":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":row==12?"7":row==13?"14":nullptr;
 					if(value) {line.replace(0,line.find(','),value);}
 				}
-				if(scenario==9 && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
+				if(multiple && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
 				if(section=="#RESOURCEINFO" && row<9) {line="Owned row";for(auto value:yields[row]) {line+=","+std::to_string(value);}}
 				if(section=="#CITIZENS" && row<7) {
 					line="Role,Roles,"+std::string(row<2?"None":"Tech80")+",Disable";
@@ -3303,7 +3304,7 @@ public:
 				static_cast<value::Callable*>(module->Get("define"))->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)});
 			}
 		};
-		std::vector<size_t> created;size_t callbacks=0;
+		std::vector<size_t> created; std::map<size_t,int64_t> initial_minerals; size_t callbacks=0;
 		const auto create=[&](GSE_CALLABLE) {
 			auto* bm=m_game.GetBM();auto* map=m_game.GetMap();
 			map->m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
@@ -3338,19 +3339,19 @@ public:
 				auto* input=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{"worker",VALUE(value::String,,"WORKER")},{"specialists",VALUE(value::Array,,items)}}));
 				auto* wrapper=static_cast<value::Object*>(bm->Wrap(GSE_CALL));
 				auto* base=Base::Unwrap(static_cast<value::Callable*>(wrapper->Get("spawn_starting_smac_base"))->Run(GSE_CALL,{slot->GetPlayer()->Wrap(GSE_CALL),tile->Wrap(GSE_CALL),input}));
-				created.push_back(base->m_id);return base;
+				created.push_back(base->m_id);initial_minerals.emplace(base->m_id,base->GetProductionState()->minerals);return base;
 			};
 			auto* base=spawn(owner,center);const auto allocation=*base->GetSmacAllocation();
 			if(scenario==1) {require(base->m_pops.at(1).GetWorkedTile()==map->GetTile(6,4) && allocation.specialists.total_count==0,"productive first Base used fixed Doctor allocation");}
 			else {require(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1,"arid first-worker literal changed");}
 			for(size_t i=1;i<16;++i) {require(allocation.specialists.types[i]==0,"fresh packed padding was fabricated from active type");}
 			const auto production=*base->GetProductionState();
-			const auto expected=scenario>=2 && scenario!=3 && scenario!=9?2:1;const auto credit=expected==1?8:4; // explicit tiny-world factor8
+			const auto expected=scenario>=2 && scenario!=3 && !multiple?2:1;const auto credit=expected==1?8:4; // explicit tiny-world factor8
 			require(production.current_item.smac_source_id==expected && production.baseline_item==production.current_item
 				&& production.minerals==credit && production.baseline_minerals==credit && production.queue && production.queue->empty(),"initial target/credit/queue differs from turn-zero producer");
 			require(base->GetAccumulatedNutrients()==0,"initial nondeficit food was posted");
 
-			if(scenario==9) {
+			if(multiple) {
 				using namespace game::backend::unit;
 				auto* um=m_game.GetUM();MoraleSet::morale_values_t names;for(int i=0;i<7;++i){names.emplace_back("Level"+std::to_string(i));}
 				um->DefineMoraleSet(new MoraleSet("FIRST_MORALE",names));
@@ -3367,10 +3368,13 @@ public:
 			require(m_game.m_simulation->value.gameplay_random==rng && m_game.GetRandom()->GetStateString()==jsf,"first Base consumed a random stream");
 		};
 		const char* faction=scenario==2?"SPARTANS":scenario==4?"HIVE":scenario==5?"UNIVERSITY":scenario==6?"MORGANITES":scenario==7?"BELIEVERS":scenario==8?"PEACEKEEPERS":"GAIANS";
-		const auto result=CheckSimulationStartup(queued,0,scenario!=9,false,0,false,0,false,false,create,source,scenario==9?"":faction,definitions);
+		const auto result=CheckSimulationStartup(queued,0,!multiple,false,0,false,0,false,false,create,source,multiple?"":faction,definitions);
 		GT_ASSERT(result.empty(),"canonical first Base actual Start: "+result);
-		GT_ASSERT(callbacks==created.size() && callbacks==(scenario==9?2u:1u),"first Base callback replay/loss");
+		GT_ASSERT(callbacks==created.size() && callbacks==(multiple?2u:1u),"first Base callback replay/loss");
 		return WithScriptValues([&](GSE_CALLABLE)->std::string {
+			// Startup observers captured stack state inside CheckSimulationStartup;
+			// retire those callbacks before this independent next-turn exercise.
+			m_game.ClearHandlers();
 			const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize();
 			bool repeated=false;try{m_game.AdvanceTurn(1);}catch(const std::exception&){repeated=true;}
 			GT_ASSERT(repeated && m_game.GetTurnId()==1 && m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeated first transition changed turn/knowledge");
@@ -3378,7 +3382,45 @@ public:
 				auto* base=m_game.GetBM()->GetBase(id);GT_ASSERT(base && base->GetSmacAllocation(),"first turn lost Base authority");
 				const auto context=base->GetSmacResourceContext();GT_ASSERT(m_game.m_simulation->value.social.Find(context.owner_simulation_id)->retained.has_value(),"actual first transition failed");
 				const auto bytes=Base::Serialize(base).ToString();GT_ASSERT(!bytes.empty() && base->GetProductionState()->queue->empty(),"first Base cannot save complete state");
+				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+1
+					&& base->GetProductionState()->baseline_minerals==base->GetProductionState()->minerals,"first upkeep did not post exactly one mineral and baseline");
+				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?3:0),"first upkeep nutrient posting differs from actual configured tile intake");
 			}
+			const auto pair=m_game.m_simulation->value.gameplay_random;
+			const auto jsf=m_game.GetRandom()->GetStateString();
+			if (scenario==10) {
+				// The first Base can commit before a later supported transition is
+				// found unavailable. This must retire the world, never permit repost.
+				auto* last=m_game.GetBM()->GetBase(created.back());
+				auto invalid=*last->GetProductionState();
+				invalid.current_item=m_game.MakeSmacProductionItem(last->m_owner,ProductionItemKind::Facility,1);
+				m_game.WithRW([&]{last->SetProductionState(GSE_CALL,invalid);});
+				const auto before=Base::Serialize(last).ToString();
+				m_game.Event(GSE_CALL,"complete_turn",{});
+				bool failed=false; try {m_game.ProcessEvents();} catch(const std::exception&) {failed=true;}
+				GT_ASSERT(failed && m_game.m_canonical_turn_failed && m_game.HasInitializationFailure()
+					&& m_game.GetTurnId()==2,"late upkeep failure did not terminally stop the incoming turn");
+				GT_ASSERT(m_game.GetBM()->GetBase(created.front())->GetProductionState()->minerals==initial_minerals.at(created.front())+2
+					&& Base::Serialize(last).ToString()==before,"late failure lost the committed prefix or changed failed Base");
+				bool save=false,retry=false;try{m_game.SerializeWorldSnapshot();}catch(const std::exception&){save=true;}
+				try{m_game.Event(GSE_CALL,"complete_turn",{});}catch(const std::exception&){retry=true;}
+				GT_ASSERT(save && retry,"partially advanced world could be saved or retried");
+				m_map.release();m_game.Iterate();m_map.reset(m_game.m_map);
+				GT_ASSERT(!m_game.IsRunning() && !m_game.m_map && !m_game.m_simulation,"terminal upkeep failure did not run existing cleanup");
+				GT_OK();
+			}
+			// Enqueue the real frontend request twice while still at turn one.
+			// The duplicate carries the same stamped turn and cannot post twice.
+			m_game.Event(GSE_CALL,"complete_turn",{});m_game.Event(GSE_CALL,"complete_turn",{});
+			bool duplicate=false;try{m_game.ProcessEvents();}catch(const std::exception&){duplicate=true;}
+			GT_ASSERT(duplicate && m_game.GetTurnId()==2 && !m_game.m_canonical_turn_failed,"duplicate completion reposted or poisoned successful turn");
+			for(const auto id:created) {
+				const auto* base=m_game.GetBM()->GetBase(id);
+				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+2
+					&& base->GetProductionState()->baseline_minerals==base->GetProductionState()->minerals,"second turn did not post exactly once across the human roster");
+				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?6:0),"second turn nutrient posting was skipped or repeated");
+			}
+			GT_ASSERT(m_game.m_simulation->value.gameplay_random==pair && m_game.GetRandom()->GetStateString()==jsf,"ordinary upkeep changed random streams");
 			GT_OK();
 		});
 	}

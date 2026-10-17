@@ -34,6 +34,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
+#include "gse/value/Float.h"
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"

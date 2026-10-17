@@ -1,0 +1,33 @@
+name: Select CI scope
+
+on:
+  workflow_call:
+    outputs:
+      run:
+        value: ${{ jobs.scope.outputs.run }}
+      full:
+        value: ${{ jobs.scope.outputs.full }}
+      unix:
+        value: ${{ jobs.scope.outputs.unix }}
+      lifecycle:
+        value: ${{ jobs.scope.outputs.lifecycle }}
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.select.outputs.run }}
+      full: ${{ steps.select.outputs.full }}
+      unix: ${{ steps.select.outputs.unix }}
+      lifecycle: ${{ steps.select.outputs.lifecycle }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Test coverage selection and result gate
+        run: python3 -m unittest discover -s tools/tests -p test_ci_scope.py
+      - id: select
+        run: python3 tools/ci_scope.py

@@ -12,6 +12,11 @@ PINS = {
 }
 
 
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
 def array(values):
     return "{ " + ", ".join(map(str, values)) + " }"
 
@@ -34,8 +39,8 @@ def project(directory):
             raise ValueError(f"source fingerprint mismatch: {name}")
         sources[name] = json.loads(raw)
     lines = ["#pragma once", "// Literal projections: tools/reference/project_smac_worked_collection.py.",
-             "#include <array>", "#include <cstdint>", "namespace gse::tests::smac_worked_fixture {",
-             "struct CollectionCase { const char* id; int32_t population; uint32_t selected, unavailable; std::array<int32_t,2> center; bool wrap; std::array<int32_t,3> seed; uint32_t sea_indices, cleaned; bool repair; std::array<int32_t,3> intake; int32_t remaining; uint32_t visited; std::array<std::array<int32_t,2>,21> coordinates; size_t coordinate_count; bool sea; };",
+             "#include <array>", "#include <cstddef>", "#include <cstdint>", "namespace gse::tests::smac_worked_fixture {",
+             "struct CollectionCase { const char* id; int32_t population; uint32_t selected, unavailable; std::array<int32_t,2> center; bool wrap; std::array<int32_t,3> seed; uint32_t sea_indices, cleaned; bool repair; std::array<int32_t,3> intake; int32_t remaining; uint32_t visited; std::array<std::array<int32_t,2>,21> coordinates; std::size_t coordinate_count; bool sea; };",
              "inline const CollectionCase collection[] = {"]
     source = sources["worked-square-collection-cases.json"]
     for case in source["cases"]:
@@ -55,12 +60,12 @@ def project(directory):
         if case["path"] != "collect":
             continue
         expected = case["expected"]
-        assert expected["return_value"] is None and expected["fourth_intake"] == 123
+        require(expected["return_value"] is None and expected["fourth_intake"] == 123, "unsupported collection side effects")
         lines.append("\t{ " + ", ".join([json.dumps(case["id"]), flag(case["center_worker_bit"]),
                      flag(not case["land"]), array(case["seed_intake"]), array(case["expected_yield"]),
                      array(expected["intake"]), str(expected["remaining_slots"])]) + " },")
         count += 1
-    assert count == 168
+    require(count == 168, "unexpected collection boundary count")
     lines += ["};", "struct CompleteCase { const char* id; int32_t population, specialists; uint32_t selected; std::array<int32_t,3> old_yield, new_yield, intake; uint32_t visited; };",
               "inline const CompleteCase complete[] = {"]
     source = sources["worker-intake-integration-cases.json"]
@@ -69,7 +74,7 @@ def project(directory):
         if case["id"] not in retained:
             continue
         value, expected = source["defaults"] | case["overrides"], case["expected"]
-        assert expected["specialists"] == value["retained_specialists"]
+        require(expected["specialists"] == value["retained_specialists"], "early completion changed specialists")
         lines.append("\t{ " + ", ".join([json.dumps(case["id"]), str(value["population"]),
                      str(value["retained_specialists"]), mask(value["selected_indices"]), array(value["old_yield"]),
                      array(value["new_yield"]), array(expected["intake"]), mask(expected["visited_indices"])]) + " },")

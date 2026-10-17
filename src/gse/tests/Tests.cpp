@@ -1,4 +1,6 @@
+#include "SmacTerritoryRules.h"
 #include "Tests.h"
+#include "SmacOrdinaryLandExploration.h"
 #include "Async.h"
 
 #include "Backend.h"
@@ -18,6 +20,7 @@
 #include "SmacProductionRules.h"
 #include "SmacMovementRules.h"
 #include "SmacTechnologyRules.h"
+#include "SmacSpecialistRules.h"
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
 #include "SmacWorldSizeRules.h"
@@ -41,8 +44,10 @@
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
+#include "SmacSpecialistAllocation.h"
 #include "SmacWorkedSquareCollection.h"
 #include "SmacWorkerAvailability.h"
+#include "SmacUnitSupport.h"
 #include "SmacMineralCostFactor.h"
 #include "SmacConventionalStats.h"
 
@@ -86,12 +91,14 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
+		tests::AddSmacTerritoryRulesTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
@@ -234,6 +241,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
+		tests::AddSmacSpecialistRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
 		tests::AddSmacSocialStateTests( task );
 		tests::AddSmacSimulationStateTests( task );
@@ -245,8 +253,10 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacWorkerAllocationTests( task );
+		tests::AddSmacSpecialistAllocationTests( task );
 		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacWorkerAvailabilityTests( task );
+		tests::AddSmacUnitSupportTests( task );
 	}
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
 		tests::AddScriptsTests( task );

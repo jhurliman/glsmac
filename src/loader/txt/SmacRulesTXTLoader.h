@@ -3,6 +3,7 @@
 #include <string>
 
 #include "game/backend/resource/SmacBaseSquareYield.h"
+#include "game/backend/settings/SmacSpecialistRules.h"
 #include "game/backend/settings/SmacProductionRules.h"
 #include "game/backend/settings/SmacMovementRules.h"
 #include "game/backend/settings/SmacTechnologyRules.h"
@@ -12,6 +13,10 @@ namespace loader::txt {
 
 class SmacRulesTXTLoader {
 public:
+	// Strict port ingestion: seven positional eight-column CITIZENS specialist
+	// rows, three ordinary-citizen name rows, and RULES row 11 from 70 rows.
+	// Preserve signed metadata and opaque trailing token; no selection/effects.
+	static game::backend::settings::SmacSpecialistRules ParseSpecialistRules( const std::string& source );
 	// Nine positional SMAC RESOURCEINFO rows, not SMAX. Decode only the
 	// N/M/E triples at positions 2, 3 and 5, regardless of their labels. The caller
 	// supplies the selected rules file's contents; no I/O, cache or defaults.

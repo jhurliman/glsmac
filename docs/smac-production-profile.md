@@ -121,7 +121,9 @@ clang++ -std=c++17 -O2 -DNDEBUG -ffunction-sections -fdata-sections \
 
 It prints the four rules and all modeled catalog records as tab-separated output;
 it does not authenticate the file, create definitions or modify an installation.
-Local validation used Clang/LLVM 15 on Linux through WSL:
+Source commit `0f9f5d53ece4eab05c7d8f138508486b35be629e`, on the larger
+integration parent `2975a51b1af7521f1e676c1557bb42261cecd03d`, was validated
+using Clang/LLVM 15 on Linux through WSL:
 
 - The final full normal suite passed 8/8 in 41.76 seconds. The full
   ASan/UBSan/LSan suite passed 8/8 in 54.68 seconds with `detect_leaks=1`.
@@ -145,3 +147,22 @@ Receipts remain under `/home/jhurliman/src/glsmac-production-profile-audit`.
 The first final-script attempt omitted the managed worktree's local Git metadata
 override and failed during version-header generation; the corrected invocation
 produced the final normal result above. CI requires no original assets.
+
+The focused publication uses synthetic base
+`40f3e8039999853440f28d7d984b838d6390ced2`: PR44 host rules at
+`df36c9f9b0891621f82cf15cbda6252c2667c7c7` plus one pinned main revision,
+`41698b3c06b748dcd3fa45b91288d11f30880574`. The merge retains both sets of
+test/build registrations and both independent backend test blocks. The profile
+adaptation explicitly includes the existing read-only `IsRulesetLocked()`
+accessor and places its test registrations in the older suite; it imports no
+world-header implementation.
+
+Publication source `500d6f85e445e51fc2e98833457e04e5e4466855` passed its full
+normal suite **5/5 in 24.56 seconds** (GSE: 18.31 seconds), including the actual
+host packet tests and all five new profile groups. Its three changed production
+translation units passed correctness analysis with zero findings in 1.70
+seconds. The newly built Release probe again matched all four rules and 71
+records and passed its rejection controls. These receipts are in
+`/home/jhurliman/src/glsmac-production-profile-publication`; the 8/8 sanitizer
+receipt above belongs to the source integration ancestry, not this smaller
+publication stack.

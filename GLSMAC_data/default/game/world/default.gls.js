@@ -6,11 +6,16 @@ return (game) => {
 
 	// variables
 	const players = game.get_players();
+	const conventional_start = game.get_ruleset() == 'smac' && game.get_player().is_single_player;
 	const players_count = #sizeof(players);
 	const tm = game.get_tm();
 	const map_width = tm.get_map_width();
 	const map_height = tm.get_map_height();
-	const optimal_base_distance = #max((map_width + map_height) / 2 / players_count, 2);
+	// Provisional GLSMAC placement: ordinary land with an exit, and enough
+	// separation that another starting HQ/Scout cannot block that first step.
+	// Terrain is preserved; this is not original site-balancing fidelity.
+	const minimum_base_distance = conventional_start ? 4 : 2;
+	const optimal_base_distance = #max((map_width + map_height) / 2 / players_count, minimum_base_distance);
 	let tiles_with_bases = [];
 
 	// functions
@@ -35,7 +40,19 @@ return (game) => {
 				continue;
 			}
 			const tile = tm.get_tile(x, y);
-			if (tile.is_water == is_naval_faction) { // naval factions start in water, others on land
+			let supported_site = tile.is_water == is_naval_faction;
+			if (conventional_start) {
+				supported_site = false;
+				if (tile.is_ordinary_conventional_land) {
+					for (neighbor of tile.get_surrounding_tiles()) {
+						if (neighbor != tile && neighbor.is_ordinary_conventional_land) {
+							supported_site = true;
+							break;
+						}
+					}
+				}
+			}
+			if (supported_site) { // naval factions start in water, others on land
 				// check that no existing bases are too close
 				let is_ok = true;
 				for (other of tiles_with_bases) {
@@ -50,7 +67,7 @@ return (game) => {
 					if (tries >= next_min_base_distance_decrease_at) {
 						// reduce base distance to increase chance of finding tile
 						next_min_base_distance_decrease_at = tries + decrease_min_base_distance_every;
-						if (min_base_distance > 2) {
+						if (min_base_distance > minimum_base_distance) {
 							min_base_distance--;
 						}
 					}
@@ -78,7 +95,25 @@ return (game) => {
 		});
 		tiles_with_bases :+tile;
 
-		// spawn "scout patrol"
+		if (conventional_start) {
+			const startup = game.get_startup_designs(player);
+			let type = null;
+			if (startup.starting_scout == 2) {
+				type = 'ConventionalScout';
+			} else {
+				for (design of startup.designs) {
+					if (design.id == startup.starting_scout && design.chassis == 1) {
+						type = 'ConventionalSpartanRover';
+					}
+				}
+			}
+			if (type == null) { throw Error('Starting design has no supported conventional presentation'); }
+			// Raw creation must run in the claimed Start event accumulator.
+			game.event('spawn_unit', {owner: player, tile: tile, type: type, starting_conventional: true});
+			continue;
+		}
+
+		// Existing SMAX/network placeholder path.
 		let type = 'MindWorms';
 		if (faction.is_naval) {
 			type = 'SeaLurk';

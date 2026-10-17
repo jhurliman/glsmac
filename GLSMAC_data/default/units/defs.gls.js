@@ -41,6 +41,21 @@ const units = [
 	native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
 ];
 
+// GLSMAC camera policy: preserve the legacy 100x75 sprite's pixel scale
+// (1.0 by 0.8 world units) on the CVR 256x256 canvas. Use the raster's
+// nominal model origin (128,128), not its separate target-blit anchor.
+// These are port placement choices, not original visual parity.
+const conventional = (id, name, composition) => {
+	return {id: id, data: {
+		name: name, morale: 'CONVENTIONAL', type: 'static', movement_type: 'land',
+		movement_per_turn: 0, // unused legacy field; owned integer stats supply movement
+		render: {
+			type: composition, facing: 2, zoom: 0, scale_numerator: 1, scale_denominator: 1,
+			world_width: 2.56, world_height: 2.730666666666667, center_x: 128.0, center_y: 128.0,
+		},
+	}};
+};
+
 const result = {
 	define: (game) => {
 
@@ -50,6 +65,15 @@ const result = {
 
 		for (unit of units) {
 			game.event('define_unit', unit);
+		}
+
+		if (game.get_ruleset() == 'smac' && game.get_player().is_single_player) {
+			game.event('define_moraleset', {id: 'CONVENTIONAL', data: [
+				{name: 'Very Green'}, {name: 'Green'}, {name: 'Disciplined'}, {name: 'Hardened'},
+				{name: 'Veteran'}, {name: 'Commando'}, {name: 'Elite'},
+			]});
+			game.event('define_unit', conventional('ConventionalScout', 'Scout Patrol', 'cvr_initialized_scout'));
+			game.event('define_unit', conventional('ConventionalSpartanRover', 'Scout Rover', 'cvr_spartan_rover'));
 		}
 
 	},

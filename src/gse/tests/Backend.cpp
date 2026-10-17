@@ -3001,7 +3001,10 @@ public:
 		using namespace game::backend;
 		using namespace game::backend::unit;
 		// Actual claimed Start and real event dispatch, with synthetic frozen
-		// profiles/map/definitions. No default-world or original art activation.
+		// profiles/map. Scenarios8/9 execute the actual default-world/definition scripts;
+		// rendering remains asset-free, while creation, movement and turn are real.
+		const bool default_world = scenario >= 8, local_rover = scenario == 9;
+		const size_t expected_units = default_world ? 1 : 3;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
 		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( []( const std::string& filename ) {
@@ -3009,7 +3012,8 @@ public:
 			if ( filename == "alpha.txt" ) { const auto start = source.find( "#RULES\n" ) + 7; source.replace( start, source.find( ',', start ) - start, "3" ); }
 			return source;
 		} ); smac_rules_fixture::AcceptWorldSize( settings );
-		EnableSimulationParticipants( { 0, 2, 6 }, 0, true );
+		EnableSimulationParticipants( default_world ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, !default_world );
+		if ( local_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
 		const auto old_id = Unit::GetNextId(), old_base_id = base::Base::GetNextId();
 		util::FinallyGuard ids( [ = ] { Unit::SetNextId( old_id ); base::Base::SetNextId( old_base_id ); } );
 		auto* previous_game = g_engine->m_game;
@@ -3030,11 +3034,42 @@ public:
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.m_tm = new map::tile::TileManager( &m_game );
 			DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
-			MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
-			auto* um = m_game.GetUM(); um->DefineMoraleSet( new MoraleSet( "EARLY_MORALE", names ) );
-			for ( bool rover : { false, true } ) {
-				um->DefineUnit( new StaticDef( rover ? "EARLY_ROVER" : "EARLY_SCOUT", um->GetMoraleSet( "EARLY_MORALE" ), "Early fixture", MT_LAND, 999.0f,
-					new CvrScoutRender( 2, 0, 100, 100, { 1.0f, 1.0f }, { 128.0f, 128.0f }, rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout ) ) );
+			auto* um = m_game.GetUM();
+			if ( !default_world ) {
+				MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
+				um->DefineMoraleSet( new MoraleSet( "EARLY_MORALE", names ) );
+				for ( bool rover : { false, true } ) {
+					um->DefineUnit( new StaticDef( rover ? "EARLY_ROVER" : "EARLY_SCOUT", um->GetMoraleSet( "EARLY_MORALE" ), "Early fixture", MT_LAND, 999.0f,
+						new CvrScoutRender( 2, 0, 100, 100, { 1.0f, 1.0f }, { 128.0f, 128.0f }, rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout ) ) );
+				}
+			}
+			if ( default_world ) {
+				using namespace map::tile;
+				for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y % 2; x < 8; x += 2 ) {
+					auto* tile = m_game.GetMap()->GetTile( x, y );
+					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0;
+					// Deliberately unsuitable centers must survive unchanged and never be selected.
+					if ( y == 0 ) { tile->features = FEATURE_XENOFUNGUS; }
+					if ( y == 7 ) { tile->features = FEATURE_MONOLITH; }
+				} }
+				m_game.GetBM()->DefineFacility( new base::FacilityDef( "HEADQUARTERS", "Headquarters", "Fixture", 0, { "facilities.pcx", 1, 2, 24, 32 }, 1 ) );
+				for ( const auto* name : { "define_moraleset", "define_unit", "spawn_base", "spawn_unit" } ) {
+					auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
+					RegisterEvent( name, new event::EventHandler( gc_space, name, static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
+						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
+				}
+				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, require ) {
+					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( base, event, "base", base::Base );
+					require( m_game.GetTurnId() == 0 && !base->HasSmacResourceContext(), "default startup activated canonical economy or reordered HQ" );
+					order.push_back( "hq" ); return VALUE( value::Undefined );
+				} ) );
+				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, call ) {
+					auto* game = static_cast< value::Object* >( m_game.Wrap( GSE_CALL ) );
+					auto* definitions = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/units/defs" ) );
+					call( GSE_CALL, definitions, "define", { game } );
+					static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/world/default" ) )->Run( GSE_CALL, { game } );
+					return VALUE( value::Undefined );
+				} ) );
 			}
 			const auto spawn = [ &, um ]( GSE_CALLABLE, size_t slot ) {
 				auto* input = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{
@@ -3101,15 +3136,17 @@ public:
 				if ( scenario == 6 ) { throw std::runtime_error( "fixture raw event failure" ); }
 				return VALUE( value::Undefined );
 			} );
-			RegisterEvent( "early_hq", new event::EventHandler( gc_space, "early_hq", noop, nullptr, hq, noop ) );
-			RegisterEvent( "early_unit", new event::EventHandler( gc_space, "early_unit", noop, nullptr, raw, noop ) );
-			m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this ) { m_game.Event( GSE_CALL, "early_hq", {} ); m_game.Event( GSE_CALL, "early_unit", {} ); return VALUE( value::Undefined ); } ) );
+			if ( !default_world ) {
+				RegisterEvent( "early_hq", new event::EventHandler( gc_space, "early_hq", noop, nullptr, hq, noop ) );
+				RegisterEvent( "early_unit", new event::EventHandler( gc_space, "early_unit", noop, nullptr, raw, noop ) );
+				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this ) { m_game.Event( GSE_CALL, "early_hq", {} ); m_game.Event( GSE_CALL, "early_unit", {} ); return VALUE( value::Undefined ); } ) );
+			}
 			const auto sealed = [ &, require ]() {
-				require( m_game.GetTurnId() == 1 && !m_game.GetUM()->HasPendingConventionalUnits(), "hook observed a partial first-turn seal" );
+				require( ( m_game.GetTurnId() == 1 || ( default_world && m_game.GetTurnId() == 2 ) ) && !m_game.GetUM()->HasPendingConventionalUnits(), "hook observed a partial first-turn seal" );
 				const int morale[] = { 1, 2, 0 }; const int allowance[] = { 3, 6, 3 }; // Morgan/Sparta/Gaia synthetic participants
 				for ( size_t i = 0; i < identities.size(); ++i ) {
 					auto* unit = m_game.GetUM()->GetUnit( identities[ i ] ); const auto stats = unit->QueryStats( SmacMoraleMode::Mode0 );
-					require( unit->Conventional().stored_morale == 1 && stats.effective_morale == morale[ i ] && stats.full_allowance == allowance[ i ], "seal used fake retained values or replaced raw fields" );
+					require( unit->Conventional().stored_morale == 1 && stats.effective_morale == ( default_world ? ( local_rover ? 2 : 0 ) : morale[ i ] ) && stats.full_allowance == ( default_world ? ( local_rover ? 6 : 3 ) : allowance[ i ] ), "seal used fake retained values or replaced raw fields" );
 				}
 			};
 			m_game.GetBM()->On( GSE_CALL, "base_turn", NATIVE_CALL( &base_hooks, sealed ) { ++base_hooks; sealed(); return VALUE( value::Undefined ); } ) );
@@ -3145,7 +3182,7 @@ public:
 			ProcessAccumulations();
 		}
 		if ( scenario == 5 ) { m_game.Iterate(); }
-		if ( scenario >= 2 ) {
+		if ( scenario >= 2 && !default_world ) {
 			GT_ASSERT( !m_game.m_map && !m_game.m_simulation && !partial_seal && !base_hooks && !turns, "failed/canceled Early world leaked a partially sealed unit or upkeep" );
 			GT_ASSERT( errors == ( scenario == 4 ? 0u : 1u ), "Early failure was lost or duplicated" );
 			g_engine->GetGC()->Iterate();
@@ -3153,22 +3190,46 @@ public:
 			if ( reset ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Early reset failed to make actual MT progress" ); }
 			GT_OK();
 		}
-		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == 3 && base_hooks == 1 && turns == 1 && order == std::vector< std::string >( { "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
+		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == 1 && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
 		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle consumed gameplay RNG" );
 		std::string saved; std::vector< std::string > saved_units;
 		const auto published = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.GetUM()->PushUpdates(); const auto& updates = m_frontend_requests; size_t spawns = 0;
 			for ( const auto& fr : updates ) { if ( fr.type == game::FrontendRequest::FR_UNIT_SPAWN ) { ++spawns; GT_ASSERT( fr.data.unit_spawn.conventional && fr.data.unit_spawn.has_moves, "sealed spawn was not actionable" ); } }
+			if ( default_world ) {
+				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
+				const auto* def = static_cast< StaticDef* >( unit->m_def );
+				GT_ASSERT( def->m_render->m_type == ( local_rover ? Render::RT_CVR_SPARTAN_ROVER : Render::RT_CVR_INITIALIZED_SCOUT )
+					&& unit->Conventional().design_id == ( local_rover ? 64 : 2 ) && unit->Conventional().owner_simulation_id == 1,
+					"default startup substituted native or slot-derived design/presentation" );
+				const auto* render = static_cast< const CvrScoutRender* >( def->m_render );
+				GT_ASSERT( render->center == types::Vec2< float >( 128.0f, 128.0f ), "default texture pivot used external blit metadata" );
+				GT_ASSERT( origin->features == 0 && origin->rockiness == map::tile::ROCKINESS_FLAT && origin->base, "default start chose unsupported terrain" );
+				map::tile::Tile* target = nullptr;
+				for ( auto* next : origin->neighbours ) {
+					try { m_game.GetUM()->ValidateConventionalMove( unit, next, 0 ); target = next; break; } catch ( const std::exception& ) {}
+				}
+				GT_ASSERT( target, "default placement has no admitted first command" );
+				ConventionalMoveEvent( GSE_CALL, unit, target, 0 );
+				GT_ASSERT( unit->GetTile() == target && target->units.at( unit->m_id ) == unit && origin->units.empty() && unit->Conventional().spent > 0,
+					"real default move event did not leave the HQ" );
+				m_state->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
+				m_game.Event( GSE_CALL, "advance_turn", { { "turn_id", VALUE( value::Int,, 2 ) } } ); ProcessEvents();
+				GT_ASSERT( m_game.GetTurnId() == 2 && unit->Conventional().spent == 0 && unit->HasMovesLeft() && base_hooks == 2 && turns == 2,
+					"default command could not continue through actual next-turn handler" );
+				for ( size_t x = 0; x < 8; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" ); }
+				for ( size_t x = 1; x < 8; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" ); }
+			}
 			saved = WorldSnapshot();
 			for ( const auto id : identities ) { saved_units.push_back( Unit::Serialize( m_game.GetUM()->GetUnit( id ) ).ToString() ); }
-			GT_ASSERT( spawns == 3 && !saved.empty(), "seal lost pending frontend/snapshot publication" );
+			GT_ASSERT( spawns == expected_units && !saved.empty(), "seal lost pending frontend/snapshot publication" );
 			for ( auto* wrapper : wrappers ) { auto* unit = static_cast< Unit* >( wrapper->wrapobj ); GT_ASSERT( unit && !unit->IsConventionalPending(), "seal replaced a raw identity" ); }
 			GT_OK();
 		} );
 		GT_ASSERT( published.empty(), "sealed publication: " + published );
 		// The actual world-body reader gets its staged BoundSimulation and must
 		// restore Ready records directly, without replaying startup or entropy.
-		BackendFixture destination; destination.ConfigureConventional( true, 3, false, true );
+		BackendFixture destination; destination.ConfigureConventional( true, 3, default_world, default_world ? local_rover : true );
 		return destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			size_t new_hooks = 0;
 			destination.GetGame()->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &new_hooks ) { ++new_hooks; return VALUE( value::Undefined ); } ) );

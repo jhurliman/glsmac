@@ -200,6 +200,10 @@ WRAPIMPL_BEGIN( Player )
 				} )
 			},
 			{
+				"is_single_player",
+				VALUE( gse::value::Bool, , m_role == PR_SINGLE )
+			},
+			{
 				"is_master",
 				VALUE( gse::value::Bool, , m_role == PR_SINGLE || m_role == PR_HOST )
 			},

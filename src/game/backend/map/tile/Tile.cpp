@@ -191,6 +191,12 @@ WRAPIMPL_BEGIN( Tile )
 			VALUE( gse::value::Bool,, !is_water_tile )
 		},
 		{
+			// Terrain-only setup predicate, not authorization for a Unit command.
+			"is_ordinary_conventional_land",
+			VALUE( gse::value::Bool,, !is_water_tile && rockiness >= ROCKINESS_FLAT && rockiness <= ROCKINESS_ROCKY
+				&& !( features & ~FEATURE_RIVER ) && !( terraforming & ~( TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST ) ) )
+		},
+		{
 			"moisture",
 			VALUE( gse::value::Int,, moisture )
 		},

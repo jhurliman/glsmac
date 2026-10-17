@@ -67,7 +67,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 				return source;
 			};
 			GT_ASSERT( Rejects( [ & ]() { settings.InitializeHostRules( source ); } ) && replaced && !settings.IsRulesetLocked(), "host admission did not reject the oversized profile before freeze" );
-			GT_ASSERT( settings.GetRulesetId() == "smac" && !settings.GetSmacBaseSquareRules() && !settings.GetSmacProductionRules()
+			GT_ASSERT( settings.GetRulesetId() == "smac" && !settings.GetSmacResourceRules() && !settings.GetSmacProductionRules()
 				&& !settings.GetSmacTechnologyRules() && !settings.GetSmacWorldSizeRules() && !settings.GetSmacFactionStartupRules()
 				&& !settings.GetSmacPredefinedUnitRules() && !settings.GetSmacMovementRules(), "failed host admission partially published a profile" );
 			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
@@ -105,7 +105,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 		// payload itself, independently of any later header/body extensions.
 		header.ReadInt(); header.ReadInt(); header.ReadString();
 		GT_ASSERT( header.ReadBool(), "missing numeric profile in test header" );
-		for ( size_t i = 0; i < 9; ++i ) { header.ReadInt(); }
+		header.ReadString();
 		for ( size_t i = 0; i < 2; ++i ) { GT_ASSERT( header.ReadBool(), "missing profile in test header" ); header.ReadString(); }
 		GT_ASSERT( header.ReadBool(), "missing size profile in test header" ); header.ReadString(); header.ReadString();
 		GT_ASSERT( header.ReadBool(), "missing faction profile in test header" ); header.ReadString();
@@ -189,10 +189,10 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 15 && wire.ReadString() == id, "writer omitted the V15 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 16 && wire.ReadString() == id, "writer omitted the V16 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
-			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
+			if ( smac ) { wire.ReadString(); }
 			GT_ASSERT( wire.ReadBool() == smac, "production presence changed" );
 			if ( smac ) {
 				GT_ASSERT( wire.ReadString() == settings.GetSmacProductionRules()->Serialize().ToString(), "header changed the production codec payload" );

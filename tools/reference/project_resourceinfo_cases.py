@@ -19,7 +19,7 @@ def project(source):
            "// Input SHA256: " + FIXTURE_SHA256, "#pragma once", "",
            "namespace gse::tests::resource_text_fixture {",
            "using game::backend::resource::smac::RuleTriple; using game::backend::resource::smac::Yield;",
-           "struct Case { const char* id; const char* text; std::array< RuleTriple, 3 > rules; std::array< Yield, 16 > yields; };",
+           "struct Case { const char* id; const char* text; std::array< RuleTriple, 3 > rules; std::array< RuleTriple, 9 > rows; std::array< Yield, 16 > yields; };",
            "inline const Case cases[] = {"]
     count = 0
     for case in cases:
@@ -33,6 +33,7 @@ def project(source):
         triple = lambda name, values: name + "{ " + ", ".join(map(str, values)) + " }"
         out += ["\t{ " + json.dumps(case["id"]) + ", " + json.dumps(case["synthetic_text"]) + ",",
                 "\t\t{ " + ", ".join(triple("RuleTriple", row) for row in rules) + " },",
+                "\t\t{ " + ", ".join(triple("RuleTriple", row[:3]) for row in case["expected_rows"]) + " },",
                 "\t\t{ " + ", ".join(triple("Yield", c["expected"]) for c in case["checks"]) + " } },"]
         count += 1
     assert count == 37

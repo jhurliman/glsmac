@@ -169,7 +169,7 @@ void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
 		auto source = fixture::Source( "alpha.txt" );
 		source.replace( source.find( "Facility 71" ), std::string( "Facility 71" ).size(), "" );
 		GT_ASSERT( Rejects( [ & ]() { settings.PrepareRuleset( [ & ]( const std::string& ) { return source; } ); } ), "bad last facility initialized a host" );
-		GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacBaseSquareRules() && !settings.global.GetSmacProductionRules(), "late source failure partially published profiles" );
+		GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules(), "late source failure partially published profiles" );
 		GT_ASSERT( settings.global.GetRulesetId() == "smac" && settings.global.map.Serialize().ToString() == before_map
 			&& settings.global.map.filename == "preserve/path" && settings.global.game_name == "preserve name" && settings.global.difficulty_level == -17,
 			"late source failure changed existing settings" );

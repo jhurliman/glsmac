@@ -11,9 +11,9 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V15 requires explicit supported-campaign movement admission in simulation V5.
-// V1..V14 downloads are unsupported.
-inline constexpr int64_t rules_version = 15;
+// V16 binds the complete resource profile and retains explicit supported-campaign
+// movement admission in simulation V5. V1..V15 downloads are unsupported.
+inline constexpr int64_t rules_version = 16;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

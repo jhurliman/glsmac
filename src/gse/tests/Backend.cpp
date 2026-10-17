@@ -6392,7 +6392,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			decoded.Deserialize( packet.Serialize() );
 			auto* restored = destination.GetGame()->GetState();
 			restored->Deserialize( types::Buffer( decoded.data.str ) );
-			GT_ASSERT( std::string( id ) == "smac" ? smac_rules_fixture::Matches( restored->m_settings.global ) : !restored->m_settings.global.GetSmacBaseSquareRules(), "State/Packet lost host numeric rules" );
+			GT_ASSERT( std::string( id ) == "smac" ? smac_rules_fixture::Matches( restored->m_settings.global ) : !restored->m_settings.global.GetSmacResourceRules(), "State/Packet lost host numeric rules" );
 			GT_ASSERT( restored->Serialize().ToString() == state->Serialize().ToString(), "state roundtrip changed settings or factions" );
 			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* script = destination.RunScript( GSE_CALL, "./GLSMAC_data/tests/_ruleset" );
@@ -6435,7 +6435,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 					client->m_on_game_state_change = [ & ]( const connection::Connection::game_state_t actual ) {
 						callbacks++;
 						callback_ruleset = actual == announced ? state->m_settings.global.GetRulesetId() : "wrong state";
-						callback_rules_valid = std::string( id ) == "smac" ? smac_rules_fixture::Matches( state->m_settings.global ) : !state->m_settings.global.GetSmacBaseSquareRules();
+						callback_rules_valid = std::string( id ) == "smac" ? smac_rules_fixture::Matches( state->m_settings.global ) : !state->m_settings.global.GetSmacResourceRules();
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
 							? state->m_settings.global.map.GetSmacWorldSize() == std::optional< settings::SmacWorldSizeSelection >( smac_rules_fixture::WorldSizes().SelectPreset( 0 ) )
 							: !state->m_settings.global.map.GetSmacWorldSize() && !state->m_settings.global.GetSmacWorldSizeRules() );
@@ -6667,7 +6667,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( state->m_settings.global.map.Serialize().ToString() == before_map && state->m_settings.global.game_name == before_name, "rejected packet changed live global settings" );
 				GT_ASSERT( state->GetFM()->Serialize().ToString() == before_factions, "rejected rules packet reached faction publication" );
 				GT_ASSERT( locked ? smac_rules_fixture::Matches( state->m_settings.global ) : state->m_settings.global.GetRulesetId() == "unselected"
-					&& !state->m_settings.global.GetSmacBaseSquareRules() && !state->m_settings.global.GetSmacProductionRules()
+					&& !state->m_settings.global.GetSmacResourceRules() && !state->m_settings.global.GetSmacProductionRules()
 					&& !state->m_settings.global.GetSmacTechnologyRules() && !state->m_settings.global.GetSmacFactionStartupRules(), "rejected packet changed session identity or values" );
 				GT_OK();
 			} );
@@ -6763,6 +6763,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			for ( const auto& invalid : world_rules_fixture::InvalidFactionHeaders( ruleset ) ) { rejected.emplace_back( "faction: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidPredefinedHeaders( ruleset ) ) { rejected.emplace_back( "predefined: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidMovementHeaders( ruleset ) ) { rejected.emplace_back( "movement: " + invalid.first, invalid.second ); }
+			for ( const auto& invalid : world_rules_fixture::InvalidResourceHeaders( ruleset ) ) { rejected.emplace_back( "resource: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
@@ -6781,7 +6782,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				rejected.emplace_back( "unexpected SMAX runtime", unexpected.ToString() );
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 7, "frame: " ) == 0 || invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 7, "frame: " ) == 0 || invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0 || invalid.first.compare( 0, 10, "resource: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();

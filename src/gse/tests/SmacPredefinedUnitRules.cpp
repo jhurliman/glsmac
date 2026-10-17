@@ -116,7 +116,7 @@ void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects( [ & ]() { retry.InitializeHostRules( []( const std::string& name ) {
 			auto source = fixture::Source( name ); if ( name == "alpha.txt" ) { source.replace( source.find( "#UNITS" ), 6, "#WRONG" ); } return source;
 		} ); } ), "missing unit table accepted" );
-		GT_ASSERT( !retry.IsRulesetLocked() && !retry.GetSmacBaseSquareRules() && !retry.GetSmacPredefinedUnitRules() && retry.game_name == "preserved", "late unit failure published partial profiles" );
+		GT_ASSERT( !retry.IsRulesetLocked() && !retry.GetSmacResourceRules() && !retry.GetSmacPredefinedUnitRules() && retry.game_name == "preserved", "late unit failure published partial profiles" );
 		retry.InitializeHostRules( fixture::Source ); GT_ASSERT( retry.GetSmacPredefinedUnitRules().has_value(), "valid retry failed" );
 		retry.ResetRuleset(); GT_ASSERT( !retry.GetSmacPredefinedUnitRules(), "reset retained catalog" );
 		GT_OK();

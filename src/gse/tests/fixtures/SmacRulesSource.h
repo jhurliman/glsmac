@@ -63,7 +63,8 @@ inline std::string ProductionSource() {
 	for ( size_t row = 1 ; row <= 70 ; ++row ) {
 		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
 			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : 0;
-		source += std::to_string( value ) + ", ; synthetic annotation\n";
+		const auto token = row == 54 ? "Tech0" : row == 55 ? "Tech1" : row == 56 ? "Tech2" : row == 58 ? "Tech3" : "";
+		source += ( *token ? std::string( token ) : std::to_string( value ) ) + ", ; synthetic annotation\n";
 	}
 	source += "#FACILITIES\n";
 	for ( const auto& facility : rules.facilities ) {
@@ -148,11 +149,36 @@ inline std::string Source( const std::string& filename ) {
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
 
+inline game::backend::settings::SmacResourceRules Resources( const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
+	return { { { { 0, 0, 0 }, { 17, INT32_MIN, INT32_MAX }, { -2, 300, 0 }, { 0, 0, 0 }, { -7, 8, 9 },
+		{ 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } } }, 0, 0, 0,
+		{ technologies.technologies[ 0 ].key, technologies.technologies[ 1 ].key, technologies.technologies[ 2 ].key, technologies.technologies[ 3 ].key } };
+}
+
+// Independent wire builder intentionally permits malformed late values.
+inline types::Buffer UncheckedResources( const game::backend::settings::SmacResourceRules& profile,
+	const std::optional< std::array< int64_t, 9 > >& center = {} ) {
+	types::Buffer result; result.WriteInt( 1 );
+	for ( size_t row = 0; row < 9; ++row ) {
+		for ( size_t column = 0; column < 3; ++column ) {
+			const int index = row == 1 ? 0 : row == 2 ? 1 : row == 4 ? 2 : -1;
+			result.WriteInt( center && index >= 0 ? ( *center )[ index * 3 + column ] : profile.rows[ row ][ column ] );
+		}
+	}
+	result.WriteInt( profile.nutrients_per_citizen ); result.WriteInt( profile.unroaded_mine_limit ); result.WriteInt( profile.mine_nutrient_effect );
+	for ( const auto& token : profile.technology_tokens ) { result.WriteString( token ); }
+	return result;
+}
+
+inline std::string ResourceFrame( const std::array< int64_t, 9 >& center, const std::optional< std::string >& technology_bytes = {} ) {
+	auto catalog = Technologies();
+	if ( technology_bytes ) { try { catalog = game::backend::settings::SmacTechnologyRules::Deserialize( types::Buffer( *technology_bytes ) ); } catch ( const std::runtime_error& ) {} }
+	return UncheckedResources( Resources( catalog ), center ).ToString();
+}
+
 inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
-	const auto& rules = settings.GetSmacBaseSquareRules();
-	using game::backend::resource::smac::RuleTriple;
-	return rules && rules->base_square == RuleTriple{ 17, INT32_MIN, INT32_MAX }
-		&& rules->bonus_square == RuleTriple{ -2, 300, 0 } && rules->recycling == RuleTriple{ -7, 8, 9 }
+	const auto& rules = settings.GetSmacResourceRules();
+	return rules && *rules == Resources()
 		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production()
 		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies()
 		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes()
@@ -169,13 +195,14 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& factions = std::nullopt,
 	const std::optional< std::string >& units = std::nullopt,
 	const std::optional< std::string >& movement = std::nullopt,
-	const std::optional< bool > movement_present = std::nullopt ) {
+	const std::optional< bool > movement_present = std::nullopt,
+	const std::optional< std::string >& resources = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 9 );
+	result.WriteInt( 10 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
-		for ( const auto value : values ) { result.WriteInt( value ); }
+		result.WriteString( resources ? *resources : ResourceFrame( values, technologies ) );
 		result.WriteString( production ? *production : Production().Serialize().ToString() );
 		result.WriteString( technologies ? *technologies : Technologies().Serialize().ToString() );
 		result.WriteString( sizes ? *sizes : WorldSizes().Serialize().ToString() );

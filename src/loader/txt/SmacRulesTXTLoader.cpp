@@ -100,7 +100,7 @@ std::array< std::string_view, 9 > ResourceRows( const std::string& source ) {
 
 }
 
-BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& source ) {
+static std::array< RuleTriple, 9 > ParseResourceRows( const std::string& source ) {
 	const auto rows = ResourceRows( source );
 	std::array< RuleTriple, 9 > values{};
 	for ( size_t i = 0; i < rows.size(); ++i ) {
@@ -133,9 +133,29 @@ BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& sou
 			if ( end != std::string_view::npos ) { row.remove_prefix( end + 1 ); }
 		}
 	}
-	// Positions select identity. Fourth values and annotations remain outside
-	// this center-yield subset; rows beyond the nine consumed lines are ignored.
+	return values;
+}
+
+BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& source ) {
+	// Compatibility projection still accepts RESOURCEINFO alone.
+	const auto values = ParseResourceRows( source );
 	return BaseSquareRules( values[ 1 ], values[ 2 ], values[ 4 ] );
+}
+
+game::backend::settings::SmacResourceRules SmacRulesTXTLoader::ParseResourceRules( const std::string& source,
+	const game::backend::settings::SmacTechnologyRules& technologies ) {
+	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
+	if ( rules.size() != 70 ) { throw std::invalid_argument( "SMAC resources require 70 positional RULES rows" ); }
+	const auto field = [ & ]( const size_t position ) {
+		auto value = util::String::TrimCopy( rules[ position - 1 ].substr( 0, rules[ position - 1 ].find( ';' ) ) );
+		if ( !value.empty() && value.back() == ',' ) { value.pop_back(); value = util::String::TrimCopy( value ); }
+		return value;
+	};
+	game::backend::settings::SmacResourceRules result{ ParseResourceRows( source ),
+		ParseField( field( 2 ), "row 2", 1, "RULES" ), ParseField( field( 9 ), "row 9", 1, "RULES" ),
+		ParseField( field( 10 ), "row 10", 1, "RULES" ), { field( 54 ), field( 55 ), field( 56 ), field( 58 ) } };
+	result.Validate( technologies );
+	return result;
 }
 
 game::backend::settings::SmacTechnologyRules SmacRulesTXTLoader::ParseTechnologyRules( const std::string& source ) {

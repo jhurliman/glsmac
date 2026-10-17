@@ -30,7 +30,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				settings.PrepareRuleset( source );
 				const bool smac = settings.global.GetRulesetId() == "smac";
 				GT_ASSERT( reads == ( smac ? 8 : 0 ), "rules file read for the wrong profile/role" );
-				GT_ASSERT( smac ? fixture::Matches( settings.global ) : !settings.global.GetSmacBaseSquareRules(), "host numeric rules do not match explicit profile" );
+				GT_ASSERT( smac ? fixture::Matches( settings.global ) : !settings.global.GetSmacResourceRules(), "host numeric rules do not match explicit profile" );
 				const auto before = settings.global.Serialize().ToString();
 				settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "locked session reread file" ); } );
 				GT_ASSERT( settings.global.Serialize().ToString() == before, "repeat preparation changed frozen rules" );
@@ -38,9 +38,9 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				settings.local.network_role = LocalSettings::NR_CLIENT;
 				settings.PrepareRuleset( source );
 				GT_ASSERT( reads == ( smac ? 8 : 0 ), "joining loaded local rules" );
-				GT_ASSERT( settings.global.GetRulesetId() == "unselected" && !settings.global.GetSmacBaseSquareRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "joining retained the previous host's rules" );
+				GT_ASSERT( settings.global.GetRulesetId() == "unselected" && !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "joining retained the previous host's rules" );
 				settings.global.SelectRuleset( "smax" );
-				GT_ASSERT( !settings.global.GetSmacBaseSquareRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "new selection inherited SMAC numeric rules" );
+				GT_ASSERT( !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "new selection inherited SMAC numeric rules" );
 			}
 		}
 		GT_OK();
@@ -60,24 +60,24 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				if ( missing ) { throw std::runtime_error( "synthetic missing file" ); }
 				return "#RESOURCEINFO\nBase Square,broken\n";
 			} ); } ), "bad source initialized a host" );
-			GT_ASSERT( settings.global.GetRulesetId() == "smac" && !settings.global.GetSmacBaseSquareRules(), "failed source published numeric rules" );
+			GT_ASSERT( settings.global.GetRulesetId() == "smac" && !settings.global.GetSmacResourceRules(), "failed source published numeric rules" );
 			GT_ASSERT( settings.global.game_name == "preserved" && settings.global.map.size_x == 88, "failed source changed unrelated settings" );
 			settings.global.SelectRuleset( "smac" ); // Failure did not freeze selection.
 		}
 		settings.PrepareRuleset( fixture::Source );
 		GT_ASSERT( fixture::Matches( settings.global ), "retry did not load supplied values" );
 		settings.global.ResetRuleset();
-		GT_ASSERT( !settings.global.GetSmacBaseSquareRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "reset retained numeric rules" );
+		GT_ASSERT( !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "reset retained numeric rules" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC V9 settings preserve signed rules and reject changes to every locked numeric field", GT() {
+	task->AddTest( "SMAC V10 settings preserve signed rules and reject changes to every locked numeric field", GT() {
 		GlobalSettings settings;
 		settings.Deserialize( fixture::Payload( "smac", true ) );
-		GT_ASSERT( fixture::Matches( settings ), "V9 lost signed values or endpoints" );
+		GT_ASSERT( fixture::Matches( settings ), "V10 lost signed values or endpoints" );
 		const auto before = settings.Serialize().ToString();
 		GlobalSettings restored;
 		restored.Deserialize( types::Buffer( before ) );
-		GT_ASSERT( restored.Serialize().ToString() == before, "V9 roundtrip changed settings bytes" );
+		GT_ASSERT( restored.Serialize().ToString() == before, "V10 roundtrip changed settings bytes" );
 		for ( size_t i = 0 ; i < 9 ; ++i ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			values[ i ] += values[ i ] == INT32_MAX ? -1 : 1;
@@ -92,9 +92,9 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( settings.game_name == restored.game_name && settings.map.size_x == 92 && fixture::Matches( settings ), "identical rules blocked a lobby update" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC V9 rejects absent, unexpected, out-of-range and incomplete rules before mutation", GT() {
+	task->AddTest( "SMAC V10 rejects absent, unexpected, out-of-range and incomplete rules before mutation", GT() {
 		std::vector< types::Buffer > invalid = { fixture::Payload( "smac", false ), fixture::Payload( "smax", true ) };
-		for ( const auto version : { 1, 2, 3, 4, 5, 6, 7, 8, 10 } ) { types::Buffer b; b.WriteInt( version ); invalid.push_back( b ); }
+		for ( const auto version : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11 } ) { types::Buffer b; b.WriteInt( version ); invalid.push_back( b ); }
 		for ( size_t i = 0 ; i < 9 ; ++i ) {
 			for ( const int64_t value : { int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1, INT64_MIN, INT64_MAX } ) {
 				std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
@@ -102,8 +102,10 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				invalid.push_back( fixture::Payload( "smac", true, values ) );
 			}
 			types::Buffer short_rules;
-			short_rules.WriteInt( 9 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
-			for ( size_t field = 0 ; field < i ; ++field ) { short_rules.WriteInt( 1 ); }
+			short_rules.WriteInt( 10 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
+			types::Buffer prefix; prefix.WriteInt( 1 );
+			for ( size_t field = 0 ; field < i ; ++field ) { prefix.WriteInt( 1 ); }
+			short_rules.WriteString( prefix.ToString() );
 			invalid.push_back( short_rules );
 		}
 		const auto valid = fixture::Payload( "smac", true );
@@ -111,7 +113,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			auto reader = valid;
 			types::Buffer rebuilt;
 			rebuilt.WriteInt( reader.ReadInt() ); rebuilt.WriteString( reader.ReadString() ); rebuilt.WriteBool( reader.ReadBool() );
-			for ( size_t field = 0 ; field < 9 ; ++field ) { rebuilt.WriteInt( reader.ReadInt() ); }
+			rebuilt.WriteString( reader.ReadString() ); // complete resource profile
 			rebuilt.WriteString( reader.ReadString() );
 			rebuilt.WriteString( reader.ReadString() );
 			rebuilt.WriteString( reader.ReadString() );
@@ -134,7 +136,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			settings.SelectRuleset( "smax" ); // Unlocked: reject invalid SMAC data, not an identity change.
 			settings.game_name = "unchanged"; settings.map.size_x = 88;
 			const auto before = settings.Serialize().ToString();
-			GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( payload ); } ), "invalid V9 settings accepted" );
+			GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( payload ); } ), "invalid V10 settings accepted" );
 			GT_ASSERT( settings.Serialize().ToString() == before, "invalid payload partially mutated settings" );
 			settings.Deserialize( valid ); // Rejection left the destination unlocked/retryable.
 			GT_ASSERT( fixture::Matches( settings ), "valid retry after rejected payload failed" );
@@ -157,7 +159,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				return fixture::Source( filename );
 			} ); } ), "late faction source failure was accepted" );
 			GT_ASSERT( reads == std::vector< std::string >( { "alpha.txt", "gaians.txt", "hive.txt", "univ.txt", "morgan.txt", "spartans.txt", "believe.txt", "peace.txt" } ), "host did not read exactly the selected canonical sources" );
-			GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacBaseSquareRules()
+			GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacResourceRules()
 				&& !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules()
 				&& !settings.global.GetSmacWorldSizeRules() && !settings.global.GetSmacFactionStartupRules(), "failed late source published a profile" );
 			GT_ASSERT( settings.global.GetRulesetId() == "smac" && settings.global.game_name == "kept name" && settings.global.difficulty_level == -19
@@ -267,7 +269,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				return source;
 			} ); } ), "malformed movement source accepted" );
 			GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacMovementRules() && !settings.global.GetSmacPredefinedUnitRules()
-				&& !settings.global.GetSmacBaseSquareRules() && settings.global.game_name == "keep" && settings.global.difficulty_level == -23
+				&& !settings.global.GetSmacResourceRules() && settings.global.game_name == "keep" && settings.global.difficulty_level == -23
 				&& settings.global.map.filename == "keep/path" && settings.global.map.Serialize().ToString() == map, "failed movement parse published partial settings" );
 		}
 		settings.PrepareRuleset( fixture::Source ); GT_ASSERT( fixture::Matches( settings.global ), "movement retry failed" ); GT_OK();

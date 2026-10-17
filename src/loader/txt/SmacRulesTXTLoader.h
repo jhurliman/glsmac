@@ -3,6 +3,7 @@
 #include <string>
 
 #include "game/backend/resource/SmacBaseSquareYield.h"
+#include "game/backend/settings/SmacResourceRules.h"
 #include "game/backend/settings/SmacProductionRules.h"
 #include "game/backend/settings/SmacMovementRules.h"
 #include "game/backend/settings/SmacTechnologyRules.h"
@@ -22,6 +23,11 @@ public:
 	// missing field delimiters or magnitude above 2^32 throw invalid_argument.
 	// Fourth numeric columns, annotations and later rows are not interpreted.
 	static game::backend::resource::smac::BaseSquareRules ParseBaseSquareRules( const std::string& source );
+	// All nine RESOURCEINFO triples plus RULES 2/9/10 and 54/55/56/58.
+	// RULES uses the existing strict 70-row decimal/token policy, independently
+	// of RESOURCEINFO's measured physical-line/prefix/wrap semantics.
+	static game::backend::settings::SmacResourceRules ParseResourceRules( const std::string& source,
+		const game::backend::settings::SmacTechnologyRules& technologies );
 	// Canonical SMAC: 70 positional RULES rows and 71 FACILITIES rows.
 	// Retains only production rules and facility name/cost/maintenance/prerequisite.
 	// Obsolete Free and the effect/AI suffix are not interpreted. No file I/O,

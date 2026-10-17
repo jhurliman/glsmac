@@ -127,8 +127,8 @@ void AddSmacRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 				return source;
 			} );
 			game::backend::settings::GlobalSettings restored; restored.Deserialize( host.global.Serialize() );
-			GT_ASSERT( host.global.IsRulesetLocked() && restored.IsRulesetLocked() && restored.GetSmacBaseSquareRules(), "host rules were not frozen and restored" );
-			const auto& rules = *restored.GetSmacBaseSquareRules();
+			GT_ASSERT( host.global.IsRulesetLocked() && restored.IsRulesetLocked() && restored.GetSmacResourceRules(), "host rules were not frozen and restored" );
+			const auto rules = restored.GetSmacResourceRules()->BaseSquare();
 			GT_ASSERT( Same( rules, row.rules ), "host transport changed resource projection" );
 			GT_ASSERT( *host.global.GetSmacMovementRules() == smac_rules_fixture::Movement()
 				&& *host.global.GetSmacProductionRules() == smac_rules_fixture::Production()

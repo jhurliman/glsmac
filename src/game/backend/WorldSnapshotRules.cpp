@@ -26,7 +26,7 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( !settings.IsRulesetLocked() || ( id != "smac" && id != "smax" ) ) {
 		throw std::runtime_error( "World snapshot requires a frozen gameplay ruleset" );
 	}
-	if ( ( id == "smac" ) != settings.GetSmacBaseSquareRules().has_value()
+	if ( ( id == "smac" ) != settings.GetSmacResourceRules().has_value()
 		|| ( id == "smac" ) != settings.GetSmacProductionRules().has_value()
 		|| ( id == "smac" ) != settings.GetSmacTechnologyRules().has_value() ) {
 		throw std::runtime_error( "World snapshot ruleset and numeric rules do not match" );
@@ -44,6 +44,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	RequireFrozenProfile( settings );
 	const auto& production = settings.GetSmacProductionRules();
 	const auto& technologies = settings.GetSmacTechnologyRules();
+	const auto& rules = settings.GetSmacResourceRules();
+	const auto resource_bytes = rules ? rules->Serialize( *technologies ).ToString() : std::string{};
 	// Validate and encode the entire owned profile before writing any header.
 	const auto production_bytes = production ? production->Serialize().ToString() : std::string{};
 	const auto technology_bytes = technologies ? technologies->Serialize().ToString() : std::string{};
@@ -63,16 +65,12 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	RequireFrameSize( selection_bytes, max_selection_bytes );
 	RequireFrameSize( unit_bytes, settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES );
 	RequireFrameSize( movement_bytes, settings::SmacMovementRules::MAX_WIRE_BYTES );
+	RequireFrameSize( resource_bytes, settings::SmacResourceRules::MAX_WIRE_BYTES );
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
-	const auto& rules = settings.GetSmacBaseSquareRules();
 	buffer.WriteBool( rules.has_value() );
-	if ( rules ) {
-		for ( const auto& row : { rules->base_square, rules->bonus_square, rules->recycling } ) {
-			for ( const auto value : row ) { buffer.WriteInt( value ); }
-		}
-	}
+	if ( rules ) { buffer.WriteString( resource_bytes ); }
 	buffer.WriteBool( production.has_value() );
 	if ( production ) { buffer.WriteString( production_bytes ); }
 	buffer.WriteBool( technologies.has_value() );
@@ -96,22 +94,13 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( ( id != "smac" && id != "smax" ) || id != settings.GetRulesetId() ) {
 		throw std::runtime_error( "World snapshot gameplay ruleset differs from the session" );
 	}
-	const auto& rules = settings.GetSmacBaseSquareRules();
+	const auto& rules = settings.GetSmacResourceRules();
 	if ( buffer.ReadBool() != rules.has_value() ) {
 		throw std::runtime_error( "World snapshot numeric rules presence differs from the session" );
 	}
 	if ( rules ) {
-		for ( const auto& row : { rules->base_square, rules->bonus_square, rules->recycling } ) {
-			for ( const auto expected : row ) {
-				const auto actual = buffer.ReadInt();
-				if ( actual < std::numeric_limits< int32_t >::min() || actual > std::numeric_limits< int32_t >::max() ) {
-					throw std::runtime_error( "World snapshot numeric rule is outside signed int32 range" );
-				}
-				if ( actual != expected ) {
-					throw std::runtime_error( "World snapshot numeric rules differ from the session" );
-				}
-			}
-		}
+		const auto incoming = settings::SmacResourceRules::Deserialize( types::Buffer( buffer.ReadString( settings::SmacResourceRules::MAX_WIRE_BYTES ) ), *settings.GetSmacTechnologyRules() );
+		if ( !( incoming == *rules ) ) { throw std::runtime_error( "World snapshot resource profile differs from the session" ); }
 	}
 	const auto& production = settings.GetSmacProductionRules();
 	if ( buffer.ReadBool() != production.has_value() ) {

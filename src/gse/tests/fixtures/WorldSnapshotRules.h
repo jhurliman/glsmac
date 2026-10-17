@@ -32,13 +32,17 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const std::optional< bool > units_present = std::nullopt,
 	const std::optional< std::string >& units = std::nullopt,
 	const std::optional< bool > movement_present = std::nullopt,
-	const std::optional< std::string >& movement = std::nullopt ) {
+	const std::optional< std::string >& movement = std::nullopt,
+	const std::optional< std::string >& resources = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
 	result.WriteString( id );
 	result.WriteBool( present );
-	if ( present ) { for ( const auto value : values ) { result.WriteInt( value ); } }
+	if ( present ) {
+		if ( version >= 16 ) { result.WriteString( resources ? *resources : smac_rules_fixture::ResourceFrame( values, technologies ) ); }
+		else { for ( const auto value : values ) { result.WriteInt( value ); } }
+	}
 	if ( version >= 4 ) {
 		const auto has_production = production_present.value_or( id == "smac" );
 		result.WriteBool( has_production );
@@ -71,6 +75,32 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	return result;
 }
 
+inline types::Buffer ResourceHeader( const std::string& id, const std::string& resources ) {
+	auto original = Header( id, id == "smac" );
+	original.ReadInt(); original.ReadInt(); original.ReadString(); original.ReadBool();
+	const auto prefix = original.ToString().substr( 0, original.lenr );
+	original.ReadString(); types::Buffer frame; frame.WriteString( resources );
+	return types::Buffer( prefix + frame.ToString() + original.ToString().substr( original.lenr ) );
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidResourceHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	result.emplace_back( "old V15", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
+		game::backend::world_snapshot::rules_marker, 15 ).ToString() );
+	if ( id != "smac" ) { return result; }
+	for ( size_t field = 0; field < 5; ++field ) {
+		auto changed = smac_rules_fixture::Resources();
+		if ( field == 0 ) { changed.rows[ 8 ][ 2 ] = 19; }
+		else if ( field == 1 ) { changed.nutrients_per_citizen = -2; }
+		else if ( field == 2 ) { changed.mine_nutrient_effect = -3; }
+		else { changed.technology_tokens[ 3 ] = field == 3 ? "Tech4" : "Missing"; }
+		result.emplace_back( "late resource field " + std::to_string( field ), ResourceHeader( id, smac_rules_fixture::UncheckedResources( changed ).ToString() ).ToString() );
+	}
+	const auto valid = smac_rules_fixture::UncheckedResources( smac_rules_fixture::Resources() ).ToString();
+	result.emplace_back( "truncated last token", ResourceHeader( id, valid.substr( 0, valid.size() - 1 ) ).ToString() );
+	return result;
+}
+
 struct FrozenFrame {
 	std::string name, prefix, payload;
 	uint32_t limit;
@@ -85,7 +115,7 @@ inline std::vector< FrozenFrame > FrozenFrames( const std::string& id ) {
 	};
 	wire.ReadInt(); wire.ReadInt(); frame( "ruleset", 4 );
 	if ( id != "smac" ) { return result; }
-	wire.ReadBool(); for ( size_t i = 0; i < 9; ++i ) { wire.ReadInt(); }
+	wire.ReadBool(); frame( "resources", game::backend::settings::SmacResourceRules::MAX_WIRE_BYTES );
 	for ( const auto* name : { "production", "technology" } ) { wire.ReadBool(); frame( name, network::Network::MAX_PACKET_BYTES ); }
 	wire.ReadBool(); frame( "world sizes", network::Network::MAX_PACKET_BYTES );
 	// Independently derive the accepted-selection extent from its four fields.
@@ -120,7 +150,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 	// Walk to predefined presence rather than trimming the new movement tail.
 	types::Buffer before_units( header( false ) );
 	before_units.ReadInt(); before_units.ReadInt(); before_units.ReadString(); before_units.ReadBool();
-	for ( size_t i = 0; i < 9; ++i ) { before_units.ReadInt(); }
+	before_units.ReadString();
 	for ( size_t i = 0; i < 2; ++i ) { before_units.ReadBool(); before_units.ReadString(); }
 	before_units.ReadBool(); before_units.ReadString(); before_units.ReadString();
 	before_units.ReadBool(); before_units.ReadString();
@@ -217,7 +247,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidFactionHeader
 	// Stop before faction presence; later versions append additional profiles.
 	types::Buffer before_faction( header( false ) );
 	before_faction.ReadInt(); before_faction.ReadInt(); before_faction.ReadString(); before_faction.ReadBool();
-	for ( size_t i = 0; i < 9; ++i ) { before_faction.ReadInt(); }
+	before_faction.ReadString();
 	for ( size_t i = 0; i < 2; ++i ) { before_faction.ReadBool(); before_faction.ReadString(); }
 	before_faction.ReadBool(); before_faction.ReadString(); before_faction.ReadString();
 	const auto prefix = before_faction.ToString().substr( 0, before_faction.lenr );
@@ -402,7 +432,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidProductionHea
 	// Stop before production presence; later header versions append more fields.
 	types::Buffer before_production( header( false ) );
 	before_production.ReadInt(); before_production.ReadInt(); before_production.ReadString(); before_production.ReadBool();
-	for ( size_t field = 0; field < 9; ++field ) { before_production.ReadInt(); }
+	before_production.ReadString();
 	const auto prefix = before_production.ToString().substr( 0, before_production.lenr );
 	result.emplace_back( "missing production presence", prefix );
 	result.emplace_back( "mistyped production presence", prefix + wrong_type.ToString() );
@@ -473,7 +503,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidTechnologyHea
 	absent.WriteBool( false ); present.WriteBool( true ); wrong_type.WriteInt( 1 );
 	types::Buffer before_technology( header( false ) );
 	before_technology.ReadInt(); before_technology.ReadInt(); before_technology.ReadString(); before_technology.ReadBool();
-	for ( size_t field = 0; field < 9; ++field ) { before_technology.ReadInt(); }
+	before_technology.ReadString();
 	before_technology.ReadBool(); before_technology.ReadString();
 	const auto prefix = before_technology.ToString().substr( 0, before_technology.lenr );
 	result.emplace_back( "missing technology presence", prefix );

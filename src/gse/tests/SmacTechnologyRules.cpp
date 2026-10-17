@@ -195,7 +195,7 @@ void AddSmacTechnologyRulesTests( task::gsetests::GSETests* task ) {
 		auto source = fixture::Source( "alpha.txt" );
 		source.replace( source.find( "Tech88" ), std::string( "Tech88" ).size(), "" );
 		GT_ASSERT( Rejects( [ & ]() { settings.PrepareRuleset( [ & ]( const std::string& ) { return source; } ); } ), "late malformed technology accepted" );
-		GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacBaseSquareRules() && !settings.global.GetSmacProductionRules()
+		GT_ASSERT( !settings.global.IsRulesetLocked() && !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules()
 			&& !settings.global.GetSmacTechnologyRules(), "late technology failure published earlier profiles" );
 		GT_ASSERT( settings.global.GetRulesetId() == "smac" && settings.global.game_name == "preserved" && settings.global.map.filename == "preserved path"
 			&& settings.global.difficulty_level == -17 && settings.global.map.Serialize().ToString() == map_before, "failed read changed unrelated settings" );

@@ -48,7 +48,7 @@ void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
 			const auto original = fixture::WorldSizeSource(); source.replace( source.find( original ), original.size(), table );
 			GlobalSettings host; host.SelectRuleset( "smac" );
 			GT_ASSERT( Rejects( [ & ]() { host.InitializeHostRules( [ & ]( const std::string& ) { return source; } ); } ), "host published an unselectable preset" );
-			GT_ASSERT( !host.IsRulesetLocked() && !host.GetSmacBaseSquareRules() && !host.GetSmacProductionRules() && !host.GetSmacTechnologyRules() && !host.GetSmacWorldSizeRules() && !host.map.GetSmacWorldSize(), "rejected preset partially published host state" );
+			GT_ASSERT( !host.IsRulesetLocked() && !host.GetSmacResourceRules() && !host.GetSmacProductionRules() && !host.GetSmacTechnologyRules() && !host.GetSmacWorldSizeRules() && !host.map.GetSmacWorldSize(), "rejected preset partially published host state" );
 			GlobalSettings peer;
 			GT_ASSERT( Rejects( [ & ]() { peer.Deserialize( fixture::Payload( "smac", true, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, {}, {}, wire.ToString() ) ); } ), "peer published an unselectable preset" );
 			GT_ASSERT( peer.GetRulesetId() == "unselected" && !peer.IsRulesetLocked() && !peer.GetSmacWorldSizeRules(), "rejected wire catalog partially published peer state" );

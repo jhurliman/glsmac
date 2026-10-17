@@ -1,5 +1,10 @@
 # SMAC RESOURCEINFO physical text
 
+This records the original parser-only change. The later
+[full frozen resource profile](smac-resource-rules.md) retains all nine triples
+and versions the settings/world frames; the physical-line conversion below
+is unchanged.
+
 `SmacRulesTXTLoader::ParseBaseSquareRules` now consumes nine physical lines
 after the unique `#RESOURCEINFO` header. Blank lines and semicolon-only comment
 lines occupy a row and contribute zero values. The Base Square, Bonus Square
@@ -57,6 +62,7 @@ the retained original report is
 
 The checked-in `SmacResourceText.h` contains only 37 self-authored text inputs
 and literal projections: the nine selected values and 592 expected triples.
+The full-profile follow-up also retains all 27 N/M/E values per case.
 `tools/reference/project_resourceinfo_cases.py` verifies the public fixture
 hash and query order before projecting it. It neither imports an oracle nor
 runs the original executable. The installed text is not copied into Git.

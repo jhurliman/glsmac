@@ -9,7 +9,7 @@
 
 #include "game/backend/rules/default/Default.h" // only default rules for now
 #include "game/backend/Account.h"
-#include "game/backend/resource/SmacBaseSquareYield.h"
+#include "SmacResourceRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
@@ -100,7 +100,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void SelectRuleset( const std::string& id );
 	using RulesSource = std::function< std::string( const std::string& filename ) >;
 	void InitializeHostRules( const RulesSource& read_source );
-	const std::optional< resource::smac::BaseSquareRules >& GetSmacBaseSquareRules() const;
+	const std::optional< SmacResourceRules >& GetSmacResourceRules() const;
 	const std::optional< SmacProductionRules >& GetSmacProductionRules() const;
 	const std::optional< SmacTechnologyRules >& GetSmacTechnologyRules() const;
 	const std::optional< SmacWorldSizeRules >& GetSmacWorldSizeRules() const;
@@ -136,7 +136,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 private:
 	ruleset_t m_ruleset = RULESET_UNSELECTED;
 	bool m_ruleset_locked = false; // lifecycle guard, not saved state
-	std::optional< resource::smac::BaseSquareRules > m_smac_base_square_rules;
+	std::optional< SmacResourceRules > m_smac_resource_rules;
 	std::optional< SmacProductionRules > m_smac_production_rules;
 	std::optional< SmacTechnologyRules > m_smac_technology_rules;
 	std::optional< SmacWorldSizeRules > m_smac_world_size_rules;

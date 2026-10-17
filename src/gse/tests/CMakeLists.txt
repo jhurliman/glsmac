@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
+	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Value.cpp
 	${PWD}/Faction.cpp

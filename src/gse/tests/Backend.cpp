@@ -148,6 +148,35 @@ public:
 		m_game.m_pending_frontend_requests = nullptr;
 	}
 
+ // These packet/lifetime fixtures begin a real seven-slot client handshake.
+ // They do not exercise the local default-game setup that populated old fixture
+ // Players, so retire those before staging the initial wire roster.
+ void StageClientRoster(game::backend::connection::Client* client, const std::string& local_name = "Local") {
+  using namespace game::backend;
+  ASSERT(m_gse->GetGCSpace()->IsAccumulating(), "fixture staging requires owner exclusion");
+  m_state->RetireRosterEpoch();
+  for(auto* player:m_state->m_players) { DELETE(player); }
+  m_state->m_players.clear(); m_state->m_slots->Clear(); m_state->m_cid_slots.clear(); m_state->EnsureRosterEpoch();
+  m_game.m_player=nullptr; m_game.m_slot=nullptr;
+  roster::RosterRecord roster; roster.slots.resize(7,{roster::SlotState::Open,std::nullopt,0,{}});
+  roster.slots[0]={roster::SlotState::Occupied,roster::PlayerRecord{"Host",roster::Role::Host,std::nullopt,"Citizen"},0,"fixture-host"};
+  roster.slots[1]={roster::SlotState::Occupied,roster::PlayerRecord{local_name,roster::Role::Player,std::nullopt,"Citizen"},0,m_state->m_settings.local.account.GetGSID()};
+  roster.slots[2]={roster::SlotState::Occupied,roster::PlayerRecord{"Peer",roster::Role::Player,std::nullopt,"Citizen"},0,"fixture-peer"};
+  types::Packet packet(types::Packet::PT_PLAYERS); packet.data.num=1; packet.data.str=roster::EncodeRoster(roster,State::ROSTER_LIMITS);
+  network::Event event; event.type=network::Event::ET_PACKET; event.data.packet_data=packet.Serialize().ToString(); client->ProcessEvent(event);
+ }
+ void PublishClientRoster(game::backend::connection::Client* client) {
+  using namespace game::backend;
+  StageClientRoster(client);
+  if(m_state->m_settings.global.GetRulesetId()=="unselected") { m_state->m_settings.global.SelectRuleset("smax"); m_state->m_settings.global.InitializeHostRules(smac_rules_fixture::Source); }
+  m_state->m_settings.global.Initialize();
+  types::Packet phase(types::Packet::PT_GAME_STATE); phase.udata.game_state.state=connection::Connection::GS_LOBBY;
+  network::Event event; event.type=network::Event::ET_PACKET; event.data.packet_data=phase.Serialize().ToString(); client->ProcessEvent(event);
+  types::Packet settings(types::Packet::PT_GLOBAL_SETTINGS); settings.data.str=m_state->Serialize().ToString();
+  event.data.packet_data=settings.Serialize().ToString(); client->ProcessEvent(event);
+  ASSERT(client->HasGlobalSettings() && m_state->m_slots->GetCount()==7,"fixture real handshake failed");
+  m_game.m_slot=&m_state->m_slots->GetSlot(1); m_game.m_player=m_game.m_slot->GetPlayer();
+ }
 	game::backend::Game* GetGame() {
 		return &m_game;
 	}
@@ -170,7 +199,7 @@ public:
 		class PlayerProbe final : public Player {
 		public:
 			PlayerProbe( Gate& gate, std::atomic< bool >& pause )
-				: Player( "Leaving player", Player::PR_PLAYER, nullptr, "" ), gate( gate ), pause( pause ) {}
+				: Player( "Leaving player", Player::PR_PLAYER, nullptr, "Citizen" ), gate( gate ), pause( pause ) {}
 			~PlayerProbe() override { if ( pause ) { gate.Enter(); } }
 		private:
 			Gate& gate; std::atomic< bool >& pause;
@@ -251,8 +280,8 @@ public:
 			m_state->AddPlayer( player );
 			auto& slot = m_state->m_slots->GetSlot( 1 ); slot.SetPlayer( player, 17, "fixture" ); slot.SetLinkedGSID( "leaving-gsid" ); player->Connect();
 			m_state->AddCIDSlot( 17, 1 ); if ( close_slot ) { slot.SetCloseAfterClear(); }
-			NEWV( survivor, Player, "Remaining player", Player::PR_PLAYER, nullptr, "" );
-			m_state->AddPlayer( survivor ); m_state->m_slots->GetSlot( 2 ).SetPlayer( survivor, 23, "fixture" ); survivor->Connect(); m_state->AddCIDSlot( 23, 2 );
+			NEWV( survivor, Player, "Remaining player", Player::PR_PLAYER, nullptr, "Citizen" );
+			m_state->AddPlayer( survivor ); m_state->m_slots->GetSlot( 2 ).SetPlayer( survivor, 23, "fixture" ); survivor->Connect(); m_state->m_slots->GetSlot(2).SetLinkedGSID("remaining-gsid"); m_state->AddCIDSlot( 23, 2 );
 			player_wrapper = player->Wrap( GSE_CALL ); ctx->CreateConst( "server_leaving_player", player_wrapper, si, ep );
 			player->Depend( &player_observer ); observing = true;
 			m_gse->AddRootObject( &root ); rooted = true;
@@ -261,7 +290,7 @@ public:
 				N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( copy, event, "player", Player );
 				++leave_calls;
 				copy_fields_ok = copy != player && copy->GetPlayerName() == "Leaving player" && copy->GetRole() == Player::PR_PLAYER &&
-					( running ? copy->GetSlot() != nullptr && !copy->IsConnected() : copy->GetSlot() == nullptr );
+					( copy->GetSlot() == nullptr && !copy->IsConnected() );
 				copy_wrapper = copy->Wrap( GSE_CALL ); ctx->CreateConst( "server_leave_copy", copy_wrapper, si, ep ); copy->Depend( &copy_observer );
 				return VALUE( value::Undefined );
 			} ) );
@@ -278,7 +307,7 @@ public:
 			if ( !running ) {
 				GT_ASSERT( destruction_gate.Wait(), "real Server event did not reach final Player destruction" );
 				GT_ASSERT( leave_calls == 0 && !player_observer.retired, "notification ran early or Player base destructor was entered" );
-				// The real event has already queued player_leave. Pausing the test
+				// The atomic commit has published its notification roots. Pausing the test
 				// derived destructor keeps the base Player/wrappers alive in the old
 				// code control while testing the actual final retirement boundary.
 				collector = std::thread( [ & ]() {
@@ -538,14 +567,13 @@ public:
 		};
 		types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS );
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
-			NEWV( host, Player, "Host", Player::PR_SINGLE, nullptr, "" );
-			m_state->AddPlayer( host ); m_state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+
 			m_state->m_settings.global.SelectRuleset( "smax" );
 			wrapper = old->Wrap( GSE_CALL ); color_wrapper = old->m_colors.text.Wrap( GSE_CALL );
 			ctx->CreateConst( "retired_faction", wrapper, si, ep ); ctx->CreateConst( "retired_faction_color", color_wrapper, si, ep );
 			old->Depend( &observer ); observing = true;
 			m_gse->AddRootObject( &root ); rooted = true;
-			client = new Client( gc_space, &m_state->m_settings.local ); m_state->SetConnection( client );
+			client = new Client( gc_space, &m_state->m_settings.local ); m_state->SetConnection( client ); StageClientRoster(client);
 			client->m_on_global_settings_update = [ & ]() {
 				++notifications;
 				if ( native_packet ) {
@@ -1932,9 +1960,9 @@ public:
 			m_state->m_settings.global.InitializeHostRules( smac_rules_fixture::Source );
 			m_state->m_settings.local.remote_address = "fixture";
 			client = new Client( gc_space, &m_state->m_settings.local, &transport );
-			m_state->SetConnection( client ); client->Connect(); transport.Iterate(); m_state->Iterate(); client->ServerReady();
+			m_state->SetConnection( client ); client->Connect(); transport.Iterate(); m_state->Iterate(); PublishClientRoster(client); client->ServerReady();
 			m_game.On( GSE_CALL, "message", NATIVE_CALL( this, &messages, &message_saw_roster ) {
-				++messages; message_saw_roster = m_state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Replacement";
+				++messages; message_saw_roster = m_state->m_slots->GetSlot( 0 ).HasPlayerFlag(slot::PF_READY);
 				return VALUE( value::Undefined );
 			} ) );
 			m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
@@ -1960,9 +1988,8 @@ public:
 			types::Packet chunk( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
 			chunk.data.str = invalid.ToString(); chunk.udata.download.offset = 0; chunk.udata.download.size = chunk.data.str.size(); transport.Queue( chunk );
 			message.data.str = "after rejected download"; transport.Queue( message );
-			Player replacement( "Replacement", Player::PR_HOST, nullptr, "" );
-			slot::Slots slots( m_state ); slots.Resize( 3 ); slots.GetSlot( 0 ).SetPlayer( &replacement, 0, "" );
-			types::Packet roster( types::Packet::PT_PLAYERS ); roster.data.num = 0; roster.data.str = slots.Serialize().ToString(); transport.Queue( roster );
+            auto refreshed=m_state->ExportRoster(); refreshed.slots[0].flags=slot::PF_READY;
+            types::Packet roster(types::Packet::PT_PLAYERS); roster.data.num=0; roster.data.str=roster::EncodeRoster(refreshed,State::ROSTER_LIMITS); transport.Queue(roster);
 			GT_OK();
 		} );
 		util::FinallyGuard cleanup( [ & ]() {
@@ -2669,6 +2696,7 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 				client->Connect();
 				network.Iterate();
 				state->Iterate();
+                fixture.PublishClientRoster(client);
 				size_t roster_updates = 0, disconnects = 0;
 				util::FinallyGuard finish_connection( [ & ]() {
 					if ( state->GetConnection() ) {
@@ -2688,13 +2716,8 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 					event.type = network::Event::ET_DISCONNECT;
 				}
 				else {
-					Player replacement( "Replacement", Player::PR_HOST, nullptr, "" );
-					slot::Slots slots( state );
-					slots.Resize( 3 );
-					slots.GetSlot( 0 ).SetPlayer( &replacement, 0, "" );
-					types::Packet packet( types::Packet::PT_PLAYERS );
-					packet.data.num = 0; // full roster update, not initial slot assignment
-					packet.data.str = slots.Serialize().ToString();
+                    auto refreshed=state->ExportRoster(); refreshed.slots[0].player->name="Replacement";
+                    types::Packet packet(types::Packet::PT_PLAYERS); packet.data.num=0; packet.data.str=roster::EncodeRoster(refreshed,State::ROSTER_LIMITS);
 					event.type = network::Event::ET_PACKET;
 					event.data.packet_data = packet.Serialize().ToString();
 				}
@@ -2734,7 +2757,7 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 						GT_ASSERT( disconnects == 1 && !state->GetConnection() && state->m_slots->GetCount() == 0, "ordinary state iteration did not apply disconnect cleanup" );
 					}
 					else {
-						GT_ASSERT( roster_updates == 1 && state->m_slots->GetSlot( 0 ).GetPlayer() != original && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Replacement", "ordinary state iteration did not apply the queued roster" );
+						GT_ASSERT( roster_updates == 1 && state->m_slots->GetSlot( 0 ).GetPlayer() == original && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Replacement", "ordinary state iteration did not apply the queued roster" );
 						state->Iterate();
 						GT_ASSERT( roster_updates == 1, "queued roster was applied more than once" );
 					}
@@ -4829,17 +4852,8 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			auto* const state = fixture.GetGame()->GetState();
 			auto* client = new RulesetClient( gc_space, &state->m_settings.local );
 			state->SetConnection( client );
-			// A null faction keeps this allocation test independent of the
-			// existing detached Faction ownership in Player::Deserialize.
-			Player source( "Decoded player", Player::PR_HOST, nullptr, "" );
-			slot::Slots slots( state );
-			slots.Resize( 1 );
-			slots.GetSlot( 0 ).SetPlayer( &source, 0, "" );
-			types::Packet packet( types::Packet::PT_PLAYERS );
-			packet.data.num = 0;
-			packet.data.str = slots.Serialize().ToString();
-			client->Receive( packet );
-			GT_ASSERT( state->m_slots->GetCount() == 1 && state->m_slots->GetSlot( 0 ).GetPlayer()->GetPlayerName() == "Decoded player", "actual Client roster decode did not publish player" );
+            fixture.PublishClientRoster(client);
+            GT_ASSERT(state->m_slots->GetCount()==7 && state->m_slots->GetSlot(1).GetPlayer()->GetPlayerName()=="Local", "actual Client roster decode did not publish player");
 			state->Reset();
 			GT_ASSERT( state->m_slots->GetCount() == 0 && !state->GetConnection(), "actual State reset did not retire decoded roster" );
 			GT_OK();
@@ -4986,13 +5000,10 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 					auto* state = destination.GetGame()->GetState();
 					state->m_settings.local.network_role = game::backend::settings::LocalSettings::NR_CLIENT;
 					state->m_settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "client tried reading local alpha.txt" ); } );
-					if ( state->m_slots->GetSlot( 0 ).GetState() != slot::Slot::SS_PLAYER ) {
-						NEWV( host, Player, "Host", Player::PR_HOST, nullptr, "Transcend" );
-						state->AddPlayer( host );
-						state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
-					}
+
 					auto* client = new RulesetClient( gc_space, &state->m_settings.local );
 					state->SetConnection( client );
+                    destination.StageClientRoster(client);
 					util::FinallyGuard cleanup( [ & ]() {
 						client->ResetHandlers();
 						state->DetachConnection();
@@ -5131,11 +5142,10 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 				auto* state = destination.GetGame()->GetState();
 				state->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT;
 				state->m_settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "client read local file" ); } );
-				NEWV( host, Player, "Host", Player::PR_HOST, nullptr, "Transcend" );
-				state->AddPlayer( host );
-				state->m_slots->GetSlot( 0 ).SetPlayer( host, 0, "" );
+
 				auto* client = new RulesetClient( gc_space, &state->m_settings.local );
 				state->SetConnection( client );
+                destination.StageClientRoster(client);
 				util::FinallyGuard cleanup( [ & ]() { client->ResetHandlers(); state->DetachConnection(); } );
 				size_t callbacks = 0, settings_updates = 0;
 				client->m_on_game_state_change = [ & ]( connection::Connection::game_state_t ) { ++callbacks; };

@@ -40,6 +40,7 @@
 #include "Runner.h"
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
+#include "SmacUnitSupport.h"
 #include "SmacMineralCostFactor.h"
 #include "SmacConventionalStats.h"
 
@@ -241,6 +242,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
+		tests::AddSmacUnitSupportTests( task );
 	}
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
 		tests::AddScriptsTests( task );

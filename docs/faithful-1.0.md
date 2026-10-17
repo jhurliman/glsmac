@@ -387,16 +387,20 @@ extreme social/resource inputs or a complete base economy.
 1. The conventional bottom-bar/preview now consumes checked allowance and the
    definition's morale name, refreshing existing list labels. Initialized
    Infantry presentation, Early-to-ready startup, selected Rover and Gaian HQ
-   movement, and remote-record independence are integrated. Queue an actual
+   movement, and remote-record independence are integrated. Ordinary flat,
+   matching road and matching tube movement now admits distant bases within
+   its measured boundary. Queue an actual
    selected starting unit only where the startup and movement route admit its
-   terrain. Ordinary moves away from HQ, native encounters, repair and hostile
-   interactions still need their callers. Destination fungus without an admitted
+   terrain. Broader terrain, native encounters, repair and hostile interactions
+   still need their callers. Retain nearest-base and placement history before
+   extending encounter admission. Destination fungus without an admitted
    nearby HQ is now rejected: the old empty-world fixture supplied a zero
    nearest-base distance and did not establish general encounter behavior.
 2. Connect the canonical evaluating-base query to real worker intake using the
-   integrated complete resource profile and owned fungal capability producer.
-   Retain the specialist catalog, worker choices,
-   base options and resource modifiers. The seven-faction first-worker and reset
+   integrated complete resource profile, fungal capability producer, specialist
+   catalog and global resource modifier state. Add canonical per-base context
+   and saved map-resource semantics while preserving worker choices and
+   specialist identity. The seven-faction first-worker and reset
    compositions supply the next acceptance cases. Preserve valid specialist
    allocations through recalculation and the measured manual-handler order;
    keep map-generation policy distinct from original generator equivalence.
@@ -406,9 +410,11 @@ extreme social/resource inputs or a complete base economy.
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
 
-The [UI/fungal checkpoint](validation/unit-ui-fungal-2026-10-17.md) passes the
-full Windows and Linux sanitizer suites, with the same 101 allocation-tracked
-groups on both. Default spawning and live resource callbacks remain unchanged.
+The [resource-context checkpoint](validation/resource-context-2026-10-17.md)
+passes the full Windows, Linux sanitizer and native macOS suites, with the same
+146 allocation-tracked groups on Windows and Linux and zero failures in the
+full 339-unit correctness scan. Default spawning and live resource callbacks
+remain unchanged.
 
 The host/world profile and startup-design foundations are implemented; focused
 publication and review remain separate from integration. Review quota delays

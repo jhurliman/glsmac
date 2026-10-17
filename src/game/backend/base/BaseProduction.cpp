@@ -13,6 +13,8 @@
 #include "gc/Space.h"
 #include <algorithm>
 #include <stdexcept>
+#include <tuple>
+#include <type_traits>
 
 namespace game::backend::base {
 namespace {
@@ -20,6 +22,11 @@ int32_t Checked( int64_t value ) {
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::overflow_error( "Production accounting exceeds signed32" ); }
 	return static_cast< int32_t >( value );
 }
+}
+
+const std::optional<SmacBaseUpkeepCache>& Base::GetSmacUpkeepCache() const {
+	GetSmacResourceContext();
+	return m_smac_upkeep_cache;
 }
 
 Base::SmacProductionResult Base::ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
@@ -30,8 +37,64 @@ Base::SmacProductionResult Base::ProcessSmacUpkeep( GSE_CALLABLE, const SmacAllo
 	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode ) {
 	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, mode, true );
 }
+Base::SmacProductionResult Base::BeginSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
+	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode ) {
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, mode, true, true );
+}
+
+void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
+	const auto context = GetSmacResourceContext();
+	if ( !m_allocation || !m_production || !m_production->queue || m_pops.size() != 1
+		|| m_production->current_item.kind != ProductionItemKind::Unit || !m_production->current_item.smac_source_id
+		|| pause.first_calculation.nutrients.stored_before != m_accumulated_nutrients
+		|| pause.first_calculation.nutrients.normalized_stored < 0
+		|| ( pause.morale_mode != unit::SmacMoraleMode::Mode0 && pause.morale_mode != unit::SmacMoraleMode::Mode1 )
+		|| unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ) <= 1
+		|| ( context.GovernorActive() && ( context.governor_options & 1u ) ) ) {
+		THROW( "Colony continuation no longer matches its size-one question" );
+	}
+	m_game->RequireSmacLocalHumanOwner( m_owner );
+	m_game->ValidateSmacProductionState( m_owner, *m_production );
+	const unit::ConventionalUnitState identity{ *m_production->current_item.smac_source_id, context.owner_simulation_id,
+		1, 0, 0, false, unit::ConventionalUnitState::Home::Base, pause.morale_mode, m_id };
+	if ( m_game->ResolveConventionalUnit( identity, m_owner ).package != unit::ConventionalUnitContext::Package::Colony
+		|| m_production->minerals < m_game->GetSmacProductionCost( m_owner, m_production->current_item ) ) {
+		THROW( "Colony continuation lost its completed owned target" );
+	}
+	// A saved question belongs to this exact first pass. Read-only validation
+	// never replaces its retained result or posts its mineral surplus again.
+	const auto actual = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &*m_allocation );
+	const auto& expected = pause.first_calculation;
+	const auto same = []( const SmacBaseResourceCalculation& a, const SmacBaseResourceCalculation& b ) {
+		return a.raw_intake == b.raw_intake
+			&& std::tie( a.nutrients.intake, a.nutrients.demand, a.nutrients.surplus, a.nutrients.stored_before, a.nutrients.normalized_stored,
+				a.minerals.multiplier_steps, a.minerals.intake, a.minerals.demand, a.minerals.surplus, a.minerals.pre_orbital_surplus )
+			== std::tie( b.nutrients.intake, b.nutrients.demand, b.nutrients.surplus, b.nutrients.stored_before, b.nutrients.normalized_stored,
+				b.minerals.multiplier_steps, b.minerals.intake, b.minerals.demand, b.minerals.surplus, b.minerals.pre_orbital_surplus );
+	};
+	if ( !same( actual, expected ) ) { THROW( "Colony continuation resource inputs changed while suspended" ); }
+}
+
+Base::SmacProductionResult Base::ResumeSmacColonyUpkeep( GSE_CALLABLE, const SmacColonyUpkeepPause& pause,
+	SmacColonyChoice choice, const SmacAllocationRoles& roles, const std::function< unit::Def*( int32_t ) >& definition ) {
+	if ( choice != SmacColonyChoice::Delay && choice != SmacColonyChoice::Screen ) {
+		THROW( "Colony acceptance requires its distinct abandonment provider" );
+	}
+	ValidateSmacColonyPause( pause );
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, pause.morale_mode, true, false, &pause );
+}
+
+Base::SmacProductionResult Base::ResumeSmacAbandonmentTail( GSE_CALLABLE, const SmacBaseUpkeepCache& retained,
+	const SmacAllocationRoles& roles, unit::SmacMoraleMode mode ) {
+	if ( !GetSmacUpkeepCache() ) { THROW( "Abandonment successor has no retained calculation" ); }
+	// The manager returns this owned cache with its authenticated successor ID.
+	// Compaction reaches population directly: no fresh mineral production pass.
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, {}, mode, true, false, nullptr, &retained );
+}
+
 Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
-	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, const bool population_step ) {
+	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, const bool population_step,
+	const bool allow_colony_pause, const SmacColonyUpkeepPause* pause, const SmacBaseUpkeepCache* retained ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "Production requires its owning accumulation" ); }
 	m_game->GetBM()->RequireSmacWorkerRecalculation();
@@ -45,13 +108,13 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		THROW( "Production completion for this target kind is not yet connected" );
 	}
 	Checked( production.minerals ); Checked( production.baseline_minerals ); Checked( m_accumulated_nutrients );
-	auto allocation = CalculateSmacWorkers( *m_allocation, context, SmacBaseResourcePhase::Upkeep );
-	SmacProductionResult result{ CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation ), {}, false };
+	auto allocation = pause || retained ? *m_allocation : CalculateSmacWorkers( *m_allocation, context, SmacBaseResourcePhase::Upkeep );
+	SmacProductionResult result{ pause ? pause->first_calculation : retained ? retained->calculation : CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation ), {}, false };
 	const auto& resources = result.first_calculation;
-	auto support = m_game->CalculateCanonicalUnitSupport( *this, population, nullptr );
+	auto support = retained ? retained->support : m_game->CalculateCanonicalUnitSupport( *this, population, nullptr );
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
 	std::optional< unit::UnitManager::PreparedConventionalRemoval > removal;
-	if ( resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
+	if ( !pause && !retained && resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
 		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
 		}
@@ -70,6 +133,16 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 					// Stored easy difficulty bypasses this check. Production
 					// management (0x1) is independent of citizen management.
 					if ( context.GovernorActive() && ( context.governor_options & 0x1u ) ) { complete = false; }
+					else if ( allow_colony_pause ) {
+						result.colony_pause = SmacColonyUpkeepPause{ resources, mode };
+						// Publish only the question prefix: posted minerals and repaired
+						// workers, with the old baseline and food still authoritative.
+						auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, m_accumulated_nutrients );
+						std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{resources,support}};
+						static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
+						prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
+						return result;
+					}
 					else { THROW( "Size-one Colony completion requires an explicit player choice" ); }
 				}
 			}
@@ -99,7 +172,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	// Ordinary unmanaged human secondary production leaves the selected target.
 	production.baseline_item = production.current_item;
 	production.baseline_minerals = production.minerals;
-	auto food = resources.nutrients.normalized_stored;
+	auto food = retained ? m_accumulated_nutrients : resources.nutrients.normalized_stored;
 	if ( population_step ) {
 		const auto map_type = m_game->GetState()->m_settings.global.map.type;
 		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
@@ -163,16 +236,19 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		// The outer forced pass always uses the resulting population and newborn
 		// home support. It normalizes food but never posts minerals or collects
 		// food again. Surviving Pop nodes are still untouched during these reads.
-		const auto remaining_support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn, result.removed_units ).mineral_support;
+		support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn, result.removed_units );
+		const auto remaining_support = support.mineral_support;
 		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, remaining_support );
 		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support );
 		food = result.final_calculation->nutrients.normalized_stored;
 	}
+	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{result.final_calculation.value_or(result.first_calculation),support}};
+	static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population );
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
-	prepared.Commit(); prepared.Finish();
+	prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
 	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
 	if ( removal ) { removal->Notify( GSE_CALL ); }
 	return result;

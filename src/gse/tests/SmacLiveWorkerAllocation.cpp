@@ -714,6 +714,65 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			} ); GT_ASSERT( error.empty(), "governor options " + std::to_string( options ) + ": " + error );
 		} GT_OK();
 	} );
+	task->AddTest( "SMAC Colony question posts minerals once and Delay resumes the actual event tail", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( ColonyChoiceSource, "GAIANS" );
+		fixture.ResourceState([](auto& state){state.economy.at(1).rates={0,0};});
+		int64_t request_id=0; size_t next_unit=0; bool obsolete_command=false;
+		const auto prefix=fixture.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+			std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
+			fixture.BasePresentationRoles(roles);SelectionPresentations(fixture);
+			auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+			const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+			base->SetProductionState(GSE_CALL,ProductionState{target,27,target,77,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(0);
+			next_unit=game::backend::unit::Unit::GetNextId();fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete_command=true;});
+			fixture.BeginColonyChoice(GSE_CALL,base->m_id);
+			GT_ASSERT(base->GetProductionState()->minerals==30 && base->GetProductionState()->baseline_minerals==77
+				&& base->GetAccumulatedNutrients()==0 && base->m_pops.size()==1 && game::backend::unit::Unit::GetNextId()==next_unit,
+				"question crossed the old baseline/food or manufactured before an answer");
+			const auto& cache=base->GetSmacUpkeepCache();
+			GT_ASSERT(cache && cache->calculation.nutrients.surplus==1 && cache->calculation.minerals.surplus==3,"question did not retain its actual first pass");
+			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
+			request_id=static_cast<value::Int*>(pending->Get("request_id"))->value;
+			GT_ASSERT(static_cast<value::Int*>(pending->Get("base_id"))->value==701
+				&& static_cast<value::Int*>(pending->Get("owner_slot"))->value==0,"question did not expose authenticated Base/owner");
+			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});})
+				&& Rejects([&]{game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request_id)},{"choice",VALUE(value::String,,"cancel")}});}),
+				"pending question admitted unrelated mutation or implicit cancellation");
+			for(int i=0;i<2;++i){game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request_id)},{"choice",VALUE(value::String,,"delay")}});}
+			GT_OK();
+		});GT_ASSERT(prefix.empty(),"Colony prefix: "+prefix);
+		fixture.DrainEvents(); // outside the source accumulation, through actual event dispatch
+		return fixture.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+			GT_ASSERT(!obsolete_command && base->GetProductionState()->minerals==30 && base->GetProductionState()->baseline_minerals==30
+				&& base->GetAccumulatedNutrients()==1 && base->m_pops.size()==1 && game::backend::unit::Unit::GetNextId()==next_unit,
+				"Delay or duplicate answer reposted minerals/food or executed an obsolete command");
+			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony")->type==VT_NULL,"Delay left its request live");
+			GT_ASSERT(base->GetSmacUpkeepCache()->calculation.nutrients.stored_before==1,"final resource pass did not replace prefix cache");GT_OK();
+		});
+	} );
+	task->AddTest( "SMAC Colony retained calculation changes only at actual calculation publication", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+		return fixture.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+			GT_ASSERT(!base->GetSmacUpkeepCache(),"supplied allocation fabricated calculation history");
+			(void)base->PrepareSmacResourceCalculation();
+			GT_ASSERT(!base->GetSmacUpkeepCache(),"read-only resource query fabricated calculation history");
+			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+			const auto before=*base->GetSmacUpkeepCache();
+			GT_ASSERT(before.calculation.nutrients.surplus==1 && before.calculation.minerals.surplus==3,"actual allocation did not retain forest result");
+			game->GetMap()->GetTile(4,2)->terraforming=0;
+			const auto fresh=base->PrepareSmacResourceCalculation();
+			GT_ASSERT(fresh.nutrients.surplus==0 && base->GetSmacUpkeepCache()->calculation.nutrients.surplus==1,
+				"query or terrain edit replaced the retained successor surplus");
+			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+			GT_ASSERT(base->GetSmacUpkeepCache()->calculation.nutrients.surplus==0,"actual later calculation did not replace retained surplus");GT_OK();
+		});
+	} );
 	task->AddTest( "SMAC Colony explicit choice and wrong presentation reject before publication", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

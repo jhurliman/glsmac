@@ -595,10 +595,10 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false)) {
+	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args,m_slot_num,false)) {
 		AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args));return;
 	}
-	if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
+	if(m_canonical_continuation) {THROW("Canonical turn awaits a choice");}
 	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
@@ -937,6 +937,10 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_pending_smac_colony",
+			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacColony(GSE_CALL);})
+		},
+		{
 			"get_pending_smac_research",
 			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacResearch(GSE_CALL);})
 		},
@@ -949,11 +953,11 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
-				if(HandleSmacResearchEvent(GSE_CALL,name,args->value,m_slot_num,false)) {
+				if(HandleSmacResearchEvent(GSE_CALL,name,args->value,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args->value,m_slot_num,false)) {
 					AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args->value));
 					return VALUE(gse::value::Undefined);
 				}
-				if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
+				if(m_canonical_continuation) {THROW("Canonical turn awaits a choice");}
 				if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
@@ -1858,6 +1862,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 					WithRW([&]{HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
 					continue;
 				}
+				if(event->GetSource()==event::Event::ES_LOCAL
+					&& HandleSmacColonyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+					WithRW([&]{HandleSmacColonyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
+					continue;
+				}
 				// Inputs accepted before the pause cannot run against a later resumed
 				// state, even if a research answer in this same batch finishes upkeep.
 				if(encountered_pause) {continue;}
@@ -2021,7 +2030,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 
 void Game::CheckRW( GSE_CALLABLE ) const {
 	if (m_canonical_turn_failed) { GSE_ERROR(gse::EC.GAME_ERROR,"Canonical transition failed; this world awaits cleanup"); }
-	if(m_canonical_continuation && !m_canonical_turn_in_progress) {GSE_ERROR(gse::EC.GAME_ERROR,"Canonical turn awaits a research choice");}
+	if(m_canonical_continuation && !m_canonical_turn_in_progress) {GSE_ERROR(gse::EC.GAME_ERROR,"Canonical turn awaits a choice");}
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
@@ -3072,7 +3081,7 @@ void Game::ResetGame() {
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
-		m_canonical_continuation.reset();m_research_request.reset();
+		m_canonical_continuation.reset();m_research_request.reset();m_colony_request.reset();
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

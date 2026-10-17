@@ -51,6 +51,7 @@ public:
 	const std::vector< game::FrontendRequest >& Updates();
 	const std::vector< game::FrontendRequest >& QueuedFrontendRequests() const;
 	void PrepareBaseCallbacks();
+	void BeginColonyChoice( GSE_CALLABLE, size_t base_id );
 	std::string Snapshot() const;
 	void Restore( GSE_CALLABLE, const std::string& snapshot, bool no_current_simulation = false );
 	void RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start );

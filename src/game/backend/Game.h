@@ -32,6 +32,7 @@
 #include "unit/ConventionalUnitState.h"
 #include "base/ProductionState.h"
 #include "base/SmacBaseEnergy.h"
+#include "base/SmacColonyContinuation.h"
 #include "State.h"
 
 // TODO: remove those
@@ -459,14 +460,25 @@ private:
 		std::vector<int32_t> choices;
 	};
 	struct CanonicalTurnContinuation {
-		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit };
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony };
 		size_t turn, owner_index=0, base_index=0;
 		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
 		Stage stage=Stage::Base;
 		std::optional<base::SmacBaseEnergyCalculation> energy;
+		std::optional<base::SmacColonyUpkeepPause> colony;
+		std::optional<size_t> screen_base;
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
 	std::optional<CanonicalResearchRequest> m_research_request;
+	struct CanonicalColonyRequest { int64_t id; int32_t owner; size_t base, turn; };
+	std::optional<CanonicalColonyRequest> m_colony_request;
+	int64_t m_next_colony_request=0; // never reused by ResetGame
+	bool BeginCanonicalBaseUpkeep(GSE_CALLABLE);
+	void RequestCanonicalColony(GSE_CALLABLE);
+	void ValidateCanonicalColony() const;
+	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
+	void NotifyCanonicalColony(GSE_CALLABLE);
 	int64_t m_next_research_request=0; // never reused by ResetGame
 	void ContinueCanonicalTurn(GSE_CALLABLE);
 	bool ContinueCanonicalResearch(GSE_CALLABLE);

@@ -268,6 +268,17 @@ public:
 		} );
 		if ( !error.empty() ) { throw std::runtime_error( error ); }
 	}
+	void BeginColonyChoice( GSE_CALLABLE, size_t base_id ) {
+		if ( m_game.m_canonical_continuation || m_game.m_colony_request || m_game.m_research_request ) { throw std::runtime_error("fixture already has a suspended turn"); }
+		auto* base=m_game.GetBM()->GetBase(base_id);
+		if(!base) {throw std::runtime_error("fixture Colony Base is absent");}
+		game::backend::Game::CanonicalTurnContinuation next{m_game.GetTurnId()};
+		next.owners.push_back({base->GetSmacResourceContext().owner_simulation_id,{base_id}});
+		m_game.m_canonical_continuation=std::move(next);
+		m_game.m_canonical_turn_in_progress=true;
+		util::FinallyGuard finish([&]{m_game.m_canonical_turn_in_progress=false;});
+		if(m_game.BeginCanonicalBaseUpkeep(GSE_CALL)) {throw std::runtime_error("fixture failed to reach actual Colony question");}
+	}
 	void BasePresentationRoles( const std::array<std::string,8>& roles ) { m_game.m_smac_base_presentations=roles; }
 	void ResourcePolicy( const bool present ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
@@ -5272,6 +5283,7 @@ void ConventionalUnitFixture::SpecialistKnowledge( int32_t simulation, const std
 void ConventionalUnitFixture::ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
 }
+void ConventionalUnitFixture::BeginColonyChoice( GSE_CALLABLE, size_t id ) { fixture->BeginColonyChoice(GSE_CALL,id); }
 void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
 void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }

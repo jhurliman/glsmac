@@ -10,6 +10,7 @@
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slot.h"
 #include "gc/Space.h"
+#include <type_traits>
 
 namespace game::backend::base {
 
@@ -26,7 +27,16 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 	const auto context = GetSmacResourceContext();
 	const auto allocation = GetSmacAllocation();
 	if ( !allocation ) { THROW( "SMAC worker recalculation requires complete saved allocation authority" ); }
-	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context, phase ), roles );
+	PublishSmacCalculatedWorkers( GSE_CALL, CalculateSmacWorkers( *allocation, context, phase ), roles, context, phase );
+}
+
+void Base::PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles,
+	const SmacBaseResourceContext& context, SmacBaseResourcePhase phase ) {
+	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{
+		CalculateSmacResourceCalculation(phase,&allocation),m_game->CalculateCanonicalUnitSupport(*this,m_pops.size(),nullptr)}};
+	static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
+	auto prepared=PrepareSmacWorkerState(GSE_CALL,allocation,roles,context,m_production,m_accumulated_nutrients);
+	prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
 }
 
 SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support ) const {

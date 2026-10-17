@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/Base.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacProductionSwitch.cpp
+	${PWD}/SmacWorkerAllocationRules.cpp
 	${PWD}/SmacUnitSupport.cpp
 	${PWD}/PopDef.cpp
 	${PWD}/Pop.cpp

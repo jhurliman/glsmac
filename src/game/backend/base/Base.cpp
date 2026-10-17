@@ -1,4 +1,5 @@
 #include "Base.h"
+#include <set>
 
 #include "gse/context/Context.h"
 #include "gse/value/Object.h"
@@ -14,6 +15,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
+#include "game/backend/map/tile/Tiles.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/base/BaseManager.h"
 #include "Pop.h"
@@ -56,6 +58,26 @@ Base::Base(
 	, m_pops( pops )
 	, m_next_pop_id( next_pop_id )
 	, m_accumulated_nutrients( accumulated_nutrients ) {
+	// Validate the complete record before claiming the center or advancing IDs.
+	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
+		THROW( "invalid or occupied base location/ID" );
+	}
+	std::set< std::pair< size_t, size_t > > assigned;
+	for ( const auto& entry : m_pops ) {
+		const auto& pop = entry.second;
+		if ( entry.first != pop.m_id || pop.m_base ) {
+			THROW( "invalid population identity in base record" );
+		}
+		const auto& pos = pop.GetWorkedTileCoords();
+		const auto error = game->GetBM()->ValidateAssignment( id, tile->coord, pop.m_id, pop.m_def, pos );
+		if ( !error.empty() ) { THROW( error ); }
+		if ( pos && !assigned.emplace( pos->x, pos->y ).second ) {
+			THROW( "duplicate worked tile in base record" );
+		}
+	}
+	if ( !m_pops.empty() && m_next_pop_id <= m_pops.rbegin()->first ) {
+		THROW( "next population ID must follow existing IDs" );
+	}
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -72,8 +94,15 @@ const Game* const Base::GetGame() const {
 }
 
 Pop* const Base::AddPop( const Pop& pop ) {
-	ASSERT( m_pops.find( pop.m_id ) == m_pops.end(), "pop already exists" );
+	if ( m_pops.find( pop.m_id ) != m_pops.end() ) { THROW( "population ID already exists" ); }
+	if ( pop.m_base != this ) { THROW( "population belongs to another base" ); }
+	const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, pop.m_id, pop.m_def, pop.m_worked_tile );
+	if ( !error.empty() ) { THROW( error ); }
+	if ( pop.m_worked_tile && m_game->GetBM()->GetBase( m_id ) != this ) {
+		THROW( "worker assignment requires a registered base" );
+	}
 	m_pops.insert_or_assign( pop.m_id, pop );
+	m_game->GetBM()->ChangeAssignment( m_id, pop.m_id, {}, pop.m_worked_tile );
 	m_game->GetBM()->RefreshBase( this );
 	TriggerUpdate();
 	return &m_pops.at( pop.m_id );
@@ -81,6 +110,7 @@ Pop* const Base::AddPop( const Pop& pop ) {
 
 void Base::RemovePop( const size_t pop_id ) {
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id not found" );
+	m_game->GetBM()->ChangeAssignment( m_id, pop_id, m_pops.at( pop_id ).m_worked_tile, {} );
 	m_pops.erase( pop_id );
 	m_game->GetBM()->RefreshBase( this );
 	TriggerUpdate();
@@ -89,15 +119,33 @@ void Base::RemovePop( const size_t pop_id ) {
 void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id ) {
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id " + std::to_string( pop_id ) + " not found" );
 	auto& pop = m_pops.at( pop_id );
-	const auto& defs = m_game->GetBM()->GetBasePopDefs();
-	const auto& it = defs.find( def_id );
-	if ( it == defs.end() ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown pop type: " + def_id );
+	const auto* def = GetPopDef( GSE_CALL, def_id );
+	SetPopAssignment( GSE_CALL, &pop, def_id, ( def->m_flags & PopDef::PF_TILE_WORKER ) ? pop.GetWorkedTile() : nullptr );
+}
+
+void Base::SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, map::tile::Tile* tile ) {
+	m_game->CheckRW( GSE_CALL );
+	const auto member = pop ? m_pops.find( pop->m_id ) : m_pops.end();
+	if ( member == m_pops.end() || &member->second != pop || pop->m_base != this ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Population does not belong to this base" );
 	}
-	if ( pop.m_def != it->second ) {
-		pop.m_def = it->second;
-		TriggerUpdate();
+	if ( tile && tile->tiles->GetMap() != m_game->GetMap() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Worked tile belongs to another map" );
 	}
+	const auto* def = GetPopDef( GSE_CALL, def_id );
+	const Pop::worked_tile_t position = tile ? Pop::worked_tile_t( tile->coord ) : std::nullopt;
+	const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, pop->m_id, def, position );
+	if ( !error.empty() ) { GSE_ERROR( gse::EC.GAME_ERROR, error ); }
+	if ( position && m_game->GetBM()->GetBase( m_id ) != this ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Worker assignment requires a registered base" );
+	}
+	if ( pop->m_def == def && pop->m_worked_tile == position ) { return; }
+	// All logical validation precedes changes to type, coordinates, or the index.
+	m_game->GetBM()->ChangeAssignment( m_id, pop->m_id, pop->m_worked_tile, position );
+	pop->m_worked_tile = position;
+	pop->m_def = def;
+	m_game->GetBM()->RefreshBase( this );
+	TriggerUpdate();
 }
 
 int64_t Base::GetAccumulatedNutrients() const {
@@ -141,6 +189,10 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	auto* faction = game->GetFaction( faction_id );
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
+	const auto* tiles = game->GetMap()->GetTilesPtr();
+	if ( pos_x < 0 || pos_y < 0 || pos_x >= tiles->GetWidth() || pos_y >= tiles->GetHeight() || ( pos_x & 1 ) != ( pos_y & 1 ) ) {
+		THROW( "invalid base coordinates" );
+	}
 	auto* tile = game->GetMap()->GetTile( pos_x, pos_y );
 	const auto name = buf.ReadString();
 	facilities_t facilities = {};
@@ -162,7 +214,9 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 		const auto pop_id = buf.ReadInt();
 		Pop pop = {};
 		pop.Deserialize( buf, game );
-		pops.insert_or_assign( pop_id, pop );
+		if ( !pops.emplace( pop_id, pop ).second ) {
+			THROW( "duplicate population ID in base record" );
+		}
 	}
 	const auto next_pop_id = buf.ReadInt();
 	const auto accumulated_nutrients = buf.ReadInt();
@@ -219,7 +273,21 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				: 2; // humans have 2
 			ASSERT( max_variants > 0, "no variants found for pop type: " + def_id );
 
-			auto* const pop = AddPop( Pop( this, m_next_pop_id++, def, m_game->GetRandom()->GetUInt(0, max_variants - 1), worked_tile ) );
+			if ( worked_tile && worked_tile->tiles->GetMap() != m_game->GetMap() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Worked tile belongs to another map" );
+			}
+			if ( m_pops.find( m_next_pop_id ) != m_pops.end() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Next population ID already exists" );
+			}
+			Pop candidate( this, m_next_pop_id, def, 0, worked_tile );
+			const auto error = m_game->GetBM()->ValidateAssignment( m_id, m_tile->coord, candidate.m_id, def, candidate.m_worked_tile );
+			if ( !error.empty() ) { GSE_ERROR( gse::EC.GAME_ERROR, error ); }
+			if ( worked_tile && m_game->GetBM()->GetBase( m_id ) != this ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Worker assignment requires a registered base" );
+			}
+			candidate.m_variant = m_game->GetRandom()->GetUInt( 0, max_variants - 1 );
+			auto* const pop = AddPop( candidate );
+			m_next_pop_id++;
 
 			return pop->Wrap( GSE_CALL );
 		} )
@@ -233,7 +301,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( pop, 0, Pop );
 
-			if ( m_pops.find( pop->m_id ) == m_pops.end() ) {
+			const auto member = m_pops.find( pop->m_id );
+			if ( member == m_pops.end() || &member->second != pop ) {
 				GSE_ERROR( gse::EC.GAME_ERROR, "Base does not have pop " + std::to_string( pop->m_id ) );
 			}
 
@@ -243,40 +312,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
-		"add_worked_tile",
+		"set_pop_assignment",
 		NATIVE_CALL( this ) {
-
-			m_game->CheckRW( GSE_CALL );
-
-			N_EXPECT_ARGS( 1 );
-			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
-
-			if ( m_worked_tiles.find( tile ) != m_worked_tiles.end() ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, "This tile is already worked" );
+			N_EXPECT_ARGS( 3 );
+			N_GETVALUE_UNWRAP( pop, 0, Pop );
+			N_GETVALUE( def_id, 1, String );
+			map::tile::Tile* tile = nullptr;
+			const auto type = arguments.at( 2 )->Deref()->type;
+			if ( type != gse::VT_UNDEFINED && type != gse::VT_NULL ) {
+				N_GETVALUE_UNWRAP( assigned_tile, 2, map::tile::Tile );
+				tile = assigned_tile;
 			}
-			m_worked_tiles.insert( tile );
-
-			TriggerUpdate();
-
-			return VALUE( gse::value::Undefined );
-		} )
-	},
-	{
-		"remove_worked_tile",
-		NATIVE_CALL( this ) {
-
-			m_game->CheckRW( GSE_CALL );
-
-			N_EXPECT_ARGS( 1 );
-			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
-
-			if ( m_worked_tiles.find( tile ) == m_worked_tiles.end() ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, "This tile is not worked" );
-			}
-			m_worked_tiles.erase( tile );
-
-			TriggerUpdate();
-
+			SetPopAssignment( GSE_CALL, pop, def_id, tile );
 			return VALUE( gse::value::Undefined );
 		} )
 	},
@@ -285,7 +332,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
-			return VALUE( gse::value::Bool,, m_worked_tiles.find( tile ) != m_worked_tiles.end() );
+			auto* pop = tile->tiles->GetMap() == m_game->GetMap() ? m_game->GetBM()->GetWorkingPop( tile->coord ) : nullptr;
+			return VALUE( gse::value::Bool,, pop && pop->m_base == this );
 		} )
 	},
 	{
@@ -417,8 +465,10 @@ gse::value::Array* const Base::GetWorkableTiles( GSE_CALLABLE ) {
 
 gse::value::Array* const Base::GetWorkedTiles( GSE_CALLABLE ) {
 	gse::value::array_elements_t result = {};
-	for ( const auto& tile : m_worked_tiles ) {
-		result.push_back( tile->Wrap( GSE_CALL ) );
+	for ( const auto& pop : m_pops ) {
+		if ( auto* tile = pop.second.GetWorkedTile() ) {
+			result.push_back( tile->Wrap( GSE_CALL ) );
+		}
 	}
 	return VALUE( gse::value::Array,, result );
 }
@@ -429,7 +479,7 @@ gse::value::Array* const Base::GetUnworkedTiles( GSE_CALLABLE ) {
 	for ( const auto& v : workable_tiles_v->value ) {
 		ASSERT( v->type == gse::VT_OBJECT && ((gse::value::Object*)v)->object_class == "Tile", "invalid tile object" );
 		auto* tile = (map::tile::Tile*)((gse::value::Object*)v)->wrapobj;
-		if ( m_worked_tiles.find( tile ) == m_worked_tiles.end() ) {
+		if ( !m_game->GetBM()->GetWorkingPop( tile->coord ) ) {
 			result.push_back( v );
 		}
 	}

@@ -6,6 +6,7 @@
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "util/FS.h"
+#include "util/FinallyGuard.h"
 #include "types/Buffer.h"
 #include "State.h"
 #include "game/backend/faction/Faction.h"
@@ -331,7 +332,7 @@ void Game::Iterate() {
 					ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
 					const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
 					const auto* const event = event_data.event;
-					const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
+					const bool was_event_applied = event_data.was_applied;
 					if ( !it.is_accepted ) {
 						if ( was_event_applied ) {
 							// event was rejected, rollback
@@ -1337,9 +1338,9 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 }
 
 void Game::WithRW( const std::function< void() >& f ) {
+	util::FinallyGuard restore( [ this ]() { m_rw_counter--; } );
 	m_rw_counter++;
 	f();
-	m_rw_counter--;
 }
 
 void Game::InitComplete( GSE_CALLABLE ) {
@@ -1545,6 +1546,7 @@ void Game::ProcessEvents() {
 									event->GetId(),
 									{
 										event,
+										process_now,
 										rollback_data
 									}
 								}

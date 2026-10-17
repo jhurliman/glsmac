@@ -4,6 +4,7 @@
 #include "game/backend/WorldSnapshotRandom.h"
 #include "game/backend/WorldSnapshotTurn.h"
 #include "types/Buffer.h"
+#include "network/Network.h"
 #include "SmacRulesSource.h"
 
 #include <array>
@@ -66,6 +67,40 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	if ( version >= 12 ) {
 		const auto has_movement = movement_present.value_or( id == "smac" ); result.WriteBool( has_movement );
 		if ( has_movement ) { result.WriteString( movement ? *movement : smac_rules_fixture::Movement().Serialize().ToString() ); }
+	}
+	return result;
+}
+
+struct FrozenFrame {
+	std::string name, prefix, payload;
+	uint32_t limit;
+};
+
+inline std::vector< FrozenFrame > FrozenFrames( const std::string& id ) {
+	auto wire = Header( id, id == "smac" );
+	std::vector< FrozenFrame > result;
+	const auto frame = [ & ]( const std::string& name, const uint32_t limit ) {
+		const auto prefix = wire.ToString().substr( 0, wire.lenr );
+		result.push_back( { name, prefix, wire.ReadString(), limit } );
+	};
+	wire.ReadInt(); wire.ReadInt(); frame( "ruleset", 4 );
+	if ( id != "smac" ) { return result; }
+	wire.ReadBool(); for ( size_t i = 0; i < 9; ++i ) { wire.ReadInt(); }
+	for ( const auto* name : { "production", "technology" } ) { wire.ReadBool(); frame( name, network::Network::MAX_PACKET_BYTES ); }
+	wire.ReadBool(); frame( "world sizes", network::Network::MAX_PACKET_BYTES );
+	// Independently derive the accepted-selection extent from its four fields.
+	types::Buffer integer; integer.WriteInt( 0 ); frame( "selection", 4 * integer.lenw );
+	wire.ReadBool(); frame( "factions", network::Network::MAX_PACKET_BYTES );
+	return result;
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidFrozenFrameHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	for ( const auto& field : FrozenFrames( id ) ) {
+		for ( const auto length : { field.limit + 1, field.limit * 2 } ) {
+			types::Buffer tail; tail.WriteString( std::string( length, 'x' ) ); tail.WriteString( "unread world body" );
+			result.emplace_back( field.name + " oversized " + std::to_string( length ), field.prefix + tail.ToString() );
+		}
 	}
 	return result;
 }

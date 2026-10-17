@@ -19,6 +19,83 @@ bool Rejects( const std::function< void() >& f ) {
 void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 	using game::backend::settings::GlobalSettings;
 	using namespace game::backend::world_snapshot;
+	task->AddTest( "world frozen frames reject oversized payloads before copying or cursor advance", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& field : world_rules_fixture::FrozenFrames( id ) ) {
+				for ( const auto length : { field.limit, field.limit + 1, field.limit * 2 } ) {
+					const std::string payload( length, 'x' );
+					for ( const bool corrupt_checksum : { false, true } ) {
+						types::Buffer frame; frame.WriteString( payload );
+						auto bytes = field.prefix + frame.ToString();
+						if ( corrupt_checksum ) { bytes.back() ^= 1; }
+						types::Buffer input( bytes ); input.WriteString( "unread world body" );
+						std::string error;
+						try { ValidateHeader( input, settings ); }
+						catch ( const std::runtime_error& caught ) { error = caught.what(); }
+						const bool length_error = error.find( "buffer read exceeds payload limit" ) != std::string::npos;
+						GT_ASSERT( !error.empty() && length_error == ( length > field.limit ), "frame " + field.name + " did not distinguish outer length admission from checksum/codec validation" );
+						if ( length > field.limit ) {
+							GT_ASSERT( input.lenr == field.prefix.size(), "frame " + field.name + " oversized frame advanced its cursor" );
+							if ( !corrupt_checksum ) {
+								GT_ASSERT( input.ReadString() == payload && input.ReadString() == "unread world body", "frame " + field.name + " complete rejected frame or body changed" );
+							}
+						} else if ( !corrupt_checksum ) {
+							GT_ASSERT( input.lenr == bytes.size() && input.ReadString() == "unread world body", "frame " + field.name + " exact-cap frame was not consumed before nested rejection" );
+						}
+						GT_ASSERT( settings.Serialize().ToString() == before, "frozen frame rejection changed settings" );
+					}
+				}
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world frozen frame writer validates all profile budgets before appending", GT() {
+		const std::array< std::string, 4 > tokens = { "Facility 3", "Repeated technology name", "Fixture tiny", "ENERGY,10" };
+		for ( size_t field = 0; field < tokens.size(); ++field ) {
+			GlobalSettings settings; settings.SelectRuleset( "smac" );
+			bool replaced = false;
+			const auto source = [ & ]( const std::string& filename ) {
+				auto source = smac_rules_fixture::Source( filename );
+				const bool target = field == 3 ? filename == game::backend::settings::SmacFactionStartupRules::Bindings()[ 0 ].filename : filename == "alpha.txt";
+				if ( target ) {
+					const auto at = source.find( tokens[ field ] );
+					if ( at == std::string::npos ) { throw std::runtime_error( "missing synthetic profile token" ); }
+					source.insert( at + tokens[ field ].size(), network::Network::MAX_PACKET_BYTES + 1, 'x' ); replaced = true;
+				}
+				return source;
+			};
+			GT_ASSERT( Rejects( [ & ]() { settings.InitializeHostRules( source ); } ) && replaced && !settings.IsRulesetLocked(), "host admission did not reject the oversized profile before freeze" );
+			GT_ASSERT( settings.GetRulesetId() == "smac" && !settings.GetSmacBaseSquareRules() && !settings.GetSmacProductionRules()
+				&& !settings.GetSmacTechnologyRules() && !settings.GetSmacWorldSizeRules() && !settings.GetSmacFactionStartupRules()
+				&& !settings.GetSmacPredefinedUnitRules() && !settings.GetSmacMovementRules(), "failed host admission partially published a profile" );
+			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			// Accepted host profiles cannot reach this size. Deliberately corrupt
+			// this nonconst fixture's frozen value to exercise the writer's
+			// independent defensive preflight, without a production mutator.
+			using namespace game::backend::settings;
+			const std::string padding( network::Network::MAX_PACKET_BYTES + 1, 'x' );
+			if ( field == 0 ) { const_cast< SmacProductionRules& >( *settings.GetSmacProductionRules() ).facilities[ 0 ].name += padding; }
+			else if ( field == 1 ) { const_cast< SmacTechnologyRules& >( *settings.GetSmacTechnologyRules() ).technologies[ 0 ].name += padding; }
+			else if ( field == 2 ) { const_cast< SmacWorldSizeRules& >( *settings.GetSmacWorldSizeRules() ).presets[ 0 ].name += padding; }
+			else { const_cast< SmacFactionStartupRules& >( *settings.GetSmacFactionStartupRules() ).factions[ 0 ].bonuses.back().value += padding; }
+			const std::array< std::string, 4 > encoded = {
+				settings.GetSmacProductionRules()->Serialize().ToString(), settings.GetSmacTechnologyRules()->Serialize().ToString(),
+				settings.GetSmacWorldSizeRules()->Serialize().ToString(), settings.GetSmacFactionStartupRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString()
+			};
+			GT_ASSERT( encoded[ field ].size() > network::Network::MAX_PACKET_BYTES, "writer fixture did not exceed the existing packet cap" );
+			GT_ASSERT( Rejects( [ & ]() { settings.Serialize(); } ), "oversized fixture unexpectedly fits the existing global packet budget" );
+			types::Buffer output; output.WriteString( "existing output" );
+			const auto before = output.ToString(); const auto cursor = output.lenr;
+			std::string error;
+			try { WriteHeader( output, settings ); }
+			catch ( const std::runtime_error& caught ) { error = caught.what(); }
+			GT_ASSERT( error.find( "frozen frame exceeds its transport budget" ) != std::string::npos, "writer did not preflight its encoded profile budget" );
+			GT_ASSERT( output.ToString() == before && output.lenr == cursor, "writer appended a partial header before profile rejection" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "world rules header bounds predefined frame before copying and preserves its cursor", GT() {
 		using Profile = game::backend::settings::SmacPredefinedUnitRules;
 		GlobalSettings settings; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );

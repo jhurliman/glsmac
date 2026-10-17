@@ -2,12 +2,24 @@
 
 #include "settings/Settings.h"
 #include "types/Buffer.h"
+#include "network/Network.h"
 
 #include <limits>
 #include <stdexcept>
 
 namespace game::backend::world_snapshot {
 namespace {
+
+// Every accepted frozen profile already fits the complete lobby packet. World
+// downloads are chunked, so retain that existing bound at each outer frame.
+constexpr uint32_t max_profile_bytes = network::Network::MAX_PACKET_BYTES;
+constexpr uint32_t max_ruleset_bytes = 4;
+// Version, category, width, height: four (type1 + length4 + int64 + checksum1).
+constexpr uint32_t max_selection_bytes = 56;
+
+void RequireFrameSize( const std::string& bytes, const uint32_t limit ) {
+	if ( bytes.size() > limit ) { throw std::runtime_error( "World snapshot frozen frame exceeds its transport budget" ); }
+}
 
 void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	const auto& id = settings.GetRulesetId();
@@ -44,6 +56,13 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto unit_bytes = units ? units->Serialize( *technologies ).ToString() : std::string{};
 	const auto& movement = settings.GetSmacMovementRules();
 	const auto movement_bytes = movement ? movement->Serialize().ToString() : std::string{};
+	RequireFrameSize( settings.GetRulesetId(), max_ruleset_bytes );
+	for ( const auto* bytes : { &production_bytes, &technology_bytes, &size_bytes, &faction_bytes } ) {
+		RequireFrameSize( *bytes, max_profile_bytes );
+	}
+	RequireFrameSize( selection_bytes, max_selection_bytes );
+	RequireFrameSize( unit_bytes, settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES );
+	RequireFrameSize( movement_bytes, settings::SmacMovementRules::MAX_WIRE_BYTES );
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -73,7 +92,7 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( buffer.ReadInt() != rules_marker || buffer.ReadInt() != rules_version ) {
 		throw std::runtime_error( "Unsupported world snapshot rules header" );
 	}
-	const auto id = buffer.ReadString();
+	const auto id = buffer.ReadString( max_ruleset_bytes );
 	if ( ( id != "smac" && id != "smax" ) || id != settings.GetRulesetId() ) {
 		throw std::runtime_error( "World snapshot gameplay ruleset differs from the session" );
 	}
@@ -99,7 +118,7 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		throw std::runtime_error( "World snapshot production profile presence differs from the session" );
 	}
 	if ( production ) {
-		const auto incoming = settings::SmacProductionRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		const auto incoming = settings::SmacProductionRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ) );
 		if ( !( incoming == *production ) ) {
 			throw std::runtime_error( "World snapshot production profile differs from the session" );
 		}
@@ -109,7 +128,7 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		throw std::runtime_error( "World snapshot technology catalog presence differs from the session" );
 	}
 	if ( technologies ) {
-		const auto incoming = settings::SmacTechnologyRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		const auto incoming = settings::SmacTechnologyRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ) );
 		if ( !( incoming == *technologies ) ) {
 			throw std::runtime_error( "World snapshot technology catalog differs from the session" );
 		}
@@ -117,15 +136,15 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	const auto& sizes = settings.GetSmacWorldSizeRules();
 	if ( buffer.ReadBool() != sizes.has_value() ) { throw std::runtime_error( "World snapshot world-size profile presence differs from the session" ); }
 	if ( sizes ) {
-		const auto incoming = settings::SmacWorldSizeRules::Deserialize( types::Buffer( buffer.ReadString() ) );
-		const auto selection = settings::SmacWorldSizeSelection::Deserialize( types::Buffer( buffer.ReadString() ) );
+		const auto incoming = settings::SmacWorldSizeRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ) );
+		const auto selection = settings::SmacWorldSizeSelection::Deserialize( types::Buffer( buffer.ReadString( max_selection_bytes ) ) );
 		incoming.ValidateSelection( selection );
 		if ( !( incoming == *sizes ) || !( selection == *settings.map.GetSmacWorldSize() ) ) { throw std::runtime_error( "World snapshot world-size profile or selection differs from the session" ); }
 	}
 	const auto& factions = settings.GetSmacFactionStartupRules();
 	if ( buffer.ReadBool() != factions.has_value() ) { throw std::runtime_error( "World snapshot faction startup presence differs from the session" ); }
 	if ( factions ) {
-		const auto incoming = settings::SmacFactionStartupRules::Deserialize( types::Buffer( buffer.ReadString() ), *technologies );
+		const auto incoming = settings::SmacFactionStartupRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ), *technologies );
 		if ( !( incoming == *factions ) ) { throw std::runtime_error( "World snapshot faction startup profile differs from the session" ); }
 	}
 	const auto& units = settings.GetSmacPredefinedUnitRules();

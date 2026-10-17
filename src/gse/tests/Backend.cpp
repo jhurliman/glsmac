@@ -3446,6 +3446,18 @@ public:
 		client->m_download_state.downloaded_size = 0;
 		client->m_download_state.buffer.clear();
 	}
+	void PrepareFinalWorldChunk( game::backend::connection::Client* client, types::Packet& packet ) {
+		const auto size = packet.data.str.size();
+		if ( !size ) { throw std::logic_error( "final-chunk fixture requires a payload" ); }
+		PrepareWorldDownload( client, size );
+		// Model already received full chunks; dispatch the actual final packet
+		// within the transport limit even when its nested world frame is larger.
+		const size_t offset = ( ( size - 1 ) / client->DOWNLOAD_CHUNK_SIZE ) * client->DOWNLOAD_CHUNK_SIZE;
+		client->m_download_state.buffer = packet.data.str.substr( 0, offset );
+		client->m_download_state.downloaded_size = static_cast< int >( offset );
+		packet.data.str.erase( 0, offset );
+		packet.udata.download.offset = offset; packet.udata.download.size = packet.data.str.size();
+	}
 	bool IsPreparingMap() const { return m_game.m_game_state == game::backend::Game::GS_PREPARING_MAP; }
 	bool IsRunning() const { return m_game.IsRunning(); }
 	bool HasMap() const { return m_game.m_map != nullptr; }
@@ -6337,6 +6349,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 		task->AddTest( std::string( "real final download chunk rejects invalid world profile before map allocation " ) + ( queued ? "queued" : "immediate" ) + ( std::string( ruleset ) == "smax" ? " SMAX" : "" ), GT( queued, ruleset ) {
 			using namespace game::backend;
 			auto rejected = world_rules_fixture::InvalidProductionHeaders( ruleset );
+			for ( const auto& invalid : world_rules_fixture::InvalidFrozenFrameHeaders( ruleset ) ) { rejected.emplace_back( "frame: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidTechnologyHeaders( ruleset ) ) {
 				rejected.emplace_back( "technology: " + invalid.first, invalid.second );
 			}
@@ -6362,7 +6375,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				rejected.emplace_back( "unexpected SMAX runtime", unexpected.ToString() );
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 7, "frame: " ) == 0 || invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();
@@ -6396,7 +6409,10 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 					game->GetUM()->On( GSE_CALL, "unit_spawn", on_callback() ); game->GetBM()->On( GSE_CALL, "base_spawn", on_callback() );
 					client = new RulesetClient( gc_space, &state->m_settings.local );
 					state->SetConnection( client );
-					fixture.PrepareWorldDownload( client, packet.data.str.size() );
+					if ( invalid.first.compare( 0, 7, "frame: " ) == 0 ) {
+						fixture.PrepareFinalWorldChunk( client, packet );
+						GT_ASSERT( packet.Serialize().lenw <= network::Network::MAX_PACKET_BYTES, "final world-frame test packet exceeds real transport cap" );
+					} else { fixture.PrepareWorldDownload( client, packet.data.str.size() ); }
 					GT_OK();
 				} );
 				GT_ASSERT( setup_error.empty(), "download setup failed: " + setup_error );

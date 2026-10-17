@@ -553,14 +553,12 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	const bool joining = m_state->m_settings.local.network_role == game::backend::settings::LocalSettings::NR_CLIENT;
-	if ( !joining ) {
-		try { m_state->m_settings.global.LockRuleset(); }
-		catch ( const std::runtime_error& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
+	try {
+		m_state->m_settings.PrepareRuleset( []( const std::string& filename ) {
+			return util::FS::ReadTextFile( g_engine->GetResourceManager()->GetCustomPath( filename ) );
+		} );
 	}
-	else {
-		// A new connection must accept its host's identity, even after another game.
-		m_state->m_settings.global.ResetRuleset();
-	}
+	catch ( const std::exception& e ) { GSE_ERROR( gse::EC.GAME_ERROR, e.what() ); }
 	auto* game = g_engine->GetGame();
 	m_state->Reset();
 	m_state->SetGame( game );

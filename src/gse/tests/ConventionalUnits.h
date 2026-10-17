@@ -43,6 +43,9 @@ public:
 	void PrepareBaseCallbacks();
 	std::string Snapshot() const;
 	void Restore( GSE_CALLABLE, const std::string& snapshot, bool no_current_simulation = false );
+	void RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start );
+	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
+	void DrainEvents();
 	void RetainedMorale( int32_t retained, int32_t current );
 	void Early();
 	std::string CheckEarlyStartup( int scenario );

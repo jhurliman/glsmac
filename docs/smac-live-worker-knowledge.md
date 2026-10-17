@@ -80,3 +80,48 @@ allocation also needs authenticated support, prepared intake, production and
 priority inputs before the complete detached allocator becomes a live caller.
 The detached support calculator is available, but current live conventional
 records still explicitly carry home=None; that is not a general support model.
+
+## Live integration checks
+
+Ten native groups use the existing asset-free backend fixture with an explicitly
+supplied 8x8 terrain, canonical participants, two actual Bases and two conventional
+Units. Sparse Base IDs place the evaluating Base second in registry order;
+knowledge observations reverse Unit registry order. Literal mask assertions
+distinguish live sea, foreign worked squares, visibility and directed recognition.
+Raw native claimant0 stays distinct from absence. A later actual Base allocation
+publication changes availability while the installed knowledge bytes stay fixed.
+
+Rejected replacement and deliberately broken forward/reverse memberships preserve
+the installed knowledge, complete same-instance snapshot, Base/Unit records,
+frontend queue size, ID allocators and both RNG states. The authority admission
+checks also reject a real legacy Unit and a Base lacking full allocation. The
+twenty-one guarded native/GSE calls require the specific knowledge-fence error,
+including empty-name Event, CompleteTurn, AdvanceTurn and FixTopBottomRows.
+A real handler queued before publication cannot run Validate/Resolve/Apply; the
+absence control runs all three phases and advances JSF, making the fence observable.
+
+Two actual world-body restores preserve exact knowledge and individual entity
+bytes, full selected32/inactive16 authority and availability with either absent or
+different current simulation. A separate actual InitComplete check sees saved
+knowledge present during `start` while both entity registries are still pending:
+queries and new Unit/Base construction reject, then the same query succeeds after
+both managers register. The fixture invokes this production checkpoint synchronously
+under its owning accumulation; it does not claim network delivery, rendered startup
+or the asynchronous startup scheduler. Restored world definition-table ordering is
+not asserted byte-identical. Complete same-instance bytes are checked after queries
+and rejected mutations.
+
+World-prefix tests cover a valid framed value plus following body, exact-budget
+nested rejection versus cap+1/large complete outer-frame rejection at the unchanged
+payload cursor, non-SMAC presence before payload consumption, atomic rejected writer
+and map-dimension preflight. These checks complement the independent knowledge codec
+tests; they do not claim rollback of an arbitrary malformed later world body.
+
+The final ten groups passed with memory tracking in normal Debug (1.042s) and
+ASan/UBSan/LSan with leak detection (1.107s). Three copied production controls fail
+the intended assertions when restore readiness is bypassed, the captured-event
+fence is removed, or live sea is replaced by constant land. No source checkout was
+mutated for those controls. An earlier test-only InitComplete adapter retained its
+setup simulation and correctly hit the existing replacement guard; its failed log
+is retained separately, and the final adapter follows the real pending-state
+publication boundary. This focused receipt does not claim a new full platform run.

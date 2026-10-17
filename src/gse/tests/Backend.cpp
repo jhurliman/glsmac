@@ -330,6 +330,20 @@ public:
 		m_game.GetBM()->ProcessUnprocessed( GSE_CALL );
 		m_game.CompleteSmacWorkerKnowledgeRestore();
 	}
+	void RestoreKnowledgeThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) {
+		RestoreWorldBody( GSE_CALL, snapshot );
+		m_game.m_simulation.reset(); // decoded continuation replaces the fixture setup only at InitComplete
+		const auto listener = m_game.On( GSE_CALL, "start", NATIVE_CALL( &on_start ) {
+			on_start( GSE_CALL ); return VALUE( value::Undefined );
+		} ) );
+		util::FinallyGuard remove( [ & ] { m_game.Off( GSE_CALL, "start", listener ); } );
+		CompleteWorldRestore( GSE_CALL );
+	}
+	void QueueKnowledgeProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) {
+		auto* probe = NATIVE_CALL( callback ) { callback(); return VALUE( value::Undefined ); } );
+		RegisterEvent( "knowledge_probe", new game::backend::event::EventHandler( gc_space, "knowledge_probe", probe, probe, probe, probe ) );
+		m_game.Event( GSE_CALL, "knowledge_probe", {} );
+	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
 		, m_gse( CreateRuntime() )
@@ -4303,6 +4317,9 @@ const std::vector< game::FrontendRequest >& ConventionalUnitFixture::QueuedFront
 void ConventionalUnitFixture::PrepareBaseCallbacks() { fixture->PrepareBaseCallbacks(); }
 std::string ConventionalUnitFixture::Snapshot() const { return fixture->WorldSnapshot(); }
 void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot, bool no_current_simulation ) { fixture->RestoreConventional( GSE_CALL, snapshot, no_current_simulation ); }
+void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
+void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
+void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }
 std::string ConventionalUnitFixture::CheckEarlyStartup( int scenario ) { return fixture->CheckEarlyConventionalStartup( scenario ); }

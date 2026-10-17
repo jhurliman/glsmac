@@ -69,6 +69,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerAvailability.cpp
 	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacWorkerKnowledge.cpp
+	${PWD}/SmacLiveWorkerKnowledge.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp

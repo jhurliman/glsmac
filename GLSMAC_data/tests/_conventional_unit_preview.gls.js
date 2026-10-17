@@ -55,8 +55,10 @@ return (game) => {
 		const sections = bottom_bar.pp.sections;
 		if (#is_defined(expected.retired_id)) {
 			const list = sections.objects_list;
-			check(!#is_defined(list.units[#to_string(expected.retired_id)]), 'retired Unit retained its clickable row');
-			check(list.units[#to_string(unit.id)].object == unit, 'same-tile survivor disappeared');
+			const retired_key = #to_string(expected.retired_id);
+			const survivor_key = #to_string(unit.id);
+			check(!#is_defined(list.units[retired_key]), 'retired Unit retained its clickable row');
+			check(list.units[survivor_key].object == unit, 'same-tile survivor disappeared');
 			check(previous_list.was_removed(), 'old clickable list was not removed');
 			check(list.selected_object == null, 'retired selected Unit remains selected');
 			previous_unit = null;

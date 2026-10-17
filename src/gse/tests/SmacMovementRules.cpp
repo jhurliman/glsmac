@@ -62,6 +62,7 @@ void AddSmacMovementRulesTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "SMAC movement profile codec rejects wrong types bounds versions and trailing data", GT() {
 		const auto bytes = SmacMovementRules( -123 ).Serialize().ToString();
+		GT_ASSERT( SmacMovementRules::MAX_WIRE_BYTES == 28 && bytes.size() == SmacMovementRules::MAX_WIRE_BYTES, "movement frame budget differs from its two integer frames" );
 		GT_ASSERT( bytes == Wire( 1, -123 ).ToString(), "movement wire schema changed" );
 		for ( size_t length = 0; length < bytes.size(); ++length ) {
 			GT_ASSERT( Rejects( [ & ]() { SmacMovementRules::Deserialize( types::Buffer( bytes.substr( 0, length ) ) ); } ), "truncated movement profile accepted" );

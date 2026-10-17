@@ -137,7 +137,7 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	const auto& movement = settings.GetSmacMovementRules();
 	if ( buffer.ReadBool() != movement.has_value() ) { throw std::runtime_error( "World snapshot movement presence differs from the session" ); }
 	if ( movement ) {
-		const auto incoming = settings::SmacMovementRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		const auto incoming = settings::SmacMovementRules::Deserialize( types::Buffer( buffer.ReadString( settings::SmacMovementRules::MAX_WIRE_BYTES ) ) );
 		if ( !( incoming == *movement ) ) { throw std::runtime_error( "World snapshot movement profile differs from the session" ); }
 	}
 }

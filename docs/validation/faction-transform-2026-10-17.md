@@ -56,7 +56,8 @@ Linux evidence uses `faction-transform-asan-{build,ctest}.log` under
 The prior actual Engine shutdown harness at the map-publication checkpoint
 remains separate evidence. This check adds no rendered restart, native Mac,
 complete save/replay, or original-game UI claim. Native Mac interaction remains
-user-confirmed at `5cd78418`; its process exit was not independently confirmed.
+user-confirmed at `5cd78418`; a later read-only follow-up confirmed that process's
+normal exit and clean final tracker check in the [Mac receipt](macos-native-2026-10-16.md).
 The provided Mac screenshots show Morgan Industries before and University Base
 after Start New Game, and the user reported that restart took a while but worked.
 The delay remains a profiling follow-up, without an assigned cause.

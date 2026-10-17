@@ -32,8 +32,13 @@ return (i) => {
 				onclick: (x) => {
 					i.settings.local.network_role = choices.value;
 					if (i.settings.local.network_role == 'server') {
-						i.steps.multiplayer_host(i);
+						i.steps.select_ruleset(i, () => {
+							i.glsmac.init();
+							i.steps.multiplayer_host(i);
+						});
 					} else {
+						i.glsmac.deinit();
+						i.glsmac.init();
 						i.steps.multiplayer_join(i);
 					}
 					return true;

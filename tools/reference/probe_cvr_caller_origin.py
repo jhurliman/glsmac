@@ -73,7 +73,7 @@ def nearest_even(numerator, denominator):
 
 
 def store(value):
-    """One exact-rational to normal binary32 nearest-even store, no double round."""
+    """One exact-rational nearest-even store; admit only +zero/normal results."""
     exact_extended(value)
     if value == 0:
         return words(0)
@@ -83,7 +83,16 @@ def store(value):
     power = Fraction(2) ** exponent
     if value < power:
         exponent -= 1
-    require(-126 <= exponent <= 127, 'domain: nonnormal binary32 store')
+    if exponent < -126:
+        # Quantize to the subnormal lattice BEFORE classifying the result.
+        # A tiny positive exact value may round to +zero, and the midpoint
+        # below minimum normal rounds upward to its even significand.
+        scaled = value * (1 << 149)
+        significand = nearest_even(scaled.numerator, scaled.denominator)
+        require(significand in (0, 1 << 23), 'domain: nonnormal binary32 store')
+        require(significand or not sign, 'domain: generated negative-zero store')
+        return words(sign | significand)
+    require(exponent <= 127, 'domain: nonnormal binary32 store')
     scaled = value / (Fraction(2) ** (exponent - 23))
     significand = nearest_even(scaled.numerator, scaled.denominator)
     if significand == 1 << 24:
@@ -137,6 +146,9 @@ def arithmetic(frame_location, frame_matrix, transform, translation, header, mut
     transformed = matvec(transform, frame_location)
     location = add(transformed, translation if mutation != 'omit-translation' else bytes(12))
     product = matmul(transform, frame_matrix) if mutation != 'reverse-product' else matmul(frame_matrix, transform)
+    if mutation == 'flush-minimum-normal':
+        product = b''.join(words(0) if (v & 0x7fffffff) == 0x00800000 else words(v)
+                           for (v,) in struct.iter_unpack('<I', product))
     matrix = b''.join(store(v * (1 if mutation == 'omit-scalar' else scalar)) for v in rationals(product))
     if mutation == 'transpose':
         matrix = b''.join(matrix[(j * 3 + i) * 4:(j * 3 + i + 1) * 4] for i in range(3) for j in range(3))
@@ -436,6 +448,48 @@ def main():
     attached['locations'] = b''.join(add(obj['locations'][i:i + 12], fbytes([-400, 200, 0]))
                                     for i in range(0, len(obj['locations']), 12))
     cases.append(probe.run('installed-explicit-attachment', attached, 0, transform, translation, header, stream))
+    # Explicit normal operands exercise stores at the zero/minimum-normal
+    # boundaries. These are synthetic arithmetic inputs, not a camera preset.
+    boundary_header = bytearray(unit_scalar_header)
+    boundary_header[32:38] = bytes(6)
+
+    def store_arguments(left, right, scalar=0x3f800000, location=False):
+        selected = {'flags': bytes(1), 'locations': words(right, 0, 0) if location else bytes(12),
+                    'matrices': bytes(36) if location else words(right) + bytes(32)}
+        selected_header = bytes(boundary_header[:8]) + words(scalar) + bytes(boundary_header[12:])
+        return dict(obj=selected, frame=0, transform=words(left) + bytes(32), translation=bytes(12),
+                    header=selected_header, stream=stream)
+
+    for name, left, right, scalar, expected in (
+            ('far-positive-zero', 0x0d800000, 0x0d800000, 0x3f800000, 0),  # 2^-200
+            ('farther-positive-zero', 0x01000000, 0x01000000, 0x3f800000, 0),  # 2^-250
+            ('below-zero-midpoint', 0x0d800000, 0x267fffff, 0x3f800000, 0),
+            ('zero-midpoint', 0x0d800000, 0x26800000, 0x3f800000, 0),  # 2^-150
+            ('minimum-normal-midpoint', 0x00800000, 0x3f7fffff, 0x3f800000, 0x00800000),
+            ('negative-minimum-normal-midpoint', 0x80800000, 0x3f7fffff, 0x3f800000, 0x80800000),
+            ('minimum-normal-exact', 0x00800000, 0x3f800000, 0x3f800000, 0x00800000),
+            ('negative-minimum-normal-exact', 0x80800000, 0x3f800000, 0x3f800000, 0x80800000),
+            ('scalar-zero-midpoint', 0x0d800000, 0x3f800000, 0x26800000, 0),
+            ('scalar-minimum-normal-midpoint', 0x00800000, 0x3f800000, 0x3f7fffff, 0x00800000),
+            ('scalar-negative-minimum-normal-midpoint', 0x80800000, 0x3f800000, 0x3f7fffff, 0x80800000)):
+        case = probe.run('store-' + name, **store_arguments(left, right, scalar))
+        require(case['captured_matrix_bytes'] == (words(expected) + bytes(32)).hex(), 'store boundary matrix mismatch')
+        cases.append(case)
+    shift64_arguments = store_arguments(0x0d800000, 0x26800000)
+    shift64_arguments['transform'] = words(0x0d800000, 0x0d800000) + bytes(28)
+    shift64_arguments['obj'] = dict(shift64_arguments['obj'], matrices=words(0x26800000, 0, 0, 0x87000000) + bytes(20))
+    case = probe.run('store-zero-midpoint-minus-exact64-bit', **shift64_arguments)
+    require(case['captured_matrix_bytes'] == bytes(36).hex(), '64-bit shift boundary mismatch')
+    cases.append(case)
+    case = probe.run('store-location-zero-midpoint', **store_arguments(0x0d800000, 0x26800000, location=True))
+    require(case['captured_location_bytes'] == bytes(12).hex(), 'location underflow boundary mismatch')
+    cases.append(case)
+    for sign in (0, 0x80000000):
+        arguments = store_arguments(sign | 0x00800000, 0x3f7fffff, location=True)
+        arguments['translation'] = words((sign ^ 0x80000000) | 0x00800000, 0, 0)
+        case = probe.run('store-location-minimum-normal-cancellation-' + str(sign), **arguments)
+        require(case['captured_location_bytes'] == bytes(12).hex(), 'minimum-normal location cancellation mismatch')
+        cases.append(case)
     rejected = []
     for name, change, expected_error in [('hidden-frame', {'obj': dict(synthetic, flags=b'\x80\0\0')}, 'hidden frame'),
             ('bad-frame', {'frame': 3}, 'frame outside'), ('nonfinite-transform', {'transform': words(0x7f800000) + transform[4:]}, 'nonfinite'),
@@ -462,7 +516,29 @@ def main():
             rejected.append({'name': name, 'error': str(error)})
         else:
             raise RuntimeError('domain rejection failed: ' + name)
+    for name, left, right, expected_error in (
+            ('above-zero-midpoint', 0x0d800000, 0x26800001, 'nonnormal'),
+            ('negative-zero-midpoint', 0x8d800000, 0x26800000, 'generated negative-zero'),
+            ('negative-far-zero', 0x8d800000, 0x0d800000, 'generated negative-zero'),
+            ('below-minimum-normal-midpoint', 0x00800000, 0x3f7ffffe, 'nonnormal'),
+            ('negative-below-minimum-normal-midpoint', 0x80800000, 0x3f7ffffe, 'nonnormal')):
+        try:
+            probe.run('rejected-store-' + name, **store_arguments(left, right))
+        except RuntimeError as error:
+            require(expected_error in str(error), 'wrong store rejection: ' + str(error))
+            rejected.append({'name': 'store-' + name, 'error': str(error)})
+        else:
+            raise RuntimeError('store domain rejection failed: ' + name)
     controls = []
+    above_shift64 = dict(shift64_arguments, obj=dict(shift64_arguments['obj'],
+        matrices=words(0x26800000, 0, 0, 0x07000000) + bytes(20)))
+    try:
+        probe.run('rejected-store-zero-midpoint-plus-exact64-bit', **above_shift64)
+    except RuntimeError as error:
+        require('nonnormal' in str(error), 'wrong 64-bit shift rejection: ' + str(error))
+        rejected.append({'name': 'store-zero-midpoint-plus-exact64-bit', 'error': str(error)})
+    else:
+        raise RuntimeError('64-bit shift domain rejection failed')
     for mutation in ('reverse-product', 'transpose', 'omit-scalar', 'omit-translation', 'omit-header-vector'):
         try:
             probe.run('negative-' + mutation, synthetic, 0, transform, translation, header, stream, mutation=mutation)
@@ -496,6 +572,14 @@ def main():
         controls.append({'name': 'unrounded-scale', 'error': str(error)})
     else:
         raise RuntimeError('unrounded scale oracle did not fail')
+    try:
+        probe.run('negative-flush-minimum-normal', **store_arguments(0x00800000, 0x3f7fffff),
+                  mutation='flush-minimum-normal')
+    except RuntimeError as error:
+        require(str(error) == 'stage oracle mismatch: matrix_product', 'wrong store control failure: ' + str(error))
+        controls.append({'name': 'flush-minimum-normal', 'error': str(error)})
+    else:
+        raise RuntimeError('flush minimum-normal oracle did not fail')
     report = {'schema': 1, 'executable_sha256': EXE_HASH, 'probe_sha256': sha(Path(__file__).read_bytes()),
         'imports_sha256': {name: sha(Path(__file__).with_name(name).read_bytes()) for name in
                            ('probe_scout_composition.py', 'probe_cvr_pixels.py', 'probe_cvr_basis.py')},

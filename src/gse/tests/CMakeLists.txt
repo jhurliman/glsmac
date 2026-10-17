@@ -17,6 +17,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/CvrBasisConverter.cpp
+	${PWD}/CvrTransformCalculator.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

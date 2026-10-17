@@ -1,6 +1,7 @@
 // Opt-in production probe. Original data/reports remain outside the repository.
 #include "game/backend/faction/SmacTechnologyState.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
+#include "loader/txt/FactionTXTLoader.h"
 
 #include <fstream>
 #include <iomanip>
@@ -15,15 +16,17 @@ int main( int argc, char** argv ) {
 	if ( argc != 2 ) { std::cerr << "usage: probe ALPHA\n"; return 2; }
 	try {
 		std::ifstream source( argv[ 1 ], std::ios::binary ); if ( !source ) { throw std::runtime_error( "Cannot read explicit alpha source" ); }
-		const auto tech = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( { std::istreambuf_iterator< char >( source ), {} } );
+		const std::string alpha( std::istreambuf_iterator< char >( source ), {} );
+		const auto tech = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( alpha );
 		int32_t recipient = 0, additional = 0, seeded = 0, score = 0, future = 0, labs = 0, target = 0, cache = 0;
 		size_t count = 0;
 		if ( !( std::cin >> recipient >> additional >> seeded >> score >> future >> labs >> target >> cache >> count ) || count > 128 ) { throw std::runtime_error( "Invalid bounded probe request" ); }
-		SmacFactionStartupRules profiles;
-		for ( size_t i = 0 ; i < 7 ; ++i ) {
-			const auto& binding = SmacFactionStartupRules::Bindings()[ i ];
-			profiles.factions[ i ] = { binding.port_id, binding.filename, binding.section, {} };
-		}
+		auto profiles = loader::txt::FactionTXTLoader::ParseStartupRules( alpha, []( const std::string& filename ) {
+			for ( const auto& binding : SmacFactionStartupRules::Bindings() ) {
+				if ( filename == binding.filename ) { return "#" + std::string( binding.section ) + "\nSynthetic header\n\n#END\n"; }
+			}
+			throw std::runtime_error( "Unexpected fixture source" );
+		}, tech );
 		for ( size_t i = 0 ; i < count ; ++i ) {
 			std::string key, value;
 			if ( !( std::cin >> std::quoted( key ) >> std::quoted( value ) ) || key.size() > 128 || value.size() > 128 ) { throw std::runtime_error( "Invalid probe bonus" ); }

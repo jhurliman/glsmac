@@ -26,7 +26,7 @@ std::vector< std::string > Fields( const std::string& row ) {
 	}
 }
 
-void ValidateLookupTables( const std::string& alpha ) {
+std::array< game::backend::settings::SmacStartupSocialModel, 4 > ValidateLookupTables( const std::string& alpha ) {
 	const std::string names = "TECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO";
 	std::vector< std::string > actual;
 	for ( const auto& line : TXTLoader::ReadUniqueSection( alpha, "BONUSNAMES" ) ) {
@@ -41,6 +41,17 @@ void ValidateLookupTables( const std::string& alpha ) {
 		Fields( "ECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH" ) ) {
 		throw std::invalid_argument( "SMAC faction startup requires canonical #SOCIO axes" );
 	}
+	if ( socio.size() != 19 || Fields( socio[ 2 ].substr( 0, socio[ 2 ].find( ';' ) ) ) !=
+		Fields( "Politics,Economics,Values,Future Society" ) ) {
+		throw std::invalid_argument( "SMAC startup requires four ordered SOCIO categories with four model rows each" );
+	}
+	std::array< game::backend::settings::SmacStartupSocialModel, 4 > models;
+	for ( size_t i = 0; i < models.size(); ++i ) {
+		const auto fields = Fields( socio[ 3 + i * 4 ].substr( 0, socio[ 3 + i * 4 ].find( ';' ) ) );
+		if ( fields.size() != 3 ) { throw std::invalid_argument( "SMAC model-zero SOCIO row requires name, prerequisite and empty modifiers" ); }
+		models[ i ] = { fields[ 0 ], fields[ 1 ], fields[ 2 ] }; models[ i ].Validate();
+	}
+	return models;
 }
 
 }
@@ -82,7 +93,7 @@ game::backend::settings::SmacFactionStartupRules FactionTXTLoader::ParseStartupR
 	const StartupSource& read_source, const game::backend::settings::SmacTechnologyRules& technologies ) {
 	using game::backend::settings::SmacFactionStartupRules;
 	technologies.Validate();
-	ValidateLookupTables( alpha );
+	const auto models = ValidateLookupTables( alpha );
 	const auto rows = ReadUniqueSection( alpha, "FACTIONS" );
 	const auto& bindings = SmacFactionStartupRules::Bindings();
 	if ( rows.size() != bindings.size() ) { throw std::invalid_argument( "SMAC faction startup requires seven #FACTIONS rows" ); }
@@ -94,6 +105,7 @@ game::backend::settings::SmacFactionStartupRules FactionTXTLoader::ParseStartupR
 		}
 	}
 	SmacFactionStartupRules result;
+	result.initial_social_models = models;
 	for ( size_t i = 0 ; i < bindings.size() ; ++i ) {
 		const auto& binding = bindings[ i ];
 		result.factions[ i ] = { binding.port_id, binding.filename, binding.section,

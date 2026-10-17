@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
@@ -41,8 +42,8 @@ void Projection( std::ostream& output, const game::backend::settings::SmacFactio
 }
 
 int main( int argc, char** argv ) {
-	if ( argc != 3 || ( std::string( argv[ 2 ] ) != "--installed" && std::string( argv[ 2 ] ) != "--lines" ) ) {
-		std::cerr << "usage: smac_faction_startup_probe installed-directory --installed|--lines\n"; return 2;
+	if ( argc != 3 || ( std::string( argv[ 2 ] ) != "--installed" && std::string( argv[ 2 ] ) != "--lines" && std::string( argv[ 2 ] ) != "--models" ) ) {
+		std::cerr << "usage: smac_faction_startup_probe installed-directory --installed|--lines|--models\n"; return 2;
 	}
 	try {
 		using loader::txt::FactionTXTLoader;
@@ -50,9 +51,16 @@ int main( int argc, char** argv ) {
 		const auto alpha = Read( InstalledFile( directory, "alpha.txt" ) );
 		const auto technologies = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( alpha );
 		std::ostringstream output;
-		if ( std::string( argv[ 2 ] ) == "--installed" ) {
+		if ( std::string( argv[ 2 ] ) != "--lines" ) {
 			const auto profile = FactionTXTLoader::ParseStartupRules( alpha, [ & ]( const std::string& filename ) { return Read( InstalledFile( directory, filename ) ); }, technologies );
-			for ( const auto& row : profile.factions ) { output << row.port_id << ' '; Projection( output, row ); }
+			if ( std::string( argv[ 2 ] ) == "--models" ) {
+				const auto copy = game::backend::settings::SmacFactionStartupRules::Deserialize( profile.Serialize( technologies ), technologies );
+				if ( !( copy == profile ) ) { throw std::runtime_error( "Frozen model codec roundtrip changed source metadata" ); }
+				for ( const auto& row : copy.initial_social_models ) {
+					output << std::quoted( row.name ) << ' ' << std::quoted( row.prerequisite ) << ' ' << std::quoted( row.modifiers ) << '\n';
+				}
+			}
+			else { for ( const auto& row : profile.factions ) { output << row.port_id << ' '; Projection( output, row ); } }
 		}
 		else {
 			std::string line;

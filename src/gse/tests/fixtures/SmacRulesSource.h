@@ -71,13 +71,22 @@ inline std::string ProductionSource() {
 	return source + "#END\n";
 }
 
+inline std::string StartupSocialSource() {
+	std::string source = "#SOCIO\nECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH\n"
+		"Synthetic axis descriptions\nPolitics,Economics,Values,Future Society\n";
+	for ( size_t group = 0; group < 4; ++group ) {
+		source += "Fixture model " + std::to_string( group ) + ",None,\n";
+		for ( size_t unused = 1; unused < 4; ++unused ) { source += "Unused model,UnusedTech,+UNUSED\n"; }
+	}
+	return source;
+}
+
 // Synthetic numeric values intentionally differ from installed defaults.
 inline std::string FactionAlpha() {
 	return "#BONUSNAMES\nTECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,\n"
 		"INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,\n"
 		"SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,\n"
-		"COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO\n#SOCIO\n"
-		"ECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH\n"
+		"COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO\n" + StartupSocialSource() +
 		"#FACTIONS\nGAIANS,GAIANS\nHIVE,HIVE\nUNIV,UNIV\nMORGAN,MORGAN\nSPARTANS,SPARTANS\nBELIEVE,BELIEVE\nPEACE,PEACE\n#END\n";
 }
 
@@ -110,7 +119,11 @@ inline game::backend::settings::SmacFactionStartupRules Factions(
 
 // Deliberately bypass profile validation to exercise late malformed wire input.
 inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFactionStartupRules& profile ) {
-	types::Buffer result; result.WriteInt( 1 ); result.WriteInt( profile.factions.size() );
+	types::Buffer result; result.WriteInt( 2 ); result.WriteInt( profile.initial_social_models.size() );
+	for ( const auto& model : profile.initial_social_models ) {
+		result.WriteString( model.name ); result.WriteString( model.prerequisite ); result.WriteString( model.modifiers );
+	}
+	result.WriteInt( profile.factions.size() );
 	for ( const auto& faction : profile.factions ) {
 		result.WriteString( faction.port_id ); result.WriteString( faction.filename ); result.WriteString( faction.section );
 		result.WriteInt( faction.bonuses.size() );
@@ -153,7 +166,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& factions = std::nullopt,
 	const std::optional< std::string >& units = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 7 );
+	result.WriteInt( 8 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {

@@ -1,8 +1,8 @@
 # CI coverage and cost
 
 Ordinary gameplay pull requests use Linux regression tests and the existing
-scoped C++ correctness check. Marking a PR ready does not start another platform
-matrix. Local development should use cached builds and affected tests; CI keeps
+scoped C++ correctness check. Marking a PR ready reuses its existing checks;
+draft/ready transitions do not trigger another run. Local development should use cached builds and affected tests; CI keeps
 the small asset-free CTest baseline to avoid guessing which tests a change needs.
 
 | Change or event | Regression/lifecycle coverage |

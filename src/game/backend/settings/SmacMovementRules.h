@@ -7,6 +7,11 @@ namespace game::backend::settings {
 
 class SmacMovementRules {
 public:
+	// V1 is exactly two Buffer integer frames: each has a 1-byte type,
+	// 4-byte length, 8-byte integer and 1-byte checksum. Bound the enclosing
+	// string before allocation; nested decode still validates both frames.
+	static constexpr uint32_t MAX_WIRE_BYTES = 28;
+
 	// Supplied canonical SMAC RULES row 1. There is no default or separately
 	// writable Q: the raw signed32 value is the sole retained authority.
 	explicit SmacMovementRules( int32_t road_rate ) : m_road_rate( road_rate ) {}

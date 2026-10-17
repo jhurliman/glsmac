@@ -33,9 +33,9 @@ The self-contained movement profile V1 uses the existing typed Buffer envelope:
 integer version1, then the raw signed32 road value carried by an integer field.
 Decode rejects wrong types/version, values outside signed32, truncation and
 trailing data before returning an owned value. It stores no derived Q, so raw
-and derived values cannot diverge. This codec is not yet part of GlobalSettings
-or a world snapshot. Host freeze, packet/world binding and live unit consumers
-are separate follow-ups; merely parsing this profile does not activate it.
+and derived values cannot diverge. The [frozen host/world follow-up](smac-movement-host-profile.md)
+binds this codec to admitted settings and snapshots. Live unit consumers remain
+separate; merely parsing or transporting this profile does not grant movement.
 
 ## Original evidence
 

@@ -26,6 +26,7 @@ std::string Temporary() {return (std::filesystem::temp_directory_path()/("glsmac
 }
 void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
     task->AddTest("Campaign file restores owned settings roster world and next actual turn",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]() -> std::string {
         return ConventionalUnitFixture::WithCampaignMapSources([&]() -> std::string {
         using namespace game::backend;using namespace game::backend::unit;
         ConventionalUnitFixture fixture;fixture.Configure(true,3,true);fixture.ResourcePolicy(true);
@@ -58,6 +59,7 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
         });if(!setup.empty()){return setup;}
         const auto restored=fixture.CheckCampaignRestore(path,snapshot);if(!restored.empty()){return restored;}
         return fixture.CheckCampaignCallbackFailure(path);
+        });
         });
     });
     task->AddTest("Campaign cancellation retires frontend resources before initialization",GT(){

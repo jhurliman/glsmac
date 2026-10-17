@@ -2,6 +2,8 @@ return {
 
 	init: (p) => {
 
+		this.format_resource_balance = p.ui.format_resource_balance;
+
 		this.cell_width = 4;
 		this.total_cells = 58; // original SMAC has 39 but leaves a lot of space for no reason(?)
 
@@ -181,11 +183,6 @@ return {
 		return this.frame;
 	},
 
-	_pad: (value) => {
-		if (value < 0) { return #to_string(value); }
-		return #pad(#to_string(value), 'left', 3, '0');
-	},
-
 	set: (data) => {
 		const types = ['nutrients', 'minerals', 'energy'];
 
@@ -195,15 +192,15 @@ return {
 
 		for (type of types) {
 			const d = data[type];
-			const total = d.profit - d.loss;
+			const balance = this.format_resource_balance(d.profit, d.loss, this.total_cells);
 
 			// cells
 			let left = 0;
 			for (let i = 0; i < this.total_cells; i++) {
 				let cls = 'base-screen-resources-cell-' + type;
-				if (i < d.loss) {
+				if (i < balance.loss_cells) {
 					cls += '-loss';
-				} else if (i >= this.total_cells - total) {
+				} else if (i >= this.total_cells - balance.profit_cells) {
 					cls += '-profit';
 				}
 				this.cells.surface({
@@ -215,14 +212,8 @@ return {
 
 			// labels
 			const l = this.labels[type];
-			l.left.text = this._pad(d.profit) + ' - ' + this._pad(d.loss);
-			if (d.profit == d.loss) {
-				l.right.text = this._pad(0);
-			} else if (d.profit > d.loss) {
-				l.right.text = '+' + this._pad(d.profit - d.loss);
-			} else {
-				l.right.text = '-' + this._pad(d.loss - d.profit);
-			}
+			l.left.text = balance.intake_consumption;
+			l.right.text = balance.surplus;
 		}
 	},
 

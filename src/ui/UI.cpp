@@ -1,4 +1,5 @@
 #include "UI.h"
+#include "ResourceBalance.h"
 
 #include <algorithm>
 
@@ -126,9 +127,27 @@ void UI::Iterate() {
 	}
 }
 
+gse::value::Callable* UI::CreateResourceBalanceFormatter( GSE_CALLABLE ) {
+	return NATIVE_CALL() {
+		N_EXPECT_ARGS( 3 );
+		N_GETVALUE( profit, 0, Int );
+		N_GETVALUE( loss, 1, Int );
+		N_GETVALUE( total_cells, 2, Int );
+		if ( total_cells < 0 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Resource cell count must be nonnegative" ); }
+		const auto balance = ResourceBalance::Format( profit, loss, total_cells );
+		return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
+			{ "intake_consumption", VALUE( gse::value::String,, balance.intake_consumption ) },
+			{ "surplus", VALUE( gse::value::String,, balance.surplus ) },
+			{ "loss_cells", VALUE( gse::value::Int,, balance.loss_cells ) },
+			{ "profit_cells", VALUE( gse::value::Int,, balance.profit_cells ) },
+		} );
+	} );
+}
+
 WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
+			{ "format_resource_balance", CreateResourceBalanceFormatter( GSE_CALL ) },
 			{
 				"root",
 				m_root->Wrap( GSE_CALL )

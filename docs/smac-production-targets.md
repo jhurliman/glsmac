@@ -37,3 +37,10 @@ The latter retain valid Doctors in ordinary and unmanaged-upkeep calls. Targeted
 analysis of four changed production translation units reports zero failures.
 The tests use synthetic frozen sources and existing calculators; they do not
 claim a new original-executable run or complete production eligibility.
+
+The local human roster policy admits accepted Single/Player participants only
+when the actual local controller is Single and no Connection exists. This is
+a GLSMAC human-controlled roster policy; it does not implement AI costs or
+upkeep. Manual worker commands still require the actual local Base owner.
+The follow-up cached run passed twelve affected tracked groups, including an
+actual second participant cost/upkeep repair and rejected manual edit.

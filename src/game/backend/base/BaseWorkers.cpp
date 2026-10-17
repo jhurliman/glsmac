@@ -39,10 +39,8 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	allocation.Validate();
 	context.Validate();
 	auto* state = m_game->GetState();
-	if ( state->GetConnection() || m_owner->GetPlayer() != m_game->GetPlayer()
-		|| m_owner->GetPlayer()->GetRole() != Player::PR_SINGLE || context.GovernorActive() ) {
-		THROW( "SMAC worker recalculation requires the local human with governor inactive" );
-	}
+	m_game->RequireSmacLocalHumanOwner( m_owner );
+	if ( context.GovernorActive() ) { THROW( "SMAC worker recalculation requires inactive governor" ); }
 	if ( m_pops.size() > 127 || m_game->GetTurnId() > INT32_MAX ) {
 		THROW( "SMAC worker recalculation population/turn exceeds its signed domain" );
 	}

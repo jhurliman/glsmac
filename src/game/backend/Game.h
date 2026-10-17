@@ -395,6 +395,8 @@ public:
 	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const;
 	// Only the ordinary prerequisite query, not active/role/coastal buildability.
 	bool HasSmacProductionPrerequisite( const slot::Slot* owner, const base::ProductionItem& item ) const;
+	// Explicit local human-controlled port roster. No AI controller is inferred.
+	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
 	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );

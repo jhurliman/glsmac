@@ -55,6 +55,10 @@ void Base::CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile ) {
     auto* bm = m_game->GetBM();
     bm->RequireSmacWorkerRecalculation();
     auto context = GetSmacResourceContext();
+    if ( m_game->GetState()->GetConnection() || !m_game->GetPlayer()
+        || m_game->GetPlayer()->GetRole() != Player::PR_SINGLE || m_owner->GetPlayer() != m_game->GetPlayer() ) {
+        THROW( "SMAC manual worker command requires the local human Base owner" );
+    }
     const auto allocation = GetSmacAllocation();
     if ( !allocation ) { THROW( "SMAC worker command requires complete allocation authority" ); }
     const auto* map = m_game->GetMap();

@@ -68,7 +68,7 @@ ProductionState Production( ProductionItemKind kind = ProductionItemKind::Unit )
 	const ProductionItem item{ kind, kind == ProductionItemKind::Stockpile ? "" : "opaque-target" };
 	return { item, 17, { ProductionItemKind::Stockpile, "" }, 5 };
 }
-Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false ) {
+Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
@@ -79,9 +79,9 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 		tile->Update(); tile->moisture = MOISTURE_ARID; tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0; tile->bonus = BONUS_NONE;
 	} }
 	game->GetMap()->GetTile( 4, 2 )->terraforming = TERRAFORMING_FOREST;
-	auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
+	auto* owner = &game->GetState()->m_slots->GetSlot( owner_slot );
 	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Live allocation", {},
-		{ { 19, Pop( nullptr, 19, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) } }, 41, 13, Production(), SmacBaseResourceContext{ 1, false, 0, 0, 0x40 } );
+		{ { 19, Pop( nullptr, 19, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) } }, 41, 13, Production(), SmacBaseResourceContext{ simulation_id, false, 0, 0, 0x40 } );
 	bm->SpawnBase( GSE_CALL, base );
 	SmacBaseAllocationState allocation{ doctor ? 1u : 3u, { {}, doctor ? 1 : 0 } };
 	for ( size_t i = 0; i < 16; ++i ) { allocation.specialists.types[ i ] = i ? ( i + 2 ) % 7 : 1; }
@@ -92,7 +92,7 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	auto* um = game->GetUM(); um->DefineMoraleSet( new MoraleSet( "live-morale", names ) );
 	um->DefineUnit( new StaticDef( "live-scout", um->GetMoraleSet( "live-morale" ), "Scout", MT_LAND, 999,
 		new CvrScoutRender( 2, 0, 100, 100, { 1, 1 }, { 128, 128 } ) ) );
-	ConventionalUnitState record{ 2, 1, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+	ConventionalUnitState record{ 2, simulation_id, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 	if ( homed ) { record.home = ConventionalUnitState::Home::Base; record.home_base_id = base->m_id; }
 	um->SpawnConventionalUnit( GSE_CALL, 91, um->GetUnitDef( "live-scout" ), owner, game->GetMap()->GetTile( 6, 6 ), record );
 	fixture.PrepareBaseCallbacks();
@@ -117,6 +117,22 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC live worker upkeep admits second human participant but not manual control", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureTwoResourceParticipants( Source );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 6, 2 );
+			auto data = KnowledgeValue().CopyData(); data.observers[ 2 ] = Knowledge::Observer{ false, {} };
+			for ( auto& tile : data.tiles ) { if ( tile.claimant == 1 ) { tile.claimant = 2; } if ( tile.explored_by == 2 ) { tile.explored_by = 4; } }
+			game->PublishSmacWorkerKnowledge( GSE_CALL, Knowledge::Create( data ) );
+			const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			GT_ASSERT( game->GetSmacProductionCost( base->m_owner, target ) == 98, "second participant did not use human Tiny factor123" );
+			base->RecalculateSmacWorkers( GSE_CALL, Roles(), SmacBaseResourcePhase::Upkeep );
+			GT_ASSERT( base->GetSmacAllocation()->selected == 5 && game->GetBM()->GetWorkingPop( { 4, 2 } ) == &base->m_pops.at( 19 ), "second participant upkeep did not repair actual workers" );
+			const auto before = Base::Serialize( base ).ToString();
+			GT_ASSERT( Rejects( [ & ] { base->CommandSmacWorkerTile( GSE_CALL, game->GetMap()->GetTile( 4, 2 ) ); } )
+				&& Base::Serialize( base ).ToString() == before, "human-roster calculation granted local manual control" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "SMAC live worker recalculation repairs actual unavailable assignments", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

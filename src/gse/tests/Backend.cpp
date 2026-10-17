@@ -4393,6 +4393,9 @@ void ConventionalUnitFixture::ConfigureResources( const std::function< std::stri
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source ) {
+	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source ); fixture->ResourcePolicy( true );
+}
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }

@@ -10,6 +10,14 @@
 
 namespace game::backend {
 
+void Game::RequireSmacLocalHumanOwner( const slot::Slot* owner ) const {
+	const auto& participant = RequireSmacProductionOwner( owner );
+	if ( !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
+		|| ( participant.role != roster::Role::Single && participant.role != roster::Role::Player ) ) {
+		throw std::runtime_error( "Canonical calculation requires the explicit local human-controlled roster" );
+	}
+}
+
 const faction::SmacSimulationParticipant& Game::RequireSmacProductionOwner( const slot::Slot* owner ) const {
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !owner ) { throw std::runtime_error( "Canonical production requires a bound owner" ); }
@@ -82,9 +90,7 @@ int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::Produc
 	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
 	const auto& participant = RequireSmacProductionOwner( owner );
 	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
-	if ( m_state->GetConnection() || owner->GetPlayer()->GetRole() != Player::PR_SINGLE ) {
-		throw std::runtime_error( "Canonical production cost currently requires a local human" );
-	}
+	RequireSmacLocalHumanOwner( owner );
 	const auto* social = m_simulation->value.social.Find( participant.simulation_id );
 	if ( !social ) { throw std::runtime_error( "Production social context is unavailable" ); }
 	if ( social->phase == faction::SmacFactionSocialState::Phase::Early ) { RequireConventionalStartupClaim(); }

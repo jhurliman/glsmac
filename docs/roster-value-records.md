@@ -99,6 +99,17 @@ manifests are retained locally in
 `/home/jhurliman/src/glsmac-roster-value-codecs/`. No installed assets are needed.
 No Windows/macOS execution or hosted CI result is inferred from these receipts.
 
+Focused publication on main `dab5a476bb93dd0d3acf2f9380933749d8402dcb`
+retains the exact codec and dedicated tests from source
+`d6b045d3ece3589640dac495055120b06248ba9b`; only registration context differs.
+Its actual normal CTest passed 5/5 in 24.38 seconds, and the full-suite log
+contains all seven new groups. This older main does not have the native-filter
+CLI. A local copied `Tests.cpp` that registers only these seven groups was linked
+against the publication objects and passed with memory tracking in 1.094 seconds,
+with no leaks. This registration-only diagnostic is not a committed CLI change
+or a full memory-tracking-suite claim. Publication commands and logs are retained
+in `/home/jhurliman/src/glsmac-roster-value-codecs-publication/`.
+
 ## Next coherent live boundary (not activated here)
 
 The approved follow-up requires all of these together before replacing live

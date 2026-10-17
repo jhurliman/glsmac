@@ -340,8 +340,13 @@ static void CheckEarlyModuleConfiguration() {
 	}
 	thread.AddModule( &first ); thread.AddModule( &second );
 	thread.StopModuleFirst( &first ); thread.StopModuleFirst( &first );
+	bool duplicate_rejected = false;
+	try { thread.AddModule( &first ); } catch ( const std::runtime_error& ) { duplicate_rejected = true; }
+	Require( duplicate_rejected, "early-stop module could be registered again after nomination" );
 	rejects( &second );
 	thread.RunOnCurrentThread( []() { return true; } );
+	Require( first.starts == 1 && first.stops == 1 && second.starts == 1 && second.stops == 1,
+		"rejected duplicate registration changed module start/stop balance" );
 	rejects( &first );
 }
 

@@ -8,7 +8,13 @@ namespace game::backend::map {
 // complete Base allocation and their live authentication belong to callers.
 class SmacWorkerKnowledge {
 public:
-	static constexpr size_t MAX_WIRE_BYTES = 2 * 1024 * 1024; // port storage budget
+	static constexpr size_t MAX_WIRE_BYTES = 4 * 1024 * 1024; // port storage budget
+	// Remembered copies of actual GLSMAC fields, not the original packed word.
+	struct Improvements {
+		uint16_t features, terraforming;
+		bool base_present, unit_present;
+		bool operator==( const Improvements& other ) const noexcept;
+	};
 	struct Tile {
 		uint8_t explored_by;
 		std::optional< int32_t > claimant; // none differs from native0
@@ -33,6 +39,9 @@ public:
 		// Y ascending, X from row parity in steps of two. No duplicated sea flag.
 		std::vector< Tile > tiles;
 		std::vector< UnitObservation > units;
+		// Empty observer row = memory unavailable. Present row has one optional
+		// entry per map tile; absence is unknown, never current terrain by default.
+		std::array< std::vector< std::optional< Improvements > >, 8 > remembered;
 		bool operator==( const Data& other ) const noexcept;
 	};
 	struct LiveUnit {

@@ -42,11 +42,11 @@ smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitte
 }
 
 UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
-	m_game->RequireWorkerKnowledgeMutation();
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) {
 		throw std::runtime_error( "Conventional movement requires a registered conventional unit" );
 	}
 	unit->RequireConventionalReady();
+	m_game->RequireConventionalSightWorld();
 	const auto* state = m_game->GetState();
 	const auto& local = state->m_settings.local;
 	if ( !m_game->IsRunning() || state->m_connection || local.game_mode != settings::LocalSettings::GM_SINGLEPLAYER
@@ -210,7 +210,9 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	auto changed = stored;
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
-	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest };
+	auto sight = result.outcome == smac_move::Outcome::Moved
+		? m_game->PrepareConventionalSight(unit->m_id,stored.owner_simulation_id,destination,source) : std::nullopt;
+	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest, std::move(sight) };
 }
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
@@ -219,7 +221,7 @@ void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destina
 
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->CheckRW( GSE_CALL );
-	const auto prepared = PrepareConventionalMove( unit, destination, caller );
+	auto prepared = PrepareConventionalMove( unit, destination, caller );
 	const auto placement = PreparePlacementHistory( *unit, destination );
 	const auto update = m_unit_updates.find( unit->m_id );
 	if ( update != m_unit_updates.end() && ( update->second.unit != unit || ( update->second.ops & UUO_DESPAWN ) ) ) {
@@ -246,6 +248,7 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	static_assert( std::is_nothrow_copy_assignable_v< SmacGameplayRandomState > );
 	unit->CommitConventionalMove( prepared.state, moved ? destination : prepared.source );
 	m_game->m_simulation->value.gameplay_random = prepared.result.random;
+	m_game->CommitConventionalSight(prepared.sight);
 	pending.ops = static_cast< unit_update_op_t >( pending.ops | UUO_REFRESH );
 	// PushUpdates later publishes the committed record. No animation callback
 	// owns movement, no GSE callbacks execute here, and no network rollback is used.

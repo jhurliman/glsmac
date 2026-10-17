@@ -4,6 +4,8 @@
 #include "Def.h"
 #include "StaticDef.h"
 #include "Unit.h"
+#include <memory>
+#include "gc/Space.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/animation/AnimationManager.h"
@@ -193,6 +195,21 @@ Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slo
 	m_game->CheckRW( GSE_CALL );
 	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) { return ResolveConventional( value, slot ); };
 	ValidateConventionalCreation( id, def, owner, tile, state, resolver );
+	if ( GetMap()->GetSmacWorkerKnowledge() ) {
+		if ( !m_game->IsRunning() || gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW("Sight placement requires its running owning accumulation"); }
+		auto sight=m_game->PrepareConventionalSight(id,state.owner_simulation_id,tile,nullptr);
+		auto unit=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,id,def,owner,state));
+		const auto history=PreparePlacementHistory(*unit,tile);
+		auto units=m_units; auto updates=m_unit_updates; auto occupants=tile->units;
+		if ( !units.emplace(id,unit.get()).second || !occupants.emplace(id,unit.get()).second || updates.count(id) ) { THROW("Sight placement has conflicting identity publication"); }
+		updates.emplace(id,unit_update_t{UUO_SPAWN,unit.get()});
+		// All validation/allocation precedes identity, membership, history and sight.
+		auto* published=unit.release(); m_units.swap(units); m_unit_updates.swap(updates); tile->units.swap(occupants);
+		published->CommitInitialPlacement(tile);
+		if ( history.first ) { history.first->MarkPlaced(history.second); }
+		m_game->CommitConventionalSight(sight);
+		TriggerSpawnHook(GSE_CALL,published); return published;
+	}
 	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state );
 	SpawnUnit( GSE_CALL, unit );
 	return unit;

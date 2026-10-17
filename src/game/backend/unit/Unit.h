@@ -81,6 +81,9 @@ public:
 
 private:
 	friend class UnitManager;
+	struct Unplaced {};
+	Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state );
+	void CommitInitialPlacement( map::tile::Tile* tile ) noexcept;
 	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true, bool pending_home = false );
 	void Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	void Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );

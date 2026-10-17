@@ -10,6 +10,7 @@
 #include "game/backend/base/PopDef.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacOrdinaryLandExploration.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/Unit.h"
@@ -117,6 +118,103 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC live ordinary sight preserves unknown memory and exact remembered copies", GT() {
+		auto data=Data(); data.remembered[1].resize(data.tiles.size());
+		data.remembered[1][0]=Knowledge::Improvements{0x7fff,0x1fff,true,false};
+		data.remembered[7].resize(data.tiles.size()); data.remembered[7].back()=Knowledge::Improvements{0,0,false,true};
+		const auto value=Knowledge::Create(data); const auto wire=value.Serialize();
+		GT_ASSERT(Knowledge::Deserialize(wire)==value, "remembered fields or unknown entries lost in codec");
+		data.remembered[1][0]->features=0;
+		GT_ASSERT(value.CopyData().remembered[1][0]->features==0x7fff && value.CopyData().remembered[2].empty(), "memory aliases caller or fabricates absent observer");
+		for(int scenario=0;scenario<4;++scenario) {
+			auto malformed=wire;
+			if(scenario==0) {malformed.pop_back();}
+			if(scenario==1) {malformed.push_back('x');}
+			if(scenario==2) {malformed.back()=4;}
+			if(scenario==3) {malformed[4]=1;}
+			GT_ASSERT(Rejects([&]{Knowledge::Deserialize(malformed);}), "malformed remembered suffix admitted");
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC live ordinary sight factory publishes mutual visibility and worker filtering", GT() {
+		for(int relation=0;relation<3;++relation) {
+			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign(false);
+			const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+				auto* game=fixture.Game(); Definitions(game);
+				for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {auto* tile=game->GetMap()->GetTile(x,y); for(auto* corner:tile->elevation.corners){*corner=100;} tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
+				auto* base=MakeBase(GSE_CALL,game,901,0,1,16,16,3);
+				Knowledge::Data data{128,64,true,true,0,{},{},{}}; data.tiles.resize(4096,{2,std::nullopt}); data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+				data.observers[1]->relations[2].foreign_unit_exemption=relation!=0;
+				game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+				auto* foreign=Spawn(GSE_CALL,game,71,1,2,17,15);
+				const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+				GT_ASSERT(actual.units.size()==1 && actual.units[0].id==71 && actual.units[0].visible_to==2, "base-only factory failed to reveal foreign unit");
+				GT_ASSERT(actual.tiles[15*64+17/2].explored_by==6 && actual.tiles[0].explored_by==2, "factory did not publish bounded exploration while preserving other observer bits");
+				GT_ASSERT(game->GetSmacWorkerAvailability(*base).unavailable==(relation==0 ? 3u:1u), "stored visibility confused with worker diplomatic exemption");
+				GT_ASSERT(actual.remembered[2][15*64+17/2]->unit_present && actual.remembered[2][16*64+16/2]->base_present, "factory memory omitted post-placement Unit or actual Base");
+				// A second, adjacent observer updates both masks without changing the
+				// already saved diplomatic worker predicate.
+				auto* local=Spawn(GSE_CALL,game,72,0,1,18,16);
+				const auto seen=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+				GT_ASSERT(seen.units[0].visible_to==2 && seen.units[1].visible_to==4 && local->GetTile()->units.at(72)==local && foreign->GetTile()->units.at(71)==foreign,
+					"factory did not publish mutual adjacent visibility with identity");
+				GT_OK();
+			}); GT_ASSERT(result.empty(), "sight factory fixture: "+result);
+		}
+		GT_OK();
+	} );
+	task->AddTest( "SMAC live ordinary sight actual movement clears only mover and restores without replay", GT() {
+		ConventionalUnitFixture source; source.ConfigureMovementCampaign(false); std::string snapshot,knowledge;
+		const auto result=source.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=source.Game(); Definitions(game);
+			for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
+			auto* local=Spawn(GSE_CALL,game,71,0,1,32,16); Spawn(GSE_CALL,game,72,1,2,48,16);
+			auto partial=local->Conventional(); partial.spent=2; game->GetUM()->UpdateConventionalUnit(GSE_CALL,local,partial);
+			source.GameplayRandom({0,123});
+			Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{6,std::nullopt});data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+			// Retained supplied history: neither stationary flag is reconstructed
+			// from the current separated positions before the actual move event.
+			data.units={{71,4,false},{72,2,false}};data.remembered[1].resize(4096);data.remembered[1][0]=Knowledge::Improvements{1,2,true,true};
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+			const auto before_attempt=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+			auto random=source.GameplayRandom();
+			GT_ASSERT(random.NextSharedLow16()==62303, "supplied failed-attempt draw changed");
+			auto* destination=game->GetMap()->GetTile(30,16);
+			auto* args=VALUE(value::Object,,GSE_CALL_NOGC,value::object_properties_t({{"unit",local->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}}));
+			Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"event",{VALUE(value::String,,"move_unit"),args});source.DrainEvents();
+			GT_ASSERT(local->GetTile()->coord.x==32 && local->Conventional().spent==3 && local->Conventional().failed_move
+				&& source.GameplayRandom()==random && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==before_attempt,
+				"accepted failed lottery changed sight or failed to retain its actual draw/spent marker");
+			game->GetUM()->ResetConventionalSpent(GSE_CALL,local);
+			Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"event",{VALUE(value::String,,"move_unit"),args});source.DrainEvents();
+			const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+			GT_ASSERT(local->GetTile()==destination && local->Conventional().spent==3 && actual.units[0].visible_to==0 && actual.units[1].visible_to==2, "actual movement globally rebuilt visibility or omitted mover clear");
+			GT_ASSERT(actual.remembered[1][16*64+30/2]->unit_present && !actual.remembered[1][16*64+32/2]->unit_present && actual.remembered[1][0]==data.remembered[1][0], "movement memory missed membership timing or refreshed unrelated old memory");
+			GT_ASSERT(source.GameplayRandom()==random, "ordinary full move consumed a sight RNG draw");
+			knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();snapshot=source.Snapshot();
+			GT_ASSERT(Rejects([&]{game->GetUM()->MoveConventionalUnit(GSE_CALL,local,game->GetMap()->GetTile(28,16),0);}) && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge, "exhausted command changed sight");
+			GT_OK();
+		});GT_ASSERT(result.empty(),"sight move fixture: "+result);
+		ConventionalUnitFixture destination;destination.ConfigureMovementCampaign(false);
+		return destination.Run([&](GSE_CALLABLE)->std::string {
+			destination.RestoreThroughStart(GSE_CALL,snapshot,[](GSE_CALLABLE){});
+			GT_ASSERT(destination.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge && destination.Game()->GetUM()->GetUnit(71)->GetTile()->coord.x==30, "restore replayed sight or lost remembered state");GT_OK();
+		});
+	} );
+	task->AddTest( "SMAC live ordinary sight rejects unsupported detection before publication", GT() {
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Definitions(game);
+			for(size_t y=0;y<64;++y){for(size_t x=y&1;x<128;x+=2){auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
+			Spawn(GSE_CALL,game,71,0,1,32,16);
+			Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{2,std::nullopt});data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};data.units={{71,0,false}};
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));const auto bytes=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto next=Unit::GetNextId();const auto queued=fixture.QueuedFrontendRequests().size();
+			auto* tile=game->GetMap()->GetTile(33,15);tile->features=map::tile::FEATURE_XENOFUNGUS;
+			GT_ASSERT(Rejects([&]{Spawn(GSE_CALL,game,72,1,2,33,15);}) && game->GetUM()->GetUnits().size()==1 && tile->units.empty() && Unit::GetNextId()==next && fixture.QueuedFrontendRequests().size()==queued && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==bytes,
+				"unsupported detection partly published identity, membership, queues or sight");GT_OK();
+		});
+	} );
+
 	task->AddTest( "SMAC live worker knowledge joins actual entities and terrain without query effects", []( GSE*, context::Context* ) -> std::string {
 		for ( bool sea : { false, true } ) {
 			ConventionalUnitFixture fixture; fixture.Configure();
@@ -265,8 +363,9 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				[ & ] { Call( GSE_CALL, static_cast< value::Object* >( um->Wrap( GSE_CALL ) ), "despawn_unit", { world.local_unit->Wrap( GSE_CALL ) } ); },
 				[ & ] { Call( GSE_CALL, static_cast< value::Object* >( bm->Wrap( GSE_CALL ) ), "despawn_base", { world.local->Wrap( GSE_CALL ) } ); }
 			};
-			for ( const auto& mutation : mutations ) {
-				GT_ASSERT( KnowledgeFence( mutation ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
+			for ( size_t index=0; index<mutations.size(); ++index ) {
+				const auto& mutation=mutations[index];
+				GT_ASSERT( ( ( index==1 || index==2 || index==4 ) ? Rejects(mutation) : KnowledgeFence(mutation) ) && !called && !target->IsLocked() && !world.local_unit->m_animation_id && Unchanged( fixture, world, before ),
 					"guarded mutation changed IDs/membership/queues/terrain/turn/RNG or ran callback" );
 			}
 			GT_OK();

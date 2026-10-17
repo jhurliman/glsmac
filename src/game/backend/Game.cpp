@@ -592,7 +592,8 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	if ( HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
+	if ( HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 		return;
 	}
@@ -894,7 +895,8 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
-				if ( !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
+				if ( !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
 					std::lock_guard guard( m_event_handlers_mutex );
 					if ( m_event_handlers.find( name ) == m_event_handlers.end() ) {
@@ -1769,6 +1771,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleConventionalMoveEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleConventionalMoveEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
 				// Also fence commands queued before explicit knowledge admission.

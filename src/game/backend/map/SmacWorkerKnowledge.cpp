@@ -23,9 +23,23 @@ void AddSize( size_t& size, size_t count, size_t stride, size_t cap ) {
 	size += count * stride;
 }
 size_t WireSize( size_t tiles, size_t units ) {
-	size_t size = HEADER_BYTES;
+	size_t size = HEADER_BYTES + 1; // remembered-row presence suffix
 	AddSize( size, tiles, TILE_BYTES, Knowledge::MAX_WIRE_BYTES );
 	AddSize( size, units, UNIT_BYTES, Knowledge::MAX_WIRE_BYTES );
+	return size;
+}
+size_t MemorySize( const Knowledge::Data& data ) {
+	size_t size = WireSize( data.tiles.size(), data.units.size() );
+	for ( const auto& row : data.remembered ) {
+		if ( row.empty() ) { continue; }
+		Require( row.size() == data.tiles.size(), "Remembered improvement extent differs" );
+		AddSize( size, row.size(), 1, Knowledge::MAX_WIRE_BYTES );
+		for ( const auto& value : row ) {
+			if ( !value ) { continue; }
+			Require( !( value->features & ~uint16_t(0x7fff) ) && !( value->terraforming & ~uint16_t(0x1fff) ), "Unknown remembered improvement fields" );
+			AddSize( size, 1, 5, Knowledge::MAX_WIRE_BYTES );
+		}
+	}
 	return size;
 }
 void ValidateId( uint64_t id ) {
@@ -34,7 +48,7 @@ void ValidateId( uint64_t id ) {
 void Validate( const Knowledge::Data& data ) {
 	Require( data.tiles.size() == TileCount( data.width, data.height ), "Worker knowledge tile count differs from dimensions" );
 	Require( data.ordinary_local_mode, "Worker knowledge requires ordinary local mode" );
-	(void)WireSize( data.tiles.size(), data.units.size() );
+	(void)MemorySize( data );
 	bool playable = false;
 	for ( size_t i = 1; i < 8; ++i ) { playable |= data.observers[i].has_value(); }
 	Require( playable, "Worker knowledge requires a playable observer row" );
@@ -58,12 +72,15 @@ void Write( std::string& wire, size_t offset, uint64_t value, unsigned bytes ) {
 }
 }
 
+bool SmacWorkerKnowledge::Improvements::operator==( const Improvements& o ) const noexcept {
+	return features == o.features && terraforming == o.terraforming && base_present == o.base_present && unit_present == o.unit_present;
+}
 bool SmacWorkerKnowledge::Tile::operator==( const Tile& o ) const noexcept { return explored_by == o.explored_by && claimant == o.claimant; }
 bool SmacWorkerKnowledge::Observer::operator==( const Observer& o ) const noexcept { return foreign_disclosure == o.foreign_disclosure && relations == o.relations; }
 bool SmacWorkerKnowledge::UnitObservation::operator==( const UnitObservation& o ) const noexcept { return id == o.id && visible_to == o.visible_to && active_convoy == o.active_convoy; }
 bool SmacWorkerKnowledge::Data::operator==( const Data& o ) const noexcept {
 	return width == o.width && height == o.height && horizontal_wrap == o.horizontal_wrap && ordinary_local_mode == o.ordinary_local_mode
-		&& all_map_revealed == o.all_map_revealed && observers == o.observers && tiles == o.tiles && units == o.units;
+		&& all_map_revealed == o.all_map_revealed && observers == o.observers && tiles == o.tiles && units == o.units && remembered == o.remembered;
 }
 SmacWorkerKnowledge::SmacWorkerKnowledge( Data data ) : m_data( std::move( data ) ) {}
 SmacWorkerKnowledge SmacWorkerKnowledge::Create( const Data& data ) { Validate( data ); return SmacWorkerKnowledge( data ); }
@@ -102,8 +119,8 @@ SmacWorkerMapFrame SmacWorkerKnowledge::Project( int32_t observer, const std::ve
 }
 
 std::string SmacWorkerKnowledge::Serialize() const {
-	std::string wire( "SWKN" ); wire.resize( WireSize( m_data.tiles.size(), m_data.units.size() ) );
-	Write( wire, 4, 1, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
+	std::string wire( "SWKN" ); wire.resize( MemorySize( m_data ) );
+	Write( wire, 4, 2, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
 	wire[16] = m_data.horizontal_wrap; wire[17] = m_data.ordinary_local_mode; wire[18] = static_cast< char >( m_data.all_map_revealed );
 	uint8_t presence = 0;
 	for ( size_t i = 0; i < 8; ++i ) {
@@ -123,18 +140,40 @@ std::string SmacWorkerKnowledge::Serialize() const {
 	for ( const auto& unit : m_data.units ) {
 		Write( wire, offset, unit.id, 8 ); offset += 8; wire[offset++] = static_cast< char >( unit.visible_to ); wire[offset++] = unit.active_convoy;
 	}
+	uint8_t memory_rows = 0;
+	for ( size_t i = 0; i < 8; ++i ) { if ( !m_data.remembered[i].empty() ) { memory_rows |= uint8_t(1u << i); } }
+	wire[offset++] = static_cast<char>(memory_rows);
+	for ( const auto& row : m_data.remembered ) { for ( const auto& value : row ) {
+		wire[offset++] = value.has_value();
+		if ( value ) {
+			Write(wire,offset,value->features,2); Write(wire,offset+2,value->terraforming,2);
+			wire[offset+4] = ( value->base_present ? 1 : 0 ) | ( value->unit_present ? 2 : 0 ); offset += 5;
+		}
+	} }
 	return wire;
 }
 
 SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) {
 	Require( wire.size() >= HEADER_BYTES && wire.size() <= MAX_WIRE_BYTES, "Worker knowledge wire length exceeds budget" );
-	Require( wire.compare( 0, 4, "SWKN" ) == 0 && Read( wire, 4, 4 ) == 1, "Unsupported worker knowledge version" );
+	Require( wire.compare( 0, 4, "SWKN" ) == 0 && Read( wire, 4, 4 ) == 2, "Unsupported worker knowledge version" );
 	const auto width = Read( wire, 8, 4 ), height = Read( wire, 12, 4 );
 	Require( width <= 512 && height <= 256, "Worker knowledge dimensions exceed budget" );
 	const auto tiles = TileCount( static_cast< int32_t >( width ), static_cast< int32_t >( height ) );
 	const auto units = static_cast< size_t >( Read( wire, 24, 4 ) );
-	Require( Read( wire, 20, 4 ) == tiles && WireSize( tiles, units ) == wire.size(), "Worker knowledge has inconsistent counts or trailing bytes" );
+	Require( Read( wire, 20, 4 ) == tiles && WireSize( tiles, units ) <= wire.size(), "Worker knowledge has inconsistent counts or trailing bytes" );
 	Require( Byte(wire,16) <= 1 && Byte(wire,17) == 1 && ( Byte(wire,19) & 254 ), "Worker knowledge has invalid mode or absent playable observers" );
+	// Scan the variable suffix before materializing any tile/unit/memory arrays.
+	size_t memory_start = HEADER_BYTES + tiles*TILE_BYTES + units*UNIT_BYTES;
+	size_t scan = memory_start; const auto memory_rows = Byte(wire,scan++);
+	for ( size_t i = 0; i < 8; ++i ) { if ( memory_rows & (1u<<i) ) { for ( size_t j = 0; j < tiles; ++j ) {
+		Require( scan < wire.size(), "Truncated remembered improvement presence" );
+		const auto present = Byte(wire,scan++); Require( present <= 1, "Invalid remembered improvement presence" );
+		if ( present ) {
+			Require( wire.size()-scan >= 5, "Truncated remembered improvement fields" );
+			Require( !(Read(wire,scan,2)&~uint64_t(0x7fff)) && !(Read(wire,scan+2,2)&~uint64_t(0x1fff)) && Byte(wire,scan+4)<=3, "Invalid remembered improvement fields" ); scan += 5;
+		}
+	} } }
+	Require( scan == wire.size(), "Trailing worker knowledge bytes" );
 	Data data{static_cast<int32_t>(width),static_cast<int32_t>(height),bool(Byte(wire,16)),true,Byte(wire,18),{},{},{}};
 	for ( size_t i = 0; i < 8; ++i ) {
 		const auto disclosure = Byte(wire,28+i*3), exemption = Byte(wire,29+i*3), recognition = Byte(wire,30+i*3);
@@ -159,6 +198,15 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 		Require( convoy <= 1, "Worker knowledge has invalid convoy flag" );
 		data.units.push_back( {id,visible,bool(convoy)} );
 	}
+	++offset; // the already validated remembered-row mask
+	for ( size_t i = 0; i < 8; ++i ) { if ( memory_rows & (1u<<i) ) {
+		auto& row = data.remembered[i]; row.reserve(tiles);
+		for ( size_t j = 0; j < tiles; ++j ) {
+			if ( !Byte(wire,offset++) ) { row.emplace_back(); continue; }
+			const auto flags=Byte(wire,offset+4);
+			row.emplace_back(Improvements{static_cast<uint16_t>(Read(wire,offset,2)),static_cast<uint16_t>(Read(wire,offset+2,2)),bool(flags&1),bool(flags&2)}); offset+=5;
+		}
+	} }
 	Validate( data ); return SmacWorkerKnowledge( std::move( data ) );
 }
 

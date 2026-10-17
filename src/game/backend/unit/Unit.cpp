@@ -60,6 +60,12 @@ Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owne
 	Publish( GSE_CALL, tile, record_placement );
 }
 
+Unit::Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state )
+	: MapObject(um->GetMap(),nullptr), m_id(id), m_def(def), m_owner(owner), m_state(state), m_um(um) {}
+void Unit::CommitInitialPlacement( map::tile::Tile* tile ) noexcept {
+	m_tile=tile; if ( next_id<=m_id ) { next_id=m_id+1; }
+}
+
 void Unit::Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 	if ( m_id == 0 || m_id >= static_cast< uint64_t >( std::numeric_limits< int64_t >::max() ) ||
 		m_id >= std::numeric_limits< size_t >::max() || m_um->HasUnitId( m_id ) || !tile || tile->units.count( m_id ) ) {

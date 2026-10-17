@@ -121,7 +121,7 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 		const size_t unit=52+input.knowledge.tiles.size()*2;
 		for(int scenario=0;scenario<22;++scenario){
 			auto wire=saved;
-			if(scenario==0){wire[0]='X';} if(scenario==1){Write(wire,4,2);} if(scenario==2){Write(wire,8,0);}
+			if(scenario==0){wire[0]='X';} if(scenario==1){Write(wire,4,1);} if(scenario==2){Write(wire,8,0);}
 			if(scenario==3){Write(wire,8,3);} if(scenario==4){Write(wire,8,0xffffffffu);} if(scenario==5){Write(wire,12,0);}
 			if(scenario==6){wire[16]=2;} if(scenario==7){wire[17]=0;} if(scenario==8){wire[19]=0;}
 			if(scenario==9){wire[19]=1;} if(scenario==10){wire[28]=1;} if(scenario==11){wire[31]=2;}
@@ -141,11 +141,11 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "SMAC worker knowledge validates exact aggregate cap before projection allocation", GT() {
 		Knowledge::Data data{2,5,true,true,0,{},{},{}}; data.observers[1]=Knowledge::Observer{false,{}}; data.tiles.resize(5,{1,0});
-		const auto count=(Knowledge::MAX_WIRE_BYTES-52-10)/10;
+		const auto count=(Knowledge::MAX_WIRE_BYTES-53-10)/10;
 		for(size_t i=0;i<count;++i){data.units.push_back({uint64_t(i+1),255,false});}
 		const auto owned=Knowledge::Create(data); const auto wire=owned.Serialize();
-		GT_ASSERT( wire.size()==Knowledge::MAX_WIRE_BYTES && Knowledge::Deserialize(wire)==owned, "exact knowledge wire cap rejected" );
-		GT_ASSERT( Rejects([&]{Knowledge::Deserialize(wire+"x");},"length"), "cap plus one copied into decoder" );
+		GT_ASSERT( wire.size()==53+10+count*10 && Knowledge::Deserialize(wire)==owned, "exact knowledge wire cap rejected" );
+		GT_ASSERT( Rejects([&]{Knowledge::Deserialize(std::string(Knowledge::MAX_WIRE_BYTES+1,'x'));},"length"), "cap plus one copied into decoder" );
 		data.units.push_back({uint64_t(count+1),0,false});
 		GT_ASSERT( Rejects([&]{Knowledge::Create(data);},"budget"), "owned aggregate overflow admitted" );
 		std::vector<Knowledge::LiveUnit> units(count,{1,1,{0,0}});

@@ -7,6 +7,7 @@
 #include "Types.h"
 #include "ConventionalUnitState.h"
 #include "SmacEmptyGroundMovement.h"
+#include "game/backend/map/SmacWorkerKnowledge.h"
 
 #include <deque>
 
@@ -94,6 +95,7 @@ private:
 		smac_move::Result result;
 		std::optional< int32_t > nearest_distance;
 		bool update_nearest = false;
+		std::optional< map::SmacWorkerKnowledge > sight;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const;

@@ -3,18 +3,24 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "SmacGameplayRandomState.h"
+#include "SmacScoutCombat.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
-#include "WorldSnapshotRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
-#include "SmacWorldSizeRules.h"
-#include "SmacFactionStartupRules.h"
 #include "SmacTechnologyState.h"
+#include "SmacWorldSizeRules.h"
+#include "SmacPredefinedUnitCatalog.h"
+#include "SmacPredefinedUnitRules.h"
+#include "SmacFactionStartupRules.h"
+#include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -22,18 +28,16 @@
 #include "SmacStartupDesignState.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
-#include "SmacPredefinedUnitCatalog.h"
-#include "SmacPredefinedUnitRules.h"
-#include "UnitRulesTXTLoader.h"
-#include "UnitDesignResolver.h"
 #include "CvrBasisConverter.h"
 #include "CvrTransformCalculator.h"
+#include "CvrScoutRenderer.h"
 #include "GSE.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
+#include "SmacConventionalStats.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -75,18 +79,22 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddSmacGameplayRandomStateTests( task );
+		tests::AddSmacScoutCombatTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );
 		tests::AddCvrFrameAssemblerTests( task );
 		tests::AddCvrIndexedRasterizerTests( task );
+		tests::AddCvrScoutRendererTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
-		tests::AddUnitRulesTXTLoaderTests( task );
-		tests::AddUnitDesignResolverTests( task );
+		tests::AddSmacConventionalStatsTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {
@@ -214,17 +222,17 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
-		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
-		tests::AddSmacWorldSizeRulesTests( task );
-		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );
-		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacSimulationStateTests( task );
 		tests::AddSmacStartupDesignStateTests( task );
+		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );
+		tests::AddSmacFactionStartupRulesTests( task );
+		tests::AddWorldSnapshotRulesTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 	}
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
 		tests::AddScriptsTests( task );

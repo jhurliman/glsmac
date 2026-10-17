@@ -198,7 +198,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidWorldSizeHead
 			auto changed = smac_rules_fixture::WorldSizes();
 			if ( field == 0 ) { changed.presets[ i ].name += " changed"; }
 			if ( field == 1 ) { ++changed.presets[ i ].source_x; }
-			if ( field == 2 ) { ++changed.presets[ i ].source_y; }
+			if ( field == 2 ) { changed.presets[ i ].source_y += 2; }
 			add( "changed source row " + std::to_string( i ) + ":" + std::to_string( field ), true, changed.Serialize().ToString() );
 		}
 	}

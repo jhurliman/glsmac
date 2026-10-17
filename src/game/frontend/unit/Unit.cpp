@@ -386,6 +386,7 @@ void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* spr
 	}
 	meshtex.mesh = mesh->ToRenderMesh();
 	meshtex.texture = texture;
+	meshtex.texture_owner = sprite->texture_owner;
 }
 
 void Unit::SetRenderCoords( const types::Vec3& coords ) {

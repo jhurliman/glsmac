@@ -11,11 +11,8 @@
 
 namespace game::backend::base {
 
-BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, Base& base,
-    unit::Def* definition, unit::SmacMoraleMode mode ) {
-    m_game->CheckRW(GSE_CALL);
-    if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()
-        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
+    if (!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
         THROW("Colony abandonment requires the current size-one canonical Base");
     }
     m_game->RequireSmacLocalHumanOwner(base.m_owner);
@@ -32,13 +29,33 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
     if (!tile || !map || tile->tiles!=map->GetTilesPtr() || tile->base!=&base) {THROW("Abandoned Base center differs");}
     const auto position=std::find(m_base_order.begin(),m_base_order.end(),base.m_id);
     if (position==m_base_order.end()) {THROW("Abandoned Base is absent from record order");}
-    SmacAbandonmentResult result{};
     if (std::next(position)!=m_base_order.end()) {
         const auto* successor=GetBase(*std::next(position));
         if (!successor || successor->m_owner!=base.m_owner) {THROW("Foreign compacted successor continuation is not yet admitted");}
         if (!successor->GetSmacUpkeepCache()) {THROW("Compacted successor lacks its retained resource calculation");}
-        result.successor_id=successor->m_id;
-        result.successor_cache=successor->GetSmacUpkeepCache();
+    }
+    const bool other_owned=std::any_of(m_base_order.begin(),m_base_order.end(),[&](size_t id){
+        const auto* candidate=GetBase(id);
+        return candidate && candidate!=&base && candidate->m_owner==base.m_owner;
+    });
+    if (!other_owned) {THROW("Last-owned-Base abandonment requires the restart/disposition path");}
+}
+
+BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, Base& base,
+    unit::Def* definition, unit::SmacMoraleMode mode ) {
+    m_game->CheckRW(GSE_CALL);
+    if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()
+        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+        THROW("Colony abandonment requires the current size-one canonical Base");
+    }
+    ValidateSmacAbandonment(base);
+    const auto& production=base.GetProductionState();
+    auto* tile=base.GetTile(); const auto* map=m_game->GetMap();
+    const auto position=std::find(m_base_order.begin(),m_base_order.end(),base.m_id);
+    SmacAbandonmentResult result{};
+    if (std::next(position)!=m_base_order.end()) {
+        const auto* successor=GetBase(*std::next(position));
+        result.successor_id=successor->m_id; result.successor_cache=successor->GetSmacUpkeepCache();
     }
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
     if (!territory) {THROW("Colony abandonment requires saved worker knowledge and territory");}

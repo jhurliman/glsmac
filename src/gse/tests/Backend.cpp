@@ -273,7 +273,12 @@ public:
 		auto* base=m_game.GetBM()->GetBase(base_id);
 		if(!base) {throw std::runtime_error("fixture Colony Base is absent");}
 		game::backend::Game::CanonicalTurnContinuation next{m_game.GetTurnId()};
-		next.owners.push_back({base->GetSmacResourceContext().owner_simulation_id,{base_id}});
+		next.owners.push_back({base->GetSmacResourceContext().owner_simulation_id,{}});
+		bool reached=false;
+		for(const auto id:m_game.GetBM()->GetBaseRecordOrder()) {
+			reached=reached || id==base_id;
+			if(reached && m_game.GetBM()->GetBase(id)->m_owner==base->m_owner) {next.owners.back().second.push_back(id);}
+		}
 		m_game.m_canonical_continuation=std::move(next);
 		m_game.m_canonical_turn_in_progress=true;
 		util::FinallyGuard finish([&]{m_game.m_canonical_turn_in_progress=false;});

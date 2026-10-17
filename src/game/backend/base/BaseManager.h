@@ -81,6 +81,7 @@ public:
 	};
 	// Native accepted-choice continuation only. Completes the current Colony,
 	// retires its size-one Base and returns the compacted record's retained tail.
+	void ValidateSmacAbandonment( const Base& base ) const;
 	SmacAbandonmentResult AbandonSmacBase( GSE_CALLABLE, Base& base, unit::Def* definition, unit::SmacMoraleMode mode );
 	void ValidateSmacResourceContext( const SmacBaseResourceContext& context, const slot::Slot* owner, const faction::Faction* faction ) const;
 

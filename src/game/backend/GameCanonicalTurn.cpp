@@ -172,6 +172,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
 	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
 	auto& next=*m_canonical_continuation;
+	if(next.stage==Stage::Screen) {ValidateCanonicalColonyScreen();return;}
 	while(next.owner_index<next.owners.size()) {
 		const auto& owner=next.owners[next.owner_index];
 		if(next.base_index==owner.second.size()) {
@@ -196,6 +197,12 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		const auto posted=saved.CreditBase(next.energy->tail.final.economy,next.energy->maintenance);
 		saved=posted;
 		m_bm->RefreshBase(base);
+		if(next.screen_base) {
+			next.stage=Stage::Screen;
+			ValidateCanonicalColonyScreen();
+			NotifyCanonicalColonyScreen(GSE_CALL);
+			return; // credit is committed; close resumes after this exact Base
+		}
 		next.energy.reset();++next.base_index;next.stage=Stage::Base;
 	}
 	const auto turn_id=next.turn;
@@ -317,8 +324,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 	ValidateCanonicalColony();
 	// Joined with the distinct prepared abandonment provider before the default
 	// controller uses BeginCanonicalBaseUpkeep. Never manufacture a substitute.
-	if(answer=="accept") {throw std::runtime_error("Colony acceptance requires the abandonment continuation");}
-	if(answer=="screen") {throw std::runtime_error("Colony screen requires its exact controller boundary");}
+	if(answer=="accept") {m_bm->ValidateSmacAbandonment(*m_bm->GetBase(m_colony_request->base));}
 	if(!apply) {return true;}
 	if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Colony choice requires its owning accumulation");}
 	m_canonical_turn_in_progress=true;
@@ -328,6 +334,35 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		auto* base=m_bm->GetBase(pending.base);
 		base::Base::SmacAllocationRoles roles;const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
 		for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+		if(answer=="accept") {
+			// Prepare traversal storage before the provider publishes and retires the
+			// old Base. Its returned stable successor owns the remaining tail.
+			auto remaining=next.owners.at(next.owner_index).second;
+			remaining.erase(remaining.begin()+next.base_index);
+			const auto mode=next.colony->morale_mode;
+			const auto design=*base->GetProductionState()->current_item.smac_source_id;
+			auto* definition=ResolveSmacProductionPresentation(base->m_owner,design);
+			const auto abandoned=m_bm->AbandonSmacBase(GSE_CALL,*base,definition,mode);
+			next.owners[next.owner_index].second.swap(remaining);
+			next.colony.reset();m_colony_request.reset();
+			if(abandoned.successor_id) {
+				if(!abandoned.successor_cache || next.base_index>=next.owners[next.owner_index].second.size()
+					|| next.owners[next.owner_index].second[next.base_index]!=*abandoned.successor_id) {
+					throw std::runtime_error("Abandonment compacted successor differs from the suspended traversal");
+				}
+				auto* successor=m_bm->GetBase(*abandoned.successor_id);
+				if(!successor) {throw std::runtime_error("Abandonment successor disappeared");}
+				const auto tail=successor->ResumeSmacAbandonmentTail(GSE_CALL,*abandoned.successor_cache,roles,mode);
+				if(tail.removed_base || tail.completed_unit || !tail.final_calculation) {
+					throw std::runtime_error("Abandonment successor produced an unsupported tail");
+				}
+				next.energy=CalculateCanonicalBaseEnergy(*successor,*tail.final_calculation);
+				next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
+			} else {next.stage=CanonicalTurnContinuation::Stage::Base;}
+			ContinueCanonicalTurn(GSE_CALL);
+			if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}
+			return true;
+		}
 		const auto selected=answer=="screen"?base::SmacColonyChoice::Screen:base::SmacColonyChoice::Delay;
 		const auto result=base->ResumeSmacColonyUpkeep(GSE_CALL,*next.colony,selected,roles,[&](int32_t design){
 			return ResolveSmacProductionPresentation(base->m_owner,design);
@@ -337,13 +372,128 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		}
 		next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
 		next.colony.reset();next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
-		if(selected==base::SmacColonyChoice::Screen) {next.screen_base=pending.base;}
+		if(selected==base::SmacColonyChoice::Screen) {next.screen_base=pending.base;next.screen_request_id=pending.id;}
 		m_colony_request.reset();
 		ContinueCanonicalTurn(GSE_CALL);
 		if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}
 	} catch(const std::exception& error) {FailCanonicalTurn(error.what());throw;}
 	catch(...) {FailCanonicalTurn("Unknown Colony continuation failure");throw;}
 	return true;
+}
+
+void Game::ValidateCanonicalColonyScreen() const {
+	if(!m_canonical_continuation || m_colony_request || m_research_request || m_canonical_turn_failed || !IsRunning()) {
+		throw std::runtime_error("Colony screen has no active suspended turn");
+	}
+	const auto& next=*m_canonical_continuation;
+	if(next.stage!=CanonicalTurnContinuation::Stage::Screen || next.colony || !next.energy
+		|| !next.screen_base || !next.screen_request_id || *next.screen_request_id<1 || next.turn!=GetTurnId()
+		|| next.owner_index>=next.owners.size()) {throw std::runtime_error("Colony screen stage differs");}
+	const auto& owner=next.owners[next.owner_index];
+	if(next.base_index>=owner.second.size() || *next.screen_base!=owner.second[next.base_index]) {
+		throw std::runtime_error("Colony screen traversal identity differs");
+	}
+	ValidateCurrentSimulation();
+	const auto* base=m_bm->GetBase(*next.screen_base);
+	if(!base || base->GetSmacResourceContext().owner_simulation_id!=owner.first) {
+		throw std::runtime_error("Colony screen Base no longer exists for its owner");
+	}
+	RequireSmacLocalHumanOwner(base->m_owner);
+}
+
+void Game::NotifyCanonicalColonyScreen(GSE_CALLABLE) {
+	// The published Screen is a stable edit boundary. Immediate UI callbacks
+	// may query its real production choices, but only enqueue stamped commands.
+	const bool active=m_canonical_turn_in_progress;m_canonical_turn_in_progress=false;
+	util::FinallyGuard restore([&]{m_canonical_turn_in_progress=active;});
+	m_state->TriggerObject(this,"colony_screen",ARGS_F(this) {
+		{"pending",GetPendingSmacColonyScreen(GSE_CALL)},
+	};});
+}
+
+gse::Value* Game::GetPendingSmacColonyScreen(GSE_CALLABLE) const {
+	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen
+		|| m_canonical_turn_failed) {return VALUE(gse::value::Null);}
+	ValidateCanonicalColonyScreen();
+	const auto& next=*m_canonical_continuation;const auto* base=m_bm->GetBase(*next.screen_base);
+	const gse::value::object_properties_t properties{
+		{"request_id",VALUE(gse::value::Int,,*next.screen_request_id)}, {"base_id",VALUE(gse::value::Int,,base->m_id)},
+		{"base_name",VALUE(gse::value::String,,base->m_name)}, {"owner_slot",VALUE(gse::value::Int,,base->m_owner->GetIndex())}
+	};
+	return VALUE(gse::value::Object,,GSE_CALL_NOGC,properties);
+}
+
+bool Game::HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,
+	const gse::value::object_properties_t& args,size_t caller,bool apply) {
+	if(name!="close_colony_screen") {return false;}
+	const auto request=args.find("request_id");
+	if(caller!=m_slot_num || args.size()!=1 || request==args.end() || !request->second || request->second->type!=gse::VT_INT
+		|| static_cast<gse::value::Int*>(request->second)->value<1) {throw std::runtime_error("Colony screen close requires its authenticated request");}
+	if(m_canonical_turn_failed || m_canonical_turn_in_progress) {throw std::runtime_error("Colony screen is not currently available");}
+	const auto id=static_cast<gse::value::Int*>(request->second)->value;
+	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen
+		|| m_canonical_continuation->screen_request_id!=id) {return true;}
+	ValidateCanonicalColonyScreen();
+	if(!apply) {return true;}
+	if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Colony screen close requires its owning accumulation");}
+	m_canonical_turn_in_progress=true;
+	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
+	try {
+		auto& next=*m_canonical_continuation;
+		next.screen_base.reset();next.screen_request_id.reset();next.energy.reset();
+		++next.base_index;next.stage=CanonicalTurnContinuation::Stage::Base;
+		NotifyCanonicalColonyScreen(GSE_CALL);
+		ContinueCanonicalTurn(GSE_CALL);
+	} catch(const std::exception& error) {FailCanonicalTurn(error.what());throw;}
+	catch(...) {FailCanonicalTurn("Unknown Colony screen continuation failure");throw;}
+	return true;
+}
+
+bool Game::QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,
+	const gse::value::object_properties_t& args) {
+	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen) {return false;}
+	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production") {return false;}
+	ValidateCanonicalColonyScreen();
+	const gse::value::object_properties_t stamped{
+		{"request_id",VALUE(gse::value::Int,,*m_canonical_continuation->screen_request_id)},
+		{"name",VALUE(gse::value::String,,name)}, {"args",VALUE(gse::value::Object,,GSE_CALL_NOGC,args)}
+	};
+	HandleCanonicalColonyScreenEdit(GSE_CALL,stamped,m_slot_num,false);
+	// Only this producer stamps an edit. Ordinary commands extracted before a
+	// question stay fenced, including when a choice opens Screen in their batch.
+	AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,"_colony_screen_edit",stamped));
+	return true;
+}
+
+bool Game::HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object_properties_t& args,size_t caller,bool apply) {
+	const auto request=args.find("request_id"),name=args.find("name"),data=args.find("args");
+	if(caller!=m_slot_num || args.size()!=3 || request==args.end() || name==args.end() || data==args.end()
+		|| !request->second || request->second->type!=gse::VT_INT || !name->second || name->second->type!=gse::VT_STRING
+		|| !data->second || data->second->type!=gse::VT_OBJECT || static_cast<gse::value::Int*>(request->second)->value<1) {
+		throw std::runtime_error("Malformed Colony screen edit");
+	}
+	if(m_canonical_turn_failed || m_canonical_turn_in_progress || m_canonical_screen_edit_in_progress) {throw std::runtime_error("Colony screen edit is not currently available");}
+	// Check the request before dereferencing potentially retired Base/tile wrappers.
+	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen
+		|| m_canonical_continuation->screen_request_id!=static_cast<gse::value::Int*>(request->second)->value) {return true;}
+	ValidateCanonicalColonyScreen();
+	const auto& command=static_cast<gse::value::String*>(name->second)->value;
+	const auto& payload=static_cast<gse::value::Object*>(data->second)->value;
+	const auto target=payload.find("base");
+	if(target==payload.end() || !target->second || target->second->Deref()->type!=gse::VT_OBJECT
+		|| static_cast<gse::value::Object*>(target->second->Deref())->object_class!=base::Base::WRAP_CLASS
+		|| base::Base::Unwrap(target->second)!=m_bm->GetBase(*m_canonical_continuation->screen_base)) {
+		throw std::runtime_error("Colony screen edit requires its current Base");
+	}
+	if(apply) {
+		if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Colony screen edit requires its owning accumulation");}
+		m_canonical_screen_edit_in_progress=true;
+	}
+	util::FinallyGuard finish([&]{if(apply) {m_canonical_screen_edit_in_progress=false;}});
+	if(command=="work_base_tile" || command=="unwork_base_tile") {
+		if(HandleSmacWorkerEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
+	} else if(command=="select_smac_production" && HandleSmacProductionEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
+	throw std::runtime_error("Colony screen permits only native worker and production edits");
 }
 
 }

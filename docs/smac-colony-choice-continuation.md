@@ -42,3 +42,28 @@ Five changed production TUs and the Backend fixture passed focused syntax
 checks before the final test-cast correction and successor-tail addition.
 Linked validation is pending the combined cached build; no platform run or
 original-executable experiment was performed for this checkpoint.
+
+## Screen and non-last Accept join
+
+The follow-up joins the prepared non-last abandonment provider. Accept first
+checks the known record/cache/last-owned boundaries without consuming the
+question. A successful provider retires the old Base; the controller continues
+by stable successor ID and its copied cache, skipping fresh successor mineral
+production. A final global record does not revisit an earlier Base. Last-owned
+restart and foreign successor cases remain rejected before publication.
+
+The accepted Screen boundary is now explicit: after current Base research and
+credit, before the next Base. `get_pending_smac_colony_screen()` returns the
+originating request ID and Base identity. `colony_screen` notifies with a
+`pending` object or null; `close_colony_screen {request_id}` clears the screen
+and advances traversal exactly once. Only the displayed Base's existing worker
+and production events are admitted. Native enqueue stamps these edits with the
+screen request; stale edits and duplicate close cannot affect a later stage.
+These edits recalculate current outputs without repeating committed income.
+
+The actual two-Base Screen fixture uses the literal treasury100→101→102 and
+research0→2→3 boundaries, then checks real worker/production edits and a stale
+post-close edit. Filter: `^SMAC Colony (question|Screen|retained|abandonment)`.
+This source handoff has not been linked yet; root owns the combined affected
+run. Default activation and pending-question persistence are separate root
+integration changes. Screen snapshots remain unavailable.

@@ -9,6 +9,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/SmacBaseUpkeepCache.h"
 #include "game/backend/base/PopDef.h"
+#include "game/backend/base/FacilityDef.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
@@ -858,6 +859,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});})
 				&& Rejects([&]{game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request_id)},{"choice",VALUE(value::String,,"cancel")}});}),
 				"pending question admitted unrelated mutation or implicit cancellation");
+			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request_id)},{"choice",VALUE(value::String,,"accept")}});}),"last-owned Accept must leave Delay available");
 			for(int i=0;i<2;++i){game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request_id)},{"choice",VALUE(value::String,,"delay")}});}
 			GT_OK();
 		});GT_ASSERT(prefix.empty(),"Colony prefix: "+prefix);
@@ -937,6 +939,85 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(base->GetSmacUpkeepCache()->calculation.nutrients.surplus==0,"actual later calculation did not replace retained surplus");GT_OK();
 		});
 	} );
+
+	task->AddTest("SMAC Colony Screen posts current income before owned edits and closes before next Base",[](GSE*,context::Context*) -> std::string {
+		const auto source=[](const std::string& filename) {
+			auto value=ColonyChoiceSource(filename);if(filename!="alpha.txt") {return value;}
+			std::istringstream input(value);std::string line,section,result;size_t row=0;
+			while(std::getline(input,line)) {
+				if(!line.empty() && line[0]=='#') {section=line;row=0;}
+				else {++row;
+					if(section=="#RULES" && (row==43 || row==44)) {line.replace(0,line.find(','),row==43?"50":"2");}
+					if(section=="#FACILITIES" && row==1) {const auto a=line.find(','),b=line.find(',',a+1),c=line.find(',',b+1);line.replace(b+1,c-b-1,"0");}
+				}result+=line+'\n';
+			}return result;
+		};
+		ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+		fixture.ResourceState([](auto& state){
+			auto& saved=state.economy.at(1);saved.rates={0,5};saved.credits=100;saved.pending_debit=0;saved.research_fraction=0;
+			state.social.factions[0].current[1]=0;state.social.factions[0].current[10]=0;
+			auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=1000;tech.labs=0;
+		});
+		int64_t request=0;bool obsolete=false;
+		const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
+			first->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");SelectionPresentations(fixture);
+			std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+			bm->DefineFacility(new FacilityDef("screen-hq","HQ","",0,{},1));first->m_facilities.emplace("screen-hq",bm->GetFacilityDef("screen-hq"));
+			auto allocation=*first->GetSmacAllocation();allocation.selected=5;first->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+			const auto former=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,1);
+			game->GetMap()->GetTile(8,2)->terraforming=TERRAFORMING_FOREST;
+			Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().worker),0,game->GetMap()->GetTile(8,2)));
+			auto* second=new Base(game,702,first->m_owner,first->m_faction,game->GetMap()->GetTile(6,2),"Next Base",{},pops,20,0,
+				ProductionState{former,0,former,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+			bm->SpawnBase(GSE_CALL,second);second->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{5,{{},0}},Roles());
+			auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles){tile.explored_by=2;tile.claimant=1;}
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+			const auto colony=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,0);
+			first->SetProductionState(GSE_CALL,ProductionState{colony,27,colony,77,std::vector<ProductionItem>{}});first->SetAccumulatedNutrients(0);
+			fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete=true;});fixture.BeginColonyChoice(GSE_CALL,first->m_id);
+			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
+			request=static_cast<value::Int*>(pending->Get("request_id"))->value;
+			game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"screen")}});GT_OK();
+		});GT_ASSERT(setup.empty(),"Screen setup: "+setup);fixture.DrainEvents();
+		const auto opened=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+			auto* pending=Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony_screen");
+			GT_ASSERT(pending->type==VT_OBJECT && static_cast<value::Int*>(static_cast<value::Object*>(pending)->Get("request_id"))->value==request,"Screen did not retain its question identity");
+			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==2;});
+			GT_ASSERT(!obsolete && first->GetProductionState()->minerals==30 && first->GetProductionState()->baseline_minerals==30
+				&& first->GetAccumulatedNutrients()==1 && game->GetCanonicalEconomy(first->m_owner).credits==101 && research
+				&& second->GetProductionState()->minerals==0 && second->GetAccumulatedNutrients()==0,"Screen boundary ran before current credit or after next Base");
+			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});})
+				&& Rejects([&]{game->Event(GSE_CALL,"unwork_base_tile",{{"base",second->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(8,2)->Wrap(GSE_CALL)}});}),"Screen admitted another Base or unrelated turn mutation");
+			game->Event(GSE_CALL,"unwork_base_tile",{{"base",first->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(4,2)->Wrap(GSE_CALL)}});
+			const auto switched=first->PrepareSmacProductionSelection(1,true);
+			game->Event(GSE_CALL,"select_smac_production",{{"base",first->Wrap(GSE_CALL)},{"source_id",VALUE(value::Int,,1)},
+				{"expected_state",VALUE(value::String,,SerializeProductionState(first->GetProductionState()).ToString())},
+				{"expected_minerals",VALUE(value::Int,,switched.state.minerals)},{"confirm",VALUE(value::Bool,,true)}});GT_OK();
+		});GT_ASSERT(opened.empty(),"Screen entry: "+opened);fixture.DrainEvents();fixture.DrainEvents();
+		const auto edited=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==2;});
+			GT_ASSERT(first->GetSmacAllocation()->specialists.total_count==1 && first->GetProductionState()->current_item.smac_source_id==1
+				&& first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==30
+				&& game->GetCanonicalEconomy(first->m_owner).credits==101 && research && second->GetProductionState()->minerals==0,
+				"Screen edits failed or retroactively reposted the current Base");
+			GT_ASSERT((game->GetCanonicalBaseEnergy(*first).tail.final==SmacEnergyCategories{1,2,1}),"Screen worker click did not refresh actual E/P/L outputs");
+			for(int i=0;i<2;++i) {game->Event(GSE_CALL,"close_colony_screen",{{"request_id",VALUE(value::Int,,request)}});}
+			// Accepted while open, but ordered after close: its retired stamp must
+			// prevent it from changing the Base after the suspended turn finishes.
+			game->Event(GSE_CALL,"work_base_tile",{{"base",first->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(4,2)->Wrap(GSE_CALL)}});GT_OK();
+		});GT_ASSERT(edited.empty(),"Screen edits: "+edited);fixture.DrainEvents();
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==3;});
+			GT_ASSERT(first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==30 && first->GetSmacAllocation()->specialists.total_count==1
+				&& second->GetAccumulatedNutrients()==1 && second->GetProductionState()->minerals==3
+				&& game->GetCanonicalEconomy(first->m_owner).credits==102 && research,"Screen close replayed current posting, stale edit or next Base upkeep");
+			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony_screen")->type==VT_NULL,"closed Screen remained pending");GT_OK();
+		});
+	});
 	task->AddTest( "SMAC Colony explicit choice and wrong presentation reject before publication", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

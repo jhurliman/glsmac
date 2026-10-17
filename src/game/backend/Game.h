@@ -453,6 +453,7 @@ private:
 	void FailCanonicalTurn(const std::string& error);
 	bool m_canonical_turn_in_progress=false;
 	bool m_canonical_turn_failed=false;
+	bool m_canonical_screen_edit_in_progress=false;
 	struct CanonicalResearchRequest {
 		int64_t id;
 		int32_t owner;
@@ -460,13 +461,14 @@ private:
 		std::vector<int32_t> choices;
 	};
 	struct CanonicalTurnContinuation {
-		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony };
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen };
 		size_t turn, owner_index=0, base_index=0;
 		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
 		Stage stage=Stage::Base;
 		std::optional<base::SmacBaseEnergyCalculation> energy;
 		std::optional<base::SmacColonyUpkeepPause> colony;
 		std::optional<size_t> screen_base;
+		std::optional<int64_t> screen_request_id;
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
 	std::optional<CanonicalTurnContinuation> m_pending_canonical_continuation;
@@ -484,6 +486,12 @@ private:
 	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
 	void NotifyCanonicalColony(GSE_CALLABLE);
+	void ValidateCanonicalColonyScreen() const;
+	void NotifyCanonicalColonyScreen(GSE_CALLABLE);
+	gse::Value* GetPendingSmacColonyScreen(GSE_CALLABLE) const;
+	bool HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	bool QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args);
+	bool HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	int64_t m_next_research_request=0; // never reused by ResetGame
 	void ContinueCanonicalTurn(GSE_CALLABLE);
 	bool ContinueCanonicalResearch(GSE_CALLABLE);

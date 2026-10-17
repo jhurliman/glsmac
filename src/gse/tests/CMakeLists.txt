@@ -2,7 +2,10 @@ SUBDIR( mocks )
 
 SET( SRC ${SRC}
 
+	${PWD}/SmacOrdinaryLandExploration.cpp
+	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/Tests.cpp
+	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
 	${PWD}/RosterRecords.cpp
@@ -20,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacSpecialistRules.cpp
 	${PWD}/SmacTechnologyState.cpp
 	${PWD}/SmacSocialState.cpp
 	${PWD}/SmacWorldSizeRules.cpp
@@ -42,6 +46,9 @@ SET( SRC ${SRC}
 	${PWD}/Runner.cpp
 	${PWD}/Scripts.cpp
 	${PWD}/SmacProductionSwitch.cpp
+	${PWD}/SmacWorkerAllocation.cpp
+	${PWD}/SmacWorkedSquareCollection.cpp
+	${PWD}/SmacUnitSupport.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 	${PWD}/SmacConventionalStats.cpp
 

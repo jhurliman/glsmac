@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacSpecialistRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/SmacPredefinedUnitRules.cpp

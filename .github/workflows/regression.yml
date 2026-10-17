@@ -4,8 +4,8 @@ on:
   push:
     branches: [main, stable]
   pull_request:
-    paths-ignore:
-      - '**/*.md'
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  merge_group:
   workflow_dispatch:
 
 # A new PR revision supersedes its prior checks; integration/manual runs finish.
@@ -17,11 +17,16 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    uses: ./.github/workflows/ci-scope.yml
+
   unix:
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14]
+        os: ${{ fromJSON(needs.scope.outputs.unix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +34,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+      - name: Cache Linux compiler outputs
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: linux-debug-ccache-${{ github.sha }}
+          restore-keys: linux-debug-ccache-
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: |
@@ -37,7 +49,13 @@ jobs:
           echo "PKG_CONFIG_PATH=$(brew --prefix ossp-uuid)/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LDFLAGS=-L$(brew --prefix)/lib" >> "$GITHUB_ENV"
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            ccache --set-config=max_size=2G
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          else
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+          fi
       - name: Build
         run: cmake --build build --parallel 3
       - name: Test without game assets or a display
@@ -50,6 +68,8 @@ jobs:
           path: build/Testing/Temporary/
 
   windows:
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -66,3 +86,30 @@ jobs:
         with:
           name: regression-windows-2022
           path: out/build/x64-debug-win-clang/Testing/Temporary/
+
+  gate:
+    name: Regression gate
+    if: always()
+    needs: [scope, unix, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require every selected regression job to succeed
+        env:
+          RUN: ${{ needs.scope.outputs.run }}
+          FULL: ${{ needs.scope.outputs.full }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          UNIX_RESULT: ${{ needs.unix.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from tools.ci_scope import validate_results
+          validate_results(*(os.environ[name] for name in ("RUN", "FULL", "SCOPE_RESULT", "UNIX_RESULT", "WINDOWS_RESULT")))
+          if os.environ["RUN"] == "false":
+              coverage = "Documentation-only or empty change; engine regression not requested"
+          else:
+              coverage = "Linux, macOS and Windows regression passed" if os.environ["FULL"] == "true" else "Linux regression passed; platform suites not requested for this change"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
+              output.write(coverage + ".\n")
+          PY

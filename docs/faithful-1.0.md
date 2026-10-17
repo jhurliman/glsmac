@@ -188,9 +188,39 @@ do not describe an unsupported analyzer invocation as coverage.
 
 ## Current status
 
-M0 is in progress. No milestone is complete. The original installation was found
-on aleph0 and SMAX PRACX reached setup, but gameplay-rule observations remain
-blocked by the reproduced startup/base-creation crash described in the reference
-notes. Engine implementation continues independently. See PRs and their check
-results for implementation status; do not treat this document as proof that
-queued work has landed.
+M0 and the prerequisites for M1 are in progress. No milestone is complete, and
+the implementation PRs remain unmerged. The integration checkout now exercises
+real backend entities, event serialization, base snapshots and their script
+bindings without the original assets. On October 16, 2026, integration commit
+[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
+passed Linux and Windows CTest, and the selected correctness scan of all 284
+production translation units reported zero failures. Commands, timings and the
+separate sanitizer retry are in the [validation record](validation/windows-smoke-2026-10-16.md#headless-checks).
+These dated checks establish infrastructure behavior at that commit, not
+gameplay fidelity or the status of later changes.
+
+The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
+rendered two quickstart worlds in one process, opened a base screen, advanced a
+turn and exited normally. It also records visible rendering and input follow-ups.
+Interactive macOS validation, hardware Linux validation, long-running sessions,
+complete save/reload and multiplayer convergence remain open.
+
+The next implementation slices are:
+
+1. Persist worker assignments as authoritative population coordinates with an
+   ID-based reverse index. Exercise actual work/unwork/add/remove handlers,
+   rollback, immediate/deferred restore and teardown after map destruction.
+2. Preserve outgoing event bytes before optimistic destructive application,
+   then separately repair acceptance/rejection bookkeeping and population
+   identity restoration. Test actual queue and acknowledgement ordering.
+3. Select and synchronize an explicit SMAC or SMAX ruleset before content
+   initialization, including host/join and running-game reconnect. This is a
+   prerequisite for implementing the researched yield rules in the live game;
+   selecting a ruleset does not make that ruleset complete.
+
+The original installation was found on aleph0 and SMAX PRACX reached setup, but
+full-game rule observations remain blocked by the reproduced startup/base-creation
+crash in the reference notes. Original executable research proceeds separately;
+keep its evidence level distinct from full-game observations. See each PR's
+reviewed commit and checks for current validation, rather than treating this
+plan as proof that queued work has landed.

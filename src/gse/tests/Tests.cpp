@@ -7,6 +7,7 @@
 #include "SmacScoutCombat.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacGroundEdgeCost.h"
+#include "SmacScoutKeyboardAdmission.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -90,6 +91,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );
+		tests::AddSmacScoutKeyboardAdmissionTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );

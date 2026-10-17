@@ -3347,6 +3347,7 @@ public:
 		std::vector< size_t > identities;
 		std::vector< std::string > order;
 		size_t errors = 0, spawn_hooks = 0, base_hooks = 0, turns = 0;
+		int64_t initial_minerals = -1;
 		bool partial_seal = false, raw_valid = true; std::string startup_error;
 		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
 		const SmacGameplayRandomState expected_random( 11, 29 ); size_t entropy = 0;
@@ -3391,9 +3392,15 @@ public:
 					RegisterEvent( name, new event::EventHandler( gc_space, name, static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
 						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
 				}
-				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, require ) {
+				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, &initial_minerals, require ) {
 					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( base, event, "base", base::Base );
 					require( m_game.GetTurnId() == 0 && base->HasSmacResourceContext() && base->GetSmacAllocation().has_value(), "default startup omitted canonical economy or reordered HQ" );
+					const auto& production = *base->GetProductionState();
+					// Founding credit uses Early INDUSTRY0. Recomputing its cost after
+					// first-turn refresh changes Sparta's half-cost rounding.
+					initial_minerals = m_game.GetSmacProductionCost( base->m_owner, production.current_item ) / 2;
+					require( production.minerals == initial_minerals && production.baseline_minerals == initial_minerals
+						&& production.baseline_item == production.current_item, "default founding credit/baseline did not use its Early cost" );
 					order.push_back( "hq" ); return VALUE( value::Undefined );
 				} ) );
 				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, call ) {
@@ -3597,7 +3604,7 @@ public:
 			if ( default_world ) {
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
 				auto* base=origin->base; const auto first=*base->GetProductionState();
-				const auto initial=m_game.GetSmacProductionCost(base->m_owner,first.current_item)/2;
+				const auto initial=initial_minerals;
 				GT_ASSERT(origin==m_game.GetMap()->GetTile(4,4) && base->GetSmacAllocation()->selected==1
 					&& base->GetSmacAllocation()->specialists.total_count==1,"default fixture did not retain its barren center and specialist");
 				GT_ASSERT(first.minerals==initial+1 && first.baseline_minerals==first.minerals && base->GetAccumulatedNutrients()==0,

@@ -60,6 +60,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp
+	${PWD}/SmacSpecialistAllocation.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/ConventionalUnits.cpp
 	${PWD}/SmacBaseResourceContext.cpp

@@ -1,4 +1,5 @@
 #include "SmacSpecialists.h"
+#include "SmacSpecialistAllocation.h"
 
 #include <stdexcept>
 
@@ -45,6 +46,18 @@ int32_t Checked( int64_t value ) {
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::overflow_error( "SMAC automatic specialist score exceeds signed32" ); }
 	return static_cast< int32_t >( value );
 }
+}
+
+SmacSpecialistAllocationCatalog ResolveSmacSpecialistAllocationCatalog( const settings::SmacSpecialistRules& rules,
+	const settings::SmacTechnologyRules& technologies, const std::array< bool, 89 >& owned ) {
+	const auto references = Validate( rules, technologies, 0 );
+	SmacSpecialistAllocationCatalog result{ rules.minimum_base_size, {} };
+	for ( size_t id = 0; id < 7; ++id ) {
+		const auto& row = rules.specialists[ id ];
+		result.rows[ id ] = { row.economy, row.psych, row.labs,
+			Available( references[ id ][ 0 ], owned, technologies ), Available( references[ id ][ 1 ], owned, technologies ) };
+	}
+	return result;
 }
 
 SmacSpecialistMenu QuerySmacSpecialistMenu( const settings::SmacSpecialistRules& rules,

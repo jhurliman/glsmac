@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacSpecialists.cpp
+	${PWD}/SmacSpecialistAllocation.cpp
 	${PWD}/BaseSpecialists.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocationRules.cpp

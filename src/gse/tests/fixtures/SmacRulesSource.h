@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/backend/settings/Settings.h"
+#include "loader/txt/FactionTXTLoader.h"
 
 #include <array>
 #include <bitset>
@@ -70,9 +71,59 @@ inline std::string ProductionSource() {
 }
 
 // Synthetic numeric values intentionally differ from installed defaults.
+inline std::string FactionAlpha() {
+	return "#BONUSNAMES\nTECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,\n"
+		"INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,\n"
+		"SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,\n"
+		"COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO\n#SOCIO\n"
+		"ECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH\n"
+		"#FACTIONS\nGAIANS,GAIANS\nHIVE,HIVE\nUNIV,UNIV\nMORGAN,MORGAN\nSPARTANS,SPARTANS\nBELIEVE,BELIEVE\nPEACE,PEACE\n#END\n";
+}
+
+inline std::string FactionSource( const std::string& filename ) {
+	const auto& bindings = game::backend::settings::SmacFactionStartupRules::Bindings();
+	for ( size_t i = 0; i < bindings.size(); ++i ) {
+		if ( filename == bindings[ i ].filename ) {
+			return "#" + std::string( bindings[ i ].section ) + "\nSynthetic header\n"
+				"TECH,Tech2,TECH,Tech2,TECH,None,TECH,Disable,SOCIAL,+SUPPORT,FACILITY,4,IMMUNITY,EFFIC,"
+				"FUNGNUTRIENT,1,VOTES,2,TECH,1,TECH,-3,ENERGY," + std::to_string( 10 + i ) + "\n#END\n";
+		}
+	}
+	throw std::runtime_error( "Unexpected faction filename: " + filename );
+}
+
+inline game::backend::settings::SmacFactionStartupRules Factions(
+	const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
+	auto result = loader::txt::FactionTXTLoader::ParseStartupRules( FactionAlpha(), FactionSource, Technologies() );
+	// Valid catalog-difference fixtures must remain valid settings even when a
+	// referenced key is renamed. Keep the same intended positional source grant.
+	for ( auto& faction : result.factions ) {
+		for ( auto& bonus : faction.bonuses ) {
+			if ( bonus.kind == game::backend::settings::SmacFactionStartupBonus::Kind::NAMED_TECH && bonus.parameter >= 0 ) {
+				bonus = game::backend::settings::SmacFactionStartupBonus::Parse( "TECH", technologies.technologies[ bonus.parameter ].key, technologies );
+			}
+		}
+	}
+	return result;
+}
+
+// Deliberately bypass profile validation to exercise late malformed wire input.
+inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFactionStartupRules& profile ) {
+	types::Buffer result; result.WriteInt( 1 ); result.WriteInt( profile.factions.size() );
+	for ( const auto& faction : profile.factions ) {
+		result.WriteString( faction.port_id ); result.WriteString( faction.filename ); result.WriteString( faction.section );
+		result.WriteInt( faction.bonuses.size() );
+		for ( const auto& bonus : faction.bonuses ) {
+			result.WriteString( bonus.keyword ); result.WriteString( bonus.value ); result.WriteInt( static_cast< int32_t >( bonus.kind ) );
+			result.WriteInt( bonus.parameter ); result.WriteInt( bonus.amount );
+		}
+	}
+	return result;
+}
+
 inline std::string Source( const std::string& filename ) {
-	if ( filename != "alpha.txt" ) { throw std::runtime_error( "Unexpected rules filename: " + filename ); }
-	return ProductionSource() + TechnologySource() + WorldSizeSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
+	return ProductionSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -84,16 +135,18 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& rules->bonus_square == RuleTriple{ -2, 300, 0 } && rules->recycling == RuleTriple{ -7, 8, 9 }
 		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production()
 		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies()
-		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes();
+		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes()
+		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::array< int64_t, 9 >& values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 },
 	const std::optional< std::string >& production = std::nullopt,
 	const std::optional< std::string >& technologies = std::nullopt,
-	const std::optional< std::string >& sizes = std::nullopt ) {
+	const std::optional< std::string >& sizes = std::nullopt,
+	const std::optional< std::string >& factions = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 5 );
+	result.WriteInt( 6 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -101,6 +154,14 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 		result.WriteString( production ? *production : Production().Serialize().ToString() );
 		result.WriteString( technologies ? *technologies : Technologies().Serialize().ToString() );
 		result.WriteString( sizes ? *sizes : WorldSizes().Serialize().ToString() );
+		std::string faction_bytes = factions ? *factions : Factions().Serialize( Technologies() ).ToString();
+		if ( technologies && !factions ) {
+			try {
+				const auto catalog = game::backend::settings::SmacTechnologyRules::Deserialize( types::Buffer( *technologies ) );
+				faction_bytes = Factions( catalog ).Serialize( catalog ).ToString();
+			} catch ( const std::runtime_error& ) { /* Preserve deliberately malformed catalog bytes above. */ }
+		}
+		result.WriteString( faction_bytes );
 	}
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;

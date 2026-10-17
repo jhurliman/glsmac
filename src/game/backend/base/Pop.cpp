@@ -6,6 +6,8 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/map/tile/Tiles.h"
 #include "gse/value/Int.h"
 #include "gse/value/Bool.h"
 #include "gse/callable/Native.h"
@@ -19,7 +21,9 @@ Pop::Pop( Base* const base, const size_t id, const PopDef* def, const uint8_t va
 	, m_id( id )
 	, m_def( def )
 	, m_variant( variant ) {
-	//
+	if ( worked_tile ) {
+		m_worked_tile = worked_tile->coord;
+	}
 }
 
 void Pop::Serialize( types::Buffer& buf ) const {
@@ -29,11 +33,15 @@ void Pop::Serialize( types::Buffer& buf ) const {
 	buf.WriteInt( m_id );
 	buf.WriteString( m_def->m_id );
 	buf.WriteInt( m_variant );
+	buf.WriteBool( m_worked_tile.has_value() );
+	if ( m_worked_tile ) {
+		buf.WriteInt( m_worked_tile->x );
+		buf.WriteInt( m_worked_tile->y );
+	}
 }
 
 void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 	ASSERT( !m_base, "pop base is not null" );
-	ASSERT( !m_def, "pop def is not null" );
 
 	auto* bm = game->GetBM();
 	ASSERT( bm, "bm is null" );
@@ -45,6 +53,24 @@ void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 		THROW( "can't deserialize pop - def not found: " + pop_id );
 	}
 	m_variant = buf.ReadInt();
+	m_worked_tile.reset();
+	if ( buf.ReadBool() ) {
+		const auto x = buf.ReadInt();
+		const auto y = buf.ReadInt();
+		const auto* tiles = game->GetMap()->GetTilesPtr();
+		if ( x < 0 || y < 0 || x >= tiles->GetWidth() || y >= tiles->GetHeight() || ( x & 1 ) != ( y & 1 ) ) {
+			THROW( "invalid worked tile coordinates" );
+		}
+		m_worked_tile = map::tile::coords_t( x, y );
+	}
+}
+
+const Pop::worked_tile_t& Pop::GetWorkedTileCoords() const {
+	return m_worked_tile;
+}
+
+map::tile::Tile* Pop::GetWorkedTile() const {
+	return m_worked_tile ? m_base->GetGame()->GetMap()->GetTile( m_worked_tile->x, m_worked_tile->y ) : nullptr;
 }
 
 void Pop::SetBase( Base* const base ) {
@@ -113,6 +139,14 @@ WRAPIMPL_BEGIN( Pop )
 				N_EXPECT_ARGS( 0 );
 				ASSERT( m_base, "pop has no base" );
 				return m_base->Wrap( GSE_CALL );
+			} )
+		},
+		{
+			"get_worked_tile",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				auto* tile = GetWorkedTile();
+				return tile ? tile->Wrap( GSE_CALL ) : VALUE( gse::value::Undefined );
 			} )
 		},
 		{

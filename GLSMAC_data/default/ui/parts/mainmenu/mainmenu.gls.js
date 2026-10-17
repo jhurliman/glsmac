@@ -143,6 +143,7 @@ return (m) => {
 			'notimpl',
 			'main',
 			'start_game',
+			'select_ruleset',
 			'select_mapsize',
 			'customize_ocean_coverage',
 			'customize_erosive_forces',
@@ -168,6 +169,8 @@ return (m) => {
 				throw Error('--host requires --playername argument');
 			}
 			mainmenu_allowed = false; // do not reopen menu next time
+			m.glsmac.deinit();
+			m.glsmac.select_ruleset(c.ruleset);
 			i.settings.local.network_type = 'simple_tcpip';
 			i.settings.global.game_name = c.gamename;
 			i.settings.local.player_name = c.playername;
@@ -179,6 +182,7 @@ return (m) => {
 				throw Error('--join requires --playername argument');
 			}
 			mainmenu_allowed = false; // do not reopen menu next time
+			m.glsmac.deinit();
 			i.settings.local.network_role = 'client';
 			i.settings.local.player_name = c.playername;
 			i.settings.local.remote_address = c.join;

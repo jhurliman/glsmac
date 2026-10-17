@@ -33,8 +33,8 @@ posting across both human owners and unchanged RNG pairs. A later Base with an
 unsupported facility target tests committed-prefix failure, blocked save/retry and
 real failure cleanup. A reversed cross-owner registration order verifies faction
 grouping before saved Base order. These are synthetic source/map compositions using the real
-native dispatcher and owned records. Runtime validation is pending the shared
-cached integration build; changed production and fixture TUs pass syntax checks.
+native dispatcher and owned records. The cached Linux integration run passes
+all 53 affected native groups with allocation tracking, including these cases.
 The default local SMAC script now queues authenticated native first-Base and
 selected Scout/Rover events. The actual definition and Base script handlers run
 before creation; their existing canonical growth guard prevents legacy posting.
@@ -51,6 +51,7 @@ GLSMAC policy does not claim a general original difficulty initializer.
 The two default-script Gaia/Sparta fixtures now load real bases.gls.js start/turn
 handlers, create canonical allocation/knowledge, seal actual selected Units,
 execute first movement and end-turn, check postings, and restore exact records.
-Their synthetic source and generated-map policy fixture are explicit. Native
-runtime checks remain pending the root cached integration run; no platform,
-interactive rendering, seven-player default-world or energy-tail claim is made.
+Their synthetic source and generated-map policy fixture are explicit. Targeted
+LLVM15 analysis passes for all six changed runtime translation units in 12.32s.
+This checkpoint does not establish interactive rendering, a seven-player default
+world, energy posting, or platform validation of this gameplay batch.

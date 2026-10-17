@@ -46,5 +46,6 @@ Targeted LLVM15 analysis of Player.cpp and Tile.cpp passed (2 TUs, 3.23s).
 
 The canonical activation extends those same two default-script cases with real
 bases.gls.js start/turn handlers, configured roles, canonical Base stores, and
-native end-turn. This updated runtime check is pending the root cached focused
-build. See canonical-local-turn-upkeep.md for transition scope and failure policy.
+native end-turn. Both updated cases pass in the cached Linux run of 53 affected
+groups with allocation tracking. See canonical-local-turn-upkeep.md for transition
+scope and failure policy.

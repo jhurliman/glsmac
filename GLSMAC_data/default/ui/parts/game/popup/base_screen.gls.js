@@ -138,7 +138,8 @@ return {
 			rows: base.get_size() + 1,
 			columns: game.get('map_growth_base'),
 			filled: base.get_accumulated_nutrients(),
-			pending: game.get('f_base_get_pending_growth')(base),
+			profit: intake.NUTRIENTS,
+			loss: consumption.NUTRIENTS,
 		});
 
 		if (faction.is_progenitor) {
@@ -184,22 +185,22 @@ return {
 		const allocation_labs = 0.4;
 		const allocation_psych = 0.2;
 
-		const total_energy = resource_data.energy.profit - resource_data.energy.loss;
+		const allocation = this.p.ui.format_placeholder_energy(resource_data.energy.profit, resource_data.energy.loss);
 		const energy_data = {
 			labs: {
 				allocation: allocation_labs,
-				value: #round(#to_float(total_energy) * allocation_labs),
+				value: allocation.labs,
 				bonus: 0,
 			},
 			psych: {
 				allocation: allocation_psych,
-				value: #round(#to_float(total_energy) * allocation_psych),
+				value: allocation.psych,
 				bonus: 0,
 			},
 		};
 		energy_data.economy = {
 			allocation: 1.0 - energy_data.labs.allocation - energy_data.psych.allocation,
-			value: total_energy - energy_data.labs.value - energy_data.psych.value,
+			value: allocation.economy,
 			bonus: 0,
 		};
 		this.sections.energy.set(energy_data);
@@ -224,7 +225,8 @@ return {
 		this.sections.bottom_bar.frame.show();
 	},
 
-	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, f_label) => {
+	set_cells: (total_width, total_height, columns, rows, filled, profit, loss, cells_el, cell_baseclass, label_el, f_label) => {
+		const progress = this.p.ui.format_resource_progress(profit, loss, filled, rows * columns);
 		cells_el.clear();
 
 		const width = #floor(#to_float(total_width) / #to_float(columns));
@@ -244,13 +246,13 @@ return {
 
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
-				if (i < filled) {
-					if (pending < 0 && i >= filled + pending) {
+				if (i < progress.filled_cells) {
+					if (progress.direction < 0 && i >= progress.end_cells) {
 						cls = 'deficit';
 					} else {
 						cls = 'full';
 					}
-				} else if (i < filled + pending) {
+				} else if (i < progress.end_cells) {
 					cls = 'pending';
 				} else {
 					cls = 'empty';
@@ -267,11 +269,7 @@ return {
 			left = offset_left;
 		}
 
-		let progress_in = 0;
-		if (pending > 0) {
-			progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
-		}
-		label_el.text = f_label(progress_in);
+		label_el.text = f_label(progress);
 	},
 
 	hide_production_selection: () => {

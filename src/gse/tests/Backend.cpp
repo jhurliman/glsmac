@@ -3994,6 +3994,32 @@ public:
 			GT_ASSERT( entropy_calls == ( failure == 6 ? 1u : failure == 7 || failure == 4 ? 2u : 0u ) && m_game.GetRandom()->GetStateString() == before_rng,
 				"failed admission sampled entropy at the wrong boundary or changed JSF" ); GT_OK();
 		}
+		// Canonical Base upkeep can pause for the first real research target.
+		// Answer the offered request before expecting the final turn notification;
+		// never bypass the continuation by assigning technology state directly.
+		if ( m_game.m_research_request ) {
+			const auto answered = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				size_t answers = 0;
+				while ( m_game.m_research_request ) {
+					GT_ASSERT( m_game.m_simulation && ++answers <= m_game.m_simulation->value.roster.size()
+						&& m_game.GetTurnId() == 1 && m_game.m_canonical_continuation && social_turns == 0,
+						"first research choice lost its suspended startup or repeated an owner" );
+					const auto request = *m_game.m_research_request;
+					GT_ASSERT( !request.bonus && !request.choices.empty(), "startup did not offer an ordinary research target" );
+					const auto& continuation = *m_game.m_canonical_continuation;
+					auto* base = m_game.GetBM()->GetBase( continuation.owners.at( continuation.owner_index ).second.at( continuation.base_index ) );
+					const auto minerals = base->GetProductionState()->minerals;
+					const auto food = base->GetAccumulatedNutrients();
+					m_game.Event( GSE_CALL, "choose_research", { { "request_id", VALUE( value::Int,, request.id ) },
+						{ "technology_id", VALUE( value::Int,, request.choices.front() ) } } );
+					m_game.ProcessEvents();
+					GT_ASSERT( base->GetProductionState()->minerals == minerals && base->GetAccumulatedNutrients() == food,
+						"research answer replayed the already posted Base resources" );
+				}
+				GT_ASSERT( !m_game.m_canonical_continuation, "research answers left the first turn suspended" ); GT_OK();
+			} );
+			GT_ASSERT( answered.empty(), "startup research continuation: " + answered );
+		}
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
 			GT_ASSERT( records->value.size() == ( cancellation == 1 ? 0u : 2u ), "actual create/start consumers did not observe one admitted simulation" );

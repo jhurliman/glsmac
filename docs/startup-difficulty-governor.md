@@ -27,10 +27,12 @@ An authenticated accepted change to a different production item clears governor
 activation and the startup marker only when that marker was present. Same-item
 selection preserves them; activation without the marker is preserved. Context,
 production and notifications commit together. Read-only picker queries and
-cancellation do not change state. The original receipt measures the choice
-prelude before confirmation and item commit, so this is not a claim about the
-original whole-dialog cancellation behavior or a complete governor production
-selector.
+cancellation do not change port state. The later original
+`governor-marker-loss-cancel` receipt proves a remaining difference: declining
+loss at stored difficulty 2/3 preserves the old item/minerals but leaves marked
+activation cleared. The port does not yet reproduce that pre-confirmation write.
+Normal stored levels 0/1 skip the loss prompt. These are separate from the
+accepted-change behavior above and from a complete governor production selector.
 
 Evidence: startup-governor-difficulty.md and its 8 prefix, 6 founding and 8
 manual-prelude controls; founding-production-initialization.md for the stored

@@ -360,9 +360,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			base->RecalculateSmacWorkers(GSE_CALL,Roles());
 			GT_ASSERT(base->GetSmacAllocation()==before,"ordinary active-governor query discarded a valid Doctor");
 			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+			GT_ASSERT(base->GetSmacAllocation()==before && &base->m_pops.at(19)==pop && !pop->GetWorkedTile(),
+				"managed upkeep discarded a retained Doctor");
+			// Managed upkeep skips old worker collection, not the retained Doctor
+			// budget. Use a complete worker allocation to distinguish the phases.
+			auto worker=before;worker.selected=3;worker.specialists.total_count=0;
+			base->PublishSmacAllocation(GSE_CALL,worker,Roles());
+			base->RecalculateSmacWorkers(GSE_CALL,Roles());
+			GT_ASSERT(base->GetSmacAllocation()==worker && &base->m_pops.at(19)==pop
+				&& pop->GetWorkedTile()==game->GetMap()->GetTile(3,1),"ordinary managed allocation replaced its complete worker");
+			base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
 			GT_ASSERT(base->GetSmacAllocation()->selected==5 && base->GetSmacAllocation()->specialists.total_count==0
 				&& &base->m_pops.at(19)==pop && pop->GetWorkedTile()==game->GetMap()->GetTile(4,2),
-				"managed upkeep did not replace the Doctor with the actual productive square");
+				"managed upkeep did not choose the actual productive square");
 			GT_ASSERT(base->GetSmacResourceContext()==context && fixture.GameplayRandom()==pair,"worker allocation cleared governor bits or spent RNG");
 			GT_OK();
 		});

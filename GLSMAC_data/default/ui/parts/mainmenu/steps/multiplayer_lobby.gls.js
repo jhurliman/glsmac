@@ -46,6 +46,12 @@ return (i) => {
 			};
 
 			const f_start_game = () => {
+				if (i.glsmac.game.get_ruleset() == 'smac') {
+					if (((i.glsmac.game.get_settings().global.get_world_size())[0]) == -1) {
+						i.popup.error('Select a planet size before starting the game');
+						return;
+					}
+				}
 				game_starting = true; // keep connection open
 				i.popup.hide();
 				i.glsmac.start_game();

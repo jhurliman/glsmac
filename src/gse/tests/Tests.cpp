@@ -3,6 +3,7 @@
 
 #include "Backend.h"
 #include "RosterRecords.h"
+#include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
@@ -68,6 +69,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
+		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );

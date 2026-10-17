@@ -635,8 +635,12 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "tiles" );
-	for ( auto& t : *m_tiles->GetTilesPtr() ) {
-		t.GetReachableObjects( reachable_objects );
+	// A rejected owner-thread download can leave an empty map rooted until
+	// the next Failure checkpoint. It has no tile children to traverse.
+	if ( m_tiles ) {
+		for ( auto& t : *m_tiles->GetTilesPtr() ) {
+			t.GetReachableObjects( reachable_objects );
+		}
 	}
 	GC_DEBUG_END();
 }
@@ -828,8 +832,6 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 
 	uint8_t percent = 0, last_percent = 0;
 
-	size_t state_iterate_eta = ITERATE_STATE_EVERY_N_TILES;
-
 	for ( auto& module_pass : module_passes ) {
 		for ( const auto& tile : tiles ) {
 			m_current_tile = tile;
@@ -855,11 +857,6 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 				MT_RETIF();
 			}
 
-			if ( !--state_iterate_eta ) {
-				// keep processing state (i.e. network events) while loading
-				m_game->GetState()->Iterate();
-				state_iterate_eta = ITERATE_STATE_EVERY_N_TILES;
-			}
 		}
 	}
 }

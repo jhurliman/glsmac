@@ -499,7 +499,8 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						0,
 						GL_RGBA,
 						GL_UNSIGNED_BYTE,
-						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
+						// Empty UI textures have no CPU allocation until their geometry is sized.
+						texture->IsEmpty() ? nullptr : ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
 
 					const bool use_mipmaps = texture->HasFlag( types::texture::TF_MIPMAPS );

@@ -360,18 +360,18 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 					case types::Packet::PT_GAME_EVENT: {
 						//Log( "Got game event packet" );
-						m_state->WithGSE(
+						m_state->WithGame(
 							this,
-							[ this, packet, event ]( GSE_CALLABLE ) {
-								auto* const game = g_engine->GetGame();
+							[ this, state = m_state, packet, event ]( Game* const game, GSE_CALLABLE ) {
+								if ( state->GetConnection() != this ) { return; }
 								auto buf = types::Buffer( packet.data.str );
 								auto* const ev = event::Event::Deserialize( game, event::Event::ES_CLIENT, GSE_CALL, buf.ReadString() );
 								const auto caller_slot = ev->GetCaller();
-								if ( caller_slot >= m_state->m_slots->GetCount() ) {
+								if ( caller_slot >= state->m_slots->GetCount() ) {
 									Error( event.cid, "event caller slot overflow" );
 									return;
 								}
-								const auto& slot = m_state->m_slots->GetSlot( caller_slot );
+								const auto& slot = state->m_slots->GetSlot( caller_slot );
 								if ( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetCid() != event.cid ) {
 									Error( event.cid, "event caller slot mismatch" );
 									return;

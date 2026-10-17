@@ -93,7 +93,7 @@ class BackendFixture {
 public:
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
-		, m_gse( new GSE() )
+		, m_gse( CreateRuntime() )
 		, m_glsmac( new GLSMAC( m_gse ) ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
 			auto* state = new game::backend::State( m_gse->GetGCSpace(), m_glsmac->m_ctx, m_glsmac.get() );
@@ -2416,6 +2416,11 @@ public:
 
 private:
 	struct MapDeleter { void operator()( game::backend::map::Map* map ) const { DELETE( map ); } };
+	static GSE* CreateRuntime() {
+		// GLSMAC owns this runtime and destroys it through tracked DELETE.
+		NEWV( runtime, GSE );
+		return runtime;
+	}
 
 	game::backend::Game m_game;
 	std::vector< game::FrontendRequest > m_frontend_requests;

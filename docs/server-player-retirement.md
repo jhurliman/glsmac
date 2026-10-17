@@ -120,3 +120,32 @@ for the copied-TU controls.
 
 Final commands, copied source controls, fixture snapshot, logs and checksums are
 retained in `/home/jhurliman/src/glsmac-server-player-retirement/`.
+
+## Focused publication
+
+The publication is based on terminal-cleanup PR #110 at
+`248899b72f689427fb8e3c272cf37586c0942260`. The Server implementation and seven
+new cases are identical to source `65f70f96d974f3363fbdbca9b851d4c5b629d23e`.
+This older stack lacks the native-filter CLI. Its ordinary full suite executes
+the cases; no filter option is imported for this publication.
+
+Tracked validation exposed two older fixture allocation mismatches, whose failed
+logs are retained: raw `new GSE` versus GLSMAC's tracked runtime deletion, then
+raw `new Tiles` in the private asset-free Map constructor versus Map's tracked
+deletion. The publication carries the established `CreateRuntime`/`NEWV` fixture
+helper and the private Map allocation correction from
+`69e72f069b5f4161c36eadf4468fdd291f844c19`. The normal Map constructor and the
+Server retirement implementation are unchanged by these adaptations. This is
+not an all-fixture tracking claim: the older `PushBaseUpdates` MapState allocation
+is not used by these seven cases and is outside this publication.
+
+After those corrections, the exact publication full CTest suite passed 6/6 in
+25.79 seconds. For low-cost tracked controls, a copied test-runner TU selected
+only the seven existing registrations; no fixture function or production behavior
+was changed by that selection. The fixed copy passed 7/7 in 1.067 seconds.
+Removing only original Player exclusion gave five passes/two overlap failures;
+removing only copy exclusion gave six passes/one overlap failure. Both controls
+exited 1 with no tracked leaks. Source sanitizer evidence above is separate;
+no additional publication sanitizer run is claimed. Publication commands, copied
+TUs and logs are retained in
+`/home/jhurliman/src/glsmac-server-player-publication/`.

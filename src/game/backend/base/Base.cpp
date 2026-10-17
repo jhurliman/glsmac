@@ -398,6 +398,24 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	WRAPIMPL_CUSTOM_SETTERS
 	{
+		"recalculate_smac_workers",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 2 );
+			N_GETVALUE( worker, 0, String );
+			N_GETVALUE( specialists, 1, Array );
+			if ( specialists.size() != 7 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Worker recalculation requires seven positional specialist roles" ); }
+			SmacAllocationRoles roles{ worker, {} };
+			for ( size_t i = 0; i < roles.specialists.size(); ++i ) {
+				const auto* value = specialists[ i ]->Deref();
+				if ( value->type != gse::VT_STRING ) { GSE_ERROR( gse::EC.INVALID_CALL, "Specialist role must be a registered definition ID" ); }
+				roles.specialists[ i ] = static_cast< const gse::value::String* >( value )->value;
+			}
+			auto* result = VALUE( gse::value::Undefined ); // allocate before authoritative publication
+			RecalculateSmacWorkers( GSE_CALL, roles );
+			return result;
+		} )
+	},
+	{
 		"get_smac_specialist_menu",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 1 );

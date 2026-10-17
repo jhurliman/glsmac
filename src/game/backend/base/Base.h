@@ -92,6 +92,10 @@ public:
 		std::array< std::string, 7 > specialists;
 	};
 	void PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles );
+	// Ordinary local-human, governor-off recalculation from owned world inputs.
+	// Retains complete valid selections; this is not an optimize/reset command,
+	// upkeep, or the full resource/citizen calculation and manual worker handler.
+	void RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& roles );
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
 	void ValidateSmacAllocation() const;

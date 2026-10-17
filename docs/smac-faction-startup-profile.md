@@ -132,11 +132,16 @@ canonical files; both tools require exactly one case-insensitive filename
 match, rejecting missing/ambiguous files. `--lines` projects explicit synthetic bonus lines from stdin.
 Probe argument errors exit 2; file/parse errors exit 1 without partial output.
 
-Native regression command (asset-free):
+Native regression command in the integrated development branch (asset-free):
 
 ```sh
 ./build/bin/GLSMAC --gse-tests --gse-tests-native-filter '^SMAC faction startup' --memorydebug
 ```
+
+The focused publication base predates that filter and the later native tracking
+repairs. On that branch, run `./build/bin/GLSMAC --gse-tests --quiet` for its full
+suite. Its isolated validation uses a copied test-registration translation unit
+containing only these seven cases; no production path or test body is changed.
 
 Local validation used Linux x86-64, Clang/LLVM 15.0.7 and source parent
 `445ee2094331babdab7e82528eb00f028a65ff26`:
@@ -162,3 +167,25 @@ Local validation used Linux x86-64, Clang/LLVM 15.0.7 and source parent
 These are local receipts, not cross-platform runtime promises. Shared frozen
 settings and world-header integration must follow the separately owned
 world-size profile change before clients can consume this metadata.
+
+## Focused publication receipt
+
+The publication is based on technology-catalog PR #114 at
+`714bb937f8c7a4e47a5b0bd687ea38aee20483ef`. Applying source
+`f99b43fd6b1ceddf86c37df7a72d86dfcd2be232` required only the existing test-list
+union: one include, one CMake entry and one registration. Production files,
+new tests, semantic fixture and probe/comparator are unchanged. Source patch
+commit `b813c18ac988695ba2f7965f6d6bd77ca91c614c` passed:
+
+- Actual publication CTest: 5/5, 27.06 seconds.
+- All seven cases through a registration-only copied translation unit, then
+  the three copied-production negative controls, each failing as intended.
+- Release probe: 16/16 original parser projections and 7/7 installed bindings.
+- Full Linux production analysis: 293 translation units, LLVM 15.0.7, four
+  jobs, zero failures in 107.10 seconds. The explicitly Windows-only unit is
+  outside that Linux database. The earlier two-unit check was focused evidence,
+  not a substitute for this complete header-change scope.
+
+The publication parent lacks later tracking/sanitizer repairs, so the integrated
+source sanitizer receipt above is kept separate; this paragraph makes no full
+publication LSan or allocation-tracking claim.

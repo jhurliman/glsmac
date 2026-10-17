@@ -79,3 +79,22 @@ named technology references, the University's separate extra count, complete
 settings roundtrip equality, and absence of a second read after freezing. These
 are backend validation results, not a rendered-game or live startup-effects
 claim.
+
+## Focused publication
+
+The publication base combines world-size PR #121 at
+`befefa2be3ab62a2ad5c15c4a02bd26300ab9ae8` and the pure faction-profile PR #120
+at `2d043bea2bb5f9098191414a8d3f178ed415e289`. The three source/test-list merge
+conflicts were resolved as unions, preserving both parents' registrations.
+Applying this host change as `d4b9717635ed4ed8274022db9573f412d4aa05f5` was
+conflict-free; production Settings and the dedicated tests/source fixture are
+byte-identical to the source receipt above.
+
+That exact publication passed normal CTest 6/6 in 37.68 seconds. All host-rule
+cases also passed through a copied registration-only translation unit; the two
+copied-production controls failed as intended, and the actual installed eight-file
+host probe passed. Focused Settings/profile analysis reported zero failures in
+1.65 seconds. These are separate from the integrated-source 8-test sanitizer
+suite. The combined source host/V7 receipt covers all 309 Linux production units;
+the publication's shared-header CI gate still runs its own full scope. This
+paragraph makes no full publication sanitizer or allocation-tracking claim.

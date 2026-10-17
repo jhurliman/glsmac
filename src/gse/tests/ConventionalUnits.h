@@ -19,6 +19,7 @@ public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
 	void Configure( bool refreshed = true, int32_t road_rate = 3, bool single = false, bool selected_rover = false );
+	void ConfigureMovementCampaign( bool selected_rover = true );
 	void SelectStartup( int32_t simulation, int32_t design );
 	void CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation = 2 );
 	game::backend::SmacGameplayRandomState GameplayRandom() const;

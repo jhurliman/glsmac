@@ -12,6 +12,7 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
@@ -55,8 +56,10 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto context = ResolveConventional( stored, unit->m_owner ); // validates current binding before native owner use
 	const auto stats = QueryConventionalUnit( stored, context, SmacMoraleMode::Mode1 );
 	const auto& simulation = m_game->m_simulation->value;
+	// Active participants and the local controller are distinct. This port
+	// route uses the accepted local participant, never an inferred faction slot.
 	const auto* participant = simulation.FindSlot( caller );
-	if ( !participant || simulation.roster.size() != 1 || participant->role != roster::Role::Single
+	if ( !participant || participant->role != roster::Role::Single
 		|| caller != m_game->GetSlotNum() || unit->m_owner != &state->m_slots->GetSlot( caller ) ) {
 		throw std::runtime_error( "Conventional movement requires the accepted local single-player controller" );
 	}
@@ -84,7 +87,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		throw std::runtime_error( "Conventional movement requires an unlocked adjacent empty destination and no animation" );
 	}
 	const auto membership = source->units.find( unit->m_id );
-	if ( membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional source membership is inconsistent" ); }
+	if ( source->units.size() != 1 || membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact unstacked source membership" ); }
 	// No combat/ZOC/stack policy is inferred. Reject any foreign native owner
 	// in either endpoint or its neighborhood before invoking a movement kernel.
 	for ( const auto* endpoint : { source, destination } ) {
@@ -107,17 +110,21 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const base::Base* admitted_hq = nullptr;
 	const auto& bases = m_game->GetBM()->GetBases();
 	if ( !bases.empty() ) {
-		const bool infantry = stored.design_id == 2 && design.chassis == 0 && stats.basic_allowance == 3
-			&& stats.full_allowance == 3 && context.retained_morale == 0;
+		const bool infantry = stored.design_id == 2 && design.chassis == 0 && stats.basic_allowance == 3;
 		// This context is produced only after resolving the canonical Spartan
 		// participant and its actual selected owned design, never slot arithmetic.
 		const bool selected_rover = context.presentation == ConventionalUnitContext::Presentation::SelectedSpartanRover
-			&& design.chassis == 1 && stats.basic_allowance == 6 && stats.full_allowance == 6 && context.retained_morale == 2;
-		if ( bases.size() != 1 || m_units.size() != 1 || stored.stored_morale != 1 || stored.damage != 0
-			|| stats.quantum != 3 || social.retained->at( 7 ) != 0 || ( !infantry && !selected_rover ) ) {
-			throw std::runtime_error( "Friendly HQ movement requires one healthy measured Infantry or selected Spartan Rover with quantum3" );
+			&& design.chassis == 1 && stats.basic_allowance == 6;
+		if ( stored.stored_morale != 1 || stored.damage != 0
+			|| stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
+			throw std::runtime_error( "Friendly HQ movement requires a healthy measured Infantry or selected Spartan Rover with quantum3" );
 		}
-		const auto& entry = *bases.begin();
+		// Select by endpoint identity, not global count or first record. Locate
+		// the borrowed pointer in the canonical manager before dereferencing it.
+		const auto* endpoint_base = source->base ? source->base : destination->base;
+		const auto found = std::find_if( bases.begin(), bases.end(), [ & ]( const auto& entry ) { return entry.second == endpoint_base; } );
+		if ( !endpoint_base || found == bases.end() ) { throw std::runtime_error( "Friendly HQ movement requires a registered endpoint HQ" ); }
+		const auto& entry = *found;
 		const auto* hq = entry.second;
 		const auto* definition = m_game->GetBM()->GetFacilityDef( "HEADQUARTERS" );
 		if ( !hq || hq->m_id != entry.first || hq->GetGame() != m_game || hq->m_owner != unit->m_owner
@@ -137,6 +144,9 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			|| ( outside->features != FEATURE_NONE && outside->terraforming != TERRAFORMING_NONE ) ) {
 			throw std::runtime_error( "Friendly HQ movement requires the HQ endpoint and adjacent flat ordinary road tube or fungus land" );
 		}
+		// An endpoint HQ is at distance0/1 from this edge. The original fungus
+		// branch consumes nearest-any-base distance <=1, not the chosen base ID;
+		// another base winning an equal-distance tie cannot invalidate it.
 		admitted_hq = hq;
 	}
 	const auto edge_source = EdgeTile( *source, admitted_hq ), edge_destination = EdgeTile( *destination, admitted_hq );

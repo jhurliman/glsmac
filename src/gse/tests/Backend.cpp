@@ -143,7 +143,7 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
-	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false ) {
+	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -157,8 +157,13 @@ public:
 				return source;
 			} );
 			smac_rules_fixture::AcceptWorldSize( settings );
-			EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
-			if ( single && selected_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
+			EnableSimulationParticipants( movement_campaign ? std::vector< size_t >{ 0, 1, 2, 3, 4, 5, 6 } : single ? std::vector< size_t >{ 0 } : selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
+			if ( ( single || movement_campaign ) && selected_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
+			if ( movement_campaign ) {
+				settings.SelectSmacCustomSize( 128, 64 );
+				auto* tiles = m_game.GetMap()->GetTilesPtr();
+				tiles->Resize( 128, 64 ); tiles->Clear();
+			}
 			m_game.PrepareNewSimulation();
 			if ( refreshed ) {
 				m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
@@ -3864,7 +3869,7 @@ public:
 		// Frontend spawn messages need tile coordinates, but no rendered assets.
 		if ( !m_map->m_map_state ) {
 			NEW( m_map->m_map_state, game::backend::map::MapState );
-			m_map->m_map_state->dimensions = { 8, 8 };
+			m_map->m_map_state->dimensions = { static_cast< uint32_t >( m_map->GetWidth() ), static_cast< uint32_t >( m_map->GetHeight() ) };
 			const common::mt_flag_t canceled = false;
 			m_map->m_map_state->LinkTileStates( canceled );
 		}
@@ -4027,6 +4032,7 @@ private:
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
+void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }

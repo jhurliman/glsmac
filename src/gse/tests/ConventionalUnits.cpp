@@ -1,8 +1,13 @@
 #include "ConventionalUnits.h"
 #include "fixtures/FriendlyHQMovement.h"
 #include "fixtures/SpartanHQMovement.h"
+#include "fixtures/GaianHQMovement.h"
+#include "fixtures/RemoteHQMovement.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
+#include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/WorldSnapshotRandom.h"
+#include "game/backend/WorldSnapshotTurn.h"
 #include "game/backend/Player.h"
 #include "game/backend/Random.h"
 #include "game/backend/slot/Slots.h"
@@ -94,6 +99,72 @@ void OriginalFeatures( map::tile::Tile* tile, int flags ) {
 	if ( flags != 0 && flags != 4 && flags != 8 && flags != 32 ) { throw std::runtime_error( "unsupported original HQ fixture feature" ); }
 	tile->features = flags == 32 ? FEATURE_XENOFUNGUS : FEATURE_NONE;
 	tile->terraforming = flags == 4 ? TERRAFORMING_ROAD : flags == 8 ? TERRAFORMING_MAG_TUBE : TERRAFORMING_NONE;
+}
+
+// Build real canonical participants first, then owned units/bases. Source IDs
+// are taken from detached runtime queries, never inferred from transport slots.
+struct RemoteHQWorld { Unit* local; base::Base* hq; std::vector< Unit* > remote; };
+RemoteHQWorld PopulateRemoteHQ( GSE_CALLABLE, ConventionalUnitFixture& fixture, const remote_hq_fixture::Case& c, bool rover = true ) {
+	auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager ); if ( rover ) { Define( manager, true ); }
+	const auto read = [ & ]( size_t slot ) {
+		auto* view = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( game->Wrap( GSE_CALL ) ), "get_startup_designs",
+			{ game->GetState()->m_slots->GetSlot( slot ).GetPlayer()->Wrap( GSE_CALL ) } ) );
+		auto record = Record(); record.owner_simulation_id = static_cast< int32_t >( static_cast< value::Int* >( view->Get( "simulation_id" ) )->value );
+		if ( slot == 0 && rover ) { record.design_id = static_cast< int32_t >( static_cast< value::Int* >( view->Get( "starting_scout" ) )->value ); }
+		return record;
+	};
+	auto initial = read( 0 ); initial.spent = static_cast< uint8_t >( c.step.spent );
+	auto* local = Spawn( GSE_CALL, fixture, initial, c.reordered ? 77 : 71, 0, rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT" );
+	auto* source = game->GetMap()->GetTile( 16, 16 ); auto* destination = game->GetMap()->GetTile( 17, 17 ); local->SetTile( GSE_CALL, source );
+	auto* hq = HQ( GSE_CALL, game, local, c.step.endpoint == 1 ? source : destination, c.reordered ? 37 : 31 );
+	RemoteHQWorld result{ local, hq, {} };
+	for ( size_t i = 1; i <= 6; ++i ) {
+		const auto slot = c.same_owner && i == 1 ? 0 : i;
+		const auto index = c.reordered && i == 6 ? 0 : i;
+		auto record = read( slot ); record.design_id = 2;
+		auto* remote = Spawn( GSE_CALL, fixture, record, 71 + index, slot );
+		auto* tile = game->GetMap()->GetTile( 40 + 12 * i, 40 ); remote->SetTile( GSE_CALL, tile );
+		auto* remote_base = HQ( GSE_CALL, game, remote, c.tie && i == 1 ? game->GetMap()->GetTile( 18, 18 ) : tile, 31 + index );
+		if ( c.same_owner && i == 1 ) { remote_base->m_facilities.clear(); }
+		result.remote.push_back( remote );
+	}
+	OriginalFeatures( source, c.step.source_flags ); OriginalFeatures( destination, c.step.destination_flags );
+	fixture.GameplayRandom( { c.step.seed, 0xa1b2c3d4 } ); fixture.Updates();
+	return result;
+}
+
+std::map< size_t, std::string > BaseBytes( Game* game ) {
+	std::map< size_t, std::string > result;
+	for ( const auto& entry : game->GetBM()->GetBases() ) { result.emplace( entry.first, base::Base::Serialize( entry.second ).ToString() ); }
+	return result;
+}
+
+// UnitManager serializes its two named definition tables in unordered-map
+// iteration order. Compare every byte of the actual world after sorting only
+// these name/value pairs; definitions, Unit records and every other frame remain
+// exact. This neither changes the production codec nor asserts raw wire order.
+std::string CanonicalMovementSnapshot( Game* game, const std::string& bytes ) {
+	types::Buffer world( bytes ); const auto* state = game->GetState();
+	world_snapshot::ValidateHeader( world, state->m_settings.global );
+	(void)world_snapshot::ReadRandomState( world );
+	(void)world_snapshot::ReadTurnState( world, state->m_slots->GetSlots() );
+	if ( world.ReadBool() ) { (void)world.ReadString(); } // exact simulation payload retained in prefix
+	(void)world.ReadString(); (void)world.ReadString(); // map and resources, likewise unchanged
+	const auto prefix = bytes.substr( 0, world.lenr ); types::Buffer units( world.ReadString() ), canonical;
+	canonical.WriteString( units.ReadString() );
+	for ( int table = 0; table < 2; ++table ) {
+		const auto count = units.ReadInt(); if ( count < 0 || count > 1024 ) { throw std::runtime_error( "invalid test definition count" ); }
+		std::map< std::string, std::string > entries;
+		for ( int64_t i = 0; i < count; ++i ) {
+			const auto name = units.ReadString(), value = units.ReadString();
+			if ( !entries.emplace( name, value ).second ) { throw std::runtime_error( "duplicate test definition name" ); }
+		}
+		canonical.WriteInt( count );
+		for ( const auto& entry : entries ) { canonical.WriteString( entry.first ); canonical.WriteString( entry.second ); }
+	}
+	types::Buffer result; result.WriteString( prefix ); result.WriteString( canonical.ToString() );
+	result.WriteString( units.ToString().substr( units.lenr ) ); result.WriteString( bytes.substr( world.lenr ) );
+	return result.ToString();
 }
 
 uint32_t SharedNext( uint32_t value ) { return static_cast< uint32_t >( UINT64_C( 1664525 ) * value + UINT64_C( 1013904223 ) ); }
@@ -231,6 +302,145 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
+	task->AddTest( "conventional Gaian HQ movement composes8 actual produced nonneutral outcomes", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int endpoint = 1; endpoint < 3; ++endpoint ) {
+			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
+				// Use actual frozen Gaian profile and first-command refresh; no injected ratings.
+				auto* unit = Spawn( GSE_CALL, fixture, Record() );
+				const auto stats = unit->QueryStats( SmacMoraleMode::Mode0 );
+				GT_ASSERT( stats.effective_morale == 0 && stats.full_allowance == 3, "Gaian producer did not supply its actual refreshed context" );
+				auto* source = game->GetMap()->GetTile( 2, 2 ); auto* destination = game->GetMap()->GetTile( 3, 3 );
+				auto* hq = endpoint ? HQ( GSE_CALL, game, unit, endpoint == 1 ? source : destination ) : nullptr;
+				for ( const auto& c : gaian_hq_fixture::CASES ) {
+					if ( c.endpoint != endpoint ) { continue; }
+					Land( game ); unit->SetTile( GSE_CALL, source ); auto record = Record(); record.spent = static_cast< uint8_t >( c.spent );
+					manager->UpdateConventionalUnit( GSE_CALL, unit, record );
+					OriginalFeatures( source, c.source_flags ); OriginalFeatures( destination, c.destination_flags );
+					fixture.GameplayRandom( { c.seed, 0xabcdef01 } ); fixture.Updates();
+					const auto base_bytes = hq ? base::Base::Serialize( hq ).ToString() : std::string{};
+					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
+					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
+					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
+						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
+						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
+					GT_ASSERT( game->GetRandom()->GetStateString() == jsf && Unit::GetNextId() == next && source->features == sf && destination->features == df
+						&& source->terraforming == st && destination->terraforming == dt && ( !hq || base::Base::Serialize( hq ).ToString() == base_bytes ),
+						"case " + std::string( c.id ) + " changed unrelated terrain/base/ID/JSF state" );
+					const auto& updates = fixture.Updates();
+					GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == ( c.spent < 3 ? 1 : 0 ),
+						"case " + std::string( c.id ) + " presented an exhausted command or lost an admitted attempt" );
+				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional remote HQ movement matches21 literal cardinality order and tie outcomes", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( const auto& c : remote_hq_fixture::CASES ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign();
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); const auto world = PopulateRemoteHQ( GSE_CALL, fixture, c ); auto* unit = world.local;
+				auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 17, 17 );
+				const auto stats = unit->QueryStats( SmacMoraleMode::Mode1 );
+				GT_ASSERT( stats.full_allowance == 6 && stats.effective_morale == 2 && game->GetUM()->GetUnits().size() == 7 && game->GetBM()->GetBases().size() == 7,
+					"remote setup did not produce selected Rover and seven canonical records" );
+				const auto bases = BaseBytes( game ); std::vector< std::string > remotes;
+				for ( auto* remote : world.remote ) { remotes.push_back( Unit::Serialize( remote ).ToString() ); }
+				const auto jsf = game->GetRandom()->GetStateString(); auto expected = unit->Conventional();
+				expected.spent = static_cast< uint8_t >( c.step.spent_after ); expected.failed_move = c.step.failed;
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.step.moved ? destination : source )
+					&& source->units.count( unit->m_id ) == ( c.step.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.step.moved ? 1u : 0u )
+					&& fixture.GameplayRandom() == SmacGameplayRandomState( c.step.shared_after, 0xa1b2c3d4 ),
+					"case " + std::string( c.step.id ) + " differs from literal original outcome" );
+				GT_ASSERT( BaseBytes( game ) == bases && game->GetRandom()->GetStateString() == jsf, "remote command changed base records or JSF" );
+				for ( size_t i = 0; i < world.remote.size(); ++i ) {
+					const auto* remote = world.remote[ i ];
+					GT_ASSERT( Unit::Serialize( remote ).ToString() == remotes[ i ] && remote->GetTile()->units.at( remote->m_id ) == remote, "remote Unit bytes or membership changed" );
+				}
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == ( c.step.spent < 6 ? 1 : 0 ),
+					"remote command refreshed remote units or lost local presentation" ); GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional multi participant HQ commands retain local authority and interaction fences", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( int scenario = 0; scenario < 9; ++scenario ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign();
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); const auto world = PopulateRemoteHQ( GSE_CALL, fixture, remote_hq_fixture::CASES.back() );
+				auto* unit = world.local; auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 17, 17 ); size_t caller = 0;
+				if ( scenario == 0 ) { caller = 1; }
+				if ( scenario == 1 ) { unit = world.remote[ 1 ]; source = unit->GetTile(); destination = source->E; caller = 2; }
+				if ( scenario == 2 ) { world.remote[ 0 ]->SetTile( GSE_CALL, source ); }
+				if ( scenario == 3 ) { world.remote[ 1 ]->SetTile( GSE_CALL, source->W ); }
+				if ( scenario == 4 ) { world.remote[ 1 ]->SetTile( GSE_CALL, destination->E ); }
+				if ( scenario == 5 ) { world.remote[ 0 ]->SetTile( GSE_CALL, destination ); }
+				if ( scenario == 6 ) { fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); }
+				if ( scenario == 7 ) { game->GetState()->m_settings.local.network_role = settings::LocalSettings::NR_SERVER; }
+				if ( scenario == 8 ) { unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 20, 20 ) ); source = unit->GetTile(); destination = source->E; }
+				fixture.Updates(); const auto before = unit->Conventional(); const auto bases = BaseBytes( game );
+				const auto random = fixture.GameplayRandom(); const auto members = source->units; const auto jsf = game->GetRandom()->GetStateString();
+				bool rejected = false; try { game->GetUM()->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& ) { rejected = true; }
+				GT_ASSERT( rejected, "remote-world unsupported command accepted at " + std::to_string( scenario ) );
+				fixture.MoveEvent( GSE_CALL, unit, destination, caller );
+				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == members && BaseBytes( game ) == bases
+					&& fixture.GameplayRandom() == random && game->GetRandom()->GetStateString() == jsf, "rejected remote command mutated authority" );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::none_of( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE || r.type == game::FrontendRequest::FR_UNIT_MOVE; } ),
+					"rejected remote command emitted unit presentation" ); GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "conventional remote HQ actual world restore preserves roster and next command", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( const bool rover : { false, true } ) {
+			ConventionalUnitFixture source, destination; source.ConfigureMovementCampaign( rover ); destination.ConfigureMovementCampaign( rover );
+			std::string snapshot, canonical_snapshot; std::map< size_t, std::string > bases;
+			const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				const auto world = PopulateRemoteHQ( GSE_CALL, source, remote_hq_fixture::CASES.back(), rover );
+				// Fail one actual command, retaining the saved marker and paired RNG.
+				auto record = world.local->Conventional(); record.spent = rover ? 5 : 2;
+				source.Game()->GetUM()->UpdateConventionalUnit( GSE_CALL, world.local, record );
+				source.Game()->GetMap()->GetTile( 17, 17 )->features = map::tile::FEATURE_NONE; source.GameplayRandom( { 1, 77 } );
+				source.MoveEvent( GSE_CALL, world.local, source.Game()->GetMap()->GetTile( 17, 17 ) );
+				GT_ASSERT( world.local->Conventional().failed_move, "remote continuation setup did not fail" );
+				bases = BaseBytes( source.Game() ); snapshot = source.Snapshot(); canonical_snapshot = CanonicalMovementSnapshot( source.Game(), snapshot ); GT_OK();
+			} ); if ( !setup.empty() ) { return setup; }
+			const auto restored = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				destination.Restore( GSE_CALL, snapshot ); destination.Game()->GetBM()->ProcessUnprocessed( GSE_CALL );
+				GT_ASSERT( CanonicalMovementSnapshot( destination.Game(), destination.Snapshot() ) == canonical_snapshot && BaseBytes( destination.Game() ) == bases,
+					"remote restore changed complete canonical saved state" ); GT_OK();
+			} ); if ( !restored.empty() ) { return restored; }
+			std::string continued;
+			for ( auto* fixture : { &source, &destination } ) {
+				const auto error = fixture->Run( [ & ]( GSE_CALLABLE ) -> std::string {
+					auto* game = fixture->Game(); game->AdvanceTurn( 2 ); auto* unit = game->GetUM()->GetUnit( 77 ); auto* target = game->GetMap()->GetTile( 17, 17 );
+					GT_ASSERT( unit->Conventional().spent == 0 && unit->Conventional().failed_move, "upkeep changed saved failure history" );
+					fixture->MoveEvent( GSE_CALL, unit, target );
+					GT_ASSERT( unit->GetTile() == target && unit->Conventional().spent == 3 && !unit->Conventional().failed_move && BaseBytes( game ) == bases,
+						"remote continuation did not preserve bases or perform the local next command" );
+					const auto canonical = CanonicalMovementSnapshot( game, fixture->Snapshot() );
+					if ( continued.empty() ) { continued = canonical; } else { GT_ASSERT( canonical == continued, "remote restored continuation diverged" ); }
+					GT_OK();
+				} ); if ( !error.empty() ) { return error; }
+			}
+		}
+		GT_OK();
+	} );
 	task->AddTest( "conventional friendly HQ movement matches70 original homeless outcomes", []( GSE*, context::Context* ) -> std::string {
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
@@ -280,11 +490,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				auto* unit = Spawn( GSE_CALL, fixture, record, 71, 0, "EXPLICIT_ROVER" );
 				auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 ); auto* hq = HQ( GSE_CALL, game, unit, source );
 				fixture.Updates();
-				if ( scenario == 2 ) { fixture.RetainedPlanet( 1, 0 ); }
-				if ( scenario == 3 ) { fixture.RetainedMorale( 0, 2 ); }
+				if ( scenario == 2 ) { fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); }
+				if ( scenario == 3 ) { source->Lock( 0 ); }
+				util::FinallyGuard unlock( [ & ] { if ( source->IsLocked() ) { source->Unlock(); } } );
 				if ( scenario == 5 ) { fixture.SelectStartup( 1, 2 ); }
 				if ( scenario == 6 ) { fixture.CopyRoverDesign( 1, 65, 1 ); fixture.SelectStartup( 1, 65 ); }
-				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72, 0, "EXPLICIT_ROVER" ); other->SetTile( GSE_CALL, game->GetMap()->GetTile( 6, 6 ) ); fixture.Updates(); }
+				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72, 0, "EXPLICIT_ROVER" ); other->SetTile( GSE_CALL, source ); fixture.Updates(); }
 				const auto base_bytes = base::Base::Serialize( hq ).ToString();
 				fixture.GameplayRandom( { 0, 77 } ); const auto jsf = game->GetRandom()->GetStateString(); const auto members = source->units;
 				const auto before = unit->Conventional(); const auto next = Unit::GetNextId(); bool rejected = false;
@@ -309,19 +520,22 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
-				fixture.RetainedPlanet( scenario == 2 ? 1 : 0, 0 ); fixture.RetainedMorale( scenario == 3 ? 1 : 0, 0 );
+				fixture.RetainedPlanet( 0, 0 ); fixture.RetainedMorale( 0, 0 );
 				auto record = Record(); if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
 				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 );
 				auto* hq = HQ( GSE_CALL, game, unit, scenario == 10 ? game->GetMap()->GetTile( 6, 6 ) : source );
 				fixture.Updates(); // retire valid spawn presentation before deliberate native corruption
 				auto* original_owner = hq->m_owner; auto* original_faction = hq->m_faction;
 				util::FinallyGuard restore_base( [ & ] { hq->m_owner = original_owner; hq->m_faction = original_faction; hq->GetTile()->base = hq; } );
+				if ( scenario == 2 ) { fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); }
+				if ( scenario == 3 ) { source->Lock( 0 ); }
+				util::FinallyGuard unlock( [ & ] { if ( source->IsLocked() ) { source->Unlock(); } } );
 				if ( scenario == 5 ) { hq->m_pops.clear(); }
 				if ( scenario == 6 ) { hq->m_facilities.clear(); }
 				if ( scenario == 7 ) { hq->m_facilities.emplace( "UNPROVED", game->GetBM()->GetFacilityDef( "HEADQUARTERS" ) ); }
 				if ( scenario == 8 ) { hq->m_owner = &game->GetState()->m_slots->GetSlot( 6 ); }
 				if ( scenario == 9 ) { hq->m_faction = nullptr; }
-				if ( scenario == 11 ) { HQ( GSE_CALL, game, unit, game->GetMap()->GetTile( 6, 6 ), 32 ); fixture.Updates(); }
+				if ( scenario == 11 ) { HQ( GSE_CALL, game, unit, destination, 32 ); fixture.Updates(); }
 				if ( scenario == 12 ) { source->rockiness = ROCKINESS_ROLLING; }
 				if ( scenario == 13 ) { destination->rockiness = ROCKINESS_ROLLING; }
 				if ( scenario == 14 ) { source->features = FEATURE_XENOFUNGUS; }
@@ -330,7 +544,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 17 ) { source->terraforming = TERRAFORMING_ROAD; }
 				if ( scenario == 18 ) { destination->features = FEATURE_XENOFUNGUS; destination->terraforming = TERRAFORMING_ROAD; }
 				if ( scenario == 19 ) { source->base = nullptr; }
-				if ( scenario == 20 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, game->GetMap()->GetTile( 6, 6 ) ); fixture.Updates(); }
+				if ( scenario == 20 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, source ); fixture.Updates(); }
 				base::FacilityDef unregistered( "HEADQUARTERS", "Unregistered", "Fixture", 1, { "fixture", 0, 0, 1, 1 } );
 				util::FinallyGuard restore_facility( [ & ] { if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = game->GetBM()->GetFacilityDef( "HEADQUARTERS" ); } } );
 				if ( scenario == 21 ) { hq->m_facilities[ "HEADQUARTERS" ] = &unregistered; }

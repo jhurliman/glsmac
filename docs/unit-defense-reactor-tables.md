@@ -60,7 +60,7 @@ every numeric column. A local Release probe reads the installed 10/14 defense
 and 4/4 reactor records without redistributing the files. Tests specify GLSMAC's
 strict ingestion policy; they do not reproduce original malformed-file behavior.
 
-CHASSIS has nineteen fields: six name/gender pairs, speed, triad, range, missile,
-cargo, cost and prerequisite. It remains a separate parser slice before a
-cross-table design resolver. No current `StaticDef`, ownership/snapshot format,
+The separate [CHASSIS decoder](unit-chassis-table.md) preserves its nineteen
+fields and six name/grammar pairs before a future cross-table design resolver.
+No current `StaticDef`, ownership/snapshot format,
 production cost, conventional art or gameplay behavior changes in this slice.

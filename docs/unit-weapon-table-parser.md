@@ -86,7 +86,8 @@ no original assets. A separate read-only local probe checks the installed
 21/26-row catalogs and the three component references above.
 
 The [defense/reactor parsers](unit-defense-reactor-tables.md) extend the same
-bounded metadata contract. CHASSIS remains a separate slice before resolving a
+bounded metadata contract. The [CHASSIS decoder](unit-chassis-table.md) supplies
+the remaining basic component metadata before resolving a
 `#UNITS` design against an explicitly selected catalog. `#UNITS` has no reactor
 column, so choosing its initial reactor requires separate original-loader
 evidence. Ability bitfields, technology eligibility and calculated costs also

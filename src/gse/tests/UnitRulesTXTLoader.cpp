@@ -13,6 +13,7 @@ namespace {
 using loader::txt::UnitRulesTXTLoader;
 using loader::txt::WeaponMode;
 using loader::txt::DefenseMode;
+using loader::txt::ChassisTriad;
 
 // Synthetic metadata: role selection must come from the mode, not names,
 // installed row indices, default costs, or prerequisite aliases.
@@ -61,6 +62,23 @@ std::string ComponentRow( const bool reactor, const size_t column, const std::st
 	std::string row;
 	for ( size_t i = 0 ; i < fields.size() ; ++i ) { if ( i != 0 ) { row += ','; } row += fields[ i ]; }
 	return row;
+}
+
+std::vector< std::string > ChassisFields() {
+	return { "Traveler", "M1", "Travelers", "M2", "Guardian", "F1", "Guardians", "F2",
+		"3", "1", "4", "1", "5", "6", "TravelTech", "Grand One", "N1", "Grand Many", "N2" };
+}
+
+std::string JoinRow( const std::vector< std::string >& fields ) {
+	std::string row;
+	for ( size_t i = 0 ; i < fields.size() ; ++i ) { if ( i != 0 ) { row += ','; } row += fields[ i ]; }
+	return row;
+}
+
+std::string ChassisRejection( const std::string& source, const std::string& ruleset = "smac" ) {
+	try { UnitRulesTXTLoader::ParseChassis( source, ruleset ); }
+	catch ( const std::invalid_argument& error ) { return error.what(); }
+	return "";
 }
 
 }
@@ -255,6 +273,105 @@ void AddUnitRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
 		for ( const auto mode : { -2147483647 - 1, -1, 3, 7, 8, 9, 2147483647 } ) {
 			for ( const auto* ruleset : { "smac", "smax" } ) {
 				GT_ASSERT( !ComponentRejection( Source( { ComponentRow( false, 3, std::to_string( mode ) ) }, "\n", "DEFENSES" ), false, ruleset ).empty(), "weapon/package or unknown mode was accepted as a defense mode" );
+			}
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Unit chassis table preserves all nineteen columns and local identity", GT() {
+		const auto fields = ChassisFields();
+		for ( const auto* newline : { "\n", "\r\n" } ) {
+			for ( const auto* ruleset : { "smac", "smax" } ) {
+				const auto table = UnitRulesTXTLoader::ParseChassis( Source( { JoinRow( fields ) + ", ; annotation" }, newline, "CHASSIS" ), ruleset );
+				GT_ASSERT( table.ruleset_id == ruleset && table.chassis.size() == 1, "chassis identity/count changed" );
+				const auto& chassis = table.chassis[ 0 ];
+				const std::vector< std::string > names = { "Traveler", "Travelers", "Guardian", "Guardians", "Grand One", "Grand Many" };
+				const std::vector< std::string > grammar = { "M1", "M2", "F1", "F2", "N1", "N2" };
+				for ( size_t pair = 0 ; pair < names.size() ; ++pair ) {
+					GT_ASSERT( chassis.names[ pair ].name == names[ pair ] && chassis.names[ pair ].grammar == grammar[ pair ], "a chassis name/grammar pair was dropped or reordered" );
+				}
+				GT_ASSERT( chassis.speed == 3 && chassis.triad == ChassisTriad::Sea && chassis.range == 4 && chassis.missile && chassis.cargo == 5 && chassis.cost == 6 && chassis.prerequisite == "TravelTech", "chassis gameplay columns were shifted or inferred from other metadata" );
+			}
+		}
+		auto a = fields, b = fields;
+		a[ 0 ] = "'Rotor"; b[ 0 ] = "Rotor";
+		const auto smac = UnitRulesTXTLoader::ParseChassis( "#CHASSIS\n" + JoinRow( a ), "smac" );
+		const auto smax = UnitRulesTXTLoader::ParseChassis( "#CHASSIS\n" + JoinRow( fields ) + "\n" + JoinRow( b ), "smax" );
+		GT_ASSERT( smac.chassis[ 0 ].names[ 0 ].name == "'Rotor" && smax.chassis[ 1 ].names[ 0 ].name == "Rotor", "catalog indices or original apostrophe spellings were normalized" );
+		// Alternative names may repeat, including all six names of one chassis.
+		for ( const size_t column : { 0, 2, 4, 6, 15, 17 } ) { a[ column ] = "Repeated"; }
+		GT_ASSERT( UnitRulesTXTLoader::ParseChassis( Source( { JoinRow( a ), JoinRow( fields ) }, "\n", "CHASSIS" ), "smac" ).chassis.size() == 2, "alternate names were incorrectly used as unique catalog keys" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit chassis table preserves signed metadata and validates triad and missile domains", GT() {
+		auto fields = ChassisFields();
+		fields[ 8 ] = "-2147483648"; fields[ 10 ] = "+2147483647";
+		fields[ 12 ] = "-0"; fields[ 13 ] = "+00017";
+		for ( const auto triad : { 0, 1, 2 } ) {
+			for ( const auto missile : { 0, 1 } ) {
+				fields[ 9 ] = "+" + std::to_string( triad ); fields[ 11 ] = std::to_string( missile );
+				const auto table = UnitRulesTXTLoader::ParseChassis( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ), "smax" );
+				const auto& chassis = table.chassis[ 0 ];
+				GT_ASSERT( chassis.speed == std::numeric_limits< int32_t >::min() && chassis.range == std::numeric_limits< int32_t >::max() && chassis.cargo == 0 && chassis.cost == 17 && static_cast< int32_t >( chassis.triad ) == triad && chassis.missile == ( missile == 1 ), "signed chassis metadata or explicit enum/flag changed" );
+			}
+		}
+		fields = ChassisFields();
+		fields[ 8 ] = "+2147483647"; fields[ 10 ] = "-2147483648";
+		fields[ 12 ] = "-2147483648"; fields[ 13 ] = "2147483647";
+		const auto table = UnitRulesTXTLoader::ParseChassis( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ), "smac" );
+		const auto& chassis = table.chassis[ 0 ];
+		GT_ASSERT( chassis.speed == std::numeric_limits< int32_t >::max() && chassis.range == std::numeric_limits< int32_t >::min() && chassis.cargo == std::numeric_limits< int32_t >::min() && chassis.cost == std::numeric_limits< int32_t >::max(), "chassis endpoints were narrowed or treated as design eligibility" );
+		for ( const size_t column : { 9, 11 } ) {
+			for ( const auto value : { -2147483647 - 1, -1, 3, 7, 2147483647 } ) {
+				fields = ChassisFields(); fields[ column ] = std::to_string( value );
+				GT_ASSERT( !ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) ).empty(), "invalid triad/missile was narrowed into a valid enum/flag" );
+			}
+		}
+		fields = ChassisFields(); fields[ 11 ] = "2";
+		GT_ASSERT( !ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) ).empty(), "missile accepted nonbinary value" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit chassis table rejects missing sections fields and duplicate primary names", GT() {
+		const auto fields = ChassisFields();
+		const auto source = Source( { JoinRow( fields ) }, "\n", "CHASSIS" );
+		for ( const auto* ruleset : { "", "SMAC", "smax ", "auto" } ) {
+			GT_ASSERT( !ChassisRejection( source, ruleset ).empty(), "chassis accepted implicit ruleset identity" );
+		}
+		for ( const auto& invalid : { std::string(), std::string( "#CHASSIS_OTHER\n" ), std::string( "##CHASSIS\n" ), std::string( "#CHASSIS\n;empty\n#END\n" ), source + "#CHASSIS\n" } ) {
+			GT_ASSERT( !ChassisRejection( invalid ).empty(), "missing, duplicate or empty chassis section accepted" );
+		}
+		for ( size_t column = 0 ; column < fields.size() ; ++column ) {
+			auto missing = fields; missing.erase( missing.begin() + column );
+			GT_ASSERT( !ChassisRejection( Source( { JoinRow( missing ) }, "\n", "CHASSIS" ) ).empty(), "missing positional chassis field accepted" );
+		}
+		for ( const auto* extra : { ",extra", ",," } ) {
+			GT_ASSERT( !ChassisRejection( Source( { JoinRow( fields ) + extra }, "\n", "CHASSIS" ) ).empty(), "additional chassis columns accepted" );
+		}
+		auto duplicate = fields; duplicate[ 2 ] = "Different alternate";
+		const auto error = ChassisRejection( Source( { JoinRow( fields ), JoinRow( duplicate ) }, "\n", "CHASSIS" ) );
+		GT_ASSERT( error.find( "#CHASSIS row 2 column 1" ) != std::string::npos, "duplicate primary name did not identify the later row" );
+		GT_OK();
+	} );
+	task->AddTest( "Unit chassis table validates every name grammar and numeric field", GT() {
+		for ( const size_t column : { 0, 2, 4, 6, 14, 15, 17 } ) {
+			for ( const auto& value : { std::string(), std::string( "x\0y", 3 ) } ) {
+				auto fields = ChassisFields(); fields[ column ] = value;
+				const auto error = ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) );
+				GT_ASSERT( error.find( "#CHASSIS row 1 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid chassis name/prerequisite accepted or mislocated" );
+			}
+		}
+		for ( const size_t column : { 1, 3, 5, 7, 16, 18 } ) {
+			for ( const auto& value : { std::string(), std::string( "M" ), std::string( "M0" ), std::string( "M3" ), std::string( "X1" ), std::string( "f1" ), std::string( "N12" ), std::string( "M\0", 2 ) } ) {
+				auto fields = ChassisFields(); fields[ column ] = value;
+				const auto error = ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) );
+				GT_ASSERT( error.find( "#CHASSIS row 1 column " + std::to_string( column + 1 ) ) != std::string::npos, "unsupported grammar accepted or mislocated" );
+			}
+		}
+		const std::vector< std::string > invalid = { "", "*", "1junk", "1.0", "0x10", "1 2", "+", "-", "+-1", "++1", "--1", "2147483648", "-2147483649", std::string( "1\0x", 3 ) };
+		for ( size_t column = 8 ; column <= 13 ; ++column ) {
+			for ( const auto& value : invalid ) {
+				auto fields = ChassisFields(); fields[ column ] = value;
+				const auto error = ChassisRejection( Source( { JoinRow( fields ) }, "\n", "CHASSIS" ) );
+				GT_ASSERT( error.find( "#CHASSIS row 1 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid chassis number accepted or mislocated" );
 			}
 		}
 		GT_OK();

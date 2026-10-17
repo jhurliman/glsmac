@@ -192,6 +192,16 @@ return {
 		return #pad(#to_string(value), 'left', 3, ' ');
 	},
 
+	set_unavailable: () => {
+		for (type in this.labels) {
+			const l = this.labels[type];
+			l.percentage.text = 'N/A';
+			l.value.text = 'N/A';
+			l.bonus.text = 'N/A';
+			l.total.text = 'N/A';
+		}
+	},
+
 	set: (data) => {
 		for (type in data) {
 			const d = data[type];

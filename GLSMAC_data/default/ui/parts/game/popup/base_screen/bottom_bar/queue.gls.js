@@ -51,6 +51,11 @@ return {
 
 	},
 
+	set_unavailable: () => {
+		this.items.clear();
+		this.items.text({ class: 'base-screen-frame-text', text: 'Unavailable' });
+	},
+
 	set: (data) => {
 
 		this.items.clear();

@@ -159,7 +159,7 @@ return {
 			bottom: 3,
 			height: 20,
 		});
-		info.area({
+		this.intake_caption = info.area({
 			align: 'left',
 			width: 442,
 		})
@@ -187,12 +187,21 @@ return {
 		const types = ['nutrients', 'minerals', 'energy'];
 
 		this.cells.clear();
+		this.intake_caption.text = #is_defined(data.minerals.loss) && #is_defined(data.energy.loss)
+			? 'INTAKE - CONSUMPTION' : 'INTAKE - CONSUMPTION (N/A = unavailable)';
 
 		const w = this.cell_width + 1;
 
 		for (type of types) {
 			const d = data[type];
-			const balance = this.format_resource_balance(d.profit, d.loss, this.total_cells);
+			let balance = undefined;
+			if (#is_defined(d.loss)) {
+				balance = this.format_resource_balance(d.profit, d.loss, this.total_cells);
+			} else {
+				// Unavailable costs cannot imply a surplus or a filled balance bar.
+				balance = { loss_cells: 0, profit_cells: 0,
+					intake_consumption: #to_string(d.profit) + ' - N/A', surplus: 'N/A' };
+			}
 
 			// cells
 			let left = 0;

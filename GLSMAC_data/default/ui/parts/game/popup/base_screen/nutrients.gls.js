@@ -54,6 +54,16 @@ return {
 		return this.frame;
 	},
 
+	set_stored: (filled) => {
+		this.growth_cells.clear();
+		this.growth_cells.text({
+			class: 'base-screen-frame-text',
+			align: 'center',
+			text: 'Stored: ' + #to_string(filled),
+		});
+		this.growth_label.text = 'Growth unavailable';
+	},
+
 	set: (data) => {
 		this.p.utils.set_cells(
 			112,

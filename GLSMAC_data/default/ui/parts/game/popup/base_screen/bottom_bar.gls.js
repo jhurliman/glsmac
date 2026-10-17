@@ -78,17 +78,22 @@ return {
 
 	set: (data) => {
 
-		this.parts.production.set({
-			rows: 3,
-			columns: 10,
-			filled: 8,
-			pending: 4,
-		});
+		if (data.base.has_smac_resource_context) {
+			this.parts.production.set_stored(data.base.get_production_state());
+			this.parts.queue.set_unavailable();
+		} else {
+			this.parts.production.set({
+				rows: 3,
+				columns: 10,
+				filled: 8,
+				pending: 4,
+			});
 
-		this.parts.queue.set([
-			'Mind Worms',
-			'Recreation Commons',
-		]);
+			this.parts.queue.set([
+				'Mind Worms',
+				'Recreation Commons',
+			]);
+		}
 
 		this.parts.middle_area.set({
 			name: data.base.name,

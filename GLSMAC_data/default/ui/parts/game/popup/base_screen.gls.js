@@ -128,19 +128,27 @@ return {
 		this.base_id = base.id;
 
 		const intake = base.get_intake();
-		const consumption = base.get_consumption();
+		const canonical = base.has_smac_resource_context;
+		let consumption = undefined;
+		if (canonical) {
+			consumption = { NUTRIENTS: base.get_smac_nutrient_demand() };
+		} else {
+			consumption = base.get_consumption();
+		}
 
 		this.hide_production_selection();
 
-		// dummy data for now
-
-		this.sections.nutrients.set({
-			rows: base.get_size() + 1,
-			columns: game.get('map_growth_base'),
-			filled: base.get_accumulated_nutrients(),
-			profit: intake.NUTRIENTS,
-			loss: consumption.NUTRIENTS,
-		});
+		if (canonical) {
+			this.sections.nutrients.set_stored(base.get_accumulated_nutrients());
+		} else {
+			this.sections.nutrients.set({
+				rows: base.get_size() + 1,
+				columns: game.get('map_growth_base'),
+				filled: base.get_accumulated_nutrients(),
+				profit: intake.NUTRIENTS,
+				loss: consumption.NUTRIENTS,
+			});
+		}
 
 		if (faction.is_progenitor) {
 			this.sections.economy.set_energy_grid({
@@ -154,8 +162,8 @@ return {
 
 		this.sections.game_state.set({
 			year: game.get_year(),
-			energy: 0, // TODO
-			ecodamage: 0, // TODO
+			energy: canonical ? 'N/A' : 0, // TODO
+			ecodamage: canonical ? 'N/A' : 0, // TODO
 		});
 
 		let facilities = [];
@@ -182,28 +190,32 @@ return {
 		};
 		this.sections.resources.set(resource_data);
 
-		const allocation_labs = 0.4;
-		const allocation_psych = 0.2;
+		if (canonical) {
+			this.sections.energy.set_unavailable();
+		} else {
+			const allocation_labs = 0.4;
+			const allocation_psych = 0.2;
 
-		const allocation = this.p.ui.format_placeholder_energy(resource_data.energy.profit, resource_data.energy.loss);
-		const energy_data = {
-			labs: {
-				allocation: allocation_labs,
-				value: allocation.labs,
+			const allocation = this.p.ui.format_placeholder_energy(resource_data.energy.profit, resource_data.energy.loss);
+			const energy_data = {
+				labs: {
+					allocation: allocation_labs,
+					value: allocation.labs,
+					bonus: 0,
+				},
+				psych: {
+					allocation: allocation_psych,
+					value: allocation.psych,
+					bonus: 0,
+				},
+			};
+			energy_data.economy = {
+				allocation: 1.0 - energy_data.labs.allocation - energy_data.psych.allocation,
+				value: allocation.economy,
 				bonus: 0,
-			},
-			psych: {
-				allocation: allocation_psych,
-				value: allocation.psych,
-				bonus: 0,
-			},
-		};
-		energy_data.economy = {
-			allocation: 1.0 - energy_data.labs.allocation - energy_data.psych.allocation,
-			value: allocation.economy,
-			bonus: 0,
-		};
-		this.sections.energy.set(energy_data);
+			};
+			this.sections.energy.set(energy_data);
+		}
 
 		this.sections.middle_area.set({
 			base: base,

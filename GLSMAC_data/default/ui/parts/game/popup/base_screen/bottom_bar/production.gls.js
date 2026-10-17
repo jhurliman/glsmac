@@ -19,7 +19,7 @@ return {
 			class: 'default-panel-inner',
 		});
 
-		body.text({
+		this.production_title = body.text({
 			class: 'base-screen-frame-title',
 			text: 'NOTHING',
 			align: 'top center',
@@ -56,7 +56,19 @@ return {
 		});
 	},
 
+	set_stored: (production) => {
+		this.production_title.text = 'PRODUCTION';
+		this.production_cells.clear();
+		this.production_cells.text({
+			class: 'base-screen-frame-text',
+			align: 'top center',
+			text: #is_defined(production) ? 'Stored: ' + #to_string(production.minerals) : 'Stored: unavailable',
+		});
+		this.production_label.text = 'Forecast unavailable';
+	},
+
 	set: (data) => {
+		this.production_title.text = 'NOTHING';
 
 		this.p.utils.set_cells(
 			108,

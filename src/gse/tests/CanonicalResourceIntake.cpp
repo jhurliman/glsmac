@@ -20,8 +20,11 @@
 #include "game/backend/slot/Slots.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
+#include "gse/value/Bool.h"
+#include "gse/value/String.h"
 #include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
+#include "ui/UI.h"
 #include "util/FinallyGuard.h"
 #include <array>
 #include <memory>
@@ -184,6 +187,49 @@ void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
 			const auto before = destination.Snapshot();
 			GT_ASSERT( base && destination.Game()->GetCanonicalOrbitalIntake( *base ) == expected, "actual deferred restore reset satellite assets or lost Aerospace role" );
 			GT_ASSERT( destination.Snapshot() == before, "restored orbital query mutated the world" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "Canonical resource intake complete base screen shows actual values and unavailable forecasts", []( GSE*, context::Context* ) -> std::string {
+		const auto next = Base::GetNextId(); util::FinallyGuard ids( [ = ] { Base::SetNextId( next ); } );
+		SourceOptions options; options.rows[ 1 ] = { 4, 5, 6 }; options.rows[ 3 ] = { 2, 7, 8 }; options.demand = 7; options.refs.fill( "None" );
+		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source( options ), "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
+			auto* forest = game->GetMap()->GetTile( 4, 2 ); Terrain( forest ); forest->terraforming = TERRAFORMING_FOREST;
+			auto* base = MakeBase( GSE_CALL, game ); Callbacks( GSE_CALL, fixture );
+			auto* wrapper = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
+			GT_ASSERT( Rejects( [ & ] { Call( GSE_CALL, wrapper, "get_consumption" ); } ), "canonical full consumption unexpectedly available" );
+			auto* game_wrapper = static_cast< value::Object* >( game->Wrap( GSE_CALL ) );
+			// The complete screen uses real Base/Tile/manager methods and production
+			// intake callbacks. Its existing harness doubles only DOM/assets/year.
+			auto* services = new value::Object( GSE_CALL, { { "get_bm", game_wrapper->Get( "get_bm" ) } } );
+			auto* no_forecast = NATIVE_CALL() {
+				throw std::runtime_error( "canonical screen called an unsupported forecast or allocation formatter" );
+				return VALUE( value::Undefined );
+			} );
+			auto* ui = new value::Object( GSE_CALL, {
+				{ "format_resource_balance", ::ui::UI::CreateResourceBalanceFormatter( GSE_CALL ) },
+				{ "format_resource_progress", no_forecast }, { "format_placeholder_energy", no_forecast },
+			} );
+			auto* initialize = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_screen_resources" ) );
+			auto* draw = static_cast< value::Callable* >( initialize->Run( GSE_CALL, { services, wrapper, ui } ) );
+			for ( const bool production_present : { false, true, false } ) {
+				const ProductionItem stockpile{ ProductionItemKind::Stockpile, {} };
+				base->SetProductionState( GSE_CALL, production_present ? std::optional< ProductionState >{ ProductionState{ stockpile, 47, stockpile, 0 } } : std::nullopt );
+				base->SetAccumulatedNutrients( production_present ? -4 : 13 );
+				const auto before = fixture.Snapshot(); const auto rng = game->GetRandom()->GetStateString();
+				const auto pair = fixture.GameplayRandom(); const auto frontend = fixture.QueuedFrontendRequests().size();
+				auto* expected = new value::Object( GSE_CALL, {
+					{ "canonical", VALUE( value::Bool,, true ) }, { "nutrients", VALUE( value::String,, "-001" ) },
+					{ "minerals", VALUE( value::String,, "12" ) }, { "energy", VALUE( value::String,, "15" ) },
+					{ "stored", VALUE( value::String,, production_present ? "Stored: -4" : "Stored: 13" ) },
+					{ "production", VALUE( value::String,, production_present ? "Stored: 47" : "Stored: unavailable" ) },
+				} );
+				draw->Run( GSE_CALL, { expected } );
+				GT_ASSERT( fixture.Snapshot() == before && game->GetRandom()->GetStateString() == rng && fixture.GameplayRandom() == pair
+					&& fixture.QueuedFrontendRequests().size() == frontend, "canonical screen changed world, RNG or frontend queue" );
+			}
+			GT_OK();
 		} );
 	} );
 	task->AddTest( "Canonical resource intake actual callbacks compose seven first-worker contexts", []( GSE*, context::Context* ) -> std::string {

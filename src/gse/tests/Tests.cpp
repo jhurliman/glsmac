@@ -8,6 +8,7 @@
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
 #include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
@@ -65,6 +66,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );

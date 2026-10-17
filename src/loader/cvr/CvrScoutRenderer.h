@@ -9,6 +9,9 @@ namespace types::texture { class Texture; }
 
 namespace loader::cvr {
 
+struct CvrActorMaterial;
+class CvrSpartanRoverRenderer;
+
 struct CvrScoutViewInput {
 	int32_t facing; // Supported flat idle facing -1 or0..7; -1 selects0.
 	int32_t zoom;
@@ -42,6 +45,8 @@ public:
 	CvrScoutImage Render( const CvrScoutViewInput& view ) const;
 
 private:
+	friend class CvrSpartanRoverRenderer;
+	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, const CvrActorMaterial* material );
 	struct Assets;
 	explicit CvrScoutRenderer( std::shared_ptr< const Assets > assets );
 	std::shared_ptr< const Assets > m_assets;

@@ -55,7 +55,7 @@ uint32_t Trig( const uint32_t input, const bool cosine ) {
 
 }
 
-View MakeView( const CvrScoutViewInput& input ) {
+View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 	RequireNearestRounding();
 	if ( input.facing < -1 || input.facing > 7 || input.zoom < -8 || input.zoom > 8 || input.scale_denominator <= 0 ) {
 		throw std::invalid_argument( "CVR Scout: view outside bounded idle domain" );
@@ -78,11 +78,20 @@ View MakeView( const CvrScoutViewInput& input ) {
 		base = Multiply( Multiply( Decode( 0x3d8f5c29 ), Integer( input.zoom + 16 ) ), Decode( 0x3d800000 ) );
 		delta = int64_t{ 50 } * ( input.zoom + 16 ) / 16;
 	}
-	result.scales = { Store( Multiply( Decode( Store( base ) ), Decode( 0x3fa00000 ) ) ), 0x3f000000 };
+	result.scales = { profile == IdleProfile::SpartanSpeeder ? Store( base ) : Store( Multiply( Decode( Store( base ) ), Decode( 0x3fa00000 ) ) ), 0x3f000000 };
 	result.projection = MultiplyMatrix( result.auxiliary, rotation );
 	for ( size_t i = 0; i < 9; ++i ) { result.projection[ i ] = Store( Multiply( Decode( result.projection[ i ] ), Decode( result.scales[ i < 6 ? 0 : 1 ] ) ) ); }
 	result.translation = { 0x43008000, 0x43008000, 0x47138780 };
 	result.light = { 0xbf13cd36, 0x3f13cd36, 0x3f13cd36 };
+	if ( profile == IdleProfile::SpartanSpeeder ) {
+		// Load validates the installed map-light tuple6,4,15. Normalize those
+		// integers here; no captured normalized vector or lighting window.
+		const float inverse_length = static_cast< float >( 1.0 / std::sqrt( 6.0 * 6.0 + 4.0 * 4.0 + 15.0 * 15.0 ) );
+		for ( size_t i = 0; i < 3; ++i ) {
+			const float component = static_cast< float >( ( i == 0 ? 6.0 : i == 1 ? 4.0 : 15.0 ) * inverse_length );
+			std::memcpy( &result.light[ i ], &component, sizeof( component ) );
+		}
+	}
 	for ( size_t i = 0; i < 2; ++i ) {
 		const int64_t anchor = int64_t( input.anchor[ i ] ) + delta;
 		if ( anchor < INT32_MIN || anchor > INT32_MAX ) { throw std::invalid_argument( "CVR Scout: target anchor overflow" ); }

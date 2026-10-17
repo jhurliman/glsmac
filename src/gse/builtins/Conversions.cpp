@@ -59,7 +59,7 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 			}
 			case VT_STRING: {
 				try {
-					value = std::stol( ((value::String*)v)->value );
+					value = std::stoll( ((value::String*)v)->value );
 				}
 				catch ( std::logic_error const& ex ) {
 					CONVERSION_ERROR( "Int" )

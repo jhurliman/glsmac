@@ -4795,7 +4795,7 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 						using Prerequisite = settings::SmacProductionPrerequisite;
 						const auto reference = state->m_settings.global.GetSmacFacilityPrerequisite( 3 );
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
-							? reference.status == Prerequisite::Status::TECHNOLOGY && reference.technology_id == 2
+							? reference.status == Prerequisite::Status::TECHNOLOGY_ID && reference.technology_id == 2
 							: reference.status == Prerequisite::Status::UNAVAILABLE && !state->m_settings.global.GetSmacTechnologyRules() );
 					};
 					size_t script_callbacks = 0;

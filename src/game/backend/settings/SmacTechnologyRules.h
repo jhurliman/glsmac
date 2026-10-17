@@ -19,15 +19,15 @@ struct SmacTechnologyRule {
 };
 
 struct SmacProductionPrerequisite {
-	enum class Status { NO_REQUIREMENT, DISABLED, TECHNOLOGY, UNAVAILABLE };
+	enum class Status { NO_REQUIREMENT, DISABLED, TECHNOLOGY_ID, UNAVAILABLE };
 	Status status;
 	std::optional< int32_t > technology_id; // present for a known catalog key
-	// TECHNOLOGY passes the production definition sign guard only, not the
+	// TECHNOLOGY_ID passes the production definition sign guard only, not the
 	// loader's stricter counted-definition test, ownership, or buildability.
 };
 
 struct SmacTechnologyReference {
-	enum class Kind { NONE, DISABLED, TECHNOLOGY, UNKNOWN };
+	enum class Kind { NONE, DISABLED, TECHNOLOGY_ID, UNKNOWN };
 	Kind kind;
 	std::optional< int32_t > technology_id;
 };

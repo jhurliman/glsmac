@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "common/Common.h"
+#include "common/MTTypes.h"
 #include "gse/Bindings.h"
 #include "gse/GCWrappable.h"
 
@@ -116,6 +117,12 @@ private:
 	game::frontend::Game* m_game = nullptr;
 
 	std::atomic< bool > m_reset_needed = false;
+	enum class ResetPhase { IDLE, WAITING, FAILED };
+	ResetPhase m_reset_phase = ResetPhase::IDLE;
+	uint64_t m_reset_barrier = 0;
+	common::mt_id_t m_reset_request = 0;
+	// Called only between owner-thread callback stages, outside accumulation.
+	bool ProcessReset();
 
 	void InitConsole();
 

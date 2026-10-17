@@ -3,6 +3,7 @@
 #include "fixtures/WorldSnapshotRules.h"
 #include "GLSMAC.h"
 #include "ui/UI.h"
+#include "ui/dom/Object.h"
 #include "ui/BaseResourcePresentation.h"
 #include <cmath>
 
@@ -143,6 +144,185 @@ public:
 
 	game::backend::Game* GetGame() {
 		return &m_game;
+	}
+	static std::string CheckPolledReset( const int scenario, size_t& owner_destroyed ) {
+		class SizedNull final : public graphics::Null {
+		public:
+			SizedNull() { OnWindowResize(); }
+			const unsigned short GetWindowWidth() const override { return 64; }
+			const unsigned short GetWindowHeight() const override { return 64; }
+			const unsigned short GetViewportWidth() const override { return 64; }
+			const unsigned short GetViewportHeight() const override { return 64; }
+		} graphics;
+		class Frontend final : public game::frontend::Game {
+		public:
+			Frontend( GLSMAC* app, game::backend::State* state, ::ui::UI* ui, size_t& iterations )
+				: game::frontend::Game( app, state, ui ), iterations( iterations ) {}
+			void Iterate() override { ++iterations; game::frontend::Game::Iterate(); }
+			size_t& iterations;
+		};
+		class Iterable final : public ::ui::dom::Object {
+		public:
+			Iterable( GSE_CALLABLE, ::ui::UI* ui, size_t& iterations )
+				: Object( GSE_CALL, ui, nullptr, {}, "reset_probe" ) {
+				Object::Iterable( [ &iterations ]() { ++iterations; } );
+			}
+		};
+		class PendingOwner final : public gc::Object {
+		public:
+			PendingOwner( gc::Space* space, size_t& destroyed ) : gc::Object( space ), destroyed( destroyed ) {}
+			~PendingOwner() override { ++destroyed; }
+			size_t& destroyed;
+		};
+		size_t frontend_iterations = 0, ui_iterations = 0, script_iterations = 0, load_completions = 0, old_bodies = 0, mains = 0;
+		bool main_after_reset = false;
+		auto* previous_graphics = g_engine->m_graphics;
+		auto* previous_game = g_engine->m_game;
+		{
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_graphics = &graphics;
+		}
+		util::FinallyGuard restore_services( [ & ]() {
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_game = previous_game; g_engine->m_graphics = previous_graphics;
+		} );
+		// The rooted GLSMAC uses Engine's backend during traversal, so both
+		// services remain installed until this fixture's runtime is destroyed.
+		BackendFixture fixture;
+		{
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_game = fixture.GetGame();
+		}
+		auto* app = fixture.m_glsmac.get();
+		auto* space = fixture.m_gse->GetGCSpace();
+		const auto install_load_completion = [ & ]() {
+			app->m_f_after_load = [ & ]() { ++load_completions; };
+			app->m_load_thread = new std::thread( []() {} );
+		};
+		Frontend* frontend = nullptr;
+		Iterable* iterable = nullptr;
+		util::FinallyGuard destroy_iterable( [ & ]() {
+			if ( iterable ) { fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				iterable->Destroy( GSE_CALL ); fixture.m_gse->RemoveRootObject( iterable ); GT_OK();
+			} ); }
+		} );
+		std::vector< common::mt_id_t > retired_requests;
+		const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			fixture.m_gse->AddRootObject( app );
+			app->m_ui = new ::ui::UI( GSE_CALL );
+			// Root this native iterable separately so S_Reset's DOM clear does
+			// not erase the observation of whether UI::Iterate is entered.
+			iterable = new Iterable( GSE_CALL, app->m_ui, ui_iterations );
+			fixture.m_gse->AddRootObject( iterable );
+			app->m_state = fixture.m_state;
+			app->m_is_game_running = true;
+			frontend = new Frontend( app, fixture.m_state, app->m_ui, frontend_iterations );
+			app->m_game = frontend;
+			frontend->m_world_ticket = fixture.FixtureWorldTicket();
+			// RunMain uses an already cached argument in a running application.
+			// The test callback observes scheduling, not Config's global wrapper.
+			app->m_wrapobj = VALUE( value::Object,, GSE_CALL_NOGC, value::object_properties_t{} );
+			app->m_main_callables.push_back( NATIVE_CALL( app, &fixture, &mains, &main_after_reset ) {
+				++mains;
+				main_after_reset = !app->m_reset_needed && !app->m_is_game_running && !fixture.HasMap();
+				return VALUE( value::Undefined );
+			} ) );
+			// Both completed and pending IDs belong to an unstarted frontend.
+			frontend->m_mt_ids.ping = fixture.m_game.MT_Ping();
+			frontend->m_mt_ids.save_map = fixture.m_game.MT_SaveMap( frontend->m_world_ticket, "unused-fixture-map" );
+			fixture.ProcessRequests(); // save returns real R_ABORTED before readiness
+			// Remaining fields own unprocessed, real MT requests. Cancellation
+			// treats IDs uniformly regardless of the request's operation.
+#define GAME_MT_ID_X( name ) \
+			if ( !frontend->m_mt_ids.name ) { frontend->m_mt_ids.name = fixture.m_game.MT_Ping(); } \
+			retired_requests.push_back( frontend->m_mt_ids.name );
+			GAME_MT_IDS_X
+#ifdef DEBUG
+			GAME_MT_ID_X( save_dump )
+#endif
+#undef GAME_MT_ID_X
+			if ( scenario != 1 ) { app->S_Reset( GSE_CALL ); }
+			GT_OK();
+		} );
+		GT_ASSERT( setup.empty(), "reset setup: " + setup );
+		if ( scenario != 1 ) { install_load_completion(); }
+		if ( scenario == 1 ) {
+			// Real owner work requests reset during GSE::Iterate. Do not join a
+			// producer while holding the accumulation/collection mutexes.
+			std::thread producer( [ & ]() { space->Accumulate( app, [ & ]() {
+				ExecutionPointer ep; app->S_Reset( space, app->m_ctx, {}, ep );
+			} ); } ); producer.join();
+		}
+		app->Iterate(); // must return before this same thread services backend
+		GT_ASSERT( app->m_reset_request && app->m_reset_barrier && app->m_reset_needed && app->m_is_game_running,
+			"reset preflight did not retain its waiting request and lifecycle guards" );
+		GT_ASSERT( !frontend_iterations && !ui_iterations && !load_completions && !mains, "reset crossed into an old callback stage" );
+		if ( scenario == 1 ) { install_load_completion(); }
+		GT_ASSERT( frontend->m_world_retired, "pre-initialization frontend was not retired" );
+#define GAME_MT_ID_X( name ) GT_ASSERT( !frontend->m_mt_ids.name, "frontend ID was not cleared: " #name );
+		GAME_MT_IDS_X
+#ifdef DEBUG
+		GAME_MT_ID_X( save_dump )
+#endif
+#undef GAME_MT_ID_X
+		for ( const auto id : retired_requests ) {
+			GT_ASSERT( fixture.m_game.MT_GetResponse( id ).result == game::backend::R_NONE, "frontend drain left an owned response" );
+		}
+		const auto request = app->m_reset_request;
+		const auto barrier = app->m_reset_barrier;
+		PendingOwner* pending_owner = nullptr;
+		const auto waiting_setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			app->S_Reset( GSE_CALL ); // repeated public request keeps the same barrier
+			pending_owner = new PendingOwner( space, owner_destroyed );
+			fixture.m_gse->AddRootObject( pending_owner );
+			GT_OK();
+		} );
+		GT_ASSERT( waiting_setup.empty(), "waiting setup: " + waiting_setup );
+		std::thread producer( [ & ]() {
+			space->Accumulate( fixture.m_state, [ & ]() { ++script_iterations; } );
+			fixture.m_state->WithGame( pending_owner, [ & ]( game::backend::Game*, GSE_CALLABLE ) { ++old_bodies; } );
+		} ); producer.join();
+		fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { fixture.m_gse->RemoveRootObject( pending_owner ); GT_OK(); } );
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( !owner_destroyed, "waiting callback owner lost its pending root" );
+		for ( size_t i = 0; i < 3; ++i ) { app->Iterate(); }
+		GT_ASSERT( app->m_reset_request == request && app->m_reset_barrier == barrier && fixture.AdmissionCount() == 1,
+			"waiting reset resubmitted or changed its cutoff" );
+		GT_ASSERT( !script_iterations && !old_bodies && !ui_iterations && !frontend_iterations && !load_completions && !mains,
+			"waiting reset executed an old GSE/UI/frontend/main callback" );
+		if ( scenario == 2 ) {
+			fixture.m_game.MTModule::Stop(); // owns an unprocessed reset payload
+			GT_ASSERT( fixture.m_game.MT_GetResponse( request ).result == game::backend::R_NONE, "shutdown left an unprocessed response" );
+			GT_OK();
+		}
+		const auto process = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			if ( scenario == 4 ) {
+				// The original cutoff must not reset a replacement binding.
+				fixture.m_state->UnsetGame(); fixture.m_state->SetGame( &fixture.m_game );
+				fixture.FixtureWorldTicket();
+			}
+			else { fixture.ReleaseMapOwnership(); }
+			// Isolate the still-separate native reset/collector exclusion issue.
+			fixture.ProcessRequests();
+			GT_OK();
+		} );
+		GT_ASSERT( process.empty(), "backend reset: " + process );
+		if ( scenario == 3 ) {
+			fixture.m_game.MTModule::Stop(); // owns the produced, unconsumed response
+			GT_ASSERT( fixture.m_game.MT_GetResponse( request ).result == game::backend::R_NONE, "shutdown left a completed response" );
+			GT_OK();
+		}
+		app->Iterate();
+		GT_ASSERT( !app->m_reset_request && !app->m_reset_barrier && !app->m_reset_needed && !app->m_is_game_running && mains == 1,
+			"terminal reset did not consume its exact response and restart once" );
+		GT_ASSERT( fixture.AdmissionCount() == 0 && fixture.m_game.MT_GetResponse( request ).result == game::backend::R_NONE,
+			"terminal controller record or response survived consumption" );
+		GT_ASSERT( scenario == 4 ? fixture.HasMap() && !main_after_reset : !fixture.HasMap() && main_after_reset,
+			"reset completion did not preserve its original cutoff semantics" );
+		GT_ASSERT( !script_iterations && !old_bodies && !ui_iterations && !frontend_iterations && !load_completions, "terminal tick resumed old callback stages" );
+		app->Iterate();
+		g_engine->GetGC()->Iterate();
+		GT_ASSERT( mains == 1 && script_iterations == 1 && !old_bodies && owner_destroyed == 1 && ui_iterations == 1 && frontend_iterations == 1 && load_completions == 1,
+			"post-reset iteration did not drain canceled roots and resume stages exactly once" );
+		GT_OK();
 	}
 	static std::string CheckFrontendQuitAdmission() {
 		class SizedNull final : public graphics::Null {
@@ -1205,6 +1385,16 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+	for ( int scenario = 0; scenario < 5; ++scenario ) {
+		const char* names[] = { "same-thread pending and success", "request during script stage", "shutdown before processing", "shutdown after processing", "stale cutoff no-op" };
+		task->AddTest( std::string( "public reset polling " ) + names[ scenario ], GT( scenario ) {
+			size_t destroyed = 0;
+			const auto error = BackendFixture::CheckPolledReset( scenario, destroyed );
+			GT_ASSERT( error.empty(), "reset polling: " + error );
+			GT_ASSERT( destroyed == 1, "pending callback owner was not destroyed exactly once after drain/shutdown" );
+			GT_OK();
+		} );
+	}
 	using namespace game::backend;
 	task->AddTest( "initialization failure before map and managers retains original error", GT() {
 		BackendFixture fixture; return fixture.CheckInitializationFailure( false, 0 );

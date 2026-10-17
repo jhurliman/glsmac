@@ -23,6 +23,13 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def*
 			const auto* def = (backend::unit::StaticDef*)unitdef;
 
 			switch ( def->m_render->m_type ) {
+				case backend::unit::Render::RT_CVR_SCOUT: {
+					m_scout_render.emplace( *static_cast< const backend::unit::CvrScoutRender* >( def->m_render ) );
+					static_.movement_type = def->m_movement_type;
+					static_.movement_per_turn = def->m_movement_per_turn;
+					static_.render.is_sprite = true;
+					break;
+				}
 
 				case backend::unit::Render::RT_SPRITE: {
 					m_render = ( (backend::unit::SpriteRender*)def->m_render )->m_render;
@@ -60,6 +67,12 @@ const bool UnitDef::IsArtillery() const {
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
+	if ( m_scout_render ) {
+		if ( !static_.render.sprite.instanced_sprite ) {
+			static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, *m_scout_render );
+		}
+		return &static_.render.sprite;
+	}
 
 	if ( m_render.morale_based_xshift ) {
 		if ( !static_.render.morale_based_sprites ) {

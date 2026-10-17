@@ -199,6 +199,9 @@ IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE S
 			"test attached widget deinit observes resources before cleanup"
 			"test generated sprite ownership survives widget copies and exceptions"
 			"test minimap capture ownership survives redraws and exceptions"
+			"CVR Scout descriptor strict codec and explicit placement"
+			"CVR Scout installed resolver cache bounds and failed replacement ownership"
+			"CVR Scout real definition unit preview and retained texture teardown"
 		)
 		ADD_TEST( NAME gse_mesh_memorydebug
 			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet

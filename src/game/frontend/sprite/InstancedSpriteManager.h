@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <memory>
 
 #include "common/Common.h"
 
@@ -13,6 +14,7 @@
 namespace types::texture {
 class Texture;
 }
+namespace game::backend::unit { class CvrScoutRender; }
 
 namespace scene {
 class Scene;
@@ -21,6 +23,7 @@ class Scene;
 namespace game {
 namespace frontend {
 namespace sprite {
+class ScoutSpriteCache;
 
 CLASS( InstancedSpriteManager, ::common::Class )
 public:
@@ -39,6 +42,7 @@ public:
 		const float z_index_adjustment = 0.0f
 	);
 	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
+	InstancedSprite* GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor );
 	InstancedSprite* GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::texture::repaint_rules_t& rules );
 	void RemoveInstancedSpriteByKey( const std::string& key );
 	void RemoveRepaintedInstancedSpriteByKey( const std::string& key );
@@ -46,6 +50,7 @@ public:
 private:
 
 	scene::Scene* m_scene = nullptr;
+	std::unique_ptr< ScoutSpriteCache > m_scout_cache;
 
 	std::unordered_map< std::string, InstancedSprite > m_instanced_sprites = {};
 	std::unordered_map< std::string, types::texture::Texture* > m_repainted_textures = {};

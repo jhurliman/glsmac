@@ -54,8 +54,8 @@ Unit::Unit(
 	Publish( GSE_CALL, tile, record_placement );
 }
 
-Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup, bool record_placement )
-	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ), m_early_startup( early_startup ) {
+Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup, bool record_placement, bool pending_home )
+	: MapObject( um->GetMap(), nullptr ), m_id( id ), m_def( def ), m_owner( owner ), m_state( state ), m_um( um ), m_early_startup( early_startup ), m_pending_home( pending_home ) {
 	// The manager has already resolved all context and presentation admission.
 	Publish( GSE_CALL, tile, record_placement );
 }
@@ -78,6 +78,7 @@ bool Unit::IsConventional() const { return std::holds_alternative< ConventionalU
 bool Unit::IsConventionalPending() const { return m_early_startup; }
 void Unit::RequireConventionalReady() const {
 	if ( m_early_startup ) { THROW( "Conventional startup unit has no derived state before first-turn seal" ); }
+	if ( m_pending_home ) { THROW( "Conventional home awaits complete Base restore" ); }
 }
 Unit::LegacyState& Unit::Legacy() {
 	if ( IsConventional() ) { THROW( "Conventional units do not have mutable legacy float state" ); }
@@ -145,7 +146,7 @@ void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 const types::Buffer Unit::Serialize( const Unit* unit ) {
 	if ( unit->IsConventional() ) { unit->QueryStats( unit->Conventional().render_morale_mode ); }
 	types::Buffer buf;
-	buf.WriteInt( 2 );
+	buf.WriteInt( 3 );
 	buf.WriteInt( unit->IsConventional() ? 1 : 0 );
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( unit->m_def->m_id );
@@ -161,9 +162,9 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver ) {
+Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver, bool defer_home ) {
 	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
-	if ( buf.ReadInt() != 2 ) { THROW( "unsupported unit record version" ); }
+	if ( buf.ReadInt() != 3 ) { THROW( "unsupported unit record version" ); }
 	const auto kind = buf.ReadInt();
 	if ( kind != 0 && kind != 1 ) { THROW( "unsupported unit record kind" ); }
 	const auto id = buf.ReadInt();
@@ -195,8 +196,8 @@ Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, cons
 	}
 	auto* slot = um->GetSlot( owner ); auto* tile = um->GetMap()->GetTile( pos_x, pos_y );
 	if ( conventional ) {
-		um->ValidateConventionalCreation( static_cast< size_t >( id ), def, slot, tile, *conventional, resolver );
-		return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile, *conventional, false, false );
+		um->ValidateConventionalCreation( static_cast< size_t >( id ), def, slot, tile, *conventional, resolver, false, defer_home );
+		return new Unit( GSE_CALL, um, static_cast< size_t >( id ), def, slot, tile, *conventional, false, false, defer_home && conventional->home == ConventionalUnitState::Home::Base );
 	}
 	if ( legacy.morale < MORALE_MIN || legacy.morale > MORALE_MAX || !std::isfinite( legacy.movement ) || !std::isfinite( legacy.health ) ) {
 		THROW( "invalid unit morale, movement or health" );
@@ -237,7 +238,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "design_id", VALUE( gse::value::Int,, state.design_id ) }, { "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
 			{ "stored_morale", VALUE( gse::value::Int,, state.stored_morale ) }, { "damage", VALUE( gse::value::Int,, state.damage ) },
 			{ "spent", VALUE( gse::value::Int,, state.spent ) }, { "failed_move", VALUE( gse::value::Bool,, state.failed_move ) },
-			{ "home", VALUE( gse::value::String,, "none" ) }, { "render_morale_mode", VALUE( gse::value::Int,, static_cast< int32_t >( state.render_morale_mode ) ) }
+			{ "home", VALUE( gse::value::String,, state.home_base_id ? "base" : "none" ) },
+			{ "home_base_id", state.home_base_id ? static_cast< gse::Value* >( VALUE( gse::value::Int,, static_cast< int64_t >( *state.home_base_id ) ) ) : VALUE( gse::value::Undefined ) }, { "render_morale_mode", VALUE( gse::value::Int,, static_cast< int32_t >( state.render_morale_mode ) ) }
 		} ) );
 	} ) },
 	{ "validate_conventional_move", NATIVE_CALL( this ) {

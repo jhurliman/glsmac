@@ -7,6 +7,9 @@
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
 #include "base/SmacBaseResourceContext.h"
+#include "base/SmacUnitSupport.h"
+#include "unit/Unit.h"
+#include "unit/UnitManager.h"
 #include "map/Map.h"
 #include "map/tile/Tiles.h"
 #include "resource/ResourceManager.h"
@@ -79,6 +82,45 @@ void RequireResourceDefinitions( const resource::ResourceManager& manager ) {
 		if ( !definitions.count( id ) ) { throw std::runtime_error( "Canonical resources require the explicit NUTRIENTS/MINERALS/ENERGY port IDs" ); }
 	}
 }
+}
+
+int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) const {
+	ValidateCurrentSimulation();
+	const auto context = evaluating_base.GetSmacResourceContext();
+	if ( evaluating_base.GetGame() != this || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_simulation ) {
+		throw std::runtime_error( "Canonical support requires a registered Base in this world" );
+	}
+	const auto* social = m_simulation->value.social.Find( context.owner_simulation_id );
+	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
+		throw std::runtime_error( "Canonical support requires retained SUPPORT" );
+	}
+	if ( evaluating_base.m_pops.size() > 127 ) { throw std::runtime_error( "Canonical support population exceeds 127" ); }
+	m_um->RequireConventionalUnitsReady();
+	std::vector< base::SmacSupportUnit > units;
+	units.reserve( m_um->GetUnits().size() );
+	for ( const auto& item : m_um->GetUnits() ) {
+		const auto* unit = item.second;
+		if ( !unit || unit->m_id != item.first || !unit->IsConventional() ) { throw std::runtime_error( "Canonical support requires conventional unit authority" ); }
+		const auto& state = unit->Conventional();
+		// This validates actual owner/design/home/presentation metadata, including
+		// unsupported packages/abilities, rather than inferring them from Def names.
+		ResolveConventionalUnit( state, unit->m_owner );
+		const auto design = ResolveConventionalDesign( state, *m_simulation );
+		const auto* tile = unit->GetTile();
+		if ( !tile || !m_map || tile->tiles != m_map->GetTilesPtr() || tile->units.find( item.first ) == tile->units.end()
+			|| tile->units.at( item.first ) != unit ) { throw std::runtime_error( "Canonical support unit membership is invalid" ); }
+		const auto home = !state.home_base_id ? base::SmacSupportHome::None
+			: *state.home_base_id == evaluating_base.m_id ? base::SmacSupportHome::EvaluatingBase : base::SmacSupportHome::OtherBase;
+		// All admitted designs are ordinary projectile Combat, without Clean or
+		// psi. The terrain-native exemption therefore cannot apply in this domain.
+		units.push_back( { unit->m_id, state.owner_simulation_id == context.owner_simulation_id, home, base::SmacSupportPackage::Combat,
+			false, design.id < 64 ? base::SmacSupportDesign::BuiltIn : base::SmacSupportDesign::PlayerDesigned,
+			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,
+			tile->is_water_tile ? base::SmacSupportTerrain::DeepOcean : base::SmacSupportTerrain::Land } );
+	}
+	// Map order is only a traversal choice. The aggregate is invariant to order;
+	// do not expose or persist the helper's per-unit free/paid classifications.
+	return base::SmacUnitSupport::Recalculate( social->retained->at( 2 ), static_cast< int32_t >( evaluating_base.m_pops.size() ), units ).mineral_support;
 }
 
 std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& evaluating_base ) const {

@@ -1611,6 +1611,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
+	m_um->CompleteConventionalHomeRestore();
 	ValidateCurrentSimulation();
 	CompleteSmacWorkerKnowledgeRestore();
 	std::optional< size_t > restored_turn;
@@ -2743,8 +2744,8 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 		// and before pending-state publication. Never consult the old world.
 		m_um->Deserialize( GSE_CALL, units, [ this, &simulation ]( const auto& unit, const auto* owner ) {
 			if ( !simulation ) { throw std::runtime_error( "Conventional unit snapshot lacks simulation state" ); }
-			return ResolveConventionalUnit( unit, owner, *simulation );
-		} );
+			return ResolveConventionalUnit( unit, owner, *simulation, true );
+		}, true );
 	}
 	{
 		auto bases = types::Buffer( body.ReadString() );

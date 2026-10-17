@@ -69,7 +69,8 @@ Unit* Spawn( GSE_CALLABLE, ConventionalUnitFixture& fixture, const ConventionalU
 		{ "design_id", VALUE( value::Int,, state.design_id ) }, { "owner_simulation_id", VALUE( value::Int,, state.owner_simulation_id ) },
 		{ "stored_morale", VALUE( value::Int,, state.stored_morale ) }, { "damage", VALUE( value::Int,, state.damage ) },
 		{ "spent", VALUE( value::Int,, state.spent ) }, { "failed_move", VALUE( value::Bool,, state.failed_move ) },
-		{ "home", VALUE( value::String,, "none" ) }, { "render_morale_mode", VALUE( value::Int,, static_cast< int >( state.render_morale_mode ) ) }
+		{ "home", VALUE( value::String,, state.home_base_id ? "base" : "none" ) },
+		{ "home_base_id", VALUE( value::Int,, state.home_base_id ? static_cast< int64_t >( *state.home_base_id ) : 0 ) }, { "render_morale_mode", VALUE( value::Int,, static_cast< int >( state.render_morale_mode ) ) }
 	} ) );
 	const auto* result = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( game->GetUM()->Wrap( GSE_CALL ) ), "spawn_conventional_unit", { data } ) );
 	return static_cast< Unit* >( result->wrapobj );
@@ -202,6 +203,30 @@ std::string CanonicalMovementSnapshot( Game* game, const std::string& bytes ) {
 	return result.ToString();
 }
 
+// Rewrite one existing unit's trailing home ID while preserving every other
+// actual snapshot frame, including checksum framing and the saved Base body.
+std::string WithLastHome( const std::string& bytes, Game* game, int64_t home ) {
+	types::Buffer world( bytes ); world_snapshot::ValidateHeader( world, game->GetState()->m_settings.global );
+	(void)world_snapshot::ReadRandomState( world ); (void)world_snapshot::ReadTurnState( world, game->GetState()->m_slots->GetSlots() );
+	if ( world.ReadBool() ) { (void)world.ReadString(); } (void)map::GlsmacResourceMapPolicy::ReadOptional( world, true );
+	(void)world_snapshot::ReadWorkerKnowledge( world, true );
+	(void)world.ReadString(); (void)world.ReadString();
+	const auto prefix = bytes.substr( 0, world.lenr ); types::Buffer units( world.ReadString() ), replacement;
+	replacement.WriteString( units.ReadString() );
+	for ( int table = 0; table < 2; ++table ) {
+		const auto count = units.ReadInt(); replacement.WriteInt( count );
+		for ( int64_t i = 0; i < count; ++i ) { replacement.WriteString( units.ReadString() ); replacement.WriteString( units.ReadString() ); }
+	}
+	const auto count = units.ReadInt(); replacement.WriteInt( count );
+	for ( int64_t i = 0; i < count; ++i ) {
+		auto wire = units.ReadString();
+		if ( i + 1 == count ) { types::Buffer changed( wire.substr( 0, wire.size() - 14 ) ); changed.WriteInt( home ); wire = changed.ToString(); }
+		replacement.WriteString( wire );
+	}
+	replacement.WriteInt( units.ReadInt() ); types::Buffer framed; framed.WriteString( replacement.ToString() );
+	return prefix + framed.ToString() + bytes.substr( world.lenr );
+}
+
 uint32_t SharedNext( uint32_t value ) { return static_cast< uint32_t >( UINT64_C( 1664525 ) * value + UINT64_C( 1013904223 ) ); }
 uint32_t SeedForBin( uint32_t bin ) {
 	for ( uint32_t seed = 0; seed < 65536; ++seed ) { if ( uint64_t( SharedNext( seed ) & 65535 ) * 9 / 65536 == bin ) { return seed; } }
@@ -211,7 +236,7 @@ uint32_t SeedForBin( uint32_t bin ) {
 int64_t Int( Value* value, const std::string& key ) { return static_cast< value::Int* >( static_cast< value::Object* >( value )->Get( key ) )->value; }
 
 struct WireRecord {
-	int64_t version = 2, kind = 1, id = 71, owner = 0, x = 2, y = 2;
+	int64_t version = 3, kind = 1, id = 71, owner = 0, x = 2, y = 2;
 	std::string definition = "EXPLICIT_SCOUT";
 	int64_t design = 2, simulation = 1, morale = 255, damage = 4, spent = 255, home = 0, mode = 1;
 	bool failed = true;
@@ -226,6 +251,145 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "Conventional home codec preserves explicit IDs and rejects malformed shapes", GT() {
+		for ( uint64_t id : { uint64_t( 1 ), uint64_t( 701 ), uint64_t( INT64_MAX - 1 ) } ) {
+			auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = id;
+			types::Buffer wire; record.Serialize( wire ); auto copy = ConventionalUnitState::Deserialize( wire );
+			GT_ASSERT( copy == record && wire.lenr == wire.lenw, "home ID lost or normalized" );
+		}
+		for ( int scenario = 0; scenario < 5; ++scenario ) {
+			auto record = Record(); if ( scenario != 0 ) { record.home = ConventionalUnitState::Home::Base; }
+			if ( scenario == 0 || scenario == 2 ) { record.home_base_id = 0; }
+			if ( scenario == 3 ) { record.home_base_id = uint64_t( INT64_MAX ); }
+			if ( scenario == 4 ) { record.home = static_cast< ConventionalUnitState::Home >( 2 ); }
+			bool rejected = false; try { types::Buffer wire; record.Serialize( wire ); } catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected, "malformed home shape accepted" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Conventional home live creation checks ownership and uses Base morale status", GT() {
+		ConventionalUnitFixture fixture; fixture.Configure();
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* um = game->GetUM(); auto* bm = game->GetBM(); Define( um ); Land( game );
+			auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
+			auto* home = new base::Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 0 ), "Home", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ 1, false, 0, 0, 0, false } );
+			bm->SpawnBase( GSE_CALL, home );
+			auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = 999;
+			const auto next = Unit::GetNextId(), queued = fixture.QueuedFrontendRequests().size();
+			bool rejected = false; try { Spawn( GSE_CALL, fixture, record ); } catch ( const std::exception& ) { rejected = true; }
+			GT_ASSERT( rejected && Unit::GetNextId() == next && game->GetMap()->GetTile( 2, 2 )->units.empty() && fixture.QueuedFrontendRequests().size() == queued, "missing home changed constructor effects" );
+			auto* foreign_owner = &game->GetState()->m_slots->GetSlot( 6 );
+			auto* foreign = new base::Base( game, 702, foreign_owner, foreign_owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 0 ), "Foreign", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ 2, false, 0, 0, 0, false } ); bm->SpawnBase( GSE_CALL, foreign );
+			auto* legacy = new base::Base( game, 703, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 4, 0 ), "Legacy", {}, {} ); bm->SpawnBase( GSE_CALL, legacy );
+			for ( const auto id : { 702u, 703u } ) {
+				record.home_base_id = id; bool failed = false; const auto count = fixture.QueuedFrontendRequests().size();
+				try { Spawn( GSE_CALL, fixture, record ); } catch ( const std::exception& ) { failed = true; }
+				GT_ASSERT( failed && Unit::GetNextId() == next && game->GetMap()->GetTile( 2, 2 )->units.empty() && count == fixture.QueuedFrontendRequests().size(), "foreign or unavailable home admitted or mutated effects" );
+			}
+			record.home_base_id = 701; record.stored_morale = 4; record.render_morale_mode = SmacMoraleMode::Mode1;
+			auto* unit = Spawn( GSE_CALL, fixture, record );
+			fixture.RetainedMorale( -4, 4 );
+			GT_ASSERT( unit->QueryStats( SmacMoraleMode::Mode0 ).effective_morale == 1, "homed ordinary morale ignored retained rating" );
+			bm->DefineFacility( new base::FacilityDef( "NOT_CRECHE_TEXT", "Misleading", "", 0, {}, 2 ) );
+			home->m_facilities.emplace( "NOT_CRECHE_TEXT", bm->GetFacilityDef( "NOT_CRECHE_TEXT" ) );
+			GT_ASSERT( unit->QueryStats( SmacMoraleMode::Mode0 ).effective_morale == 3, "actual Creche role omitted" );
+			Spawn( GSE_CALL, fixture, Record(), 72 ); fixture.Updates();
+			auto context = home->GetSmacResourceContext(); context.governor_options ^= 1; home->SetSmacResourceContext( GSE_CALL, context );
+			const auto& unrelated = fixture.Updates();
+			GT_ASSERT( std::none_of( unrelated.begin(), unrelated.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ), "governor-only change refreshed Unit stats" );
+			context.drone_riots = true; home->SetSmacResourceContext( GSE_CALL, context );
+			const auto& refreshed = fixture.Updates();
+			const auto update = std::find_if( refreshed.begin(), refreshed.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } );
+			GT_ASSERT( update != refreshed.end() && update->data.unit_update.unit_id == unit->m_id && update->data.unit_update.morale == 4
+				&& std::count_if( refreshed.begin(), refreshed.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == 1,
+				"riots status did not refresh only its homed Unit with fresh stats" );
+			GT_ASSERT( unit->QueryStats( SmacMoraleMode::Mode1 ).effective_morale == 4 && unit->QueryStats( SmacMoraleMode::Mode0 ).effective_morale == 3, "saved riots lost mode distinction" );
+			auto* detached = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( unit->Wrap( GSE_CALL ) ), "get_conventional_state" ) );
+			GT_ASSERT( static_cast< value::Int* >( detached->Get( "home_base_id" ) )->value == 701, "wrapper lost stable home ID" );
+			rejected = false; try { bm->DespawnBase( GSE_CALL, 701 ); } catch ( const std::exception& ) { rejected = true; }
+			GT_ASSERT( rejected && bm->GetBase( 701 ) == home, "Base removal orphaned a saved home" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "Conventional support query consumes actual homes retained rating and current population", GT() {
+		ConventionalUnitFixture fixture; fixture.Configure();
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* um = game->GetUM(); auto* bm = game->GetBM(); Define( um ); Land( game );
+			const auto make = [ & ]( size_t id, size_t slot, int32_t sim, size_t x ) {
+				auto* owner = &game->GetState()->m_slots->GetSlot( slot );
+				auto* b = new base::Base( game, id, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( x, 0 ), "Support" + std::to_string( id ), {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ sim, false, 0, 0, 0, false } );
+				bm->SpawnBase( GSE_CALL, b ); return b;
+			};
+			auto* home = make( 701, 0, 1, 0 ); auto* other = make( 702, 0, 1, 2 ); auto* foreign = make( 703, 6, 2, 4 );
+			for ( size_t i = 0; i < 6; ++i ) {
+				auto record = Record(); if ( i != 3 ) { record.home = ConventionalUnitState::Home::Base; record.home_base_id = i == 4 ? 702 : i == 5 ? 703 : 701; }
+				if ( i == 5 ) { record.owner_simulation_id = 2; }
+				Spawn( GSE_CALL, fixture, record, 90 - i, i == 5 ? 6 : 0 );
+			}
+			const auto pair = fixture.GameplayRandom(); const auto bytes = base::Base::Serialize( home ).ToString();
+			const std::array< int32_t, 8 > expected{ 6, 3, 2, 2, 1, 0, 0, 0 };
+			for ( int rating = -4; rating <= 3; ++rating ) {
+				fixture.ResourceState( [ & ]( auto& state ) { state.social.factions.front().retained->at( 2 ) = rating; state.social.factions.front().current[ 2 ] = 3; } );
+				GT_ASSERT( game->GetCanonicalMineralSupport( *home ) == expected[ rating + 4 ], "actual aggregate ignored retained rating/home filtering" );
+				auto* support = Call( GSE_CALL, static_cast< value::Object* >( home->Wrap( GSE_CALL ) ), "get_smac_mineral_support" );
+				GT_ASSERT( support->type == VT_INT && static_cast< value::Int* >( support )->value == expected[ rating + 4 ], "Base wrapper omitted actual canonical support" );
+			}
+			GT_ASSERT( game->GetCanonicalMineralSupport( *other ) == 0 && game->GetCanonicalMineralSupport( *foreign ) == 0
+				&& fixture.GameplayRandom() == pair && base::Base::Serialize( home ).ToString() == bytes, "support consumed RNG or changed Base authority" );
+			GT_OK();
+		} );
+	} );
+	task->AddTest( "Conventional home restore rejects missing and foreign references before any readiness seal", GT() {
+		ConventionalUnitFixture source; source.Configure(); std::string saved;
+		const auto prepared = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Define( game->GetUM() ); Land( game );
+			for ( int i = 0; i < 2; ++i ) {
+				auto* owner = &game->GetState()->m_slots->GetSlot( i ? 6 : 0 );
+				auto* base = new base::Base( game, 701 + i, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2 * i, 0 ), "Reference" + std::to_string( i ), {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ 1 + i, false, 0, 0, 0, false } );
+				game->GetBM()->SpawnBase( GSE_CALL, base );
+			}
+			auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = 701;
+			Spawn( GSE_CALL, source, record, 71 ); Spawn( GSE_CALL, source, record, 72 ); saved = source.Snapshot(); GT_OK();
+		} ); if ( !prepared.empty() ) { return prepared; }
+		for ( const auto home : { 702, 999 } ) {
+			ConventionalUnitFixture destination; destination.Configure();
+			const auto error = destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				std::string diagnostic; bool rejected = false; try { destination.Restore( GSE_CALL, WithLastHome( saved, source.Game(), home ), true ); } catch ( const std::exception& error ) { rejected = true; diagnostic = error.what(); }
+				GT_ASSERT( rejected && destination.Game()->GetBM()->GetBase( 701 ) && destination.Game()->GetBM()->GetBase( 702 ), "home rejection did not reach complete Base-reference validation: " + diagnostic );
+				for ( size_t id : { 71u, 72u } ) {
+					auto* unit = destination.Game()->GetUM()->GetUnit( id ); GT_ASSERT( unit, "restored Unit absent before home validation" );
+					bool blocked = false; try { unit->RequireConventionalReady(); } catch ( const std::runtime_error& ) { blocked = true; }
+					GT_ASSERT( blocked, "failed all-home preflight partly released Unit readiness" );
+				}
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Conventional home actual Start restore binds only after Bases and preserves saved status", GT() {
+		ConventionalUnitFixture source; source.Configure(); std::string saved;
+		const auto prepared = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); Define( game->GetUM() ); Land( game ); auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
+			auto* base = new base::Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 0 ), "Saved home", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ 1, false, 0, 0, 0, true } );
+			game->GetBM()->SpawnBase( GSE_CALL, base ); auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = 701;
+			Spawn( GSE_CALL, source, record ); source.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } ); saved = source.Snapshot(); GT_OK();
+		} ); if ( !prepared.empty() ) { return prepared; }
+		ConventionalUnitFixture destination; destination.Configure();
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			bool pending_observed = false;
+			destination.RestoreThroughStart( GSE_CALL, saved, [ & ]( GSE_CALLABLE ) {
+				auto* game = destination.Game(); auto* unit = game->GetMap()->GetTile( 2, 2 )->units.at( 71 );
+				if ( game->GetBM()->GetBase( 701 ) ) { throw std::runtime_error( "home Base loaded before Start checkpoint" ); }
+				try { unit->QueryStats( SmacMoraleMode::Mode1 ); } catch ( const std::runtime_error& ) { pending_observed = true; }
+				if ( !pending_observed ) { throw std::runtime_error( "unresolved home exposed stats" ); }
+			} );
+			auto* game = destination.Game(); auto* unit = game->GetUM()->GetUnit( 71 ); auto* base = game->GetBM()->GetBase( 701 );
+			GT_ASSERT( pending_observed && unit && base && unit->Conventional().home_base_id == 701 && base->GetSmacResourceContext().drone_riots
+				&& game->GetCanonicalMineralSupport( *base ) == 2, "actual Start lost saved link/status/support" );
+			GT_ASSERT( unit->QueryStats( SmacMoraleMode::Mode1 ).effective_morale == 1, "restored home stats unavailable or recomputed status" ); GT_OK();
+		} );
+	} );
+
 	task->AddTest( "movement history nearest base preserves original metric ties and empty output", GT() {
 		for ( size_t i = 0; i < nearest_any_fixture::cases.size(); ++i ) {
 			const auto& row = nearest_any_fixture::cases[ i ];

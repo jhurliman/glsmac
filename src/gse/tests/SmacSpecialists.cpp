@@ -55,7 +55,7 @@ Base* MakeBase( GSE_CALLABLE, Game* game, size_t population = 5, size_t slot = 0
 	}
 	auto* owner = &game->GetState()->m_slots->GetSlot( slot );
 	auto* base = new Base( game, id, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( slot ? 6 : 2, 2 ),
-		"Specialists", {}, pops, population + 1, 7, {}, SmacBaseResourceContext{ slot ? 2 : 1, true, 37, -7, 0x8f000041u } );
+		"Specialists", {}, pops, population + 1, 7, {}, SmacBaseResourceContext{ slot ? 2 : 1, true, 37, -7, 0x8f000041u, false } );
 	bm->SpawnBase( GSE_CALL, base ); return base;
 }
 

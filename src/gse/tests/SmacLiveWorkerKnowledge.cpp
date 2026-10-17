@@ -62,7 +62,7 @@ Base* MakeBase( GSE_CALLABLE, Game* game, size_t id, size_t slot, int32_t simula
 	pops.emplace( 4, Pop( nullptr, 4, bm->GetPopDef( Roles().specialists[ 1 ] ), 1 ) );
 	pops.emplace( 91, Pop( nullptr, 91, bm->GetPopDef( Roles().specialists[ 1 ] ), 0 ) );
 	auto* base = new Base( game, id, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( x, y ), "Knowledge Base", {}, pops, 100, 19, {},
-		SmacBaseResourceContext{ simulation, false, 0, 0, 0x80000040u } );
+		SmacBaseResourceContext{ simulation, false, 0, 0, 0x80000040u, false } );
 	bm->SpawnBase( GSE_CALL, base );
 	SmacBaseAllocationState allocation{ selected, { {}, 1 } };
 	for ( size_t i = 0; i < 16; ++i ) { allocation.specialists.types[ i ] = ( i + 1 ) % 7; }
@@ -206,7 +206,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				}
 				else {
 					auto* unallocated = new Base( game, 902, owner, owner->GetPlayer()->GetFaction(), tile, "No allocation", {}, {}, 1, 0, {},
-						SmacBaseResourceContext{ 1, false, 0, 0, 0 } ); game->GetBM()->SpawnBase( GSE_CALL, unallocated );
+						SmacBaseResourceContext{ 1, false, 0, 0, 0, false } ); game->GetBM()->SpawnBase( GSE_CALL, unallocated );
 				}
 				const auto snapshot = fixture.Snapshot(); const auto next_unit = Unit::GetNextId(), next_base = Base::GetNextId(); const auto queued = fixture.QueuedFrontendRequests().size();
 				GT_ASSERT( Rejects( [ & ] { game->PublishSmacWorkerKnowledge( GSE_CALL, Knowledge::Create( data ) ); } ) && !game->GetMap()->GetSmacWorkerKnowledge()

@@ -328,6 +328,7 @@ public:
 		SetRunning( true );
 		m_game.GetUM()->ProcessUnprocessed( GSE_CALL );
 		m_game.GetBM()->ProcessUnprocessed( GSE_CALL );
+		m_game.GetUM()->CompleteConventionalHomeRestore();
 		m_game.CompleteSmacWorkerKnowledgeRestore();
 	}
 	void RestoreKnowledgeThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) {

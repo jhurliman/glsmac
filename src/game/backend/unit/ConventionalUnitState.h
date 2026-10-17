@@ -15,9 +15,10 @@ struct ConventionalUnitState {
 	int32_t design_id, owner_simulation_id;
 	uint8_t stored_morale, damage, spent;
 	bool failed_move;
-	enum class Home : uint8_t { None };
+	enum class Home : uint8_t { None, Base };
 	Home home;
 	SmacMoraleMode render_morale_mode;
+	std::optional< uint64_t > home_base_id; // stable manager ID; never a retained pointer
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
 	void Serialize( types::Buffer& buffer ) const;
@@ -36,6 +37,7 @@ struct ConventionalUnitContext {
 	// from the presentation Def or a transport slot number.
 	enum class Presentation { Scout, SelectedSpartanRover };
 	Presentation presentation = Presentation::Scout;
+	std::optional< SmacMoraleHome > home;
 };
 
 using ConventionalUnitResolver = std::function< ConventionalUnitContext( const ConventionalUnitState&, const slot::Slot* ) >;

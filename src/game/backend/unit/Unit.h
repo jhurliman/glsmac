@@ -73,7 +73,7 @@ public:
 	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver = {} );
+	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver = {}, bool defer_home = false );
 
 	WRAPDEFS_DYNAMIC( Unit );
 
@@ -81,7 +81,7 @@ public:
 
 private:
 	friend class UnitManager;
-	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true );
+	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true, bool pending_home = false );
 	void Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	void Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	// Called only after manager validation and membership/update allocation.
@@ -91,6 +91,7 @@ private:
 	// Transient and deliberately not serializable. Only the claimed new-world
 	// Start producer may create it; the first-turn preflight seals all at once.
 	bool m_early_startup = false;
+	bool m_pending_home = false; // restored scalar ID awaiting all Base records
 
 };
 

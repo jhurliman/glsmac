@@ -7,6 +7,9 @@
 #include "slot/Slot.h"
 #include "slot/Slots.h"
 #include "unit/UnitManager.h"
+#include "base/Base.h"
+#include "base/BaseManager.h"
+#include "base/FacilityDef.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 
@@ -268,13 +271,31 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 	return ResolveConventionalUnit( state, owner, *m_simulation );
 }
 
-unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation ) const {
+unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation, bool defer_home ) const {
 	auto result = ResolveConventionalIdentity( state, owner, simulation );
 	const auto* social = simulation.value.social.Find( state.owner_simulation_id );
 	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
 		throw std::runtime_error( "Conventional units require refreshed retained social state" );
 	}
 	result.retained_morale = social->retained->at( 4 );
+	if ( state.home == unit::ConventionalUnitState::Home::Base ) {
+		// The complete downloaded Base records load after Units. Do not bind a
+		// saved ID into the destination's old world or fabricate home morale.
+		if ( defer_home ) { return result; }
+		const auto* home = m_bm->GetBase( static_cast< size_t >( *state.home_base_id ) );
+		if ( !home || home->m_owner != owner || home->GetGame() != this
+			|| home->GetSmacResourceContext().owner_simulation_id != state.owner_simulation_id ) {
+			throw std::runtime_error( "Conventional home must be an existing same-owner canonical Base" );
+		}
+		bool creche = false;
+		for ( const auto& item : home->m_facilities ) {
+			if ( !item.second || m_bm->GetFacilityDef( item.first ) != item.second ) { throw std::runtime_error( "Unregistered conventional home facility" ); }
+			m_bm->ValidateSmacFacilityDef( item.second );
+			if ( !item.second->m_smac_source_id ) { throw std::runtime_error( "Conventional home facility lacks positional identity" ); }
+			if ( *item.second->m_smac_source_id == 2 ) { creche = true; }
+		}
+		result.home = unit::SmacMoraleHome{ creche, home->GetSmacResourceContext().drone_riots };
+	}
 	unit::QueryConventionalUnit( state, result, state.render_morale_mode );
 	return result;
 }

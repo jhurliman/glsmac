@@ -9,7 +9,7 @@ namespace game::backend::base {
 // Persistent inputs belonging to one canonical Base. These are not a cached
 // yield, a social rating, a population allocation, or a governor decision.
 struct SmacBaseResourceContext {
-	static constexpr uint32_t MAX_WIRE_BYTES = 5 * 14 + 2 * 7;
+	static constexpr uint32_t MAX_WIRE_BYTES = 5 * 14 + 3 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
 	enum Event : uint8_t {
@@ -22,6 +22,7 @@ struct SmacBaseResourceContext {
 	uint8_t resource_events;
 	int32_t resource_event_timer;
 	uint32_t governor_options; // one authority; preserve all supplied bits
+	bool drone_riots; // saved actual status; queries never derive it from population
 
 	void Validate() const;
 	bool GovernorActive() const { return ( governor_options & GOVERNOR_ACTIVE ) != 0; }
@@ -30,7 +31,7 @@ struct SmacBaseResourceContext {
 	bool operator==( const SmacBaseResourceContext& other ) const;
 };
 
-// Port V1 inner record. Absent means legacy/unavailable, never neutral SMAC.
+// Port V2 inner record (adds drone-riot status). Absent means legacy/unavailable, never neutral SMAC.
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value );
 std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( types::Buffer buffer );
 

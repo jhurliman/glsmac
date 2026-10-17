@@ -3,6 +3,7 @@
 #include <set>
 #include <utility>
 
+#include "gc/Space.h"
 #include "gse/context/Context.h"
 #include "gse/value/Object.h"
 #include "gse/value/Int.h"
@@ -20,6 +21,8 @@
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
 #include "Pop.h"
 #include "PopDef.h"
 #include "FacilityDef.h"
@@ -236,10 +239,35 @@ void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& 
 	const auto previous = GetSmacResourceContext();
 	context.Validate();
 	if ( context.owner_simulation_id != previous.owner_simulation_id ) { THROW( "Cannot rebind a base resource context" ); }
-	// Scalar replacement only. No status recomputation, event aging, governor
-	// allocation reset, faction remembered-settings write, or yield evaluation.
+	if ( previous.drone_riots == context.drone_riots ) {
+		// Governor/resource-only edits do not refresh unrelated Unit stats.
+		m_resource_context = context; TriggerUpdate(); return;
+	}
+	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "Home morale publication requires its owning accumulation" ); }
+	auto* bm = m_game->GetBM(); auto* um = m_game->GetUM();
+	if ( bm->m_dispatching_updates ) { THROW( "Home morale publication cannot reenter Base update dispatch" ); }
+	// Preflight the future derived stats and prepare both update queues plus the
+	// Base callback set before publishing the owned status. No callback runs here.
+	auto unit_updates = um->m_unit_updates;
+	for ( const auto& entry : um->GetUnits() ) {
+		const auto* unit = entry.second;
+		if ( !unit->IsConventional() || unit->Conventional().home_base_id != m_id ) { continue; }
+		unit->RequireConventionalReady(); const auto& state = unit->Conventional();
+		auto resolved = um->ResolveConventional( state, unit->m_owner );
+		resolved.home->drone_riots = context.drone_riots;
+		(void)unit::QueryConventionalUnit( state, resolved, state.render_morale_mode );
+		auto& update = unit_updates.try_emplace( entry.first, unit::UnitManager::unit_update_t{ unit::UnitManager::UUO_NONE, unit } ).first->second;
+		if ( update.unit != unit || ( update.ops & unit::UnitManager::UUO_DESPAWN ) ) { THROW( "Home morale has an incompatible Unit update" ); }
+		update.ops = static_cast< unit::UnitManager::unit_update_op_t >( update.ops | unit::UnitManager::UUO_REFRESH );
+	}
+	auto base_updates = bm->m_base_updates;
+	auto& update = base_updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
+	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "Home morale has an incompatible Base update" ); }
+	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
+	std::lock_guard lock( bm->m_updated_bases_mutex );
+	auto triggers = bm->m_updated_bases; triggers.insert( this );
 	m_resource_context = context;
-	TriggerUpdate();
+	um->m_unit_updates.swap( unit_updates ); bm->m_base_updates.swap( base_updates ); bm->m_updated_bases.swap( triggers );
 }
 
 void Base::ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const {
@@ -441,6 +469,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return VALUE( gse::value::Object,, GSE_CALL_NOGC, {
 				{ "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
 				{ "golden_age", VALUE( gse::value::Bool,, state.golden_age ) },
+				{ "drone_riots", VALUE( gse::value::Bool,, state.drone_riots ) },
 				{ "resource_events", VALUE( gse::value::Int,, state.resource_events ) },
 				{ "resource_event_timer", VALUE( gse::value::Int,, state.resource_event_timer ) },
 				{ "governor_options", VALUE( gse::value::Int,, state.governor_options ) },
@@ -710,6 +739,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
 			return VALUE( gse::value::Int,, m_game->GetCanonicalNutrientDemand( *this ) );
+		} ),
+	},
+	{
+		"get_smac_mineral_support",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Int,, m_game->GetCanonicalMineralSupport( *this ) );
 		} ),
 	},
 	{

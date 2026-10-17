@@ -30,7 +30,7 @@ Value* Call( GSE_CALLABLE, value::Object* object, const std::string& name, const
 	return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
 }
 
-SmacBaseResourceContext Record() { return { 1, true, 37, -7, 0x8f000041u }; }
+SmacBaseResourceContext Record() { return { 1, true, 37, -7, 0x8f000041u, true }; }
 
 struct ObservedPopDef final : PopDef {
 	ObservedPopDef( size_t& destroyed, const std::string& id, uint8_t role )
@@ -54,7 +54,7 @@ Base* MakeBase( GSE_CALLABLE, Game* game ) {
 
 types::Buffer Frame( int64_t version, int64_t owner, int64_t events, int64_t timer, int64_t governor ) {
 	types::Buffer b; b.WriteInt( version ); b.WriteBool( true ); b.WriteInt( owner ); b.WriteBool( true );
-	b.WriteInt( events ); b.WriteInt( timer ); b.WriteInt( governor ); return b;
+	b.WriteInt( events ); b.WriteInt( timer ); b.WriteInt( governor ); b.WriteBool( true ); return b;
 }
 }
 
@@ -94,9 +94,9 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 			for ( uint8_t flags = 0; flags < 64; ++flags ) {
 				for ( int32_t timer : { INT32_MIN, -7, -1, 0, 1, 10, INT32_MAX } ) {
 					for ( uint32_t governor : { 0u, 0x40u, 0x80000000u, 0xffffffffu } ) {
-						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor };
+						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor, flags % 3 == 0 };
 						const auto bytes = SerializeSmacBaseResourceContext( input );
-						GT_ASSERT( bytes.lenw == 84 && SmacBaseResourceContext::MAX_WIRE_BYTES == 84, "fixed context frame extent changed" );
+						GT_ASSERT( bytes.lenw == 91 && SmacBaseResourceContext::MAX_WIRE_BYTES == 91, "fixed context frame extent changed" );
 						const auto restored = DeserializeSmacBaseResourceContext( bytes );
 						GT_ASSERT( restored && *restored == input && SerializeSmacBaseResourceContext( restored ).ToString() == bytes.ToString(), "restore reset or normalized persistent context" );
 						GT_ASSERT( restored->GovernorActive() == ( governor >= 0x80000000u ) && restored->ManageCitizens() == ( governor == 0x40u || governor == 0xffffffffu ), "citizen and active flags became coupled" );
@@ -107,9 +107,9 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( !DeserializeSmacBaseResourceContext( SerializeSmacBaseResourceContext( std::nullopt ) ), "legacy absence invented neutral context" ); GT_OK();
 	} );
 	task->AddTest( "SMAC Base resource context rejects malformed bounded frames before publication", GT() {
-		for ( const auto& frame : { Frame( 0, 1, 0, 0, 0 ), Frame( 2, 1, 0, 0, 0 ), Frame( 1, 0, 0, 0, 0 ), Frame( 1, 8, 0, 0, 0 ),
-			Frame( 1, 1, -1, 0, 0 ), Frame( 1, 1, 64, 0, 0 ), Frame( 1, 1, 0, INT64_C( -2147483649 ), 0 ), Frame( 1, 1, 0, INT64_C( 2147483648 ), 0 ),
-			Frame( 1, 1, 0, 0, -1 ), Frame( 1, 1, 0, 0, INT64_C( 4294967296 ) ) } ) {
+		for ( const auto& frame : { Frame( 0, 1, 0, 0, 0 ), Frame( 3, 1, 0, 0, 0 ), Frame( 2, 0, 0, 0, 0 ), Frame( 2, 8, 0, 0, 0 ),
+			Frame( 2, 1, -1, 0, 0 ), Frame( 2, 1, 64, 0, 0 ), Frame( 2, 1, 0, INT64_C( -2147483649 ), 0 ), Frame( 2, 1, 0, INT64_C( 2147483648 ), 0 ),
+			Frame( 2, 1, 0, 0, -1 ), Frame( 2, 1, 0, 0, INT64_C( 4294967296 ) ) } ) {
 			GT_ASSERT( Rejects( [ & ] { DeserializeSmacBaseResourceContext( frame ); } ), "malformed context accepted" );
 		}
 		const auto bytes = SerializeSmacBaseResourceContext( Record() ).ToString();
@@ -165,7 +165,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 			types::Buffer envelope; envelope.WriteString( SerializeSmacBaseResourceContext( Record() ).ToString() );
 			types::Buffer allocation_absent; allocation_absent.WriteBool( false );
 			const auto prefix = saved.substr( 0, saved.size() - envelope.lenw - allocation_absent.lenw );
-			for ( const auto& payload : { Frame( 1, 8, 0, 0, 0 ).ToString(), SerializeSmacBaseResourceContext( Record() ).ToString() + "x" } ) {
+			for ( const auto& payload : { Frame( 2, 8, 0, 0, 0 ).ToString(), SerializeSmacBaseResourceContext( Record() ).ToString() + "x" } ) {
 				types::Buffer body( prefix ); body.WriteString( payload ); body.WriteBool( false );
 				GT_ASSERT( Rejects( [ & ] { std::unique_ptr< Base > rejected( Base::Deserialize( body, game ) ); } ) && !bm->GetBase( base_id )
 					&& !game->GetMap()->GetTile( 2, 2 )->base && Base::GetNextId() == after, "late malformed body published a Base" );

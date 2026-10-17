@@ -29,7 +29,7 @@ namespace game {
 namespace backend {
 namespace unit {
 
-static const std::string s_snapshot_format = "GLSMAC_UNITS_V2";
+static const std::string s_snapshot_format = "GLSMAC_UNITS_V3";
 
 static size_t ReadSnapshotCount( types::Buffer& buf ) {
 	const auto count = buf.ReadInt();
@@ -160,7 +160,7 @@ std::pair< SmacMovementHistory*, size_t > UnitManager::PreparePlacementHistory( 
 }
 
 void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
-	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup ) const {
+	const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup, bool defer_home ) const {
 	if ( !resolver || id == 0 || id >= static_cast< uint64_t >( INT64_MAX ) || id >= std::numeric_limits< size_t >::max()
 		|| HasUnitId( id ) || !tile || tile->units.count( id ) || !GetMap()
 		|| tile->coord.x >= GetMap()->GetWidth() || tile->coord.y >= GetMap()->GetHeight()
@@ -173,7 +173,8 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 		THROW( "Conventional presentation definition is not canonical" );
 	}
 	const auto context = resolver( state, owner );
-	if ( !early_startup ) { QueryConventionalUnit( state, context, state.render_morale_mode ); }
+	if ( state.damage >= 10 * context.reactor ) { THROW( "Conventional living unit damage exceeds health" ); }
+	if ( !early_startup && !( defer_home && state.home == ConventionalUnitState::Home::Base ) ) { QueryConventionalUnit( state, context, state.render_morale_mode ); }
 	const auto* presentation = static_cast< const StaticDef* >( def );
 	const auto* render = dynamic_cast< const CvrScoutRender* >( presentation->m_render );
 	using Ground = settings::SmacMovementRules::GroundChassis;
@@ -220,6 +221,23 @@ bool UnitManager::HasPendingConventionalUnits() const {
 }
 void UnitManager::RequireConventionalUnitsReady() const {
 	if ( HasPendingConventionalUnits() ) { THROW( "Conventional startup units have not reached first-turn seal" ); }
+	for ( const auto& item : m_units ) { item.second->RequireConventionalReady(); }
+	for ( const auto& item : m_unprocessed_units ) { item.unit->RequireConventionalReady(); }
+}
+void UnitManager::CompleteConventionalHomeRestore() {
+	if ( !m_unprocessed_units.empty() ) { THROW( "Home validation requires registered restored Units" ); }
+	// Preflight every link and derived query before releasing any pending Unit.
+	for ( const auto& item : m_units ) {
+		const auto* unit = item.second;
+		if ( unit->m_pending_home ) { const auto& state = unit->Conventional(); QueryConventionalUnit( state, ResolveConventional( state, unit->m_owner ), state.render_morale_mode ); }
+	}
+	for ( const auto& item : m_units ) { item.second->m_pending_home = false; }
+}
+bool UnitManager::HasConventionalHome( size_t base_id ) const {
+	const auto matches = [ & ]( const Unit* unit ) { return unit->IsConventional() && unit->Conventional().home_base_id == base_id; };
+	for ( const auto& item : m_units ) { if ( matches( item.second ) ) { return true; } }
+	for ( const auto& item : m_unprocessed_units ) { if ( matches( item.unit ) ) { return true; } }
+	return false;
 }
 void UnitManager::PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const {
 	if ( !m_unprocessed_units.empty() && HasPendingConventionalUnits() ) { THROW( "Startup unit is not registered" ); }
@@ -239,7 +257,7 @@ void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const Conven
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
 	unit->RequireConventionalReady();
 	const auto& prior = unit->Conventional();
-	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home
+	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home || state.home_base_id != prior.home_base_id
 		|| state.render_morale_mode != prior.render_morale_mode ) { THROW( "Conventional update cannot replace identity or presentation policy" ); }
 	QueryConventionalUnit( state, ResolveConventional( state, unit->m_owner ), state.render_morale_mode );
 	unit->m_state = state;
@@ -353,6 +371,7 @@ void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 void UnitManager::PushUpdates() {
 	// Keep queued spawn/update ownership until the whole first-turn seal.
 	if ( HasPendingConventionalUnits() ) { return; }
+	for ( const auto& item : m_units ) { if ( item.second->m_pending_home ) { return; } }
 	if ( m_game->IsRunning() && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
 			const auto unit_id = it.first;
@@ -702,9 +721,14 @@ WRAPIMPL_BEGIN( UnitManager )
 				N_GETPROP( failed, obj, "failed_move", Bool ); N_GETPROP( home, obj, "home", String ); N_GETPROP( mode, obj, "render_morale_mode", Int );
 				if ( id < 0 || static_cast< uint64_t >( id ) >= std::numeric_limits< size_t >::max() || design < 0 || design >= 512
 					|| simulation < 1 || simulation > 7 || morale < 0 || morale > 255 || damage < 0 || damage > 255 || spent < 0 || spent > 255
-					|| home != "none" || mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Invalid explicit conventional unit record" ); }
-				const ConventionalUnitState state{ static_cast< int32_t >( design ), static_cast< int32_t >( simulation ), static_cast< uint8_t >( morale ),
+					|| ( home != "none" && home != "base" ) || mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Invalid explicit conventional unit record" ); }
+				ConventionalUnitState state{ static_cast< int32_t >( design ), static_cast< int32_t >( simulation ), static_cast< uint8_t >( morale ),
 					static_cast< uint8_t >( damage ), static_cast< uint8_t >( spent ), failed, ConventionalUnitState::Home::None, static_cast< SmacMoraleMode >( mode ) };
+				if ( home == "base" ) {
+					N_GETPROP( home_id, obj, "home_base_id", Int );
+					if ( home_id <= 0 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Invalid conventional home Base ID" ); }
+					state.home = ConventionalUnitState::Home::Base; state.home_base_id = static_cast< uint64_t >( home_id );
+				}
 				auto* unit = SpawnConventionalUnit( GSE_CALL, id ? static_cast< size_t >( id ) : Unit::GetNextId(), GetUnitDef( def_id ), owner->GetSlot(), tile, state );
 				return unit->Wrap( GSE_CALL );
 			} )
@@ -818,7 +842,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	Deserialize( GSE_CALL, buf, [ this ]( const auto& state, const auto* owner ) { return ResolveConventional( state, owner ); } );
 }
 
-void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver ) {
+void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home ) {
 	if ( !m_unit_moralesets.empty() || !m_unit_defs.empty() || !m_units.empty() || !m_unprocessed_units.empty() ) {
 		THROW( "unit snapshot requires an empty manager" );
 	}
@@ -858,7 +882,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const Conventio
 	size_t highest_id = 0;
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		auto* unit = Unit::Deserialize( GSE_CALL, b, this, resolver );
+		auto* unit = Unit::Deserialize( GSE_CALL, b, this, resolver, defer_home );
 		highest_id = std::max( highest_id, unit->m_id );
 		if ( m_game->IsRunning() ) { RegisterUnit( unit ); }
 		else { m_unprocessed_units.push_back( { unit, false } ); }

@@ -109,7 +109,7 @@ Base* MakeBase( GSE_CALLABLE, Game* game, const size_t id = 701, Tile* center = 
 	if ( worker ) { pops.emplace( 1, Pop( nullptr, 1, bm->GetPopDef( "WORK" ), 0, game->GetMap()->GetTile( 4, 2 ) ) ); }
 	if ( specialist ) { pops.emplace( 2, Pop( nullptr, 2, bm->GetPopDef( "SPECIAL" ), 0 ) ); }
 	auto* base = new Base( game, id, owner, owner->GetPlayer()->GetFaction(), center, "Resource query", { { "ROLE1", bm->GetFacilityDef( "ROLE1" ) } },
-		pops, pops.empty() ? 1 : pops.rbegin()->first + 1, 13, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u } );
+		pops, pops.empty() ? 1 : pops.rbegin()->first + 1, 13, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u, false } );
 	bm->SpawnBase( GSE_CALL, base ); return base;
 }
 void Callbacks( GSE_CALLABLE, ConventionalUnitFixture& fixture ) {
@@ -168,7 +168,7 @@ void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
 			bm->DefineFacility( new FacilityDef( "LAUNCH_SITE", "Misleading display", "", 0, {}, 29 ) );
 			auto* owner = &game->GetState()->m_slots->GetSlot( 0 ); Base::pops_t pops;
 			for ( size_t i = 1; i <= 4; ++i ) { pops.emplace( i, Pop( nullptr, i, bm->GetPopDef( "SPECIAL" ), 0 ) ); }
-			auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Orbital", {}, pops, 5, 0, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u } );
+			auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Orbital", {}, pops, 5, 0, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u, false } );
 			bm->SpawnBase( GSE_CALL, base );
 			GT_ASSERT( game->GetCanonicalOrbitalIntake( *base ) == ( std::array< int32_t, 3 >{ 0, 0, 0 } ), "actual new-world producer did not initialize satellite assets" );
 			fixture.ResourceState( []( auto& state ) { state.satellites.at( 1 ) = { { 3, 7, 0 } }; } );

@@ -1,4 +1,5 @@
 #include "BaseManager.h"
+#include "game/backend/unit/UnitManager.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -26,7 +27,7 @@ namespace base {
 
 // A typed string also makes old readers, which expect an integer count first,
 // reject this format before interpreting any definitions or base instances.
-static const std::string s_snapshot_format = "GLSMAC_BASES_V7";
+static const std::string s_snapshot_format = "GLSMAC_BASES_V8";
 
 BaseManager::BaseManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -182,7 +183,9 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 	}
 	for ( const auto& participant : m_game->m_simulation->value.roster ) {
 		if ( &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner ) {
-			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, 0x00dfbe41u };
+			// Drone riots begin false by explicit GLSMAC new-campaign policy.
+			// Later citizen calculation owns changes; restore never replays this.
+			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, 0x00dfbe41u, false };
 			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
 			return result;
 		}
@@ -339,6 +342,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	}
 
 	auto* base = it->second;
+	if ( m_game->GetUM()->HasConventionalHome( base_id ) ) { THROW( "Cannot remove a conventional home Base before explicit reassignment" ); }
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
 

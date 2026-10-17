@@ -27,6 +27,8 @@ namespace slot {
 class Slot;
 }
 
+namespace base { class Base; }
+
 namespace unit {
 
 class MoraleSet;
@@ -48,6 +50,8 @@ public:
 	Unit* SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode );
 	bool HasPendingConventionalUnits() const;
 	void RequireConventionalUnitsReady() const;
+	void CompleteConventionalHomeRestore();
+	bool HasConventionalHome( size_t base_id ) const;
 	void UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state );
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
@@ -78,10 +82,10 @@ public:
 
 private:
 	friend class game::backend::Game;
-	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver );
+	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
-		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false ) const;
+		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false, bool defer_home = false ) const;
 	struct PreparedConventionalMove {
 		Unit* unit;
 		map::tile::Tile* source;
@@ -127,6 +131,7 @@ private:
 
 private:
 	friend class Unit;
+	friend class base::Base; // prepared home-morale refresh transaction
 	std::pair< SmacMovementHistory*, size_t > PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const;
 	map::Map* GetMap() const;
 	slot::Slot* GetSlot( const size_t slot_num ) const;

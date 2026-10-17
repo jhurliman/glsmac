@@ -55,7 +55,7 @@ Base* MakeBase( GSE_CALLABLE, Game* game, const std::string& name = "Allocation"
 	auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
 	Base::pops_t pops;
 	for ( size_t id : { 40u, 1u, 8u } ) { pops.emplace( id, Pop( nullptr, id, bm->GetPopDef( roles.specialists[ 1 ] ), id % 2 ) ); }
-	auto* base = new Base( game, 901, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), name, {}, pops, 71, 29, {}, SmacBaseResourceContext{ 1, true, 37, -11, 0x80000040u } );
+	auto* base = new Base( game, 901, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), name, {}, pops, 71, 29, {}, SmacBaseResourceContext{ 1, true, 37, -11, 0x80000040u, false } );
 	bm->SpawnBase( GSE_CALL, base ); return base;
 }
 SmacBaseAllocationState Allocation() {
@@ -133,7 +133,7 @@ void AddSmacBaseAllocationTests( task::gsetests::GSETests* task ) {
 					bm->DespawnBase( GSE_CALL, base->m_id ); game->GetMap()->GetTilesPtr()->Resize( 2, 8 );
 					auto* owner = &game->GetState()->m_slots->GetSlot( 0 );
 					Base::pops_t pops; for ( size_t id : { 1u, 8u, 40u } ) { pops.emplace( id, Pop( nullptr, id, bm->GetPopDef( Roles().specialists[ 1 ] ) ) ); }
-					base = new Base( game, 903, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 2 ), "Narrow", {}, pops, 71, 0, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0 } );
+					base = new Base( game, 903, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 2 ), "Narrow", {}, pops, 71, 0, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0, false } );
 					bm->SpawnBase( GSE_CALL, base );
 				}
 				else {

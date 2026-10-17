@@ -386,6 +386,7 @@ public:
 	std::array< int64_t, 3 > GetCanonicalTileResources( const map::tile::Tile& tile, const base::Base& base, ResourceQueryPhase phase ) const;
 	int64_t GetCanonicalNutrientDemand( const base::Base& base ) const;
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
+	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
 	void PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowledge& knowledge );
@@ -523,7 +524,7 @@ private:
 	void PublishPendingSimulation();
 	void ValidateCurrentSimulation() const;
 	unit::ConventionalUnitContext ResolveConventionalUnit( const unit::ConventionalUnitState& unit, const slot::Slot* owner ) const;
-	unit::ConventionalUnitContext ResolveConventionalUnit( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
+	unit::ConventionalUnitContext ResolveConventionalUnit( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation, bool defer_home = false ) const;
 	void WriteSimulationState( types::Buffer& buffer ) const;
 	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
 	void RefreshSimulationForTurn( size_t turn );

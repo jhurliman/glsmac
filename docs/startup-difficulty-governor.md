@@ -23,16 +23,21 @@ unchanged. Founding and recalculation pass actual saved governor activation,
 citizen management, directives and frozen faction priorities into the existing
 allocator. Its ordinary and managed-upkeep paths remain distinct.
 
-An authenticated accepted change to a different production item clears governor
-activation and the startup marker only when that marker was present. Same-item
-selection preserves them; activation without the marker is preserved. Context,
-production and notifications commit together. Read-only picker queries and
-cancellation do not change port state. The later original
-`governor-marker-loss-cancel` receipt proves a remaining difference: declining
-loss at stored difficulty 2/3 preserves the old item/minerals but leaves marked
-activation cleared. The port does not yet reproduce that pre-confirmation write.
-Normal stored levels 0/1 skip the loss prompt. These are separate from the
-accepted-change behavior above and from a complete governor production selector.
+An authenticated changed-item prelude clears governor activation and the startup
+marker only when that marker was present. Same-item selection preserves them;
+activation without the marker is preserved. Read-only picker queries do not
+change state. The first OK for a quoted loss queues the prelude before displaying
+the confirmation. Declining at stored difficulty 2/3 preserves the old item,
+minerals, baseline and queue but leaves marked activation cleared, as measured by
+`governor-marker-loss-cancel`. These marked higher-level cases are controlled
+retained-marker states, not original startup defaults. Normal stored levels 0/1
+already skip the loss prompt and restore the full baseline on selection.
+
+A governor-only prelude does not queue production/display refresh, which would
+close the pending loss dialog. The next worker query consumes the updated context;
+accepted production changes retain the existing staged refresh transaction. The
+saved context codec preserves the result on restore. This is the bounded manual
+interaction, not a complete governor production selector or preference editor.
 
 Evidence: startup-governor-difficulty.md and its 8 prefix, 6 founding and 8
 manual-prelude controls; founding-production-initialization.md for the stored
@@ -52,4 +57,5 @@ units and four affected test translation units. Added actual six-difficulty
 claimed Start cases, a global-versus-stored context discriminator, eight real
 production-event configurations, and managed-upkeep allocation coverage. Linked
 native execution is reserved for the parent's next shared cached build; no full
-suite or platform run is claimed here.
+suite or platform run is claimed here. The later pre-confirmation follow-up adds
+one six-case actual picker/event/restore group; its shared linked run is pending.

@@ -28,6 +28,7 @@
 #include "Runner.h"
 #include "Scripts.h"
 #include "SmacMineralCostFactor.h"
+#include "SmacProductionSwitch.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -204,6 +205,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRunnerTests( task );
 		tests::AddBackendTests( task );
 		tests::AddBufferTests( task );
+		tests::AddSmacProductionSwitchTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );

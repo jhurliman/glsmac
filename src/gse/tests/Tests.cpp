@@ -4,6 +4,7 @@
 #include "Backend.h"
 #include "RosterRecords.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
 #include "SmacHostRules.h"
@@ -77,6 +78,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
 		tests::AddAsyncTests( task );
 		task->AddTest(

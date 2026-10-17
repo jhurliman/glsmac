@@ -7,6 +7,7 @@
 #include "game/backend/Random.h"
 #include "game/backend/WorldSnapshotRules.h"
 #include "game/backend/WorldSnapshotWorkerKnowledge.h"
+#include "game/backend/WorldSnapshotTerritory.h"
 #include "game/backend/WorldSnapshotRandom.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
@@ -147,7 +148,8 @@ std::string CanonicalResourceSnapshot( Game* game, const std::string& bytes ) {
 	(void)world_snapshot::ReadRandomState( world ); (void)world_snapshot::ReadTurnState( world, state->m_slots->GetSlots() );
 	if ( world.ReadBool() ) { (void)world.ReadString(); }
 	(void)map::GlsmacResourceMapPolicy::ReadOptional( world, true );
-	(void)world_snapshot::ReadWorkerKnowledge( world, true ); (void)world.ReadString();
+	(void)world_snapshot::ReadWorkerKnowledge( world, true );
+	(void)world_snapshot::ReadTerritoryTopology( world, true ); (void)world.ReadString();
 	types::Buffer result; result.WriteString( bytes.substr( 0, world.lenr ) );
 	const auto named = []( types::Buffer& input, types::Buffer& output ) {
 		const auto count = input.ReadInt(); if ( count < 0 || count > 1024 ) { throw std::runtime_error( "invalid fixture definition count" ); }
@@ -163,11 +165,11 @@ std::string CanonicalResourceSnapshot( Game* game, const std::string& bytes ) {
 	result.WriteString( canonical_resources.ToString() ); result.WriteString( world.ReadString() ); // complete empty Unit manager
 	types::Buffer bases( world.ReadString() ), canonical_bases; canonical_bases.WriteString( bases.ReadString() );
 	named( bases, canonical_bases );
-	for ( const bool facility : { true, false } ) {
+	{ // Only facility definitions are unordered. BM9 Base record order is semantic.
 		const auto count = bases.ReadInt(); if ( count < 0 || count > 1024 ) { throw std::runtime_error( "invalid fixture base table count" ); }
 		std::map< std::string, std::string > records;
 		for ( int64_t i = 0; i < count; ++i ) {
-			const auto bytes = bases.ReadString(); types::Buffer payload( bytes ); const auto id = facility ? payload.ReadString() : std::to_string( payload.ReadInt() );
+			const auto bytes = bases.ReadString(); types::Buffer payload( bytes ); const auto id = payload.ReadString();
 			if ( !records.emplace( id, bytes ).second ) { throw std::runtime_error( "duplicate fixture base record" ); }
 		}
 		canonical_bases.WriteInt( count ); for ( const auto& record : records ) { canonical_bases.WriteString( record.second ); }

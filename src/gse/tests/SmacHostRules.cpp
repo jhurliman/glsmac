@@ -122,6 +122,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			rebuilt.WriteString( reader.ReadString() ); // predefined unit profile
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // movement profile
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // specialist profile
+			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // territory profile
 			types::Buffer map( reader.ReadString() );
 			if ( bad_map ) { map.WriteInt( 123 ); }
 			rebuilt.WriteString( map.ToString() );

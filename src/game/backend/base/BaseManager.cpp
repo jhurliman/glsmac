@@ -363,7 +363,9 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	auto* base = it->second;
 	const auto ordered = std::find( m_base_order.begin(), m_base_order.end(), base_id );
 	if ( ordered == m_base_order.end() ) { THROW( "Base is missing its record order" ); }
-	if ( m_game->GetUM()->HasConventionalHome( base_id ) ) { THROW( "Cannot remove a conventional home Base before explicit reassignment" ); }
+	const auto* units = m_game->GetUM();
+	if ( !units && base->HasSmacResourceContext() ) { THROW( "Canonical Base removal requires the Unit registry" ); }
+	if ( units && units->HasConventionalHome( base_id ) ) { THROW( "Cannot remove a conventional home Base before explicit reassignment" ); }
 	auto territory = m_game->PrepareBaseTerritory( nullptr, base, false );
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );

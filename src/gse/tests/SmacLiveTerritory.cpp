@@ -94,7 +94,11 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		settings::GlobalSettings a,b;
 		const auto initialize=[&](settings::GlobalSettings& target,int32_t raw) {
 			target.SelectRuleset("smac");target.InitializeHostRules([&](const std::string& name){auto text=smac_rules_fixture::Source(name);if(name=="alpha.txt"){
-				const auto start=text.find("#RULES\n"),end=text.find("#",start+1);text.replace(start,end-start,Rules(raw));}return text;});smac_rules_fixture::AcceptWorldSize(target);
+				// Change only the border row; retain the full fixture's technology
+				// tokens and other frozen profiles required by host initialization.
+				auto row=text.find("#RULES\n")+7;
+				for(int index=1;index<48;++index){row=text.find('\n',row)+1;}
+				text.replace(row,text.find('\n',row)-row,std::to_string(raw)+", ; border fixture");}return text;});smac_rules_fixture::AcceptWorldSize(target);
 		};
 		initialize(a,100);initialize(b,101);const auto saved=a.Serialize().ToString();
 		GT_ASSERT(Rejects([&]{a.Deserialize(b.Serialize());}) && a.Serialize().ToString()==saved,"clamp-equal raw border changed locked settings");

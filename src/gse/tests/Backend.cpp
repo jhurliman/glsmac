@@ -2406,6 +2406,9 @@ public:
 	std::string CheckStartupFinish( const bool restored, const bool cancel ) {
 		using namespace game::backend;
 		EnableWorldSnapshot(); EnableTurnPlayers();
+		auto original_source = m_game.m_gameplay_entropy_word_source;
+		util::FinallyGuard restore_source( [ & ]() { m_game.m_gameplay_entropy_word_source = std::move( original_source ); } );
+		m_game.m_gameplay_entropy_word_source = []() -> uint32_t { throw std::runtime_error( "SMAX must not sample SMAC entropy" ); };
 		BackendFixture source;
 		source.EnableWorldSnapshot(); source.EnableTurnPlayers(); source.SetSnapshotTurn( 37 );
 		for ( auto* state : { m_state, source.m_state } ) {
@@ -2695,7 +2698,7 @@ public:
 			if ( refreshed ) { m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() ); }
 		} );
 	}
-	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false ) {
+	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
@@ -2714,6 +2717,15 @@ public:
 		}
 		EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, customs );
 		settings.difficulty_level = failure == 1 ? INT64_MAX : failure == 2 ? INT64_MIN : failure == 3 ? 3 : difficulty;
+		size_t entropy_calls = 0, random_observations = 0; bool random_valid = true;
+		const SmacGameplayRandomState expected_random( 0, zero_random ? 0 : UINT32_MAX );
+		auto original_source = m_game.m_gameplay_entropy_word_source;
+		util::FinallyGuard restore_source( [ & ]() { m_game.m_gameplay_entropy_word_source = std::move( original_source ); } );
+		m_game.m_gameplay_entropy_word_source = [ & ]() -> uint32_t {
+			++entropy_calls;
+			if ( ( failure == 6 && entropy_calls == 1 ) || ( failure == 7 && entropy_calls == 2 ) || entropy_calls > 2 ) { throw std::runtime_error( "fixture entropy failure" ); }
+			return entropy_calls == 1 ? expected_random.Shared() : expected_random.Crt();
+		};
 		Value* observed = nullptr; size_t errors = 0, social_turns = 0, unit_turns = 0, base_turns = 0; bool social_hook_valid = true;
 		const auto old_unit_id = unit::Unit::GetNextId(), old_base_id = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ]() { unit::Unit::SetNextId( old_unit_id ); base::Base::SetNextId( old_base_id ); } );
@@ -2721,6 +2733,12 @@ public:
 		const auto before_rng = m_game.GetRandom()->GetStateString();
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.m_tm = new map::tile::TileManager( &m_game );
+			for ( const auto* phase : { "create_world", "start" } ) {
+				m_game.On( GSE_CALL, phase, NATIVE_CALL( this, &random_observations, &random_valid, &entropy_calls, expected_random ) {
+					++random_observations; random_valid = random_valid && entropy_calls == 2 && m_game.m_simulation && m_game.m_simulation->value.gameplay_random == expected_random;
+					return VALUE( value::Undefined );
+				} ) );
+			}
 			m_game.On( GSE_CALL, "turn", NATIVE_CALL( this, &social_turns, &social_hook_valid ) {
 				++social_turns;
 				social_hook_valid = social_hook_valid && m_game.GetTurnId() == 1 && m_game.m_simulation.has_value();
@@ -2780,7 +2798,9 @@ public:
 				const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
 				GT_ASSERT( records->value.size() == ( failure == 4 ? 1u : 0u ), "unsupported admission reached create/start consumers" ); GT_OK();
 			} );
-			GT_ASSERT( rejected.empty(), "failed admission consumer boundary: " + rejected ); GT_OK();
+			GT_ASSERT( rejected.empty(), "failed admission consumer boundary: " + rejected );
+			GT_ASSERT( entropy_calls == ( failure == 6 ? 1u : failure == 7 || failure == 4 ? 2u : 0u ) && m_game.GetRandom()->GetStateString() == before_rng,
+				"failed admission sampled entropy at the wrong boundary or changed JSF" ); GT_OK();
 		}
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
@@ -2821,7 +2841,10 @@ public:
 			GT_OK();
 		} );
 		GT_ASSERT( check.empty(), "simulation consumer: " + check );
-		GT_ASSERT( m_game.GetRandom()->GetStateString() == before_rng, "simulation admission consumed RNG" );
+		GT_ASSERT( m_game.GetRandom()->GetStateString() == before_rng, "simulation admission consumed JSF" );
+		GT_ASSERT( entropy_calls == ( cancellation == 1 ? 0u : 2u ) && random_observations == ( cancellation == 1 ? 0u : 2u ) && random_valid,
+			"claimed Start sampled repeatedly, reordered/reseeded zero, or published before complete RNG construction" );
+		if ( m_game.m_simulation ) { GT_ASSERT( m_game.m_simulation->value.gameplay_random == expected_random, "startup/first turn consumed gameplay RNG" ); }
 		if ( cancellation ) {
 			if ( cancellation == 2 ) { m_game.Iterate(); }
 			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_simulation && !m_game.m_pending_simulation, "reset retained admitted or staged simulation state" );
@@ -2840,7 +2863,12 @@ public:
 			void Receive( const types::Packet& packet ) { network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event ); }
 			const std::string& ErrorReason() const { return m_disconnect_reason; }
 		};
+		size_t entropy_calls = 0;
+		auto original_source = m_game.m_gameplay_entropy_word_source;
+		util::FinallyGuard restore_source( [ & ]() { m_game.m_gameplay_entropy_word_source = std::move( original_source ); } );
+		m_game.m_gameplay_entropy_word_source = [ & ]() -> uint32_t { ++entropy_calls; throw std::runtime_error( "restore must not sample entropy" ); };
 		BackendFixture source;
+		source.m_game.m_gameplay_entropy_word_source = []() -> uint32_t { return 0; };
 		source.EnableWorldSnapshot(); EnableWorldSnapshot();
 		const auto prepared = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			source.m_state->SetConnection( new RecordingConnection( gc_space ) );
@@ -2849,6 +2877,8 @@ public:
 			source.EnableSimulationParticipants( { 0, 2, 6 }, 0, true ); source.m_game.PrepareNewSimulation();
 			source.m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 			auto& value = source.m_game.m_simulation->value;
+			value.gameplay_random = SmacGameplayRandomState( UINT32_MAX, 0 );
+			for ( size_t i = 0; i < 7; ++i ) { value.gameplay_random.NextSharedLow16(); value.gameplay_random.NextCrtRaw15(); }
 			const int32_t ids[] = { 7, 2, 5 };
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
 				value.roster[ i ].simulation_id = ids[ i ];
@@ -2870,6 +2900,7 @@ public:
 		GT_ASSERT( prepared.empty(), "simulation source: " + prepared );
 		const auto expected = source.m_game.m_simulation->value;
 		const auto snapshot = source.WorldSnapshot(); const auto random = source.m_game.GetRandom()->GetStateString();
+		GT_ASSERT( source.m_game.m_simulation->value == expected, "snapshot writer advanced gameplay RNG" );
 		Client* client = nullptr; Value* observations = nullptr; size_t errors = 0;
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			// Real canonical join order: roster then phase then frozen settings.
@@ -2916,6 +2947,7 @@ public:
 				ProcessAccumulations();
 			} else { m_game.Iterate(); }
 		} );
+		GT_ASSERT( entropy_calls == 0, "restore invoked the new-world entropy policy" );
 		if ( failure ) {
 			GT_ASSERT( !m_game.m_simulation && !m_game.m_pending_simulation && !m_game.m_map, "failed or canceled restore retained paired runtime state" );
 			GT_ASSERT( errors == ( failure == 3 ? 0u : 1u ), "late simulation mismatch did not take terminal startup failure" );
@@ -2972,6 +3004,12 @@ public:
 			GT_OK();
 		} );
 		GT_ASSERT( check.empty(), "simulation restored consumer/continuity: " + check );
+		auto continued = expected.gameplay_random;
+		for ( size_t i = 0; i < 32; ++i ) {
+			GT_ASSERT( m_game.m_simulation->value.gameplay_random.NextSharedLow16() == continued.NextSharedLow16()
+				&& m_game.m_simulation->value.gameplay_random.NextCrtRaw15() == continued.NextCrtRaw15(), "restored gameplay continuation differs from saved pair" );
+		}
+		GT_ASSERT( m_game.m_simulation->value.gameplay_random == continued && entropy_calls == 0, "restored gameplay words changed independently of draws" );
 		GT_OK();
 	}
 
@@ -3017,7 +3055,7 @@ public:
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 35; ++scenario ) {
+		for ( int scenario = 0; scenario < 41; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3040,7 +3078,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 2 : 3 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 3 : 4 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -3074,6 +3112,12 @@ public:
 				types::Buffer bad; bad.WriteInt( marker ); bad.WriteInt( 2 ); social_wire = bad.ToString() + social_wire.substr( input.lenr );
 			}
 			if ( scenario != 33 ) { raw.WriteString( social_wire ); }
+			auto gameplay_wire = value.gameplay_random.Serialize();
+			if ( scenario == 36 ) { gameplay_wire[ 0 ] = 'X'; }
+			if ( scenario == 37 ) { gameplay_wire[ 4 ] = 2; }
+			if ( scenario == 38 ) { gameplay_wire.pop_back(); }
+			if ( scenario == 39 || scenario == 40 ) { gameplay_wire.resize( scenario == 39 ? 17 : 4096, 'x' ); }
+			if ( scenario != 35 ) { raw.WriteString( gameplay_wire ); }
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }
@@ -3106,8 +3150,7 @@ public:
 				map.WriteInt( scenario == 14 ? 9 : 8 ); bytes.WriteString( map.ToString() );
 			}
 			types::Packet packet( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE ); packet.data.str = bytes.ToString();
-			packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
-			const auto ready = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { destination.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK(); } );
+			const auto ready = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { destination.PrepareFinalWorldChunk( client, packet ); GT_OK(); } );
 			GT_ASSERT( ready.empty(), "runtime download prepare failed: " + ready );
 			auto* prior_map = destination.m_game.m_map; types::Buffer prior_tiles; prior_map->SaveToBuffer( prior_tiles );
 			const auto prior_rng = destination.m_game.GetRandom()->GetStateString(); const auto prior_turn = destination.m_game.GetTurnId();
@@ -7711,6 +7754,14 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	for ( const int failure : { 6, 7 } ) {
+		task->AddTest( "SMAC gameplay RNG claimed Start entropy failure " + std::to_string( failure - 5 ), GT( failure ) {
+			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );
+		} );
+	}
+	task->AddTest( "SMAC gameplay RNG claimed Start preserves explicit all-zero pair", GT() {
+		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, 0, false, true );
+	} );
 	task->AddTest( "SMAC social actual first unit base and game upkeep read refreshed owner state", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, 0, true );
 	} );

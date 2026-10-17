@@ -11,9 +11,9 @@ namespace game::backend::world_snapshot {
 // Independent of the lobby settings and map/body formats. The typed prefix
 // also rejects legacy snapshots that began directly with a map string.
 inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
-// V13 requires the owned social continuation in the framed simulation payload.
-// V1..V12 downloads are unsupported.
-inline constexpr int64_t rules_version = 13;
+// V14 requires the owned gameplay RNG pair in the framed simulation payload.
+// V1..V13 downloads are unsupported.
+inline constexpr int64_t rules_version = 14;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

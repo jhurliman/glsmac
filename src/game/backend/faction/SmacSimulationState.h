@@ -2,6 +2,7 @@
 
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
+#include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "game/backend/RosterRecords.h"
 
@@ -19,12 +20,14 @@ struct SmacSimulationParticipant {
 };
 
 struct SmacSimulationState {
+	explicit SmacSimulationState( SmacGameplayRandomState random ) noexcept : gameplay_random( random ) {}
 	static constexpr size_t MAX_WIRE_BYTES = 64 * 1024;
 	static constexpr size_t MAX_TEXT_BYTES = 32 * 1024;
 	std::vector< SmacSimulationParticipant > roster;
 	SmacTechnologyState technology;
 	SmacSocialState social;
 	unit::SmacStartupDesignState designs;
+	SmacGameplayRandomState gameplay_random;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;
 	const SmacSimulationParticipant* FindSlot( size_t slot ) const;

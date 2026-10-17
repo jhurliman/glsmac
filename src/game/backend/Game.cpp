@@ -109,7 +109,7 @@ struct Game::DetachedMapPresentation {
 };
 
 Game::Game()
-	: gse::GCWrappable( nullptr ) {}
+	: gse::GCWrappable( nullptr ), m_gameplay_entropy_word_source( util::random::Random::NewSeed ) {}
 
 common::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};

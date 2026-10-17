@@ -3328,7 +3328,7 @@ public:
 			}));
 			const auto* raw_before=&m_game.m_simulation->value.gameplay_random;
 			const auto rng=*raw_before;const auto jsf=m_game.GetRandom()->GetStateString();
-			auto* owner=&m_state->m_slots->GetSlot(0);auto* center=map->GetTile(4,4);
+			auto* owner=&m_state->m_slots->GetSlot(0);auto* center=map->GetTile(scenario==11?6:4,4);
 			if(scenario==3) {
 				const auto id=Base::GetNextId();const auto before=m_frontend_requests.size();auto invalid=roles;invalid[4]="MISSING";
 				bool rejected=false;try{bm->SpawnStartingSmacBase(GSE_CALL,owner,center,"WORKER",invalid);}catch(const std::exception&){rejected=true;}
@@ -3342,7 +3342,7 @@ public:
 				created.push_back(base->m_id);initial_minerals.emplace(base->m_id,base->GetProductionState()->minerals);return base;
 			};
 			Base* remote_first=nullptr;
-			if(scenario==11) {remote_first=spawn(&m_state->m_slots->GetSlot(2),map->GetTile(0,4));}
+			if(scenario==11) {remote_first=spawn(&m_state->m_slots->GetSlot(2),map->GetTile(2,4));}
 			auto* base=spawn(owner,center);const auto allocation=*base->GetSmacAllocation();
 			if(scenario==1) {require(base->m_pops.at(1).GetWorkedTile()==map->GetTile(6,4) && allocation.specialists.total_count==0,"productive first Base used fixed Doctor allocation");}
 			else {require(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1,"arid first-worker literal changed");}

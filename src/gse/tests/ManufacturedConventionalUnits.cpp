@@ -66,6 +66,30 @@ Unit* Manufacture( GSE_CALLABLE, ConventionalUnitFixture& fixture, const World& 
 }
 
 void AddManufacturedConventionalUnitTests( task::gsetests::GSETests* task ) {
+	task->AddTest("Manufactured land training uses current morale and exact facility roles",GT(){
+		for (const bool low_morale : {false,true}) {
+			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign(false);
+			const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
+				const auto world=Populate(GSE_CALL,fixture); auto* game=fixture.Game(); auto* bm=game->GetBM();
+				for (const int32_t role : {3,4,8,27,30}) {
+					const auto id="training-role"+std::to_string(role);
+					bm->DefineFacility(new base::FacilityDef(id,"Unrelated display label","",1,{"fixture",0,0,1,1},role));
+				}
+				fixture.RetainedMorale(5,low_morale?-2:0);
+				for (const int32_t role : {3,4,8}) {
+					const auto id="training-role"+std::to_string(role); world.home->m_facilities.emplace(id,bm->GetFacilityDef(id));
+				}
+				GT_ASSERT(Manufacture(GSE_CALL,fixture,world)->Conventional().stored_morale==1,"unrelated starting facilities changed production training");
+				world.home->m_facilities.emplace("training-role27",bm->GetFacilityDef("training-role27"));
+				GT_ASSERT(Manufacture(GSE_CALL,fixture,world)->Conventional().stored_morale==(low_morale?2:3),"Command Center did not use current morale");
+				world.home->m_facilities.emplace("training-role30",bm->GetFacilityDef("training-role30"));
+				GT_ASSERT(Manufacture(GSE_CALL,fixture,world)->Conventional().stored_morale==(low_morale?3:5),"combined land training was not halved together");
+				GT_OK();
+			});
+			GT_ASSERT(error.empty(),"fixture failed: " + error);
+		}
+		GT_OK();
+	});
 	task->AddTest("Manufactured conventional preparation preserves authority and defers its hook",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
 		return fixture.Run([&](GSE_CALLABLE)->std::string{

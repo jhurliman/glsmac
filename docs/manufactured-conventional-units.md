@@ -9,7 +9,12 @@ only; this change does not add an order codec or silently activate terraforming.
 
 `UnitManager::PrepareManufacturedConventionalUnit` validates the registered
 same-owner home, available global slot below 2,048, ordinary no-project campaign,
-and local untrained HQ-only facility context. It supplies stored morale1,
+and exact local facility roles. Ordinary land training adds two for Command
+Center and two for Bioenhancement Center, then halves their combined bonus
+when current MORALE is below -1. It adds the ordinary baseline 1 afterward.
+Perimeter Defense, Network Node and Recycling Tanks do not add training or
+block manufacturing. The admitted designs have no abilities and are already
+prototyped; project training remains excluded by the saved campaign. It supplies
 damage0, spent0 and a clear failure marker; effective morale and full allowance
 are queried from the actual frozen design, retained social state and saved home
 status. Existing generic explicit-state creation remains separate.
@@ -38,7 +43,7 @@ faithful Former CVR recipe remains a separate presentation dependency.
 
 The original behavioral inputs are the human-maintained
 `docs/behavior/ordinary-unit-production-loop.md`,
-`production-posting-and-unit-creation.md`, `movement-edge-cost.md` and
+`production-posting-and-unit-creation.md`, `ordinary-production-training-inputs.md`, `movement-edge-cost.md` and
 `unit-support-and-convoys.md` in the research workspace. The five production-loop
 sequences include actual factory, move and later upkeep returns. The tests here
 exercise the bounded runtime stages in a synthetic canonical world; they do not
@@ -59,3 +64,10 @@ The same 29 groups passed the focused ASan/UBSan/LSan run with memory tracking
 (5.175s), leak detection and halt-on-error enabled. This includes deferred
 home restore, abandoned prepared ownership and retained marker texture lifetime.
 No full platform or full-suite run is claimed.
+
+The training follow-up passed all six manufactured-unit groups in the cached
+Linux build with memory tracking. Its new cases distinguish current from retained
+MORALE and cover neutral starting facilities, Command Center, and the combined
+Command Center/Bioenhancement bonus. The updated UnitManager also passed targeted
+LLVM15 analysis; custom designs without a completed prototype remain outside
+this manufacturing path.

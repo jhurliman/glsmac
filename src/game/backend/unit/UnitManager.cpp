@@ -274,12 +274,28 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 	if ( !m_game->m_simulation || m_game->m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
 		THROW( "Ordinary manufacturing requires the admitted no-project campaign" );
 	}
+	bool command_center = false, bioenhancement = false;
 	for ( const auto& entry : home.m_facilities ) {
 		if ( !entry.second || m_game->GetBM()->GetFacilityDef( entry.first ) != entry.second ) { THROW( "Unregistered manufacturing facility" ); }
 		m_game->GetBM()->ValidateSmacFacilityDef( entry.second );
-		if ( entry.second->m_smac_source_id != 1 ) { THROW( "Manufacturing currently admits the ordinary HQ-only training context" ); }
+		if ( !entry.second->m_smac_source_id || *entry.second->m_smac_source_id < 1 || *entry.second->m_smac_source_id > 33 ) {
+			THROW( "Ordinary manufacturing requires resolved local facility roles" );
+		}
+		command_center |= entry.second->m_smac_source_id == 27;
+		bioenhancement |= entry.second->m_smac_source_id == 30;
 	}
-	const ConventionalUnitState state{ design_id, context.owner_simulation_id, 1, 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	const auto* social = m_game->m_simulation->value.social.Find( context.owner_simulation_id );
+	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed ) {
+		THROW( "Ordinary manufacturing requires current MORALE" );
+	}
+	// The saved campaign excludes Command Nexus/Cyborg Factory. The admitted
+	// conventional designs have no abilities and are already prototyped, so only
+	// these two local training categories precede the ordinary baseline one.
+	int32_t training = ( command_center ? 2 : 0 ) + ( bioenhancement ? 2 : 0 );
+	if ( social->current[ 4 ] < -1 ) { training /= 2; }
+	const ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	const auto design = m_game->ResolveConventionalDesign( state, *m_game->m_simulation );
+	if ( design.id >= 64 && !design.prototyped ) { THROW( "First custom prototype completion is not yet admitted" ); }
 	return PrepareConventionalUnit( GSE_CALL, Unit::GetNextId(), def, home.m_owner, home.GetTile(), state );
 }
 

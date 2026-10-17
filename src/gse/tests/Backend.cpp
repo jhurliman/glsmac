@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "fixtures/SmacRulesSource.h"
+#include "fixtures/SmacStartupSource.h"
 #include "fixtures/WorldSnapshotRules.h"
 #include "GLSMAC.h"
 #include "ui/UI.h"
@@ -2406,19 +2407,19 @@ public:
 
 	// Explicit accepted participants for simulation tests. This uses the live
 	// State producer, unlike older decoder fixtures' synthetic Slot pointers.
-	void EnableSimulationParticipants( const std::vector< size_t >& ids = { 0, 2, 6 }, const size_t local = 0 ) {
+	void EnableSimulationParticipants( const std::vector< size_t >& ids = { 0, 2, 6 }, const size_t local = 0, const bool customs = false ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
 			using namespace game::backend;
 			m_state->m_settings.global.Initialize();
 			m_state->RetireRosterEpoch();
 			for ( auto* player : m_state->m_players ) { DELETE( player ); }
 			m_state->m_players.clear(); m_state->m_slots->Clear(); m_state->m_cid_slots.clear(); m_state->EnsureRosterEpoch();
-			for ( const auto* id : { "UNIVERSITY", "HIVE" } ) {
+			for ( const auto* id : { "UNIVERSITY", "HIVE", "MORGANITES", "SPARTANS" } ) {
 				if ( !m_state->GetFM()->Get( id ) ) { m_state->GetFM()->Add( new faction::Faction( id, id ) ); }
 			}
 			for ( const auto id : ids ) {
 				const auto role = id == 0 ? ( m_state->GetConnection() ? roster::Role::Host : roster::Role::Single ) : roster::Role::Player;
-				m_state->CreatePlayerSlot( id, { "Participant", role, id == 2 ? "UNIVERSITY" : "GAIANS", "Citizen" },
+				m_state->CreatePlayerSlot( id, { "Participant", role, customs && id == 0 ? "MORGANITES" : customs && id == 2 ? "SPARTANS" : id == 2 ? "UNIVERSITY" : "GAIANS", "Citizen" },
 					( id == 2 ? m_state->m_settings.local.account.GetGSID() : "simulation-controller-" + std::to_string( id ) ), id + 1, "fixture", true );
 			}
 			m_game.m_slot_num = local; m_game.m_slot = &m_state->m_slots->GetSlot( local ); m_game.m_player = m_game.m_slot->GetPlayer();
@@ -2427,11 +2428,15 @@ public:
 	void AdmitSimulationForSnapshotFixture() {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() { m_game.PrepareNewSimulation(); } );
 	}
-	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false ) {
+	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0 ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
-		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( [ & ]( const std::string& filename ) {
+			auto source = smac_startup_fixture::Source( filename );
+			if ( failure == 5 && filename == "gaians.txt" ) { source.insert( source.find( "\n#END" ), ",TECH,Tech88" ); }
+			return source;
+		} ); smac_rules_fixture::AcceptWorldSize( settings );
 		if ( host ) {
 			class Server final : public connection::Server {
 			public:
@@ -2440,12 +2445,15 @@ public:
 			m_simulation_transport = std::make_unique< SimulationTransport >();
 			m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() { m_state->SetConnection( new Server( m_gse->GetGCSpace(), &m_state->m_settings.local, m_simulation_transport.get() ) ); } );
 		}
-		EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 } );
-		Value* observed = nullptr;
+		EnableSimulationParticipants( single ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, customs );
+		settings.difficulty_level = failure == 1 ? INT64_MAX : failure == 2 ? INT64_MIN : failure == 3 ? 3 : difficulty;
+		Value* observed = nullptr; size_t errors = 0;
 		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
 		const auto before_rng = m_game.GetRandom()->GetStateString();
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.m_tm = new map::tile::TileManager( &m_game );
+			m_game.On( GSE_CALL, "error", NATIVE_CALL( &errors ) { ++errors; return VALUE( value::Undefined ); } ) );
+			if ( failure == 4 ) { m_game.On( GSE_CALL, "start", NATIVE_CALL( &settings ) { settings.difficulty_level = -3; return VALUE( value::Undefined ); } ) ); }
 			const auto helper = static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/tests/_simulation_state" ) );
 			observed = helper->Run( GSE_CALL, { m_game.Wrap( GSE_CALL ) } ); m_gse->AddRootObject( observed );
 			auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/advance_turn" ) );
@@ -2471,6 +2479,14 @@ public:
 			ProcessAccumulations();
 		}
 		else { m_game.Iterate(); }
+		if ( failure ) {
+			GT_ASSERT( errors == 1 && !m_game.m_simulation && !m_game.m_pending_simulation && !m_game.m_map, "failed design admission or late difficulty change retained simulation" );
+			const auto rejected = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
+				GT_ASSERT( records->value.size() == ( failure == 4 ? 1u : 0u ), "unsupported admission reached create/start consumers" ); GT_OK();
+			} );
+			GT_ASSERT( rejected.empty(), "failed admission consumer boundary: " + rejected ); GT_OK();
+		}
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto records = static_cast< value::Array* >( static_cast< value::Callable* >( observed )->Run( GSE_CALL, {} ) );
 			GT_ASSERT( records->value.size() == ( cancellation == 1 ? 0u : 2u ), "actual create/start consumers did not observe one admitted simulation" );
@@ -2482,12 +2498,23 @@ public:
 				GT_ASSERT( participants->value.size() == ( single ? 1u : 3u ), "unoccupied factions were admitted" );
 				for ( size_t i = 0; i < participants->value.size(); ++i ) {
 					const auto participant = static_cast< value::Object* >( participants->value[ i ] );
+					GT_ASSERT( participant->Get( "designs_before" )->ToString() == participant->Get( "designs_after" )->ToString(), "script copy mutated design state" );
+					const auto design_state = static_cast< value::Object* >( participant->Get( "designs_after" ) );
+					const auto designs = static_cast< value::Array* >( design_state->Get( "designs" ) );
+					GT_ASSERT( static_cast< value::Int* >( design_state->Get( "global_difficulty" ) )->value == difficulty + 3
+						&& static_cast< value::Int* >( design_state->Get( "starting_scout" ) )->value == ( customs && i == 1 ? 128 : 2 )
+						&& designs->value.size() == ( customs && i < 2 ? 1u : 0u ), "startup consumer saw wrong global difficulty or custom selection" );
+					if ( !designs->value.empty() ) {
+						const auto design = static_cast< value::Object* >( designs->value[ 0 ] );
+						GT_ASSERT( static_cast< value::Int* >( design->Get( "id" ) )->value == static_cast< int64_t >( 64 * ( i + 1 ) )
+							&& static_cast< value::Int* >( design->Get( "cost" ) )->value == 2 && static_cast< value::Bool* >( design->Get( "prototyped" ) )->value, "design generation/marking occurred after consumer" );
+					}
 					GT_ASSERT( static_cast< value::Int* >( participant->Get( "id" ) )->value == static_cast< int64_t >( i + 1 ), "dense policy inferred simulation ID from transport index" );
 					for ( const auto* key : { "before", "after" } ) {
 						const auto state = static_cast< value::Object* >( participant->Get( key ) );
 						GT_ASSERT( static_cast< value::Int* >( state->Get( "labs" ) )->value == 0 && static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value.size() == 89,
 							"script copy changed authoritative research state" );
-						GT_ASSERT( static_cast< value::Bool* >( static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value[ 2 ] )->value, "startup grant missing or script copy mutated ownership" );
+						GT_ASSERT( static_cast< value::Bool* >( static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value[ customs && i == 0 ? 1 : customs && i == 1 ? 5 : i == 1 ? 2 : 6 ] )->value, "startup grant missing or script copy mutated ownership" );
 					}
 				}
 			}
@@ -2516,12 +2543,16 @@ public:
 		const auto prepared = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			source.m_state->SetConnection( new RecordingConnection( gc_space ) );
 			auto& settings = source.m_state->m_settings.global;
-			settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
-			source.EnableSimulationParticipants(); source.m_game.PrepareNewSimulation();
+			settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			source.EnableSimulationParticipants( { 0, 2, 6 }, 0, true ); source.m_game.PrepareNewSimulation();
 			auto& value = source.m_game.m_simulation->value;
 			const int32_t ids[] = { 7, 2, 5 };
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
 				value.roster[ i ].simulation_id = ids[ i ];
+				auto& owner = value.designs.owners[ i ];
+				const auto old_id = owner.simulation_id; owner.simulation_id = ids[ i ];
+				for ( auto& design : owner.designs ) { design.id += 64 * ( ids[ i ] - old_id ); design.cost = static_cast< uint8_t >( 253 + i ); design.prototyped = false; design.active = false; }
+				if ( owner.starting_scout != 2 ) { owner.starting_scout += 64 * ( ids[ i ] - old_id ); }
 				auto& tech = value.technology.factions[ i ]; tech.admission.simulation_id = ids[ i ];
 				tech.owned.fill( false ); tech.owned[ 88 - i ] = true;
 				tech.labs = -123 - static_cast< int32_t >( i ); tech.score = INT32_MAX; tech.future_count = 4;
@@ -2565,6 +2596,8 @@ public:
 				m_state->CreatePlayerSlot( 6, record, gsid, 91, "replacement", false );
 			}
 			if ( failure == 3 ) { m_game.MT_Reset( ticket ); }
+			if ( failure == 5 ) { m_state->m_settings.global.difficulty_level = -3; }
+			if ( failure == 6 ) { m_game.On( GSE_CALL, "start", NATIVE_CALL( this ) { m_state->m_settings.global.difficulty_level = -3; return VALUE( value::Undefined ); } ) ); }
 			GT_OK();
 		} );
 		GT_ASSERT( setup.empty(), "simulation restore setup: " + setup );
@@ -2595,6 +2628,15 @@ public:
 				GT_ASSERT( static_cast< value::Int* >( participant->Get( "id" ) )->value == expected.roster[ i ].simulation_id, "start inferred an ID from its slot" );
 				const auto after = static_cast< value::Object* >( participant->Get( "after" ) );
 				GT_ASSERT( static_cast< value::Int* >( after->Get( "labs" ) )->value == expected.technology.factions[ i ].labs, "start script copy mutated saved labs" );
+				GT_ASSERT( participant->Get( "designs_before" )->ToString() == participant->Get( "designs_after" )->ToString(), "script copy mutated saved design state" );
+				const auto view = static_cast< value::Object* >( participant->Get( "designs_after" ) );
+				const auto& owner = expected.designs.owners[ i ]; const auto rows = static_cast< value::Array* >( view->Get( "designs" ) );
+				GT_ASSERT( static_cast< value::Int* >( view->Get( "starting_scout" ) )->value == owner.starting_scout && rows->value.size() == owner.designs.size(), "saved selection changed in script" );
+				if ( !owner.designs.empty() ) {
+					const auto row = static_cast< value::Object* >( rows->value[ 0 ] );
+					GT_ASSERT( static_cast< value::Int* >( row->Get( "id" ) )->value == owner.designs[ 0 ].id && static_cast< value::Int* >( row->Get( "cost" ) )->value == owner.designs[ 0 ].cost
+						&& !static_cast< value::Bool* >( row->Get( "active" ) )->value && !static_cast< value::Bool* >( row->Get( "prototyped" ) )->value, "restore regenerated custom state" );
+				}
 			}
 			GT_ASSERT( WorldSnapshot() == snapshot, "complete world serialization changed after restore" );
 			// Real refresh packet preserves the accepted Player lifetime, despite
@@ -2624,13 +2666,13 @@ public:
 		EnableWorldSnapshot();
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_state->SetConnection( new RecordingConnection( gc_space ) );
-			auto& settings = m_state->m_settings.global; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
-			EnableSimulationParticipants(); m_game.PrepareNewSimulation(); GT_OK();
+			auto& settings = m_state->m_settings.global; settings.SelectRuleset( "smac" ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			EnableSimulationParticipants( { 0, 2, 6 }, 0, true ); m_game.PrepareNewSimulation(); GT_OK();
 		} );
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
 		const auto expected = m_game.m_simulation->value;
 		const auto& settings = m_state->m_settings.global;
-		for ( int scenario = 0; scenario < 17; ++scenario ) {
+		for ( int scenario = 0; scenario < 25; ++scenario ) {
 			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -2653,14 +2695,28 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 2 : 1 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 1 : 2 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
 			}
 			raw.WriteString( value.technology.Serialize( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ).ToString() );
+			auto designs = value.designs;
+			if ( scenario == 17 ) { designs.global_difficulty = 0; }
+			if ( scenario == 18 ) { designs.owners.pop_back(); }
+			if ( scenario == 19 ) { designs.owners[ 2 ].simulation_id = 7; }
+			auto design_wire = designs.Serialize( settings.GetSmacPredefinedUnitRules()->catalog ).ToString();
+			if ( scenario == 20 ) { design_wire.pop_back(); }
+			if ( scenario == 21 ) { design_wire.append( "x" ); }
+			if ( scenario == 22 ) { design_wire.assign( unit::SmacStartupDesignState::MAX_WIRE_BYTES + 1, 'x' ); }
+			if ( scenario == 23 ) {
+				types::Buffer input( design_wire ); const auto marker = input.ReadInt(); input.ReadInt();
+				types::Buffer replacement; replacement.WriteInt( marker ); replacement.WriteInt( 2 );
+				design_wire = replacement.ToString() + design_wire.substr( input.lenr );
+			}
+			if ( scenario != 24 ) { raw.WriteString( design_wire ); }
 			types::Buffer bytes;
-			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 8 ); }
+			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }
 			world_snapshot::WriteRandomState( bytes, m_game.GetRandom()->GetState() );
 			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, m_state->m_slots->GetSlots() ) );
@@ -2680,7 +2736,7 @@ public:
 					world_snapshot::ReadRandomState( input ); world_snapshot::ReadTurnState( input, destination.m_state->m_slots->GetSlots() );
 					destination.m_game.ReadSimulationState( input );
 				} catch ( const std::runtime_error& ) { rejected = true; }
-				GT_ASSERT( rejected == ( scenario < 11 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
+				GT_ASSERT( rejected == ( scenario < 11 || scenario >= 17 ), "runtime prefix rejected at the wrong boundary " + std::to_string( scenario ) ); GT_OK();
 			} );
 			GT_ASSERT( prefix_check.empty(), "runtime prefix: " + prefix_check );
 			// The remaining cases have a valid runtime and reach the actual map
@@ -5216,7 +5272,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			auto* game = fixture.GetGame();
 			auto& settings = game->GetState()->m_settings.global;
 			settings.SelectRuleset( id );
-			settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 			if ( std::string( id ) == "smac" ) { fixture.EnableSimulationParticipants(); fixture.AdmitSimulationForSnapshotFixture(); }
 			types::Buffer old_body;
 			game->GetMap()->SaveToBuffer( old_body );
@@ -5587,7 +5643,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 			for ( auto* fixture : { &source, &destination } ) {
 				fixture->EnableWorldSnapshot(); fixture->EnableTurnPlayers();
 				auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+				settings.SelectRuleset( scenario == 3 ? "smac" : "smax" ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 				if ( scenario == 3 ) { fixture->EnableSimulationParticipants( { 0, 2 }, 2 ); }
 			}
 			if ( scenario == 3 ) { source.AdmitSimulationForSnapshotFixture(); }
@@ -5752,7 +5808,7 @@ static void AddWorldRandomTests( task::gsetests::GSETests* task ) {
 				for ( auto* fixture : { &source, &destination } ) {
 					fixture->EnableWorldSnapshot();
 					auto& settings = fixture->GetGame()->GetState()->m_settings.global;
-					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+					settings.SelectRuleset( ruleset ); settings.InitializeHostRules( smac_startup_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
 					if ( std::string( ruleset ) == "smac" ) { fixture->EnableSimulationParticipants(); }
 				}
 				if ( std::string( ruleset ) == "smac" ) { source.AdmitSimulationForSnapshotFixture(); }
@@ -7254,6 +7310,17 @@ static void AddResourceYieldTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	for ( int64_t difficulty = -3; difficulty <= 2; ++difficulty ) {
+		task->AddTest( "SMAC actual startup generates and marks custom designs at difficulty " + std::to_string( difficulty ), GT( difficulty ) {
+			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, difficulty, true );
+		} );
+	}
+	for ( int failure = 1; failure <= 5; ++failure ) {
+		task->AddTest( "SMAC actual startup retires unsupported design admission " + std::to_string( failure ), GT( failure ) {
+			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );
+		} );
+	}
+
 	task->AddTest( "SMAC simulation actual single participant Start admission", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( false, 0, true );
 	} );
@@ -7268,7 +7335,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	}
 
 	for ( const bool queued : { false, true } ) {
-		for ( const int failure : { 0, 1, 2, 3, 4 } ) {
+		for ( const int failure : { 0, 1, 2, 3, 4, 5, 6 } ) {
 			task->AddTest( std::string( "SMAC simulation actual serialized restore continuation " ) + std::to_string( queued ) + " failure " + std::to_string( failure ), GT( queued, failure ) {
 				BackendFixture fixture; return fixture.CheckSimulationRestore( queued, failure );
 			} );

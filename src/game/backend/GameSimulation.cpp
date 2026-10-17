@@ -10,14 +10,24 @@
 #include "gse/value/Bool.h"
 
 namespace game::backend {
+namespace {
+int32_t OriginalGlobalDifficulty( const settings::GlobalSettings& settings ) {
+	const auto& names = settings.rules.m_difficulty_levels.GetVK();
+	if ( settings.difficulty_level < INT32_MIN || settings.difficulty_level > INT32_MAX ) { throw std::runtime_error( "Unknown SMAC global difficulty encoding" ); }
+	const auto found = names.find( static_cast< int >( settings.difficulty_level ) );
+	if ( found == names.end() ) { throw std::runtime_error( "Unknown SMAC global difficulty encoding" ); }
+	return unit::SmacStartupDesignState::OriginalDifficulty( found->second );
+}
+}
+
 
 Game::BoundSimulation Game::BindSimulation( faction::SmacSimulationState value ) const {
 	const auto& settings = m_state->m_settings.global;
 	if ( settings.GetRulesetId() != "smac" || !settings.IsRulesetLocked()
-		|| !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) {
+		|| !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() || !settings.GetSmacPredefinedUnitRules() ) {
 		throw std::runtime_error( "SMAC simulation requires frozen source profiles" );
 	}
-	try { value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ); }
+	try { value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() ); }
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
 	BoundSimulation result{ std::move( value ), m_state->CaptureRosterEpoch(), m_state->CaptureGameSession(), {} };
 	m_state->RequireRoster( result.epoch );
@@ -39,6 +49,9 @@ void Game::ValidateSimulation( const BoundSimulation& simulation ) const {
 		throw std::runtime_error( "SMAC simulation controller roster was retired" );
 	}
 	m_state->RequireRoster( simulation.epoch );
+	if ( simulation.value.designs.global_difficulty != OriginalGlobalDifficulty( m_state->m_settings.global ) ) {
+		throw std::runtime_error( "SMAC saved global difficulty differs from accepted settings" );
+	}
 	const auto& slots = m_state->m_slots->GetSlots();
 	if ( slots.size() != 7 || simulation.players.size() != simulation.value.roster.size() ) { throw std::runtime_error( "SMAC simulation controller roster changed" ); }
 	size_t occupied = 0;
@@ -65,7 +78,7 @@ void Game::PrepareNewSimulation() {
 	}
 	if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "New-world simulation was already admitted" ); }
 	const auto& settings = m_state->m_settings.global;
-	if ( !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) { throw std::runtime_error( "Missing SMAC simulation profiles" ); }
+	if ( !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() || !settings.GetSmacPredefinedUnitRules() ) { throw std::runtime_error( "Missing SMAC simulation profiles" ); }
 	faction::SmacSimulationState value;
 	std::vector< faction::SmacSimulationAdmission > admissions;
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
@@ -79,7 +92,10 @@ void Game::PrepareNewSimulation() {
 		value.roster.push_back( { id, static_cast< int32_t >( slot.GetIndex() ), slot.GetLinkedGSID(), record.role, *record.faction_id } );
 		admissions.push_back( { id, *record.faction_id } );
 	}
-	try { value.technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ); }
+	try {
+		value.technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ) );
+	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
 	m_simulation = BindSimulation( std::move( value ) );
 }
@@ -107,7 +123,7 @@ void Game::WriteSimulationState( types::Buffer& buffer ) const {
 	std::optional< std::string > wire;
 	if ( m_simulation ) {
 		const auto& settings = m_state->m_settings.global;
-		wire = m_simulation->value.Serialize( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() ).ToString();
+		wire = m_simulation->value.Serialize( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() ).ToString();
 	}
 	buffer.WriteBool( wire.has_value() );
 	if ( wire ) { buffer.WriteString( *wire ); }
@@ -118,11 +134,11 @@ std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer&
 	const bool expected = settings.GetRulesetId() == "smac";
 	if ( buffer.ReadBool() != expected ) { throw std::runtime_error( "World simulation presence differs from selected ruleset" ); }
 	if ( !expected ) { return {}; }
-	if ( !settings.IsRulesetLocked() || !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() ) {
+	if ( !settings.IsRulesetLocked() || !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() || !settings.GetSmacPredefinedUnitRules() ) {
 		throw std::runtime_error( "SMAC simulation requires frozen source profiles" );
 	}
 	// The nested reader bounds the framed payload before allocating records.
-	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
 	return BindSimulation( std::move( value ) );
 }
 
@@ -156,6 +172,29 @@ gse::Value* Game::CopyTechnologyState( GSE_CALLABLE, const Player* player ) cons
 		{ "labs", VALUE( gse::value::Int,, state.labs ) },
 		{ "target", optional( state.target ) },
 		{ "cached_threshold", optional( state.cached_threshold ) },
+	} ) );
+}
+
+gse::Value* Game::CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const {
+	const auto& participant = RequireSimulationParticipant( player );
+	const auto& state = m_simulation->value.designs;
+	const auto& owner = *state.Find( participant.simulation_id );
+	gse::value::array_elements_t designs;
+	for ( const auto& d : owner.designs ) {
+		designs.push_back( VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+			{ "id", VALUE( gse::value::Int,, d.id ) }, { "chassis", VALUE( gse::value::Int,, d.chassis ) },
+			{ "weapon", VALUE( gse::value::Int,, d.weapon ) }, { "defense", VALUE( gse::value::Int,, d.defense ) },
+			{ "reactor", VALUE( gse::value::Int,, d.reactor ) }, { "abilities", VALUE( gse::value::Int,, d.abilities ) },
+			{ "cost", VALUE( gse::value::Int,, d.cost ) }, { "plan", VALUE( gse::value::Int,, d.plan ) }, { "carry", VALUE( gse::value::Int,, d.carry ) },
+			{ "active", VALUE( gse::value::Bool,, d.active ) }, { "prototyped", VALUE( gse::value::Bool,, d.prototyped ) },
+			{ "faction_exclusion", VALUE( gse::value::Int,, d.faction_exclusion ) }
+		} ) ) );
+	}
+	return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+		{ "simulation_id", VALUE( gse::value::Int,, participant.simulation_id ) },
+		{ "global_difficulty", VALUE( gse::value::Int,, state.global_difficulty ) },
+		{ "starting_scout", VALUE( gse::value::Int,, owner.starting_scout ) },
+		{ "designs", VALUE( gse::value::Array,, designs ) }
 	} ) );
 }
 

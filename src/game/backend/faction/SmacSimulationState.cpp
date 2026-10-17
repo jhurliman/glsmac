@@ -7,7 +7,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 1;
+constexpr int64_t VERSION = 2;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -20,9 +20,10 @@ bool SmacSimulationParticipant::operator==( const SmacSimulationParticipant& oth
 	return simulation_id == other.simulation_id && slot == other.slot && gsid == other.gsid && role == other.role && faction_id == other.faction_id;
 }
 
-void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const {
+void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const {
 	technology.Validate( technologies, profiles );
-	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
+	units.Validate( technologies ); designs.Validate( units.catalog );
+	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
 	std::array< bool, 8 > ids{};
 	std::array< bool, 7 > slots{};
 	std::set< std::string > gsids;
@@ -41,20 +42,21 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		}
 		if ( !gsids.insert( participant.gsid ).second ) { throw std::runtime_error( "Duplicate SMAC simulation controller GSID" ); }
 		const auto* state = technology.Find( participant.simulation_id );
-		if ( !state || state->admission.faction_id != participant.faction_id ) { throw std::runtime_error( "SMAC simulation roster and technology identities differ" ); }
+		if ( !state || state->admission.faction_id != participant.faction_id || !designs.Find( participant.simulation_id ) ) { throw std::runtime_error( "SMAC simulation roster and technology identities differ" ); }
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs; }
 
 const SmacSimulationParticipant* SmacSimulationState::FindSlot( size_t slot ) const {
 	for ( const auto& participant : roster ) { if ( static_cast< size_t >( participant.slot ) == slot ) { return &participant; } }
 	return nullptr;
 }
 
-types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const {
-	Validate( technologies, profiles );
+types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const {
+	Validate( technologies, profiles, units );
 	const auto state = technology.Serialize( technologies, profiles );
+	const auto design_state = designs.Serialize( units.catalog );
 	types::Buffer buffer;
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( VERSION ); buffer.WriteInt( roster.size() );
 	for ( const auto& participant : roster ) {
@@ -62,12 +64,13 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 		buffer.WriteInt( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
 	}
 	buffer.WriteString( state.ToString() );
+	buffer.WriteString( design_state.ToString() );
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
 
 SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, const settings::SmacTechnologyRules& technologies,
-	const settings::SmacFactionStartupRules& profiles ) {
+	const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) {
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	try {
 		types::Buffer buffer( wire );
@@ -85,8 +88,9 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 			result.roster.push_back( std::move( participant ) );
 		}
 		result.technology = SmacTechnologyState::Deserialize( buffer.ReadString( SmacTechnologyState::MAX_WIRE_BYTES ), technologies, profiles );
+		result.designs = unit::SmacStartupDesignState::Deserialize( buffer.ReadString( unit::SmacStartupDesignState::MAX_WIRE_BYTES ), units.catalog );
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
-		result.Validate( technologies, profiles );
+		result.Validate( technologies, profiles, units );
 		return result;
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }

@@ -30,7 +30,9 @@ types::Buffer Wire( const SmacFactionStartupRules& rules, size_t changed_number 
 	size_t numbers = 0, texts = 0;
 	const auto number = [ & ]( int64_t value ) { buffer.WriteInt( numbers++ == changed_number ? number_value : value ); };
 	const auto text = [ & ]( const std::string& value ) { buffer.WriteString( texts++ == changed_text ? text_value : value ); };
-	number( 1 ); number( 7 );
+	number( 2 ); number( 4 );
+	for ( const auto& model : rules.initial_social_models ) { text( model.name ); text( model.prerequisite ); text( model.modifiers ); }
+	number( 7 );
 	for ( const auto& row : rules.factions ) {
 		text( row.port_id ); text( row.filename ); text( row.section ); number( row.bonuses.size() );
 		for ( const auto& bonus : row.bonuses ) {
@@ -42,6 +44,54 @@ types::Buffer Wire( const SmacFactionStartupRules& rules, size_t changed_number 
 }
 
 void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC faction startup model-zero metadata owns positional neutral source rows", GT() {
+		const auto catalog = fixture::Technologies();
+		auto profile = Profile();
+		for ( size_t i = 0; i < 4; ++i ) {
+			const auto& model = profile.initial_social_models[ i ];
+			GT_ASSERT( model.name == "Fixture model " + std::to_string( i ) && model.prerequisite == "None" && model.modifiers.empty(), "wrong source row or synthesized model metadata" );
+		}
+		profile.initial_social_models[ 3 ].name = std::string( SmacStartupSocialModel::MAX_NAME_BYTES, 'x' );
+		const auto bytes = profile.Serialize( catalog ).ToString();
+		const auto restored = SmacFactionStartupRules::Deserialize( types::Buffer( bytes ), catalog );
+		GT_ASSERT( restored == profile && Wire( profile ).ToString() == bytes, "model metadata lost in codec" );
+		profile.initial_social_models[ 3 ].name = "Changed";
+		GT_ASSERT( !( restored == profile ) && restored.Serialize( catalog ).ToString() == bytes, "model metadata equality or owned lifetime lost" );
+		GT_OK();
+	} );
+	task->AddTest( "SMAC faction startup neutral model admission rejects unsupported source and wire before publication", GT() {
+		const auto catalog = fixture::Technologies(); const auto original = Profile(); auto retained = original;
+		const auto parse_rejects = [ & ]( const std::string& alpha ) {
+			size_t reads = 0;
+			return Rejects( [ & ]() { retained = FactionTXTLoader::ParseStartupRules( alpha,
+				[ & ]( const std::string& filename ) { ++reads; return fixture::Source( filename ); }, catalog ); } ) && reads == 0 && retained == original;
+		};
+		for ( const auto& replacement : std::vector< std::pair< std::string, std::string > >{
+			{ "Politics,Economics", "Economics,Politics" }, { "Unused model,UnusedTech,+UNUSED\n", "" },
+			{ "#FACTIONS", "Extra model,None,\n#FACTIONS" }, { "#FACTIONS", "#SOCIO\n#FACTIONS" }
+		} ) {
+			auto alpha = fixture::Alpha(); alpha.replace( alpha.find( replacement.first ), replacement.first.size(), replacement.second );
+			GT_ASSERT( parse_rejects( alpha ), "ambiguous SOCIO layout reached faction source reads" );
+		}
+		for ( size_t i = 0; i < 4; ++i ) {
+			const auto row = "Fixture model " + std::to_string( i ) + ",None,";
+			for ( const auto& bad : { std::string( ",None," ), std::string( 257, 'x' ) + ",None,", std::string( "Name,Disable," ),
+				std::string( "Name,None,+MORALE" ), std::string( "Name,None" ), std::string( "Name,None,," ) } ) {
+				auto alpha = fixture::Alpha(); alpha.replace( alpha.find( row ), row.size(), bad );
+				GT_ASSERT( parse_rejects( alpha ), "unsupported model row reached source reads" );
+			}
+			for ( size_t field = 0; field < 3; ++field ) {
+				const auto bad = field == 0 ? std::string( 257, 'x' ) : field == 1 ? "Tech0" : "+MORALE";
+				GT_ASSERT( Rejects( [ & ]() { retained = SmacFactionStartupRules::Deserialize( Wire( original, SIZE_MAX, 0, i * 3 + field, bad ), catalog ); } ) && retained == original,
+					"unsupported model wire field published" );
+			}
+			GT_ASSERT( Rejects( [ & ]() { SmacFactionStartupRules::Deserialize( Wire( original, SIZE_MAX, 0, i * 3, std::string( "N\0ame", 5 ) ), catalog ); } ), "model name NUL accepted" );
+		}
+		for ( const int64_t count : { int64_t( -1 ), int64_t( 0 ), int64_t( 3 ), int64_t( 5 ), INT64_MAX } ) {
+			GT_ASSERT( Rejects( [ & ]() { retained = SmacFactionStartupRules::Deserialize( Wire( original, 1, count ), catalog ); } ) && retained == original, "untrusted model count accepted" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "SMAC faction startup canonical source mapping and ordered record projection", GT() {
 		std::vector< std::string > reads;
 		const auto profile = FactionTXTLoader::ParseStartupRules( fixture::Alpha(), [ & ]( const std::string& filename ) {
@@ -166,9 +216,9 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 			try { target = SmacFactionStartupRules::Deserialize( wire, catalog ); } catch ( const std::runtime_error& ) { return target == original; }
 			return false;
 		};
-		for ( const int64_t value : { int64_t( -1 ), int64_t( 0 ), int64_t( 2 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 0, value ) ), "unknown version accepted" ); }
-		for ( const int64_t value : { int64_t( -1 ), int64_t( 6 ), int64_t( 8 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 1, value ) ), "wrong binding count accepted" ); }
-		size_t number = 2, text = 0;
+		for ( const int64_t value : { int64_t( -1 ), int64_t( 0 ), int64_t( 1 ), int64_t( 3 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 0, value ) ), "unknown version accepted" ); }
+		for ( const int64_t value : { int64_t( -1 ), int64_t( 6 ), int64_t( 8 ), INT64_MAX } ) { GT_ASSERT( rejects( Wire( original, 2, value ) ), "wrong binding count accepted" ); }
+		size_t number = 3, text = 12;
 		for ( const auto& row : original.factions ) {
 			for ( size_t i = 0 ; i < 3 ; ++i ) { GT_ASSERT( rejects( Wire( original, SIZE_MAX, 0, text + i, "Other" ) ), "binding identity modified" ); }
 			text += 3;
@@ -189,7 +239,7 @@ void AddSmacFactionStartupRulesTests( task::gsetests::GSETests* task ) {
 		auto trailing = original.Serialize( catalog ); trailing.WriteInt( 0 ); GT_ASSERT( rejects( trailing ), "trailing payload accepted" );
 		const auto bytes = original.Serialize( catalog ).ToString();
 		for ( const auto length : { size_t( 0 ), size_t( 4 ), bytes.size() / 2, bytes.size() - 1 } ) { GT_ASSERT( rejects( types::Buffer( bytes.substr( 0, length ) ) ), "truncated payload accepted" ); }
-		types::Buffer wrong_type; wrong_type.WriteInt( 1 ); wrong_type.WriteString( "7" ); GT_ASSERT( rejects( wrong_type ), "wrong type accepted" );
+		types::Buffer wrong_type; wrong_type.WriteInt( 2 ); wrong_type.WriteString( "7" ); GT_ASSERT( rejects( wrong_type ), "wrong type accepted" );
 		auto changed_catalog = catalog; changed_catalog.technologies[ 6 ].key = "Other";
 		GT_ASSERT( Rejects( [ & ]() { SmacFactionStartupRules::Deserialize( original.Serialize( catalog ), changed_catalog ); } ), "named references not bound to supplied catalog" );
 		GT_OK();

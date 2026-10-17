@@ -664,6 +664,42 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_simulation_faction_id",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return VALUE( gse::value::Int,, RequireSimulationParticipant( player ).simulation_id ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
+			"get_technology_state",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return CopyTechnologyState( GSE_CALL, player ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
+			"get_social_state",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return CopySocialState( GSE_CALL, player ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
+			"get_startup_designs",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return CopyStartupDesigns( GSE_CALL, player ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
 			"get_turn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -1387,6 +1423,9 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
+	// Stage the first-command social refresh before publishing the new turn or
+	// invoking any upkeep consumer. A malformed context leaves both unchanged.
+	RefreshSimulationForTurn( turn_id );
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
 	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
@@ -1529,11 +1568,15 @@ void Game::WithRW( const std::function< void() >& f ) {
 void Game::InitComplete( GSE_CALLABLE ) {
 	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
 	// A failed setup must never leave a saved continuation for a later start.
-	util::FinallyGuard discard_snapshot_state( [ this ]() {
+	bool completed = false;
+	util::FinallyGuard discard_snapshot_state( [ this, &completed ]() {
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
+		m_pending_simulation.reset();
+		if ( !completed ) { m_simulation.reset(); }
 	} );
 	ValidatePendingSnapshotTurn();
+	PublishPendingSimulation();
 
 	try {
 		m_state->TriggerObject(
@@ -1551,10 +1594,12 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		return;
 	}
 	ValidatePendingSnapshotTurn();
+	ValidateCurrentSimulation();
 
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
+	ValidateCurrentSimulation();
 	std::optional< size_t > restored_turn;
 	try { restored_turn = ApplySnapshotTurn(); }
 	catch ( const std::runtime_error& error ) {
@@ -1585,6 +1630,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 			}
 		);
 	}
+	completed = true;
 }
 
 void Game::InitFailed( const std::string& error_text ) {
@@ -2155,6 +2201,7 @@ void Game::StartInitializedWorld( GSE_CALLABLE ) {
 
 	if ( m_state->IsMaster() ) {
 		try {
+			PrepareNewSimulation();
 			m_state->TriggerObject(
 				this, "create_world", ARGS_F( this ) {
 					{
@@ -2396,6 +2443,7 @@ void Game::AcquireInitializationMap() {
 		// generate map
 
 		MTModule::Log( "Game seed: " + m_random->GetStateString() );
+		m_state->m_settings.global.ValidateWorldSize();
 
 		PrepareInitializationMap();
 		// Native generation and its progress/IO calls must not hold collection
@@ -2536,10 +2584,17 @@ std::string Game::SerializeWorldSnapshot() const {
 	// Reading/writing this state does not draw from the generator.
 	const auto random_state = m_random->GetState();
 	const auto turn_state = world_snapshot::CaptureTurnState( m_current_turn.GetId(), m_state->m_slots->GetSlots() );
+	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
+		m_state->m_settings.global.ValidateWorldSize();
+		const auto& selection = *m_state->m_settings.global.map.GetSmacWorldSize();
+		if ( m_map->GetTilesPtr()->GetWidth() != static_cast< uint32_t >( selection.width )
+			|| m_map->GetTilesPtr()->GetHeight() != static_cast< uint32_t >( selection.height ) ) { THROW( "World map dimensions differ from accepted SMAC world size" ); }
+	}
 	types::Buffer buf;
 	world_snapshot::WriteHeader( buf, m_state->m_settings.global );
 	world_snapshot::WriteRandomState( buf, random_state );
 	world_snapshot::WriteTurnState( buf, turn_state );
+	WriteSimulationState( buf );
 
 	// map
 	m_map->SaveToBuffer( buf );
@@ -2591,6 +2646,7 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	};
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
+	m_pending_simulation.reset();
 	connection->m_on_download_progress = [ this, is_current ]( const float progress ) {
 		if ( !is_current() ) { return; }
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
@@ -2613,11 +2669,13 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 		world_snapshot::ValidateHeader( buf, m_state->m_settings.global );
 		const auto random_state = world_snapshot::ReadRandomState( buf );
 		const auto turn_state = world_snapshot::ReadTurnState( buf, m_state->m_slots->GetSlots() );
+		auto simulation = ReadSimulationState( buf, turn_state.id );
 
 		// map
 		const auto map_payload = buf.ReadString();
+		world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 		NEW( m_map, map::Map, this );
-		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state );
+		DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ) );
 		return true;
 	}
 	catch ( const std::runtime_error& error ) {
@@ -2632,9 +2690,11 @@ bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* conne
 	}
 }
 
-void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state ) {
+void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation ) {
+	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
+	m_pending_simulation.reset();
 	auto map_buffer = types::Buffer( map_payload );
 	const auto ec = m_map->LoadFromBuffer( map_buffer );
 	if ( ec != map::Map::EC_NONE ) {
@@ -2662,6 +2722,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	// hooks and clears completion, so it must never be used for restoration.
 	m_current_turn.AdvanceTurn( turn_state.id );
 	m_pending_snapshot_random = random_state;
+	m_pending_simulation = std::move( simulation );
 	m_game_state = GS_INITIALIZING;
 }
 
@@ -2808,6 +2869,7 @@ void Game::ResetGame() {
 
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
+		m_pending_simulation.reset(); m_simulation.reset();
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

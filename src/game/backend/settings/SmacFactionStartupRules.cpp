@@ -125,8 +125,20 @@ const std::array< SmacFactionStartupBinding, 7 >& SmacFactionStartupRules::Bindi
 	return bindings;
 }
 
+void SmacStartupSocialModel::Validate() const {
+	Text( name );
+	if ( name.size() > MAX_NAME_BYTES || prerequisite != "None" || !modifiers.empty() ) {
+		throw std::invalid_argument( "SMAC startup requires bounded neutral model-zero SOCIO rows with prerequisite None" );
+	}
+}
+
+bool SmacStartupSocialModel::operator==( const SmacStartupSocialModel& other ) const {
+	return name == other.name && prerequisite == other.prerequisite && modifiers == other.modifiers;
+}
+
 void SmacFactionStartupRules::Validate( const SmacTechnologyRules& technologies ) const {
 	technologies.Validate();
+	for ( const auto& model : initial_social_models ) { model.Validate(); }
 	for ( size_t i = 0 ; i < factions.size() ; ++i ) {
 		const auto& row = factions[ i ]; const auto& binding = Bindings()[ i ];
 		if ( row.port_id != binding.port_id || row.filename != binding.filename || row.section != binding.section ) {
@@ -140,7 +152,7 @@ void SmacFactionStartupRules::Validate( const SmacTechnologyRules& technologies 
 	}
 }
 
-bool SmacFactionStartupRules::operator==( const SmacFactionStartupRules& other ) const { return factions == other.factions; }
+bool SmacFactionStartupRules::operator==( const SmacFactionStartupRules& other ) const { return initial_social_models == other.initial_social_models && factions == other.factions; }
 
 const SmacFactionStartupRule* SmacFactionStartupRules::Find( const std::string& port_id ) const {
 	for ( const auto& row : factions ) { if ( row.port_id == port_id ) { return &row; } }
@@ -149,7 +161,11 @@ const SmacFactionStartupRule* SmacFactionStartupRules::Find( const std::string& 
 
 types::Buffer SmacFactionStartupRules::Serialize( const SmacTechnologyRules& technologies ) const {
 	Validate( technologies ); types::Buffer buffer;
-	buffer.WriteInt( 1 ); buffer.WriteInt( factions.size() );
+	buffer.WriteInt( 2 ); buffer.WriteInt( initial_social_models.size() );
+	for ( const auto& model : initial_social_models ) {
+		buffer.WriteString( model.name ); buffer.WriteString( model.prerequisite ); buffer.WriteString( model.modifiers );
+	}
+	buffer.WriteInt( factions.size() );
 	for ( const auto& row : factions ) {
 		buffer.WriteString( row.port_id ); buffer.WriteString( row.filename ); buffer.WriteString( row.section );
 		buffer.WriteInt( row.bonuses.size() );
@@ -162,8 +178,13 @@ types::Buffer SmacFactionStartupRules::Serialize( const SmacTechnologyRules& tec
 }
 
 SmacFactionStartupRules SmacFactionStartupRules::Deserialize( types::Buffer buffer, const SmacTechnologyRules& technologies ) {
-	if ( buffer.ReadInt() != 1 ) { throw std::runtime_error( "Unsupported SMAC faction startup profile version" ); }
+	if ( buffer.ReadInt() != 2 ) { throw std::runtime_error( "Unsupported SMAC faction startup profile version" ); }
 	SmacFactionStartupRules result;
+	if ( buffer.ReadInt() != static_cast< int64_t >( result.initial_social_models.size() ) ) { throw std::runtime_error( "SMAC startup requires four model-zero rows" ); }
+	for ( auto& model : result.initial_social_models ) {
+		model.name = buffer.ReadString( SmacStartupSocialModel::MAX_NAME_BYTES );
+		model.prerequisite = buffer.ReadString( 4 ); model.modifiers = buffer.ReadString( 0 );
+	}
 	if ( buffer.ReadInt() != static_cast< int64_t >( result.factions.size() ) ) { throw std::runtime_error( "SMAC faction startup profile requires seven bindings" ); }
 	for ( auto& row : result.factions ) {
 		row.port_id = buffer.ReadString(); row.filename = buffer.ReadString(); row.section = buffer.ReadString();

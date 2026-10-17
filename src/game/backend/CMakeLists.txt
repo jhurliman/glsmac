@@ -21,6 +21,7 @@ SET( SRC ${SRC}
 	${PWD}/WorldSnapshotRandom.cpp
 	${PWD}/WorldSnapshotTurn.cpp
 	${PWD}/Game.cpp
+	${PWD}/GameSimulation.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp

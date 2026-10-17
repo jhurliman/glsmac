@@ -13,14 +13,7 @@ inline game::backend::settings::SmacTechnologyRules Technologies() {
 	return result;
 }
 
-inline std::string Alpha() {
-	return "#BONUSNAMES\nTECH,MORALE,PSI,FACILITY,RESEARCH,DRONE,TALENT,ENERGY,\n"
-		"INTEREST,COMMERCE,POPULATION,HURRY,UNIT,TECHCOST,SHARETECH,TERRAFORM,\n"
-		"SOCIAL,ROBUST,IMMUNITY,IMPUNITY,PENALTY,FUNGNUTRIENT,FUNGMINERALS,FUNGENERGY,\n"
-		"COMMFREQ,MINDCONTROL,FANATIC,VOTES,FREEPROTO\n#SOCIO\n"
-		"ECONOMY,EFFIC,SUPPORT,TALENT,MORALE,POLICE,GROWTH,PLANET,PROBE,INDUSTRY,RESEARCH\n"
-		"#FACTIONS\nGAIANS,GAIANS\nHIVE,HIVE\nUNIV,UNIV\nMORGAN,MORGAN\nSPARTANS,SPARTANS\nBELIEVE,BELIEVE\nPEACE,PEACE\n#END\n";
-}
+inline std::string Alpha() { return smac_rules_fixture::FactionAlpha(); }
 
 inline std::string Faction( const std::string& section, const std::string& bonuses ) {
 	return "## synthetic faction source\r\n#" + section + "\r\nSynthetic faction header\r\n; ignored full-line comment\r\n"

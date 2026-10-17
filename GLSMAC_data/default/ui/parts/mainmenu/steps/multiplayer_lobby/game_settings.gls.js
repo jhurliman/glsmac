@@ -61,6 +61,12 @@ return (i) => {
 			return v;
 		});
 
+		if (settings.ruleset == 'smac') {
+			const size = settings.get_world_size();
+			let choices = [['-1', 'Select size'], ['0', 'Tiny planet'], ['1', 'Small planet'], ['2', 'Standard planet'], ['3', 'Large planet'], ['4', 'Huge planet']];
+			if (size[0] == 99) { choices :+['99', 'Custom ' + #to_string(size[1]) + 'x' + #to_string(size[2])]; }
+			make_line('planet_size', 'Planet Size', choices, #to_string(size[0]), (v) => { return v; });
+		} else {
 		make_line('planet_size', 'Planet Size', [
 			['68x34', 'Tiny planet'],
 			['88x44', 'Small planet'],
@@ -70,6 +76,7 @@ return (i) => {
 		], #to_string(settings.map.size_x) + 'x' + #to_string(settings.map.size_y), (v) => {
 			return v; // parsed in event
 		});
+		}
 
 		make_line('ocean_coverage', 'Ocean Coverage', [
 			['0.4', '30-50% of surface'],
@@ -135,6 +142,10 @@ return (i) => {
 					readonly: readonly || line.key == 'ruleset',
 				});
 				line.select.on('select', (e) => {
+					if (settings.ruleset == 'smac' && line.key == 'planet_size' && (e.value == '-1' || e.value == '99')) {
+						line.select.value = #to_string((settings.get_world_size())[0]);
+						return true;
+					}
 					game.event('game_settings', {
 						changes: [
 							[line.key, line.converter(e.value)],

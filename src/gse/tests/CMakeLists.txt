@@ -3,6 +3,7 @@ SUBDIR( mocks )
 SET( SRC ${SRC}
 
 	${PWD}/Tests.cpp
+	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/Async.cpp
 	${PWD}/Backend.cpp
@@ -21,12 +22,18 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacTechnologyState.cpp
+	${PWD}/SmacSocialState.cpp
+	${PWD}/SmacWorldSizeRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacPredefinedUnitRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/WorldSnapshotRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp
+	${PWD}/SmacSimulationState.cpp
+	${PWD}/SmacStartupDesignState.cpp
 	${PWD}/CvrFrameAssembler.cpp
 	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/CvrBasisConverter.cpp

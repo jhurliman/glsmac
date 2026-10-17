@@ -199,7 +199,14 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [startup and combat receipt](validation/startup-combat-2026-10-17.md)
+The latest [social and movement receipt](validation/social-movement-2026-10-17.md)
+records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
+`f0b1ee2e`, plus zero failures across 332 production analysis units. Owned
+social continuation refreshes before the first authoritative turn hooks;
+settings and world snapshots retain frozen movement Q. These values are ready
+for conventional Unit consumers; they do not yet drive complete live commands.
+
+The preceding [startup and combat receipt](validation/startup-combat-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
 at `445eba1d`, with zero failures across 328 production analysis units. Owned
 startup designs now accompany simulation identities and technology through

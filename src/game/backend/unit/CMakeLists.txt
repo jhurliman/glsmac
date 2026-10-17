@@ -1,6 +1,8 @@
 SET( SRC ${SRC}
+	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
+	${PWD}/SmacStartupDesignState.cpp
 	${PWD}/SmacEmptyGroundMovement.cpp
 
 	${PWD}/UnitManager.cpp

@@ -24,6 +24,7 @@
 #include "State.h"
 #include "util/random/Types.h"
 #include "WorldSnapshotTurn.h"
+#include "faction/SmacSimulationState.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -485,7 +486,28 @@ private:
 	bool DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes );
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );
-	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state );
+	struct BoundSimulation {
+		faction::SmacSimulationState value;
+		roster_epoch_t epoch;
+		State::game_session_t session;
+		std::vector< player_identity_t > players; // in value.roster order
+	};
+	// Accessed only under the existing owner/native exclusion. Identity tokens
+	// own no Player and require no GC roots; retirement makes them invalid.
+	std::optional< BoundSimulation > m_simulation, m_pending_simulation;
+	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
+	void ValidateSimulation( const BoundSimulation& value ) const;
+	void PrepareNewSimulation();
+	void PublishPendingSimulation();
+	void ValidateCurrentSimulation() const;
+	void WriteSimulationState( types::Buffer& buffer ) const;
+	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
+	void RefreshSimulationForTurn( size_t turn );
+	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
+	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
+	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
+	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
+	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation );
 	void ResetGame();
 	void ClearUntransferredMapData();
 	struct DetachedMapPresentation;

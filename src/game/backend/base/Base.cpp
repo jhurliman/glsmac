@@ -1,4 +1,5 @@
 #include "Base.h"
+#include <limits>
 #include <set>
 #include <utility>
 
@@ -395,6 +396,47 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			auto* const pop = AddPop( candidate );
 			m_next_pop_id++;
 
+			return pop->Wrap( GSE_CALL );
+		} )
+	},
+	{
+		"restore_pop",
+		NATIVE_CALL( this ) {
+			m_game->CheckRW( GSE_CALL );
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( data, 0, Object );
+			N_GETPROP( id, data, "id", Int );
+			N_GETPROP( def_id, data, "type", String );
+			N_GETPROP( variant, data, "variant", Int );
+			if ( id < 0 || static_cast< uint64_t >( id ) >= m_next_pop_id ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Restored population ID must precede the next population ID" );
+			}
+			if ( m_pops.count( static_cast< size_t >( id ) ) ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Restored population ID already exists" );
+			}
+			if ( variant < 0 || variant > std::numeric_limits< uint8_t >::max() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Restored population variant is out of range" );
+			}
+			const auto* def = GetPopDef( GSE_CALL, def_id );
+			map::tile::Tile* worked_tile = nullptr;
+			const auto tile = data.find( "worked_tile" );
+			if ( tile != data.end() ) {
+				auto* value = tile->second->Deref();
+				if ( value->type != gse::VT_UNDEFINED && value->type != gse::VT_NULL ) {
+					if ( value->type != gse::VT_OBJECT ) {
+						GSE_ERROR( gse::EC.INVALID_CALL, "Worked tile must be a Tile object" );
+					}
+					N_CHECK_OBJECT_CLASS( value, map::tile::Tile::WRAP_CLASS );
+					worked_tile = map::tile::Tile::Unwrap( value );
+				}
+			}
+			if ( worked_tile && worked_tile->tiles->GetMap() != m_game->GetMap() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Worked tile belongs to another map" );
+			}
+			// AddPop validates the assignment before changing the population or
+			// its reverse tile claim. Restoration neither draws RNG nor advances
+			// the next ID; wrappers invalidated by removal remain undefined.
+			auto* pop = AddPop( Pop( this, static_cast< size_t >( id ), def, static_cast< uint8_t >( variant ), worked_tile ) );
 			return pop->Wrap( GSE_CALL );
 		} )
 	},

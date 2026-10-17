@@ -50,6 +50,7 @@
 #include "SmacMineralCostFactor.h"
 #include "SmacProductionSwitch.h"
 #include "SmacConventionalStats.h"
+#include "ConventionalUnits.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -112,6 +113,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );
+		tests::AddConventionalUnitTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

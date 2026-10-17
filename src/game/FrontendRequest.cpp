@@ -65,6 +65,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_UNIT_UPDATE: {
+			NEW( data.unit_update.morale_string, std::string, *other.data.unit_update.morale_string );
+			break;
+		}
 		case FR_BASE_POP_DEFINE: {
 			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
 			break;
@@ -155,6 +159,10 @@ FrontendRequest::~FrontendRequest() {
 		case FR_UNIT_SPAWN: {
 			DELETE( data.unit_spawn.unitdef_id );
 			DELETE( data.unit_spawn.morale_string );
+			break;
+		}
+		case FR_UNIT_UPDATE: {
+			DELETE( data.unit_update.morale_string );
 			break;
 		}
 		case FR_BASE_POP_DEFINE: {

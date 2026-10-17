@@ -1439,6 +1439,12 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
+			if ( unit->IsConventional() ) {
+				// Conventional upkeep is not activated. Preserve every stored byte,
+				// including failure state; refresh only the derived presentation.
+				m_um->RefreshUnit( GSE_CALL, unit );
+				continue;
+			}
 			m_state->TriggerObject(
 				m_um, "unit_turn", ARGS_F( &unit ) {
 					{
@@ -1447,7 +1453,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 					},
 				}; }
 			);
-			unit->m_moved_this_turn = false;
+			unit->Legacy().moved_this_turn = false;
 			m_um->RefreshUnit( GSE_CALL, unit );
 		}
 
@@ -2706,7 +2712,12 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	}
 	{
 		auto units = types::Buffer( body.ReadString() );
-		m_um->Deserialize( GSE_CALL, units );
+		// The downloaded simulation is still private here; UM loads before BM
+		// and before pending-state publication. Never consult the old world.
+		m_um->Deserialize( GSE_CALL, units, [ this, &simulation ]( const auto& unit, const auto* owner ) {
+			if ( !simulation ) { throw std::runtime_error( "Conventional unit snapshot lacks simulation state" ); }
+			return ResolveConventionalUnit( unit, owner, *simulation );
+		} );
 	}
 	{
 		auto bases = types::Buffer( body.ReadString() );

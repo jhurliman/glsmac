@@ -1095,7 +1095,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.movement,
 				d.morale,
 				*d.morale_string,
-				d.health
+				d.health, d.conventional, d.has_moves, d.full_movement
 			);
 			break;
 		}
@@ -1109,6 +1109,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			ASSERT( unit, "unit is null" );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
+			unit->SetActionability( d.conventional, d.has_moves, d.full_movement );
+			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
 				/*MoveUnit(

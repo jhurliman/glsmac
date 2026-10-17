@@ -141,6 +141,18 @@ void AddSmacSpecialistAllocationTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects([&] { Allocation::Compete(catalog,c); }), "priority overflow hidden by later product" );
 		c.build_priority = 0; c.maximum_candidate_nutrients = -1;
 		GT_ASSERT( Rejects([&] { Allocation::Compete(catalog,c); }), "negative candidate maximum admitted" );
+		// Preserve original demand -> candidate maximum -> turn order. These
+		// extreme products test port rejection, not original overflow behavior.
+		c = {true,127,100,INT32_MAX,255,10,0,0,0,0,37};
+		for ( const auto turn : {100,101} ) {
+			c.turn = turn;
+			GT_ASSERT( Rejects([&] { Allocation::Compete(catalog,c); }), "turn gate hid evaluated demand overflow" );
+		}
+		c.turn = 100; c.nutrients_per_citizen = 2; catalog.rows[0].psych = INT32_MAX;
+		const auto early = Allocation::Compete(catalog,c);
+		GT_ASSERT( !early.type && early.score == 37, "early turn evaluated specialist scoring or changed tile choice" );
+		c.turn = 101;
+		GT_ASSERT( Rejects([&] { Allocation::Compete(catalog,c); }), "later turn skipped evaluated specialist scoring" );
 		// A full specialist budget ends even with a deficit; insertion does not
 		// evaluate its short-circuited demand when another vacancy forces rescan.
 		GT_ASSERT( !Allocation::Insert(State(1),0,{0,{-999,0,0},1,false},127,INT32_MAX).rescan, "full budget rescanned" );

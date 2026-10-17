@@ -70,6 +70,8 @@ SmacSpecialistCompetition SmacSpecialistAllocation::Compete( const SmacSpecialis
 	if ( c.maximum_candidate_nutrients < 0 ) { throw std::invalid_argument( "SMAC candidate nutrient maximum starts at zero" ); }
 	SmacSpecialistCompetition result{ {}, c.tile_best_score };
 	if ( !c.managed || c.population < 5 ) { return result; }
+	// Original 0x4fe0b5 evaluates demand before the turn gate at 0x4fe0d0.
+	// Early turns skip later scoring, not this checked intermediate.
 	if ( c.current_nutrients <= Mul( c.population, c.nutrients_per_citizen ) && c.maximum_candidate_nutrients != 0 ) { return result; }
 	if ( c.turn <= 100 ) { return result; }
 	for ( uint8_t id = 0; id < 7; ++id ) {

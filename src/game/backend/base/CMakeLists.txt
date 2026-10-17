@@ -13,6 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseSpecialists.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocationRules.cpp
+	${PWD}/SmacUnitSupport.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp
 	${PWD}/SmacWorkerAvailability.cpp
 	${PWD}/PopDef.cpp

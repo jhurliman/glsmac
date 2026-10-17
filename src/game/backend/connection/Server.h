@@ -38,6 +38,8 @@ public:
 	void SendPlayersList();
 
 protected:
+	Server( gc::Space* const gc_space, settings::LocalSettings* const settings, network::Network* const network );
+
 	void ProcessEvent( const network::Event& event ) override;
 	void SendGameEvents( const game_events_t& game_events ) override;
 

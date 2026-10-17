@@ -3,9 +3,179 @@
 #include "task/gsetests/GSETests.h"
 #include "types/Buffer.h"
 
+#include <cstring>
+#include <functional>
+#include <limits>
+#include <utility>
+#include <vector>
+
 namespace gse::tests {
 
+static std::string ExpectReadFailure( types::Buffer& buffer, const std::function< void() >& read, const std::string& reason ) {
+	const auto* cursor = buffer.dr;
+	const auto offset = buffer.lenr;
+	const auto bytes = buffer.ToString();
+	bool rejected = false;
+	try {
+		read();
+	}
+	catch ( const std::runtime_error& error ) {
+		rejected = true;
+		GT_ASSERT( std::string( error.what() ).find( reason ) != std::string::npos, "unexpected buffer rejection: " + std::string( error.what() ) );
+	}
+	GT_ASSERT( rejected, "malformed buffer read was accepted" );
+	GT_ASSERT( buffer.dr == cursor && buffer.lenr == offset, "rejected read changed the cursor" );
+	GT_ASSERT( buffer.ToString() == bytes, "rejected read modified the source bytes" );
+	GT_OK();
+}
+
+static void AddFramedReadTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "bounded string frames preserve cursor and default reader semantics", GT() {
+		for ( const uint32_t cap : { 0u, 256u, 65536u } ) {
+			types::Buffer exact;
+			exact.WriteInt( 29 ); exact.WriteString( std::string( cap, 'a' ) ); exact.WriteInt( 31 );
+			GT_ASSERT( exact.ReadInt() == 29 && exact.ReadString( cap ) == std::string( cap, 'a' ) && exact.ReadInt() == 31,
+				"exact-cap string changed payload or adjacent frames" );
+			types::Buffer over;
+			over.WriteInt( 29 ); over.WriteString( std::string( cap + 1, 'b' ) ); over.WriteInt( 31 );
+			GT_ASSERT( over.ReadInt() == 29, "prefix changed" );
+			const auto error = ExpectReadFailure( over, [ & ] { over.ReadString( cap ); }, "payload limit" );
+			GT_ASSERT( error.empty(), "complete over-budget frame changed cursor: " + error );
+			GT_ASSERT( over.ReadString() == std::string( cap + 1, 'b' ) && over.ReadInt() == 31,
+				"default unbounded read changed after bounded rejection" );
+		}
+		types::Buffer wrong_type; wrong_type.WriteInt( 1 );
+		GT_ASSERT( ExpectReadFailure( wrong_type, [ & ] { wrong_type.ReadString( 0 ); }, "unexpected type" ).empty(),
+			"type rejection no longer precedes budget validation" );
+		types::Buffer valid; valid.WriteString( "payload" );
+		types::Buffer truncated( valid.ToString().substr( 0, valid.lenw - 1 ) );
+		GT_ASSERT( ExpectReadFailure( truncated, [ & ] { truncated.ReadString( 0 ); }, "prematurely" ).empty(),
+			"incomplete frame was treated as a complete oversized payload" );
+		GT_OK();
+	} );
+	task->AddTest(
+		"test truncated and corrupt frames preserve the cursor and caller output",
+		GT() {
+			types::Buffer prefix;
+			prefix.WriteInt( 29 );
+			types::Buffer record;
+			record.WriteColor( types::Color( 0.1f, 0.2f, 0.3f, 0.4f ) );
+			const auto bytes = record.ToString();
+			std::vector< std::pair< std::string, std::string > > cases;
+			// Every incomplete prefix covers the header, payload, and checksum.
+			for ( size_t size = 0 ; size < bytes.size() ; ++size ) {
+				cases.emplace_back( bytes.substr( 0, size ), "prematurely" );
+			}
+			auto wrong_type = bytes;
+			wrong_type.front() = static_cast< char >( 255 );
+			cases.emplace_back( wrong_type, "unexpected type" );
+			auto wrong_checksum = bytes;
+			wrong_checksum.back() ^= 1;
+			cases.emplace_back( wrong_checksum, "checksum mismatch" );
+			auto wrong_size = bytes;
+			const uint32_t short_size = sizeof( types::Color::color_t ) - 1;
+			std::memcpy( wrong_size.data() + 1, &short_size, sizeof( short_size ) );
+			cases.emplace_back( wrong_size, "size mismatch" );
+			for ( const auto& test : cases ) {
+				types::Buffer input( prefix.ToString() + test.first );
+				GT_ASSERT( input.ReadInt() == 29, "prefix changed" );
+				types::Color output( 0.9f, 0.8f, 0.7f, 0.6f );
+				const auto before = output.value;
+				const auto error = ExpectReadFailure( input, [ & ]() { input.ReadColor( output ); }, test.second );
+				GT_ASSERT( error.empty(), "frame rejection failed: " + error );
+				GT_ASSERT( std::memcmp( &output.value, &before, sizeof( before ) ) == 0, "rejected frame changed caller output" );
+			}
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test oversized serialized lengths are rejected before allocation",
+		GT() {
+			for ( const bool is_data : { false, true } ) {
+				for ( const uint32_t size : { uint32_t{ 2 }, std::numeric_limits< uint32_t >::max() - 1, std::numeric_limits< uint32_t >::max() } ) {
+					types::Buffer original;
+					if ( is_data ) { original.WriteData( "x", 1 ); }
+					else { original.WriteString( "x" ); }
+					auto bytes = original.ToString();
+					std::memcpy( bytes.data() + 1, &size, sizeof( size ) );
+					types::Buffer input( bytes );
+					const auto error = ExpectReadFailure( input, [ & ]() {
+						if ( is_data ) {
+							const auto* data = input.ReadData( size );
+							free( const_cast< void* >( data ) );
+						}
+						else { input.ReadString(); }
+					}, "prematurely" );
+					GT_ASSERT( error.empty(), "oversized frame rejection failed: " + error );
+				}
+			}
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test data reads enforce the requested size including zero",
+		GT() {
+			for ( const uint32_t size : { 0, 1, 3 } ) {
+				types::Buffer input;
+				input.WriteData( "ab", 2 );
+				const auto error = ExpectReadFailure( input, [ & ]() {
+					const auto* data = input.ReadData( size );
+					free( const_cast< void* >( data ) );
+				}, "size mismatch" );
+				GT_ASSERT( error.empty(), "data size rejection failed: " + error );
+			}
+			GT_OK();
+		}
+	);
+	task->AddTest(
+		"test empty and nonempty framed values preserve data ownership and following records",
+		GT() {
+			types::Buffer input;
+			input.WriteString( "" );
+			input.WriteData( nullptr, 0 );
+			const std::string text( "a\0b", 3 );
+			input.WriteString( text );
+			input.WriteData( text.data(), text.size() );
+			input.WriteInt( 91 );
+			const auto bytes = input.ToString();
+			GT_ASSERT( input.ReadString().empty(), "empty string changed" );
+			GT_ASSERT( input.ReadData( 0 ) == nullptr, "empty data should not allocate storage" );
+			GT_ASSERT( input.ReadString() == text, "embedded null in string changed" );
+			const auto* data = input.ReadData( text.size() );
+			const bool equal = std::memcmp( data, text.data(), text.size() ) == 0;
+			free( const_cast< void* >( data ) );
+			GT_ASSERT( equal, "data payload changed" );
+			GT_ASSERT( input.ReadInt() == 91, "following record changed" );
+			GT_ASSERT( input.lenr == input.lenw && input.dr == input.dw, "successful reads did not consume exactly the records" );
+			GT_ASSERT( input.ToString() == bytes, "successful reads modified the source bytes" );
+			GT_OK();
+		}
+	);
+}
+
 void AddBufferTests( task::gsetests::GSETests* task ) {
+	task->AddTest(
+		"test empty serialized buffers retain the default empty storage contract",
+		GT() {
+			types::Buffer empty( "" );
+			GT_ASSERT( empty.data == nullptr && empty.dr == nullptr && empty.dw == nullptr, "empty serialized buffer allocated storage" );
+			GT_ASSERT( empty.allocated_len == 0 && empty.lenw == 0 && empty.lenr == 0, "empty serialized buffer retained byte counts" );
+			const auto error = ExpectReadFailure( empty, [ & ]() { empty.ReadInt(); }, "prematurely" );
+			GT_ASSERT( error.empty(), "empty buffer read rejection changed: " + error );
+			types::Buffer copy( empty );
+			types::Buffer assigned;
+			assigned.WriteString( "replaced storage" );
+			assigned = empty;
+			GT_ASSERT( copy.data == nullptr && assigned.data == nullptr, "copying an empty snapshot allocated storage" );
+			GT_ASSERT( copy.ToString().empty() && assigned.ToString().empty(), "empty copy or assignment retained bytes" );
+			empty.WriteInt( 37 );
+			copy.WriteString( "copy" );
+			assigned.WriteBool( true );
+			GT_ASSERT( empty.ReadInt() == 37 && copy.ReadString() == "copy" && assigned.ReadBool(), "empty snapshots cannot be reused independently" );
+			GT_OK();
+		}
+	);
+	AddFramedReadTests( task );
 	task->AddTest(
 		"test buffer booleans preserve the canonical one-byte format",
 		GT() {

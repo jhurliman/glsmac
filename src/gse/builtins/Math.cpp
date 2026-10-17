@@ -6,6 +6,7 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
+#include "gse/IntegerArithmetic.h"
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "util/random/Random.h"
@@ -108,7 +109,8 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 		switch ( arguments.at( 0 )->type ) {
 			case VT_INT: {
 				N_GETVALUE( a, 0, Int );
-				return VALUE( gse::value::Int,, std::abs( a ) );
+				try { return VALUE( gse::value::Int,, integer::Abs( a ) ); }
+				catch ( const integer::Error& error ) { GSE_ERROR( EC.MATH_ERROR, error.what() ); }
 			}
 			case VT_FLOAT: {
 				N_GETVALUE( a, 0, Float );

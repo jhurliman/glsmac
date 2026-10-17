@@ -88,6 +88,26 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
+// These owners may notify the renderer when destroyed. Detach them while
+// native roots are excluded from collection, then release them after the guard.
+struct Game::DetachedMapPresentation {
+	response_map_data_t* response = nullptr;
+	types::texture::Texture* texture = nullptr;
+	types::mesh::Render* mesh = nullptr;
+	types::mesh::Data* data = nullptr;
+	map::MapState* state = nullptr;
+	DetachedMapPresentation() = default;
+	DetachedMapPresentation( const DetachedMapPresentation& ) = delete;
+	DetachedMapPresentation& operator=( const DetachedMapPresentation& ) = delete;
+	~DetachedMapPresentation() {
+		if ( response ) { DELETE( response ); }
+		if ( texture ) { DELETE( texture ); }
+		if ( mesh ) { DELETE( mesh ); }
+		if ( data ) { DELETE( data ); }
+		if ( state ) { DELETE( state ); }
+	}
+};
+
 Game::Game()
 	: gse::GCWrappable( nullptr ) {}
 
@@ -348,44 +368,41 @@ void Game::Stop() {
 		if ( m_active_admission ) { CancelAdmission( m_active_admission ); }
 	}
 
-	if ( m_state ) {
-	   m_state->RetireGameCallbacks();
-	   m_state = nullptr;
-	}
-
+	// Preserve Stop's original no-transport-work contract: Network may already
+	// be stopping. The borrowed Space survives State unpublication below.
+	WithNativeRetirement( [ this ]() {
+		if ( m_state ) { m_state->RetireGameCallbacks(); m_state = nullptr; }
+	} );
 	ResetGame();
-
-	m_tm = nullptr;
-	m_rm = nullptr;
-	m_um = nullptr;
-	m_bm = nullptr;
-	m_am = nullptr;
-
+	RetireOldMap();
+	WithNativeRetirement( [ this ]() {
+		DELETE( m_random );
+		m_random = nullptr;
+	} );
 	DELETE( m_pending_frontend_requests );
 	m_pending_frontend_requests = nullptr;
 
-	DELETE( m_random );
-	m_random = nullptr;
-
 	MTModule::Stop();
-	{
+	WithNativeRetirement( [ this ]() {
 		std::lock_guard guard( m_admission_mutex );
 		m_admissions.clear();
 		m_failed_admission.reset();
 		m_failed_admission_error.clear();
-	}
+	} );
+	m_world_space = nullptr;
 }
 
 void Game::Iterate() {
 	if ( OwnerBlocksNative() ) { return; }
+	// A completed native/ingress checkpoint may already have rejected this
+	// world. Publish its owner failure before extracting any further requests.
+	// A canceled admission is excluded here so its real MT reset can progress.
+	if ( PublishInitializationFailure() ) { return; }
 	MTModule::Iterate();
 	{
 		std::lock_guard guard( m_admission_mutex );
 		if ( m_active_admission && m_active_admission->cancelled ) { return; }
 	}
-	// Keep servicing MT reset requests, but park ordinary state/manager work
-	// while a rejected download waits for owner-thread error handling.
-	if ( IsSnapshotTurnFailurePending() ) { return; }
 
 	if ( m_state ) {
 		m_state->Iterate();
@@ -396,7 +413,7 @@ void Game::Iterate() {
 	if ( m_state ) {
 
 		m_state->WithGame( this, [ this ]( Game* const, GSE_CALLABLE ) {
-			if ( IsSnapshotTurnFailurePending() ) { return; }
+			if ( HasInitializationFailure() ) { return; }
 
 			{
 				std::lock_guard guard( m_pending_event_responses_mutex );
@@ -475,7 +492,7 @@ void Game::Iterate() {
 
 		m_state->WithGame(
 			this, [ this ]( Game* const, GSE_CALLABLE ) {
-				if ( IsSnapshotTurnFailurePending() ) { return; }
+				if ( HasInitializationFailure() ) { return; }
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -1003,6 +1020,9 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	if ( m_map ) {
 		GC_REACHABLE( m_map );
 	}
+	if ( m_old_map ) {
+		GC_REACHABLE( m_old_map );
+	}
 
 	GC_DEBUG_BEGIN( "events" );
 	{
@@ -1513,7 +1533,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
 	} );
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	try {
 		m_state->TriggerObject(
@@ -1530,7 +1550,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		InitFailed( e.what() );
 		return;
 	}
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
@@ -1832,6 +1852,24 @@ bool Game::OwnerBlocksNative() const {
 	return m_owner_transition && ( m_owner_transition->phase == OwnerTransition::Pending || m_owner_transition->phase == OwnerTransition::Running );
 }
 
+bool Game::HasInitializationFailure() const {
+	std::lock_guard guard( m_admission_mutex );
+	return m_active_admission && m_active_admission->stage == StartupStage::Failure;
+}
+
+bool Game::PublishInitializationFailure() {
+	std::shared_ptr< WorldAdmission > admission;
+	{
+		std::lock_guard guard( m_admission_mutex );
+		admission = m_active_admission;
+		if ( !admission || admission->cancelled || admission->stage != StartupStage::Failure ) { return false; }
+	}
+	// Claim/cancel is rechecked under the admission mutex by publication and
+	// execution. Never hold that mutex while registering work with Space.
+	PublishOwnerTransition( admission, StartupStage::Failure );
+	return true;
+}
+
 void Game::WithWorldIngress( State* state, gc::Object* owner, const State::game_func_t& callback ) {
 	const auto session = state->CaptureGameSession();
 	{
@@ -2010,7 +2048,7 @@ void Game::InitializeMap() {
 	ASSERT( m_state, "state is null" );
 	// State::Iterate may have delivered a roster replacement after the
 	// download. Reject it before touching cached Slot/Player pointers.
-	if ( !CheckPendingSnapshotTurn() ) { return; }
+	ValidatePendingSnapshotTurn();
 
 	if ( !m_state->IsMaster() ) {
 		ASSERT( m_state->m_connection, "not master but no connection" );
@@ -2062,11 +2100,7 @@ void Game::InitializeMap() {
 		m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
 		m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
-		if ( m_old_map ) {
-			MTModule::Log( "Destroying old map state" );
-			DELETE( m_old_map );
-			m_old_map = nullptr;
-		}
+		RetireOldMap();
 
 		// notify server of successful initialization
 		m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
@@ -2363,12 +2397,12 @@ void Game::AcquireInitializationMap() {
 
 		MTModule::Log( "Game seed: " + m_random->GetStateString() );
 
-		ASSERT( !m_old_map, "old map not null" );
-		m_old_map = nullptr;
-		if ( m_map ) {
-			m_old_map = m_map;
-		}
-		NEW( m_map, map::Map, this );
+		PrepareInitializationMap();
+		// Native generation and its progress/IO calls must not hold collection
+		// exclusion. Keep all partially constructed tile storage unpublished.
+		map::Map* candidate = nullptr;
+		util::FinallyGuard discard( [ & ]() { DiscardInitializationMap( candidate ); } );
+		NEW( candidate, map::Map, this );
 
 		const auto* config = g_engine->GetConfig();
 
@@ -2385,7 +2419,7 @@ void Game::AcquireInitializationMap() {
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			MTModule::Log( (std::string)"Loading map dump from " + filename );
 			SetLoaderText( "Loading dump" );
-			m_map->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
+			candidate->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else
@@ -2393,16 +2427,16 @@ void Game::AcquireInitializationMap() {
 		{
 			if ( !connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
-				ec = m_map->LoadFromFile( filename );
+				ec = candidate->LoadFromFile( filename );
 			}
 			else {
 				auto& map_settings = m_state->m_settings.global.map;
 				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
-					ec = m_map->LoadFromFile( map_settings.filename );
+					ec = candidate->LoadFromFile( map_settings.filename );
 				}
 				else {
-					ec = m_map->Generate( &map_settings, m_init_cancel );
+					ec = candidate->Generate( &map_settings, m_init_cancel );
 				}
 			}
 
@@ -2413,6 +2447,7 @@ void Game::AcquireInitializationMap() {
 		}
 
 		if ( !ec ) {
+			PublishInitializationMap( candidate );
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
 			if ( connection ) {
 				connection->UpdateSlot( m_slot_num, m_slot, true );
@@ -2462,6 +2497,33 @@ void Game::AcquireInitializationMap() {
 			}
 		);
 	}
+}
+
+void Game::PrepareInitializationMap() {
+	WithNativeRetirement( [ this ]() {
+		ASSERT( !m_old_map, "old map not null" );
+		// Preserve the existing error path: InitFailed restores this ownership
+		// after retiring a failed current map, including a still-private attempt.
+		m_old_map = std::exchange( m_map, nullptr );
+	} );
+}
+
+void Game::PublishInitializationMap( map::Map*& candidate ) {
+	WithNativeRetirement( [ & ]() {
+		if ( m_init_cancel ) { throw std::runtime_error( map::Map::GetErrorString( map::Map::EC_ABORTED ) ); }
+		ASSERT( !m_map && candidate && candidate->m_tiles, "invalid initialization map publication" );
+		m_map = std::exchange( candidate, nullptr );
+	} );
+}
+
+void Game::DiscardInitializationMap( map::Map*& candidate ) {
+	// Only unpublished candidates belong here: no script wrapper or renderer
+	// borrower can exist. Presentation cleanup may notify the renderer, so it
+	// stays outside the native collection guard, including exception unwinding.
+	DetachedMapPresentation detached;
+	response_map_data_t* no_response = nullptr;
+	DetachMapPresentation( candidate, no_response, detached );
+	RetireMap( candidate, detached );
 }
 
 std::string Game::SerializeWorldSnapshot() const {
@@ -2616,21 +2678,12 @@ void Game::StageSnapshotTurn( GSE_CALLABLE, const world_snapshot::TurnState& sta
 	// Construct under the caller's accumulation before locking. Root traversal
 	// takes Space exclusion then this mutex; reset only drops nonowning tokens.
 	std::lock_guard guard( m_snapshot_turn_mutex );
-	++m_snapshot_turn_generation;
-	m_snapshot_turn_failure_pending = false;
 	m_pending_snapshot_turn = std::move( pending );
 }
 
 void Game::DiscardSnapshotTurn() {
 	std::lock_guard guard( m_snapshot_turn_mutex );
-	++m_snapshot_turn_generation;
-	m_snapshot_turn_failure_pending = false;
 	m_pending_snapshot_turn.reset();
-}
-
-bool Game::IsSnapshotTurnFailurePending() const {
-	std::lock_guard guard( m_snapshot_turn_mutex );
-	return m_snapshot_turn_failure_pending;
 }
 
 void Game::ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const {
@@ -2654,85 +2707,81 @@ void Game::ValidateSnapshotBindings( const PendingSnapshotTurn& pending ) const 
 	}
 }
 
-bool Game::CheckPendingSnapshotTurn() {
-	auto* const state = m_state;
-	uint64_t generation = 0;
-	try {
+void Game::ValidatePendingSnapshotTurn() {
+	// Native validation shares exclusion with canonical roster commits and
+	// retirement. Failure has no side effects here: the admitted coordinator
+	// owns its later Failure checkpoint, including reset/cancellation ordering.
+	m_world_space->WithNativeMutation( [ & ]() {
 		std::lock_guard guard( m_snapshot_turn_mutex );
-		generation = m_snapshot_turn_generation;
 		if ( m_pending_snapshot_turn ) { ValidateSnapshotBindings( *m_pending_snapshot_turn ); }
-	}
-	catch ( const std::runtime_error& error ) {
-		{
-			std::lock_guard guard( m_admission_mutex );
-			if ( m_active_admission && m_active_admission->stage != StartupStage::Complete ) { throw; }
-		}
-		// Iterate runs on the backend thread, while InitFailed emits a script
-		// event and must run on the Space owner. Park initialization immediately
-		// so no cached Slot is touched and subsequent iterations cannot retry it.
-		{
-			std::lock_guard guard( m_snapshot_turn_mutex );
-			if ( generation != m_snapshot_turn_generation ) { return false; }
-			m_snapshot_turn_failure_pending = true;
-			m_game_state = GS_STARTING;
-		}
-		state->WithGame( state, [ this, state, generation, message = std::string( error.what() ) ]( Game* const, GSE_CALLABLE ) {
-			{
-				std::lock_guard guard( m_snapshot_turn_mutex );
-				if ( generation != m_snapshot_turn_generation || !m_pending_snapshot_turn || m_state != state || m_game_state != GS_STARTING ) { return; }
-			}
-			// State is the queued owner, not a borrowed captured lifetime. Reset
-			// and replacement downloads retire the generation before this drain.
-			InitFailed( message );
-		} );
-		return false;
-	}
-	return true;
+	} );
 }
 
 std::optional< size_t > Game::ApplySnapshotTurn() {
-	std::lock_guard guard( m_snapshot_turn_mutex );
-	if ( !m_pending_snapshot_turn ) { return {}; }
-	const auto& pending = *m_pending_snapshot_turn;
-	ValidateSnapshotBindings( pending ); // Complete validation before any flag changes.
-	const auto id = pending.state.id;
-	for ( const auto& record : pending.state.players ) {
-		auto* player = m_state->m_slots->GetSlot( record.id ).GetPlayer();
-		if ( record.completed ) { player->CompleteTurn(); }
-		else { player->UncompleteTurn(); }
+	std::optional< size_t > restored;
+	m_world_space->WithNativeMutation( [ & ]() {
+		std::lock_guard guard( m_snapshot_turn_mutex );
+		if ( !m_pending_snapshot_turn ) { return; }
+		const auto& pending = *m_pending_snapshot_turn;
+		ValidateSnapshotBindings( pending ); // Validate and commit under the same roster exclusion.
+		restored = pending.state.id;
+		for ( const auto& record : pending.state.players ) {
+			auto* player = m_state->m_slots->GetSlot( record.id ).GetPlayer();
+			if ( record.completed ) { player->CompleteTurn(); }
+			else { player->UncompleteTurn(); }
+		}
+		m_current_turn.AdvanceTurn( *restored );
+		m_pending_snapshot_turn.reset();
+	} );
+	return restored;
+}
+
+void Game::WithNativeRetirement( const std::function< void() >& f ) {
+	if ( m_world_space ) { m_world_space->WithNativeMutation( f ); }
+	else {
+		if ( m_map || m_old_map ) { throw std::runtime_error( "Native world retirement has no owning Space" ); }
+		f(); // Before the first State is bound, no script wrappers can exist.
 	}
-	m_current_turn.AdvanceTurn( id );
-	m_pending_snapshot_turn.reset();
-	return id;
+}
+
+void Game::DetachMapPresentation( map::Map* map, response_map_data_t*& response, DetachedMapPresentation& detached ) {
+	detached.response = std::exchange( response, nullptr );
+	if ( !map ) { return; }
+	// The owning response may alias any subset of the Map presentation.
+	if ( detached.response ) {
+		if ( map->m_textures.terrain == detached.response->terrain_texture ) { map->m_textures.terrain = nullptr; }
+		if ( map->m_meshes.terrain == detached.response->terrain_mesh ) { map->m_meshes.terrain = nullptr; }
+		if ( map->m_meshes.terrain_data == detached.response->terrain_data_mesh ) { map->m_meshes.terrain_data = nullptr; }
+	}
+	detached.texture = std::exchange( map->m_textures.terrain, nullptr );
+	detached.mesh = std::exchange( map->m_meshes.terrain, nullptr );
+	detached.data = std::exchange( map->m_meshes.terrain_data, nullptr );
+}
+
+void Game::RetireMap( map::Map*& map, DetachedMapPresentation& detached ) {
+	if ( map ) {
+		detached.state = std::exchange( map->m_map_state, nullptr );
+		auto* retired = std::exchange( map, nullptr );
+		DELETE( retired ); // Actual Tile/Map wrapper invalidation stays protected.
+	}
+}
+
+void Game::RetireOldMap() {
+	if ( !m_old_map ) { return; }
+	MTModule::Log( "Destroying old map state" );
+	DetachedMapPresentation detached;
+	WithNativeRetirement( [ & ]() {
+		response_map_data_t* no_response = nullptr;
+		DetachMapPresentation( m_old_map, no_response, detached );
+		RetireMap( m_old_map, detached );
+	} );
 }
 
 void Game::ClearUntransferredMapData() {
-	// Until GET_MAP_DATA transfers ownership, the response envelope may
-	// alias the Map's presentation. Detach those aliases before its owning
-	// destructor runs, including a partially populated envelope.
-	if ( m_response_map_data ) {
-		if ( m_map ) {
-			if ( m_map->m_textures.terrain == m_response_map_data->terrain_texture ) { m_map->m_textures.terrain = nullptr; }
-			if ( m_map->m_meshes.terrain == m_response_map_data->terrain_mesh ) { m_map->m_meshes.terrain = nullptr; }
-			if ( m_map->m_meshes.terrain_data == m_response_map_data->terrain_data_mesh ) { m_map->m_meshes.terrain_data = nullptr; }
-		}
-		DELETE( m_response_map_data );
-		m_response_map_data = nullptr;
-	}
-	if ( m_map ) {
-		if ( m_map->m_textures.terrain ) {
-			DELETE( m_map->m_textures.terrain );
-			m_map->m_textures.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain ) {
-			DELETE( m_map->m_meshes.terrain );
-			m_map->m_meshes.terrain = nullptr;
-		}
-		if ( m_map->m_meshes.terrain_data ) {
-			DELETE( m_map->m_meshes.terrain_data );
-			m_map->m_meshes.terrain_data = nullptr;
-		}
-	}
+	// Called from the existing owner error checkpoint. Its accumulation owns
+	// exclusion; unlike foreign native reset it may already notify the renderer.
+	DetachedMapPresentation detached;
+	DetachMapPresentation( m_map, m_response_map_data, detached );
 }
 
 void Game::ResetGame() {
@@ -2740,70 +2789,78 @@ void Game::ResetGame() {
 		std::lock_guard guard( m_admission_mutex );
 		ASSERT( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running || m_owner_transition->thread == std::this_thread::get_id(), "native reset during owner initialization" );
 		if ( m_owner_transition && m_owner_transition->phase == OwnerTransition::Pending ) { m_owner_transition->phase = OwnerTransition::Cancelled; }
-		if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
-		m_active_admission.reset();
 	}
 	if ( m_state ) { m_state->RetireGameCallbacks(); }
-
-	m_pending_snapshot_random.reset();
-	DiscardSnapshotTurn();
-	ClearHandlers();
-
-	if ( m_game_state != GS_NONE ) {
-		// TODO: do something?
-		m_game_state = GS_NONE;
+	// The coordinator excludes native packet producers and executing owner
+	// transitions. Keep State/Connection published throughout this transport wait.
+	if ( m_state && m_state->m_connection ) {
+		m_state->m_connection->Disconnect();
+		m_state->m_connection->DrainEventRequest();
 	}
-	m_init_cancel = false;
-	m_player = nullptr;
-	m_slot_num = 0;
-	m_slot = nullptr;
-
-	{
-		std::lock_guard guard( m_events_waiting_for_responses_mutex );
-		m_events_waiting_for_responses.clear();
-	}
-	{
-		std::lock_guard guard( m_pending_event_responses_mutex );
-		m_pending_event_responses.clear();
-	}
-	{
-		std::lock_guard guard( m_pending_events_mutex );
-		m_pending_events.clear();
-	}
-	{
-		std::lock_guard guard( m_event_handlers_mutex );
-		m_event_handlers.clear();
-	}
-	m_next_event_id = 0;
-
-	m_tm = nullptr;
-	m_rm = nullptr;
-	m_um = nullptr;
-	m_bm = nullptr;
-	m_am = nullptr;
-
-	ClearUntransferredMapData();
-	if ( m_map ) {
-		MTModule::Log( "Resetting map" );
-		DELETE( m_map );
-		m_map = nullptr;
-	}
-
-	ASSERT( m_pending_frontend_requests, "pending events not set" );
-	m_pending_frontend_requests->clear();
-
-	m_current_turn.Reset();
-	m_is_turn_complete = false;
-	m_turn_status = turn::TS_PLEASE_WAIT;
-
-	if ( m_state ) {
-		// ui thread will reset state as needed
-		m_state->UnsetGame();
-		if ( m_state->m_connection ) {
-			m_state->m_connection->Disconnect();
-			m_state->m_connection->ResetHandlers();
+	if ( m_map ) { MTModule::Log( "Resetting map" ); }
+	DetachedMapPresentation detached;
+	WithNativeRetirement( [ & ]() {
+		{
+			std::lock_guard guard( m_admission_mutex );
+			if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
+			m_active_admission.reset();
 		}
-	}
+
+		m_pending_snapshot_random.reset();
+		DiscardSnapshotTurn();
+		ClearHandlers();
+
+		if ( m_game_state != GS_NONE ) {
+			// TODO: do something?
+			m_game_state = GS_NONE;
+		}
+		m_init_cancel = false;
+		m_player = nullptr;
+		m_slot_num = 0;
+		m_slot = nullptr;
+
+		{
+			std::lock_guard guard( m_events_waiting_for_responses_mutex );
+			m_events_waiting_for_responses.clear();
+		}
+		{
+			std::lock_guard guard( m_pending_event_responses_mutex );
+			m_pending_event_responses.clear();
+		}
+		{
+			std::lock_guard guard( m_pending_events_mutex );
+			m_pending_events.clear();
+		}
+		{
+			std::lock_guard guard( m_event_handlers_mutex );
+			m_event_handlers.clear();
+		}
+		m_next_event_id = 0;
+
+		m_tm = nullptr;
+		m_rm = nullptr;
+		m_um = nullptr;
+		m_bm = nullptr;
+		m_am = nullptr;
+
+		DetachMapPresentation( m_map, m_response_map_data, detached );
+		RetireMap( m_map, detached );
+
+		ASSERT( m_pending_frontend_requests, "pending events not set" );
+		m_pending_frontend_requests->clear();
+
+		m_current_turn.Reset();
+		m_is_turn_complete = false;
+		m_turn_status = turn::TS_PLEASE_WAIT;
+
+		if ( m_state ) {
+			// ui thread will reset state as needed
+			m_state->UnsetGame();
+			if ( m_state->m_connection ) {
+				m_state->m_connection->ResetHandlers();
+			}
+		}
+	} );
 }
 
 bool Game::IsLocalTurnComplete() const {
@@ -2842,6 +2899,10 @@ const std::string Game::GenerateEventId() {
 
 void Game::SetState( State* const state ) {
 	ASSERT( state, "state is null" );
+	if ( m_world_space && m_world_space != state->m_gc_space ) {
+		throw std::runtime_error( "Game cannot move native wrappers to another Space before Stop" );
+	}
+	m_world_space = state->m_gc_space;
 	if ( state != m_state ) {
 		ASSERT( !m_state, "game state already set" );
 		m_state = state;

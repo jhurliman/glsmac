@@ -22,6 +22,8 @@ SET( SRC ${SRC}
 	${PWD}/Game.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
+	${PWD}/RosterRecords.cpp
+	${PWD}/StateRoster.cpp
 	${PWD}/MapObject.cpp
 	${PWD}/ResourceRelated.cpp
 

@@ -14,7 +14,8 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( !settings.IsRulesetLocked() || ( id != "smac" && id != "smax" ) ) {
 		throw std::runtime_error( "World snapshot requires a frozen gameplay ruleset" );
 	}
-	if ( ( id == "smac" ) != settings.GetSmacBaseSquareRules().has_value() ) {
+	if ( ( id == "smac" ) != settings.GetSmacBaseSquareRules().has_value()
+		|| ( id == "smac" ) != settings.GetSmacProductionRules().has_value() ) {
 		throw std::runtime_error( "World snapshot ruleset and numeric rules do not match" );
 	}
 }
@@ -23,6 +24,9 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
 	RequireFrozenProfile( settings );
+	const auto& production = settings.GetSmacProductionRules();
+	// Validate and encode the entire owned profile before writing any header.
+	const auto production_bytes = production ? production->Serialize().ToString() : std::string{};
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -33,6 +37,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 			for ( const auto value : row ) { buffer.WriteInt( value ); }
 		}
 	}
+	buffer.WriteBool( production.has_value() );
+	if ( production ) { buffer.WriteString( production_bytes ); }
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -59,6 +65,16 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 					throw std::runtime_error( "World snapshot numeric rules differ from the session" );
 				}
 			}
+		}
+	}
+	const auto& production = settings.GetSmacProductionRules();
+	if ( buffer.ReadBool() != production.has_value() ) {
+		throw std::runtime_error( "World snapshot production profile presence differs from the session" );
+	}
+	if ( production ) {
+		const auto incoming = settings::SmacProductionRules::Deserialize( types::Buffer( buffer.ReadString() ) );
+		if ( !( incoming == *production ) ) {
+			throw std::runtime_error( "World snapshot production profile differs from the session" );
 		}
 	}
 }

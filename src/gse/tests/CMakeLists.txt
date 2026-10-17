@@ -26,6 +26,7 @@ SET( SRC ${SRC}
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacResourceRules.cpp
+	${PWD}/SmacSpecialistRules.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp

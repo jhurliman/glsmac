@@ -23,6 +23,7 @@
 #include "UnitDesignResolver.h"
 #include "SmacMovementRules.h"
 #include "SmacResourceRules.h"
+#include "SmacSpecialistRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -252,6 +253,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionRulesTests( task );
 		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacResourceRulesTests( task );
+		tests::AddSmacSpecialistRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );

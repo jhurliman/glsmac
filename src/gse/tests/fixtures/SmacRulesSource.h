@@ -57,12 +57,43 @@ inline game::backend::settings::SmacProductionRules Production() {
 
 inline game::backend::settings::SmacMovementRules Movement() { return game::backend::settings::SmacMovementRules( -1 ); }
 
+inline game::backend::settings::SmacSpecialistRules Specialists() {
+	game::backend::settings::SmacSpecialistRules result{ -3, {} };
+	for ( size_t i = 0; i < result.specialists.size(); ++i ) {
+		result.specialists[ i ] = { static_cast< int32_t >( i ), "Repeated singular", "Repeated plural",
+			i == 0 ? "None" : i == 1 ? "Disable" : i == 2 ? "Unknown" : "tEcH" + std::to_string( i ),
+			i == 6 ? "Disable" : "Tech" + std::to_string( i ),
+			i == 0 ? INT32_MIN : static_cast< int32_t >( i ), -static_cast< int32_t >( i ), i == 6 ? INT32_MAX : 0, "opaque" + std::to_string( i ) };
+	}
+	return result;
+}
+
+inline std::string SpecialistSource() {
+	std::string source = "#CITIZENS\n";
+	for ( const auto& row : Specialists().specialists ) {
+		source += row.singular + "," + row.plural + "," + row.prerequisite + "," + row.obsolete + ","
+			+ std::to_string( row.economy ) + "," + std::to_string( row.psych ) + "," + std::to_string( row.labs ) + "," + row.trailing_token + "\n";
+	}
+	return source + "Ordinary A,Ordinary plural A,\nOrdinary B,Ordinary plural B,\nOrdinary C,Ordinary plural C,\n#END\n";
+}
+
+// Independent, deliberately unchecked framing for malformed fixtures.
+inline types::Buffer UncheckedSpecialists( const game::backend::settings::SmacSpecialistRules& profile ) {
+	types::Buffer result; result.WriteInt( 1 ); result.WriteInt( profile.minimum_base_size ); result.WriteInt( profile.specialists.size() );
+	for ( const auto& row : profile.specialists ) {
+		result.WriteInt( row.source_id ); result.WriteString( row.singular ); result.WriteString( row.plural );
+		result.WriteString( row.prerequisite ); result.WriteString( row.obsolete );
+		result.WriteInt( row.economy ); result.WriteInt( row.psych ); result.WriteInt( row.labs ); result.WriteString( row.trailing_token );
+	}
+	return result;
+}
+
 inline std::string ProductionSource() {
 	const auto rules = Production();
 	std::string source = "#RULES\n";
 	for ( size_t row = 1 ; row <= 70 ; ++row ) {
 		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
-			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : 0;
+			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : 0;
 		const auto token = row == 54 ? "Tech0" : row == 55 ? "Tech1" : row == 56 ? "Tech2" : row == 58 ? "Tech3" : "";
 		source += ( *token ? std::string( token ) : std::to_string( value ) ) + ", ; synthetic annotation\n";
 	}
@@ -144,7 +175,7 @@ inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits( const g
 
 inline std::string Source( const std::string& filename ) {
 	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
-	return ProductionSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	return ProductionSource() + SpecialistSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -184,7 +215,8 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes()
 		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions()
 		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits()
-		&& settings.GetSmacMovementRules() && *settings.GetSmacMovementRules() == Movement();
+		&& settings.GetSmacMovementRules() && *settings.GetSmacMovementRules() == Movement()
+		&& settings.GetSmacSpecialistRules() && *settings.GetSmacSpecialistRules() == Specialists();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
@@ -196,9 +228,11 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& units = std::nullopt,
 	const std::optional< std::string >& movement = std::nullopt,
 	const std::optional< bool > movement_present = std::nullopt,
-	const std::optional< std::string >& resources = std::nullopt ) {
+	const std::optional< std::string >& resources = std::nullopt,
+	const std::optional< std::string >& specialists = std::nullopt,
+	const std::optional< bool > specialists_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 10 );
+	result.WriteInt( 11 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -224,6 +258,8 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const auto has_movement = movement_present.value_or( present );
 	result.WriteBool( has_movement );
 	if ( has_movement ) { result.WriteString( movement ? *movement : Movement().Serialize().ToString() ); }
+	const auto has_specialists = specialists_present.value_or( present ); result.WriteBool( has_specialists );
+	if ( has_specialists ) { result.WriteString( specialists ? *specialists : Specialists().Serialize().ToString() ); }
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;
 	result.WriteString( map.Serialize().ToString() );

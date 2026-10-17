@@ -6459,6 +6459,11 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
 							? movement && movement->RawRoadRate() == -1 && movement->Quantum() == 1
 							: !movement );
+						const auto& specialists = state->m_settings.global.GetSmacSpecialistRules();
+						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
+							? specialists && *specialists == smac_rules_fixture::Specialists()
+								&& specialists->TechnologyReferences( *state->m_settings.global.GetSmacTechnologyRules() )[ 2 ][ 0 ].kind == settings::SmacTechnologyReference::Kind::UNKNOWN
+							: !specialists );
 						const auto& units = state->m_settings.global.GetSmacPredefinedUnitRules();
 						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
 							? units && units->catalog.units.size() == 14 && units->catalog.units[ 0 ].cost == 3
@@ -6545,7 +6550,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 } ) {
+		for ( int scenario = 0; scenario < 71; ++scenario ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -6558,13 +6563,13 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26 || ( scenario >= 30 && scenario <= 33 ) || scenario == 39 || scenario == 40 || scenario >= 49;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26 || ( scenario >= 30 && scenario <= 33 ) || scenario == 39 || scenario == 40 || ( scenario >= 49 && scenario <= 68 );
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
 			std::optional< std::string > sizes;
 			std::optional< std::string > startup;
 			std::optional< std::string > units;
-			std::optional< std::string > movement;
+			std::optional< std::string > movement, specialists;
 			if ( scenario == 3 || scenario == 4 ) {
 				auto changed = smac_rules_fixture::Production();
 				if ( scenario == 3 ) { changed.facilities.front().cost = 123; }
@@ -6633,11 +6638,28 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 42 ) { movement = smac_rules_fixture::Movement().Serialize().ToString(); movement->pop_back(); }
 			if ( scenario == 43 ) { types::Buffer bad; bad.WriteInt( 1 ); bad.WriteInt( int64_t( INT32_MAX ) + 1 ); movement = bad.ToString(); }
 			if ( scenario == 44 ) { auto bad = smac_rules_fixture::Movement().Serialize(); bad.WriteInt( 0 ); movement = bad.ToString(); }
-			if ( scenario >= 47 ) {
+			if ( scenario >= 47 && scenario <= 50 ) {
 				movement = smac_rules_fixture::Movement().Serialize().ToString();
 				movement->append( ( scenario % 2 ? settings::SmacMovementRules::MAX_WIRE_BYTES + 1 : 4096 ) - movement->size(), 'x' );
 			}
-			auto global_payload = smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units, movement, scenario == 45 ? std::optional< bool >( false ) : std::nullopt ).ToString();
+			if ( scenario >= 51 && scenario <= 60 ) {
+				auto changed = smac_rules_fixture::Specialists(); auto& row = changed.specialists.back();
+				switch ( scenario ) {
+					case 51: ++changed.minimum_base_size; break; case 52: row.singular += " changed"; break;
+					case 53: row.plural += " changed"; break; case 54: row.prerequisite = "Missing"; break;
+					case 55: row.obsolete = "None"; break; case 56: ++row.economy; break; case 57: --row.psych; break;
+					case 58: --row.labs; break; case 59: row.trailing_token += " changed"; break; case 60: row.source_id = 5; break;
+				}
+				specialists = smac_rules_fixture::UncheckedSpecialists( changed ).ToString();
+			}
+			if ( scenario == 61 ) { specialists = smac_rules_fixture::Specialists().Serialize().ToString(); specialists->pop_back(); }
+			if ( scenario == 62 ) { types::Buffer bad; bad.WriteInt( 2 ); specialists = bad.ToString(); }
+			if ( scenario == 63 ) { types::Buffer bad; bad.WriteInt( 1 ); bad.WriteString( "5" ); specialists = bad.ToString(); }
+			if ( scenario == 64 || scenario == 65 || scenario == 69 || scenario == 70 ) { specialists = std::string( scenario == 65 || scenario == 70 ? 20000 : settings::SmacSpecialistRules::MAX_WIRE_BYTES + 1, 'x' ); }
+			if ( scenario == 68 ) { specialists = smac_rules_fixture::Specialists().Serialize().ToString() + 'x'; }
+			auto global_payload = smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units, movement,
+				scenario == 45 ? std::optional< bool >( false ) : std::nullopt, {}, specialists, scenario == 66 ? std::optional< bool >( false ) : std::nullopt ).ToString();
+			if ( scenario == 67 ) { types::Buffer old; old.WriteInt( 10 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
 			if ( scenario == 46 ) { types::Buffer old; old.WriteInt( 8 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
 			if ( scenario == 38 ) { types::Buffer old; old.WriteInt( 7 ); global_payload = old.ToString() + global_payload.substr( old.lenw ); }
 			types::Buffer invalid_state;
@@ -6645,7 +6667,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();
-			if ( scenario >= 47 ) { GT_ASSERT( invalid.Serialize().lenw <= network::Network::MAX_PACKET_BYTES, "movement test was rejected by aggregate framing instead" ); }
+			if ( scenario >= 47 ) { GT_ASSERT( invalid.Serialize().lenw <= network::Network::MAX_PACKET_BYTES, "nested profile test was rejected by aggregate framing instead" ); }
 			const auto error = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* state = destination.GetGame()->GetState();
 				state->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT;
@@ -6674,7 +6696,8 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( state->GetFM()->Serialize().ToString() == before_factions, "rejected rules packet reached faction publication" );
 				GT_ASSERT( locked ? smac_rules_fixture::Matches( state->m_settings.global ) : state->m_settings.global.GetRulesetId() == "unselected"
 					&& !state->m_settings.global.GetSmacResourceRules() && !state->m_settings.global.GetSmacProductionRules()
-					&& !state->m_settings.global.GetSmacTechnologyRules() && !state->m_settings.global.GetSmacFactionStartupRules(), "rejected packet changed session identity or values" );
+					&& !state->m_settings.global.GetSmacTechnologyRules() && !state->m_settings.global.GetSmacFactionStartupRules()
+					&& !state->m_settings.global.GetSmacSpecialistRules(), "rejected packet changed session identity or values" );
 				GT_OK();
 			} );
 			GT_ASSERT( error.empty(), "host rules packet rejection failed: " + error );
@@ -6770,6 +6793,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			for ( const auto& invalid : world_rules_fixture::InvalidPredefinedHeaders( ruleset ) ) { rejected.emplace_back( "predefined: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidMovementHeaders( ruleset ) ) { rejected.emplace_back( "movement: " + invalid.first, invalid.second ); }
 			for ( const auto& invalid : world_rules_fixture::InvalidResourceHeaders( ruleset ) ) { rejected.emplace_back( "resource: " + invalid.first, invalid.second ); }
+			for ( const auto& invalid : world_rules_fixture::InvalidSpecialistHeaders( ruleset ) ) { rejected.emplace_back( "specialist: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
@@ -6788,7 +6812,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				rejected.emplace_back( "unexpected SMAX runtime", unexpected.ToString() );
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 7, "frame: " ) == 0 || invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0 || invalid.first.compare( 0, 10, "resource: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 7, "frame: " ) == 0 || invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0 || invalid.first.compare( 0, 12, "predefined: " ) == 0 || invalid.first.compare( 0, 10, "movement: " ) == 0 || invalid.first.compare( 0, 10, "resource: " ) == 0 || invalid.first.compare( 0, 12, "specialist: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();

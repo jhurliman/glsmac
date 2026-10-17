@@ -189,7 +189,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 16 && wire.ReadString() == id, "writer omitted the V16 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 17 && wire.ReadString() == id, "writer omitted the V17 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { wire.ReadString(); }
@@ -212,6 +212,8 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacPredefinedUnitRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "predefined source/derived metadata changed" ); }
 			GT_ASSERT( wire.ReadBool() == smac, "movement presence changed" );
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacMovementRules()->Serialize().ToString(), "raw movement rule changed" ); }
+			GT_ASSERT( wire.ReadBool() == smac, "specialist presence changed" );
+			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacSpecialistRules()->Serialize().ToString(), "specialist profile changed" ); }
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );

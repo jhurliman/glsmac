@@ -70,14 +70,14 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "reset retained numeric rules" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC V10 settings preserve signed rules and reject changes to every locked numeric field", GT() {
+	task->AddTest( "SMAC V11 settings preserve signed rules and reject changes to every locked numeric field", GT() {
 		GlobalSettings settings;
 		settings.Deserialize( fixture::Payload( "smac", true ) );
-		GT_ASSERT( fixture::Matches( settings ), "V10 lost signed values or endpoints" );
+		GT_ASSERT( fixture::Matches( settings ), "V11 lost signed values or endpoints" );
 		const auto before = settings.Serialize().ToString();
 		GlobalSettings restored;
 		restored.Deserialize( types::Buffer( before ) );
-		GT_ASSERT( restored.Serialize().ToString() == before, "V10 roundtrip changed settings bytes" );
+		GT_ASSERT( restored.Serialize().ToString() == before, "V11 roundtrip changed settings bytes" );
 		for ( size_t i = 0 ; i < 9 ; ++i ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			values[ i ] += values[ i ] == INT32_MAX ? -1 : 1;
@@ -92,9 +92,9 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( settings.game_name == restored.game_name && settings.map.size_x == 92 && fixture::Matches( settings ), "identical rules blocked a lobby update" );
 		GT_OK();
 	} );
-	task->AddTest( "SMAC V10 rejects absent, unexpected, out-of-range and incomplete rules before mutation", GT() {
+	task->AddTest( "SMAC V11 rejects absent, unexpected, out-of-range and incomplete rules before mutation", GT() {
 		std::vector< types::Buffer > invalid = { fixture::Payload( "smac", false ), fixture::Payload( "smax", true ) };
-		for ( const auto version : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11 } ) { types::Buffer b; b.WriteInt( version ); invalid.push_back( b ); }
+		for ( const auto version : { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12 } ) { types::Buffer b; b.WriteInt( version ); invalid.push_back( b ); }
 		for ( size_t i = 0 ; i < 9 ; ++i ) {
 			for ( const int64_t value : { int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1, INT64_MIN, INT64_MAX } ) {
 				std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
@@ -102,7 +102,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				invalid.push_back( fixture::Payload( "smac", true, values ) );
 			}
 			types::Buffer short_rules;
-			short_rules.WriteInt( 10 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
+			short_rules.WriteInt( 11 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
 			types::Buffer prefix; prefix.WriteInt( 1 );
 			for ( size_t field = 0 ; field < i ; ++field ) { prefix.WriteInt( 1 ); }
 			short_rules.WriteString( prefix.ToString() );
@@ -121,6 +121,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			rebuilt.WriteBool( reader.ReadBool() );
 			rebuilt.WriteString( reader.ReadString() ); // predefined unit profile
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // movement profile
+			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // specialist profile
 			types::Buffer map( reader.ReadString() );
 			if ( bad_map ) { map.WriteInt( 123 ); }
 			rebuilt.WriteString( map.ToString() );
@@ -136,7 +137,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			settings.SelectRuleset( "smax" ); // Unlocked: reject invalid SMAC data, not an identity change.
 			settings.game_name = "unchanged"; settings.map.size_x = 88;
 			const auto before = settings.Serialize().ToString();
-			GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( payload ); } ), "invalid V10 settings accepted" );
+			GT_ASSERT( Rejects( [ & ]() { settings.Deserialize( payload ); } ), "invalid V11 settings accepted" );
 			GT_ASSERT( settings.Serialize().ToString() == before, "invalid payload partially mutated settings" );
 			settings.Deserialize( valid ); // Rejection left the destination unlocked/retryable.
 			GT_ASSERT( fixture::Matches( settings ), "valid retry after rejected payload failed" );

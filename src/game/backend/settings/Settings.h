@@ -10,6 +10,7 @@
 #include "game/backend/rules/default/Default.h" // only default rules for now
 #include "game/backend/Account.h"
 #include "SmacResourceRules.h"
+#include "SmacSpecialistRules.h"
 #include "SmacProductionRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacWorldSizeRules.h"
@@ -107,6 +108,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< SmacFactionStartupRules >& GetSmacFactionStartupRules() const;
 	const std::optional< SmacPredefinedUnitRules >& GetSmacPredefinedUnitRules() const;
 	const std::optional< SmacMovementRules >& GetSmacMovementRules() const;
+	const std::optional< SmacSpecialistRules >& GetSmacSpecialistRules() const;
 	void SelectSmacWorldSize( int64_t category );
 	void SelectSmacCustomSize( int64_t width, int64_t height );
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
@@ -143,6 +145,7 @@ private:
 	std::optional< SmacFactionStartupRules > m_smac_faction_startup_rules;
 	std::optional< SmacPredefinedUnitRules > m_smac_predefined_unit_rules;
 	std::optional< SmacMovementRules > m_smac_movement_rules;
+	std::optional< SmacSpecialistRules > m_smac_specialist_rules;
 	static ruleset_t ParseRuleset( const std::string& id );
 };
 

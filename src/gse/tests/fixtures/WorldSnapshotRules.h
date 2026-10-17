@@ -33,7 +33,9 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	const std::optional< std::string >& units = std::nullopt,
 	const std::optional< bool > movement_present = std::nullopt,
 	const std::optional< std::string >& movement = std::nullopt,
-	const std::optional< std::string >& resources = std::nullopt ) {
+	const std::optional< std::string >& resources = std::nullopt,
+	const std::optional< bool > specialists_present = std::nullopt,
+	const std::optional< std::string >& specialists = std::nullopt ) {
 	types::Buffer result;
 	result.WriteInt( marker );
 	result.WriteInt( version );
@@ -72,6 +74,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		const auto has_movement = movement_present.value_or( id == "smac" ); result.WriteBool( has_movement );
 		if ( has_movement ) { result.WriteString( movement ? *movement : smac_rules_fixture::Movement().Serialize().ToString() ); }
 	}
+	if ( version >= 17 ) {
+		const auto has_specialists = specialists_present.value_or( id == "smac" ); result.WriteBool( has_specialists );
+		if ( has_specialists ) { result.WriteString( specialists ? *specialists : smac_rules_fixture::Specialists().Serialize().ToString() ); }
+	}
 	return result;
 }
 
@@ -98,6 +104,50 @@ inline std::vector< std::pair< std::string, std::string > > InvalidResourceHeade
 	}
 	const auto valid = smac_rules_fixture::UncheckedResources( smac_rules_fixture::Resources() ).ToString();
 	result.emplace_back( "truncated last token", ResourceHeader( id, valid.substr( 0, valid.size() - 1 ) ).ToString() );
+	return result;
+}
+
+inline std::string SpecialistPrefix( const std::string& id ) {
+	auto wire = Header( id, id == "smac" );
+	wire.ReadInt(); wire.ReadInt(); wire.ReadString();
+	for ( size_t i = 0; i < 7; ++i ) {
+		if ( wire.ReadBool() ) { wire.ReadString(); if ( i == 3 ) { wire.ReadString(); } }
+	}
+	return wire.ToString().substr( 0, wire.lenr );
+}
+
+inline types::Buffer SpecialistHeader( const std::string& id, const bool present, const std::string& bytes ) {
+	types::Buffer tail; tail.WriteBool( present ); if ( present ) { tail.WriteString( bytes ); }
+	return types::Buffer( SpecialistPrefix( id ) + tail.ToString() );
+}
+
+inline std::vector< std::pair< std::string, std::string > > InvalidSpecialistHeaders( const std::string& id ) {
+	std::vector< std::pair< std::string, std::string > > result;
+	result.emplace_back( "old V16", Header( id, id == "smac", { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, game::backend::world_snapshot::rules_marker, 16 ).ToString() );
+	const auto valid = smac_rules_fixture::Specialists().Serialize().ToString();
+	result.emplace_back( "wrong presence", SpecialistHeader( id, id != "smac", valid ).ToString() );
+	if ( id != "smac" ) { return result; }
+	result.emplace_back( "missing presence", SpecialistPrefix( id ) );
+	const auto add = [ & ]( const std::string& label, const std::string& bytes ) { result.emplace_back( label, SpecialistHeader( id, true, bytes ).ToString() ); };
+	for ( size_t field = 0; field < 10; ++field ) {
+		auto changed = smac_rules_fixture::Specialists(); auto& row = changed.specialists.back();
+		switch ( field ) {
+			case 0: ++changed.minimum_base_size; break;
+			case 1: row.singular += " changed"; break;
+			case 2: row.plural += " changed"; break;
+			case 3: row.prerequisite = "Missing"; break;
+			case 4: row.obsolete = "None"; break;
+			case 5: ++row.economy; break;
+			case 6: --row.psych; break;
+			case 7: --row.labs; break;
+			case 8: row.trailing_token += " changed"; break;
+			case 9: row.source_id = 5; break;
+		}
+		add( "last row field " + std::to_string( field ), smac_rules_fixture::UncheckedSpecialists( changed ).ToString() );
+	}
+	add( "truncated last token", valid.substr( 0, valid.size() - 1 ) ); add( "trailing nested byte", valid + 'x' );
+	for ( const auto size : { game::backend::settings::SmacSpecialistRules::MAX_WIRE_BYTES + 1, 32768u } ) { add( "oversized " + std::to_string( size ), std::string( size, 'x' ) ); }
+	types::Buffer version; version.WriteInt( 2 ); add( "unknown nested version", version.ToString() + valid.substr( version.lenw ) );
 	return result;
 }
 
@@ -210,12 +260,17 @@ inline std::vector< std::pair< std::string, std::string > > InvalidMovementHeade
 	if ( id == "smax" ) { result.emplace_back( "unexpected movement profile", header( true ) ); return result; }
 	result.emplace_back( "absent movement profile", header( false ) );
 	types::Buffer absent, present, wrong; absent.WriteBool( false ); present.WriteBool( true ); wrong.WriteInt( 1 );
-	const auto missing = header( false ); const auto prefix = missing.substr( 0, missing.size() - absent.lenw );
+	auto before_movement = Header( id, true );
+	before_movement.ReadInt(); before_movement.ReadInt(); before_movement.ReadString();
+	for ( size_t i = 0; i < 3; ++i ) { before_movement.ReadBool(); before_movement.ReadString(); }
+	before_movement.ReadBool(); before_movement.ReadString(); before_movement.ReadString();
+	for ( size_t i = 0; i < 2; ++i ) { before_movement.ReadBool(); before_movement.ReadString(); }
+	const auto prefix = before_movement.ToString().substr( 0, before_movement.lenr );
 	result.emplace_back( "missing movement presence", prefix );
 	result.emplace_back( "mistyped movement presence", prefix + wrong.ToString() );
 	result.emplace_back( "missing movement payload", prefix + present.ToString() );
 	result.emplace_back( "mistyped movement payload", prefix + present.ToString() + wrong.ToString() );
-	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { result.emplace_back( name, header( true, bytes ) ); };
+	const auto add = [ & ]( const std::string& name, const std::string& bytes ) { types::Buffer frame; frame.WriteString( bytes ); result.emplace_back( name, prefix + present.ToString() + frame.ToString() ); };
 	const auto bytes = smac_rules_fixture::Movement().Serialize().ToString();
 	add( "oversized movement cap+1", bytes + 'x' );
 	add( "oversized movement complete frame", bytes + std::string( 4096 - bytes.size(), 'x' ) );

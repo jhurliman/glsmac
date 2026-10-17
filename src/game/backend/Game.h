@@ -584,6 +584,9 @@ private:
 	void CommitStartingBaseKnowledge( StartingBaseKnowledge& prepared ) noexcept;
 	std::optional< map::SmacWorkerKnowledge > PrepareBaseTerritory( const base::Base* added, const base::Base* removed, bool attached ) const;
 	void CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
+	bool HasSmacTechnologyReveal( int32_t simulation_id ) const;
+	std::optional< map::SmacWorkerKnowledge > PrepareSmacTechnologyReveal( int32_t simulation_id ) const;
+	void CommitSmacTechnologyReveal( std::optional< map::SmacWorkerKnowledge > prepared ) noexcept;
 	void ValidateSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge ) const;
 	void CompleteSmacWorkerKnowledgeRestore();
 	void RequireConventionalSightWorld() const;

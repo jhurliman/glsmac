@@ -281,6 +281,9 @@ public:
 		m_game.PostCanonicalBaseEconomy( base, base.PrepareSmacResourceCalculation( game::backend::base::SmacBaseResourcePhase::Upkeep ) );
 	}
 	void SettleEconomy( int32_t owner ) { m_game.SettleCanonicalEconomy( owner ); }
+	bool HasTechnologyReveal( int32_t owner ) const { return m_game.HasSmacTechnologyReveal(owner); }
+	std::optional< game::backend::map::SmacWorkerKnowledge > PrepareTechnologyReveal( int32_t owner ) const { return m_game.PrepareSmacTechnologyReveal(owner); }
+	void CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value ) { m_game.CommitSmacTechnologyReveal(std::move(value)); }
 	void ConventionalRetainedMorale( int32_t retained, int32_t current ) {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.retained->at( 4 ) = retained; owner.current[ 4 ] = current; }
 	}
@@ -4074,7 +4077,7 @@ public:
 				if ( scenario == 71 ) { wire[ 0 ] = 'X'; } // inner magic, outer Buffer framing remains valid
 				if ( scenario == 72 ) { wire[ 53 ] = 8; } // first tile claimant, outside 0..7/255
 				if ( scenario == 73 ) { wire[ 117 ] = 2; } // first remembered-entry presence
-				if ( scenario == 74 ) { wire[ wire.size() - 9 ] |= 1; } // Pact row for absent observer zero
+				if ( scenario == 74 ) { wire[ wire.size() - 13 ] |= 1; } // Pact row for absent observer zero
 				bool invalid = false;
 				try { Knowledge::Deserialize( wire ); } catch ( const std::invalid_argument& ) { invalid = true; }
 				GT_ASSERT( invalid, "malformed knowledge control was valid" );
@@ -4663,6 +4666,9 @@ void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::strin
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
 void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }
 void ConventionalUnitFixture::SettleEconomy( int32_t owner ) { fixture->SettleEconomy( owner ); }
+bool ConventionalUnitFixture::HasTechnologyReveal( int32_t owner ) const { return fixture->HasTechnologyReveal(owner); }
+std::optional< game::backend::map::SmacWorkerKnowledge > ConventionalUnitFixture::PrepareTechnologyReveal( int32_t owner ) const { return fixture->PrepareTechnologyReveal(owner); }
+void ConventionalUnitFixture::CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value ) { fixture->CommitTechnologyReveal(std::move(value)); }
 void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
 }

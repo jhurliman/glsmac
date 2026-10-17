@@ -43,7 +43,7 @@ explicit little-endian bytes. There is no native-struct serialization.
 | Offset | Field |
 | --- | --- |
 | 0 | Four bytes `SWKN` |
-| 4 | uint32 version 3 |
+| 4 | uint32 version 4 |
 | 8, 12 | uint32 width, height |
 | 16, 17, 18, 19 | wrap, ordinary-local, revelation, observer-presence bytes |
 | 20, 24 | uint32 tile and Unit counts |
@@ -52,13 +52,14 @@ explicit little-endian bytes. There is no native-struct serialization.
 | after tiles | Ten bytes per observation: uint64 ID, visibility byte, convoy boolean |
 | after observations | Remembered-row presence byte, then one square-presence byte per tile in each present row; known squares append uint16 features, uint16 terraforming and Base/Unit marker bits |
 | after remembered rows | Directed Pact presence mask and eight bytes of directed Pact masks; absent rows encode zero and cannot belong to an absent observer |
+| after Pact rows | uint32 Base-memory count, then 18-byte records: uint64 stable ID, known mask, population-presence mask and eight population bytes |
 
 Dimensions are the existing frame's width 2..512 even and height 1..256. Tiles
 follow increasing Y and parity X, so the tile count is exactly width*height/2.
 Absent observer rows must encode three zero bytes. Boolean bytes are strict;
 claimants are absent/native0/playable1..7; arbitrary eight-bit knowledge masks
 remain intact. Exact counts, aggregate budget and header fields are checked
-before record reserves; the complete remembered and Pact suffixes are scanned first.
+before record reserves; the complete remembered, Pact and Base-memory suffixes are scanned first.
 Truncation, trailing bytes, duplicate IDs and invalid
 domains reject. The projected frame has its own larger per-record budget and
 may reject a knowledge value that fits this codec.

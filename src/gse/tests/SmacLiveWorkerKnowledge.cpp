@@ -119,6 +119,62 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC technology reveal stages actual map and Base snapshots and restores exactly",GT() {
+		ConventionalUnitFixture fixture; fixture.Configure(); std::string snapshot, knowledge;
+		const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game(); const auto world=Populate(GSE_CALL,game,true);
+			auto data=Data(); data.all_map_revealed=4;
+			data.remembered[1].resize(32,Knowledge::Improvements{0,map::tile::TERRAFORMING_AIRBASE,false,false});
+			data.remembered[2]=data.remembered[1];
+			Knowledge::BaseObservation prior{901,4,{}}; prior.population[2]=99; data.bases.push_back(prior);
+			auto* tile=game->GetMap()->GetTile(4,2); tile->terraforming=map::tile::TERRAFORMING_MINE|map::tile::TERRAFORMING_ROAD;
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+			const auto before=Save(fixture,world);
+			auto prepared=fixture.PrepareTechnologyReveal(1);
+			GT_ASSERT(prepared && !fixture.HasTechnologyReveal(1) && Unchanged(fixture,world,before),"reveal preparation published authority");
+			const auto next=prepared->CopyData();
+			GT_ASSERT(next.all_map_revealed==6 && next.units==data.units && next.observers==data.observers && next.remembered[2]==data.remembered[2],"revelation changed visibility, observers or other memory");
+			for(size_t y=0;y<8;++y){for(size_t x=y&1;x<8;x+=2){
+				const auto i=Index(x,y);const auto* actual=game->GetMap()->GetTile(x,y);
+				const Knowledge::Improvements expected{actual->features,actual->terraforming,actual->base!=nullptr,!actual->units.empty()};
+				GT_ASSERT(next.tiles[i].explored_by==(data.tiles[i].explored_by|2) && next.tiles[i].claimant==data.tiles[i].claimant && next.remembered[1][i]==expected,"reveal did not copy complete current land/sea improvements");
+			}}
+			GT_ASSERT(next.bases.size()==2,"reveal omitted a foreign Base");
+			for(const auto& base:next.bases){GT_ASSERT(base.population[1]==2 && (base.known_by&2),"Base known/population snapshot differs");if(base.id==901){GT_ASSERT(base.population[2]==99 && (base.known_by&4),"other Base memory changed");}}
+			fixture.CommitTechnologyReveal(std::move(prepared));
+			GT_ASSERT(fixture.HasTechnologyReveal(1) && Base::Serialize(world.local).ToString()==before.base && Base::Serialize(world.foreign).ToString()==before.other
+				&& Unit::Serialize(world.local_unit).ToString()==before.unit && Unit::Serialize(world.foreign_unit).ToString()==before.other_unit
+				&& fixture.GameplayRandom()==before.pair && game->GetRandom()->GetStateString()==before.jsf && fixture.QueuedFrontendRequests().size()==before.requests,"reveal changed entities, RNG or queues");
+			knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+			tile->terraforming=map::tile::TERRAFORMING_FARM;
+			GT_ASSERT(!fixture.PrepareTechnologyReveal(1) && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeat reveal refreshed the retained snapshot");
+			snapshot=fixture.Snapshot();GT_OK();
+		});
+		if(!error.empty()){return error;}
+		ConventionalUnitFixture restored;restored.Configure();
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.Restore(GSE_CALL,snapshot,true);
+			GT_ASSERT(restored.HasTechnologyReveal(1) && !restored.PrepareTechnologyReveal(1)
+				&& restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"restore replayed reveal or lost memory");
+			// Actual Base retirement removes only its acquired memory record.
+			restored.Game()->GetBM()->DespawnBase(GSE_CALL,901);
+			const auto after=restored.Game()->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+			GT_ASSERT(after.bases.size()==1 && after.bases[0].id==800 && after.bases[0].population[1]==2,"Base retirement retained stale identity or lost survivor memory");GT_OK();
+		});
+	});
+	task->AddTest("SMAC technology reveal rejects invalid bindings before mutation",GT() {
+		ConventionalUnitFixture fixture;fixture.Configure();
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();const auto world=Populate(GSE_CALL,game,false);
+			GT_ASSERT(Rejects([&]{fixture.PrepareTechnologyReveal(1);}),"absent knowledge inferred");
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(Data()));const auto before=Save(fixture,world);
+			for(const auto owner:{0,3,8,-1}){GT_ASSERT(Rejects([&]{fixture.PrepareTechnologyReveal(owner);}) && Unchanged(fixture,world,before),"invalid reveal recipient changed world");}
+			auto bad=Data();bad.bases.push_back({999,2,{}});
+			GT_ASSERT(Rejects([&]{game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(bad));}) && Unchanged(fixture,world,before),"unregistered Base memory admitted");
+			GT_OK();
+		});
+	});
+
 	task->AddTest( "SMAC live ordinary ZOC preserves directed Pact and unknown distinction", GT() {
 		auto data=Data(); data.observers[1]->pact_with=4; data.observers[2]->pact_with=0;
 		const auto value=Knowledge::Create(data); const auto wire=value.Serialize();
@@ -127,8 +183,8 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT(!(Knowledge::Create(data)==value), "unknown Pact state collapsed into no Pacts");
 		for(int scenario=0;scenario<4;++scenario) {
 			auto bad=wire;
-			if(scenario==0){bad[bad.size()-9]|=1;}
-			if(scenario==1){bad.back()=1;}
+			if(scenario==0){bad[bad.size()-13]|=1;}
+			if(scenario==1){bad[bad.size()-5]=1;}
 			if(scenario==2){bad.pop_back();}
 			if(scenario==3){bad[4]=2;}
 			GT_ASSERT(Rejects([&]{Knowledge::Deserialize(bad);}), "invalid directed Pact suffix admitted");

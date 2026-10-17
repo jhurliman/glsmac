@@ -30,6 +30,7 @@ SET( SRC ${SRC}
 	${PWD}/GameEconomy.cpp
 	${PWD}/GameTileResources.cpp
 	${PWD}/GameWorkerKnowledge.cpp
+	${PWD}/GameTechnologyReveal.cpp
 	${PWD}/GameTerritory.cpp
 	${PWD}/GameStartingBase.cpp
 	${PWD}/GameFounding.cpp

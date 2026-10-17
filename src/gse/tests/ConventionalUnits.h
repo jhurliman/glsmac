@@ -6,6 +6,7 @@
 #include <vector>
 #include "gse/Value.h"
 #include "game/backend/SmacGameplayRandomState.h"
+#include "game/backend/map/SmacWorkerKnowledge.h"
 #include "game/backend/faction/SmacSimulationState.h"
 #include "game/backend/settings/SmacSpecialistRules.h"
 
@@ -30,6 +31,9 @@ public:
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
 	void PostEconomy( const game::backend::base::Base& base );
 	void SettleEconomy( int32_t owner );
+	bool HasTechnologyReveal( int32_t owner ) const;
+	std::optional< game::backend::map::SmacWorkerKnowledge > PrepareTechnologyReveal( int32_t owner ) const;
+	void CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value );
 	void ResourcePolicy( bool present );
 	void BasePresentationRoles( const std::array<std::string,8>& roles );
 	void SelectStartup( int32_t simulation, int32_t design );

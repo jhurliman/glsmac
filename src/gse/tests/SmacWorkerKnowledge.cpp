@@ -45,6 +45,17 @@ void Write( std::string& wire, size_t offset, uint64_t value, unsigned bytes=4 )
 }
 
 void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC worker knowledge bounds and preserves acquired Base memory",GT() {
+		auto input=Small();Knowledge::BaseObservation base{17,128,{}};base.population[0]=0;base.population[7]=127;input.knowledge.bases.push_back(base);
+		const auto value=Knowledge::Create(input.knowledge);const auto wire=value.Serialize();
+		GT_ASSERT(Knowledge::Deserialize(wire)==value && !value.CopyData().bases[0].population[1],"Base memory lost zero/unknown/native or high observer distinction");
+		for(int scenario=0;scenario<7;++scenario){auto bad=wire;const auto at=bad.size()-18;
+			if(scenario==0){Write(bad,at,0,8);}if(scenario==1){Write(bad,at,uint64_t(1)<<63,8);}if(scenario==2){bad[at+17]=char(128);}
+			if(scenario==3){bad[at+11]=1;}if(scenario==4){Write(bad,at-4,0xffffffffu);}if(scenario==5){bad.pop_back();}if(scenario==6){bad[4]=3;}
+			GT_ASSERT(Rejects([&]{Knowledge::Deserialize(bad);}),"malformed Base memory admitted");}
+		input.knowledge.bases.push_back(base);GT_ASSERT(Rejects([&]{Knowledge::Create(input.knowledge);}),"duplicate Base memory admitted");GT_OK();
+	});
+
 	task->AddTest( "SMAC worker knowledge preserves original frame results through explicit ID joins", GT() {
 		size_t evaluations=0, roundtrips=0;
 		for ( const auto& state : fixture::states ) {
@@ -141,10 +152,10 @@ void AddSmacWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "SMAC worker knowledge validates exact aggregate cap before projection allocation", GT() {
 		Knowledge::Data data{2,5,true,true,0,{},{},{}}; data.observers[1]=Knowledge::Observer{false,{}}; data.tiles.resize(5,{1,0});
-		const auto count=(Knowledge::MAX_WIRE_BYTES-62-10)/10;
+		const auto count=(Knowledge::MAX_WIRE_BYTES-66-10)/10;
 		for(size_t i=0;i<count;++i){data.units.push_back({uint64_t(i+1),255,false});}
 		const auto owned=Knowledge::Create(data); const auto wire=owned.Serialize();
-		GT_ASSERT( wire.size()==62+10+count*10 && Knowledge::Deserialize(wire)==owned, "exact knowledge wire cap rejected" );
+		GT_ASSERT( wire.size()==66+10+count*10 && Knowledge::Deserialize(wire)==owned, "exact knowledge wire cap rejected" );
 		GT_ASSERT( Rejects([&]{Knowledge::Deserialize(std::string(Knowledge::MAX_WIRE_BYTES+1,'x'));},"length"), "cap plus one copied into decoder" );
 		data.units.push_back({uint64_t(count+1),0,false});
 		GT_ASSERT( Rejects([&]{Knowledge::Create(data);},"budget"), "owned aggregate overflow admitted" );

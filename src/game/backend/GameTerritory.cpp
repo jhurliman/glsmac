@@ -2,6 +2,7 @@
 #include "State.h"
 
 #include <set>
+#include <algorithm>
 #include <stdexcept>
 #include "base/Base.h"
 #include "base/BaseManager.h"
@@ -62,7 +63,13 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareBaseTerritory( const base
 	}
 	if ( seen.size() != m_bm->GetBases().size() || !found_removed ) { throw std::runtime_error( "Territory Base order is incomplete" ); }
 	if ( added ) { append( added, true ); }
-	return map::smac_territory::ReplaceClaims( *m_map->m_worker_knowledge, input );
+	auto replacement=map::smac_territory::ReplaceClaims( *m_map->m_worker_knowledge, input );
+	if ( removed ) {
+		auto data=replacement.CopyData();
+		data.bases.erase(std::remove_if(data.bases.begin(),data.bases.end(),[&](const auto& observation){return observation.id==removed->m_id;}),data.bases.end());
+		return map::SmacWorkerKnowledge::Create(data);
+	}
+	return replacement;
 }
 
 void Game::CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept {

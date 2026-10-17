@@ -49,6 +49,9 @@ map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerK
 		if ( !allocation || base->GetTile()->base != base ) { throw std::runtime_error( "Worker Base lacks allocation authority or center membership" ); }
 		bases.push_back( { context.owner_simulation_id, position, allocation->selected & Frame::RADIUS_MASK } );
 	}
+	for ( const auto& observation : data.bases ) {
+		if ( !m_bm->GetBase(observation.id) ) { throw std::runtime_error("Remembered Base ID is not registered"); }
+	}
 	std::vector< map::SmacWorkerKnowledge::LiveUnit > units;
 	for ( const auto& entry : m_um->GetUnits() ) {
 		const auto* unit = entry.second;

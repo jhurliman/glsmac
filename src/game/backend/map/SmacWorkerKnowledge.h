@@ -34,6 +34,12 @@ public:
 		bool active_convoy;
 		bool operator==( const UnitObservation& other ) const noexcept;
 	};
+	struct BaseObservation {
+		uint64_t id; // stable port Base ID, never original compacted record index
+		uint8_t known_by;
+		std::array< std::optional< uint8_t >, 8 > population;
+		bool operator==( const BaseObservation& other ) const noexcept;
+	};
 	struct Data {
 		int32_t width, height;
 		bool horizontal_wrap, ordinary_local_mode;
@@ -45,6 +51,9 @@ public:
 		// Empty observer row = memory unavailable. Present row has one optional
 		// entry per map tile; absence is unknown, never current terrain by default.
 		std::array< std::vector< std::optional< Improvements > >, 8 > remembered;
+		// Sparse acquired Base memory. Missing record/value is unavailable;
+		// known bits and population snapshots are separate saved authorities.
+		std::vector< BaseObservation > bases;
 		bool operator==( const Data& other ) const noexcept;
 	};
 	struct LiveUnit {

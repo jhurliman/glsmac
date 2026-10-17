@@ -18,6 +18,8 @@
 namespace loader::cvr {
 
 struct CvrScoutRenderer::Assets {
+	explicit Assets( const Profile selected ) : profile( selected ) {}
+	const Profile profile;
 	std::shared_ptr< const CvrFrameSource > frames;
 	using Geometry = std::variant< CvrGeometry, CvrSimpleDetailChain >;
 	std::vector< std::vector< Geometry > > geometry;
@@ -29,10 +31,10 @@ struct CvrScoutRenderer::Assets {
 CvrScoutRenderer::CvrScoutRenderer( std::shared_ptr< const Assets > assets ) : m_assets( std::move( assets ) ) {}
 
 CvrScoutRenderer CvrScoutRenderer::Load( const std::string_view infantry, const std::string_view reactor ) {
-	return LoadParts( { infantry, reactor }, nullptr );
+	return LoadParts( { infantry, reactor }, Profile::Infantry, nullptr );
 }
 
-CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const CvrActorMaterial* material ) {
+CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
 	for ( const auto bytes : parts ) {
@@ -41,7 +43,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 		}
 		total_bytes += bytes.size();
 	}
-	auto owned = std::make_shared< Assets >();
+	auto owned = std::make_shared< Assets >( profile );
 	owned->geometry.resize( parts.size() ); owned->palettes.resize( parts.size() );
 	if ( material ) { owned->software_colors = material->colors; }
 	std::vector< CvrScene > scenes;
@@ -52,7 +54,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 		owned->palettes[ index ] = CvrPaletteReader::Read( container );
 		// Fixed Speeder composition: only VGMCP and VBP use the generated actor
 		// material. All other parts retain their own decoded shade lookups.
-		if ( material && ( index == 2 || index == 4 ) ) { owned->palettes[ index ].shades = material->shades; }
+		if ( profile == Profile::SpartanSpeeder && material && ( index == 2 || index == 4 ) ) { owned->palettes[ index ].shades = material->shades; }
 		auto scene = CvrSceneReader::Read( container );
 		if ( scene.objects.size() > CvrFrameAssembler::CAPACITY - object_count ) {
 			throw std::invalid_argument( "CVR Scout: complete composition exceeds frame budget" );
@@ -72,7 +74,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 					record_count += group.records.size();
 				}
 			};
-			if ( material && index == 8 ) {
+			if ( profile == Profile::SpartanSpeeder && index == 8 ) {
 				// VLIGHTS retains every simple level, including continuation flags.
 				// Selection happens using each draw's actual global scale.
 				auto chain = CvrSimpleDetailChain::Read( *object.voxel_data );
@@ -105,11 +107,12 @@ template< size_t N > std::array< uint32_t, N > Bits( const std::array< float, N 
 
 CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	using namespace scout;
-	const auto view = MakeView( input, m_assets->software_colors ? IdleProfile::SpartanSpeeder : IdleProfile::Infantry );
+	const bool speeder = m_assets->profile == Profile::SpartanSpeeder;
+	const auto view = MakeView( input, speeder ? IdleProfile::SpartanSpeeder : IdleProfile::Infantry );
 	std::vector< CvrFrameSelection > requests;
 	// Speeder assembly uses each part's asset location directly. The Infantry
 	// attachment offset belongs only to its distinct VI/reactor composition.
-	const std::array< float, 3 > offset = m_assets->software_colors ? std::array< float, 3 >{ 0, 0, 0 } : std::array< float, 3 >{ -400, 200, 0 };
+	const std::array< float, 3 > offset = speeder ? std::array< float, 3 >{ 0, 0, 0 } : std::array< float, 3 >{ -400, 200, 0 };
 	for ( size_t i = 0; i < m_assets->geometry.size(); ++i ) { requests.push_back( { i, 0, offset } ); }
 	const auto frames = CvrFrameAssembler::Assemble( m_assets->frames, requests );
 	if ( frames.first_omitted ) { throw std::invalid_argument( "CVR Scout: incomplete frame assembly" ); }

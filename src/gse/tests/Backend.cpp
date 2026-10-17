@@ -250,9 +250,12 @@ public:
 	}
 
 	void DestroyMapBeforeManagers() {
-		// Mirrors ResetGame: the map dies before the collector-owned managers.
-		m_map.reset();
-		m_game.m_map = nullptr;
+		// The registered State reaches Game's map and tile wrappers. Retire the
+		// published pointer and destroy them while collection is excluded.
+		m_gse->GetGCSpace()->Accumulate( m_gse, [ this ]() {
+			m_game.m_map = nullptr;
+			m_map.reset();
+		} );
 	}
 
 	size_t FrontendRequestCount() const { return m_frontend_requests.size(); }
@@ -635,6 +638,75 @@ public:
 		ProcessEvent( event );
 	}
 };
+
+static void AddBackendFixtureLifecycleTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test backend fixture retires map and tile wrappers under GC exclusion", GT() {
+		for ( const bool already_accumulating : { false, true } ) {
+			BackendFixture fixture;
+			fixture.DefinePop( "WORKER", "Worker", game::backend::base::PopDef::PF_TILE_WORKER );
+			auto* map = fixture.GetGame()->GetMap();
+			auto* tile = map->GetTile( 2, 2 );
+			const Wrappable* const map_dependency = map;
+			const Wrappable* const tile_dependency = tile;
+			size_t map_notifications = 0, tile_notifications = 0, unprotected = 0, still_published = 0;
+			class DestructionObserver final : public Wrappable {
+			public:
+				std::function< void( const Wrappable* ) > on_destroy;
+				Value* const Wrap( GSE_CALLABLE ) override { return nullptr; }
+				void NotifyDependencyDestruction( const Wrappable* const dependency ) override { on_destroy( dependency ); }
+			} observer;
+			observer.on_destroy = [ & ]( const Wrappable* dependency ) {
+				map_notifications += dependency == map_dependency;
+				tile_notifications += dependency == tile_dependency;
+				unprotected += !fixture.IsAccumulating();
+				still_published += fixture.HasMap();
+			};
+			bool map_attached = false, tile_attached = false;
+			// If setup/assertion fails before retirement, detach while the runtime
+			// and dependencies are alive; the stack observer must never dangle.
+			util::FinallyGuard detach( [ & ]() {
+				if ( fixture.HasMap() && ( map_attached || tile_attached ) ) {
+					fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+						if ( map_attached ) { map->Undepend( &observer ); }
+						if ( tile_attached ) { tile->Undepend( &observer ); }
+						GT_OK();
+					} );
+				}
+			} );
+			Value* map_value = nullptr;
+			Value* tile_value = nullptr;
+			const auto setup = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				map_value = map->Wrap( GSE_CALL ); tile_value = tile->Wrap( GSE_CALL );
+				ctx->CreateConst( "retired_map", map_value, si, ep );
+				ctx->CreateConst( "retired_tile", tile_value, si, ep );
+				map->Depend( &observer ); map_attached = true;
+				tile->Depend( &observer ); tile_attached = true;
+				GT_OK();
+			} );
+			GT_ASSERT( setup.empty(), "retirement observer setup failed: " + setup );
+			if ( already_accumulating ) {
+				const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+					fixture.DestroyMapBeforeManagers();
+					GT_OK();
+				} );
+				GT_ASSERT( error.empty(), "nested retirement failed: " + error );
+			}
+			else { fixture.DestroyMapBeforeManagers(); }
+			GT_ASSERT( map_notifications == 1 && tile_notifications == 1, "real map/tile destruction notifications missing or duplicated" );
+			GT_ASSERT( unprotected == 0, "map or tile destruction ran without GC collection exclusion" );
+			GT_ASSERT( still_published == 0 && !fixture.HasMap(), "map remained published during wrapper destruction" );
+			const auto checked = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+				GT_ASSERT( map_value->type == VT_UNDEFINED && tile_value->type == VT_UNDEFINED, "retired map/tile wrappers remained valid" );
+				GT_ASSERT( fixture.GetGame()->GetBM()->GetPopDef( "WORKER" ), "map retirement destroyed the retained manager" );
+				GT_OK();
+			} );
+			GT_ASSERT( checked.empty(), "retired fixture validation failed: " + checked );
+			fixture.DestroyMapBeforeManagers();
+			GT_ASSERT( map_notifications == 1 && tile_notifications == 1, "empty retirement destroyed dependencies twice" );
+		}
+		GT_OK();
+	} );
+}
 
 static bool RejectsSettings( const std::function< void() >& operation ) {
 	try { operation(); }
@@ -1534,6 +1606,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	AddEventTransportTests( task );
 	AddEventResponseTests( task );
 	AddRulesetTests( task );
+	AddBackendFixtureLifecycleTests( task );
 	AddWorldSnapshotTests( task );
 	AddHostRulesPacketTests( task );
 	AddPopReferenceTests( task );

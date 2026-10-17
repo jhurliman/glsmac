@@ -84,6 +84,7 @@ class Player;
 
 namespace connection {
 class Connection;
+class Client;
 }
 
 namespace bindings {
@@ -387,6 +388,8 @@ private:
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 
 	void InitGame( MT_Response& response, MT_CANCELABLE );
+	std::string SerializeWorldSnapshot() const;
+	void ConfigureWorldDownload( connection::Client* connection );
 	void ResetGame();
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
@@ -409,6 +412,7 @@ private:
 
 	struct event_waiting_for_response_t {
 		event::Event* event;
+		bool was_applied;
 		gse::Value* rollback_data;
 	};
 	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};

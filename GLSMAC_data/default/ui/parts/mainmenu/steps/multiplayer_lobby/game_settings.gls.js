@@ -26,6 +26,10 @@ return (i) => {
 		const make_empty_line = () => {
 			lines :+[];
 		};
+		make_line('ruleset', 'Ruleset', [
+			['smac', 'Alpha Centauri'],
+			['smax', 'Alien Crossfire'],
+		], settings.ruleset, (v) => { return v; });
 
 		make_line('difficulty', 'Difficulty Level', [
 			// TODO
@@ -128,7 +132,7 @@ return (i) => {
 					right: 10,
 					items: line.choices,
 					value: line.initial_choice,
-					readonly: readonly,
+					readonly: readonly || line.key == 'ruleset',
 				});
 				line.select.on('select', (e) => {
 					game.event('game_settings', {

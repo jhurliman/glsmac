@@ -113,6 +113,14 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"ruleset", "smac|smax", "Select gameplay rules for quickstart or hosting (both are in development)", AH( this ) {
+			if ( value != "smac" && value != "smax" ) {
+				Error( "Invalid --ruleset value; expected smac or smax" );
+			}
+			m_ruleset = value;
+		}
+	);
+	m_manager->AddRule(
 		"version", "Show version of GLSMAC", AH() {
 			util::LogHelper::Println(
 				(std::string)
@@ -387,6 +395,12 @@ void Config::Init( const int argc, char* const argv[] ) {
 	try {
 		m_manager->ParseArgs( argc, argv );
 		m_manager->ParseFile();
+		if ( ( HasLaunchFlag( LF_QUICKSTART ) || HasLaunchFlag( LF_HOST ) ) && m_ruleset.empty() ) {
+			Error( "--quickstart and --host require --ruleset smac or --ruleset smax" );
+		}
+		if ( HasLaunchFlag( LF_JOIN ) && !m_ruleset.empty() ) {
+			Error( "--join uses the host's ruleset; omit --ruleset" );
+		}
 	}
 	catch ( std::runtime_error& e ) {
 		Error( e.what() );
@@ -432,6 +446,10 @@ const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 
 const smac_type_t Config::GetSMACType() const {
 	return m_smac_type;
+}
+
+const std::string& Config::GetRuleset() const {
+	return m_ruleset;
 }
 
 void Config::SetSMACPath( const std::string& path ) const {

@@ -37,6 +37,8 @@ CLASS( Scene, common::Class )
 	void SetCamera( Camera* camera );
 	Camera* GetCamera() const;
 	void AddLight( Light* light );
+	// Lights are caller-owned; unlinking never destroys them.
+	void RemoveLight( Light* light );
 	std::unordered_set< Light* >* GetLights();
 
 	void SetWorldInstancePositions( const instance_positions_t& world_instance_positions );

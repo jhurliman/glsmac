@@ -46,6 +46,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp
 	${PWD}/SmacWorkerAvailability.cpp
+	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 	${PWD}/SmacConventionalStats.cpp
 

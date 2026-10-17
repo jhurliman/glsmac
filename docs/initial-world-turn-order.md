@@ -79,3 +79,29 @@ change does not modify build policy. Explicit correctness analysis of
 Local receipts are retained outside the checkout in
 `/home/jhurliman/src/glsmac-unit-weapon-parser/initial-turn-{negative,fixed,asan}.log`,
 `initial-turn-fixed-ctest.log`, and `initial-turn-analysis/summary.json`.
+
+### Focused publication validation
+
+The publication base `d47791992e1075cfa61f518d7700c192c1bb9c31` preserves
+the histories of world-profile PR #112 (`96513ced9dcb281540dcbeb925dc01679e992826`),
+native retirement PR #99 (`a6be97c047410ce9f019b2e8467d89e2a6475c2c`), and
+initial-population PR #35 (`a5e7dfd1326cb095da7f91e2048fb379399cc7a2`). These
+supply the real startup coordinator, reset exclusion, and production-growth
+fixture used here. Merge resolution only combined test includes and retained
+one copy of identical fixture helpers. The combined base passed its six
+registered CTests in 34.42 seconds.
+
+The unchanged source fix and seven regressions were cherry-picked as
+`3c98e7d6a0193bb889205d25eeefc7fb845c56e7`. Rebuilding that branch with only
+`Game.cpp` restored to its base bytes produced 321 native/script passes and
+exactly four expected startup turn-order failures (30.13 seconds). Restoring
+the fix passed all six registered CTests in 37.47 seconds, including every new
+case. Publication-scope analysis of `Game.cpp` reported zero failures in
+16.57 seconds. This older publication ancestry has six CTests rather than the
+integrated source's eight; the sanitizer receipt above belongs to that
+integrated source, not a rerun of the publication branch.
+
+Publication receipts are retained beside the source receipts as
+`initial-turn-final-base-ctest.log`, `initial-turn-combined-negative.log`,
+`initial-turn-combined-fixed-ctest.log`, and
+`initial-turn-publication-analysis/summary.json`.

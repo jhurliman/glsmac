@@ -199,7 +199,17 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [live simulation receipt](validation/live-simulation-2026-10-17.md)
+The latest [startup and combat receipt](validation/startup-combat-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at `445eba1d`, with zero failures across 328 production analysis units. Owned
+startup designs now accompany simulation identities and technology through
+actual startup and exact restore (simulation V2/world V10). Scout render
+descriptors reach real Unit and registered preview consumers. Separate pure
+components reproduce the supplied gameplay RNG, neutral Scout combat, and
+conventional morale/allowance queries; these do not yet drive live commands.
+Each publication still has its own dependency, review and CI gates.
+
+The preceding [live simulation receipt](validation/live-simulation-2026-10-17.md)
 records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
 at `39172a7d`. The actual claimed Game startup and restore paths now own explicit
 simulation faction identities and mutable technology state; callbacks receive
@@ -319,8 +329,11 @@ owned Scout image producer is implemented in
 macOS Release with UBSan each match all 19 original drawing views, including
 indexed/depth buffers, generated lighting and the baseline keyed RGBA image.
 The twentieth original case is target-culled and excluded from pixel matching.
-Live actor/cache/preview integration remains in progress, including retained
-texture and presenter callback lifetimes.
+Live actor/cache/preview integration is implemented in
+[#138](https://github.com/jhurliman/glsmac/pull/138), including retained texture
+and presenter callback lifetimes. The integrated original-asset Unit/preview
+smoke passes on Windows and honey with Null graphics and synthetic badges;
+this is not a new interactive GPU or pixel-comparison receipt.
 Actual conventional-unit gameplay definitions and commands are unfinished.
 Component results do not establish visual fidelity.
 
@@ -343,20 +356,18 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Land the refreshed canonical-roster/startup publication with its separate
-   switch-scope prerequisite after exact-head GitHub review and CI. Then land
-   the already reviewed host/world profile chain and live simulation binding
-   without dropping shared test registrations during dependency merges.
-2. Connect the installed-asset Scout image to real Unit/GetSprite and preview
-   consumers. Retain the image and copied badge textures through preview actor
-   destruction; retire presenter callbacks safely and verify actual registration,
-   teardown and reattachment. Keep the existing native-unit path operational.
-3. Add owned faction custom-design blocks keyed by the admitted simulation IDs,
-   with persistence and exact restore rather than regeneration. Extend original
-   startup evidence across difficulty/network/owner contexts before wiring the
-   generator into ordinary quickstart. Map the port's canonical difficulty
-   identities explicitly to original indices, not its current -3..2 values.
-   Then connect founding to base creation. The observed first-base current SUPPORT
+1. Finish landing the refreshed host/world profile chain, live simulation and
+   owned startup designs. Preserve the shared regression registrations during
+   dependency merges and address each current GitHub review finding before merge.
+2. Supply live conventional units from one authoritative Unit record: design and
+   simulation-owner identity, stored morale, damage, spent movement and home.
+   Bind Q to the original first road-rate rule and chassis Moves; derive full
+   allowance and effective morale. Preserve unknown or supplied retained social
+   state through early reset, then refresh before first-command unit/base hooks.
+   Spartan Recon rendering requires its actual Speeder composition and scale.
+3. Connect measured empty-tile movement and combat to legal commands and paired
+   RNG state, then implement the measured base-versus-Colony-Pod startup choice.
+   Connect founding to base creation. The observed first-base current SUPPORT
    and INDUSTRY are zero; late faction modifiers precede first upkeep and do
    not retroactively recompute starting minerals. Preserve independent target,
    stored minerals and switching baseline, then connect support/intake,
@@ -375,14 +386,24 @@ first base → Scout/Former/Colony → second base loop still needs real produce
 legal commands and persistence checks. Native lifetime repairs and conventional
 rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
 
-The new conventional Scout reference covers complete battle-core returns in
-187 supplied-world cases, including 3,073 rounds and promotion draws. Combat
-uses a distinct CRT stream with ordered attacker/defender modulo draws and
-ties against the attacker; ordinary movement uses a separate shared range
-stream. Both must be persisted independently from map JSF32 state. Remaining
-movement-tail position/selection, command admission and original new-game/save
-RNG provenance are still being investigated. These are reference findings,
-not implemented combat or a claim of full live-game fidelity.
+The pure Scout combat implementation in
+[#142](https://github.com/jhurliman/glsmac/pull/142) matches 187 supplied original
+core/normal-return cases, 3,073 rounds, 6,194 CRT draws and three subsequent
+command histories. The independent two-word gameplay RNG codec is in
+[#139](https://github.com/jhurliman/glsmac/pull/139). Combat retains the attacker
+at its source after victory; original wrapper return zero is distinct from
+defeat. The ordinary keyboard gate rejects exhausted Scouts even though a
+direct diagnostic battle call can reach combat. Original new-game/save RNG
+provenance and live command integration remain open.
+
+Owned startup design state in [#141](https://github.com/jhurliman/glsmac/pull/141)
+matches 1,008 human difficulty/owner cases and nine baseline projections, with
+exact codec roundtrips. Conventional stat queries in
+[#140](https://github.com/jhurliman/glsmac/pull/140) match 9,484 selected original
+outputs; basic allowance remains an explicit input in that slice. Controlled
+original startup/controller evidence establishes the first-command morale
+refresh, without proving or inventing an earlier retained-zero reset. These
+bounded components are not a complete conventional unit or campaign.
 
 ### Review and evidence discipline
 

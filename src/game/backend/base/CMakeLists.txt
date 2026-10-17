@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocationRules.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp
+	${PWD}/SmacWorkerAvailability.cpp
 	${PWD}/PopDef.cpp
 	${PWD}/Pop.cpp
 	${PWD}/FacilityDef.cpp

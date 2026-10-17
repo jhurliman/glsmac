@@ -416,6 +416,12 @@ extreme social/resource inputs or a complete base economy.
 
 ### Current gameplay batch and next implementation slices
 
+The [Former/controller integration](validation/former-controller-2026-10-17.md)
+now passes its affected cached Linux checks, including ordinary work, owned
+terrain patches and original selected-unit continuation. Faction selection,
+visible unit commands, energy presentation and campaign save/load are the next
+first-session changes; their source handoffs are not yet interactive receipts.
+
 The [research integration checkpoint](validation/research-terrain-2026-10-17.md)
 connects actual Base labs, required manual choice, completion, Secrets and map
 revelation to suspended native upkeep. An answer resumes credit and eventual

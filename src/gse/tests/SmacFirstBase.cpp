@@ -2,6 +2,14 @@
 #include "task/gsetests/GSETests.h"
 namespace gse::tests {
 void AddSmacFirstBaseTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC first Base all six difficulties copy governor and stored human target inputs",GT(){
+        for (int difficulty=0;difficulty<6;++difficulty) {
+            for (int scenario : {0,2}) {
+                const auto result=CheckSmacFirstBaseFixture(scenario,false,difficulty);
+                if(!result.empty()) {return "difficulty "+std::to_string(difficulty)+": "+result;}
+            }
+        } GT_OK();
+    });
     task->AddTest("SMAC first Base claimed Start computes initial arid package before refresh",GT(){
         return CheckSmacFirstBaseFixture(0,false);
     });

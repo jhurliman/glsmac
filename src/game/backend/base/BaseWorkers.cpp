@@ -5,6 +5,7 @@
 #include "SmacWorkedSquareCollection.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
+#include "game/backend/faction/Faction.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slot.h"
@@ -42,7 +43,6 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	context.Validate();
 	auto* state = m_game->GetState();
 	m_game->RequireSmacLocalHumanOwner( m_owner );
-	if ( context.GovernorActive() ) { THROW( "SMAC worker recalculation requires inactive governor" ); }
 	if ( population > 127 || m_game->GetTurnId() > INT32_MAX ) {
 		THROW( "SMAC worker recalculation population/turn exceeds its signed domain" );
 	}
@@ -65,6 +65,9 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() || !global.GetSmacTechnologyRules() ) {
 		THROW( "SMAC worker recalculation requires frozen resource/specialist/technology rules" );
 	}
+	const auto& profiles = global.GetSmacFactionStartupRules();
+	const auto* profile = profiles ? profiles->Find(m_faction->m_id) : nullptr;
+	if (!profile) { THROW("SMAC worker recalculation requires frozen owner priorities"); }
 	const auto catalog = ResolveSmacSpecialistAllocationCatalog( *global.GetSmacSpecialistRules(), *global.GetSmacTechnologyRules(),
 		m_game->GetBM()->GetSmacSpecialistKnowledge( *this ) );
 	const auto prefix = m_game->CalculateCanonicalOrbitalIntake( *this, population );
@@ -89,7 +92,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	const auto result = SmacAutomaticWorkerAllocation::Allocate( {
 		static_cast< int32_t >( population ), static_cast< int32_t >( m_game->GetTurnId() ),
 		global.GetSmacResourceRules()->nutrients_per_citizen, mineral_support, production,
-		{ true, false, false, false, false, false, {} }, context.ManageCitizens(), phase == SmacBaseResourcePhase::Upkeep,
+		context.WorkerPriorities(profile->worker_priorities), context.ManageCitizens(), phase == SmacBaseResourcePhase::Upkeep,
 		allocation.selected, availability.unavailable, prefix, allocation.specialists, catalog, std::nullopt
 	}, query );
 	// Existing publication prepares reverse assignments/Pop projections/queues

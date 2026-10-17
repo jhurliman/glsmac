@@ -496,14 +496,10 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 			throw Exception( EC.PARSE_ERROR, "Unexpected catch without try", nullptr, conditional->m_si, *m_ep );
 		}
 		case Conditional::CT_SWITCH: {
-			std::vector< Case* > cases = {};
-			cases.reserve( body->body.size() );
-			for ( const auto& c : body->body ) {
-				ASSERT( c->control_type == program::Control::CT_CONDITIONAL, "control type not conditional" );
-				ASSERT( ((program::Conditional*)c)->conditional_type == program::Conditional::CT_CASE, "conditional type not case" );
-				cases.push_back( (program::Case*)c );
-			}
-			return new program::Switch( GetSI( begin, end ), (SimpleCondition*)condition.release(), cases );
+			std::unique_ptr< const Scope > owned_body( body );
+			auto* result = new program::Switch( GetSI( begin, end ), static_cast< const SimpleCondition* >( condition.get() ), std::move( owned_body ) );
+			condition.release();
+			return result;
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->ToString() );

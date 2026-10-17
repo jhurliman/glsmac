@@ -199,7 +199,15 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [social and movement receipt](validation/social-movement-2026-10-17.md)
+The latest [unit, Rover and resource receipt](validation/unit-rover-resources-2026-10-17.md)
+records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
+`d6afde1a`, plus zero failures across 336 production analysis units. Conventional
+Unit state and paired gameplay RNG are owned and restored with checked context;
+fixed Rover presentation reaches real unit previews, and resource text follows
+measured physical-row semantics. Live conventional movement and default startup
+activation remain the next consumers.
+
+The preceding [social and movement receipt](validation/social-movement-2026-10-17.md)
 records CTest 8/8 on Windows, leak-enabled Linux and native macOS arm64 at
 `f0b1ee2e`, plus zero failures across 332 production analysis units. Owned
 social continuation refreshes before the first authoritative turn hooks;
@@ -421,6 +429,11 @@ lookup. Each was fixed, checked against a reproducing regression, and received
 a clean review on its corrected head. Dependency merges that change the head
 receive another review. Each PR owns its current review/check evidence; a
 request or local success is not a completed GitHub review.
+
+The review usage quota was reached again later on October 17. New current heads
+are held unmerged until a completed Codex review is available; repeated quota
+requests are not used as a substitute. Implementation, local validation and
+focused draft publications continue independently.
 
 Production, research, terraforming, conventional combat, AI, diplomacy, victories
 and the expansion remain substantial work. Original executable evidence is

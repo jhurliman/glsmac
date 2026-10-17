@@ -13,6 +13,7 @@
 #include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "SmacProductionRules.h"
+#include "SmacMovementRules.h"
 #include "SmacTechnologyRules.h"
 #include "SmacPredefinedUnitCatalog.h"
 #include "SmacFactionStartupRules.h"
@@ -214,6 +215,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );

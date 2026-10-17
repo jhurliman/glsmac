@@ -16,6 +16,7 @@ SET( SRC ${SRC}
 	${PWD}/UnitDesignResolver.cpp
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
+	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacFactionStartupRules.cpp

@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Settings.cpp
 	${PWD}/SmacProductionRules.cpp
+	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 

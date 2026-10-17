@@ -44,8 +44,11 @@ Autobuild now runs only on `stable` pushes or explicit dispatch. A manual dispat
 builds both portable artifacts and the full scan-build report on the selected
 ref. Dispatching it on `main`/`stable` retains its existing release publication
 behavior; use another ref when only artifacts are wanted. Tiny `main` merges no
-longer automatically replace the development release. Scoped C++ correctness and
-the narrowly path-filtered reference inventory workflow are unchanged.
+longer automatically replace the development release. Scoped C++ correctness
+resolves changed production headers to their actual compiler-observed consumers;
+source/test registrations alone no longer select every production unit. See
+[the selector and its failure policy](cpp-analysis.md#scope-and-diagnostics).
+The narrowly path-filtered reference inventory workflow is unchanged.
 
 ## Check results and branch protection
 

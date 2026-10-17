@@ -19,6 +19,7 @@
 #include "SmacRulesTXTLoader.h"
 #include "UnitRulesTXTLoader.h"
 #include "UnitDesignResolver.h"
+#include "SmacMovementRules.h"
 #include "CvrContainerReader.h"
 #include "CvrSceneReader.h"
 #include "CvrGeometryReader.h"
@@ -238,6 +239,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacRulesTXTLoaderTests( task );
 		tests::AddSmacHostRulesTests( task );
 		tests::AddSmacProductionRulesTests( task );
+		tests::AddSmacMovementRulesTests( task );
 		tests::AddSmacTechnologyRulesTests( task );
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacTechnologyStateTests( task );

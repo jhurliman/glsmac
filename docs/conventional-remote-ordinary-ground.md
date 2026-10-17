@@ -1,5 +1,10 @@
 # Conventional ordinary ground movement with remote Bases
 
+Historical checkpoint: the nonfungus flat/equal-infrastructure/proximity
+restrictions below are superseded by
+[owned-Base terrain movement](conventional-owned-base-terrain-movement.md).
+The original receipt and validation results here retain their original scope.
+
 The local conventional movement event now admits the measured nonfungal edge
 when the world has remote Bases and neither endpoint is a Base. Previously any
 Base-containing world required an endpoint HQ. This is a narrow admission

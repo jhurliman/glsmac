@@ -4,6 +4,7 @@
 #include "fixtures/GaianHQMovement.h"
 #include "fixtures/RemoteHQMovement.h"
 #include "fixtures/RemoteOrdinaryGround.h"
+#include "fixtures/OwnedBaseTerrainMovement.h"
 #include "fixtures/NearestAnyBase.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
@@ -86,14 +87,17 @@ void Land( Game* game ) {
 	}
 }
 
-base::Base* HQ( GSE_CALLABLE, Game* game, Unit* unit, map::tile::Tile* tile, size_t id = 31 ) {
+base::Base* HQ( GSE_CALLABLE, Game* game, Unit* unit, map::tile::Tile* tile, size_t id = 31, size_t population = 1, bool has_hq = true ) {
 	auto* manager = game->GetBM();
 	if ( !manager->GetFacilityDef( "HEADQUARTERS" ) ) {
 		manager->DefineFacility( new base::FacilityDef( "HEADQUARTERS", "Fixture HQ", "Fixture", 1, { "fixture", 0, 0, 1, 1 } ) );
 	}
 	if ( !manager->GetPopDef( "HQ_WORKER" ) ) { manager->DefinePop( new base::PopDef( "HQ_WORKER", "Worker", {}, {}, base::PopDef::PF_NONE ) ); }
-	auto* result = new base::Base( game, id, unit->m_owner, unit->m_owner->GetPlayer()->GetFaction(), tile, "HQ",
-		{ { "HEADQUARTERS", manager->GetFacilityDef( "HEADQUARTERS" ) } }, { { 1, base::Pop( nullptr, 1, manager->GetPopDef( "HQ_WORKER" ) ) } }, 2 );
+	base::Base::pops_t pops;
+	for ( size_t i = 1; i <= population; ++i ) { pops.emplace( i, base::Pop( nullptr, i, manager->GetPopDef( "HQ_WORKER" ) ) ); }
+	base::Base::facilities_t facilities;
+	if ( has_hq ) { facilities.emplace( "HEADQUARTERS", manager->GetFacilityDef( "HEADQUARTERS" ) ); }
+	auto* result = new base::Base( game, id, unit->m_owner, unit->m_owner->GetPlayer()->GetFaction(), tile, "HQ", facilities, pops, population + 1 );
 	manager->SpawnBase( GSE_CALL, result ); return result;
 }
 
@@ -454,27 +458,69 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		} );
 	}
+	task->AddTest( "conventional owned base nonfungus terrain matches18 original traces", []( GSE*, context::Context* ) -> std::string {
+		using namespace map::tile;
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		for ( const auto& c : owned_base_terrain_fixture::CASES ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign( c.rover );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); Land( game ); Define( game->GetUM(), c.rover );
+				auto* player = game->GetState()->m_slots->GetSlot( 0 ).GetPlayer();
+				auto* view = Call( GSE_CALL, static_cast< value::Object* >( game->Wrap( GSE_CALL ) ), "get_startup_designs", { player->Wrap( GSE_CALL ) } );
+				auto record = Record(); record.owner_simulation_id = static_cast< int32_t >( Int( view, "simulation_id" ) );
+				record.design_id = static_cast< int32_t >( Int( view, "starting_scout" ) );
+				auto history = SmacMovementHistory::NewGeneratedWorld( 128, 64 ); history.RetainNearest( 777 ); fixture.MovementHistory( history );
+				auto* unit = Spawn( GSE_CALL, fixture, record, 71, 0, c.rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT" );
+				auto* source = game->GetMap()->GetTile( c.sx, c.sy ); auto* destination = game->GetMap()->GetTile( c.dx, c.dy );
+				unit->SetTile( GSE_CALL, source );
+				auto* base = HQ( GSE_CALL, game, unit, game->GetMap()->GetTile( c.bx, c.by ), 31, c.population, c.hq );
+				const auto terrain = []( Tile* tile, int flags ) {
+					if ( flags != 0 && flags != 4 && flags != 128 && flags != 2097152 ) { throw std::runtime_error( "unsupported original ordinary fixture flags" ); }
+					tile->features = flags == 128 ? FEATURE_RIVER : FEATURE_NONE;
+					tile->terraforming = flags == 4 ? TERRAFORMING_ROAD : flags == 2097152 ? TERRAFORMING_FOREST : TERRAFORMING_NONE;
+				};
+				terrain( source, c.source_flags ); terrain( destination, c.destination_flags );
+				destination->rockiness = static_cast< rockiness_t >( ROCKINESS_FLAT + c.rockiness );
+				// The receipt observes no nearest-base query. Preserve a nonzero old
+				// result while actual placement still marks the newly occupied tile.
+				history = *fixture.MovementHistory();
+				fixture.GameplayRandom( { 12345, 0xa1b2c3d4 } ); fixture.Updates();
+				GT_ASSERT( unit->QueryStats( SmacMoraleMode::Mode1 ).full_allowance == c.allowance && base->m_pops.size() == static_cast< size_t >( c.population )
+					&& base->m_facilities.empty() == !c.hq, "original owned-Base setup differs" );
+				const auto base_bytes = BaseBytes( game ); const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
+				const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
+				game->GetUM()->ValidateConventionalMove( unit, destination, 0 );
+				GT_ASSERT( fixture.MovementHistory() == history && fixture.GameplayRandom() == SmacGameplayRandomState( 12345, 0xa1b2c3d4 ), "ordinary validation changed authority" );
+				fixture.MoveEvent( GSE_CALL, unit, destination );
+				auto expected = record; expected.spent = static_cast< uint8_t >( c.spent );
+				GT_ASSERT( unit->GetTile() == destination && unit->Conventional() == expected && source->units.empty()
+					&& destination->units.size() == 1 && destination->units.at( unit->m_id ) == unit
+					&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xa1b2c3d4 ), "original owned-Base movement differs at " + std::string( c.id ) );
+				GT_ASSERT( BaseBytes( game ) == base_bytes && base->GetTile()->base == base && source->features == sf && destination->features == df
+					&& source->terraforming == st && destination->terraforming == dt && fixture.MovementHistory()->NearestDistance() == 777
+					&& fixture.MovementHistory()->WasPlaced( c.sx, c.sy ) && fixture.MovementHistory()->WasPlaced( c.dx, c.dy ) && game->GetRandom()->GetStateString() == jsf
+					&& Unit::GetNextId() == next, "ordinary movement changed Base, nearest result, JSF or ID authority" );
+				const auto& updates = fixture.Updates();
+				GT_ASSERT( std::count_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_UPDATE; } ) == 1, "ordinary move did not publish one refreshed unit" );
+				GT_OK();
+			} ); if ( !error.empty() ) { return error; }
+		}
+		GT_OK();
+	} );
 	task->AddTest( "conventional remote ordinary ground rejects unsupported contexts atomically", []( GSE*, context::Context* ) -> std::string {
 		using namespace map::tile;
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
-		for ( int scenario = 0; scenario < 26; ++scenario ) {
+		// Former terrain/equal-infrastructure/owned-proximity rejections are
+		// superseded by the complete ordinary movement receipt above.
+		for ( const int scenario : { 0, 1, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 } ) {
 			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign();
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); const auto world = PopulateRemoteGround( GSE_CALL, fixture, remote_ground_fixture::CASES[ 0 ] );
 				auto* unit = world.local; auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 17, 17 ); size_t caller = 0;
 				if ( scenario == 0 ) { source->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 1 ) { destination->features = FEATURE_XENOFUNGUS; }
-				if ( scenario == 2 ) { source->features = FEATURE_RIVER; }
-				if ( scenario == 3 ) { destination->features = FEATURE_RIVER; }
-				if ( scenario == 4 ) { source->rockiness = ROCKINESS_ROLLING; }
-				if ( scenario == 5 ) { destination->rockiness = ROCKINESS_ROCKY; }
-				if ( scenario == 6 ) { source->terraforming = TERRAFORMING_FOREST; }
-				if ( scenario == 7 ) { destination->terraforming = TERRAFORMING_FOREST; }
-				if ( scenario == 8 ) { source->terraforming = TERRAFORMING_ROAD; }
-				if ( scenario == 9 ) { destination->terraforming = TERRAFORMING_MAG_TUBE; }
-				if ( scenario == 10 ) { source->terraforming = TERRAFORMING_ROAD; destination->terraforming = TERRAFORMING_MAG_TUBE; }
-				if ( scenario == 11 ) { source->terraforming = destination->terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE; }
 				if ( scenario == 12 ) { auto state = unit->Conventional(); state.damage = 1; manager->UpdateConventionalUnit( GSE_CALL, unit, state ); }
 				if ( scenario == 13 ) { auto state = unit->Conventional(); state.stored_morale = 2; manager->UpdateConventionalUnit( GSE_CALL, unit, state ); }
 				if ( scenario == 14 ) { world.remote[ 0 ]->SetTile( GSE_CALL, source ); }
@@ -490,7 +536,6 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				util::FinallyGuard animation( [ & ] { unit->m_animation_id = 0; } );
 				if ( scenario == 23 ) { destination->is_water_tile = true; }
 				if ( scenario == 24 ) { HQ( GSE_CALL, game, world.remote[ 0 ], source->W, 38 ); }
-				if ( scenario == 25 ) { HQ( GSE_CALL, game, unit, destination->E, 38 ); }
 				fixture.Updates(); const auto before = fixture.Snapshot(); const auto state = unit->Conventional(); const auto members = source->units;
 				const auto others = destination->units; const auto random = fixture.GameplayRandom(); const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
 				bool rejected = false; try { manager->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& ) { rejected = true; }
@@ -732,8 +777,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 5 ) { world.remote[ 0 ]->SetTile( GSE_CALL, destination ); }
 				if ( scenario == 6 ) { fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable ); }
 				if ( scenario == 7 ) { game->GetState()->m_settings.local.network_role = settings::LocalSettings::NR_SERVER; }
-				// Plain remote movement is now admitted; forest remains unmeasured.
-				if ( scenario == 8 ) { unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 20, 20 ) ); source = unit->GetTile(); destination = source->E; source->terraforming = map::tile::TERRAFORMING_FOREST; }
+				// Ordinary forest is admitted; distant destination fungus still
+				// requires a separate encounter caller instead of the HQ bypass.
+				if ( scenario == 8 ) { unit->SetTile( GSE_CALL, game->GetMap()->GetTile( 20, 20 ) ); source = unit->GetTile(); destination = source->E; destination->features = map::tile::FEATURE_XENOFUNGUS; }
 				fixture.Updates(); const auto before = unit->Conventional(); const auto bases = BaseBytes( game );
 				const auto random = fixture.GameplayRandom(); const auto members = source->units; const auto jsf = game->GetRandom()->GetStateString();
 				bool rejected = false; try { game->GetUM()->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& ) { rejected = true; }
@@ -860,14 +906,16 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		using namespace map::tile;
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
-		for ( int scenario = 0; scenario < 22; ++scenario ) {
+		// Ordinary terrain and larger/non-HQ Bases are now admitted. Preserve
+		// the independent fungus-only population/facility boundary below.
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 18, 19, 20, 21 } ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
 				fixture.RetainedPlanet( 0, 0 ); fixture.RetainedMorale( 0, 0 );
 				auto record = Record(); if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
 				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 );
-				auto* hq = HQ( GSE_CALL, game, unit, scenario == 10 ? game->GetMap()->GetTile( 6, 6 ) : source );
+				auto* hq = HQ( GSE_CALL, game, unit, source );
 				fixture.Updates(); // retire valid spawn presentation before deliberate native corruption
 				auto* original_owner = hq->m_owner; auto* original_faction = hq->m_faction;
 				util::FinallyGuard restore_base( [ & ] { hq->m_owner = original_owner; hq->m_faction = original_faction; hq->GetTile()->base = hq; } );
@@ -877,17 +925,10 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 5 ) { hq->m_pops.clear(); }
 				if ( scenario == 6 ) { hq->m_facilities.clear(); }
 				if ( scenario == 7 ) { hq->m_facilities.emplace( "UNPROVED", game->GetBM()->GetFacilityDef( "HEADQUARTERS" ) ); }
+				if ( scenario == 5 || scenario == 6 || scenario == 7 || scenario == 21 ) { destination->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 8 ) { hq->m_owner = &game->GetState()->m_slots->GetSlot( 6 ); }
 				if ( scenario == 9 ) { hq->m_faction = nullptr; }
-				// A distant HQ no longer blocks a plain edge; keep the terrain fence.
-				if ( scenario == 10 ) { source->terraforming = TERRAFORMING_FOREST; }
-				if ( scenario == 11 ) { HQ( GSE_CALL, game, unit, destination, 32 ); fixture.Updates(); }
-				if ( scenario == 12 ) { source->rockiness = ROCKINESS_ROLLING; }
-				if ( scenario == 13 ) { destination->rockiness = ROCKINESS_ROLLING; }
 				if ( scenario == 14 ) { source->features = FEATURE_XENOFUNGUS; }
-				if ( scenario == 15 ) { destination->features = FEATURE_RIVER; }
-				if ( scenario == 16 ) { destination->terraforming = TERRAFORMING_FOREST; }
-				if ( scenario == 17 ) { source->terraforming = TERRAFORMING_ROAD; }
 				if ( scenario == 18 ) { destination->features = FEATURE_XENOFUNGUS; destination->terraforming = TERRAFORMING_ROAD; }
 				if ( scenario == 19 ) { source->base = nullptr; }
 				if ( scenario == 20 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, source ); fixture.Updates(); }
@@ -1085,7 +1126,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "conventional movement rejects unsupported commands before any authority or RNG effects", []( GSE*, context::Context* ) -> std::string {
 		using namespace map::tile;
 		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
-		for ( int scenario = 0; scenario < 20; ++scenario ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19 } ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 14 ? 100 : 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager ); fixture.RetainedPlanet( 0, 0 );
@@ -1107,19 +1148,10 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 13 ) { game->GetState()->m_settings.local.network_role = settings::LocalSettings::NR_CLIENT; }
 				if ( scenario == 14 ) { destination->rockiness = ROCKINESS_ROCKY; destination->terraforming = TERRAFORMING_FOREST; }
 				const auto base_next = base::Base::GetNextId(); util::FinallyGuard restore_base_id( [ = ] { base::Base::SetNextId( base_next ); } );
-				if ( ( scenario >= 15 && scenario <= 17 ) || scenario == 19 ) {
-					base::Base::facilities_t facilities;
-					if ( scenario == 17 ) {
-						auto* facility = new base::FacilityDef( "HEADQUARTERS", "Headquarters", "Fixture", 1, { "fixture", 0, 0, 1, 1 } );
-						game->GetBM()->DefineFacility( facility ); facilities.emplace( facility->m_id, facility );
-					}
-					auto* site = scenario == 15 ? source : scenario == 16 ? destination : game->GetMap()->GetTile( 6, 6 );
-					game->GetBM()->SpawnBase( GSE_CALL, new base::Base( game, 31, unit->m_owner, game->GetFaction( "GAIANS" ), site, "Admission fence", facilities, {} ) );
+				if ( scenario == 19 ) {
+					game->GetBM()->SpawnBase( GSE_CALL, new base::Base( game, 31, unit->m_owner, game->GetFaction( "GAIANS" ), game->GetMap()->GetTile( 6, 6 ), "Admission fence", {}, {} ) );
 				}
 				if ( scenario == 18 ) { fixture.MovementCapability( static_cast< faction::SmacSimulationState::MovementCapability >( 2 ) ); }
-				// A distant Base alone is no longer a rejection reason. These older
-				// scenarios retain their Base setup and now test unmeasured terrain.
-				if ( scenario == 17 ) { destination->terraforming = TERRAFORMING_FOREST; }
 				if ( scenario == 19 ) { destination->features = FEATURE_XENOFUNGUS; }
 				fixture.GameplayRandom( { 0xdeadbeef, 0x12345678 } ); fixture.Updates();
 				const auto before = unit->Conventional(); const auto source_members = source->units, destination_members = destination->units;

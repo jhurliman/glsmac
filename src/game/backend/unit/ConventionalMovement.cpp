@@ -19,11 +19,11 @@
 
 namespace game::backend::unit {
 namespace {
-smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitted_hq ) {
+smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitted_base ) {
 	using namespace map::tile;
 	constexpr auto features = FEATURE_RIVER | FEATURE_XENOFUNGUS;
 	constexpr auto terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST;
-	if ( tile.is_water_tile || ( tile.base && tile.base != admitted_hq ) || tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY
+	if ( tile.is_water_tile || ( tile.base && tile.base != admitted_base ) || tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY
 		|| ( tile.features & ~features ) != 0 || ( tile.terraforming & ~terraforming ) != 0
 		|| tile.coord.x > INT32_MAX || tile.coord.y > INT32_MAX ) {
 		throw std::runtime_error( "Conventional movement requires admitted ordinary land without base, landmark or interaction features" );
@@ -105,10 +105,11 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
-	// The measured Base-containing routes are narrower than the base-free route.
-	// HEADQUARTERS is the explicit port facility identity, not an English-name or
-	// source-slot classification. The saved no-project capability remains required.
+	// Owned Bases impose no extra ordinary nonfungus terrain or population rule.
+	// Fungus still uses the narrower, independently admitted endpoint-HQ path.
 	const base::Base* admitted_hq = nullptr;
+	const base::Base* admitted_source_base = nullptr;
+	const base::Base* admitted_destination_base = nullptr;
 	const auto& bases = m_game->GetBM()->GetBases();
 	if ( !bases.empty() ) {
 		const bool infantry = stored.design_id == 2 && design.chassis == 0 && stats.basic_allowance == 3;
@@ -120,24 +121,23 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			|| stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
 			throw std::runtime_error( "Movement with Bases requires a healthy measured Infantry or selected Spartan Rover with quantum3" );
 		}
-		if ( !source->base && !destination->base ) {
-			using namespace map::tile;
-			// Ordinary remote-world requests prove only these three exact pairs.
-			// Do not inherit the broader edge kernel's river/forest/rocky domain.
-			if ( source->rockiness != ROCKINESS_FLAT || destination->rockiness != ROCKINESS_FLAT
-				|| source->features != FEATURE_NONE || destination->features != FEATURE_NONE
-				|| source->terraforming != destination->terraforming
-				|| ( source->terraforming != TERRAFORMING_NONE && source->terraforming != TERRAFORMING_ROAD && source->terraforming != TERRAFORMING_MAG_TUBE ) ) {
-				throw std::runtime_error( "Remote ordinary movement requires flat clear endpoints with matching none road or tube terrain" );
-			}
+		if ( !( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
 			for ( const auto& entry : bases ) {
-				const auto* center = entry.second ? entry.second->GetTile() : nullptr;
-				// A broken Tile::base link must not bypass endpoint-HQ validation.
-				// Adjacent Bases are outside this remote-only admission receipt.
-				if ( !center || center == source || center == destination || source->IsAdjactentTo( center ) || destination->IsAdjactentTo( center ) ) {
-					throw std::runtime_error( "Remote ordinary movement requires Bases outside both endpoint neighborhoods" );
+				const auto* base = entry.second;
+				const auto* center = base ? base->GetTile() : nullptr;
+				if ( !base || base->m_id != entry.first || base->GetGame() != m_game || !canonical( center ) || center->base != base ) {
+					throw std::runtime_error( "Ordinary movement requires canonical registered Base centers" );
 				}
+				if ( center == source || center == destination || source->IsAdjactentTo( center ) || destination->IsAdjactentTo( center ) ) {
+					if ( base->m_owner != unit->m_owner || base->m_faction != unit->m_owner->GetPlayer()->GetFaction() ) {
+						throw std::runtime_error( "Ordinary movement does not admit foreign Base interactions" );
+					}
+				}
+				if ( center == source ) { admitted_source_base = base; }
+				if ( center == destination ) { admitted_destination_base = base; }
 			}
+		} else if ( !source->base && !destination->base ) {
+			throw std::runtime_error( "Fungus movement with Bases requires an admitted endpoint HQ" );
 		} else {
 			// Select by endpoint identity, not global count or first record. Locate
 			// the borrowed pointer in the canonical manager before dereferencing it.
@@ -197,7 +197,8 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		// remains unavailable; no CRT roll or native insertion is activated.
 		if ( !nearest_distance || *nearest_distance > 1 ) { throw std::runtime_error( "Admitted HQ does not establish the fungus encounter bypass" ); }
 	}
-	const auto edge_source = EdgeTile( *source, admitted_hq ), edge_destination = EdgeTile( *destination, admitted_hq );
+	const auto edge_source = EdgeTile( *source, admitted_hq ? admitted_hq : admitted_source_base );
+	const auto edge_destination = EdgeTile( *destination, admitted_hq ? admitted_hq : admitted_destination_base );
 	const smac_edge::Query query{
 		{ design.id, static_cast< smac_edge::Chassis >( design.chassis ), static_cast< int32_t >( catalog.chassis.chassis.at( design.chassis ).triad ),
 			weapon.offense, static_cast< int32_t >( weapon.mode ), design.plan, design.abilities, stats.basic_allowance },

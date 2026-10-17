@@ -25,6 +25,7 @@
 #include "SmacFactionStartupRules.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
+#include "SmacPredefinedUnitRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrFrameAssembler.h"
 #include "CvrIndexedRasterizer.h"
@@ -228,6 +229,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacFactionStartupRulesTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
+		tests::AddSmacPredefinedUnitRulesTests( task );
 		tests::AddWorldSnapshotRulesTests( task );
 	}
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {

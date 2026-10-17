@@ -1,4 +1,5 @@
 #include "Settings.h"
+#include "network/Network.h"
 
 #include "util/FS.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
@@ -135,6 +136,7 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 	m_smac_technology_rules.reset();
 	m_smac_world_size_rules.reset();
 	m_smac_faction_startup_rules.reset();
+	m_smac_predefined_unit_rules.reset();
 	map.ClearSmacWorldSize();
 }
 
@@ -146,6 +148,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	std::optional< SmacTechnologyRules > technologies;
 	std::optional< SmacWorldSizeRules > world_sizes;
 	std::optional< SmacFactionStartupRules > factions;
+	std::optional< SmacPredefinedUnitRules > units;
 	if ( m_ruleset == RULESET_SMAC ) {
 		const auto source = read_source( "alpha.txt" );
 		parsed = loader::txt::SmacRulesTXTLoader::ParseBaseSquareRules( source );
@@ -153,13 +156,29 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 		technologies = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( source );
 		world_sizes = loader::txt::SmacRulesTXTLoader::ParseWorldSizeRules( source );
 		factions = loader::txt::FactionTXTLoader::ParseStartupRules( source, read_source, *technologies );
+		units = SmacPredefinedUnitRules::Parse( source, *technologies );
 	}
-	// Only publish after file reading and all parsing succeeded.
-	m_smac_base_square_rules = parsed;
-	m_smac_production_rules = std::move( production );
-	m_smac_technology_rules = std::move( technologies );
-	m_smac_world_size_rules = std::move( world_sizes );
-	m_smac_faction_startup_rules = std::move( factions );
+	// Stage the complete settings payload, including its existing mutable tail.
+	// The later State admission also accounts for configured faction metadata.
+	GlobalSettings staged;
+	staged.m_ruleset = m_ruleset;
+	staged.map.Deserialize( map.Serialize() );
+	staged.rules.Deserialize( rules.Serialize() );
+	staged.difficulty_level = difficulty_level;
+	staged.game_name = game_name;
+	staged.m_smac_base_square_rules = parsed;
+	staged.m_smac_production_rules = std::move( production );
+	staged.m_smac_technology_rules = std::move( technologies );
+	staged.m_smac_world_size_rules = std::move( world_sizes );
+	staged.m_smac_faction_startup_rules = std::move( factions );
+	staged.m_smac_predefined_unit_rules = std::move( units );
+	staged.Serialize();
+	m_smac_base_square_rules = staged.m_smac_base_square_rules;
+	m_smac_production_rules = std::move( staged.m_smac_production_rules );
+	m_smac_technology_rules = std::move( staged.m_smac_technology_rules );
+	m_smac_world_size_rules = std::move( staged.m_smac_world_size_rules );
+	m_smac_faction_startup_rules = std::move( staged.m_smac_faction_startup_rules );
+	m_smac_predefined_unit_rules = std::move( staged.m_smac_predefined_unit_rules );
 	LockRuleset();
 }
 
@@ -178,6 +197,7 @@ const std::optional< SmacTechnologyRules >& GlobalSettings::GetSmacTechnologyRul
 const std::optional< SmacWorldSizeRules >& GlobalSettings::GetSmacWorldSizeRules() const { return m_smac_world_size_rules; }
 
 const std::optional< SmacFactionStartupRules >& GlobalSettings::GetSmacFactionStartupRules() const { return m_smac_faction_startup_rules; }
+const std::optional< SmacPredefinedUnitRules >& GlobalSettings::GetSmacPredefinedUnitRules() const { return m_smac_predefined_unit_rules; }
 
 void GlobalSettings::SelectSmacWorldSize( const int64_t category ) {
 	if ( m_ruleset != RULESET_SMAC || !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
@@ -227,7 +247,7 @@ void GlobalSettings::LockRuleset() {
 	if ( m_ruleset == RULESET_UNSELECTED ) {
 		THROW( "Select a gameplay ruleset before starting a game" );
 	}
-	if ( m_ruleset == RULESET_SMAC && ( !m_smac_base_square_rules || !m_smac_production_rules || !m_smac_technology_rules || !m_smac_world_size_rules || !m_smac_faction_startup_rules ) ) {
+	if ( m_ruleset == RULESET_SMAC && ( !m_smac_base_square_rules || !m_smac_production_rules || !m_smac_technology_rules || !m_smac_world_size_rules || !m_smac_faction_startup_rules || !m_smac_predefined_unit_rules ) ) {
 		THROW( "SMAC rules profiles have not been loaded" );
 	}
 	m_ruleset_locked = true;
@@ -245,6 +265,7 @@ void GlobalSettings::ResetRuleset() {
 	m_smac_technology_rules.reset();
 	m_smac_world_size_rules.reset();
 	m_smac_faction_startup_rules.reset();
+	m_smac_predefined_unit_rules.reset();
 	map.ClearSmacWorldSize();
 }
 
@@ -290,8 +311,9 @@ const types::Buffer GlobalSettings::Serialize() const {
 	// The integer prefix rejects the old string-first format in both directions.
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_world_size_rules.has_value() ) { THROW( "Gameplay ruleset and SMAC world-size rules do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_faction_startup_rules.has_value() ) { THROW( "Gameplay ruleset and SMAC faction startup rules do not match" ); }
+	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_predefined_unit_rules.has_value() ) { THROW( "Gameplay ruleset and predefined unit profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 6 );
+	buf.WriteInt( 7 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_base_square_rules.has_value() );
 	if ( m_smac_base_square_rules ) {
@@ -303,10 +325,13 @@ const types::Buffer GlobalSettings::Serialize() const {
 		buf.WriteString( m_smac_world_size_rules->Serialize().ToString() );
 		buf.WriteString( m_smac_faction_startup_rules->Serialize( *m_smac_technology_rules ).ToString() );
 	}
+	buf.WriteBool( m_smac_predefined_unit_rules.has_value() );
+	if ( m_smac_predefined_unit_rules ) { buf.WriteString( m_smac_predefined_unit_rules->Serialize( *m_smac_technology_rules ).ToString() ); }
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
 	buf.WriteString( game_name );
+	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
 
 	return buf;
 }
@@ -316,8 +341,9 @@ static bool SameSmacRules( const std::optional< resource::smac::BaseSquareRules 
 }
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
-	if ( buf.ReadInt() != 6 ) {
-		THROW( "Unsupported global settings format (expected version 6)" );
+	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
+	if ( buf.ReadInt() != 7 ) {
+		THROW( "Unsupported global settings format (expected version 7)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -329,6 +355,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	std::optional< SmacTechnologyRules > technologies;
 	std::optional< SmacWorldSizeRules > world_sizes;
 	std::optional< SmacFactionStartupRules > factions;
+	std::optional< SmacPredefinedUnitRules > units;
 	if ( has_smac_rules ) {
 		std::array< resource::smac::RuleTriple, 3 > rows;
 		for ( auto& row : rows ) {
@@ -346,6 +373,11 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		world_sizes = SmacWorldSizeRules::Deserialize( types::Buffer( buf.ReadString() ) );
 		factions = SmacFactionStartupRules::Deserialize( types::Buffer( buf.ReadString() ), *technologies );
 	}
+	const auto has_units = buf.ReadBool();
+	if ( ( ruleset == RULESET_SMAC ) != has_units ) { THROW( "Gameplay ruleset and predefined unit profile do not match" ); }
+	if ( has_units ) { units = SmacPredefinedUnitRules::Deserialize( buf.ReadString(), *technologies ); }
+	if ( m_ruleset_locked && ( units.has_value() != m_smac_predefined_unit_rules.has_value()
+		|| ( units && !( *units == *m_smac_predefined_unit_rules ) ) ) ) { THROW( "Host changed the predefined unit profile of an initialized session" ); }
 	if ( m_ruleset_locked && m_ruleset != ruleset ) {
 		THROW( "Host changed the gameplay ruleset of an initialized session" );
 	}
@@ -374,7 +406,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 		world_sizes->ValidateSelection( *next_selection );
 	}
 	const auto rules_data = buf.ReadString();
-	// Default rules currently serialize no fields; V6 must not silently drop
+	// Default rules currently serialize no fields; V7 must not silently drop
 	// unknown payload bytes. A future rules format requires an explicit version.
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();
@@ -393,6 +425,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	m_smac_technology_rules = std::move( technologies );
 	m_smac_world_size_rules = std::move( world_sizes );
 	m_smac_faction_startup_rules = std::move( factions );
+	m_smac_predefined_unit_rules = std::move( units );
 	m_ruleset_locked = true;
 }
 

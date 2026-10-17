@@ -5,5 +5,6 @@ SET( SRC ${SRC}
 	${PWD}/SmacTechnologyRules.cpp
 	${PWD}/SmacFactionStartupRules.cpp
 	${PWD}/SmacWorldSizeRules.cpp
+	${PWD}/SmacPredefinedUnitRules.cpp
 
 	PARENT_SCOPE )

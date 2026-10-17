@@ -1,4 +1,5 @@
 #pragma once
+#include "SmacPredefinedUnitSource.h"
 
 #include "game/backend/settings/Settings.h"
 #include "loader/txt/FactionTXTLoader.h"
@@ -121,9 +122,13 @@ inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFacti
 	return result;
 }
 
+inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits( const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
+	return game::backend::settings::SmacPredefinedUnitRules::Parse( PredefinedSource(), technologies );
+}
+
 inline std::string Source( const std::string& filename ) {
 	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
-	return ProductionSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
+	return ProductionSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"
 		"Improved Land,*,*,*\nImproved Sea,*,*,*\nMonolith,*,*,*\nBorehole Square,*,*,*\n#END\n";
 }
@@ -136,7 +141,8 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& settings.GetSmacProductionRules() && *settings.GetSmacProductionRules() == Production()
 		&& settings.GetSmacTechnologyRules() && *settings.GetSmacTechnologyRules() == Technologies()
 		&& settings.GetSmacWorldSizeRules() && *settings.GetSmacWorldSizeRules() == WorldSizes()
-		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions();
+		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions()
+		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits();
 }
 
 inline types::Buffer Payload( const std::string& id, const bool present,
@@ -144,9 +150,10 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& production = std::nullopt,
 	const std::optional< std::string >& technologies = std::nullopt,
 	const std::optional< std::string >& sizes = std::nullopt,
-	const std::optional< std::string >& factions = std::nullopt ) {
+	const std::optional< std::string >& factions = std::nullopt,
+	const std::optional< std::string >& units = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 6 );
+	result.WriteInt( 7 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -162,6 +169,12 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 			} catch ( const std::runtime_error& ) { /* Preserve deliberately malformed catalog bytes above. */ }
 		}
 		result.WriteString( faction_bytes );
+	}
+	result.WriteBool( present );
+	if ( present ) {
+		auto catalog = Technologies();
+		if ( technologies ) { try { catalog = game::backend::settings::SmacTechnologyRules::Deserialize( types::Buffer( *technologies ) ); } catch ( const std::runtime_error& ) {} }
+		result.WriteString( units ? *units : PredefinedUnits( catalog ).Serialize( catalog ).ToString() );
 	}
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;

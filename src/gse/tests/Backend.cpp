@@ -5028,6 +5028,11 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 							? startup && startup->Find( "GAIANS" ) && startup->Find( "GAIANS" )->NamedTechnologyReferences() == std::vector< int32_t >{ 2, 2, -1, -2 }
 								&& startup->Find( "GAIANS" )->ExtraTechnologyCount() == -3
 							: !startup );
+						const auto& units = state->m_settings.global.GetSmacPredefinedUnitRules();
+						callback_rules_valid = callback_rules_valid && ( std::string( id ) == "smac"
+							? units && units->catalog.units.size() == 14 && units->catalog.units[ 0 ].cost == 3
+								&& units->catalog.units[ 1 ].prerequisite.technology_id == 2
+							: !units );
 					};
 					size_t script_callbacks = 0;
 					std::string script_ruleset;
@@ -5060,9 +5065,56 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 }
 
 static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "test host settings actual packet admits exact frame cap and rejects faction expansion before send", GT() {
+		using namespace game::backend;
+		class Transport final : public network::Network {
+		public:
+			std::vector< network::Event > sent;
+			static size_t FrameLimit() { return BUFFER_SIZE; }
+		protected:
+			network::MT_Response ListenStart() override { return Success(); }
+			network::MT_Response ListenStop() override { return Success(); }
+			network::MT_Response Connect( const std::string&, MT_CANCELABLE ) override { return Success(); }
+			network::MT_Response Disconnect() override { return Success(); }
+			network::MT_Response DisconnectClient( network::cid_t ) override { return Success(); }
+			void ProcessEvents() override { const auto events = GetEvents(); sent.insert( sent.end(), events.begin(), events.end() ); }
+		} transport;
+		class Server final : public connection::Server {
+		public:
+			Server( gc::Space* space, settings::LocalSettings* settings, network::Network* network ) : connection::Server( space, settings, network ) {}
+		};
+		BackendFixture fixture;
+		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* state = fixture.GetGame()->GetState();
+			state->m_settings.global.SelectRuleset( "smac" ); state->m_settings.PrepareRuleset( smac_rules_fixture::Source );
+			NEWV( player, Player, "Remote", Player::PR_PLAYER, nullptr, "Transcend" ); state->AddPlayer( player );
+			state->m_slots->GetSlot( 1 ).SetPlayer( player, 1, "" ); player->Connect();
+			auto* server = new Server( gc_space, &state->m_settings.local, &transport ); state->SetConnection( server );
+			util::FinallyGuard detach( [ & ]() { server->ResetHandlers(); state->DetachConnection(); } );
+			const auto connect = transport.MT_Connect( network::CM_SERVER ); transport.Iterate();
+			GT_ASSERT( transport.MT_GetResult( connect ).result == network::R_SUCCESS, "fixture transport did not start" );
+			types::Packet packet( types::Packet::PT_GLOBAL_SETTINGS ); packet.data.str = state->Serialize().ToString();
+			GT_ASSERT( packet.Serialize().lenw + sizeof( int ) < Transport::FrameLimit(), "synthetic complete profile is too large" );
+			auto* faction = state->GetFM()->GetAll().front(); const auto original_name = faction->m_name;
+			const auto padding = network::Network::MAX_PACKET_BYTES - packet.Serialize().lenw;
+			faction->m_name += std::string( padding, 'x' ); packet.data.str = state->Serialize().ToString();
+			GT_ASSERT( packet.Serialize().lenw + sizeof( int ) == Transport::FrameLimit(), "exact actual framing limit differs" );
+			server->UpdateGameSettings(); transport.Iterate();
+			GT_ASSERT( transport.sent.size() == 1 && transport.sent.front().data.packet_data == packet.Serialize().ToString(), "exact-cap settings did not traverse real sender" );
+			faction->m_name += 'x';
+			GT_ASSERT( RejectsSettings( [ & ]() { server->UpdateGameSettings(); } ), "cap+1 FM expansion reached send" );
+			transport.Iterate(); GT_ASSERT( transport.sent.size() == 1, "oversized settings queued a packet" );
+			types::Buffer oversized; oversized.WriteString( state->m_settings.global.Serialize().ToString() ); oversized.WriteString( state->GetFM()->Serialize().ToString() );
+			faction->m_name = original_name;
+			const auto before = state->Serialize().ToString();
+			GT_ASSERT( RejectsSettings( [ & ]() { state->Deserialize( oversized ); } ) && state->Serialize().ToString() == before, "oversized decode changed settings or FM" );
+			GT_OK();
+		} );
+		GT_ASSERT( error.empty(), "packet-budget fixture failed: " + error ); GT_OK();
+	} );
 	task->AddTest( "test real client rejects missing and tampered host rules without publishing callbacks or state", GT() {
 		using namespace game::backend;
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 } ) {
+		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 } ) {
 			BackendFixture source, destination;
 			auto* host_state = source.GetGame()->GetState();
 			host_state->m_settings.global.SelectRuleset( "smac" );
@@ -5075,11 +5127,12 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			std::array< int64_t, 9 > values = { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 };
 			if ( scenario == 1 ) { values[ 4 ] = int64_t( INT32_MAX ) + 1; }
 			if ( scenario == 2 ) { values[ 7 ] = 77; }
-			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21;
+			const bool locked = ( scenario >= 2 && scenario <= 4 ) || scenario == 8 || scenario == 9 || scenario == 14 || scenario == 15 || scenario == 20 || scenario == 21 || scenario == 26;
 			std::optional< std::string > production;
 			std::optional< std::string > technologies;
 			std::optional< std::string > sizes;
 			std::optional< std::string > startup;
+			std::optional< std::string > units;
 			if ( scenario == 3 || scenario == 4 ) {
 				auto changed = smac_rules_fixture::Production();
 				if ( scenario == 3 ) { changed.facilities.front().cost = 123; }
@@ -5133,8 +5186,12 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 23 ) { startup = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ).ToString(); startup->pop_back(); }
 			if ( scenario == 24 ) { auto bad = smac_rules_fixture::Factions().Serialize( smac_rules_fixture::Technologies() ); bad.WriteInt( 42 ); startup = bad.ToString(); }
 			if ( scenario == 25 ) { types::Buffer bad; bad.WriteInt( 2 ); startup = bad.ToString(); }
+			if ( scenario == 26 ) { auto changed = smac_rules_fixture::PredefinedUnits(); changed.catalog.abilities.abilities.back().description += " changed"; units = changed.Serialize( smac_rules_fixture::Technologies() ).ToString(); }
+			if ( scenario == 27 ) { units = smac_rules_fixture::PredefinedUnits().Serialize( smac_rules_fixture::Technologies() ).ToString(); units->pop_back(); }
+			if ( scenario == 28 ) { types::Buffer bad; bad.WriteInt( 2 ); units = bad.ToString(); }
+			if ( scenario == 29 ) { units = std::string( settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ); }
 			types::Buffer invalid_state;
-			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup ).ToString() );
+			invalid_state.WriteString( smac_rules_fixture::Payload( "smac", scenario != 0, values, production, technologies, sizes, startup, units ).ToString() );
 			invalid_state.WriteString( factions );
 			types::Packet invalid( types::Packet::PT_GLOBAL_SETTINGS );
 			invalid.data.str = invalid_state.ToString();

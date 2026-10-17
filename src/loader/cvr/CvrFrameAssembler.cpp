@@ -8,6 +8,10 @@
 #include <stdexcept>
 #include <utility>
 
+#if defined( __SSE__ ) || defined( _M_X64 ) || ( defined( _M_IX86_FP ) && _M_IX86_FP >= 1 )
+#include <xmmintrin.h>
+#endif
+
 namespace loader::cvr {
 namespace {
 
@@ -78,6 +82,11 @@ CvrFrameAssembly CvrFrameAssembler::Assemble( std::shared_ptr< const CvrFrameSou
 	const std::vector< CvrFrameSelection >& selections ) {
 	if ( !source ) { Invalid( "source is null" ); }
 	if ( std::fegetround() != FE_TONEAREST ) { Invalid( "nearest floating-point rounding is required" ); }
+#if defined( __SSE__ ) || defined( _M_X64 ) || ( defined( _M_IX86_FP ) && _M_IX86_FP >= 1 )
+	// fegetround can report x87 while Add/conversion use SSE. Both controls
+	// must admit nearest; the caller must not change them during assembly.
+	if ( ( _mm_getcsr() & _MM_ROUND_MASK ) != _MM_ROUND_NEAREST ) { Invalid( "nearest SSE rounding is required" ); }
+#endif
 	size_t count = 0;
 	for ( const auto& selection : selections ) {
 		if ( selection.scene_index >= source->Scenes().size() || selection.frame < 0 ) { Invalid( "invalid scene index or negative frame" ); }

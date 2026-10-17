@@ -1,4 +1,5 @@
 #include "CvrFrameAssembler.h"
+#include "fixtures/CvrFrameArithmetic.h"
 
 #include "loader/cvr/CvrFrameAssembler.h"
 #include "task/gsetests/GSETests.h"
@@ -39,6 +40,11 @@ template< typename F > bool Rejects( F&& action ) {
 }
 
 void AddCvrFrameAssemblerTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "CVR assembly validates effective rounding and preserves denormal controls", GT() {
+		const auto error = cvr_frame_arithmetic::Check();
+		GT_ASSERT( error.empty(), "arithmetic environment: " + error );
+		GT_OK();
+	} );
 	task->AddTest( "CVR assembly preserves multi-scene order own modulo exact flags matrix and offsets", GT() {
 		auto source = CvrFrameSource::Create( { Scene( 2, 2 ), Scene( 1, 3 ) } );
 		const auto result = CvrFrameAssembler::Assemble( source, { { 0, 5, { -400, 200, 0 } }, { 1, 5, { 1.25f, -2.5f, 7.75f } }, { 0, 0, { 0, 0, 0 } } } );
@@ -124,11 +130,10 @@ void AddCvrFrameAssemblerTests( task::gsetests::GSETests* task ) {
 			const float offset = mode == 1 ? Float( 0x7f7fffff ) : mode == 2 ? -Float( 0x00800000 ) : 0;
 			GT_ASSERT( Rejects( [ & ]() { (void)CvrFrameAssembler::Assemble( input, { { 0, 0, {} }, { 1, 0, { offset, 0, 0 } } } ); } ), "unsupported late arithmetic accepted" );
 		}
-		const auto previous = std::fegetround();
+		cvr_frame_arithmetic::Environment restore;
 		const auto changed = std::fesetround( FE_DOWNWARD );
 		const bool rejected = Rejects( [ & ]() { (void)CvrFrameAssembler::Assemble( source, { { 0, 0, {} } } ); } );
-		const auto restored = std::fesetround( previous );
-		GT_ASSERT( changed == 0 && restored == 0 && rejected, "unsupported rounding accepted or test environment not restored" );
+		GT_ASSERT( changed == 0 && rejected, "unsupported rounding accepted" );
 		GT_OK();
 	} );
 	task->AddTest( "CVR assembly preserves matrix endpoint bits signed zero and nearest-even additions", GT() {

@@ -3,6 +3,7 @@ SET( SRC ${SRC}
 	${PWD}/RenderInfo.cpp
 	${PWD}/BaseManager.cpp
 	${PWD}/Base.cpp
+	${PWD}/BaseResourceCalculation.cpp
 	${PWD}/BaseAllocation.cpp
 	${PWD}/BaseWorkers.cpp
 	${PWD}/BaseWorkerCommands.cpp

@@ -735,6 +735,10 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} ),
 	},
 	{
+		"get_smac_resource_calculation",
+		NATIVE_CALL( this ) { N_EXPECT_ARGS( 0 ); return CopySmacResourceCalculation( GSE_CALL ); } )
+	},
+	{
 		"get_smac_nutrient_demand",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

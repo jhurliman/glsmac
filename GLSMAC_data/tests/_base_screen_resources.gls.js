@@ -58,8 +58,8 @@ return (game, base, ui) => {
 			check(screen.sections.resources.labels.nutrients.right.text == expected.nutrients, 'wrong canonical nutrient demand/surplus');
 			check(screen.sections.resources.labels.nutrients.left.text == '006 - 007', 'canonical intake/demand was substituted');
 			check(screen.sections.resources.intake_caption.text == 'INTAKE - CONSUMPTION (N/A = unavailable)', 'unavailable legend missing');
-			check(screen.sections.resources.labels.minerals.left.text == '012 - 000', 'actual mineral support was not shown');
-			check(screen.sections.resources.labels.minerals.right.text == '+012', 'wrong mineral balance');
+			check(screen.sections.resources.labels.minerals.left.text == expected.minerals + ' - 000', 'actual mineral support was not shown');
+			check(screen.sections.resources.labels.minerals.right.text == '+' + expected.minerals, 'wrong mineral balance');
 			for (type of ['energy']) {
 				check(screen.sections.resources.labels[type].left.text == expected[type] + ' - N/A', 'actual intake or unavailable consumption missing');
 				check(screen.sections.resources.labels[type].right.text == 'N/A', 'canonical surplus was invented');

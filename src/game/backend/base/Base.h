@@ -12,6 +12,7 @@
 
 #include "Pop.h"
 #include "ProductionState.h"
+#include "BaseResourceCalculation.h"
 #include "SmacBaseResourceContext.h"
 #include "SmacSpecialists.h"
 #include "SmacBaseAllocationState.h"
@@ -71,6 +72,7 @@ public:
 	void RemovePop( const size_t pop_id );
 	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
 	void SetPopAssignment( GSE_CALLABLE, Pop* pop, const std::string& def_id, map::tile::Tile* tile );
+	SmacBaseResourceCalculation PrepareSmacResourceCalculation( SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary ) const;
 	int64_t GetAccumulatedNutrients() const;
 	void SetAccumulatedNutrients( const int64_t nutrients );
 	const std::optional< ProductionState >& GetProductionState() const;
@@ -154,6 +156,7 @@ private:
 	gse::value::Array* const GetWorkableTiles( GSE_CALLABLE );
 	gse::value::Array* const GetWorkedTiles( GSE_CALLABLE );
 	gse::value::Array* const GetUnworkedTiles( GSE_CALLABLE );
+	gse::Value* CopySmacResourceCalculation( GSE_CALLABLE ) const;
 	gse::value::Object* const GetIntake( GSE_CALLABLE );
 	gse::value::Object* const GetConsumption( GSE_CALLABLE );
 

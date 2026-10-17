@@ -12,6 +12,11 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/FacilityDef.h"
 #include "game/backend/base/PopDef.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/StaticDef.h"
+#include "game/backend/unit/MoraleSet.h"
+#include "game/backend/unit/CvrScoutRender.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/map/tile/TileManager.h"
@@ -112,6 +117,19 @@ Base* MakeBase( GSE_CALLABLE, Game* game, const size_t id = 701, Tile* center = 
 		pops, pops.empty() ? 1 : pops.rbegin()->first + 1, 13, {}, SmacBaseResourceContext{ 1, false, 0, 0, 0x00dfbe41u, false } );
 	bm->SpawnBase( GSE_CALL, base ); return base;
 }
+void SupportedUnit( GSE_CALLABLE, ConventionalUnitFixture& fixture, Base* base, const bool homed ) {
+    using namespace game::backend::unit;
+    auto* game = fixture.Game(); auto* um = game->GetUM();
+    MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
+    um->DefineMoraleSet( new MoraleSet( "resource-morale", names ) );
+    um->DefineUnit( new StaticDef( "resource-scout", um->GetMoraleSet( "resource-morale" ), "Scout", MT_LAND, 999,
+        new CvrScoutRender( 2, 0, 1, 1, { 1, 1 }, { 128, 128 } ) ) );
+    ConventionalUnitState record{ 2, 1, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+    if ( homed ) { record.home = ConventionalUnitState::Home::Base; record.home_base_id = base->m_id; }
+    Terrain( game->GetMap()->GetTile( 6, 6 ) );
+    um->SpawnConventionalUnit( GSE_CALL, 91, um->GetUnitDef( "resource-scout" ), base->m_owner, game->GetMap()->GetTile( 6, 6 ), record );
+    fixture.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } );
+}
 void Callbacks( GSE_CALLABLE, ConventionalUnitFixture& fixture ) {
 	fixture.PrepareBaseCallbacks();
 	auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_growth" ) );
@@ -160,6 +178,119 @@ std::string CanonicalResourceSnapshot( Game* game, const std::string& bytes ) {
 }
 
 void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
+    task->AddTest( "Canonical N M preparation matches admitted original mineral cases through actual Base", []( GSE*, context::Context* ) -> std::string {
+        // Literal BASE-M-001,002,005..009,018,031 outputs. Remaining named
+        // cases need projects/convoys and are outside this live admission.
+        struct Case { int32_t raw, support; std::vector< int32_t > facilities; int32_t gross, surplus; };
+        const std::vector< Case > cases{
+            {5,0,{},5,5}, {5,2,{},5,3}, {5,2,{22},7,5}, {3,0,{22},4,4},
+            {3,0,{22,19},6,6}, {3,0,{22,19,20},7,7}, {5,0,{21},7,7},
+            {0,2,{19,20,21,22},0,-2}, {-3,0,{22},-4,-4}
+        };
+        const auto next = Base::GetNextId(), unit_next = unit::Unit::GetNextId();
+        util::FinallyGuard ids( [ = ] { Base::SetNextId( next ); unit::Unit::SetNextId( unit_next ); } );
+        for ( const auto& c : cases ) {
+            SourceOptions options; options.rows[ 1 ][ 1 ] = c.raw;
+            ConventionalUnitFixture fixture; fixture.ConfigureResources( Source( options ), "GAIANS" );
+            const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+                auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
+                auto* base = MakeBase( GSE_CALL, game, 701, nullptr, false, true );
+                for ( const auto role : c.facilities ) {
+                    const auto id = "MULTIPLIER" + std::to_string( role );
+                    game->GetBM()->DefineFacility( new FacilityDef( id, "Misleading facility", "", 0, {}, role ) );
+                    base->m_facilities.emplace( id, game->GetBM()->GetFacilityDef( id ) );
+                }
+                SupportedUnit( GSE_CALL, fixture, base, c.support != 0 );
+                const ProductionItem item{ ProductionItemKind::Unit, "Opaque target not consulted by this stage" };
+                base->SetProductionState( GSE_CALL, ProductionState{ item, 47, item, 11 } );
+                const auto before = fixture.Snapshot(); const auto rng = game->GetRandom()->GetStateString(); const auto pair = fixture.GameplayRandom();
+                for ( int repeat = 0; repeat < 2; ++repeat ) {
+                    const auto result = base->PrepareSmacResourceCalculation();
+                    GT_ASSERT( result.raw_intake[ 1 ] == c.raw && result.minerals.intake == c.gross && result.minerals.demand == c.support
+                        && result.minerals.surplus == c.surplus && result.minerals.pre_orbital_surplus == c.surplus, "live mineral stage differs from original literal" );
+                }
+                GT_ASSERT( fixture.Snapshot() == before && game->GetRandom()->GetStateString() == rng && fixture.GameplayRandom() == pair,
+                    "mineral preparation posted or accumulated resources" ); GT_OK();
+            } ); if ( !error.empty() ) { return error; }
+        }
+        GT_OK();
+    } );
+    task->AddTest( "Canonical N M preparation stages food normalization without collection or query mutation", []( GSE*, context::Context* ) -> std::string {
+        const auto next = Base::GetNextId(), unit_next = unit::Unit::GetNextId();
+        util::FinallyGuard ids( [ = ] { Base::SetNextId( next ); unit::Unit::SetNextId( unit_next ); } );
+        // Original GROW normalization boundaries; no population transition or
+        // surplus collection is executed by this preparation.
+        const std::array< std::array< int64_t, 4 >, 6 > cases{{
+            {{0,0,-2,-1}}, {{0,1,-2,1}}, {{0,-3,-2,-3}}, {{2,-3,0,0}}, {{4,-3,2,0}}, {{4,20,2,20}}
+        }}; // center N, stored before, surplus, normalized store
+        for ( const auto& c : cases ) {
+            SourceOptions options; options.rows[ 1 ][ 0 ] = static_cast< int32_t >( c[ 0 ] );
+            ConventionalUnitFixture fixture; fixture.ConfigureResources( Source( options ), "GAIANS" );
+            const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+                auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
+                auto* base = MakeBase( GSE_CALL, game, 701, nullptr, false, true ); base->SetAccumulatedNutrients( c[ 1 ] );
+                const auto before = fixture.Snapshot(); const auto queued = fixture.QueuedFrontendRequests().size();
+                const auto result = base->PrepareSmacResourceCalculation();
+                GT_ASSERT( result.nutrients.intake == c[ 0 ] && result.nutrients.demand == 2 && result.nutrients.surplus == c[ 2 ]
+                    && result.nutrients.stored_before == c[ 1 ] && result.nutrients.normalized_stored == c[ 3 ], "wrong staged food normalization" );
+                auto* value = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( base->Wrap( GSE_CALL ) ), "get_smac_resource_calculation" ) );
+                auto* nutrients = static_cast< value::Object* >( value->Get( "nutrients" ) );
+                static_cast< value::Int* >( nutrients->Get( "normalized_stored" ) )->value = 999;
+                GT_ASSERT( base->PrepareSmacResourceCalculation().nutrients.normalized_stored == c[ 3 ] && fixture.Snapshot() == before
+                    && fixture.QueuedFrontendRequests().size() == queued, "UI query normalized, collected or exposed mutable owned state" ); GT_OK();
+            } ); if ( !error.empty() ) { return error; }
+        }
+        GT_OK();
+    } );
+    task->AddTest( "Canonical N M preparation composes tile orbital facilities support phase and saved target", []( GSE*, context::Context* ) -> std::string {
+        const auto next = Base::GetNextId(), unit_next = unit::Unit::GetNextId();
+        util::FinallyGuard ids( [ = ] { Base::SetNextId( next ); unit::Unit::SetNextId( unit_next ); } );
+        ConventionalUnitFixture fixture; fixture.ConfigureResources( Source(), "GAIANS" );
+        return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+            auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
+            auto* forest = game->GetMap()->GetTile( 4, 2 ); Terrain( forest ); forest->terraforming = TERRAFORMING_FOREST;
+            auto* base = MakeBase( GSE_CALL, game, 701, nullptr, true, true ); SupportedUnit( GSE_CALL, fixture, base, true );
+            for ( const int role : { 19, 22 } ) {
+                const auto id = "MULTIPLIER" + std::to_string( role ); game->GetBM()->DefineFacility( new FacilityDef( id, "Other", "", 0, {}, role ) );
+                base->m_facilities.emplace( id, game->GetBM()->GetFacilityDef( id ) );
+            }
+            fixture.ResourceState( []( auto& state ) {
+                state.satellites.at( 1 ).resources = {4,4,0}; state.resource_modifiers.solar_ordinary = true; state.resource_modifiers.solar_upkeep = false;
+            } );
+            base->SetAccumulatedNutrients( -9 );
+            const ProductionItem target{ ProductionItemKind::Orbital, "opaque accepted category" };
+            base->SetProductionState( GSE_CALL, ProductionState{ target, 47, { ProductionItemKind::Stockpile, {} }, 11 } );
+            const auto before = fixture.Snapshot();
+            const auto ordinary = base->PrepareSmacResourceCalculation(), upkeep = base->PrepareSmacResourceCalculation( SmacBaseResourcePhase::Upkeep );
+            GT_ASSERT( ordinary.raw_intake[ 0 ] == 5 && ordinary.raw_intake[ 1 ] == 5 && ordinary.nutrients.demand == 4 && ordinary.nutrients.surplus == 1
+                && ordinary.nutrients.normalized_stored == 0 && ordinary.minerals.multiplier_steps == 2 && ordinary.minerals.intake == 10
+                && ordinary.minerals.demand == 2 && ordinary.minerals.surplus == 8 && ordinary.minerals.pre_orbital_surplus == 8,
+                "live tile/orbit/home/facility composition changed" );
+            GT_ASSERT( ordinary.raw_intake[ 2 ] != upkeep.raw_intake[ 2 ] && ordinary.raw_intake[ 0 ] == upkeep.raw_intake[ 0 ]
+                && ordinary.minerals.intake == upkeep.minerals.intake && fixture.Snapshot() == before, "phase was inferred or resources were posted" );
+            GT_OK();
+        } );
+    } );
+    task->AddTest( "Canonical N M preparation rejects missing authority and late overflow atomically", []( GSE*, context::Context* ) -> std::string {
+        const auto next = Base::GetNextId(), unit_next = unit::Unit::GetNextId();
+        util::FinallyGuard ids( [ = ] { Base::SetNextId( next ); unit::Unit::SetNextId( unit_next ); } );
+        SourceOptions options; options.rows[ 1 ][ 1 ] = INT32_MAX;
+        ConventionalUnitFixture fixture; fixture.ConfigureResources( Source( options ), "GAIANS" );
+        return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+            auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
+            auto* base = MakeBase( GSE_CALL, game, 701, nullptr, false, true ); base->SetAccumulatedNutrients( -4 );
+            const auto before = fixture.Snapshot(), rng = game->GetRandom()->GetStateString(); const auto pair = fixture.GameplayRandom();
+            GT_ASSERT( Rejects( [ & ] { base->PrepareSmacResourceCalculation(); } ), "late multiplier arithmetic overflow accepted" );
+            GT_ASSERT( Rejects( [ & ] { base->PrepareSmacResourceCalculation( static_cast< SmacBaseResourcePhase >( 99 ) ); } ), "unknown phase accepted" );
+            fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::Unavailable );
+            const auto unsupported = fixture.Snapshot();
+            GT_ASSERT( Rejects( [ & ] { base->PrepareSmacResourceCalculation(); } ) && fixture.Snapshot() == unsupported, "missing project authority acquired a neutral default" );
+            fixture.MovementCapability( faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain );
+            GT_ASSERT( fixture.Snapshot() == before && game->GetRandom()->GetStateString() == rng && fixture.GameplayRandom() == pair
+                && base->GetAccumulatedNutrients() == -4, "rejected calculation normalized food or changed world" ); GT_OK();
+        } );
+    } );
+
 	task->AddTest( "Canonical orbital intake consumes saved owner assets and registered Aerospace role", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureResources( Source(), "GAIANS" );
 		std::string world; std::array< int32_t, 3 > expected{ 3, 4, 0 };
@@ -207,6 +338,8 @@ void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
 			auto* game = fixture.Game(); Define( game ); Terrain( game->GetMap()->GetTile( 2, 2 ) );
 			auto* forest = game->GetMap()->GetTile( 4, 2 ); Terrain( forest ); forest->terraforming = TERRAFORMING_FOREST;
 			auto* base = MakeBase( GSE_CALL, game ); Callbacks( GSE_CALL, fixture );
+            game->GetBM()->DefineFacility( new FacilityDef( "MINERAL_FACTORY", "No name identity", "", 0, {}, 22 ) );
+            base->m_facilities.emplace( "MINERAL_FACTORY", game->GetBM()->GetFacilityDef( "MINERAL_FACTORY" ) );
 			auto* wrapper = static_cast< value::Object* >( base->Wrap( GSE_CALL ) );
 			GT_ASSERT( Rejects( [ & ] { Call( GSE_CALL, wrapper, "get_consumption" ); } ), "canonical full consumption unexpectedly available" );
 			auto* game_wrapper = static_cast< value::Object* >( game->Wrap( GSE_CALL ) );
@@ -231,7 +364,7 @@ void AddCanonicalResourceIntakeTests( task::gsetests::GSETests* task ) {
 				const auto pair = fixture.GameplayRandom(); const auto frontend = fixture.QueuedFrontendRequests().size();
 				auto* expected = new value::Object( GSE_CALL, {
 					{ "canonical", VALUE( value::Bool,, true ) }, { "nutrients", VALUE( value::String,, "-001" ) },
-					{ "minerals", VALUE( value::String,, "12" ) }, { "energy", VALUE( value::String,, "15" ) },
+					{ "minerals", VALUE( value::String,, "018" ) }, { "energy", VALUE( value::String,, "15" ) },
 					{ "stored", VALUE( value::String,, production_present ? "Stored: -4" : "Stored: 13" ) },
 					{ "production", VALUE( value::String,, production_present ? "Stored: 47" : "Stored: unavailable" ) },
 				} );

@@ -127,15 +127,17 @@ return {
 
 		this.base_id = base.id;
 
-		const intake = base.get_intake();
 		const canonical = base.has_smac_resource_context;
+		let intake = undefined;
 		let consumption = undefined;
 		if (canonical) {
-			consumption = {
-				NUTRIENTS: base.get_smac_nutrient_demand(),
-				MINERALS: base.get_smac_mineral_support(),
-			};
+			// Fresh preparation only: drawing does not normalize stored food,
+			// collect nutrients, post minerals or invent energy processing.
+			const calculation = base.get_smac_resource_calculation();
+			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
+			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
 		} else {
+			intake = base.get_intake();
 			consumption = base.get_consumption();
 		}
 

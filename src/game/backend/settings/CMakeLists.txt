@@ -3,5 +3,6 @@ SET( SRC ${SRC}
 	${PWD}/Settings.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacFactionStartupRules.cpp
 
 	PARENT_SCOPE )

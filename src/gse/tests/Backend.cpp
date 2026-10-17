@@ -54,6 +54,7 @@
 #include "resource/ResourceManager.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/backend/Game.h"
+#include "game/backend/CampaignFile.h"
 #include "game/backend/Random.h"
 #include "game/backend/Player.h"
 #include "game/backend/unit/UnitManager.h"
@@ -2415,6 +2416,61 @@ public:
 			"retired world ran a queued controller callback" );
 		GT_OK();
 	}
+
+    std::string CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {
+        const auto world=m_game.SerializeWorldSnapshot();const auto session=m_state->CaptureGameSession();
+        auto* previous=m_glsmac->m_state;m_glsmac->m_state=m_state;
+        util::FinallyGuard restore([&]{m_glsmac->m_state=previous;});
+        bool rejected=false;try{m_glsmac->LoadCampaign(GSE_CALL,path);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected && m_glsmac->m_state==m_state && !m_glsmac->m_campaign_previous_state
+            && m_state->CaptureGameSession()==session && m_state->IsGameSessionActive(session)
+            && m_game.SerializeWorldSnapshot()==world,"failed file load replaced current State or session");
+        GT_OK();
+    }
+
+    std::string CheckCampaignRestore(const std::string& path,const std::string& expected_world) {
+        using namespace game::backend;
+        const auto saved=campaign::Read(path);
+        const auto before_turn=m_game.GetTurnId();
+        const auto before_rng=m_game.m_simulation->value.gameplay_random;
+        const auto before_settings=m_state->Serialize().ToString();
+        const auto before_roster=m_state->ExportRoster();
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* old_state=m_state;
+            auto* candidate=new State(gc_space,ctx,m_glsmac.get());m_gse->AddRootObject(candidate);
+            candidate->Deserialize(types::Buffer(saved.settings));
+            candidate->RestoreLocalCampaignRoster(saved.roster);
+            candidate->m_settings.local.game_mode=settings::LocalSettings::GM_SINGLEPLAYER;
+            candidate->m_settings.local.network_role=settings::LocalSettings::NR_NONE;
+            Game::ValidateCampaignWorld(candidate,saved.world);
+            GT_ASSERT(candidate!=old_state && candidate->m_slots->GetSlot(0).GetPlayer()!=old_state->m_slots->GetSlot(0).GetPlayer(),"campaign reused old player identities");
+            ResetRequest();
+            m_game.BindLocalCampaignState(candidate);m_state=candidate;
+            m_gse->RemoveRootObject(old_state);
+            size_t configure_calls=0,create_calls=0,start_calls=0;
+            m_game.On(GSE_CALL,"configure",NATIVE_CALL(&configure_calls){++configure_calls;return VALUE(value::Undefined); }));
+            m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
+            m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
+            util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
+            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);ProcessRequests();
+            GT_ASSERT(m_game.MT_GetResponse(pending.request).result==R_SUCCESS,"campaign restore request was not admitted");
+            util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
+            for(int i=0;i<4;++i){m_game.Iterate();}
+            GT_ASSERT(m_game.m_active_admission && m_game.m_active_admission->stage==Game::StartupStage::InitializeMap
+                && m_game.m_pending_snapshot_turn && !m_game.m_simulation,"campaign did not use staged saved decode");
+            // Asset-free fixture skips only renderer construction. Decode and
+            // the actual claimed Start/InitComplete consumer remain production.
+            m_game.m_game_state=Game::GS_STARTING;
+            m_game.SetStartupStage(m_game.m_active_admission,Game::StartupStage::Start);m_game.Iterate();
+            GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
+            GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
+                && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
+            GT_ASSERT(m_game.SerializeWorldSnapshot()==expected_world,"campaign restore did not preserve complete world bytes");
+            m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
+            GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
+            GT_OK();
+        });
+    }
 
 	void ProcessEvents() { m_game.ProcessEvents(); }
 	void FlushEvents() { m_game.GetState()->GetConnection()->ProcessPending( true ); }
@@ -5032,6 +5088,8 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {return fixture->CheckCampaignRejectedLoad(GSE_CALL,path);}
+std::string ConventionalUnitFixture::CheckCampaignRestore(const std::string& path,const std::string& world) {return fixture->CheckCampaignRestore(path,world);}
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) { return fixture->CheckUnitCommandCompletion( actor, helper ); }
 std::string ConventionalUnitFixture::CheckSelectedWorkController( game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( actor ); }

@@ -71,8 +71,9 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start, const std::function< void() > on_cancel )
-	: m_glsmac( glsmac )
+Game::Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start, const std::function< void() > on_cancel, std::optional<std::string> campaign_world )
+	: m_campaign_world(std::move(campaign_world))
+	, m_glsmac( glsmac )
 	, m_state( state )
 	, m_ui( ui )
 	, m_on_start( on_start )
@@ -96,7 +97,7 @@ void Game::Start() {
 	auto* game = g_engine->GetGame();
 	auto* config = g_engine->GetConfig();
 
-	if ( m_state->IsMaster() ) {
+	if ( !m_campaign_world && m_state->IsMaster() ) {
 		if ( config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 			m_state->m_settings.global.map.type = backend::settings::MapSettings::MT_MAPFILE;
 			m_state->m_settings.global.map.filename = config->GetQuickstartMapFile();
@@ -127,7 +128,8 @@ void Game::Start() {
 			return false;
 		}
 	);
-	const auto initialization = game->MT_Init( m_state );
+	const auto initialization = m_campaign_world ? game->MT_RestoreCampaign(m_state,std::move(*m_campaign_world)) : game->MT_Init( m_state );
+	m_campaign_world.reset();
 	m_mt_ids.init = initialization.request;
 	m_pending_world_ticket = initialization.ticket;
 	m_world_retired = false;

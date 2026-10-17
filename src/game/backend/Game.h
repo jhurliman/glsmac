@@ -301,6 +301,10 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	// initialize map and other things
 	pending_initialization_t MT_Init( State* state, world_ticket_t previous_world = 0 );
+	pending_initialization_t MT_RestoreCampaign(State* state, std::string world);
+	void BindLocalCampaignState(State* state); // empty controller, validated staged State
+	static void ValidateCampaignWorld(State* state, const std::string& world);
+	std::string SaveCampaign(const std::string& path);
 	pending_initialization_t MT_LoadMap( world_ticket_t world, const std::string& path );
 	MT_Response MT_GetResponse( common::mt_id_t request );
 	MT_Response MT_WaitResponse( common::mt_id_t request );
@@ -501,17 +505,18 @@ private:
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 
-	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress };
+	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, RestoreCampaign, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress };
 	struct WorldAdmission {
 		enum Kind { INITIALIZATION, CONTROLLER_RESET };
-		WorldAdmission( world_ticket_t ticket, Kind kind, State* state, State::game_session_t binding, world_ticket_t previous = 0, std::optional< std::string > map_path = {} )
-			: ticket( ticket ), kind( kind ), state( state ), binding( std::move( binding ) ), previous( previous ), map_path( std::move( map_path ) ) {}
+		WorldAdmission( world_ticket_t ticket, Kind kind, State* state, State::game_session_t binding, world_ticket_t previous = 0, std::optional< std::string > map_path = {}, std::optional<std::string> campaign_world = {} )
+			: ticket( ticket ), kind( kind ), state( state ), binding( std::move( binding ) ), previous( previous ), map_path( std::move( map_path ) ), campaign_world(std::move(campaign_world)) {}
 		const world_ticket_t ticket;
 		const Kind kind;
 		State* const state;
 		const State::game_session_t binding;
 		const world_ticket_t previous;
 		const std::optional< std::string > map_path;
+		const std::optional<std::string> campaign_world;
 		common::mt_id_t request = 0;
 		State::game_session_t admitted_binding;
 		bool cancelled = false;
@@ -545,7 +550,7 @@ private:
 	std::vector< std::shared_ptr< OwnerTransition > > m_owner_transition_handoffs;
 	std::string m_failed_admission_error;
 	static world_ticket_t ReserveWorldTicket();
-	pending_initialization_t EnqueueInitialization( State* state, world_ticket_t previous, std::optional< std::string > map_path = {} ); // admission mutex held
+	pending_initialization_t EnqueueInitialization( State* state, world_ticket_t previous, std::optional< std::string > map_path = {}, std::optional<std::string> campaign_world = {} ); // admission mutex held
 	void CancelAdmission( const std::shared_ptr< WorldAdmission >& admission ); // admission mutex held
 	void RetireWorld( world_ticket_t world, world_ticket_t pending_initialization ); // admission mutex held
 	void ReleaseAdmissionRequest( common::mt_id_t request );
@@ -568,6 +573,7 @@ private:
 	void DiscardInitializationMap( map::Map*& candidate );
 	void InitializeMap();
 	void StartInitializedWorld( GSE_CALLABLE );
+	void DecodeWorldSnapshot(GSE_CALLABLE, const std::string& bytes);
 	bool DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes );
 	std::string SerializeWorldSnapshot() const;
 	void ConfigureWorldDownload( connection::Client* connection );

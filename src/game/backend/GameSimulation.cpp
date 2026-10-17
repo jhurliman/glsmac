@@ -254,7 +254,7 @@ void Game::RequireConventionalStartupClaim() const {
 		|| m_owner_transition->stage != StartupStage::Start
 		|| !m_active_admission || m_owner_transition->admission != m_active_admission
 		|| m_active_admission->cancelled || m_active_admission->kind != WorldAdmission::Kind::INITIALIZATION
-		|| m_active_admission->previous || m_active_admission->map_path
+		|| m_active_admission->previous || m_active_admission->map_path || m_active_admission->campaign_world
 		|| m_active_admission->state != m_state || !m_state->IsGameSessionActive( m_active_admission->admitted_binding )
 		|| m_current_turn.GetId() != 0 || !m_simulation || m_pending_simulation ) {
 		throw std::runtime_error( "Early conventional admission requires the claimed new-world Start at turn zero" );

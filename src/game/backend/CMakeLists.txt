@@ -23,6 +23,8 @@ SET( SRC ${SRC}
 	${PWD}/WorldSnapshotTerritory.cpp
 	${PWD}/WorldSnapshotRandom.cpp
 	${PWD}/WorldSnapshotTurn.cpp
+	${PWD}/CampaignFile.cpp
+	${PWD}/GameCampaign.cpp
 	${PWD}/Game.cpp
 	${PWD}/GameSimulation.cpp
 	${PWD}/GameProduction.cpp

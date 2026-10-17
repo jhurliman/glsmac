@@ -1181,7 +1181,10 @@ public:
 			world_snapshot::WriteHeader( bytes, fixture.m_state->m_settings.global );
 			world_snapshot::WriteRandomState( bytes, fixture.m_game.GetRandom()->GetState() );
 			world_snapshot::WriteTurnState( bytes, world_snapshot::CaptureTurnState( 37, fixture.m_state->m_slots->GetSlots() ) );
-			bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteBool( false ); bytes.WriteString( bad_tiles.ToString() );
+			bytes.WriteBool( false ); bytes.WriteBool( false ); // no simulation or resource policy in this SMAX fixture
+			world_snapshot::WriteWorkerKnowledge( bytes, {}, false );
+			world_snapshot::WriteTerritoryTopology( bytes, {}, false );
+			bytes.WriteString( bad_tiles.ToString() );
 			packet.data.str = bytes.ToString(); packet.udata.download.offset = 0; packet.udata.download.size = packet.data.str.size();
 			fixture.PrepareWorldDownload( client, packet.data.str.size() ); GT_OK();
 		} );

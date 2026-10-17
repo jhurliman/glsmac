@@ -8,12 +8,19 @@
 #include "task/gsetests/GSETests.h"
 #include "types/texture/Texture.h"
 #include "fixtures/CvrScoutMatrix.h"
+#include "game/backend/unit/CvrScoutRender.h"
+#include "game/frontend/sprite/ScoutSpriteCache.h"
+#include "resource/ResourceManager.h"
+#include "util/UUID.h"
+#include "util/FinallyGuard.h"
 
 #include <algorithm>
 #include <cfenv>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <filesystem>
+#include <fstream>
 
 namespace gse::tests {
 namespace {
@@ -111,7 +118,93 @@ constexpr CvrScoutViewInput VIEW{ 0, 0, 1, 1, { 128, 128 } };
 
 }
 
+std::string MakeScoutTestAsset( const bool reactor ) {
+	AssetInput input;
+	if ( reactor ) { input.x = 500; input.shade = 77; }
+	else { input.grouped = true; }
+	return Asset( input );
+}
+
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "CVR Scout descriptor strict codec and explicit placement", GT() {
+		using game::backend::unit::CvrScoutRender;
+		const CvrScoutRender source( 3, 2, 5, 4, { 2, 4 }, { 64, 192 } );
+		GT_ASSERT( source.Offset() == types::Vec2< float >( 0.5f, -1.0f ), "source pixel center does not map to unit origin" );
+		const auto bytes = source.Encode();
+		GT_ASSERT( CvrScoutRender::Decode( bytes ).PlacementKey() == source.PlacementKey(), "descriptor roundtrip lost fields" );
+		const auto rejects = []( const std::function< void() >& f ) { try { f(); } catch ( const std::exception& ) { return true; } return false; };
+		for ( size_t end = 0; end < bytes.size(); ++end ) {
+			GT_ASSERT( rejects( [ & ] { CvrScoutRender::Decode( bytes.substr( 0, end ) ); } ), "truncated descriptor accepted" );
+		}
+		GT_ASSERT( rejects( [ & ] { CvrScoutRender::Decode( bytes + "x" ); } ), "trailing descriptor bytes accepted" );
+		for ( size_t field = 0; field < 11; ++field ) {
+			types::Buffer bad;
+			const std::array< int64_t, 7 > integers{ 0x43565253, 1, 0, 0, 0, 1, 1 };
+			for ( size_t i = 0; i < integers.size(); ++i ) {
+				bad.WriteInt( i != field ? integers[ i ] : i < 3 ? integers[ i ] + 1 : i == 5 ? INT64_MAX : -99 );
+			}
+			for ( size_t i = 7; i < 11; ++i ) { bad.WriteFloat( i == field ? std::numeric_limits< float >::infinity() : 1 ); }
+			GT_ASSERT( rejects( [ & ] { CvrScoutRender::Decode( bad.ToString() ); } ), "invalid field accepted" );
+		}
+		GT_ASSERT( rejects( [] { CvrScoutRender( 0, 0, 1, 1, { std::numeric_limits< float >::max(), 1 }, { 0, 0 } ); } ), "unbounded derived offset admitted" );
+		GT_ASSERT( rejects( [] { CvrScoutRender( 0, 0, 1, 1, { std::numeric_limits< float >::denorm_min(), 1 }, { 0, 0 } ); } ), "degenerate rectangle admitted" );
+		for ( const auto ratio : { std::array< int32_t, 2 >{ INT32_MAX, 1 }, { INT32_MAX, 49 }, { 2104533976, 49 } } ) {
+			GT_ASSERT( rejects( [ & ] { CvrScoutRender( 0, 0, ratio[ 0 ], ratio[ 1 ], { 2, 2 }, { 128, 128 } ); } ),
+				"constructor admitted overflowing derived Scout anchor" );
+		}
+		for ( const auto ratio : { std::array< int32_t, 2 >{ INT32_MAX, 50 }, { 2104533975, 49 } } ) {
+			const CvrScoutRender boundary( 0, 0, ratio[ 0 ], ratio[ 1 ], { 2, 2 }, { 128, 128 } );
+			const auto view = loader::cvr::scout::MakeView( boundary.view );
+			GT_ASSERT( view.target_anchor[ 0 ] == INT32_MAX && view.target_anchor[ 1 ] == INT32_MAX &&
+				CvrScoutRender::Decode( boundary.Encode() ).PixelKey() == boundary.PixelKey(), "valid divided anchor boundary rejected" );
+		}
+		const CvrScoutRender other_placement( 3, 2, 5, 4, { 2.000001f, 4 }, { 64, 192 } );
+		GT_ASSERT( other_placement.PixelKey() == source.PixelKey() && other_placement.PlacementKey() != source.PlacementKey(), "placement/pixel keys conflated or rounded" );
+		GT_OK();
+	} );
+	task->AddTest( "CVR Scout installed resolver cache bounds and failed replacement ownership", GT() {
+		try {
+		using game::backend::unit::CvrScoutRender;
+		using game::frontend::sprite::ScoutSpriteCache;
+		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-scout-cache-" + util::UUID::Generate() );
+		std::filesystem::create_directory( directory );
+		std::filesystem::create_directory( directory / "default" );
+		util::FinallyGuard cleanup( [ & ] { std::filesystem::remove_all( directory ); } );
+		const auto write = [ & ]( const char* name, const std::string& data ) { std::ofstream file( directory / "default" / name, std::ios::binary ); file.write( data.data(), data.size() ); };
+		write( "VI.cvr", MakeScoutTestAsset( false ) ); write( "Viptr00.cvr", "invalid" );
+		resource::ResourceManager resources( directory.string() );
+		ScoutSpriteCache cache;
+		const CvrScoutRender baseline( 0, 0, 1, 1, { 2, 2 }, { 128, 128 } );
+		bool rejected = false;
+		try { cache.Get( resources, baseline ); } catch ( const std::exception& ) { rejected = true; }
+		GT_ASSERT( rejected, "malformed installed asset accepted" );
+		write( "Viptr00.cvr", MakeScoutTestAsset( true ) );
+		auto first = cache.Get( resources, baseline );
+		GT_ASSERT( first->GetWidth() == 256 && first->GetHeight() == 256, "cache cropped full image" );
+		const std::string pixels( reinterpret_cast< char* >( first->GetBitmap() ), first->GetBitmapSize() );
+		write( "VI.cvr", "broken replacement" );
+		ScoutSpriteCache replacement;
+		rejected = false; try { replacement.Get( resources, baseline ); } catch ( const std::exception& ) { rejected = true; }
+		GT_ASSERT( rejected && cache.Get( resources, baseline ) == first &&
+			std::string( reinterpret_cast< char* >( first->GetBitmap() ), first->GetBitmapSize() ) == pixels, "failed replacement invalidated live cache owner" );
+		const CvrScoutRender placed( 0, 0, 1, 1, { 3, 4 }, { 1, 255 } );
+		GT_ASSERT( cache.Get( resources, placed ) == first, "placement duplicated identical pixels" );
+		for ( const auto& view : { CvrScoutRender( 1, 0, 1, 1, { 2, 2 }, { 128, 128 } ),
+			CvrScoutRender( 0, 1, 1, 1, { 2, 2 }, { 128, 128 } ), CvrScoutRender( 0, 0, 1, 2, { 2, 2 }, { 128, 128 } ) } ) {
+			GT_ASSERT( cache.Get( resources, view ) != first, "facing, zoom or ratio denominator missing from cache key" );
+		}
+		// Nonpositive numerator uses the renderer's admitted no-ratio branch;
+		// distinct raw inputs remain bounded cache keys even when pixels coincide.
+		for ( int i = 0; i < 60; ++i ) {
+			const CvrScoutRender view( 0, 0, -i, 1, { 2, 2 }, { 128, 128 } );
+			GT_ASSERT( cache.Get( resources, view ) != first, "view field missing from cache key" );
+		}
+		rejected = false;
+		try { cache.Get( resources, CvrScoutRender( 2, 0, 1, 1, { 2, 2 }, { 128, 128 } ) ); } catch ( const std::exception& ) { rejected = true; }
+		GT_ASSERT( rejected && cache.Get( resources, baseline ) == first, "cache budget evicted an in-use image or admitted unbounded churn" );
+		GT_OK();
+		} catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout cache: " ) + error.what() ); }
+	} );
 	task->AddTest( "CVR Scout original synthetic matrix schedule and store cases", GT() {
 		for ( const auto& fixture : fixtures::SCOUT_MATRIX_CASES ) {
 			if ( fixture.reject_overflow ) {

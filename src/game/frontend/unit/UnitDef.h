@@ -2,6 +2,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <optional>
+#include "game/backend/unit/CvrScoutRender.h"
 
 #include "game/backend/unit/Types.h"
 
@@ -47,6 +49,7 @@ private:
 	sprite::InstancedSpriteManager* const m_ism;
 
 	backend::unit::sprite_render_info_t m_render = {};
+	std::optional< backend::unit::CvrScoutRender > m_scout_render;
 
 	std::string m_id;
 	std::string m_name;

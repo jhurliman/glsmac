@@ -1,0 +1,48 @@
+// Production handlers and helpers operating on native Base, Pop, and Tile wrappers.
+const work = #include('../default/game/event/work_base_tile');
+const unwork = #include('../default/game/event/unwork_base_tile');
+const add = #include('../default/game/event/add_base_pop');
+const remove = #include('../default/game/event/remove_base_pop');
+return (game, base, other, target) => {
+	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
+	const pop = (base.get_pops())[0];
+	const old_tile = pop.get_worked_tile();
+	const data = { base: base, pop: pop, tile: target };
+	const e = { caller: base.get_owner().id, game: game, data: data };
+	check(!#is_defined(work.validate(e)), 'valid reassignment rejected');
+	const applied = work.apply(e);
+	check(pop.get_worked_tile() == target, 'work did not reassign');
+	check(!#is_defined(old_tile.get_working_pop()), 'work kept old reverse claim');
+	work.rollback(e + { applied: applied });
+	check(pop.get_worked_tile() == old_tile, 'work rollback lost prior assignment');
+	check(old_tile.get_working_pop() == pop, 'work rollback lost reverse claim');
+	const doctor = (base.get_pops())[2];
+	const doctor_e = { game: game, data: { base: base, pop: doctor, tile: target } };
+	const doctor_applied = work.apply(doctor_e);
+	check(doctor.get_type() == 'WORKER', 'work did not convert specialist');
+	work.rollback(doctor_e + { applied: doctor_applied });
+	check(doctor.get_type() == 'DOCTOR' && !#is_defined(doctor.get_worked_tile()), 'rollback lost specialist type');
+	const unwork_e = { caller: base.get_owner().id, game: game, data: { base: base, tile: old_tile } };
+	check(!#is_defined(unwork.validate(unwork_e)), 'valid unwork rejected');
+	const unworked = unwork.apply(unwork_e);
+	check(pop.get_type() == 'DOCTOR' && !#is_defined(old_tile.get_working_pop()), 'unwork did not release');
+	unwork.rollback(unwork_e + { applied: unworked });
+	check(pop.get_type() == 'WORKER' && pop.get_worked_tile() == old_tile, 'unwork rollback lost type or tile');
+	const foreign = (other.get_pops())[0];
+	check(#is_defined(work.validate({ caller: base.get_owner().id, data: { base: base, pop: foreign, tile: target } })), 'foreign population accepted');
+	check(#is_defined(unwork.validate({ caller: base.get_owner().id, data: { base: base, tile: foreign.get_worked_tile() } })), 'foreign base tile accepted');
+	const nutrients = base.get_accumulated_nutrients();
+	const add_e = { game: game, data: { base: base, type: 'WORKER', worked_tile: target } };
+	const added = add.apply(add_e);
+	check(#is_defined(target.get_working_pop()), 'add event lost initial assignment');
+	add.rollback(add_e + { applied: added });
+	check(!#is_defined(target.get_working_pop()) && base.get_accumulated_nutrients() == nutrients, 'add rollback lost assignment or nutrients');
+	const remove_e = { game: game, data: { base: base, pop: pop } };
+	const removed = remove.apply(remove_e);
+	check(!#is_defined(old_tile.get_working_pop()), 'remove did not release assignment');
+	remove.rollback(remove_e + { applied: removed });
+	const recreated = old_tile.get_working_pop();
+	check(#is_defined(recreated) && recreated.get_type() == 'WORKER', 'remove rollback lost assignment');
+	check(base.get_accumulated_nutrients() == nutrients, 'remove rollback lost nutrients');
+	// Restoring the removed citizen's exact identity is a separate event defect.
+};

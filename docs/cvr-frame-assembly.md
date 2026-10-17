@@ -65,7 +65,11 @@ suffix; the original probe establishes no equivalent malformed-input guarantee.
 ## Supported arithmetic
 
 The API requires IEEE binary32 storage, at least binary64 intermediate precision,
-and the calling thread's rounding mode to be `FE_TONEAREST`. Location and offset
+and the calling thread's standard rounding mode to be `FE_TONEAREST`. On SSE
+targets, its independently configurable MXCSR rounding mode must also be nearest.
+Checking only `fegetround()` is insufficient on platforms where it reports x87
+state while the evaluated additions/conversions use SSE. Neither control is
+changed by assembly. Location and offset
 operands must be finite normal values or signed zero. The computed binary64
 intermediate must be zero or within the finite normal binary32 range **before**
 conversion. This checks the rounded intermediate, not an infinitely precise
@@ -73,7 +77,15 @@ mathematical sum: adding 1 to maximum finite binary32 is absorbed in binary64
 and returns maximum finite binary32. Subnormal operands
 or results, overflow, NaNs, infinities and other rounding modes are explicitly
 unsupported. These conservative boundaries avoid guessing at the original
-process's floating-point state or host flush-to-zero behavior.
+process's exceptional floating-point behavior.
+
+SSE flush-to-zero (FTZ) and denormals-are-zero (DAZ) may be enabled: all admitted
+binary32 operands are normal or zero, and their smallest possible nonzero
+difference, 2^-149, is normal in binary64. Unsupported subnormal operands are
+rejected by their stored bits; subnormal binary32 results are rejected using the
+normal binary64 intermediate before conversion. Thus neither mode changes
+accepted arithmetic or conceals these domain errors. Matrix bits are copied
+without arithmetic, including subnormal values.
 
 Each addition uses binary64 intermediates and one binary32 conversion. For two
 binary32 operands, this produces nearest-even binary32 rounding within the
@@ -137,7 +149,7 @@ duplicate/empty names, complete/prefix capacity, malformed public scenes,
 late invalid selections and arithmetic boundaries. They run in the existing
 full native suite (`build/bin/GLSMAC --gse-tests`).
 
-Local Linux/WSL checks:
+Initial implementation checks on Linux/WSL:
 
 - Full normal CTest: **4/4**, 17.58 seconds, including all six new native groups.
 - The six groups pass with `--memorydebug` and under ASan + UBSan + LSan
@@ -161,6 +173,47 @@ with focused and copied-source logs in `build/assembly-validation/` and
 `build-asan/assembly-validation/`. The validating checkout's ignored
 `out/validation-cvr-composition/assembly-comparison.json` pins the reference
 report and Release probe hashes. Original frame payloads remain local.
+
+## Independent SSE rounding regression
+
+The follow-up adds a seventh native group and a shared, asset-free standalone
+caller. It changes MXCSR directly while leaving x87 nearest, then checks all
+three non-nearest SSE modes are rejected. It also checks nearest-even rounding,
+all four FTZ/DAZ combinations, unsupported denormal operands/results and unchanged
+opaque matrix bits. A scoped environment saves/restores the standard environment
+and exact MXCSR on normal, assertion and exception exits.
+
+The same checks can run against an optimized production TU without the Debug-only
+GSE harness:
+
+```sh
+clang++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -pedantic -Isrc \
+  src/loader/cvr/CvrFrameAssembler.cpp tools/tests/cvr_frame_arithmetic.cpp \
+  -o /tmp/cvr-frame-arithmetic
+/tmp/cvr-frame-arithmetic
+```
+
+Follow-up validation:
+
+- Copied original production code fails the real mixed-control check in both
+  Debug (`-O0 -g`) and Release (`-O3 -DNDEBUG`), exit 1. With x87 nearest and
+  MXCSR downward, `0x3f800001 + 0x33800000` incorrectly returns `0x3f800001`
+  instead of nearest-even `0x3f800002`. The intended checkout was not reverted.
+- Fixed Clang 15 and GCC standalone Debug, Release and ASan/UBSan builds pass.
+  Native Windows x64 Clang Debug and Release standalone builds also pass.
+  The architecture guard uses standard SSE intrinsics and omits the independent
+  control check on non-SSE targets; no new native macOS execution is claimed.
+- Full Linux/WSL normal CTest passes **4/4**, 17.41 seconds, including all seven
+  assembly groups. The standalone checks take under 0.01 seconds each.
+- Debug and Release production-TU correctness analysis passes with zero findings
+  (2.07 / 2.06 seconds).
+- The newly compiled Release production reader/assembler again matches the
+  retained original report's **30 cases / 1,755 records**. This reruns the C++
+  comparison, not the original executable experiment.
+
+Follow-up commands, binaries, logs and comparison hashes remain under
+`/home/jhurliman/src/glsmac-cvr-effective-rounding/`; native Windows standalone
+logs are in the validating checkout's ignored `out/validation-cvr-rounding/`.
 
 This work does not establish axis orientation, matrix application,
 geometry-to-vertex mapping, colors, projection, animation timing, default reactor

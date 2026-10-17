@@ -538,6 +538,62 @@ void AddLiveRosterTests( task::gsetests::GSETests* task ) {
 		}
 		Check( rejected, "live aggregate text budget ignored" );
 	} );
+	add( "ready lobby sends initial roster before any newcomer slot update", []() {
+		Fixture host( true ), newcomer;
+		host.StartServer();
+		host.With( [ & ]( GSE_CALLABLE ) {
+			// Both in-process accounts load the test prefix. Give the host's
+			// existing native Slot a distinct account identity, as separate hosts do.
+			host.state->m_slots->GetSlot( 0 ).UnsetLinkedGSID();
+			host.state->m_slots->GetSlot( 0 ).SetLinkedGSID( "host-fixture-gsid" );
+		} );
+		types::Packet auth( types::Packet::PT_AUTH );
+		auth.data.vec = { "established-gsid", "Established" };
+		host.ServerPacket( auth, 17 );
+		types::Packet ready( types::Packet::PT_UPDATE_FLAGS );
+		ready.udata.flags.flags = slot::PF_READY;
+		host.ServerPacket( ready, 17 );
+		host.With( [ & ]( GSE_CALLABLE ) {
+			host.state->m_slots->GetSlot( 0 ).SetPlayerFlag( slot::PF_READY );
+		} );
+		Check( host.state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY )
+			   && host.state->m_slots->GetSlot( 1 ).HasPlayerFlag( slot::PF_READY ), "ready-lobby setup failed" );
+		host.transport.Iterate();
+		host.transport.sent.clear();
+		newcomer.client->Connect();
+		newcomer.transport.Iterate();
+		newcomer.state->Iterate();
+		auth.data.vec = { newcomer.state->m_settings.local.account.GetGSID(), "Newcomer" };
+		host.ServerPacket( auth, 23 );
+		host.transport.Iterate();
+		std::vector< types::Packet::packet_type_t > order;
+		std::vector< network::Event > incoming;
+		size_t existing_flags = 0;
+		for ( const auto& event : host.transport.sent ) {
+			if ( event.type != network::Event::ET_PACKET ) { continue; }
+			types::Packet packet( types::Packet::PT_NONE );
+			packet.Deserialize( types::Buffer( event.data.packet_data ) );
+			if ( event.cid == 17 && packet.type == types::Packet::PT_FLAGS_UPDATE ) { ++existing_flags; }
+			if ( event.cid != 23 ) { continue; }
+			// Record every packet, including unexpected pre-handshake updates.
+			order.push_back( packet.type );
+			incoming.push_back( event );
+			incoming.back().cid = 0;
+		}
+		for ( const auto& event : incoming ) {
+			newcomer.Poll( event );
+			if ( !newcomer.client->ErrorReason().empty() ) { break; }
+		}
+		Check( newcomer.client->ErrorReason().empty(), "newcomer rejected actual ready-lobby packet sequence" );
+		Check( order == std::vector< types::Packet::packet_type_t >{ types::Packet::PT_PLAYERS, types::Packet::PT_GAME_STATE,
+																		 types::Packet::PT_GLOBAL_SETTINGS }, "newcomer received a packet before its complete initial handshake" );
+		Check( existing_flags == 2 && !host.state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY )
+			   && !host.state->m_slots->GetSlot( 1 ).HasPlayerFlag( slot::PF_READY ), "existing clients did not receive both readiness clears" );
+		Check( newcomer.client->HasGlobalSettings() && newcomer.client->GetSlotNum() == 2
+			   && newcomer.client->GetPlayer() == newcomer.PlayerAt( 2 ) && newcomer.PlayerAt( 2 )->GetPlayerName() == "Newcomer"
+			   && !newcomer.state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY )
+			   && !newcomer.state->m_slots->GetSlot( 1 ).HasPlayerFlag( slot::PF_READY ), "initial roster did not publish cleared readiness and assigned identity" );
+	} );
 	add( "real server packets adopt update retire and reconnect owned Players", []() {
 		Fixture f( true );
 		f.StartServer();

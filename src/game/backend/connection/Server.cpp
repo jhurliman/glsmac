@@ -157,9 +157,12 @@ void Server::ProcessEvent( const network::Event& event ) {
                         const auto current = [&]() { return epoch && epoch->active && m_state == state && state->GetConnection() == this; };
                         const auto& rules = state->m_settings.global.rules;
                         if (m_game_state == GS_LOBBY) {
-                            m_state->CreatePlayerSlot(slot_num, {player_name, roster::Role::Player, std::nullopt, rules.GetDefaultDifficultyLevel()}, gsid, event.cid, event.data.remote_address, true);
+                            // Existing clients receive these flags before the new CID
+                            // joins broadcasts; its first packets must be the initial
+                            // roster, phase and settings, in that order.
                             ClearReadyFlags();
                             if (!current()) { break; }
+                            m_state->CreatePlayerSlot(slot_num, {player_name, roster::Role::Player, std::nullopt, rules.GetDefaultDifficultyLevel()}, gsid, event.cid, event.data.remote_address, true);
                         } else {
                             if (!slot_num) { throw std::runtime_error("A remote connection cannot assume the host Slot"); }
                             m_state->ReconnectPlayerSlot(slot_num, event.cid, event.data.remote_address);

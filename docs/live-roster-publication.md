@@ -175,3 +175,32 @@ make generic Connection callbacks cancellation-safe, permit live-world occupant
 replacement, or resolve the held PR77 findings. Canonical lookup still requires
 the caller's existing owner accumulation/native exclusion. No new GC locking API
 or whole-State::Iterate lock is added.
+
+### Ready-lobby authentication follow-up
+
+PR126 review found an ordering defect in the new server authentication path:
+adopting the newcomer's connected CID before clearing existing ready flags made
+the readiness broadcast send `PT_FLAGS_UPDATE` before its initial `PT_PLAYERS`.
+The strict Client correctly rejected that update. The server now clears existing
+readiness, checks the captured roster epoch/current connection, and only then
+adopts the new CID. `CreatePlayerSlot` still revalidates the selected open slot.
+The initial Client publication guard and the running reconnect path are unchanged.
+
+The new native regression uses a ready host and an established ready remote
+player, actual Server authentication dispatch, and actual Client MT polling. It
+records every packet addressed to the newcomer and requires exactly the initial
+roster, game phase and settings sequence; existing recipients still receive both
+readiness clears. Both fixtures share one local account file, so the host Slot's
+fixture GSID is explicitly made distinct to represent separate processes.
+
+With the original production ordering, ASan/UBSan/LSan plus `--memorydebug`
+observed two premature flags packets and the Client's `Slot update before roster
+publication` rejection (0 passed, 1 failed, exit 1). Two earlier fixture setup
+failures involving the shared account/GSID setter are retained separately and
+are not counted as reproductions. With the correction, all 21 roster groups pass
+with tracking in normal and sanitizer builds; the existing synchronous reset
+during a readiness callback and running reconnect cases remain included. Normal
+CTest passes 8/8 in 47.90 seconds, leak-enabled sanitizer CTest 8/8 in 65.07 seconds,
+and Server.cpp passes the existing LLVM 15 correctness policy (one TU, zero
+failures, 3.46 seconds). Evidence is retained separately under
+`/home/jhurliman/src/glsmac-ready-lobby-handshake`.

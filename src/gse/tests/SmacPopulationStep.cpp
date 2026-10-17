@@ -43,6 +43,8 @@ void AddSmacPopulationStepTests( task::gsetests::GSETests* task ) {
 		const auto plan = SmacPopulationStep::Prepare( boom, 2, 5, 2, false );
 		GT_ASSERT( plan.stored_nutrients == 5 && plan.Finish( -1 ) == 0, "boom cap occurred before resource normalization" );
 		const SmacPopulationRules ordinary{ 10, 0, 2, true, false };
+		GT_ASSERT( CalculateSmacNutrientCostFactor( { true, 3, false, false, false, 99, 10, 0 } ) == 10,
+			"accepted custom category acquired preset size scaling" );
 		GT_ASSERT( Rejects( [ & ] { SmacPopulationStep::Prepare( ordinary, 2, INT64_MAX, 1, false ); } ), "stored food narrowed" );
 		GT_ASSERT( Rejects( [ & ] { SmacPopulationStep::Prepare( ordinary, 127, 1280, 1, false ); } ), "unobserved ordinary population overflow accepted" );
 		GT_ASSERT( Rejects( [ & ] { SmacPopulationStep::Prepare( ordinary, 2, 1, INT32_MAX, false ); } ), "collection overflow accepted" );

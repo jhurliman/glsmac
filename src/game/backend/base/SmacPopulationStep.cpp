@@ -19,7 +19,7 @@ int32_t Normalize( const int32_t stored, const int32_t surplus ) {
 
 int32_t CalculateSmacNutrientCostFactor( const SmacNutrientCostInputs& input ) {
 	if ( input.global_difficulty < 0 || input.global_difficulty > 5 || input.world_size_category < 0
-		|| input.world_size_category > 4 || input.nutrient_multiplier < 0 ) {
+		|| ( input.world_size_category > 4 && input.world_size_category != 99 ) || input.nutrient_multiplier < 0 ) {
 		throw std::invalid_argument( "Unsupported SMAC nutrient cost inputs" );
 	}
 	static constexpr std::array< int32_t, 6 > ai_factors{ 13, 12, 11, 10, 8, 7 };

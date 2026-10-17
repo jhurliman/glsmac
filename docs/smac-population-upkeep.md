@@ -18,6 +18,11 @@ and Dome. Human cost ignores AI adaptive inputs; the supplied AI cost helper
 requires resolved leader/dominance inputs and does not implement their lifecycle.
 Objective protection is an explicit input. Signed32 overflow and the unobserved
 ordinary-growth edge above population127 reject instead of inventing behavior.
+Accepted custom category99 takes the no-scaling branch: the recovered setup
+contract preserves99 even at preset geometry, and retained cost instructions
+`0x4f9dfa`–`0x4f9e38` scale only categories0 and1. No category is inferred from
+dimensions. This composition uses the established producer and inspected cost
+branch; it is not a new full-game custom-world observation.
 
 The test fixture copies 36 self-authored `RE-SMAC-GROW-001` observations and 20
 `RE-SMAC-NUTRIENT-COST-001` observations from the research workspace. Expected

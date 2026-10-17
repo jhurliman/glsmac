@@ -10,6 +10,11 @@ namespace txt {
 
 CLASS( TXTLoader, Loader )
 
+public:
+	// Pure, uncached extraction for strict table readers. Unlike the legacy
+	// faction parser, unrelated sections need not have unique names.
+	static std::vector< std::string > ReadUniqueSection( const std::string& source, const std::string& name );
+
 protected:
 
 	struct txt_data_t {

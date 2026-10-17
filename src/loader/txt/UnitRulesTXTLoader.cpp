@@ -194,4 +194,30 @@ UnitTable UnitRulesTXTLoader::ParseUnits( const std::string& source, const std::
 	return result;
 }
 
+AbilityTable UnitRulesTXTLoader::ParseAbilities( const std::string& source, const std::string& ruleset_id ) {
+	const std::string section = "ABILITIES";
+	const auto rows = Rows( source, ruleset_id, section );
+	AbilityTable result{ ruleset_id, {} };
+	for ( size_t i = 0 ; i < rows.size() ; ++i ) {
+		const auto row = i + 1;
+		// ReadUniqueSection keeps inline semicolons. Unlike numeric component
+		// rows, an ability description can contain them as meaningful text.
+		auto fields = util::String::Split( rows[ i ], ',' );
+		if ( rows[ i ].back() == ',' ) { fields.emplace_back(); }
+		if ( fields.size() == 7 && fields.back().empty() ) { fields.pop_back(); }
+		if ( fields.size() != 6 ) {
+			throw std::invalid_argument( "#ABILITIES row " + std::to_string( row ) + ": expected 6 fields" );
+		}
+		for ( size_t column = 0 ; column < fields.size() ; ++column ) {
+			if ( column != 3 || !fields[ column ].empty() ) { RequiredText( fields[ column ], section, row, column + 1 ); }
+		}
+		const auto cost = Integer( fields[ 1 ], section, row, 2 );
+		if ( fields[ 4 ].find_first_not_of( "01" ) != std::string::npos ) {
+			throw std::invalid_argument( Location( section, row, 5 ) + ": flags must be a nonempty binary string" );
+		}
+		result.abilities.push_back( { fields[ 0 ], cost, fields[ 2 ], fields[ 3 ], fields[ 4 ], fields[ 5 ] } );
+	}
+	return result;
+}
+
 }

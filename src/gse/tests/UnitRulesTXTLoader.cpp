@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace gse::tests {
@@ -99,9 +100,94 @@ std::string UnitsRejection( const std::string& source, const std::string& rulese
 	return "";
 }
 
+std::vector< std::string > AbilityFields() {
+	return { "Hidden Survey", "-3", "SurveyTech", "", "0010100", "Concealed; avoids patrols" };
+}
+
+std::string AbilityRejection( const std::string& source, const std::string& ruleset = "smac" ) {
+	try { UnitRulesTXTLoader::ParseAbilities( source, ruleset ); }
+	catch ( const std::invalid_argument& error ) { return error.what(); }
+	return "";
+}
+
 }
 
 void AddUnitRulesTXTLoaderTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "Ability table owns complete descriptions and source row identity", GT() {
+		for ( const auto* ruleset : { "smac", "smax" } ) {
+			auto second = AbilityFields();
+			second[ 1 ] = "4"; second[ 3 ] = "Other"; second[ 4 ] = "0001";
+			second[ 5 ] = "First clause; second clause; final clause";
+			auto source = Source( { JoinRow( AbilityFields() ), JoinRow( second ) + "," }, "\r\n", "ABILITIES" );
+			auto parsed = UnitRulesTXTLoader::ParseAbilities( source, ruleset );
+			source.assign( source.size(), 'x' ); // returned values do not borrow input
+			auto copied = parsed;
+			parsed.abilities[ 0 ].name = "changed";
+			parsed.abilities[ 1 ].description.clear();
+			auto moved = std::move( copied );
+			GT_ASSERT( moved.ruleset_id == ruleset && moved.abilities.size() == 2, "lost explicit profile or source rows" );
+			const auto& first = moved.abilities[ 0 ];
+			GT_ASSERT( first.name == "Hidden Survey" && first.cost == -3 && first.prerequisite == "SurveyTech", "ability metadata was resolved or changed" );
+			GT_ASSERT( first.abbreviation.empty() && first.flags == "0010100", "empty abbreviation or leading flag zeros were lost" );
+			GT_ASSERT( first.description == "Concealed; avoids patrols", "section/field parsing truncated a semicolon description" );
+			const auto& next = moved.abilities[ 1 ];
+			GT_ASSERT( next.name == first.name && next.cost == 4 && next.abbreviation == "Other" && next.flags == "0001", "display names became identity keys or rows moved" );
+			GT_ASSERT( next.description == second[ 5 ], "owned copied description changed" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Ability table preserves signed cost endpoints and arbitrary binary width", GT() {
+		std::vector< std::string > rows;
+		for ( const auto* cost : { "-2147483648", "+2147483647", "-0", "+0007" } ) {
+			auto fields = AbilityFields(); fields[ 1 ] = cost;
+			fields[ 3 ] = "Shared"; fields[ 4 ] = std::string( 80, '0' ) + "1";
+			rows.push_back( JoinRow( fields ) );
+		}
+		const auto table = UnitRulesTXTLoader::ParseAbilities( Source( rows, "\n", "ABILITIES" ), "smac" );
+		GT_ASSERT( table.abilities.size() == 4, "signed endpoint records were dropped" );
+		GT_ASSERT( table.abilities[ 0 ].cost == std::numeric_limits< int32_t >::min() && table.abilities[ 1 ].cost == std::numeric_limits< int32_t >::max(), "signed metadata was narrowed to gameplay cost codes" );
+		GT_ASSERT( table.abilities[ 2 ].cost == 0 && table.abilities[ 3 ].cost == 7, "valid signed decimal spelling rejected" );
+		for ( const auto& record : table.abilities ) {
+			GT_ASSERT( record.flags == std::string( 80, '0' ) + "1" && record.abbreviation == "Shared", "flags narrowed or duplicate abbreviation rejected" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Ability table requires explicit profile and one nonempty exact section", GT() {
+		const auto row = JoinRow( AbilityFields() );
+		for ( const auto& invalid : { std::string(), std::string( "#ABILITIES_OTHER\n" ) + row, std::string( "##ABILITIES\n" ) + row,
+			std::string( "#ABILITIES\n ; no records\n#END" ), Source( { row }, "\n", "ABILITIES" ) + "#ABILITIES\n" + row } ) {
+			GT_ASSERT( !AbilityRejection( invalid ).empty(), "missing, empty or duplicate ability section accepted" );
+		}
+		for ( const auto* ruleset : { "", "auto", "SMAC", "smax " } ) {
+			GT_ASSERT( !AbilityRejection( Source( { row }, "\n", "ABILITIES" ), ruleset ).empty(), "implicit ruleset accepted" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "Ability table rejects malformed late fields without partial output", GT() {
+		const auto original = AbilityFields();
+		for ( size_t column = 0 ; column < original.size() ; ++column ) {
+			auto fields = original; fields.erase( fields.begin() + column );
+			GT_ASSERT( !AbilityRejection( Source( { JoinRow( fields ) }, "\n", "ABILITIES" ) ).empty(), "missing positional ability field accepted" );
+			for ( const auto& invalid : { std::string(), std::string( "x\0y", 3 ) } ) {
+				if ( column == 3 && invalid.empty() ) { continue; }
+				fields = original; fields[ column ] = invalid;
+				const auto error = AbilityRejection( Source( { JoinRow( original ), JoinRow( fields ) }, "\n", "ABILITIES" ) );
+				GT_ASSERT( error.find( "#ABILITIES row 2 column " + std::to_string( column + 1 ) ) != std::string::npos, "invalid late text accepted or mislocated" );
+			}
+		}
+		for ( const auto* extra : { ",extra", ",," } ) {
+			GT_ASSERT( !AbilityRejection( Source( { JoinRow( original ) + extra }, "\n", "ABILITIES" ) ).empty(), "extra ability columns accepted" );
+		}
+		for ( const auto* value : { "1junk", "1.0", "0x10", "1 2", "+", "-", "+-1", "++1", "--1", "2147483648", "-2147483649" } ) {
+			auto fields = original; fields[ 1 ] = value;
+			GT_ASSERT( AbilityRejection( Source( { JoinRow( original ), JoinRow( fields ) }, "\n", "ABILITIES" ) ).find( "row 2 column 2" ) != std::string::npos, "malformed signed cost accepted" );
+		}
+		for ( const auto* value : { "2", "0012", "0b01", "-1", "+01", "0 1", "1.0", "*" } ) {
+			auto fields = original; fields[ 4 ] = value;
+			GT_ASSERT( AbilityRejection( Source( { JoinRow( fields ) }, "\n", "ABILITIES" ) ).find( "row 1 column 5" ) != std::string::npos, "nonbinary flags accepted" );
+		}
+		GT_OK();
+	} );
 	task->AddTest( "Unit weapon table preserves component metadata and source order", GT() {
 		for ( const auto* newline : { "\n", "\r\n" } ) {
 			const auto table = UnitRulesTXTLoader::ParseWeapons( Source( Rows(), newline ), "smac" );

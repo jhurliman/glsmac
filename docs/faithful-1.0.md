@@ -186,41 +186,110 @@ tests, and deterministic gameplay regressions cover different failure modes;
 none substitutes for the others. Keep platform-specific checks visible and
 do not describe an unsupported analyzer invocation as coverage.
 
-## Current status
+The focused LLVM 15 correctness gate has landed on main through PR #16;
+readability and modernization checks remain disabled. The explicit single-file
+runner has landed in #55. The analyzer still honors explicit NOLINT
+directives, so those require review; there is no blanket suppression baseline.
+Shared-header changes continue to trigger a full production scan rather than
+using the single-file option to narrow the required check.
 
-M0 and the prerequisites for M1 are in progress. No milestone is complete, and
-the implementation PRs remain unmerged. The integration checkout now exercises
-real backend entities, event serialization, base snapshots and their script
-bindings without the original assets. On October 16, 2026, integration commit
-[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
-passed Linux and Windows CTest, and the selected correctness scan of all 284
-production translation units reported zero failures. Commands, timings and the
-separate sanitizer retry are in the [validation record](validation/windows-smoke-2026-10-16.md#headless-checks).
-These dated checks establish infrastructure behavior at that commit, not
-gameplay fidelity or the status of later changes.
+## Current status — 2026-10-17
 
-The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
-rendered two quickstart worlds in one process, opened a base screen, advanced a
-turn and exited normally. It also records visible rendering and input follow-ups.
-Interactive macOS validation, hardware Linux validation, long-running sessions,
-complete save/reload and multiplayer convergence remain open.
+M0 and M1 remain in progress. There is no complete conquest match, and no
+milestone is declared complete. The integration branch combines tested slices
+before their smaller PRs land; its contents must not be confused with main.
 
-The next implementation slices are:
+The latest [production-profile receipt](validation/production-profile-2026-10-17.md)
+records Windows and leak-enabled Linux CTest 8/8 at `23dcaacf`, plus native
+macOS arm64 CTest 8/8 at `8923374f`. Focused Windows/Linux tracked tests cover
+the latter revision's effective SSE rounding guard. On honey, the user confirmed
+map interaction, base inspection, a turn, a new world and close at `5cd78418`.
+A later read-only check confirmed exit 0 and no tracked memory/OpenGL leaks.
+The screenshots show Morgan Industries before and University Base after restart.
+The delay remains untimed; see the [Mac receipt](validation/macos-native-2026-10-16.md).
 
-1. Persist worker assignments as authoritative population coordinates with an
-   ID-based reverse index. Exercise actual work/unwork/add/remove handlers,
-   rollback, immediate/deferred restore and teardown after map destruction.
-2. Preserve outgoing event bytes before optimistic destructive application,
-   then separately repair acceptance/rejection bookkeeping and population
-   identity restoration. Test actual queue and acknowledgement ordering.
-3. Select and synchronize an explicit SMAC or SMAX ruleset before content
-   initialization, including host/join and running-game reconnect. This is a
-   prerequisite for implementing the researched yield rules in the live game;
-   selecting a ruleset does not make that ruleset complete.
+The [preceding receipt](validation/faction-transform-2026-10-17.md) retains an
+unresolved Windows native-filter child timeout followed by passing unchanged
+runs. Later successes do not identify its cause. The separate aggregate test
+allowance correction does not explain it. Hardware Linux interaction, long runs,
+complete saves/replay and multiplayer convergence remain open.
 
-The original installation was found on aleph0 and SMAX PRACX reached setup, but
-full-game rule observations remain blocked by the reproduced startup/base-creation
-crash in the reference notes. Original executable research proceeds separately;
-keep its evidence level distinct from full-game observations. See each PR's
-reviewed commit and checks for current validation, rather than treating this
-plan as proof that queued work has landed.
+### Implemented foundations
+
+Worker claims and population/event rollback have real backend regressions.
+Independent production item/mineral balances and switching baselines landed in
+[PR #103](https://github.com/jhurliman/glsmac/pull/103). New bases remain
+unconfigured. The mineral-cost calculator landed in
+[#98](https://github.com/jhurliman/glsmac/pull/98), and merged
+[#108](https://github.com/jhurliman/glsmac/pull/108) calculates switching against
+independent baselines and matches 4,594 retained original scenarios. Neither
+calculator chooses eligible items or schedules a turn.
+
+[#111](https://github.com/jhurliman/glsmac/pull/111) freezes four SMAC production
+rule values and all 71 facility records in host settings. A separate V4
+world-header change binds that profile before map allocation; its source
+validation is recorded in [world snapshot rules](https://github.com/jhurliman/glsmac/blob/cfb5b4d55b5ea6d5ecd13dc81cc1e2106e6d89f5/docs/world-snapshot-rules.md).
+It is being prepared as a focused PR. SMAX has no SMAC numeric profile.
+Technology definitions and actual faction/design startup producers precede
+production activation.
+
+The wider lifetime stack preserves entity state, RNG continuation and turn
+metadata, stages map publication, and guards specific native replacement/cleanup
+paths from collection. Terminal-connection cleanup is
+[#110](https://github.com/jhurliman/glsmac/pull/110). These bounded fixes do not
+settle canonical Player/Slot/Connection ownership. Concurrent roster and
+failure/reset findings holding #77 remain open; sequential round-trips do not
+prove exclusion. Follow the
+[pinned roster plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md).
+World downloads are still not disk savegames or deterministic replay.
+
+Conventional units have parsed component/design metadata and verified bounded
+CVR decoding, composition, projection and raster calculations. Frame assembly
+matches 30 installed-input cases and 1,755 records. The corrected explicit
+transform calculator matches 44 cases, 660 binary32 words and 528 integers;
+indexed rasterization matches 42 cases. Original lighting selection has
+separate evidence in [#109](https://github.com/jhurliman/glsmac/pull/109).
+Actual conventional-unit rendering, caller inputs, gameplay definitions and
+commands remain unfinished. Component results do not establish visual fidelity.
+
+### Next three implementation slices
+
+1. Finish publication of the production profile and V4 world binding. Preserve
+   strict early client rejection and actual body-restoration checks. Every
+   changed PR head needs its own GitHub review and relevant checks.
+2. Import the real SMAC technology catalog and classify facility prerequisites
+   against it. Preserve identities and raw priority positions. Distinguish no
+   prerequisite, disabled definitions, known technology and unavailable
+   references; this is not a buildability decision. Synchronize host settings
+   without inventing technology ownership or social ratings.
+3. Establish actual faction and predefined-design startup producers, then connect
+   founding to base creation. Inputs include owned technologies, selected social
+   models/faction modifiers, current ratings, separately retained founding
+   SUPPORT, active designs and cached costs. Retain original difficulty and
+   world-size identities, and process initial creation before FirstTurn advances
+   the counter. Connect support/intake, posting, completion and queues afterward.
+
+Reverse engineering is prioritized around those consumers. New bounded founding
+and upkeep compositions execute original target selection, resource/citizen
+processing, completion and baseline writers with explicit supplied boundaries.
+They establish ordering, including resource recalculation after a facility
+grant, but do not prove normal startup selections or a whole game turn. The
+first base → Scout/Former/Colony → second base loop still needs real producers,
+legal commands and persistence checks. Native lifetime repairs and conventional
+rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
+
+### Review and evidence discipline
+
+GitHub Codex review became available again on October 17 after the retained
+October 16 quota failures. New reviews identified x87-only rounding validation,
+classification before binary32 underflow rounding, and case-sensitive asset
+lookup. Each was fixed, checked against a reproducing regression, and received
+a clean review on its corrected head. Dependency merges that change the head
+receive another review. Each PR owns its current review/check evidence; a
+request or local success is not a completed GitHub review.
+
+Production, research, terraforming, conventional combat, AI, diplomacy, victories
+and the expansion remain substantial work. Original executable evidence is
+tracked separately from interactive PRACX observations. Original assets,
+binaries and the researcher's uncommitted files are excluded from implementation
+PRs. Golden 1.0.0 still requires every release gate above.

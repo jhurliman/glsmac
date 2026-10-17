@@ -168,6 +168,12 @@ return {
 			get_stats_str: (object) => {
 				switch (#classof(object)) {
 					case 'Unit': {
+						if (object.is_conventional) {
+							const state = object.get_conventional_state();
+							const stats = object.query_conventional_stats(state.render_morale_mode);
+							const movement = #to_float(stats.full_allowance) / #to_float(stats.quantum);
+							return '? - ? - ' + #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+						}
 						let stats_str = '';
 						// tmp
 						const def = object.get_def();

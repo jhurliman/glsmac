@@ -56,7 +56,7 @@ return {
 					item: item,
 					object: object
 				};
-				item.text({
+				this.units[key].stats_label = item.text({
 					class: 'bottombar-objects-list-item-text',
 					text: parent.p.get_stats_str(object),
 				});
@@ -191,6 +191,8 @@ return {
 				if (!#is_defined(this.units[key])) {
 					this.add_object(e.unit, this.list_width);
 					this.list_width = this.list_width + this.object_width;
+				} else {
+					this.units[key].stats_label.text = this.p.get_stats_str(e.unit);
 				}
 			}
 		});

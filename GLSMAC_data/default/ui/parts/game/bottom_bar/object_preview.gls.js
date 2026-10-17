@@ -101,10 +101,16 @@ return {
 
 				f_line(this.p.get_stats_str(object), 14, 'center');
 
-				f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
-
-				if (!object.is_immovable) {
-					f_line('Moves: ' + this.format_movement(object.movement), 14, 'left');
+				if (object.is_conventional) {
+					const state = object.get_conventional_state();
+					const stats = object.query_conventional_stats(state.render_morale_mode);
+					f_line(stats.morale_name, 14, 'left');
+					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
+				} else {
+					f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
+					if (!object.is_immovable) {
+						f_line('Moves: ' + this.format_movement(object.movement), 14, 'left');
+					}
 				}
 
 				break;

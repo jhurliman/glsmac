@@ -84,7 +84,7 @@ SmacTechnologyReference SmacTechnologyRules::ResolveToken( const std::string& to
 	if ( SameAsciiKey( key, "Disable" ) ) { return { Kind::DISABLED, {} }; }
 	// RE-SMAC-TECH-PRE-001: first positional match, including collisions after
 	// seven-byte key storage. A lookup token itself is never truncated.
-	for ( const auto& row : technologies ) { if ( SameAsciiKey( key, row.key ) ) { return { Kind::TECHNOLOGY, row.source_id }; } }
+	for ( const auto& row : technologies ) { if ( SameAsciiKey( key, row.key ) ) { return { Kind::TECHNOLOGY_ID, row.source_id }; } }
 	// Original diagnostic presentation is not invoked by this query. UNKNOWN
 	// remains distinct from explicit Disable even if that dialog would return -2.
 	return { Kind::UNKNOWN, {} };
@@ -108,7 +108,7 @@ SmacProductionPrerequisite SmacTechnologyRules::ResolveProductionPrerequisite( c
 	if ( first == Kind::UNKNOWN || second == Kind::UNKNOWN ) { return { Status::UNAVAILABLE, id }; }
 	if ( first == Kind::DISABLED || ( first != Kind::NONE && second == Kind::DISABLED ) ) { return { Status::DISABLED, id }; }
 	// This is a definition check, not a recursive ancestor-ownership check.
-	return { Status::TECHNOLOGY, id };
+	return { Status::TECHNOLOGY_ID, id };
 }
 
 }

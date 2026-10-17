@@ -131,7 +131,7 @@ void AddSmacTechnologyRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( SmacTechnologyRules::Deserialize( catalog.Serialize() ) == catalog, "colliding ordered keys did not survive codec" );
 		for ( const auto* token : { "SevenKe", "sEvEnKe   " } ) {
 			const auto ref = catalog.ResolveToken( token );
-			GT_ASSERT( ref.kind == Kind::TECHNOLOGY && ref.technology_id == 0, "lookup did not use first case-insensitive positional match" );
+			GT_ASSERT( ref.kind == Kind::TECHNOLOGY_ID && ref.technology_id == 0, "lookup did not use first case-insensitive positional match" );
 		}
 		GT_ASSERT( catalog.ResolveToken( "nOnE   " ).kind == Kind::NONE && catalog.ResolveToken( "dIsAbLe  " ).kind == Kind::DISABLED, "case/trailing-space sentinel lookup failed" );
 		GT_ASSERT( catalog.ResolveToken( "tEcH88" ).technology_id == 88, "last catalog key did not resolve" );
@@ -139,7 +139,7 @@ void AddSmacTechnologyRulesTests( task::gsetests::GSETests* task ) {
 			const auto ref = catalog.ResolveToken( token );
 			GT_ASSERT( ref.kind == Kind::UNKNOWN && !ref.technology_id, "unknown token silently normalized to a reference" );
 		}
-		GT_ASSERT( catalog.ResolveProductionPrerequisite( "SevenKe" ).status == Status::TECHNOLOGY, "forward catalog reference did not resolve" );
+		GT_ASSERT( catalog.ResolveProductionPrerequisite( "SevenKe" ).status == Status::TECHNOLOGY_ID, "forward catalog reference did not resolve" );
 		GT_OK();
 	} );
 	task->AddTest( "SMAC production prerequisite query distinguishes definition identity without ownership defaults", GT() {
@@ -149,14 +149,14 @@ void AddSmacTechnologyRulesTests( task::gsetests::GSETests* task ) {
 		};
 		GT_ASSERT( check( "None", Status::NO_REQUIREMENT, {} ) && check( "Disable", Status::DISABLED, {} ), "sentinel meaning changed" );
 		GT_ASSERT( check( "misspelled", Status::UNAVAILABLE, {} ) && check( "Missing", Status::UNAVAILABLE, {} ), "unknown/case-mismatched key accepted" );
-		GT_ASSERT( check( "Tech0", Status::TECHNOLOGY, 0 ) && check( "Tech87", Status::TECHNOLOGY, 87 )
+		GT_ASSERT( check( "Tech0", Status::TECHNOLOGY_ID, 0 ) && check( "Tech87", Status::TECHNOLOGY_ID, 87 )
 			&& check( "Tech88", Status::UNAVAILABLE, 88 ), "production reference range changed" );
 		for ( const auto& first : { "None", "Disable", "Tech88", "Missing" } ) {
 			for ( const auto& second : { "None", "Disable", "Tech0", "Missing" } ) {
 				catalog.technologies[ 1 ].prerequisites = { first, second };
 				const bool unknown = std::string( first ) == "Missing" || std::string( second ) == "Missing";
 				const bool disabled = std::string( first ) == "Disable" || ( std::string( first ) != "None" && std::string( second ) == "Disable" );
-				const auto status = unknown ? Status::UNAVAILABLE : disabled ? Status::DISABLED : Status::TECHNOLOGY;
+				const auto status = unknown ? Status::UNAVAILABLE : disabled ? Status::DISABLED : Status::TECHNOLOGY_ID;
 				GT_ASSERT( check( "Tech1", status, 1 ), "evidenced definition exception or unknown policy changed" );
 			}
 		}
@@ -167,7 +167,7 @@ void AddSmacTechnologyRulesTests( task::gsetests::GSETests* task ) {
 			&& settings.GetSmacFacilityPrerequisite( 38 ).status == Status::NO_REQUIREMENT
 			&& settings.GetSmacFacilityPrerequisite( 71 ).status == Status::DISABLED, "real frozen facility query lost prerequisite identity" );
 		const auto known = settings.GetSmacFacilityPrerequisite( 3 );
-		GT_ASSERT( known.status == Status::TECHNOLOGY && known.technology_id == 2, "facility prerequisite did not resolve against host catalog" );
+		GT_ASSERT( known.status == Status::TECHNOLOGY_ID && known.technology_id == 2, "facility prerequisite did not resolve against host catalog" );
 		for ( const int32_t invalid : { INT32_MIN, 0, 72, INT32_MAX } ) { GT_ASSERT( settings.GetSmacFacilityPrerequisite( invalid ).status == Status::UNAVAILABLE, "unknown facility slot accepted" ); }
 		settings.ResetRuleset(); settings.SelectRuleset( "smax" );
 		GT_ASSERT( settings.GetSmacFacilityPrerequisite( 1 ).status == Status::UNAVAILABLE, "absent SMAC catalog supplied a default" );

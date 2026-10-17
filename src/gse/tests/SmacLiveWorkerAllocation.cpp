@@ -332,10 +332,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
 			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, 30, scout, 30, std::vector< ProductionItem >{} } );
-			// Owner remains Librarian while the global cost difficulty is easiest.
+			// The generic participant fixture starts at Citizen. Set the actual
+			// owner to Librarian while the global cost difficulty is easiest.
 			// Manual retooling must still charge the owner's 30-to-20 penalty.
+			game->GetPlayer()->SetDifficultyLevel( "Librarian" );
 			game->GetState()->m_settings.global.difficulty_level = -3; // port encoding of Citizen
 			fixture.ResourceState( []( auto& state ) { state.designs.global_difficulty = 0; } );
+			GT_ASSERT( unit::SmacStartupDesignState::OriginalDifficulty( base->m_owner->GetPlayer()->GetDifficultyLevel() ) == 3,
+				"penalty fixture did not establish the owner's stored Librarian difficulty" );
 			const auto original = *base->GetProductionState(); const auto random = fixture.GameplayRandom();
 			auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_production_selection" ) );
 			auto* picker = static_cast< value::Callable* >( setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ) } ) );

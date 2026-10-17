@@ -384,8 +384,8 @@ extreme social/resource inputs or a complete base economy.
 
 ### Next three implementation slices
 
-1. Complete the conventional bottom-bar/preview consumer of checked stats,
-   including current allowance and the definition's morale name. Initialized
+1. The conventional bottom-bar/preview now consumes checked allowance and the
+   definition's morale name, refreshing existing list labels. Initialized
    Infantry presentation, Early-to-ready startup, selected Rover and Gaian HQ
    movement, and remote-record independence are integrated. Queue an actual
    selected starting unit only where the startup and movement route admit its
@@ -394,8 +394,8 @@ extreme social/resource inputs or a complete base economy.
    nearby HQ is now rejected: the old empty-world fixture supplied a zero
    nearest-base distance and did not establish general encounter behavior.
 2. Connect the canonical evaluating-base query to real worker intake using the
-   integrated complete resource profile. Derive fungal capabilities from owned
-   technology and faction records; retain the specialist catalog, worker choices,
+   integrated complete resource profile and owned fungal capability producer.
+   Retain the specialist catalog, worker choices,
    base options and resource modifiers. The seven-faction first-worker and reset
    compositions supply the next acceptance cases. Preserve valid specialist
    allocations through recalculation and the measured manual-handler order;
@@ -405,6 +405,10 @@ extreme social/resource inputs or a complete base economy.
    Colony Pod founding and Former commands, then conventional combat, to close
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
+
+The [UI/fungal checkpoint](validation/unit-ui-fungal-2026-10-17.md) passes the
+full Windows and Linux sanitizer suites, with the same 101 allocation-tracked
+groups on both. Default spawning and live resource callbacks remain unchanged.
 
 The host/world profile and startup-design foundations are implemented; focused
 publication and review remain separate from integration. Review quota delays

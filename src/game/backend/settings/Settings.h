@@ -77,6 +77,12 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 
 	void Initialize();
+	// Gameplay identity, independent of the installed asset distribution.
+	enum ruleset_t { RULESET_UNSELECTED, RULESET_SMAC, RULESET_SMAX };
+	const std::string& GetRulesetId() const;
+	void SelectRuleset( const std::string& id );
+	void LockRuleset();
+	void ResetRuleset();
 
 	MapSettings map = {};
 
@@ -91,6 +97,11 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
+
+private:
+	ruleset_t m_ruleset = RULESET_UNSELECTED;
+	bool m_ruleset_locked = false; // lifecycle guard, not saved state
+	static ruleset_t ParseRuleset( const std::string& id );
 };
 
 // settings that aren't synced between players

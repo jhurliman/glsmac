@@ -199,10 +199,12 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The latest [production-profile receipt](validation/production-profile-2026-10-17.md)
-records Windows and leak-enabled Linux CTest 8/8 at `23dcaacf`, plus native
-macOS arm64 CTest 8/8 at `8923374f`. Focused Windows/Linux tracked tests cover
-the latter revision's effective SSE rounding guard. On honey, the user confirmed
+The latest [technology/startup receipt](validation/technology-startup-2026-10-17.md)
+records CTest 8/8 on native Windows, leak-enabled Linux and native macOS arm64
+at the same integrated commit, `445ee209`. It includes the technology catalog,
+V5 world-header binding, initial-turn ordering and Server departure retirement.
+The [preceding production-profile receipt](validation/production-profile-2026-10-17.md)
+retains the effective SSE rounding guard's focused Windows/Linux tests. On honey, the user confirmed
 map interaction, base inspection, a turn, a new world and close at `5cd78418`.
 A later read-only check confirmed exit 0 and no tracked memory/OpenGL leaks.
 The screenshots show Morgan Industries before and University Base after restart.
@@ -226,17 +228,24 @@ independent baselines and matches 4,594 retained original scenarios. Neither
 calculator chooses eligible items or schedules a turn.
 
 [#111](https://github.com/jhurliman/glsmac/pull/111) freezes four SMAC production
-rule values and all 71 facility records in host settings. A separate V4
-world-header change binds that profile before map allocation; its source
-validation is recorded in [world snapshot rules](https://github.com/jhurliman/glsmac/blob/cfb5b4d55b5ea6d5ecd13dc81cc1e2106e6d89f5/docs/world-snapshot-rules.md).
-It is being prepared as a focused PR. SMAX has no SMAC numeric profile.
-Technology definitions and actual faction/design startup producers precede
-production activation.
+rule values and all 71 facility records in host settings;
+[#112](https://github.com/jhurliman/glsmac/pull/112) binds that profile in the V4
+world header before map allocation. [#114](https://github.com/jhurliman/glsmac/pull/114)
+adds all 89 positional technology definitions and their original key lookup and
+prerequisite classification. [#116](https://github.com/jhurliman/glsmac/pull/116)
+binds the technology catalog in V5. These are published, reviewed slices awaiting
+their dependency merges; see the pinned
+[world snapshot rules](https://github.com/jhurliman/glsmac/blob/445ee2094331babdab7e82528eb00f028a65ff26/docs/world-snapshot-rules.md).
+SMAX has no SMAC numeric profile. Definitions alone grant no discoveries or
+buildable items. Actual faction/design startup producers precede production
+activation. [#113](https://github.com/jhurliman/glsmac/pull/113) runs initial
+world events at turn zero, before the first turn advances.
 
 The wider lifetime stack preserves entity state, RNG continuation and turn
 metadata, stages map publication, and guards specific native replacement/cleanup
 paths from collection. Terminal-connection cleanup is
-[#110](https://github.com/jhurliman/glsmac/pull/110). These bounded fixes do not
+[#110](https://github.com/jhurliman/glsmac/pull/110), followed by Server departure
+retirement in [#115](https://github.com/jhurliman/glsmac/pull/115). These bounded fixes do not
 settle canonical Player/Slot/Connection ownership. Concurrent roster and
 failure/reset findings holding #77 remain open; sequential round-trips do not
 prove exclusion. Follow the
@@ -254,26 +263,32 @@ commands remain unfinished. Component results do not establish visual fidelity.
 
 ### Next three implementation slices
 
-1. Finish publication of the production profile and V4 world binding. Preserve
-   strict early client rejection and actual body-restoration checks. Every
-   changed PR head needs its own GitHub review and relevant checks.
-2. Import the real SMAC technology catalog and classify facility prerequisites
-   against it. Preserve identities and raw priority positions. Distinguish no
-   prerequisite, disabled definitions, known technology and unavailable
-   references; this is not a buildability decision. Synchronize host settings
-   without inventing technology ownership or social ratings.
-3. Establish actual faction and predefined-design startup producers, then connect
-   founding to base creation. Inputs include owned technologies, selected social
-   models/faction modifiers, current ratings, separately retained founding
-   SUPPORT, active designs and cached costs. Retain original difficulty and
-   world-size identities, and process initial creation before FirstTurn advances
-   the counter. Connect support/intake, posting, completion and queues afterward.
+1. Preserve the accepted SMAC world-size category separately from dimensions.
+   Parse the five original presets; explicit custom maps remain category 99
+   even when their dimensions equal a preset. Bind the frozen rows and accepted
+   selection to settings/world snapshots, and reject unsupported dimensions
+   before allocation. The original mineral-cost rule consumes this category.
+2. Parse canonical faction startup metadata against the frozen technology
+   catalog, preserving ordered bonuses, the shared eight-record capacity and
+   the distinct named versus deferred numeric TECH behavior. Pair this with
+   coherent Player/Slot/Connection publication before introducing live research
+   ownership. Metadata parsing must not prematurely apply intrinsic SOCIAL.
+3. Establish actual startup discoveries and predefined/active designs, then
+   connect founding to base creation. The observed first-base current SUPPORT
+   and INDUSTRY are zero; late faction modifiers precede first upkeep and do
+   not retroactively recompute starting minerals. Preserve independent target,
+   stored minerals and switching baseline, then connect support/intake,
+   posting, completion and queues in their evidenced order.
 
-Reverse engineering is prioritized around those consumers. New bounded founding
-and upkeep compositions execute original target selection, resource/citizen
-processing, completion and baseline writers with explicit supplied boundaries.
-They establish ordering, including resource recalculation after a facility
-grant, but do not prove normal startup selections or a whole game turn. The
+Reverse engineering is prioritized around those consumers. Bounded original
+compositions now cover all seven human factions through first-base creation,
+late intrinsic SOCIAL, and the first upkeep. The first base selects Formers for
+Gaians and Scout Patrol for the other six at the tested difficulty; the Spartan
+placed starting Rover is distinct from its base's production target. Two
+resource passes bracket production, baseline commit and population processing;
+the second pass does not post minerals again. Explicit supplied terrain, naming,
+UI and regional services limit these results. They do not establish full
+generated-world setup, rendered first-input parity or a complete campaign. The
 first base → Scout/Former/Colony → second base loop still needs real producers,
 legal commands and persistence checks. Native lifetime repairs and conventional
 rendering continue in parallel. SMAC evidence must never silently become SMAX rules.

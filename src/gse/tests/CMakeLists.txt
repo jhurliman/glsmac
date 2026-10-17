@@ -45,5 +45,6 @@ SET( SRC ${SRC}
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 	${PWD}/SmacConventionalStats.cpp
+	${PWD}/ConventionalUnits.cpp
 
 	PARENT_SCOPE )

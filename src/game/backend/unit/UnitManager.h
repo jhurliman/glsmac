@@ -5,6 +5,7 @@
 #include "gse/value/Object.h"
 
 #include "Types.h"
+#include "ConventionalUnitState.h"
 
 #include <deque>
 
@@ -41,6 +42,8 @@ public:
 	void DefineUnit( Def* def );
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
+	Unit* SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
+	void UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;
@@ -66,6 +69,11 @@ public:
 	void RefreshUnit( GSE_CALLABLE, const Unit* unit );
 
 private:
+	friend class game::backend::Game;
+	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver );
+	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
+	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
+		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver ) const;
 	Game* m_game = nullptr;
 
 	std::unordered_map< std::string, MoraleSet* > m_unit_moralesets = {};

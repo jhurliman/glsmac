@@ -1,0 +1,45 @@
+#pragma once
+
+#include "SmacConventionalStats.h"
+#include "game/backend/settings/SmacMovementRules.h"
+#include "types/Buffer.h"
+#include <functional>
+
+namespace game::backend::slot { class Slot; }
+
+namespace game::backend::unit {
+
+// Authoritative stored fields. Tile, UnitID and canonical controller remain on
+// Unit; simulation identity is explicit and is never inferred from a slot.
+struct ConventionalUnitState {
+	int32_t design_id, owner_simulation_id;
+	uint8_t stored_morale, damage, spent;
+	bool failed_move;
+	enum class Home : uint8_t { None };
+	Home home;
+	SmacMoraleMode render_morale_mode;
+	bool operator==( const ConventionalUnitState& other ) const;
+	void Validate() const;
+	void Serialize( types::Buffer& buffer ) const;
+	static ConventionalUnitState Deserialize( types::Buffer& buffer );
+};
+
+// An owned resolved copy produced from a checked current or downloaded bound
+// simulation. No pointers into profiles, Players, designs or social state.
+struct ConventionalUnitContext {
+	settings::SmacMovementRules::GroundChassis chassis;
+	int32_t quantum, basic_allowance, retained_morale;
+	uint8_t reactor;
+};
+
+using ConventionalUnitResolver = std::function< ConventionalUnitContext( const ConventionalUnitState&, const slot::Slot* ) >;
+
+struct ConventionalUnitStats {
+	int32_t effective_morale, allowance_morale, quantum, basic_allowance;
+	int32_t full_allowance, remaining_allowance, hit_points, maximum_hit_points;
+};
+
+ConventionalUnitStats QueryConventionalUnit( const ConventionalUnitState& state,
+	const ConventionalUnitContext& context, SmacMoraleMode mode );
+
+}

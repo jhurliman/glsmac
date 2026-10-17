@@ -172,6 +172,75 @@ const faction::SmacSimulationParticipant& Game::RequireSimulationParticipant( co
 	throw std::runtime_error( "Player is not an admitted simulation participant" );
 }
 
+unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner ) const {
+	ValidateCurrentSimulation();
+	if ( !m_simulation ) { throw std::runtime_error( "Conventional units require an admitted SMAC simulation" ); }
+	return ResolveConventionalUnit( state, owner, *m_simulation );
+}
+
+unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation ) const {
+	state.Validate();
+	ValidateSimulation( simulation );
+	const auto& global = m_state->m_settings.global;
+	const auto& movement = global.GetSmacMovementRules();
+	const auto& profiles = global.GetSmacFactionStartupRules();
+	const auto& technologies = global.GetSmacTechnologyRules();
+	const auto& units = global.GetSmacPredefinedUnitRules();
+	if ( !global.IsRulesetLocked() || !movement || !profiles || !technologies || !units ) {
+		throw std::runtime_error( "Conventional units require complete frozen source profiles" );
+	}
+	// Validate every raw bonus, including records after the shared cap. The
+	// supported profile cannot contain direct MORALE, so absence means 0/OFF.
+	profiles->Validate( *technologies );
+	const faction::SmacSimulationParticipant* participant = nullptr;
+	for ( const auto& candidate : simulation.value.roster ) {
+		if ( &m_state->m_slots->GetSlot( candidate.slot ) == owner && candidate.simulation_id == state.owner_simulation_id ) {
+			participant = &candidate; break;
+		}
+	}
+	if ( !participant || !profiles->Find( participant->faction_id ) ) { throw std::runtime_error( "Conventional owner does not match its simulation participant" ); }
+	const auto* social = simulation.value.social.Find( state.owner_simulation_id );
+	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
+		throw std::runtime_error( "Conventional units require refreshed retained social state" );
+	}
+	const auto& catalog = units->catalog;
+	simulation.value.designs.Validate( catalog );
+	unit::SmacCustomDesign design;
+	bool found = false;
+	if ( state.design_id < 64 ) {
+		for ( const auto& row : catalog.units ) {
+			if ( row.source_id == static_cast< uint32_t >( state.design_id ) ) {
+				design = { state.design_id, row.chassis_id, row.weapon_id, row.defense_id, row.reactor, row.cost, row.plan,
+					row.carry, row.abilities, row.faction_exclusion, row.active, row.prototyped };
+				found = true; break;
+			}
+		}
+	}
+	else if ( const auto* designs = simulation.value.designs.Find( state.owner_simulation_id ) ) {
+		for ( const auto& row : designs->designs ) { if ( row.id == state.design_id ) { design = row; found = true; break; } }
+	}
+	if ( !found || !design.active || design.chassis > 1 || design.weapon != 0 || design.defense != 0 || design.reactor != 1
+		|| design.abilities != 0 || design.faction_exclusion != 0 || design.plan != 3
+		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.empty()
+		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {
+		throw std::runtime_error( "Unsupported conventional Scout or Rover design" );
+	}
+	using namespace loader::txt;
+	const auto& chassis = catalog.chassis.chassis[ design.chassis ];
+	const auto& weapon = catalog.weapons.weapons[ 0 ]; const auto& defense = catalog.defenses.defenses[ 0 ];
+	if ( chassis.triad != ChassisTriad::Land || chassis.missile || chassis.range != 0 || chassis.cargo != 1
+		|| weapon.mode != WeaponMode::Projectile || weapon.offense != 1 || defense.mode != DefenseMode::Projectile
+		|| defense.rating != 1 || catalog.reactors.reactors[ 0 ].power != 1 ) {
+		throw std::runtime_error( "Unsupported conventional component semantics" );
+	}
+	using Ground = settings::SmacMovementRules::GroundChassis;
+	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
+	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),
+		social->retained->at( 4 ), design.reactor };
+	unit::QueryConventionalUnit( state, result, state.render_morale_mode );
+	return result;
+}
+
 gse::Value* Game::CopyTechnologyState( GSE_CALLABLE, const Player* player ) const {
 	const auto& participant = RequireSimulationParticipant( player );
 	const auto& state = *m_simulation->value.technology.Find( participant.simulation_id );

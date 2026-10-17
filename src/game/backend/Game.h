@@ -25,6 +25,7 @@
 #include "util/random/Types.h"
 #include "WorldSnapshotTurn.h"
 #include "faction/SmacSimulationState.h"
+#include "unit/ConventionalUnitState.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/Tile.h"
@@ -500,6 +501,8 @@ private:
 	void PrepareNewSimulation();
 	void PublishPendingSimulation();
 	void ValidateCurrentSimulation() const;
+	unit::ConventionalUnitContext ResolveConventionalUnit( const unit::ConventionalUnitState& unit, const slot::Slot* owner ) const;
+	unit::ConventionalUnitContext ResolveConventionalUnit( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
 	void WriteSimulationState( types::Buffer& buffer ) const;
 	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
 	void RefreshSimulationForTurn( size_t turn );

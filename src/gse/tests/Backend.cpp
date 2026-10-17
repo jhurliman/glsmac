@@ -4718,7 +4718,7 @@ static void AddHostRulesPacketTests( task::gsetests::GSETests* task ) {
 			if ( scenario == 14 || scenario == 15 ) {
 				auto changed = smac_rules_fixture::WorldSizes();
 				if ( scenario == 14 ) { changed.presets.back().name += " changed"; }
-				else { ++changed.presets.back().source_y; }
+				else { changed.presets.back().source_y += 2; } // valid geometry, different frozen profile
 				sizes = changed.Serialize().ToString();
 			}
 			if ( scenario == 16 ) { types::Buffer bad; bad.WriteInt( 2 ); sizes = bad.ToString(); }

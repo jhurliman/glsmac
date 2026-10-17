@@ -1,5 +1,10 @@
 # Frozen SMAC production configuration
 
+The [technology catalog follow-up](smac-technology-catalog.md) extends the
+global-settings envelope to V4 and stages a third profile in the same host read.
+The production-profile V1 layout below is unchanged; the V3 discussion records
+this production layer's original integration.
+
 An explicit SMAC host now reads `alpha.txt` once through the existing resource
 resolver and stages both the base-square rules and a production profile before
 publishing either. Joining clients accept the complete host profile through the

@@ -12,6 +12,7 @@
 #include "gse/value/Object.h"
 
 #include "RenderInfo.h"
+#include "Pop.h"
 
 namespace game {
 namespace backend {
@@ -55,6 +56,8 @@ public:
 	void UndefineFacility( const std::string& id );
 
 	Base* GetBase( const size_t id ) const;
+	Pop* GetWorkingPop( const map::tile::coords_t& coord ) const;
+	std::string ValidateAssignment( const size_t base_id, const map::tile::coords_t& center, const size_t pop_id, const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	void SpawnBase( GSE_CALLABLE, Base* base );
 	void DespawnBase( GSE_CALLABLE, const size_t base_id );
 
@@ -78,6 +81,13 @@ public:
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+	friend class Base;
+	using tile_key_t = std::pair< size_t, size_t >;
+	using pop_key_t = std::pair< size_t, size_t >;
+	// Derived lookup only. IDs/coordinates remain safe after the map is destroyed.
+	std::map< tile_key_t, pop_key_t > m_work_assignments;
+	void ChangeAssignment( const size_t base_id, const size_t pop_id, const Pop::worked_tile_t& old_tile, const Pop::worked_tile_t& new_tile );
+	void RemoveAssignments( const Base* base );
 	Game* m_game = nullptr;
 
 	popdefs_t m_base_popdefs = {};

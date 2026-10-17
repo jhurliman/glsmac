@@ -39,22 +39,19 @@ const std::string& Class::GetLocalName() const {
 	return m_name;
 }
 
-#ifdef DEBUG
-static uint64_t last_time = 0;
-#endif
-
 void Class::Log( const std::string& text ) const {
 	if ( g_engine != NULL ) {
 #ifdef DEBUG
-		const auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		const auto duration = last_time
-			? time - last_time
-			: 0;
-		last_time = time;
+		// One immutable origin avoids a shared last-message timestamp race.
+		// Convert explicitly: the clock's native tick is not necessarily a nanosecond.
+		static const auto origin = std::chrono::steady_clock::now();
+		const auto duration = std::chrono::duration_cast< std::chrono::nanoseconds >(
+			std::chrono::steady_clock::now() - origin
+		).count();
 #endif
 		g_engine->Log(
 #ifdef DEBUG
-			"[+" + std::to_string( duration ) + "ns] " +
+			"[t+" + std::to_string( duration ) + "ns] " +
 #endif
 				"<" + GetName() + "> " + text
 		);

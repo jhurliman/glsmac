@@ -41,7 +41,11 @@ class Space;
 CLASS( Object, common::Class )
 
 	Object( gc::Space* const gc_space );
-	virtual ~Object() = default;
+	virtual ~Object();
+	Object( const Object& ) = delete;
+	Object( Object&& ) = delete;
+	Object& operator=( const Object& ) = delete;
+	Object& operator=( Object&& ) = delete;
 
 	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects );
 
@@ -51,6 +55,10 @@ protected:
 	const bool IsPersisted( Object* const obj ) const;
 
 private:
+	friend class Space;
+	// Pending registration belongs to this address. A failed derived constructor
+	// cancels it during base destruction; publication clears it before collection.
+	Space* m_pending_space = nullptr;
 	std::unordered_set< Object* > m_persisted_objects = {};
 
 };

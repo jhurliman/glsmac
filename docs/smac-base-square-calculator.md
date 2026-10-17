@@ -64,3 +64,37 @@ and synchronizes them through global settings. Live calculation still requires
 an adapter supplying authoritative owner, economy, facilities, eligible terrain
 bonuses and event state. Passing this suite establishes the bounded calculation
 contract, not complete base income, original map behavior or SMAX parity.
+
+### Signed32 validation — 2026-10-17
+
+The opt-in batch probe accepts all 31 semantic input fields explicitly. The
+comparison tool verifies fixture SHA-256
+`c92671c1dbd7fe16d403109bf78d801d07e34363284ee684de212ecea032c059`,
+merges its shared defaults with each case's overrides (arrays replace), and
+compares literal expected triples:
+
+```sh
+clang++-15 -std=c++17 -O2 -DNDEBUG -fsanitize=undefined \
+  -fno-sanitize-recover=all -Isrc tools/tests/smac_base_square_probe.cpp \
+  src/game/backend/resource/SmacBaseSquareYield.cpp -o /tmp/center-probe
+python3 tools/reference/compare_base_square_integer.py --probe /tmp/center-probe \
+  --cases /private/base-square-integer-boundaries-cases.json \
+  --output /tmp/center-comparison.json
+```
+
+At implementation `ecb625b8bd70ab1d4c61d3d7ae027012346f7f18`, the Release/UBSan
+probe matched all 1,389 scenarios (4,167 returned values). A separately compiled
+copy returning unbounded intermediates instead of wrapping disagreed on exactly
+422 scenarios and exited nonzero; the intended source/binary was unchanged.
+Six malformed probe field/framing controls rejected without emitting a result.
+The actual publication suite passed 8/8 in 48.50 seconds. Full LLVM15 analysis
+checked all 300 Linux production translation units with zero failures in
+223.54 seconds at two workers; Windows-only networking is outside that scan.
+Logs and comparison results are retained under
+`/home/jhurliman/src/glsmac-base-square-integer`, with publication CTest logs in
+`/home/jhurliman/src/glsmac-pr95-refreshed/base-square-integer-ctest.log`.
+
+The broader integration at `c85982ad923847854a1ca3f1ca85ed07ca3d5eb2` passed
+Windows CTest 8/8 in 79.85 seconds and Linux ASan/UBSan/LSan CTest 8/8 in
+129.93 seconds with leak detection and halt-on-error enabled. These are separate
+integration results, not additional runs of the smaller publication branch.

@@ -31,12 +31,12 @@ using namespace game::backend::unit;
 
 ConventionalUnitState Record() { return { 2, 1, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 }; }
 
-Def* Define( UnitManager* manager ) {
+Def* Define( UnitManager* manager, bool rover = false ) {
 	MoraleSet::morale_values_t names;
 	for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
-	manager->DefineMoraleSet( new MoraleSet( "CONVENTIONAL_MORALE", names ) );
-	auto* def = new StaticDef( "EXPLICIT_SCOUT", manager->GetMoraleSet( "CONVENTIONAL_MORALE" ), "Fixture Scout", MT_LAND, 999.0f,
-		new CvrScoutRender( 0, 0, 100, 100, { 1.0f, 1.0f }, { 128.0f, 128.0f } ) );
+	if ( !manager->GetMoraleSet( "CONVENTIONAL_MORALE" ) ) { manager->DefineMoraleSet( new MoraleSet( "CONVENTIONAL_MORALE", names ) ); }
+	auto* def = new StaticDef( rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT", manager->GetMoraleSet( "CONVENTIONAL_MORALE" ), "Fixture Scout", MT_LAND, 999.0f,
+		new CvrScoutRender( 2, 0, 100, 100, { 1.0f, 1.0f }, { 128.0f, 128.0f }, rover ? CvrScoutRender::Composition::SpartanRover : CvrScoutRender::Composition::Scout ) );
 	manager->DefineUnit( def ); return def;
 }
 
@@ -44,11 +44,11 @@ Value* Call( GSE_CALLABLE, value::Object* object, const std::string& method, con
 	return static_cast< value::Callable* >( object->Get( method ) )->Run( GSE_CALL, arguments );
 }
 
-Unit* Spawn( GSE_CALLABLE, ConventionalUnitFixture& fixture, const ConventionalUnitState& state, size_t id = 71 ) {
+Unit* Spawn( GSE_CALLABLE, ConventionalUnitFixture& fixture, const ConventionalUnitState& state, size_t id = 71, size_t slot = 0, const char* def = "EXPLICIT_SCOUT" ) {
 	auto* game = fixture.Game();
 	auto* data = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{
-		{ "id", VALUE( value::Int,, id ) }, { "def", VALUE( value::String,, "EXPLICIT_SCOUT" ) },
-		{ "owner", game->GetState()->m_slots->GetSlot( 0 ).GetPlayer()->Wrap( GSE_CALL ) },
+		{ "id", VALUE( value::Int,, id ) }, { "def", VALUE( value::String,, def ) },
+		{ "owner", game->GetState()->m_slots->GetSlot( slot ).GetPlayer()->Wrap( GSE_CALL ) },
 		{ "tile", game->GetMap()->GetTile( 2, 2 )->Wrap( GSE_CALL ) },
 		{ "design_id", VALUE( value::Int,, state.design_id ) }, { "owner_simulation_id", VALUE( value::Int,, state.owner_simulation_id ) },
 		{ "stored_morale", VALUE( value::Int,, state.stored_morale ) }, { "damage", VALUE( value::Int,, state.damage ) },
@@ -77,6 +77,63 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "selected Spartan Rover actual spawn and staged restore preserve presentation authority", GT() {
+		ConventionalUnitFixture source, destination; source.Configure( true, 3, true ); destination.Configure( true, 3, true );
+		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( next ); } );
+		ConventionalUnitState record{ 128, 2, 1, 0, 1, true, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+		std::string bytes;
+		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = source.Game(); auto* manager = game->GetUM(); Define( manager, true );
+			auto* unit = Spawn( GSE_CALL, source, record, 91, 2, "EXPLICIT_ROVER" );
+			GT_ASSERT( unit->m_owner->GetIndex() == 2 && unit->Conventional() == record
+				&& static_cast< StaticDef* >( unit->m_def )->m_render->m_type == Render::RT_CVR_SPARTAN_ROVER,
+				"selected Rover lost canonical owner or presentation" );
+			const auto stats = unit->QueryStats( SmacMoraleMode::Mode0 );
+			GT_ASSERT( stats.effective_morale == 2 && stats.full_allowance == 6 && stats.remaining_allowance == 5, "selected Rover used Infantry or unrefreshed stats" );
+			const auto& updates = source.Updates();
+			const auto spawn = std::find_if( updates.begin(), updates.end(), []( const auto& r ) { return r.type == game::FrontendRequest::FR_UNIT_SPAWN; } );
+			GT_ASSERT( spawn != updates.end() && spawn->data.unit_spawn.slot_index == 2 && spawn->data.unit_spawn.morale == 2
+				&& spawn->data.unit_spawn.full_movement == 2.0f && spawn->data.unit_spawn.movement == 5.0f / 3.0f,
+				"selected Rover spawn FR lost its actual derived stats" );
+			bytes = source.Snapshot(); GT_OK();
+		} ); if ( !setup.empty() ) { return setup; }
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			// Current context is valid but deliberately selects the Infantry fallback.
+			// Only the saved private context can authorize this Rover during UM decode.
+			destination.SelectStartup( 2, 2 );
+			destination.Restore( GSE_CALL, bytes );
+			auto* game = destination.Game(); auto* unit = game->GetUM()->GetUnit( 91 );
+			GT_ASSERT( unit && unit->Conventional() == record && unit->m_def == game->GetUM()->GetUnitDef( "EXPLICIT_ROVER" )
+				&& unit->m_owner == &game->GetState()->m_slots->GetSlot( 2 ) && unit->GetTile() == game->GetMap()->GetTile( 2, 2 )
+				&& unit->QueryStats( SmacMoraleMode::Mode0 ).full_allowance == 6 && destination.Snapshot() == bytes,
+				"saved selected Rover was rebound to current selection or lost exact destination state" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "selected Spartan Rover rejects other owners selections and mismatched renderers before effects", GT() {
+		ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Define( manager, true ); fixture.Updates();
+			// Structurally valid owned rows isolate faction/selection admission from
+			// component legality. This does not claim the startup producer makes them.
+			fixture.CopyRoverDesign( 2, 129 ); fixture.CopyRoverDesign( 3, 192 ); fixture.SelectStartup( 3, 192 );
+			const auto next = Unit::GetNextId(); const auto before = fixture.Snapshot(); size_t hooks = 0;
+			manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
+			for ( int scenario = 0; scenario < 6; ++scenario ) {
+				ConventionalUnitState state{ 128, 2, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+				size_t owner = 2; const char* def = "EXPLICIT_ROVER";
+				if ( scenario == 0 ) { def = "EXPLICIT_SCOUT"; }
+				if ( scenario == 1 ) { state.design_id = 129; }
+				if ( scenario == 2 ) { state.design_id = 192; state.owner_simulation_id = 3; owner = 6; }
+				if ( scenario == 3 ) { state.design_id = 2; }
+				if ( scenario == 4 ) { state.design_id = 11; }
+				if ( scenario == 5 ) { state.owner_simulation_id = 3; owner = 6; }
+				bool rejected = false; try { Spawn( GSE_CALL, fixture, state, next, owner, def ); } catch ( const std::exception& ) { rejected = true; }
+				GT_ASSERT( rejected && Unit::GetNextId() == next && manager->GetUnits().empty() && game->GetMap()->GetTile( 2, 2 )->units.empty()
+					&& hooks == 0 && fixture.Updates().empty(), "invalid selected Rover produced effects at scenario " + std::to_string( scenario ) );
+			}
+			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "conventional unit record rejects malformed fields before publication", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );

@@ -163,9 +163,15 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 	const auto context = resolver( state, owner );
 	QueryConventionalUnit( state, context, state.render_morale_mode );
 	const auto* presentation = static_cast< const StaticDef* >( def );
-	if ( context.chassis != settings::SmacMovementRules::GroundChassis::Infantry || context.reactor != 1
-		|| presentation->m_movement_type != MT_LAND || !presentation->m_render || presentation->m_render->m_type != Render::RT_CVR_SCOUT ) {
-		THROW( "Conventional design has no compatible explicit presentation; Rover is not Infantry" );
+	const auto* render = dynamic_cast< const CvrScoutRender* >( presentation->m_render );
+	using Ground = settings::SmacMovementRules::GroundChassis;
+	using Profile = ConventionalUnitContext::Presentation;
+	const bool scout = context.chassis == Ground::Infantry && context.presentation == Profile::Scout && render
+		&& render->m_type == Render::RT_CVR_SCOUT && render->composition == CvrScoutRender::Composition::Scout;
+	const bool rover = context.chassis == Ground::Speeder && context.presentation == Profile::SelectedSpartanRover && render
+		&& render->m_type == Render::RT_CVR_SPARTAN_ROVER && render->composition == CvrScoutRender::Composition::SpartanRover;
+	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover ) ) {
+		THROW( "Conventional design has no compatible explicit Scout or selected Spartan Rover presentation" );
 	}
 }
 

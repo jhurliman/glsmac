@@ -247,6 +247,15 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
 	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),
 		social->retained->at( 4 ), design.reactor };
+	if ( ground == Ground::Speeder ) {
+		const auto* selected = simulation.value.designs.Find( state.owner_simulation_id );
+		// This renderer has fixed Spartan source material. An arbitrary Speeder,
+		// another faction's design, or a predefined Rover is not interchangeable.
+		if ( participant->faction_id != "SPARTANS" || state.design_id < 64 || !selected || selected->starting_scout != state.design_id ) {
+			throw std::runtime_error( "Speeder presentation requires the selected owned Spartan startup design" );
+		}
+		result.presentation = unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
+	}
 	unit::QueryConventionalUnit( state, result, state.render_morale_mode );
 	return result;
 }

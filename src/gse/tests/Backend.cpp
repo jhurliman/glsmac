@@ -143,7 +143,7 @@ game::backend::unit::Unit* SpawnSnapshotUnit( GSE_CALLABLE, BackendFixture& fixt
 // traffic, or original-game files are involved in these tests.
 class BackendFixture {
 public:
-	void ConfigureConventional( bool refreshed, int32_t road_rate ) {
+	void ConfigureConventional( bool refreshed, int32_t road_rate, bool selected_rover = false ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -157,7 +157,7 @@ public:
 				return source;
 			} );
 			smac_rules_fixture::AcceptWorldSize( settings );
-			EnableSimulationParticipants( { 0, 6 }, 0 );
+			EnableSimulationParticipants( selected_rover ? std::vector< size_t >{ 0, 2, 6 } : std::vector< size_t >{ 0, 6 }, 0, selected_rover );
 			m_game.PrepareNewSimulation();
 			if ( refreshed ) {
 				m_game.m_simulation->value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
@@ -174,6 +174,16 @@ public:
 	void ConventionalEarly() {
 		for ( auto& owner : m_game.m_simulation->value.social.factions ) { owner.phase = game::backend::faction::SmacFactionSocialState::Phase::Early; owner.retained.reset(); }
 		SetSnapshotTurn( 0 );
+	}
+	void ConventionalSelectStartup( int32_t simulation, int32_t design ) {
+		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.starting_scout = design; return; } }
+		throw std::runtime_error( "missing fixture design owner" );
+	}
+	void ConventionalCopyRoverDesign( int32_t simulation, int32_t design ) {
+		auto copy = m_game.m_simulation->value.designs.Find( 2 )->designs.front();
+		copy.id = design;
+		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.designs.push_back( copy ); return; } }
+		throw std::runtime_error( "missing fixture design owner" );
 	}
 	void RestoreConventional( GSE_CALLABLE, const std::string& snapshot ) {
 		m_game.GetUM()->Clear();
@@ -1590,7 +1600,8 @@ public:
 			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
 		} );
 		BackendFixture fixture; // runtime dies before services are restored
-		fixture.EnableTurns();
+		if ( rover ) { fixture.ConfigureConventional( true, 3, true ); }
+		else { fixture.EnableTurns(); }
 		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
 			const auto render_tag = rover ? Render::RT_CVR_SPARTAN_ROVER : Render::RT_CVR_SCOUT;
@@ -1691,8 +1702,9 @@ public:
 			auto um = std::make_unique< game::frontend::unit::UnitManager >( &frontend );
 			game::backend::faction::Faction faction_source( "TEST", "Test" );
 			game::frontend::faction::Faction faction( &faction_source, ism.get() );
-			game::frontend::Slot slot( 0, &faction );
-			um->DefineSlotBadges( 0, &faction );
+			const size_t owner_slot = rover ? 2 : 0;
+			game::frontend::Slot slot( owner_slot, &faction );
+			um->DefineSlotBadges( owner_slot, &faction );
 			auto badges = std::make_unique< game::frontend::unit::BadgeDefs >( ism.get() );
 			auto def = std::make_unique< game::frontend::unit::UnitDef >( ism.get(), copied.get() );
 			StaticDef other_source( "OTHER_SCOUT", manager->GetMoraleSet( "SCOUT_TEST" ), "Other explicit Scout", MT_LAND, 1,
@@ -1738,9 +1750,29 @@ public:
 			unit->SetMorale( 0, "Rank" );
 			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
 			frontend.m_widgets.UnitPreview = presenter.get();
-			auto* backend_unit = new Unit( GSE_CALL, manager, 1, manager->GetUnitDef( "SCOUT_TEST" ),
-				&fixture.m_state->m_slots->GetSlot( 0 ), fixture.m_game.GetMap()->GetTile( 2, 2 ), 1, 0, 1, false );
-			manager->SpawnUnit( GSE_CALL, backend_unit );
+			Unit* backend_unit = nullptr;
+			if ( rover ) {
+				ConventionalUnitState state{ 128, 2, 1, 0, 1, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+				fixture.WithRW( [ & ] {
+					backend_unit = manager->SpawnConventionalUnit( GSE_CALL, 1, manager->GetUnitDef( "SCOUT_TEST" ),
+						&fixture.m_state->m_slots->GetSlot( 2 ), fixture.m_game.GetMap()->GetTile( 2, 2 ), state );
+				} );
+				fixture.PushUnitUpdates(); // complete the genuine spawn queue first
+				state.spent = 5; // still actionable, despite less than a whole point
+				fixture.WithRW( [ & ] { manager->UpdateConventionalUnit( GSE_CALL, backend_unit, state ); } );
+				const auto& updates = fixture.PushUnitUpdates();
+				const auto refresh = std::find_if( updates.begin(), updates.end(), []( const auto& fr ) { return fr.type == game::FrontendRequest::FR_UNIT_UPDATE; } );
+				GT_ASSERT( refresh != updates.end(), "selected Rover did not publish its actual refresh" );
+				frontend.ProcessRequest( &*refresh );
+				GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2" && refresh->data.unit_update.morale == 2
+					&& unit->GetSprite()->instanced_sprite->texture_owner == instanced->texture_owner,
+					"actual selected Rover refresh lost stats or changed composition pixels" );
+			}
+			else {
+				backend_unit = new Unit( GSE_CALL, manager, 1, manager->GetUnitDef( "SCOUT_TEST" ),
+					&fixture.m_state->m_slots->GetSlot( 0 ), fixture.m_game.GetMap()->GetTile( 2, 2 ), 1, 0, 1, false );
+				manager->SpawnUnit( GSE_CALL, backend_unit );
+			}
 			const auto preview_data = [ & ] { return new value::Object( GSE_CALL, { { "unit", backend_unit->Wrap( GSE_CALL ) } } ); };
 			widget->WrapSet( "data", preview_data(), GSE_CALL );
 			widget->WrapSet( "type", new value::String( gc_space, "unit-preview" ), GSE_CALL );
@@ -3769,7 +3801,9 @@ private:
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
-void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate ) { fixture->ConfigureConventional( refreshed, rate ); }
+void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, selected_rover ); }
+void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
+void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design ) { fixture->ConventionalCopyRoverDesign( simulation, design ); }
 game::backend::Game* ConventionalUnitFixture::Game() const { return fixture->GetGame(); }
 std::string ConventionalUnitFixture::Run( const std::function< std::string( GSE_CALLABLE ) >& check ) { return fixture->WithEngineGameScriptValues( check ); }
 Value* ConventionalUnitFixture::Script( GSE_CALLABLE, const std::string& path ) { return fixture->RunScript( GSE_CALL, path ); }

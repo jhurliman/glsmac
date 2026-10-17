@@ -16,7 +16,9 @@ class ConventionalUnitFixture {
 public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
-	void Configure( bool refreshed = true, int32_t road_rate = 3 );
+	void Configure( bool refreshed = true, int32_t road_rate = 3, bool selected_rover = false );
+	void SelectStartup( int32_t simulation, int32_t design );
+	void CopyRoverDesign( int32_t simulation, int32_t design );
 	game::backend::Game* Game() const;
 	std::string Run( const std::function< std::string( GSE_CALLABLE ) >& check );
 	Value* Script( GSE_CALLABLE, const std::string& path );

@@ -35,9 +35,11 @@ kernel. This is not a default for an incomplete or expanded profile.
 
 The design domain is active conventional Gun/Scout armor, reactor 1, Infantry
 or Speeder component semantics, no abilities/exclusion and plan 3. Actual
-creation additionally requires a canonical land StaticDef with the explicit
-`RT_CVR_SCOUT` descriptor and **Infantry**. Speeder presentation is rejected;
-the Spartan Rover image adapter is not an Infantry descriptor. Facing, view,
+creation originally required a canonical land StaticDef with the explicit
+`RT_CVR_SCOUT` descriptor and **Infantry**. The
+[selected Spartan presentation follow-up](conventional-selected-presentation.md)
+also admits the selected owned Spartan Speeder with its distinct Rover
+descriptor. An arbitrary Speeder is still rejected. Facing, view,
 scale and placement still come from the explicitly validated render descriptor.
 No native/Psi/special plan, home-base fixup or SMAX interpretation is introduced.
 

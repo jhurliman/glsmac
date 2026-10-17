@@ -30,6 +30,10 @@ struct ConventionalUnitContext {
 	settings::SmacMovementRules::GroundChassis chassis;
 	int32_t quantum, basic_allowance, retained_morale;
 	uint8_t reactor;
+	// Checked against the bound participant and owned selection; never inferred
+	// from the presentation Def or a transport slot number.
+	enum class Presentation { Scout, SelectedSpartanRover };
+	Presentation presentation = Presentation::Scout;
 };
 
 using ConventionalUnitResolver = std::function< ConventionalUnitContext( const ConventionalUnitState&, const slot::Slot* ) >;

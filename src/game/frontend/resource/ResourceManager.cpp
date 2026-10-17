@@ -123,12 +123,18 @@ void ResourceManager::UndefineNoResource() {
 	m_no_resource.sprites.clear();
 }
 
-const sprite::InstancedSprite* const ResourceManager::GetResourceSprite( const std::string& id, const size_t value ) const {
-	ASSERT( m_resources.find( id ) != m_resources.end(), "resource sprite " + id + " not found" );
-	const auto& r = m_resources.at( id );
-	ASSERT( value > 0, "resource sprite " + id + " value is zero" );
-	ASSERT( r.sprites.size() > value - 1, "resource sprite " + id + " overflow: " + std::to_string( value ) + " > " + std::to_string( r.sprites.size() ) );
-	return r.sprites.at( value - 1 );
+const sprite::InstancedSprite* const ResourceManager::GetResourceSprite( const std::string& id, const int64_t value ) const {
+	const auto count = GetResourceSpriteCount( id );
+	if ( value <= 0 || static_cast< uint64_t >( value ) > count ) {
+		return nullptr; // No exact sprite; callers must display the numeric value.
+	}
+	return m_resources.at( id ).sprites.at( static_cast< size_t >( value - 1 ) );
+}
+
+size_t ResourceManager::GetResourceSpriteCount( const std::string& id ) const {
+	const auto it = m_resources.find( id );
+	if ( it == m_resources.end() ) { THROW( "Unknown resource: " + id ); }
+	return it->second.sprites.size();
 }
 
 const types::Vec2< size_t >& ResourceManager::GetResourceMaxWH( const std::string& id ) const {

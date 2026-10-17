@@ -5,8 +5,11 @@
 #include "RosterRecords.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
+#include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
+#include "UnitRulesTXTLoader.h"
+#include "UnitDesignResolver.h"
 #include "SmacHostRules.h"
 #include "WorldSnapshotRules.h"
 #include "CvrContainerReader.h"
@@ -63,6 +66,8 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddUnitRulesTXTLoaderTests( task );
+		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
@@ -79,6 +84,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
+		tests::AddMeshTests( task );
 		tests::AddGSETests( task );
 		tests::AddAsyncTests( task );
 		task->AddTest(
@@ -202,7 +208,9 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddWorldSnapshotRulesTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 	}
-	tests::AddScriptsTests( task );
+	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {
+		tests::AddScriptsTests( task );
+	}
 
 }
 

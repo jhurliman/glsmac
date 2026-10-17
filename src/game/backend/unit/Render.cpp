@@ -3,6 +3,7 @@
 #include "SpriteRender.h"
 #include "CvrScoutRender.h"
 #include "FormerMarkerRender.h"
+#include "ColonyMarkerRender.h"
 
 namespace game {
 namespace backend {
@@ -16,6 +17,10 @@ Render::Render( const render_type_t type )
 void Render::Serialize( types::Buffer& buf, const Render* render ) {
 	buf.WriteInt( render->m_type );
 	switch ( render->m_type ) {
+		case RT_PORT_COLONY_MARKER:
+			if ( !dynamic_cast< const ColonyMarkerRender* >( render ) ) { THROW( "Invalid Colony marker descriptor" ); }
+			buf.WriteInt( 1 );
+			break;
 		case RT_PORT_FORMER_MARKER:
 			if ( !dynamic_cast< const FormerMarkerRender* >( render ) ) { THROW( "Invalid Former marker descriptor" ); }
 			buf.WriteInt( 1 );
@@ -37,6 +42,9 @@ void Render::Serialize( types::Buffer& buf, const Render* render ) {
 Render* Render::Deserialize( types::Buffer& buf ) {
 	const auto render_type = buf.ReadInt();
 	switch ( render_type ) {
+		case RT_PORT_COLONY_MARKER:
+			if ( buf.ReadInt() != 1 ) { THROW( "Unsupported Colony marker descriptor version" ); }
+			return new ColonyMarkerRender();
 		case RT_PORT_FORMER_MARKER:
 			if ( buf.ReadInt() != 1 ) { THROW( "Unsupported Former marker descriptor version" ); }
 			return new FormerMarkerRender();

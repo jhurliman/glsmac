@@ -3204,6 +3204,8 @@ public:
 				GT_ASSERT(m_game.ResolveSmacProductionPresentation(unit->m_owner,unit->Conventional().design_id)==unit->m_def,"explicit presentation did not resolve actual selected owner/design");
 				const auto* former=static_cast<const StaticDef*>(m_game.ResolveSmacProductionPresentation(unit->m_owner,1));
 				GT_ASSERT(former->m_render->m_type==Render::RT_PORT_FORMER_MARKER && former!=unit->m_def,"Former reused combat presentation");
+				const auto* colony=static_cast<const StaticDef*>(m_game.ResolveSmacProductionPresentation(unit->m_owner,0));
+				GT_ASSERT(colony->m_render->m_type==Render::RT_PORT_COLONY_MARKER && colony!=former,"Colony reused another package presentation");
 				const auto bindings=*m_game.m_smac_presentations;
 				m_game.m_smac_presentations->at(2)=bindings[0];
 				bool mismatched=false;try{m_game.ResolveSmacProductionPresentation(unit->m_owner,1);}catch(const std::exception&){mismatched=true;}

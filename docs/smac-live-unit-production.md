@@ -9,8 +9,8 @@ The first pass supplies nutrient normalization, the stored-food gate,
 nonnegative mineral posting, saved riots suppression, actual cached target cost,
 human carry cap, queue advancement and target/mineral baselines. An empty human
 queue repeats its current target. Unit eligibility uses actual active,
-exclusion, prerequisite, owner and coastal inputs. Colony and non-unit queue
-eligibility are not connected.
+exclusion, prerequisite, owner and coastal inputs. Non-unit queue eligibility is not connected. The separate Colony continuation
+is described in `smac-colony-production.md`.
 
 The caller supplies a read-only registered presentation lookup, which must not
 execute scripts or mutate the world. The manufactured-unit factory checks the
@@ -43,7 +43,7 @@ unavailable. Size-one starvation awaits actual Base removal/home reassignment,
 and a negative mineral surplus at the post-population handler boundary after
 turn one awaits supported-unit loss processing. Both reject before any
 publication. Energy, credits, research, later riot-status decisions and
-facility/project/Colony completion are outside this N/M slice. The factory's
+facility/project completion are outside this N/M slice. The factory's
 separate training and presentation restrictions still apply.
 
 Focused native checks cover actual Scout/Former completion and queue repetition,

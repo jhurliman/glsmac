@@ -20,6 +20,7 @@
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/backend/unit/FormerMarkerRender.h"
+#include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/FrontendRequest.h"
 #include "gse/value/Array.h"
 #include "gse/value/Callable.h"
@@ -81,7 +82,7 @@ ProductionState Production( ProductionItemKind kind = ProductionItemKind::Unit )
 	const ProductionItem item{ kind, kind == ProductionItemKind::Stockpile ? "" : "opaque-target" };
 	return { item, 17, { ProductionItemKind::Stockpile, "" }, 5 };
 }
-Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1 ) {
+Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
@@ -93,10 +94,12 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	} }
 	game->GetMap()->GetTile( 4, 2 )->terraforming = TERRAFORMING_FOREST;
 	auto* owner = &game->GetState()->m_slots->GetSlot( owner_slot );
+	Base::pops_t pops;
+	for ( size_t i = 0; i < population; ++i ) { pops.emplace( std::piecewise_construct, std::forward_as_tuple( 19 + i ), std::forward_as_tuple( nullptr, 19 + i, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) ); }
 	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Live allocation", {},
-		{ { 19, Pop( nullptr, 19, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) } }, 41, 13, Production(), SmacBaseResourceContext{ simulation_id, false, 0, 0, 0x40 } );
+		pops, 41, 13, Production(), SmacBaseResourceContext{ simulation_id, false, 0, 0, 0x40 } );
 	bm->SpawnBase( GSE_CALL, base );
-	SmacBaseAllocationState allocation{ doctor ? 1u : 3u, { {}, doctor ? 1 : 0 } };
+	SmacBaseAllocationState allocation{ doctor ? 1u : population == 2 ? 7u : 3u, { {}, doctor ? static_cast< int32_t >( population ) : 0 } };
 	for ( size_t i = 0; i < 16; ++i ) { allocation.specialists.types[ i ] = i ? ( i + 2 ) % 7 : 1; }
 	base->PublishSmacAllocation( GSE_CALL, allocation, roles );
 	// An actual conventional Unit and optional saved home, not an injected support total.
@@ -130,6 +133,79 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC Colony completion debits population before growth and repeats its queue", []( GSE*, context::Context* ) -> std::string {
+		for ( const int food : { 0, 20 } ) {
+			// Housing2 distinguishes the staged post-debit population from the live P2.
+			const auto source = []( const std::string& filename ) { auto text = UpkeepSource( filename );
+				if ( filename == "alpha.txt" ) { const auto at = text.find( "#RULES\n" ); size_t row = at + 7; for ( int i = 1; i < 13; ++i ) { row = text.find( '\n', row ) + 1; } text.replace( row, text.find( ',', row ) - row, "2" ); } return text; };
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( source, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				using namespace game::backend::unit;
+				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 0, 1, 2 ); auto* um = game->GetUM();
+				game->GetMap()->GetTile( 3, 1 )->terraforming = TERRAFORMING_FOREST;
+				um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
+				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+				const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+				GT_ASSERT( game->IsSmacUnitProductionEligible( *base, target ), "ordinary generated Colony queue was not admitted" );
+				base->SetProductionState( GSE_CALL, ProductionState{ target, game->GetSmacProductionCost( base->m_owner, target ) - 5, target, 77, std::vector< ProductionItem >{} } );
+				base->SetAccumulatedNutrients( food );
+				const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t id ) { return id == 0 ? um->GetUnitDef( "live-colony" ) : nullptr; }, SmacMoraleMode::Mode0 );
+				GT_ASSERT( result.completed_unit && result.first_calculation.nutrients.intake == 4 && result.first_calculation.nutrients.surplus == 0
+					&& result.first_calculation.minerals.surplus == 5, "Colony did not complete after actual two-worker first pass" );
+				auto* pod = um->GetUnit( *result.completed_unit ); const auto& record = pod->Conventional();
+				GT_ASSERT( record.design_id == 0 && record.home_base_id == base->m_id && record.stored_morale == 1 && !record.damage && !record.spent
+					&& pod->GetTile() == base->GetTile() && pod->QueryStats( SmacMoraleMode::Mode1 ).full_allowance == 3
+					&& um->GetUnit( 91 )->Conventional().home == ConventionalUnitState::Home::None, "Pod identity/home/stats or existing Scout home differs" );
+				GT_ASSERT( base->m_pops.size() == ( food ? 2u : 1u ) && base->GetAccumulatedNutrients() == 0
+					&& result.final_calculation->minerals.surplus == ( food ? 5 : 3 ) && result.final_calculation->nutrients.surplus == ( food ? 0 : 1 )
+					&& base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0
+					&& base->GetProductionState()->current_item == target && base->GetProductionState()->baseline_item == target
+					&& base->GetProductionState()->queue->empty(), "Colony debit/growth/forced pass or baselines differ" ); GT_OK();
+			} ); GT_ASSERT( error.empty(), "Colony completion: " + error );
+		} GT_OK();
+	} );
+	task->AddTest( "SMAC Colony moves immediately and restores exact homed continuation", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture source; source.ConfigureProduction( UpkeepSource, "GAIANS" ); std::string saved, record; size_t id = 0;
+		const auto error = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = source.Game(); auto* base = Populate( GSE_CALL, source, false, false, 0, 1, 2 ); auto* um = game->GetUM();
+			game->GetMap()->GetTile( 3, 1 )->terraforming = TERRAFORMING_FOREST;
+			um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+			base->SetProductionState( GSE_CALL, ProductionState{ target, game->GetSmacProductionCost( base->m_owner, target ) - 5, target, 0, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( 0 );
+			id = *base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return um->GetUnitDef( "live-colony" ); }, SmacMoraleMode::Mode0 ).completed_unit;
+			auto* pod = um->GetUnit( id ); source.MoveEvent( GSE_CALL, pod, game->GetMap()->GetTile( 4, 2 ) );
+			GT_ASSERT( pod->GetTile() == game->GetMap()->GetTile( 4, 2 ) && pod->Conventional().spent == 6 && !pod->HasMovesLeft(), "Colony real forest event did not spend two movement points" );
+			record = Unit::Serialize( pod ).ToString(); saved = source.Snapshot(); GT_OK();
+		} ); GT_ASSERT( error.empty(), "Colony movement: " + error );
+		ConventionalUnitFixture destination; destination.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			destination.Restore( GSE_CALL, saved, true ); auto* game = destination.Game(); auto* pod = game->GetUM()->GetUnit( id ); auto* base = game->GetBM()->GetBase( 701 );
+			GT_ASSERT( Unit::Serialize( pod ).ToString() == record && static_cast< StaticDef* >( pod->m_def )->m_render->m_type == Render::RT_PORT_COLONY_MARKER, "Colony restore changed stored package/home/render/spent" );
+			game->GetUM()->ResetConventionalSpent( GSE_CALL, pod ); destination.MoveEvent( GSE_CALL, pod, game->GetMap()->GetTile( 6, 2 ) );
+			GT_ASSERT( pod->GetTile() == game->GetMap()->GetTile( 6, 2 ) && pod->Conventional().spent == 3, "restored Colony did not take ordinary flat step" );
+			const auto next = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-colony" ); }, SmacMoraleMode::Mode0 );
+			GT_ASSERT( !next.completed_unit && base->GetProductionState()->minerals == 3 && base->GetAccumulatedNutrients() == 1
+				&& base->m_pops.size() == 1 && pod->Conventional().home_base_id == base->m_id, "restored following upkeep replayed Colony completion or lost home" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC Colony size-one and wrong presentation reject before publication", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
+			um->DefineUnit( new StaticDef( "live-colony", um->GetMoraleSet( "live-morale" ), "Colony port marker", MT_LAND, 0, new ColonyMarkerRender() ) );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) ); const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+			base->SetProductionState( GSE_CALL, ProductionState{ target, game->GetSmacProductionCost( base->m_owner, target ), target, 0, std::vector< ProductionItem >{} } );
+			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
+			for ( const auto* presentation : { "live-scout", "live-colony" } ) {
+				GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return um->GetUnitDef( presentation ); }, SmacMoraleMode::Mode0 ); } )
+					&& fixture.Snapshot() == before && Unit::GetNextId() == id, "unsupported Colony choice/presentation partially posted" );
+			} GT_OK();
+		} );
+	} );
 	task->AddTest( "SMAC live upkeep stages growth starvation and stable Pop lifetime", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

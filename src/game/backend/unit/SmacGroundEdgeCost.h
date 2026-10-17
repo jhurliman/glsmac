@@ -36,7 +36,8 @@ struct Query {
 
 // Owned values only. Explicit port domain: Q1..100, basic allowance Q..99Q,
 // faction1..7, ordinary Infantry/Speeder, ground/projectile/positive offense,
-// plans0..3, or Infantry Terraformer mode9/offense0/plan9; no abilities or
+// plans0..3, Infantry Terraformer mode9/offense0/plan9, or nonfungus
+// Infantry Colonist mode8/offense0/plan8; no abilities or
 // native design IDs8/9; valid land coordinates and
 // only the feature bits above. Unsupported inputs throw invalid_argument.
 // This query does not admit commands, check adjacency or mutate unit/RNG state.

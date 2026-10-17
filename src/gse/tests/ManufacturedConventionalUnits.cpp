@@ -16,6 +16,7 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/backend/unit/FormerMarkerRender.h"
+#include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/backend/unit/SmacGroundEdgeCost.h"
 #include "game/frontend/unit/UnitDef.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
@@ -158,7 +159,13 @@ void AddManufacturedConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(sprite==view.GetSprite(6)->instanced_sprite&&sprite->key.find("PortFormerMarker:")==0&&retained&&retained->GetWidth()==64
 				&&retained->GetPixel(0,0)==0&&retained->GetPixel(20,20)!=0,"distinct generated Former marker lost ownership or contents");
 		}
-		GT_ASSERT(retained&&retained->GetPixel(20,20)!=0,"retained preview texture died with sprite registration");GT_OK();
+		GT_ASSERT(retained&&retained->GetPixel(20,20)!=0,"retained preview texture died with sprite registration");
+		{
+			game::frontend::sprite::InstancedSpriteManager sprites(&scene); MoraleSet::morale_values_t names; for(int i=0;i<7;++i){names.emplace_back("green");} MoraleSet morale("colony",names);
+			StaticDef def("colony",&morale,"Colony marker",MT_LAND,0,new ColonyMarkerRender());game::frontend::unit::UnitDef view(&sprites,&def);
+			auto* sprite=view.GetSprite(1)->instanced_sprite;
+			GT_ASSERT(sprite->key.find("PortColonyMarker:")==0&&sprite->texture_owner->GetPixel(20,20)!=retained->GetPixel(20,20),"Colony marker reused Former identity or pixels");
+		} GT_OK();
 	});
 	task->AddTest("Manufactured Former edge pricing preserves package terrain order",GT(){
 		using namespace smac_edge;Query q{{1,Chassis::Infantry,0,0,9,9,0,3},3,1,0,false,false,128,64,true,{16,16,3,0,Base},{18,16,3,0,0}};

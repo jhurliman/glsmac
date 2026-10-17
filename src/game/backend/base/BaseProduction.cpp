@@ -35,6 +35,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	if ( !m_allocation || !m_production || !m_production->queue ) { THROW( "Production requires complete allocation and target/queue authority" ); }
 	m_game->ValidateSmacProductionState( m_owner, *m_production );
 	auto production = *m_production;
+	auto population = m_pops.size();
 	if ( production.current_item.kind != ProductionItemKind::Unit && production.current_item.kind != ProductionItemKind::Stockpile ) {
 		THROW( "Production completion for this target kind is not yet connected" );
 	}
@@ -58,6 +59,10 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
 			auto* def = definition( design_id );
 			unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
+			if ( m_game->ResolveConventionalUnit( unit->Candidate().Conventional(), m_owner ).package == unit::ConventionalUnitContext::Package::Colony ) {
+				if ( !population_step || population < 2 ) { THROW( "Colony completion requires full upkeep and size-one choice policy is not connected" ); }
+				--population; // factory/home first; debit before queue, baselines and growth
+			}
 			// Empty queues keep the current target without revalidation. Each
 			// popped candidate remains current, including the last rejected one.
 			while ( !production.queue->empty() ) {
@@ -71,7 +76,6 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	production.baseline_item = production.current_item;
 	production.baseline_minerals = production.minerals;
 	auto food = resources.nutrients.normalized_stored;
-	auto population = m_pops.size();
 	if ( population_step ) {
 		const auto map_type = m_game->GetState()->m_settings.global.map.type;
 		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
@@ -79,7 +83,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		}
 		// The current generated local campaign has no objective producer. This
 		// is explicit GLSMAC non-scenario policy, not an inferred original flag.
-		const auto plan = SmacPopulationStep::Prepare( m_game->GetCanonicalPopulationRules( *this ),
+		const auto plan = SmacPopulationStep::Prepare( m_game->CalculateCanonicalPopulationRules( *this, population ),
 			static_cast< int32_t >( population ), food, resources.nutrients.surplus, false );
 		if ( !plan.stored_nutrients ) { THROW( "Size-one starvation awaits canonical Base removal and home reassignment" ); }
 		population = plan.population; food = *plan.stored_nutrients;

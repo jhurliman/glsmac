@@ -44,11 +44,13 @@ public:
 	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
 	InstancedSprite* GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor );
 	InstancedSprite* GetFormerMarkerSprite( const std::string& name );
+	InstancedSprite* GetColonyMarkerSprite( const std::string& name );
 	InstancedSprite* GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::texture::repaint_rules_t& rules );
 	void RemoveInstancedSpriteByKey( const std::string& key );
 	void RemoveRepaintedInstancedSpriteByKey( const std::string& key );
 
 private:
+	InstancedSprite* GetPortWorkerMarkerSprite( const std::string& name, bool colony );
 
 	scene::Scene* m_scene = nullptr;
 	std::unique_ptr< ScoutSpriteCache > m_scout_cache;

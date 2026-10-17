@@ -402,7 +402,7 @@ public:
 	// Explicit local human-controlled port roster. No AI controller is inferred.
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
 	// Explicit session presentation roles; saved Unit/Def records remain authority.
-	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,3>& roles );
+	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,4>& roles );
 	unit::Def* ResolveSmacProductionPresentation( const slot::Slot* owner, int32_t design_id ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
@@ -421,7 +421,7 @@ public:
 
 private:
 	friend class gse::tests::BackendFixture;
-	std::optional<std::array<std::string,3>> m_smac_presentations;
+	std::optional<std::array<std::string,4>> m_smac_presentations;
 	bool HandleCanonicalStartupTurnEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void RequireCanonicalStartupTurn( size_t turn_id ) const;
 
@@ -672,6 +672,7 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
+	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population ) const;
 	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
 	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
 	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;

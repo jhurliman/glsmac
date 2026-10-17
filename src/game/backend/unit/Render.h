@@ -25,6 +25,7 @@ public:
 		RT_CVR_SPARTAN_ROVER,
 		RT_CVR_INITIALIZED_SCOUT,
 		RT_PORT_FORMER_MARKER,
+		RT_PORT_COLONY_MARKER,
 	};
 
 	Render( const render_type_t type );

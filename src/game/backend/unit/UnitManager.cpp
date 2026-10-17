@@ -18,6 +18,7 @@
 #include "game/backend/unit/SpriteRender.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "FormerMarkerRender.h"
+#include "ColonyMarkerRender.h"
 #include "game/backend/Player.h"
 
 #include "gse/context/Context.h"
@@ -193,7 +194,10 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 	const bool former = context.chassis == Ground::Infantry && context.presentation == Profile::FormerMarker
 		&& presentation->m_render->m_type == Render::RT_PORT_FORMER_MARKER
 		&& dynamic_cast< const FormerMarkerRender* >( presentation->m_render );
-	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover && !former ) ) {
+	const bool colony = context.chassis == Ground::Infantry && context.presentation == Profile::ColonyMarker
+		&& presentation->m_render->m_type == Render::RT_PORT_COLONY_MARKER
+		&& dynamic_cast< const ColonyMarkerRender* >( presentation->m_render );
+	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover && !former && !colony ) ) {
 		THROW( "Conventional design has no compatible explicit presentation" );
 	}
 }
@@ -718,10 +722,11 @@ WRAPIMPL_BEGIN( UnitManager )
 
 						return VALUE( gse::value::Undefined );
 					}
-					else if ( render_type == "port_former_marker" ) {
+					else if ( render_type == "port_former_marker" || render_type == "port_colony_marker" ) {
 						const auto* moraleset = GetMoraleSet( morale );
 						if ( !moraleset ) { GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined" ); }
-						auto render = std::make_unique< unit::FormerMarkerRender >();
+						std::unique_ptr< unit::Render > render = render_type == "port_former_marker"
+							? std::unique_ptr< unit::Render >( new unit::FormerMarkerRender() ) : std::unique_ptr< unit::Render >( new unit::ColonyMarkerRender() );
 						auto* def = new unit::StaticDef( id, moraleset, name, movement_type, movement_per_turn, render.get() );
 						render.release(); DefineUnit( def ); return VALUE( gse::value::Undefined );
 					}

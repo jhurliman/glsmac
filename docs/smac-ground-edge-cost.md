@@ -130,3 +130,9 @@ GLSMAC --gse-tests --gse-tests-native-filter '^SMAC ground edge cost ' --memoryd
 
 The focused checks require no original assets. This slice has no Unit, Game,
 Settings, world-format, script or live renderer changes.
+
+The manufactured-unit integration additionally admits Infantry Terraformer
+mode9/offense0/plan9 and, on nonfungus endpoints, Infantry Colonist
+mode8/offense0/plan8. The latter reuses the same ordinary terrain arithmetic;
+its actual forest/flat caller continuation is checked in the Colony production
+tests. This does not admit noncombat fungus encounters or foreign ZOC.

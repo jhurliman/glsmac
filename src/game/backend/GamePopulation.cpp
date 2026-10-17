@@ -11,6 +11,9 @@
 namespace game::backend {
 
 base::SmacPopulationRules Game::GetCanonicalPopulationRules( const base::Base& evaluating_base ) const {
+	return CalculateCanonicalPopulationRules( evaluating_base, evaluating_base.m_pops.size() );
+}
+base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::Base& evaluating_base, size_t population ) const {
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base ) {
 		throw std::runtime_error( "Population rules require a registered Base in this world" );
 	}
@@ -63,7 +66,7 @@ base::SmacPopulationRules Game::GetCanonicalPopulationRules( const base::Base& e
 		}
 	}
 	const int64_t growth = int64_t( social->current[ 6 ] ) + ( creche ? 2 : 0 ) + ( context.golden_age ? 2 : 0 );
-	if ( growth < INT32_MIN || growth > INT32_MAX || evaluating_base.m_pops.size() > 127 ) {
+	if ( growth < INT32_MIN || growth > INT32_MAX || population < 1 || population > 127 ) {
 		throw std::overflow_error( "Population growth or population exceeds admitted signed32/byte domain" );
 	}
 	const auto effective_growth = static_cast< int32_t >( growth );
@@ -73,7 +76,7 @@ base::SmacPopulationRules Game::GetCanonicalPopulationRules( const base::Base& e
 		base::CalculateSmacNutrientCostFactor( { true, m_simulation->value.designs.global_difficulty, false, false, false,
 			selection->category, rules->nutrient_multiplier, effective_growth } ),
 		effective_growth, rules->nutrients_per_citizen,
-		base::SmacHousingAllowsGrowth( static_cast< int32_t >( evaluating_base.m_pops.size() ), population_penalty,
+		base::SmacHousingAllowsGrowth( static_cast< int32_t >( population ), population_penalty,
 			rules->hab_complex_limit, rules->hab_dome_limit, hab_complex, hab_dome, false ), false
 	};
 }

@@ -101,9 +101,9 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
-	if ( context.package == ConventionalUnitContext::Package::Former
+	if ( context.package != ConventionalUnitContext::Package::Combat
 		&& ( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
-		throw std::runtime_error( "Former runtime fungus encounter admission is not established" );
+		throw std::runtime_error( "Noncombat runtime fungus encounter admission is not established" );
 	}
 	// Owned Bases impose no extra ordinary nonfungus terrain or population rule.
 	// Fungus still uses the narrower, independently admitted endpoint-HQ path.

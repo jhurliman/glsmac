@@ -80,7 +80,11 @@ const result = {
 				name: 'Formers', morale: 'CONVENTIONAL', type: 'static', movement_type: 'land',
 				movement_per_turn: 0, render: {type: 'port_former_marker'},
 			}});
-			game.configure_smac_unit_presentations({scout: 'ConventionalScout', selected_spartan_rover: 'ConventionalSpartanRover', former: 'ConventionalFormer'});
+			game.event('define_unit', {id: 'ConventionalColony', data: {
+				name: 'Colony Pod', morale: 'CONVENTIONAL', type: 'static', movement_type: 'land',
+				movement_per_turn: 0, render: {type: 'port_colony_marker'},
+			}});
+			game.configure_smac_unit_presentations({scout: 'ConventionalScout', selected_spartan_rover: 'ConventionalSpartanRover', former: 'ConventionalFormer', colony: 'ConventionalColony'});
 		}
 
 	},

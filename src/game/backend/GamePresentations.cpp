@@ -5,6 +5,7 @@
 #include "unit/StaticDef.h"
 #include "unit/CvrScoutRender.h"
 #include "unit/FormerMarkerRender.h"
+#include "unit/ColonyMarkerRender.h"
 #include "unit/MoraleSet.h"
 #include "base/BaseManager.h"
 #include "gc/Space.h"
@@ -13,7 +14,7 @@
 
 namespace game::backend {
 
-void Game::ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,3>& roles ) {
+void Game::ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,4>& roles ) {
 	bool configure=false;
 	{
 		std::lock_guard lock(m_admission_mutex);
@@ -33,7 +34,7 @@ void Game::ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::strin
 	std::set<std::string> unique;
 	for (const auto& role:roles) {
 		if (role.empty() || role.size()>256 || role.find('\0')!=std::string::npos || !unique.insert(role).second) {
-			throw std::runtime_error("Presentation roles require three distinct bounded definition IDs");
+			throw std::runtime_error("Presentation roles require four distinct bounded definition IDs");
 		}
 	}
 	if (m_smac_presentations && *m_smac_presentations!=roles) { throw std::runtime_error("Presentation roles already configured"); }
@@ -53,6 +54,7 @@ unit::Def* Game::ResolveSmacProductionPresentation( const slot::Slot* owner, int
 		case Profile::Scout:index=0;break;
 		case Profile::SelectedSpartanRover:index=1;break;
 		case Profile::FormerMarker:index=2;break;
+		case Profile::ColonyMarker:index=3;break;
 		default:throw std::runtime_error("Unsupported canonical presentation role");
 	}
 	auto* definition=m_um->GetUnitDef(m_smac_presentations->at(index));
@@ -66,8 +68,10 @@ unit::Def* Game::ResolveSmacProductionPresentation( const slot::Slot* owner, int
 		&& cvr->composition==unit::CvrScoutRender::Composition::InitializedScout
 		: index==1 ? cvr && cvr->m_type==unit::Render::RT_CVR_SPARTAN_ROVER
 		&& cvr->composition==unit::CvrScoutRender::Composition::SpartanRover
-		: dynamic_cast<const unit::FormerMarkerRender*>(presentation->m_render)
-		&& presentation->m_render->m_type==unit::Render::RT_PORT_FORMER_MARKER;
+		: index==2 ? dynamic_cast<const unit::FormerMarkerRender*>(presentation->m_render)
+		&& presentation->m_render->m_type==unit::Render::RT_PORT_FORMER_MARKER
+		: dynamic_cast<const unit::ColonyMarkerRender*>(presentation->m_render)
+		&& presentation->m_render->m_type==unit::Render::RT_PORT_COLONY_MARKER;
 	if (!valid || presentation->m_movement_type!=unit::MT_LAND) { throw std::runtime_error("Configured presentation does not match the actual design profile"); }
 	return definition;
 }

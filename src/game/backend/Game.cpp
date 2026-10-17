@@ -817,8 +817,8 @@ WRAPIMPL_BEGIN( Game )
 			"configure_smac_unit_presentations",
 			NATIVE_CALL(this) {
 				N_EXPECT_ARGS(1); N_GETVALUE(roles,0,Object);
-				N_GETPROP(scout,roles,"scout",String); N_GETPROP(rover,roles,"selected_spartan_rover",String); N_GETPROP(former,roles,"former",String);
-				ConfigureSmacPresentations(GSE_CALL,{scout,rover,former});
+				N_GETPROP(scout,roles,"scout",String); N_GETPROP(rover,roles,"selected_spartan_rover",String); N_GETPROP(former,roles,"former",String); N_GETPROP(colony,roles,"colony",String);
+				ConfigureSmacPresentations(GSE_CALL,{scout,rover,former,colony});
 				return VALUE(gse::value::Undefined);
 			})
 		},

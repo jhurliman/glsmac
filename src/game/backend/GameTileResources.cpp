@@ -119,10 +119,11 @@ int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_bas
 			|| tile->units.at( unit->m_id ) != unit ) { throw std::runtime_error( "Canonical support unit membership is invalid" ); }
 		const auto home = !state.home_base_id ? base::SmacSupportHome::None
 			: *state.home_base_id == evaluating_base.m_id ? base::SmacSupportHome::EvaluatingBase : base::SmacSupportHome::OtherBase;
-		// Ordinary Formers consume support too. Neither admitted package has
+		// Ordinary Former and Colony packages consume support too. None has
 		// Clean or psi; the terrain-native exemption cannot apply here.
 		const auto package = resolved.package == unit::ConventionalUnitContext::Package::Former
-			? base::SmacSupportPackage::Former : base::SmacSupportPackage::Combat;
+			? base::SmacSupportPackage::Former : resolved.package == unit::ConventionalUnitContext::Package::Colony
+			? base::SmacSupportPackage::Colony : base::SmacSupportPackage::Combat;
 		units.push_back( { unit->m_id, state.owner_simulation_id == context.owner_simulation_id, home, package,
 			false, design.id < 64 ? base::SmacSupportDesign::BuiltIn : base::SmacSupportDesign::PlayerDesigned,
 			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,

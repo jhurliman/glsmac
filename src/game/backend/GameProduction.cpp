@@ -101,7 +101,13 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 	if ( !HasSmacProductionPrerequisite( base.m_owner, item ) ) { return false; }
 	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	if ( catalog.weapons.weapons.at( design.weapon ).mode == loader::txt::WeaponMode::Colonist ) {
-		throw std::runtime_error( "Colony queue admission requires the owned no-colony rule" );
+		RequireSmacLocalHumanOwner( base.m_owner );
+		const auto map_type = m_state->m_settings.global.map.type;
+		// The current ordinary generated campaign has no scenario/no-colony rule
+		// producer. Scenario admission must supply that authority before this path.
+		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
+			throw std::runtime_error( "Colony queue admission requires the ordinary generated non-scenario campaign" );
+		}
 	}
 	if ( catalog.chassis.chassis.at( design.chassis ).triad == loader::txt::ChassisTriad::Sea ) {
 		const auto* map = GetMap();

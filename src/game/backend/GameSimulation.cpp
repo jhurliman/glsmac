@@ -335,8 +335,9 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	const auto& weapon = catalog.weapons.weapons[ design.weapon ]; const auto& defense = catalog.defenses.defenses[ 0 ];
 	const bool combat = weapon.mode == WeaponMode::Projectile && weapon.offense == 1 && design.plan == 3;
 	const bool former = design.chassis == 0 && weapon.mode == WeaponMode::Terraformer && weapon.offense == 0 && design.plan == 9;
+	const bool colony = design.chassis == 0 && weapon.mode == WeaponMode::Colonist && weapon.offense == 0 && design.plan == 8;
 	if ( chassis.triad != ChassisTriad::Land || chassis.missile || chassis.range != 0 || chassis.cargo != 1
-		|| ( !combat && !former ) || defense.mode != DefenseMode::Projectile
+		|| ( !combat && !former && !colony ) || defense.mode != DefenseMode::Projectile
 		|| defense.rating != 1 || catalog.reactors.reactors[ 0 ].power != 1 ) {
 		throw std::runtime_error( "Unsupported conventional component semantics" );
 	}
@@ -347,6 +348,10 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	if ( former ) {
 		result.package = unit::ConventionalUnitContext::Package::Former;
 		result.presentation = unit::ConventionalUnitContext::Presentation::FormerMarker;
+	}
+	if ( colony ) {
+		result.package = unit::ConventionalUnitContext::Package::Colony;
+		result.presentation = unit::ConventionalUnitContext::Presentation::ColonyMarker;
 	}
 	if ( ground == Ground::Speeder ) {
 		const auto* selected = simulation.value.designs.Find( state.owner_simulation_id );

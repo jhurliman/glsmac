@@ -222,7 +222,10 @@ bool GLSMAC::ProcessReset() {
 	m_reset_phase = ResetPhase::IDLE;
 	m_is_game_running = false;
 	m_reset_needed = false;
-	if(m_campaign_previous_state) {m_state=m_campaign_previous_state;m_campaign_previous_state=nullptr;game->BindLocalCampaignState(m_state);}
+	if(m_campaign_previous_state) {
+		if(m_game) {m_game->Stop();}
+		m_state=m_campaign_previous_state;m_campaign_previous_state=nullptr;game->BindLocalCampaignState(m_state);
+	}
 	RunMain();
 	return true;
 }
@@ -681,7 +684,8 @@ void GLSMAC::LoadCampaign(GSE_CALLABLE,const std::string& path) {
         auto* backend=g_engine->GetGame();
         backend->BindLocalCampaignState(candidate);
         m_campaign_previous_state=m_state;m_state=candidate;
-        StartGame(GSE_CALL,saved.world);
+        try { StartGame(GSE_CALL,saved.world); }
+        catch(...) { m_reset_needed=true; throw; }
     } catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
 }
 
@@ -707,12 +711,12 @@ void GLSMAC::StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world 
 	if ( m_game ) {
 		m_game->Stop();
 		delete m_game;
+		m_game = nullptr;
 	}
 	m_game = new ::game::frontend::Game(
 		this, real_state, m_ui, [ this, si, ep ] () {
 			m_gc_space->Accumulate(
 				this, [ this ]() {
-					m_campaign_previous_state=nullptr;
 					TriggerObject( this, "start_game" );
 				}
 			);

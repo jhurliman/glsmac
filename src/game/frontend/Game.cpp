@@ -141,10 +141,8 @@ void Game::Stop() {
 	auto* const game = g_engine->GetGame();
 	ASSERT( game, "game not set" );
 	RetireBackendRequests();
-	if ( !m_is_initialized ) {
-		return;
-	}
-
+	// Start owns managers and widgets before the map becomes initialized.
+	// Cancellation must retire those partial frontend resources too.
 	if ( m_is_initialized ) {
 		Deinitialize();
 	}
@@ -192,12 +190,9 @@ void Game::Stop() {
 		m_world_scene = nullptr;
 	}
 
-	if ( game ) {
-		ASSERT( !m_state || game->GetState() == m_state, "backend has different state" );
-	}
-	else if ( m_state ) {
-		m_state = nullptr;
-	}
+	// The pending State is a borrowed pointer. Backend rejection/reset may
+	// already have released its binding; no frontend work may retain it now.
+	m_state = nullptr;
 
 	if ( m_random ) {
 		DELETE( m_random );
@@ -289,6 +284,7 @@ void Game::Iterate() {
 					UpdateCameraRange();
 					UpdateMapInstances();
 					UpdateMinimap();
+					m_glsmac->CompleteCampaignLoad();
 				}
 				else {
 					f_handle_nonsuccess_init( response );

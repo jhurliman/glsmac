@@ -2417,6 +2417,70 @@ public:
 		GT_OK();
 	}
 
+    static std::string WithCampaignMapSources(const std::function<std::string()>& check) {
+        ::resource::ResourceManager resources("unused-campaign-map-fixture");
+        resources.m_resource_paths={{::resource::PCX_TEXTURE,"campaign-texture"},{::resource::PCX_TER1,"campaign-terrain"}};
+        class Textures final : public loader::texture::TextureLoader {
+        public: types::texture::Texture texture{1,1},terrain{1,1};
+        protected:
+            types::texture::Texture* LoadTextureImpl(const std::string& path,types::texture::texture_flag_t) override {
+                if(path=="campaign-texture"){return &texture;}if(path=="campaign-terrain"){return &terrain;}
+                throw std::runtime_error("unexpected campaign fixture texture");
+            }
+            types::texture::Texture* LoadTextureImpl(const std::string&,size_t,size_t,size_t,size_t,uint8_t,float,types::texture::texture_flag_t) override {
+                throw std::runtime_error("campaign fixture unexpectedly rendered a texture region");
+            }
+        } textures;
+        auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;
+        {std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;}
+        util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;});
+        return check(); // The fixture and restored Map retire before these borrowed sources.
+    }
+
+    std::string CheckCampaignFrontendCancellation() {
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard cleanup_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+            NEW(frontend.m_random,util::random::Random);
+            NEW(frontend.m_world_scene,scene::Scene,"Campaign pending frontend",scene::SCENE_TYPE_WORLD);
+            g_engine->GetGraphics()->AddScene(frontend.m_world_scene);
+            NEW(frontend.m_ism,game::frontend::sprite::InstancedSpriteManager,frontend.m_world_scene);
+            NEW(frontend.m_um,game::frontend::unit::UnitManager,&frontend);
+            frontend.RegisterWidgets();
+            util::FinallyGuard stop([&]{frontend.Stop();});
+            GT_ASSERT(!frontend.m_is_initialized,"cancellation fixture unexpectedly initialized a map");
+            frontend.Stop();
+            GT_ASSERT(!frontend.m_random && !frontend.m_world_scene && !frontend.m_ism && !frontend.m_um && !frontend.m_state,
+                "canceled frontend retained pre-initialization resources or borrowed State");
+            GT_OK();
+        });
+    }
+
+    std::string CheckCampaignCallbackFailure(const std::string& path) {
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            ResetRequest(); // Load is a menu operation; retire this fixture's running world first.
+            auto* menu_state=m_state;
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            auto* old_ui=m_glsmac->m_ui;auto* old_state=m_glsmac->m_state;
+            m_glsmac->m_ui=ui;m_glsmac->m_state=menu_state;
+            util::FinallyGuard cleanup([&]{
+                m_glsmac->ClearHandlers();
+                if(m_glsmac->m_game){m_glsmac->m_game->Stop();delete m_glsmac->m_game;m_glsmac->m_game=nullptr;}
+                if(m_glsmac->m_campaign_previous_state){ResetRequest();m_game.BindLocalCampaignState(menu_state);}
+                m_glsmac->m_campaign_previous_state=nullptr;m_glsmac->m_state=old_state;m_glsmac->m_ui=old_ui;
+                m_glsmac->m_reset_needed=false;m_glsmac->m_is_game_running=false;
+                ui->GetRoot()->Container::Destroy(GSE_CALL);
+            });
+            m_glsmac->On(GSE_CALL,"mainmenu_hide",NATIVE_CALL(){throw std::runtime_error("injected campaign hide failure");return VALUE(value::Undefined);}));
+            bool failed=false;try{m_glsmac->LoadCampaign(GSE_CALL,path);}catch(const std::exception&){failed=true;}
+            GT_ASSERT(failed && m_glsmac->m_reset_needed && m_glsmac->m_campaign_previous_state==menu_state
+                && m_glsmac->m_state!=menu_state && !m_game.m_active_admission,
+                "synchronous campaign callback failure lost the backup or omitted reset");
+            GT_OK();
+        });
+    }
+
     std::string CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {
         const auto world=m_game.SerializeWorldSnapshot();const auto session=m_state->CaptureGameSession();
         auto* previous=m_glsmac->m_state;m_glsmac->m_state=m_state;
@@ -5089,6 +5153,9 @@ void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::stri
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {return fixture->CheckCampaignRejectedLoad(GSE_CALL,path);}
+std::string ConventionalUnitFixture::WithCampaignMapSources(const std::function<std::string()>& check) { return BackendFixture::WithCampaignMapSources(check); }
+std::string ConventionalUnitFixture::CheckCampaignCallbackFailure(const std::string& path) { return fixture->CheckCampaignCallbackFailure(path); }
+std::string ConventionalUnitFixture::CheckCampaignFrontendCancellation() { return fixture->CheckCampaignFrontendCancellation(); }
 std::string ConventionalUnitFixture::CheckCampaignRestore(const std::string& path,const std::string& world) {return fixture->CheckCampaignRestore(path,world);}
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) { return fixture->CheckUnitCommandCompletion( actor, helper ); }

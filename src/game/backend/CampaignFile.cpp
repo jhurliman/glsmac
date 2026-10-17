@@ -6,9 +6,13 @@
 #include <fstream>
 #include <atomic>
 #include <stdexcept>
+#include <cerrno>
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
 #endif
 
 namespace game::backend::campaign {
@@ -70,12 +74,37 @@ std::string Write(const std::string& text,const Record& record) {
     const auto path=Path(text);
     static std::atomic<uint64_t> next{0};
     auto temporary=path;temporary += ".tmp-"+std::to_string(++next);
-    // A leftover temporary file is never replaced or removed by this attempt.
-    if(std::filesystem::exists(temporary)) throw std::runtime_error("Campaign temporary file already exists");
-    util::FinallyGuard cleanup([&]{std::error_code ignored;std::filesystem::remove(temporary,ignored);});
-    {std::ofstream output(temporary,std::ios::binary|std::ios::trunc);
-     if(!output || !output.write(bytes.data(),static_cast<std::streamsize>(bytes.size()))) throw std::runtime_error("Cannot write GLSMAC campaign");
-     output.close();if(!output) throw std::runtime_error("Cannot finish GLSMAC campaign");}
+    // Exclusive creation owns this temporary path even across game processes.
+    // A colliding attempt cannot truncate or remove another writer's bytes.
+#ifdef _WIN32
+    auto file=CreateFileW(temporary.c_str(),GENERIC_WRITE,0,nullptr,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(file==INVALID_HANDLE_VALUE) throw std::runtime_error("Cannot create campaign temporary file exclusively");
+    util::FinallyGuard cleanup([&]{if(file!=INVALID_HANDLE_VALUE){CloseHandle(file);}std::error_code ignored;std::filesystem::remove(temporary,ignored);});
+    size_t offset=0;
+    while(offset<bytes.size()) {
+        DWORD written=0;
+        if(!WriteFile(file,bytes.data()+offset,static_cast<DWORD>(bytes.size()-offset),&written,nullptr) || !written)
+            throw std::runtime_error("Cannot write GLSMAC campaign");
+        offset+=written;
+    }
+    if(!FlushFileBuffers(file)) throw std::runtime_error("Cannot flush GLSMAC campaign");
+    const auto closed=CloseHandle(file);file=INVALID_HANDLE_VALUE;
+    if(!closed) throw std::runtime_error("Cannot finish GLSMAC campaign");
+#else
+    auto file=::open(temporary.c_str(),O_WRONLY|O_CREAT|O_EXCL,0600);
+    if(file<0) throw std::runtime_error("Cannot create campaign temporary file exclusively");
+    util::FinallyGuard cleanup([&]{if(file>=0){::close(file);}std::error_code ignored;std::filesystem::remove(temporary,ignored);});
+    size_t offset=0;
+    while(offset<bytes.size()) {
+        const auto written=::write(file,bytes.data()+offset,bytes.size()-offset);
+        if(written<0 && errno==EINTR) continue;
+        if(written<=0) throw std::runtime_error("Cannot write GLSMAC campaign");
+        offset+=static_cast<size_t>(written);
+    }
+    if(::fsync(file)) throw std::runtime_error("Cannot flush GLSMAC campaign");
+    const auto closed=::close(file);file=-1;
+    if(closed) throw std::runtime_error("Cannot finish GLSMAC campaign");
+#endif
 #ifdef _WIN32
     if(!MoveFileExW(temporary.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)) throw std::runtime_error("Cannot replace GLSMAC campaign");
 #else

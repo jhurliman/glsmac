@@ -57,6 +57,9 @@ public:
 	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
 	void DrainEvents();
 	std::string CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path);
+	static std::string WithCampaignMapSources(const std::function<std::string()>& check);
+	std::string CheckCampaignFrontendCancellation();
+	std::string CheckCampaignCallbackFailure(const std::string& path);
 	std::string CheckCampaignRestore(const std::string& path, const std::string& saved_world);
 	static std::string WithControllerViewport( const std::function<std::string()>& check );
 	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper );

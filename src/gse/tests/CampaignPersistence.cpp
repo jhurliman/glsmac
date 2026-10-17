@@ -24,6 +24,7 @@ std::string Temporary() {return (std::filesystem::temp_directory_path()/("glsmac
 }
 void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
     task->AddTest("Campaign file restores owned settings roster world and next actual turn",GT(){
+        return ConventionalUnitFixture::WithCampaignMapSources([&]() -> std::string {
         using namespace game::backend;using namespace game::backend::unit;
         ConventionalUnitFixture fixture;fixture.Configure(true,3,true);fixture.ResourcePolicy(true);
         const auto path=Temporary();util::FinallyGuard cleanup([&]{std::error_code ignored;std::filesystem::remove(path,ignored);});
@@ -43,7 +44,15 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
             // Replacing an existing file is the same atomic publication path.
             game->SaveCampaign(path);GT_ASSERT(campaign::Read(path).world==snapshot,"replacement changed snapshot");GT_OK();
         });if(!setup.empty()){return setup;}
-        return fixture.CheckCampaignRestore(path,snapshot);
+        const auto restored=fixture.CheckCampaignRestore(path,snapshot);if(!restored.empty()){return restored;}
+        return fixture.CheckCampaignCallbackFailure(path);
+        });
+    });
+    task->AddTest("Campaign cancellation retires frontend resources before initialization",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]() -> std::string {
+            ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+            return fixture.CheckCampaignFrontendCancellation();
+        });
     });
     task->AddTest("Campaign malformed files and unstable saves preserve current world and existing file",GT(){
         using namespace game::backend;

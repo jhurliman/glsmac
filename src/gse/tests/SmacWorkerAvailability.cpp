@@ -74,6 +74,11 @@ void AddSmacWorkerAvailabilityTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Builder::Build( context, squares, {} ) == 2, "invisible later convoy exempted by Treaty" );
 		square.units = {{1,true,false},{0,true,false}};
 		GT_ASSERT( Builder::Build( context, squares, {} ) == 2, "visible native did not block owned territory" );
+		context.pact[ 0 ] = true;
+		GT_ASSERT( Rejects( [ & ] { Builder::Build( context, squares, {} ); } ), "native Pact admitted a visible native square" );
+		context.pact[ 0 ] = false; context.treaty[ 0 ] = true;
+		GT_ASSERT( Rejects( [ & ] { Builder::Build( context, squares, {} ); } ), "native Treaty admitted a visible native square" );
+		context.treaty[ 0 ] = false;
 		square.units.back().visible_to_evaluator = false;
 		GT_ASSERT( Builder::Build( context, squares, {} ) == 0, "unseen ordinary foreign unit blocked" );
 		square.units.front().active_convoy = true;

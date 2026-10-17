@@ -13,6 +13,7 @@
 #include "gse/value/String.h"
 #include "gse/tests/Tests.h"
 #include "gse/ExecutionPointer.h"
+#include "util/UUID.h"
 
 namespace gse {
 namespace tests {
@@ -45,6 +46,14 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 					GSE_ERROR( "TestError", "Assertion failed: " + reason );
 				}
 				return VALUE( value::Undefined );
+			} )
+		},
+		{
+			"generate_uuid",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS( 0 );
+				// Exercise the production utility without constructing a backend account.
+				return VALUE( value::String,, util::UUID::Generate() );
 			} )
 		},
 		{

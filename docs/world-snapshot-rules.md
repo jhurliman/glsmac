@@ -1,13 +1,16 @@
 # World-download rules binding
 
 Multiplayer world downloads now start with a separate, typed rules header:
-integer marker `0x474c53574f524c44` (`GLSWORLD`), integer version `4`, the exact
+integer marker `0x474c53574f524c44` (`GLSWORLD`), integer version `5`, the exact
 `smac` or `smax` identity, and a Boolean indicating SMAC numeric rules. SMAC then
 includes nine signed-int32 values in Base Square, Bonus Square, Recycling Tanks
 order, with nutrients/minerals/energy inside each row. A second Boolean declares
 the production profile's presence. SMAC requires it and follows it with one
 String frame containing the existing versioned `SmacProductionRules` codec;
-SMAX requires absence and has no production payload.
+SMAX requires absence and has no production payload. A third Boolean declares
+the technology catalog's presence, followed for SMAC by one String frame with
+the existing versioned `SmacTechnologyRules` codec. SMAX requires absence here
+as well; it does not inherit a SMAC catalog.
 
 The [frozen production profile](smac-production-profile.md) includes all four
 production/retool constants and the complete 71-slot facility/project catalog,
@@ -16,12 +19,18 @@ prerequisite token. World encoding and decoding call that codec directly;
 they do not maintain another copy of its field ordering. Decoded profile
 equality compares every modeled field against the established frozen session.
 
+The [frozen technology catalog](smac-technology-catalog.md) contains all 89
+positional records, including identity text, seven-byte keys, the four raw
+priority positions, both prerequisite tokens and flags. Its independent V1
+codec performs structural validation before exact catalog equality. The header
+does not interpret ownership, grant a technology, or decide buildability.
+
 Both writing and validation require a frozen session profile. The client
 compares the header against the host profile already accepted through global
 settings. Validation neither changes those settings nor reads local rules
 files. Unknown markers/versions/identities, legacy string-first downloads,
 inconsistent presence, out-of-range numbers, truncation, and any differing
-numeric or production value fail before map allocation. This includes invalid
+numeric, production or technology value fail before map allocation. This includes invalid
 or mismatched fields at the end of the catalog, not merely the scalar constants.
 The writer validates/encodes the complete profile before appending any header
 fields. Allocation failures do not promise transactional Buffer writes.
@@ -33,8 +42,8 @@ only in the packet dispatcher would miss deferred failures. Client completion
 holds a local copy of its callable while invoking it because the Game handler
 clears the installed callbacks as it starts.
 
-Version 4 follows the profile with the unchanged [backend RNG continuation](world-snapshot-rng.md)
-and [turn/completion block](world-snapshot-turn.md). Versions 3, 2, 1 and unversioned
+Version 5 follows the profiles with the unchanged [backend RNG continuation](world-snapshot-rng.md)
+and [turn/completion block](world-snapshot-turn.md). Versions 4, 3, 2, 1 and unversioned
 downloads are unsupported. After that prefix, the map/resource/unit/base/animation
 frames keep their previous order and bytes; the former trailing turn field is
 now in the prefix. The header codec consumes only the header; it
@@ -44,17 +53,20 @@ implement transfer-size limits, or activate yield/production gameplay consumers.
 
 Native tests use synthetic SMAC values including negative numbers and both
 int32 endpoints. They cover all nine mismatches/range failures, frozen-profile
-requirements, every modeled production field, SMAX absence, malformed nested
+requirements, every modeled production and technology field, SMAX absence, malformed nested
 profiles/headers, and preservation of trailing bytes. A real Game writer test
 compares the entire remaining body with the previous frame layout. Real Client
 final-chunk dispatch invokes the installed
 Game callback both immediately and from a worker thread, then processes queued
 accumulations. Those download fixtures preload frozen settings directly; the
 separate host-rules tests cover the real State/Packet settings handshake.
-Rejection preserves map absence, manager bytes, settings, RNG, turn/completion,
+Rejection preserves map absence (or the existing map and its bytes for the
+technology cases), manager bytes, settings, RNG, turn/completion,
 frontend requests and the pre-initialization state, without invoking start,
 turn, unit-spawn or base-spawn callbacks. SMAC malformed/mismatched profiles and
 an unexpected SMAX profile both traverse immediate and queued final chunks.
+Technology cases include malformed final records, missing presence/payload,
+wrong frame types, out-of-range metadata, trailing fields, and truncation.
 Matching-header cases with a missing or wrong-type map frame also exercise the
 deferred native-error handler. These asset-free checks stop before successful rendered-map creation;
 they do not claim a successful rendered Client download or original-game
@@ -128,3 +140,33 @@ stand in for a complete valid rendered download. Positive asset-free body
 restoration asserts byte-for-byte equality of the complete reserialized world
 snapshot for both rulesets. These checks do not establish rendered Client
 startup, disk save compatibility, or future multiplayer lockstep.
+
+## Version 5 validation
+
+The V5 source delta is based on integrated technology source
+`ea35b6cb95e6564516440379414eefc4822900e1`, with the Windows enum-name correction
+`77aa41bec751a0d507bb9e4cbbcd7d460cd474e6` applied separately. The normal
+Linux/WSL Clang 15 suite passed all eight CTests in 50.74 seconds. After the
+enum correction, the focused header/writer/real-Client selection passed again
+with allocation tracking. The full ASan/UBSan/LSan suite passed eight of eight
+in 61.20 seconds (`detect_leaks=1`); its focused allocation-tracked selection
+also passed with no reported memory/OpenGL leaks. The local sanitizer build
+retains the existing non-PIE startup workaround.
+
+Combined correctness analysis, including the technology catalog's shared
+settings header, checked all 307 Linux production translation units with
+LLVM 15.0.7 and four jobs: zero failures in 115.05 seconds. The existing
+Windows-only translation-unit exclusion is unchanged. Two independently
+compiled source-copy controls each exited one at the expected assertion:
+disabling technology equality admitted a valid but different catalog, and
+removing the nested codec's trailing-field check admitted an extra field.
+No intended checkout source was replaced for those controls.
+
+The pure equality matrix checks 801 valid differences (nine modeled fields
+per record across all 89 records). Malformed positional IDs are checked
+separately. The immediate and queued real Client tests retain an existing
+asset-free map for technology failures and verify its pointer and bytes remain
+unchanged, alongside settings, managers, RNG, turn/completion state and callback
+counts. This proves rejection before body mutation, not rollback after a
+malformed body. Local receipts are retained outside the checkout under
+`/home/jhurliman/src/glsmac-world-technology-audit`.

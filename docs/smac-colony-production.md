@@ -54,8 +54,11 @@ Pod consumption use their separate transaction.
 The automatic branches use `docs/behavior/colony-choice-continuation.md` and its
 13 semantic contexts. Three new live groups check stored difficulty 0/1 versus
 global 3, population-one versus population-two debit, independent governor bits,
-queue retention and no factory during deferral. The repeated governor-deferral
-test composes the measured automatic branch with the established population
+queue retention and no factory during deferral. These literal replays explicitly
+set the source mineral multiplier and completion exemption to the installed value 10,
+replacing the shared synthetic fixture's deliberate 123/INT_MIN values while
+retaining the actual owned three-unit Colony design and fixed 30-mineral checks.
+The repeated governor-deferral test composes the measured automatic branch with the established population
 ordering: food19/minerals27 becomes size1/food20/minerals30, then
 size2/food0/minerals33, then a Pod and size1/food0/minerals5. The original
 three-upkeep replay supplied explicit Delay; this composition does not claim a

@@ -75,6 +75,19 @@ std::string UpkeepSource( const std::string& filename ) {
 	}
 	return output;
 }
+std::string ColonyChoiceSource( const std::string& filename ) {
+	auto source = UpkeepSource( filename ); if ( filename != "alpha.txt" ) { return source; }
+	// The generic source deliberately uses multiplier 123 and exemption INT_MIN.
+	// Literal Colony receipts require the installed multiplier 10 and exemption 10;
+	// the existing owned Infantry/Colonist/Scout-armor design then costs 3 * 10.
+	std::istringstream input( source ); std::string line, section, output; size_t row = 0;
+	while ( std::getline( input, line ) ) {
+		if ( !line.empty() && line[ 0 ] == '#' ) { section = line; row = 0; }
+		else { ++row; if ( section == "#RULES" && ( row == 7 || row == 45 ) ) { line.replace( 0, line.find( ',' ), "10" ); } }
+		output += line + '\n';
+	}
+	return output;
+}
 Base::SmacAllocationRoles Roles() {
 	Base::SmacAllocationRoles result{ "live-worker", {} };
 	for ( size_t i = 0; i < 7; ++i ) { result.specialists[ i ] = "live-role-" + std::to_string( i ); } return result;
@@ -533,7 +546,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "SMAC Colony easy difficulty bypasses size-one governor deferral without population debit", []( GSE*, context::Context* ) -> std::string {
 		for ( const auto difficulty : { "Citizen", "Specialist" } ) {
 			for ( const size_t population : { 1u, 2u } ) {
-				ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+				ConventionalUnitFixture fixture; fixture.ConfigureProduction( ColonyChoiceSource, "GAIANS" );
 				const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 					using namespace game::backend::unit;
 					auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 0, 1, population ); auto* um = game->GetUM();
@@ -563,7 +576,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		} GT_OK();
 	} );
 	task->AddTest( "SMAC Colony governor deferral posts before growth and completes only on a later upkeep", []( GSE*, context::Context* ) -> std::string {
-		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( ColonyChoiceSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
 			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
@@ -595,7 +608,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "SMAC Colony automatic deferral requires both governor bits and preserves the pending queue", []( GSE*, context::Context* ) -> std::string {
 		for ( const uint32_t options : { 0u, 0x80000000u, 1u, 0x80000001u } ) {
-			ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( ColonyChoiceSource, "GAIANS" );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				using namespace game::backend::unit;
 				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); auto* um = game->GetUM();
@@ -604,6 +617,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				auto context = base->GetSmacResourceContext(); context.governor_options = options; base->SetSmacResourceContext( GSE_CALL, context );
 				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
 				const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 0 );
+				GT_ASSERT( game->GetSmacProductionCost( base->m_owner, target ) == 30, "Colony literal fixture cost changed" );
 				const auto next = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
 				const ProductionState production{ target, 27, target, 27, std::vector< ProductionItem >{ next } };
 				base->SetProductionState( GSE_CALL, production ); base->SetAccumulatedNutrients( 0 );

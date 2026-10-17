@@ -6,11 +6,63 @@
 #include "map/Map.h"
 #include "map/SmacTerritoryRules.h"
 #include "unit/UnitManager.h"
+#include "Player.h"
+#include "slot/Slot.h"
 #include "gc/Space.h"
 #include <set>
+#include <thread>
 #include <type_traits>
 
 namespace game::backend {
+
+bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
+    const gse::value::object_properties_t& args,size_t caller,bool apply) {
+    if(name!="spawn_starting_smac_base" && name!="spawn_starting_conventional_unit") {return false;}
+    // Enqueue happens in create_world before GS_RUNNING. Only this exact
+    // claimed new-world Start can queue these native commands; dispatch then
+    // uses the stricter ordinary raw-startup producer guard.
+    bool claimed=false;
+    {
+        std::lock_guard lock(m_admission_mutex);
+        claimed=m_state && m_state->IsMaster() && m_owner_transition
+            && m_owner_transition->phase==OwnerTransition::Phase::Running
+            && m_owner_transition->thread==std::this_thread::get_id()
+            && m_owner_transition->stage==StartupStage::Start && m_active_admission
+            && m_owner_transition->admission==m_active_admission && !m_active_admission->cancelled
+            && m_active_admission->kind==WorldAdmission::Kind::INITIALIZATION
+            && !m_active_admission->previous && !m_active_admission->map_path
+            && m_active_admission->state==m_state && m_state->IsGameSessionActive(m_active_admission->admitted_binding);
+    }
+    if(!claimed || caller!=m_slot_num || m_current_turn.GetId()!=0 || gc_space!=GetGCSpace()
+        || !gc_space->IsAccumulating() || m_canonical_turn_failed || m_canonical_turn_in_progress) {
+        throw std::runtime_error("Canonical startup commands require the authenticated claimed local Start");
+    }
+    const auto owner_arg=args.find("owner"),tile_arg=args.find("tile");
+    if(args.size()!=2 || owner_arg==args.end() || tile_arg==args.end() || !owner_arg->second || !tile_arg->second) {
+        throw std::runtime_error("Canonical startup command requires only owner and tile");
+    }
+    auto* player=Player::Unwrap(owner_arg->second);
+    auto* tile=map::tile::Tile::Unwrap(tile_arg->second);
+    auto* owner=player->GetSlot();
+    RequireSmacLocalHumanOwner(owner);
+    if(owner->GetPlayer()!=player || !m_map || tile->tiles!=m_map->GetTilesPtr() || tile->is_water_tile) {
+        throw std::runtime_error("Canonical startup owner or land tile is not current");
+    }
+    if(apply) {
+        CheckRW(GSE_CALL); RequireConventionalStartupClaim();
+        if(name=="spawn_starting_smac_base") {
+            const auto& configured=GetSmacBasePresentations();
+            std::array<std::string,7> specialists;
+            for(size_t i=0;i<7;++i) {specialists[i]=configured[i+1];}
+            m_bm->SpawnStartingSmacBase(GSE_CALL,owner,tile,configured[0],specialists);
+        } else {
+            const auto raw=PrepareStartingConventionalUnit(owner,unit::SmacMoraleMode::Mode0);
+            auto* definition=ResolveSmacProductionPresentation(owner,raw.design_id);
+            m_um->SpawnStartingConventionalUnit(GSE_CALL,definition,owner,tile,unit::SmacMoraleMode::Mode0);
+        }
+    }
+    return true;
+}
 
 Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base& candidate ) const {
     RequireConventionalStartupClaim();

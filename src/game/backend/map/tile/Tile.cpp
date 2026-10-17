@@ -201,6 +201,10 @@ WRAPIMPL_BEGIN( Tile )
 			VALUE( gse::value::Int,, moisture )
 		},
 		{
+			"is_clear_land",
+			VALUE(gse::value::Bool,,!is_water_tile && rockiness==ROCKINESS_FLAT && features==FEATURE_NONE && terraforming==TERRAFORMING_NONE)
+		},
+		{
 			"rockiness",
 			VALUE( gse::value::Int,, rockiness )
 		},

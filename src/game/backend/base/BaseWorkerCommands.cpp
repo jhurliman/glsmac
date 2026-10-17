@@ -136,7 +136,10 @@ void Base::CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile ) {
     }
     next = CalculateSmacWorkers( next, context );
     SmacAllocationRoles roles;
-    for ( const auto& item : bm->GetBasePopDefs() ) {
+    if (m_game->HasSmacBasePresentations()) {
+        const auto& configured=m_game->GetSmacBasePresentations(); roles.worker=configured[0];
+        for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+    } else for ( const auto& item : bm->GetBasePopDefs() ) {
         const auto* def = item.second;
         if ( def->m_flags & PopDef::PF_TILE_WORKER ) {
             if ( !roles.worker.empty() ) { THROW( "SMAC worker command requires one registered worker presentation role" ); }

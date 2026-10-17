@@ -13,6 +13,7 @@ return (game) => {
 	const map_height = tm.get_map_height();
 	// Provisional GLSMAC placement: ordinary land with an exit, and enough
 	// separation that another starting HQ/Scout cannot block that first step.
+	// The current foreign-sight producer requires clear interior centers.
 	// Terrain is preserved; this is not original site-balancing fidelity.
 	const minimum_base_distance = conventional_start ? 4 : 2;
 	const optimal_base_distance = #max((map_width + map_height) / 2 / players_count, minimum_base_distance);
@@ -43,7 +44,7 @@ return (game) => {
 			let supported_site = tile.is_water == is_naval_faction;
 			if (conventional_start) {
 				supported_site = false;
-				if (tile.is_ordinary_conventional_land) {
+				if (tile.is_clear_land && x >= 2 && x + 2 < map_width && y >= 2 && y + 2 < map_height) {
 					for (neighbor of tile.get_surrounding_tiles()) {
 						if (neighbor != tile && neighbor.is_ordinary_conventional_land) {
 							supported_site = true;
@@ -85,33 +86,17 @@ return (game) => {
 
 		const tile = get_good_starting_base_location(faction.is_naval);
 
-		// spawn headquarters base
-		game.event('spawn_base', {
-			owner: player,
-			tile: tile,
-			facilities: [
-				'HEADQUARTERS',
-			]
-		});
 		tiles_with_bases :+tile;
 
 		if (conventional_start) {
-			const startup = game.get_startup_designs(player);
-			let type = null;
-			if (startup.starting_scout == 2) {
-				type = 'ConventionalScout';
-			} else {
-				for (design of startup.designs) {
-					if (design.id == startup.starting_scout && design.chassis == 1) {
-						type = 'ConventionalSpartanRover';
-					}
-				}
-			}
-			if (type == null) { throw Error('Starting design has no supported conventional presentation'); }
-			// Raw creation must run in the claimed Start event accumulator.
-			game.event('spawn_unit', {owner: player, tile: tile, type: type, starting_conventional: true});
+			// Native producers resolve actual owner/design and presentation after
+			// definition events, still inside the authenticated turn-zero Start.
+			game.event('spawn_starting_smac_base', {owner: player, tile: tile});
+			game.event('spawn_starting_conventional_unit', {owner: player, tile: tile});
 			continue;
 		}
+
+		game.event('spawn_base', {owner: player, tile: tile, facilities: ['HEADQUARTERS']});
 
 		// Existing SMAX/network placeholder path.
 		let type = 'MindWorms';

@@ -3000,6 +3000,29 @@ public:
 			if ( refreshed ) { m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() ); }
 		} );
 	}
+	static std::string CanonicalStartupSource(const std::string& filename,bool multiple) {
+			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
+			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
+			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
+			const std::array<std::array<int,3>,7> specialists{{{2,0,0},{0,2,0},{0,0,3},{3,0,2},{2,2,0},{0,1,3},{2,2,4}}};
+			while(std::getline(input,line)) {
+				if(!line.empty() && line[0]=='#') {section=line;row=0;result+=line+"\n";continue;}
+				if(section=="#RULES") {
+					const auto value=row==0?"3":row==1?"2":row==5?"10":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":row==12?"7":row==13?"14":nullptr;
+					if(value) {line.replace(0,line.find(','),value);}
+				}
+				if(multiple && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
+				if(section=="#RESOURCEINFO" && row<9) {line="Owned row";for(auto value:yields[row]) {line+=","+std::to_string(value);}}
+				if(section=="#CITIZENS" && row<7) {
+					line="Role,Roles,"+std::string(row<2?"None":"Tech80")+",Disable";
+					for(auto value:specialists[row]) {line+=","+std::to_string(value);}line+=",tail";
+				}
+				if(section=="#TECHNOLOGY") {line.replace(line.rfind(',')+1,std::string::npos,"000000000");}
+				result+=line+"\n";++row;
+			}
+			return result;
+	}
+
 	std::string CheckEarlyConventionalStartup( const int scenario ) {
 		using namespace game::backend;
 		using namespace game::backend::unit;
@@ -3009,13 +3032,20 @@ public:
 		const bool default_world = scenario >= 8, local_rover = scenario == 9;
 		const size_t expected_units = default_world ? 1 : 3;
 		EnableWorldSnapshot();
+		if(default_world) {
+			m_gse->GetGCSpace()->Accumulate(m_gse,[&] {
+				NEWV(map,map::Map,&m_game,10,8); m_map.reset(map); m_game.m_map=map;
+				map->GetTilesPtr()->Clear();
+			});
+		}
 		auto& settings = m_state->m_settings.global;
-		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( []( const std::string& filename ) {
-			auto source = smac_startup_fixture::Source( filename );
+		settings.SelectRuleset( "smac" ); settings.InitializeHostRules( [default_world]( const std::string& filename ) {
+			auto source = default_world?CanonicalStartupSource(filename,true):smac_startup_fixture::Source( filename );
 			if ( filename == "alpha.txt" ) { const auto start = source.find( "#RULES\n" ) + 7; source.replace( start, source.find( ',', start ) - start, "3" ); }
 			return source;
 		} ); smac_rules_fixture::AcceptWorldSize( settings );
 		EnableSimulationParticipants( default_world ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, !default_world );
+		if(default_world) {GT_ASSERT(settings.difficulty_level==0,"new-campaign default is not the admitted Librarian difficulty");}
 		if ( local_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
 		const auto old_id = Unit::GetNextId(), old_base_id = base::Base::GetNextId();
 		util::FinallyGuard ids( [ = ] { Unit::SetNextId( old_id ); base::Base::SetNextId( old_base_id ); } );
@@ -3036,7 +3066,7 @@ public:
 		const auto require = []( bool condition, const char* message ) { if ( !condition ) { throw std::runtime_error( message ); } };
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.m_tm = new map::tile::TileManager( &m_game );
-			DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );
+			if(!default_world) {DefinePop( "WORKER", "Worker", base::PopDef::PF_TILE_WORKER );}
 			auto* um = m_game.GetUM();
 			if ( !default_world ) {
 				MoraleSet::morale_values_t names; for ( int i = 0; i < 7; ++i ) { names.emplace_back( "level" + std::to_string( i ) ); }
@@ -3048,26 +3078,32 @@ public:
 			}
 			if ( default_world ) {
 				using namespace map::tile;
-				for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y % 2; x < 8; x += 2 ) {
+				m_game.GetMap()->m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
+				for(size_t y=0;y<8;++y) {for(size_t x=y%2;x<10;x+=2) {
+					for(auto* corner:m_game.GetMap()->GetTile(x,y)->elevation.corners) {*corner=100;}
+				}}
+				for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y % 2; x < 10; x += 2 ) {
 					auto* tile = m_game.GetMap()->GetTile( x, y );
+					tile->Update(); tile->moisture=MOISTURE_ARID; tile->bonus=BONUS_NONE;
 					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0;
 					// Deliberately unsuitable centers must survive unchanged and never be selected.
 					if ( y == 0 ) { tile->features = FEATURE_XENOFUNGUS; }
 					if ( y == 7 ) { tile->features = FEATURE_MONOLITH; }
 				} }
-				m_game.GetBM()->DefineFacility( new base::FacilityDef( "HEADQUARTERS", "Headquarters", "Fixture", 0, { "facilities.pcx", 1, 2, 24, 32 }, 1 ) );
-				for ( const auto* name : { "define_moraleset", "define_unit", "spawn_base", "spawn_unit" } ) {
+				for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
+				for ( const auto* name : { "define_moraleset", "define_unit", "define_base_pop", "define_base_facility" } ) {
 					auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, std::string( "./GLSMAC_data/default/game/event/" ) + name ) );
 					RegisterEvent( name, new event::EventHandler( gc_space, name, static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
 						static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
 				}
 				m_game.GetBM()->On( GSE_CALL, "base_spawn", NATIVE_CALL( this, &order, require ) {
 					N_EXPECT_ARGS( 1 ); N_GETVALUE( event, 0, Object ); N_GETPROP_UNWRAP( base, event, "base", base::Base );
-					require( m_game.GetTurnId() == 0 && !base->HasSmacResourceContext(), "default startup activated canonical economy or reordered HQ" );
+					require( m_game.GetTurnId() == 0 && base->HasSmacResourceContext() && base->GetSmacAllocation().has_value(), "default startup omitted canonical economy or reordered HQ" );
 					order.push_back( "hq" ); return VALUE( value::Undefined );
 				} ) );
 				m_game.On( GSE_CALL, "create_world", NATIVE_CALL( this, call ) {
 					auto* game = static_cast< value::Object* >( m_game.Wrap( GSE_CALL ) );
+					static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/bases"))->Run(GSE_CALL,{game});
 					auto* definitions = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/units/defs" ) );
 					call( GSE_CALL, definitions, "define", { game } );
 					static_cast< value::Callable* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/world/default" ) )->Run( GSE_CALL, { game } );
@@ -3193,7 +3229,7 @@ public:
 			if ( reset ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Early reset failed to make actual MT progress" ); }
 			GT_OK();
 		}
-		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == 1 && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
+		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == (default_world?0u:1u) && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
 		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle consumed gameplay RNG" );
 		std::string saved; std::vector< std::string > saved_units;
 		const auto published = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
@@ -3201,6 +3237,17 @@ public:
 			for ( const auto& fr : updates ) { if ( fr.type == game::FrontendRequest::FR_UNIT_SPAWN ) { ++spawns; GT_ASSERT( fr.data.unit_spawn.conventional && fr.data.unit_spawn.has_moves, "sealed spawn was not actionable" ); } }
 			if ( default_world ) {
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
+				auto* base=origin->base; const auto first=*base->GetProductionState();
+				const auto initial=m_game.GetSmacProductionCost(base->m_owner,first.current_item)/2;
+				GT_ASSERT(first.minerals==initial+1 && first.baseline_minerals==first.minerals && base->GetAccumulatedNutrients()==0,
+					"real default first upkeep or legacy growth posted incorrect stores");
+				const auto next_base=base::Base::GetNextId(),next_unit=Unit::GetNextId();
+				for(const auto* name:{"spawn_starting_smac_base","spawn_starting_conventional_unit"}) {
+					bool rejected=false;try{m_game.Event(GSE_CALL,name,{{"owner",unit->m_owner->GetPlayer()->Wrap(GSE_CALL)},{"tile",origin->Wrap(GSE_CALL)}});}catch(const std::exception&){rejected=true;}
+					GT_ASSERT(rejected && base::Base::GetNextId()==next_base && Unit::GetNextId()==next_unit,"late native startup event escaped its claim");
+				}
+				GT_ASSERT(m_game.GetBM()->GetPopDef("WORKER") && m_game.GetBM()->GetPopDef("TALENT") && m_game.GetSmacBasePresentations()[0]=="WORKER",
+					"default worker/talent coexistence lost explicit role binding");
 				GT_ASSERT(m_game.ResolveSmacProductionPresentation(unit->m_owner,unit->Conventional().design_id)==unit->m_def,"explicit presentation did not resolve actual selected owner/design");
 				const auto* former=static_cast<const StaticDef*>(m_game.ResolveSmacProductionPresentation(unit->m_owner,1));
 				GT_ASSERT(former->m_render->m_type==Render::RT_PORT_FORMER_MARKER && former!=unit->m_def,"Former reused combat presentation");
@@ -3228,11 +3275,13 @@ public:
 				GT_ASSERT( unit->GetTile() == target && target->units.at( unit->m_id ) == unit && origin->units.empty() && unit->Conventional().spent > 0,
 					"real default move event did not leave the HQ" );
 				m_state->m_slots->GetSlot( 0 ).GetPlayer()->CompleteTurn();
-				m_game.Event( GSE_CALL, "advance_turn", { { "turn_id", VALUE( value::Int,, 2 ) } } ); ProcessEvents();
-				GT_ASSERT( m_game.GetTurnId() == 2 && unit->Conventional().spent == 0 && unit->HasMovesLeft() && base_hooks == 2 && turns == 2,
+				m_game.Event(GSE_CALL,"complete_turn",{}); ProcessEvents();
+				GT_ASSERT( m_game.GetTurnId() == 2 && unit->Conventional().spent == 0 && unit->HasMovesLeft() && base_hooks == 0 && turns == 2,
 					"default command could not continue through actual next-turn handler" );
-				for ( size_t x = 0; x < 8; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" ); }
-				for ( size_t x = 1; x < 8; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" ); }
+				GT_ASSERT(base->GetProductionState()->minerals==initial+2 && base->GetAccumulatedNutrients()==0,
+					"real default second upkeep skipped or double-posted legacy economy");
+				for ( size_t x = 0; x < 10; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" ); }
+				for ( size_t x = 1; x < 10; x += 2 ) { GT_ASSERT( m_game.GetMap()->GetTile( x, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" ); }
 			}
 			saved = WorldSnapshot();
 			for ( const auto id : identities ) { saved_units.push_back( Unit::Serialize( m_game.GetUM()->GetUnit( id ) ).ToString() ); }
@@ -3243,11 +3292,15 @@ public:
 		GT_ASSERT( published.empty(), "sealed publication: " + published );
 		// The actual world-body reader gets its staged BoundSimulation and must
 		// restore Ready records directly, without replaying startup or entropy.
-		BackendFixture destination; destination.ConfigureConventional( true, 3, default_world, default_world ? local_rover : true );
+		BackendFixture destination;
+		const std::function<std::string(const std::string&)> restore_source=default_world
+			? std::function<std::string(const std::string&)>([](const std::string& name){return CanonicalStartupSource(name,true);}) : nullptr;
+		destination.ConfigureConventional( true, 3, default_world, default_world ? local_rover : true,false,nullptr,restore_source );
 		return destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+
 			size_t new_hooks = 0;
 			destination.GetGame()->GetUM()->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &new_hooks ) { ++new_hooks; return VALUE( value::Undefined ); } ) );
-			destination.RestoreConventional( GSE_CALL, saved );
+			destination.RestoreConventional( GSE_CALL, saved, default_world );
 			GT_ASSERT( new_hooks == 0 && !destination.GetGame()->GetUM()->HasPendingConventionalUnits() && destination.m_game.m_simulation->value.gameplay_random == expected_random, "restore replayed Early lifecycle or changed gameplay continuation" );
 			for ( size_t i = 0; i < identities.size(); ++i ) {
 				auto* unit = destination.GetGame()->GetUM()->GetUnit( identities[ i ] );
@@ -3271,28 +3324,7 @@ public:
 				for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<10;x+=2) {map->GetTile(x,y)->Update();}}
 			});
 		}
-		const auto source=[scenario,multiple](const std::string& filename) {
-			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
-			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
-			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
-			const std::array<std::array<int,3>,7> specialists{{{2,0,0},{0,2,0},{0,0,3},{3,0,2},{2,2,0},{0,1,3},{2,2,4}}};
-			while(std::getline(input,line)) {
-				if(!line.empty() && line[0]=='#') {section=line;row=0;result+=line+"\n";continue;}
-				if(section=="#RULES") {
-					const auto value=row==0?"3":row==1?"2":row==5?"10":row==6?"10":row==8?"1":row==9?"-1":row==10?"5":row==12?"7":row==13?"14":nullptr;
-					if(value) {line.replace(0,line.find(','),value);}
-				}
-				if(multiple && section=="#WORLDSIZE" && row==1) {line="Fixture sight,5,8";}
-				if(section=="#RESOURCEINFO" && row<9) {line="Owned row";for(auto value:yields[row]) {line+=","+std::to_string(value);}}
-				if(section=="#CITIZENS" && row<7) {
-					line="Role,Roles,"+std::string(row<2?"None":"Tech80")+",Disable";
-					for(auto value:specialists[row]) {line+=","+std::to_string(value);}line+=",tail";
-				}
-				if(section=="#TECHNOLOGY") {line.replace(line.rfind(',')+1,std::string::npos,"000000000");}
-				result+=line+"\n";++row;
-			}
-			return result;
-		};
+		const auto source=[multiple](const std::string& filename) {return CanonicalStartupSource(filename,multiple);};
 		const auto definitions=[&](GSE_CALLABLE) {
 			for(const auto* name:{"define_base_pop","define_base_facility"}) {
 				auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));

@@ -403,6 +403,9 @@ public:
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
 	// Explicit session presentation roles; saved Unit/Def records remain authority.
 	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,4>& roles );
+	void ConfigureSmacBasePresentations( GSE_CALLABLE, const std::array<std::string,8>& roles );
+	const std::array<std::string,8>& GetSmacBasePresentations() const;
+	bool HasSmacBasePresentations() const { return m_smac_base_presentations.has_value(); }
 	unit::Def* ResolveSmacProductionPresentation( const slot::Slot* owner, int32_t design_id ) const;
 	// Explicit snapshot admission until sight/territory producers are integrated.
 	// No knowledge is inferred from current units, tiles or a transport slot.
@@ -422,7 +425,9 @@ public:
 private:
 	friend class gse::tests::BackendFixture;
 	std::optional<std::array<std::string,4>> m_smac_presentations;
+	std::optional<std::array<std::string,8>> m_smac_base_presentations;
 	bool HandleCanonicalStartupTurnEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	bool HandleCanonicalStartupEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void RequireCanonicalStartupTurn( size_t turn_id ) const;
 	void RequireCanonicalTurn(size_t turn_id) const;
 	bool QueueCanonicalCompleteTurn(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args);

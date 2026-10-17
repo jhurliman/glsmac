@@ -12,8 +12,50 @@
 #include "gc/Space.h"
 #include "gse/value/Int.h"
 #include "util/FinallyGuard.h"
+#include <set>
+#include <thread>
 
 namespace game::backend {
+
+void Game::ConfigureSmacBasePresentations(GSE_CALLABLE,const std::array<std::string,8>& roles) {
+	bool configure=false;
+	{
+		std::lock_guard lock(m_admission_mutex);
+		configure=m_state && m_owner_transition && m_owner_transition->phase==OwnerTransition::Phase::Running
+			&& m_owner_transition->thread==std::this_thread::get_id() && m_active_admission
+			&& m_owner_transition->admission==m_active_admission && !m_active_admission->cancelled
+			&& m_active_admission->state==m_state && m_state->IsGameSessionActive(m_active_admission->admitted_binding)
+			&& (m_owner_transition->stage==StartupStage::InitializeConfigure
+				|| (m_owner_transition->stage==StartupStage::Start && m_state->IsMaster()
+					&& m_active_admission->kind==WorldAdmission::Kind::INITIALIZATION
+					&& !m_active_admission->previous && !m_active_admission->map_path));
+	}
+	if (!configure || gc_space!=GetGCSpace() || !gc_space->IsAccumulating() || !m_bm
+		|| !m_bm->GetBases().empty() || m_current_turn.GetId()!=0) {
+		throw std::runtime_error("Base presentation roles must be configured by startup before entities");
+	}
+	std::set<std::string> unique;
+	for (const auto& role:roles) {
+		if (role.empty() || role.size()>256 || role.find('\0')!=std::string::npos || !unique.insert(role).second) {
+			throw std::runtime_error("Base presentation roles require eight distinct bounded definition IDs");
+		}
+	}
+	if (m_smac_base_presentations && *m_smac_base_presentations!=roles) { throw std::runtime_error("Base presentation roles already configured"); }
+	m_smac_base_presentations=roles;
+}
+
+const std::array<std::string,8>& Game::GetSmacBasePresentations() const {
+	if (!m_smac_base_presentations || !m_bm) { throw std::runtime_error("Base presentation roles are not configured"); }
+	for (size_t i=0;i<8;++i) {
+		const auto* def=m_bm->GetPopDef(m_smac_base_presentations->at(i));
+		if (!def || (i==0 ? !(def->m_flags & base::PopDef::PF_TILE_WORKER) || def->m_smac_specialist_id.has_value()
+			: (def->m_flags & base::PopDef::PF_TILE_WORKER) || def->m_smac_specialist_id!=i-1)) {
+			throw std::runtime_error("Configured Base presentation does not match its positional role");
+		}
+		m_bm->ValidateSmacPopDef(def);
+	}
+	return *m_smac_base_presentations;
+}
 
 void Game::RequireCanonicalStartupTurn( size_t turn_id ) const {
 	if ( !m_map || !m_map->m_worker_knowledge ) { return; }
@@ -74,23 +116,11 @@ bool Game::HandleCanonicalStartupTurnEvent(GSE_CALLABLE,const std::string& name,
 
 void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	RequireCanonicalTurn(turn_id);
-	// Resolve semantic Pop roles once, with no display-name inference. These
-	// are already the registered authority used by founding/manual allocation.
+	// Session bindings choose the worker presentation explicitly: default
+	// WORKER and TALENT both carry the tile-worker flag.
 	base::Base::SmacAllocationRoles roles;
-	for (const auto& entry:m_bm->GetBasePopDefs()) {
-		const auto* def=entry.second;
-		m_bm->ValidateSmacPopDef(def);
-		if (def->m_flags & base::PopDef::PF_TILE_WORKER) {
-			if (!roles.worker.empty()) { throw std::runtime_error("Canonical upkeep has ambiguous worker presentation"); }
-			roles.worker=entry.first;
-		} else if (def->m_smac_specialist_id) {
-			auto& role=roles.specialists.at(*def->m_smac_specialist_id);
-			if (!role.empty()) { throw std::runtime_error("Canonical upkeep has ambiguous specialist presentation"); }
-			role=entry.first;
-		}
-	}
-	if (roles.worker.empty()) { throw std::runtime_error("Canonical upkeep lacks its worker role"); }
-	for (const auto& role:roles.specialists) { if(role.empty()) { throw std::runtime_error("Canonical upkeep lacks a specialist role"); } }
+	const auto& configured=GetSmacBasePresentations(); roles.worker=configured[0];
+	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
 	const auto records=m_bm->GetBaseRecordOrder();
 	for (const auto id:records) {
 		const auto* base=m_bm->GetBase(id);

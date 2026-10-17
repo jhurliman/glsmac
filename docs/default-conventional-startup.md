@@ -1,27 +1,29 @@
 # Local SMAC conventional startup
 
-The default local SMAC world now queues its existing HQ followed by an actual
-starting conventional Unit. The queued event runs in the owning Start
-accumulator: raw turn-zero creation preserves the selected design and stored
-morale, and the existing first-turn seal supplies refreshed statistics before
-frontend publication. The world script reads the admitted owner's
-`starting_scout`; builtin design 2 uses initialized Infantry, while the selected
-owned Speeder uses the Spartan Rover descriptor. It does not derive a design
-from a transport slot. The native startup API authenticates that selection.
+The local SMAC default script now queues native canonical first-Base creation
+followed by the actual owner's selected Scout or Spartan Rover. The authenticated
+claimed-Start dispatcher resolves the frozen selected design and configured
+presentation after queued definition events. Initial allocation, claims, reveal,
+production target/credit and Early raw Unit publication precede the real first
+social refresh and full N/M upkeep. The default Base script's existing canonical
+growth guard prevents legacy duplicate posting.
 
-`Player.is_single_player` exposes the existing Single role. Both definition and
-world activation require SMAC plus this local role; SMAX/network retain their
-existing native placeholder path. The HQ remains on the legacy Base economy
-path. This change does not activate canonical growth or worker allocation.
+New campaigns default to Librarian as a temporary GLSMAC policy matching the
+currently supported first-Base producer. An explicitly selected other difficulty
+is preserved and rejects at that producer rather than being silently substituted.
+SMAX and network startup retain their existing placeholder path. AI and general
+multiplayer controller sequencing are not activated.
 
-The provisional GLSMAC placement policy requires ordinary land, an ordinary
-adjacent exit, and a minimum center distance of four tile-distance units.
-The terrain-only Tile predicate accepts known rockiness, river, and the already
-supported road/tube/forest improvements; fungus and interacting landmarks are
-excluded. It is not Unit command authorization. Existing movement validation
-still checks ownership, occupancy and other command inputs. Placement preserves
-terrain and reports failure when it cannot find space; it does not clear fungus
-or claim original starting-site balancing.
+Default Pop definitions configure one worker and seven positional specialist
+presentation IDs explicitly. WORKER and TALENT coexist; their shared tile-worker
+flag does not select the canonical worker. This session configuration is validated
+at use, not added to saved gameplay state.
+
+The provisional GLSMAC placement policy uses clear, flat interior land centers,
+an adjacent ordinary exit and a minimum center distance of four tile-distance
+units. Clear centers accommodate the current foreign-sight producer; no terrain
+is cleared and no original starting-site balance is claimed. The existing
+ordinary movement predicate still admits the supported nonfungus terrain domain.
 
 The explicit port camera policy uses facing 2, zoom 0 and ratio 1:1. The full
 256-square texture retains the legacy sprite pixel scale (world size 2.56 by
@@ -31,7 +33,7 @@ and Rover x105..152/y105..140. The separate target-blit metadata (50,50) is not 
 texture pivot. No original final-screen scale/placement parity is asserted.
 The conventional morale labels are the seven installed MORALE names.
 
-Focused validation reused the cached native build. All ten tracked groups
+Historical pre-canonical-economy validation reused the cached native build. All ten tracked groups
 matching `Early conventional|Default conventional` passed: the original eight
 claimed-Start/cancellation/restore cases plus two actual default-script cases
 for local Gaia and Sparta. The new cases load the definition, world and spawn
@@ -41,3 +43,8 @@ turn-2 handler, and restore exact Unit records without replay. Unsupported
 fixture terrain remains unchanged. The synthetic map/profile and asset-free
 frontend do not claim a fully rendered default campaign or seven-player run.
 Targeted LLVM15 analysis of Player.cpp and Tile.cpp passed (2 TUs, 3.23s).
+
+The canonical activation extends those same two default-script cases with real
+bases.gls.js start/turn handlers, configured roles, canonical Base stores, and
+native end-turn. This updated runtime check is pending the root cached focused
+build. See canonical-local-turn-upkeep.md for transition scope and failure policy.

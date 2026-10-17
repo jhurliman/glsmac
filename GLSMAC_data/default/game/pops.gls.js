@@ -30,6 +30,9 @@ const define = (game, id, name, renders_human_x, renders_progenitor_x, propertie
 
 const result = {
 	define: (game) => {
+		if (game.get_ruleset() == 'smac') {
+			game.configure_smac_base_presentations(['WORKER', 'TECHNICIAN', 'DOCTOR', 'LIBRARIAN', 'ENGINEER', 'EMPATH', 'THINKER', 'TRANSCEND']);
+		}
 
 		const role = (id) => { return game.get_ruleset() == 'smac' ? {smac_specialist_id: id} : {}; };
 		define(game, 'WORKER', 'Worker', [79, 118], [40], {tile_worker: true});

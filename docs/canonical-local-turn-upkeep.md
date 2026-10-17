@@ -2,10 +2,11 @@
 
 The native local `complete_turn` request now binds the incoming turn number when
 queued. Dispatch admits only the actual local Single controller and the admitted
-Single/Player human roster, checks exact current+1, and processes factions in ascending accepted simulation-ID order, then Bases
-in saved record order within each owner. This faction controller order is an
-explicit GLSMAC local policy; the original receipt proves the per-faction traversal. Duplicate queued requests are ignored as stale and cannot run upkeep twice or
-discard the following valid worker command. Direct
+Single/Player human roster, checks exact current+1, and processes factions in
+ascending accepted simulation-ID order, then saved Base record order within each
+owner. This faction controller order is an explicit GLSMAC local policy; the
+original receipt proves the per-faction traversal. Duplicate queued requests are
+ignored as stale and cannot run upkeep twice or discard a following command. Direct
 script `advance_turn` cannot bypass the native route when worker knowledge exists.
 
 The transition refreshes social state and seals pending startup Units, publishes
@@ -33,4 +34,22 @@ real failure cleanup. A reversed cross-owner registration order verifies faction
 grouping before saved Base order. These are synthetic source/map compositions using the real
 native dispatcher and owned records. Runtime validation is pending the shared
 cached integration build; changed production and fixture TUs pass syntax checks.
-Default-world canonical activation is the immediate follow-up, not claimed here.
+The default local SMAC script now queues authenticated native first-Base and
+selected Scout/Rover events. The actual definition and Base script handlers run
+before creation; their existing canonical growth guard prevents legacy posting.
+An explicit session-only eight-role binding chooses WORKER alongside the still
+registered TALENT and positional specialists. Use validates the actual PopDefs;
+saved allocation/Pop records remain authoritative. Manual clicks consume these
+same configured roles, retaining their earlier explicit-fixture fallback.
+
+New campaigns default to Librarian, the currently admitted first-Base difficulty.
+The existing UI difficulty choice remains available and is never rewritten at
+startup; unsupported selections fail the producer explicitly. This temporary
+GLSMAC policy does not claim a general original difficulty initializer.
+
+The two default-script Gaia/Sparta fixtures now load real bases.gls.js start/turn
+handlers, create canonical allocation/knowledge, seal actual selected Units,
+execute first movement and end-turn, check postings, and restore exact records.
+Their synthetic source and generated-map policy fixture are explicit. Native
+runtime checks remain pending the root cached integration run; no platform,
+interactive rendering, seven-player default-world or energy-tail claim is made.

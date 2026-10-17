@@ -595,7 +595,8 @@ void Game::ClearEvents() {
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
 	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
-	if ( HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
+	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
@@ -918,7 +919,8 @@ WRAPIMPL_BEGIN( Game )
 				}
 				if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
-				if ( !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
+				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
@@ -930,6 +932,20 @@ WRAPIMPL_BEGIN( Game )
 				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args->value ) );
 				return VALUE( gse::value::Undefined );
 			} )
+		},
+		{
+			"configure_smac_base_presentations",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(1); N_GET(roles,0,Array);
+				if (roles->value.size()!=8) { THROW("Base presentations require one worker and seven positional specialists"); }
+				std::array<std::string,8> names;
+				for(size_t i=0;i<8;++i) {
+					if (!roles->value[i] || roles->value[i]->type!=gse::VT_STRING) { THROW("Base presentation IDs must be strings"); }
+					names[i]=static_cast<gse::value::String*>(roles->value[i])->value;
+				}
+				ConfigureSmacBasePresentations(GSE_CALL,names);
+				return VALUE(gse::value::Undefined);
+			})
 		},
 		{
 			"get_fm",
@@ -1795,6 +1811,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 			for ( const auto& event : batch->events ) {
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleCanonicalStartupEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false) ) {
+					WithRW([&]{HandleCanonicalStartupEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
+					continue;
+				}
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
@@ -2970,6 +2991,7 @@ void Game::ResetGame() {
 		DiscardSnapshotTurn();
 		m_pending_simulation.reset(); m_simulation.reset();
 		m_smac_presentations.reset();
+		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
 		ClearHandlers();
 

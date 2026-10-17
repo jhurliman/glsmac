@@ -4,8 +4,8 @@ on:
   push:
     branches: [main, stable]
   pull_request:
-    paths-ignore:
-      - '**/*.md'
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  merge_group:
   workflow_dispatch:
 
 # A new PR revision supersedes its prior checks; integration/manual runs finish.
@@ -17,15 +17,15 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    uses: ./.github/workflows/ci-scope.yml
+
   lifecycle:
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            compiler: g++
-          - os: macos-14
-            compiler: clang++
+      matrix: ${{ fromJSON(needs.scope.outputs.lifecycle) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     steps:
@@ -34,3 +34,29 @@ jobs:
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
         run: python3 tools/test_thread_lifecycle.py --compiler "${{ matrix.compiler }}" --sanitizer
+
+  gate:
+    name: Lifecycle gate
+    if: always()
+    needs: [scope, lifecycle]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require every selected lifecycle job to succeed
+        env:
+          RUN: ${{ needs.scope.outputs.run }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          LIFECYCLE_RESULT: ${{ needs.lifecycle.result }}
+          FULL: ${{ needs.scope.outputs.full }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from tools.ci_scope import validate_lifecycle
+          validate_lifecycle(*(os.environ[name] for name in ("RUN", "FULL", "SCOPE_RESULT", "LIFECYCLE_RESULT")))
+          if os.environ["RUN"] == "false":
+              coverage = "Documentation-only or empty change; lifecycle tests not requested"
+          else:
+              coverage = "Linux and macOS lifecycle sanitizer tests passed" if os.environ["FULL"] == "true" else "Linux lifecycle sanitizer tests passed; macOS not requested for this change"
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
+              output.write(coverage + ".\n")
+          PY

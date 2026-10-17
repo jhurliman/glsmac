@@ -34,21 +34,17 @@ static int32_t ParseField( const std::string& field, const std::string& row, con
 
 BaseSquareRules SmacRulesTXTLoader::ParseBaseSquareRules( const std::string& source ) {
 	const auto rows = TXTLoader::ReadUniqueSection( source, "RESOURCEINFO" );
-	// RE-SMAC-BASE-001 identifies a nine-row, four-int table. Verify the
-	// canonical labels in order rather than silently remapping moved rows.
-	static const std::array< const char*, 9 > labels = {
-		"Ocean Square", "Base Square", "Bonus Square", "Forest Square",
-		"Recycling Tanks", "Improved Land", "Improved Sea", "Monolith", "Borehole Square"
-	};
-	if ( rows.size() != labels.size() ) {
-		throw std::invalid_argument( "#RESOURCEINFO requires the canonical nine-row SMAC layout" );
+	// RE-SMAC-BASE-ROWS-001: positions select the stored rule rows. Labels
+	// can be renamed or repeated; moving a complete row changes its meaning.
+	if ( rows.size() != 9 ) {
+		throw std::invalid_argument( "#RESOURCEINFO requires nine positional SMAC rows" );
 	}
 	std::array< RuleTriple, 3 > triples;
 	size_t target = 0;
 	for ( size_t i = 0 ; i < rows.size() ; ++i ) {
 		const auto fields = util::String::Split( rows[ i ], ',' );
-		if ( fields.empty() || fields.front() != labels[ i ] ) {
-			throw std::invalid_argument( "#RESOURCEINFO row " + std::to_string( i + 1 ) + ": expected " + labels[ i ] );
+		if ( fields.empty() || fields.front().empty() ) {
+			throw std::invalid_argument( "#RESOURCEINFO row " + std::to_string( i + 1 ) + ": missing label" );
 		}
 		if ( i == 1 || i == 2 || i == 4 ) {
 			if ( fields.size() < 4 ) {

@@ -3552,7 +3552,12 @@ public:
 						const auto state = static_cast< value::Object* >( participant->Get( key ) );
 						GT_ASSERT( static_cast< value::Int* >( state->Get( "labs" ) )->value == 0 && static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value.size() == 89,
 							"script copy changed authoritative research state" );
-						GT_ASSERT( static_cast< value::Bool* >( static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value[ customs && i == 0 ? 1 : customs && i == 1 ? 5 : i == 1 ? 2 : 6 ] )->value, "startup grant missing or script copy mutated ownership" );
+						const int first_grant = first_faction == "HIVE" ? 43 : first_faction == "UNIVERSITY" ? 2
+							: first_faction == "MORGANITES" ? 1 : first_faction == "SPARTANS" ? 5
+							: first_faction == "BELIEVERS" ? 4 : first_faction == "PEACEKEEPERS" ? 0 : 6;
+						const auto grant = i == 0 && !first_faction.empty() ? first_grant
+							: customs && i == 0 ? 1 : customs && i == 1 ? 5 : i == 1 ? 2 : 6;
+						GT_ASSERT( static_cast< value::Bool* >( static_cast< value::Array* >( state->Get( "owned_technologies" ) )->value[ grant ] )->value, "startup grant missing or script copy mutated ownership" );
 					}
 				}
 			}

@@ -2,7 +2,9 @@
 
 #include "BaseManager.h"
 #include "SmacPopulationStep.h"
+#include "SmacUnitSupport.h"
 #include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "gc/Space.h"
@@ -43,7 +45,9 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	auto allocation = CalculateSmacWorkers( *m_allocation, context, SmacBaseResourcePhase::Upkeep );
 	SmacProductionResult result{ CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation ), {}, false };
 	const auto& resources = result.first_calculation;
+	auto support = m_game->CalculateCanonicalUnitSupport( *this, population, nullptr );
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
+	std::optional< unit::UnitManager::PreparedConventionalRemoval > removal;
 	if ( resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
 		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
@@ -88,28 +92,62 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		if ( !plan.stored_nutrients ) { THROW( "Size-one starvation awaits canonical Base removal and home reassignment" ); }
 		population = plan.population; food = *plan.stored_nutrients;
 		const auto* newborn = unit ? &unit->Candidate() : nullptr;
-		auto mineral_surplus = resources.minerals.surplus;
+		auto gross_minerals = resources.minerals.intake;
 		if ( plan.NeedsRecalculation() ) {
 			allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production );
 			const auto internal = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn );
 			food = plan.Finish( internal.nutrients.surplus );
-			mineral_surplus = internal.minerals.surplus;
+			gross_minerals = internal.minerals.intake;
+			support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn );
 		}
-		if ( m_game->GetTurnId() > 1 && mineral_surplus < 0 ) {
-			THROW( "Mineral deficit awaits canonical supported-unit loss processing" );
+		if ( m_game->GetTurnId() > 1 && support.mineral_support > gross_minerals ) {
+			// Paid markings belong to the latest resource pass, not to the newly
+			// produced roster. Growth's internal pass can make the newborn paid.
+			const auto* map = m_game->GetMap();
+			const auto* knowledge = map->GetSmacWorkerKnowledge();
+			if ( !knowledge ) { THROW( "Support loss requires the current map geometry" ); }
+			const bool wraps = knowledge->CopyData().horizontal_wrap;
+			auto demand = support.mineral_support;
+			while ( demand > gross_minerals ) {
+				std::optional<size_t> selected;
+				int64_t best_distance = -1;
+				for ( const auto& marking : support.units ) {
+					if ( marking.disposition != SmacSupportDisposition::Paid
+						|| std::find( result.removed_units.begin(), result.removed_units.end(), marking.id ) != result.removed_units.end() ) { continue; }
+					const auto* candidate = newborn && newborn->m_id == marking.id ? newborn : m_game->GetUM()->GetUnit( marking.id );
+					if ( !candidate ) { THROW( "Paid support record lost its Unit" ); }
+					const auto* position = candidate == newborn ? GetTile() : candidate->GetTile();
+					auto dx = std::abs( int64_t( position->coord.x ) - int64_t( GetTile()->coord.x ) );
+					const auto dy = std::abs( int64_t( position->coord.y ) - int64_t( GetTile()->coord.y ) );
+					if ( wraps ) { dx = std::min( dx, int64_t( map->GetWidth() ) - dx ); }
+					const auto distance = std::max( dx, dy ) - ( std::abs( dx - dy ) + 2 ) / 4;
+					// Strict replacement preserves live roster order for ties. All
+					// admitted packages have ordinary plans 3, 8 or 9; no convoys.
+					if ( distance > best_distance ) { selected = marking.id; best_distance = distance; }
+				}
+				if ( !selected ) { break; }
+				result.removed_units.push_back( *selected );
+				demand -= support.minerals_per_paid_unit;
+			}
+			if ( !result.removed_units.empty() ) {
+				removal.emplace( m_game->GetUM()->PrepareConventionalRemoval( GSE_CALL, result.removed_units, unit ? &*unit : nullptr ) );
+			}
 		}
 		// The outer forced pass always uses the resulting population and newborn
 		// home support. It normalizes food but never posts minerals or collects
 		// food again. Surviving Pop nodes are still untouched during these reads.
-		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production );
-		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn );
+		const auto remaining_support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn, result.removed_units ).mineral_support;
+		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, remaining_support );
+		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support );
 		food = result.final_calculation->nutrients.normalized_stored;
 	}
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population );
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
+	if ( removal ) { removal->Commit(); }
 	prepared.Commit(); prepared.Finish();
-	if ( unit ) { unit->Notify( GSE_CALL ); }
+	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
+	if ( removal ) { removal->Notify( GSE_CALL ); }
 	return result;
 }
 

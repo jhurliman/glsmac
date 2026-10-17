@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include <limits>
+#include <algorithm>
 #include <stdexcept>
 
 #include "base/Base.h"
@@ -88,14 +89,18 @@ int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) co
 	return CalculateCanonicalMineralSupport( evaluating_base, evaluating_base.m_pops.size(), nullptr );
 }
 int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_base, const size_t population, const unit::Unit* prepared_unit ) const {
+	return CalculateCanonicalUnitSupport( evaluating_base, population, prepared_unit ).mineral_support;
+}
+base::SmacUnitSupportResult Game::CalculateCanonicalUnitSupport( const base::Base& evaluating_base, const size_t population,
+	const unit::Unit* prepared_unit, const std::vector<size_t>& removed ) const {
 	ValidateCurrentSimulation();
 	const auto context = evaluating_base.GetSmacResourceContext();
 	if ( evaluating_base.GetGame() != this || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_simulation ) {
 		throw std::runtime_error( "Canonical support requires a registered Base in this world" );
 	}
 	const auto* social = m_simulation->value.social.Find( context.owner_simulation_id );
-	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
-		throw std::runtime_error( "Canonical support requires retained SUPPORT" );
+	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed ) {
+		throw std::runtime_error( "Canonical support requires refreshed current SUPPORT" );
 	}
 	if ( population > 127 ) { throw std::runtime_error( "Canonical support population exceeds 127" ); }
 	m_um->RequireConventionalUnitsReady();
@@ -124,6 +129,7 @@ int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_bas
 		const auto package = resolved.package == unit::ConventionalUnitContext::Package::Former
 			? base::SmacSupportPackage::Former : resolved.package == unit::ConventionalUnitContext::Package::Colony
 			? base::SmacSupportPackage::Colony : base::SmacSupportPackage::Combat;
+		if ( std::find( removed.begin(), removed.end(), unit->m_id ) != removed.end() ) { return; }
 		units.push_back( { unit->m_id, state.owner_simulation_id == context.owner_simulation_id, home, package,
 			false, design.id < 64 ? base::SmacSupportDesign::BuiltIn : base::SmacSupportDesign::PlayerDesigned,
 			false, ( tile->features & map::tile::FEATURE_XENOFUNGUS ) != 0,
@@ -136,7 +142,7 @@ int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_bas
 	}
 	if ( prepared_unit ) { append( prepared_unit, true ); }
 	// The order is saved authority; free allowances precede paid units in it.
-	return base::SmacUnitSupport::Recalculate( social->retained->at( 2 ), static_cast< int32_t >( population ), units ).mineral_support;
+	return base::SmacUnitSupport::Recalculate( social->current.at( 2 ), static_cast< int32_t >( population ), units );
 }
 
 std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& evaluating_base ) const {

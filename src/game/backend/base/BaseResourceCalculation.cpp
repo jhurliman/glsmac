@@ -28,7 +28,7 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
     return CalculateSmacResourceCalculation( phase, nullptr );
 }
 
-SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit ) const {
+SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support ) const {
     const auto population = candidate_population.value_or( m_pops.size() );
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
@@ -46,7 +46,7 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     // The support query authenticates every actual Unit as an admitted Combat/Former
     // design with its saved owner/home. There is no Supply/convoy package in
     // this live domain; incoming/outgoing convoy effects are therefore absent.
-    const auto support = m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
+    const auto support = candidate_support ? *candidate_support : m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
     SmacBaseResourceCalculation result{};
     for ( size_t i = 0; i < orbital.size(); ++i ) { result.raw_intake[ i ] = orbital[ i ]; }
     const auto add = [ & ]( const map::tile::Tile& tile ) {

@@ -273,9 +273,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				&& fixture.Snapshot() == before && Unit::GetNextId() == id, "pending starvation removal partially published upkeep" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "SMAC live upkeep rejects pending mineral deficit without partial completion", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "SMAC live upkeep shortage uses prior paid flags and restores newborn continuation", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
-		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+		std::string snapshot; size_t newborn_id = 0, next_loss = 0;
+		const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
 			auto* game = fixture.Game(); game->AdvanceTurn( 2 );
 			auto* base = Populate( GSE_CALL, fixture, true, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
@@ -287,9 +288,72 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			}
 			GT_ASSERT( base->PrepareSmacResourceCalculation( SmacBaseResourcePhase::Upkeep ).minerals.surplus == -1, "actual home support did not produce deficit" );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, cost, scout, 0, std::vector< ProductionItem >{} } );
-			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();
-			GT_ASSERT( Rejects( [ & ] { base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 ); } )
-				&& fixture.Snapshot() == before && Unit::GetNextId() == id, "unsupported deficit partially completed or posted upkeep" ); GT_OK();
+			const auto order = game->GetUM()->GetUnitRecordOrder(); next_loss = order.at( 3 );
+			const auto pair = fixture.GameplayRandom();
+			const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			GT_ASSERT( result.completed_unit && result.removed_units == std::vector<size_t>{ order.at( 2 ) }
+				&& game->GetUM()->GetUnit( 91 ) && game->GetUM()->GetUnit( *result.completed_unit ), "shortage selected free far unit or unmarked newborn" );
+			newborn_id = *result.completed_unit;
+			GT_ASSERT( result.first_calculation.minerals.surplus == -1 && result.final_calculation->minerals.surplus == -1
+				&& base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0
+				&& base->GetAccumulatedNutrients() == 13 && fixture.GameplayRandom() == pair, "shortage reposted stores or recounted newborn before selection" );
+			snapshot = fixture.Snapshot(); GT_OK();
+		} );
+		if ( !error.empty() ) { return error; }
+		ConventionalUnitFixture restored; restored.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return restored.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			restored.Restore( GSE_CALL, snapshot, true ); auto* game = restored.Game(); auto* base = game->GetBM()->GetBase( 701 );
+			const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); }, unit::SmacMoraleMode::Mode0 );
+			GT_ASSERT( !result.completed_unit && result.removed_units == std::vector<size_t>{ next_loss }
+				&& game->GetUM()->GetUnit( newborn_id ) && result.final_calculation->minerals.surplus == 0
+				&& base->GetProductionState()->minerals == 0 && base->GetAccumulatedNutrients() == 13, "restored shortage lost record order or posted recovered surplus" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC live upkeep shortage preserves paid roster ties wrapping and current SUPPORT", []( GSE*, context::Context* ) -> std::string {
+		for ( const int rating : { 0, -4 } ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				using namespace game::backend::unit;
+				auto* game = fixture.Game(); game->AdvanceTurn( 2 ); auto* base = Populate( GSE_CALL, fixture, true, true );
+				auto* um = game->GetUM(); auto data = KnowledgeValue( true, true, 128, 64 ).CopyData();
+				const auto record = um->GetUnit( 91 )->Conventional();
+				for ( const auto entry : { std::pair<size_t,size_t>{50,64}, {70,12}, {60,120}, {40,6} } ) {
+					um->SpawnConventionalUnit( GSE_CALL, entry.first, um->GetUnitDef( "live-scout" ), base->m_owner, game->GetMap()->GetTile( entry.second, 2 ), record );
+					data.units.push_back( { entry.first, 0, false } );
+				}
+				fixture.ResourceState( [ & ]( auto& state ) { auto& social = state.social.factions.front(); social.current[2] = rating; social.retained->at(2) = rating == 0 ? -4 : 0; } );
+				game->PublishSmacWorkerKnowledge( GSE_CALL, Knowledge::Create( data ) );
+				const ProductionItem stock{ ProductionItemKind::Stockpile, "" };
+				base->SetProductionState( GSE_CALL, ProductionState{ stock, 10, stock, 10, std::vector<ProductionItem>{} } );
+				const auto before = fixture.GameplayRandom();
+				const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), {}, SmacMoraleMode::Mode0 );
+				const std::vector<size_t> expected = rating == 0 ? std::vector<size_t>{70,60} : std::vector<size_t>{50,70,60,91,40};
+				GT_ASSERT( result.removed_units == expected && result.final_calculation->minerals.demand == ( rating == 0 ? 1 : 0 ), "shortage changed wrapped distance, record ties, free allowance or current two-mineral cost" );
+				GT_ASSERT( base->GetProductionState()->minerals == 10 && base->GetProductionState()->baseline_minerals == 10
+					&& base->GetAccumulatedNutrients() == 13 && fixture.GameplayRandom() == before, "shortage changed stores/baselines/RNG" ); GT_OK();
+			} );
+			if ( !error.empty() ) { return error; }
+		}
+		return {};
+	} );
+	task->AddTest( "SMAC live upkeep growth recount can remove the staged newborn", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* game = fixture.Game(); game->AdvanceTurn( 2 ); auto* base = Populate( GSE_CALL, fixture, true, true );
+			game->GetMap()->GetTile( 4, 2 )->terraforming = 0;
+			fixture.ResourceState( []( auto& state ) { state.social.factions.front().current[2] = -4; } );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, scout ), scout, 0, std::vector<ProductionItem>{} } );
+			base->SetAccumulatedNutrients( 20 );
+			const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t ) { return game->GetUM()->GetUnitDef( "live-scout" ); }, SmacMoraleMode::Mode0 );
+			GT_ASSERT( result.completed_unit && result.removed_units == std::vector<size_t>({91,*result.completed_unit})
+				&& game->GetUM()->GetUnits().empty() && game->GetUM()->GetUnitRecordOrder().empty()
+				&& game->GetMap()->GetSmacWorkerKnowledge()->CopyData().units.empty(), "growth did not count and retire the newborn with its older paid home unit" );
+			GT_ASSERT( base->m_pops.size() == 2 && result.final_calculation->minerals.demand == 0
+				&& base->GetProductionState()->minerals == 0 && base->GetProductionState()->baseline_minerals == 0, "growth shortage reposted minerals or changed population" );
+			GT_ASSERT( !fixture.Snapshot().empty(), "growth shortage left unsavable authority" ); GT_OK();
 		} );
 	} );
 	task->AddTest( "SMAC live production commits actual Scout Former queue home and second-pass support", []( GSE*, context::Context* ) -> std::string {
@@ -496,7 +560,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, homed );
 				auto allocation = *base->GetSmacAllocation(); allocation.selected = 5;
 				base->PublishSmacAllocation( GSE_CALL, allocation, Roles() );
-				fixture.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } );
+				fixture.ResourceState( []( auto& state ) { state.social.factions.front().current.at( 2 ) = -4; } );
 				auto* unit = game->GetUM()->GetUnit( 91 );
 				auto context = base->GetSmacResourceContext(); context.drone_riots = true; base->SetSmacResourceContext( GSE_CALL, context );
 				game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );

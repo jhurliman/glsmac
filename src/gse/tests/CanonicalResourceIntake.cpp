@@ -129,7 +129,7 @@ void SupportedUnit( GSE_CALLABLE, ConventionalUnitFixture& fixture, Base* base, 
     if ( homed ) { record.home = ConventionalUnitState::Home::Base; record.home_base_id = base->m_id; }
     Terrain( game->GetMap()->GetTile( 6, 6 ) );
     um->SpawnConventionalUnit( GSE_CALL, 91, um->GetUnitDef( "resource-scout" ), base->m_owner, game->GetMap()->GetTile( 6, 6 ), record );
-    fixture.ResourceState( []( auto& state ) { state.social.factions.front().retained->at( 2 ) = -4; } );
+    fixture.ResourceState( []( auto& state ) { state.social.factions.front().current.at( 2 ) = -4; } );
 }
 void Callbacks( GSE_CALLABLE, ConventionalUnitFixture& fixture ) {
 	fixture.PrepareBaseCallbacks();

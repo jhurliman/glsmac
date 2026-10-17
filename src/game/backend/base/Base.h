@@ -112,6 +112,7 @@ public:
 		std::optional< size_t > completed_unit;
 		bool queue_advanced = false;
 		std::optional< SmacBaseResourceCalculation > final_calculation;
+		std::vector<size_t> removed_units; // shortage order; may include completed_unit
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
@@ -164,7 +165,7 @@ private:
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
 	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary, std::optional< size_t > population = {},
-		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr ) const;
+		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr, std::optional<int32_t> mineral_support = {} ) const;
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step );
@@ -185,7 +186,7 @@ private:
 		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {} );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
-		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr ) const;
+		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {} ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

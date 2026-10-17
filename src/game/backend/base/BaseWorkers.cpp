@@ -28,7 +28,7 @@ void Base::RecalculateSmacWorkers( GSE_CALLABLE, const SmacAllocationRoles& role
 	PublishSmacAllocation( GSE_CALL, CalculateSmacWorkers( *allocation, context, phase ), roles );
 }
 
-SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production ) const {
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support ) const {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( !candidate_production && m_production ) { candidate_production = &*m_production; }
 	Game::ResourceQueryPhase query_phase;
@@ -60,7 +60,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	// This query authenticates the complete current Unit/Base/map projection.
 	// It retains raw selected32 on Base; only availability is taken from the frame.
 	const auto availability = m_game->GetSmacWorkerAvailability( *this );
-	const int32_t mineral_support = m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
+	const int32_t mineral_support = candidate_support ? *candidate_support : m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
 	const auto& global = state->m_settings.global;
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() || !global.GetSmacTechnologyRules() ) {
 		THROW( "SMAC worker recalculation requires frozen resource/specialist/technology rules" );

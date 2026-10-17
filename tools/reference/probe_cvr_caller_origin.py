@@ -310,7 +310,12 @@ class CallerProbe:
             mutation=None, deny=None, deny_phase='A', budget=4000):
         require(0 <= frame < len(obj['flags']), 'domain: frame outside supplied array')
         require(obj['flags'][frame] & 0x80 == 0, 'domain: hidden frame')
-        require(Fraction(scale) > 0, 'domain: positive admission scale')
+        try:
+            scale_bytes = fbytes([scale])
+        except (OverflowError, struct.error) as error:
+            raise RuntimeError('domain: admission scale outside binary32') from error
+        scale_value = rationals(scale_bytes)[0]
+        require(scale_value > 0, 'domain: positive admission scale')
         require(len(obj['locations']) == 12 * len(obj['flags']) and len(obj['matrices']) == 36 * len(obj['flags']),
                 'domain: frame array extent')
         require(len(obj['flags']) <= 32, 'domain: frame array exceeds bounded arena')
@@ -324,7 +329,7 @@ class CallerProbe:
             (FLAGS, obj['flags'], 'supplied frame flags'), (LOCATIONS, obj['locations'], 'supplied frame locations'),
             (MATRICES, obj['matrices'], 'supplied frame matrices'), (GEOMETRY, header, 'simple flags-8 header'),
             (TRANSFORM, transform, 'supplied transform, not a default camera'), (TRANSLATION, translation, 'supplied translation'),
-            (SCALE, fbytes([scale]), 'supplied admission/footprint scale'),
+            (SCALE, scale_bytes, 'supplied admission/footprint scale'),
             (CAMERA + 0x40, fbytes([-100000, 100000]), 'supplied permissive depth bounds'),
             (CAMERA + 0x58, words(100000, 100000), 'supplied positive x/y extents'),
             (ESP + 0x5c, words(MODEL, CAMERA, 0), 'explicit loop ABI: model, camera, object index')]
@@ -351,7 +356,8 @@ class CallerProbe:
         actual_writes = [(int(access['address'], 16), access['bytes']) for access in report_a['memory_trace']
             if access['kind'] == 'write' and BASIS <= int(access['address'], 16) < COUNTERS + 8]
         require(actual_writes == expected_writes, 'basis global write order changed')
-        footprint = int(rationals(header[8:12])[0] * Fraction(scale) <= Fraction(1, 2))
+        footprint_scale = Fraction(scale) if mutation == 'unrounded-scale' else scale_value
+        footprint = int(rationals(header[8:12])[0] * footprint_scale <= Fraction(1, 2))
         require(report_a['checkpoint_bytes']['renderer_arguments'] == words(CONTEXT, GEOMETRY, ESP + 0x24,
             ESP + 0x30, CAMERA + 12, MODEL + 0x48, struct.unpack_from('<I', header, 8)[0], footprint).hex(), 'actual renderer argument mismatch')
         expected_calls = ['0x641e70', '0x641ee0', '0x652a50', '0x6420a0', '0x641bb0', '0x659800', '0x65a930'] + ['0x660678'] * 9
@@ -372,7 +378,8 @@ class CallerProbe:
         require(report_b['helper_calls'] == ['0x641e70', '0x641ee0'] + ['0x660678'] * 3, 'B call order changed')
         return {'name': name, 'frame': frame, 'frame_location_bytes': frame_location.hex(), 'frame_matrix_bytes': frame_matrix.hex(),
             'header_bytes': header.hex(), 'supplied_transform_bytes': transform.hex(), 'supplied_translation_bytes': translation.hex(),
-            'admission_scale': scale, 'footprint_argument': footprint, 'captured_matrix_bytes': a['matrix'].hex(),
+            'admission_scale': scale, 'admission_scale_bytes': scale_bytes.hex(),
+            'footprint_argument': footprint, 'captured_matrix_bytes': a['matrix'].hex(),
             'captured_location_bytes': a['location'].hex(), 'basis': a['basis'], 'origin_float_bytes': b['origin_float'].hex(),
             'origin': b['origin'], 'raster_arithmetic_policy': raster_domain(a['basis'], b['origin'], stream), 'A': report_a, 'B': report_b}
 
@@ -417,6 +424,14 @@ def main():
         transform[:24] + fbytes([16384, 0, 0]), translation, header, stream))
     for scale in (.125, .25, .5, 2):
         cases.append(probe.run('footprint-scale-' + str(scale), synthetic, 0, transform, translation, header, stream, scale))
+    unit_scalar_header = header[:8] + fbytes([1]) + header[12:]
+    for scale, expected_bits, footprint in ((.49999997, 0x3effffff, 1), (.49999999, 0x3f000000, 1),
+                                          (.50000001, 0x3f000000, 1), (.50000003, 0x3f000001, 0)):
+        case = probe.run('rounded-footprint-scale-' + str(scale), synthetic, 0, transform, translation,
+                         unit_scalar_header, stream, scale)
+        require(case['admission_scale_bytes'] == words(expected_bits).hex() and
+                case['footprint_argument'] == footprint, 'rounded footprint boundary mismatch')
+        cases.append(case)
     attached = dict(obj)
     attached['locations'] = b''.join(add(obj['locations'][i:i + 12], fbytes([-400, 200, 0]))
                                     for i in range(0, len(obj['locations']), 12))
@@ -433,7 +448,11 @@ def main():
             ('zero-scalar', {'header': header[:8] + words(0) + header[12:]}, 'positive scalar'),
             ('subnormal-store', {'transform': words(1) + words(0) * 8}, 'nonnormal'),
             ('inexact-extended', {'transform': fbytes([1, 2 ** -80, 1]) + transform[12:]}, 'inexact extended'),
-            ('zero-scale', {'scale': 0}, 'positive admission scale')]:
+            ('zero-scale', {'scale': 0}, 'positive admission scale'),
+            ('scale-rounded-zero', {'scale': 1e-100}, 'positive admission scale'),
+            ('scale-rounded-negative-zero', {'scale': -1e-100}, 'negative zero'),
+            ('nonfinite-scale', {'scale': float('inf')}, 'nonfinite'),
+            ('overflow-scale', {'scale': 1e100}, 'admission scale outside binary32')]:
         arguments = dict(obj=synthetic, frame=0, transform=transform, translation=translation, header=header, stream=stream)
         arguments.update(change)
         try:
@@ -469,6 +488,14 @@ def main():
         controls.append({'name': 'outside-original-admission', 'error': str(error)})
     else:
         raise RuntimeError('original admission did not leave permitted fragment')
+    try:
+        probe.run('negative-unrounded-scale', synthetic, 0, transform, translation,
+                  unit_scalar_header, stream, .50000001, mutation='unrounded-scale')
+    except RuntimeError as error:
+        require(str(error) == 'actual renderer argument mismatch', 'wrong scale control failure: ' + str(error))
+        controls.append({'name': 'unrounded-scale', 'error': str(error)})
+    else:
+        raise RuntimeError('unrounded scale oracle did not fail')
     report = {'schema': 1, 'executable_sha256': EXE_HASH, 'probe_sha256': sha(Path(__file__).read_bytes()),
         'imports_sha256': {name: sha(Path(__file__).with_name(name).read_bytes()) for name in
                            ('probe_scout_composition.py', 'probe_cvr_pixels.py', 'probe_cvr_basis.py')},

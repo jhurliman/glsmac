@@ -6,6 +6,7 @@
 #include "SmacGameplayRandomState.h"
 #include "SmacScoutCombat.h"
 #include "SmacEmptyGroundMovement.h"
+#include "SmacGroundEdgeCost.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Value.h"
@@ -91,6 +92,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
+		tests::AddSmacGroundEdgeCostTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddUnitRulesTXTLoaderTests( task );
 		tests::AddUnitDesignResolverTests( task );

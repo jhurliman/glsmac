@@ -230,3 +230,10 @@ CTest passes 8/8 in 47.90 seconds, leak-enabled sanitizer CTest 8/8 in 65.07 sec
 and Server.cpp passes the existing LLVM 15 correctness policy (one TU, zero
 failures, 3.46 seconds). Evidence is retained separately under
 `/home/jhurliman/src/glsmac-ready-lobby-handshake`.
+
+The follow-up source is `e65f385420088cc51fd4453c7be683c9a333fe95`;
+publication `7bc222389d1b1f94afeb7aea8d8b5fe698030925` applies it without source
+adaptation. Its actual older-ancestry CTest suite passes 6/6 in 29.54 seconds,
+and the full native/script tracking run passes in 20.14 seconds with no tracked
+leaks, including the new ready-lobby case and all 21 roster groups. This is
+separate publication evidence; the native-filter CLI remains absent there.

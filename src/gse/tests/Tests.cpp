@@ -2,6 +2,7 @@
 #include "Async.h"
 
 #include "Backend.h"
+#include "RosterRecords.h"
 #include "Buffer.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacRulesTXTLoader.h"
@@ -58,6 +59,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		tests::AddRosterRecordTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
 		tests::AddCvrGeometryReaderTests( task );

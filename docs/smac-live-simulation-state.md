@@ -3,8 +3,10 @@
 SMAC Game startup now owns an explicit simulation roster and its mutable
 technology state. This connects the existing [technology value](smac-runtime-technology-state.md)
 to the actual `create_world`/`start` consumer boundary and world download.
-It does not create conventional units, activate research upkeep, or implement
-custom Morgan/Spartan designs.
+The [startup design extension](smac-startup-design-state.md) now adds owned
+Morgan/Spartan designs and world V10. This earlier receipt documents the
+identity/technology V9 boundary; neither slice creates live conventional units
+or activates research upkeep.
 
 ## Admission and identity
 

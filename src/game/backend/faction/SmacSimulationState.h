@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SmacTechnologyState.h"
+#include "game/backend/unit/SmacStartupDesignState.h"
 #include "game/backend/RosterRecords.h"
 
 namespace game::backend::faction {
@@ -21,12 +22,13 @@ struct SmacSimulationState {
 	static constexpr size_t MAX_TEXT_BYTES = 32 * 1024;
 	std::vector< SmacSimulationParticipant > roster;
 	SmacTechnologyState technology;
-	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const;
+	unit::SmacStartupDesignState designs;
+	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;
 	const SmacSimulationParticipant* FindSlot( size_t slot ) const;
-	types::Buffer Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const;
+	types::Buffer Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	static SmacSimulationState Deserialize( const std::string& wire, const settings::SmacTechnologyRules& technologies,
-		const settings::SmacFactionStartupRules& profiles );
+		const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units );
 };
 
 }

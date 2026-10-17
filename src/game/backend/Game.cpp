@@ -682,6 +682,15 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_startup_designs",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+				try { return CopyStartupDesigns( GSE_CALL, player ); }
+				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
+			} )
+		},
+		{
 			"get_turn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );

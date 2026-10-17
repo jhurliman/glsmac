@@ -193,225 +193,103 @@ directives, so those require review; there is no blanket suppression baseline.
 Shared-header changes continue to trigger a full production scan rather than
 using the single-file option to narrow the required check.
 
-## Current status
+## Current status — 2026-10-17
 
-M0 and the prerequisites for M1 are in progress. No milestone is complete.
-The later checkpoint at `f4f79581` passes Windows and leak-enabled Linux CTest
-8/8, actual sanitized Engine shutdown in both thread modes, and a 300-source
-correctness scan. Its [validation record](validation/native-retirement-2026-10-16.md)
-also preserves an incomplete rendered retry caused by a stuck UI-control helper.
-The earlier [coordinator check](validation/windows-coordinator-2026-10-16.md)
-successfully restarted and closed the Windows game at `12a58670`.
-The reviewed SDL/main-thread foundation landed in fork PR #1 at
-[`428cf01f7a9a13b70dd29ff505e9e5e7aec1f496`](https://github.com/jhurliman/glsmac/commit/428cf01f7a9a13b70dd29ff505e9e5e7aec1f496)
-as a development baseline. Native macOS build, tests, map interaction and
-restart now pass on the pinned integration described in the
-[Mac validation report](https://github.com/jhurliman/glsmac/blob/19d01b9afa306176f41779355263441a7a1c7a35/docs/validation/macos-native-2026-10-16.md); shutdown and
-hardware Linux checks remain open. Subsequent implementation PRs are still being reviewed and
-integrated. The integration checkout now exercises
-real backend entities, event serialization, base snapshots and their script
-bindings without the original assets. On October 16, 2026, integration commit
-[`dc546b5b`](https://github.com/jhurliman/glsmac/commit/dc546b5bdca12a727fe75ce39932dbc6b12ebfe5)
-passed Linux and Windows CTest, and the selected correctness scan of all 284
-production translation units reported zero failures. Commands, timings and the
-separate sanitizer retry are in the [validation record](validation/windows-smoke-2026-10-16.md#headless-checks).
-These dated checks establish infrastructure behavior at that commit, not
-gameplay fidelity or the status of later changes.
+M0 and M1 remain in progress. There is no complete conquest match, and no
+milestone is declared complete. The integration branch combines tested slices
+before their smaller PRs land; its contents must not be confused with main.
 
-The [Windows smoke test on October 16](validation/windows-smoke-2026-10-16.md)
-rendered two quickstart worlds in one process, opened a base screen, advanced a
-turn and exited normally. It also records visible rendering and input follow-ups.
-The later Mac check confirms map interaction, base inspection, turn advancement
-and a second world in the same process. Hardware Linux validation, long-running
-sessions, complete save/reload and multiplayer convergence remain open.
+The latest [production-profile receipt](validation/production-profile-2026-10-17.md)
+records Windows and leak-enabled Linux CTest 8/8 at `23dcaacf`, plus native
+macOS arm64 CTest 8/8 at `8923374f`. Focused Windows/Linux tracked tests cover
+the latter revision's effective SSE rounding guard. On honey, the user confirmed
+map interaction, base inspection, a turn, a new world and close at `5cd78418`.
+A later read-only check confirmed exit 0 and no tracked memory/OpenGL leaks.
+The screenshots show Morgan Industries before and University Base after restart.
+The delay remains untimed; see the [Mac receipt](validation/macos-native-2026-10-16.md).
 
-The subsequent integration contains authoritative worker coordinates and reverse
-claims, optimistic-event wire preservation and acknowledgement bookkeeping,
-exact population rollback, and explicit pre-initialization ruleset selection.
-Several of these slices have landed; the remaining work continues through
-separate reviewed PRs. The
-verified SMAC base-square calculator and strict RESOURCEINFO parser are pure
-components; the live resource callback has not been switched to them.
+The [preceding receipt](validation/faction-transform-2026-10-17.md) retains an
+unresolved Windows native-filter child timeout followed by passing unchanged
+runs. Later successes do not identify its cause. The separate aggregate test
+allowance correction does not explain it. Hardware Linux interaction, long runs,
+complete saves/replay and multiplayer convergence remain open.
 
-The [follow-up validation record](validation/rulesets-yields-2026-10-16.md)
-pins the combined source, successful ruleset and signed-yield Windows smoke
-tests, later headless checks, and the tracked GUI failures and subsequent
-functional passes. The tracked two-world run at `705cc939` passed worker
-removal/restoration, map replacement and minimap rendering, then exited 0 with
-empty stderr and no tracked memory/OpenGL leaks. Earlier retained allocations
-and failures remain recorded. At `68081411`, Windows CTest passed 8/8 and Linux
-ASan/UBSan/LSan CTest passed 8/8 with leak detection enabled after repairing
-normal switch-scope ownership. These are bounded checks, not a soak or full
-save/reload result. The async-cancellation defect matching an older PR head's
-Windows timeout now has a deterministic regression and a focused repair in
-PR #69. Integration `0d98cde8` passes Windows and leak-enabled Linux CTest 8/8;
-the original hosted timeout and lack of its exact interleaving remain recorded.
-Focused UUID and mesh allocation checks add approximately one second each
-locally to CTest. Full allocation-tracked suites and interactive debugging
-remain separate from the ordinary development loop.
+### Implemented foundations
 
-The next implementation slices are:
+Worker claims and population/event rollback have real backend regressions.
+Independent production item/mineral balances and switching baselines landed in
+[PR #103](https://github.com/jhurliman/glsmac/pull/103). New bases remain
+unconfigured. The mineral-cost calculator landed in
+[#98](https://github.com/jhurliman/glsmac/pull/98), and merged
+[#108](https://github.com/jhurliman/glsmac/pull/108) calculates switching against
+independent baselines and matches 4,594 retained original scenarios. Neither
+calculator chooses eligible items or schedules a turn.
 
-1. Carry reviewed RNG continuation #71 and turn-restoration #74 through their
-   prerequisite stack. The exception-message repair #72 has merged. The real
-   initialization-error test exposed the prior leak; integration
-   `82222d37` now passes Windows and leak-enabled Linux CTest 8/8. The versioned
-   state is validated before map allocation and installed after reconstruction;
-   ordinary initialization retains its draw ordering. The timer repair in #69
-   now precedes the unit-table stack and passes current-head cross-platform
-   checks. PR #74 restores turn metadata without replaying gameplay hooks and
-   initializes the minimap from cached status. Integration `519a0bd7` passes
-   Linux sanitizers; a first Windows timeout and subsequent passing retry are
-   retained in the validation record. PR #77 now persists player completion at
-   the world-snapshot boundary, with canonical roster/lifetime checks and
-   owner-thread rejection of a changed roster. Its combined integration
-   `a16fa30b` passes Windows and leak-enabled Linux CTest 8/8. The focused
-   publication initially exposed a missing Boolean-decoder prerequisite (#24);
-   that commit is included and all five focused CTests now pass. Canonical
-   player/faction links and safe retirement of queued session work are next;
-   full saves, event catch-up and future host/client lockstep remain separate.
-   PR #77 is held for review findings: concurrent roster mutation can race
-   completion validation/commit, MT reset can overtake queued failure handling,
-   and parked failure currently dispatches ordinary MT requests too early.
-   Passing sequential tests do not establish exclusion for those overlaps.
-   The separate loader repair in #78 prevents reset from deleting a Map inside
-   its progress callback. It passes Windows CTest 8/8 and focused Linux CTest
-   5/5; a 297-unit correctness scan is clean. It does not fix those concurrent
-   snapshot races. PR #79 pairs decoded Player allocation with State's tracked
-   deletion. PR #80 defers connection events until native map processing returns.
-   PR #81 captures callback identity before extraction and retires old queued
-   work across reset, including event root handoff and copied animation IDs.
-   Integration `078a72fb` passes Windows and leak-enabled Linux CTest 8/8 and
-   a fresh 297-unit correctness scan. PR #86 now supplies owned world admission
-   tickets, execution-time request validation, frontend request retirement and
-   the two-step reset barrier; its integration passes Windows CTest 8/8 and a
-   fresh 298-unit correctness scan. PR #88's public reset polling implementation
-   passes native same-thread regressions, removing the old self-wait. PR #87's
-   early initialization failure cleanup handles absent maps and throwing error
-   hooks; #89 releases untransferred startup presentation exactly once. Payload
-   integration `cd2613d1` passes Windows and leak-enabled Linux CTest 8/8 and a
-   fresh 298-unit correctness scan. The separate Engine teardown repair at
-   `2b7ca61c` (published separately in #90) keeps backend Game alive ahead of
-   script-runtime destruction in single-thread mode; actual asset-free Engine
-   tests pass in both modes, along
-   with Windows and leak-enabled Linux CTest 8/8. These results are recorded in
-   the validation ledger and do not establish rendered Mac shutdown.
-   PR #97 adds owned startup checkpoints across admission, configuration,
-   captured ingress, Start and Failure, with native execution parked through
-   each Running owner operation. PR #99 adds native reset/collector exclusion,
-   keeping transport waits and presentation destruction outside its new guard.
-   Both have tested narrow publication stacks as well as combined validation.
-   They remain pending GitHub review; #77's findings are not marked resolved.
-   PR #102 now keeps map acquisition private until complete publication and
-   makes rooted empty-map traversal safe. PR #106 excludes collection during
-   native faction replacement. Both have controlled overlap regressions;
-   Player/Slot/Connection mutation and canonical roster ownership remain open.
-   Queued cancellation alone is insufficient.
-   The script-entry guard in #82 has user-confirmed rendered restart evidence
-   on the pinned Mac integration. A later read-only follow-up confirmed exit 0
-   and a clean tracked shutdown for that process; see the
-   [native Mac receipt](validation/macos-native-2026-10-16.md).
-   See the [pinned roster ownership plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md) for the
-   canonical-faction work's native lifetime prerequisites.
-2. Resolve conventional-unit content from explicit component tables. Weapon,
-   defense, reactor, chassis and counted predefined-design parsers are queued
-   in PRs #59, #60, #62 and #65. PR #67 creates owned metadata by exact
-   component keys, preserving row identity and rejecting ambiguous or mismatched
-   ruleset references. PR #94 adds owned ability-table metadata without
-   interpreting its flags or cost encoding. Reactor selection, ability-bit mapping, conventional
-   design state, CVR rendering and gameplay commands remain separate work.
-   The local asset inventory contains 140 CVR containers. Merged PR #73 reads
-   their observed envelopes. Merged PR #75 decodes owned scene/object/frame records;
-   all installed files pass both probes. Merged PR #83 decodes owned raw geometry
-   records for 438 payloads and explicitly rejects two unsupported variants;
-   all seven focused Windows tracking tests pass. Original loader, projection,
-   palette and rendering semantics remain unverified. The next steps are in the
-   [pinned rendering plan](https://github.com/jhurliman/glsmac/blob/e022b688e4206ee9848050d816329dd125ade4ca/docs/conventional-unit-rendering-plan.md).
-   The existing native
-   sprite sheet is not conventional-unit art; source model names alone do not
-   establish design-to-model mappings. Merged PR #84 adds a bounded original
-   Scout selector probe, resolving the observed component choices and frame
-   selection separately from rendering semantics. Later bounded original
-   composition execution (#91) and a pure frame assembler (#92) are integrated at
-   `65000147`; the assembler matches 30 installed-input cases containing 1,755
-   records bitwise. Six other positive original cases use synthetic
-   prefix/capacity inputs and are reported separately. This does not render a
-   conventional unit or establish palette, projection and draw semantics.
-   PR #93 now executes the bounded original indexed draw path; #95's pure
-   rasterizer matches 42 original cases, including 21,231 geometry records and
-   11,414 successful samples. Supplied basis, origin and lookup tables remain
-   explicit. Original basis conversion (#96) and its integer-only implementation
-   (#100) match 41 cases and 369 outputs. PR #101 supplies bounded original
-   caller/origin evidence; #104's checked dyadic calculation matches its 25
-   cases, 375 binary32 words and 300 integer outputs. Explicit camera/frame/scalar
-   inputs still require real callers. Lighting/RGB preparation remains separate evidence
-   work; none of these helpers is a live conventional-unit rendering path.
-   Do not turn the current native-unit movement assumptions into standard-unit
-   behavior or invent reactor/cost defaults.
-3. Review #70's evaluating-base route. Worker intake, scoring and base-screen
-   queries now pass the canonical base and owner while preserving legacy calls.
-   Real work/unwork events and restored identities pass the regression; Windows
-   and leak-enabled Linux CTest each pass 8/8 at `bf00f411`. A current-script
-   Windows smoke at `519a0bd7` verifies visible worker intake changes, one
-   ordinary turn and clean tracked shutdown; it does not establish yield parity.
-   Resource bonus, nutrient, mineral and energy kernels now have original-routine
-   comparisons; the energy kernel matches 3,122 direct checks. A native bridge,
-   complete frozen rules profile and authoritative terrain, technology, social,
-   capability and phase-specific event producers precede normal-game activation.
-   Independent PR #98 calculates mineral cost factors from explicit resolved
-   inputs and matches 2,021 retained original factor outputs; it does not compute
-   ranking/dominance or schedule construction. PR #103 now stores optional
-   current item/minerals and independent retool baseline item/minerals in V4
-   Base snapshots, with detached script access and optimistic rollback tests.
-   It is integrated but still awaiting the GitHub review gate. Production
-   switching is the next arithmetic slice; initial target selection, posting,
-   completion, ordered queues and UI activation follow as validated changes.
+[#111](https://github.com/jhurliman/glsmac/pull/111) freezes four SMAC production
+rule values and all 71 facility records in host settings. A separate V4
+world-header change binds that profile before map allocation; its source
+validation is recorded in [world snapshot rules](world-snapshot-rules.md).
+It is being prepared as a focused PR. SMAX has no SMAC numeric profile.
+Technology definitions and actual faction/design startup producers precede
+production activation.
 
-World downloads are now bound to the frozen host profile before map allocation,
-and faction snapshots preserve flags and ordered land/water names. Those
-changes and canonical unit snapshots are queued in PRs #47, #48 and #53;
-they do not complete disk savegames, whole-state rollback or network convergence.
-The native test exit-code gate landed in PR #3 after current-head cross-platform
-checks and Codex review. Population-removal bookkeeping, OpenGL context checks
-and boolean operand evaluation have also landed through that gate. The remaining
-stack continues through the same review and validation process.
+The wider lifetime stack preserves entity state, RNG continuation and turn
+metadata, stages map publication, and guards specific native replacement/cleanup
+paths from collection. Terminal-connection cleanup is
+[#110](https://github.com/jhurliman/glsmac/pull/110). These bounded fixes do not
+settle canonical Player/Slot/Connection ownership. Concurrent roster and
+failure/reset findings holding #77 remain open; sequential round-trips do not
+prove exclusion. Follow the
+[pinned roster plan](https://github.com/jhurliman/glsmac/blob/fa939625bc87de69d193c8e732e883807e8d3c93/docs/player-roster-ownership-plan.md).
+World downloads are still not disk savegames or deterministic replay.
 
-The checkpoint work has reviewed RNG-continuation and side-effect-free turn
-restoration candidates, with persisted completion now submitted in #77.
-Canonical player/faction links and turn checksums remain. The current
-world-download path is not a disk-save or deterministic replay implementation.
-Production now has authoritative current-item/mineral/baseline storage in the
-integration; ordinary bases remain unconfigured and the interface still contains
-placeholder progress. Complete the producers, execution and command integration in
-small slices alongside conventional units and founding before claiming the M2
-conquest loop.
+Conventional units have parsed component/design metadata and verified bounded
+CVR decoding, composition, projection and raster calculations. Frame assembly
+matches 30 installed-input cases and 1,755 records. The corrected explicit
+transform calculator matches 44 cases, 660 binary32 words and 528 integers;
+indexed rasterization matches 42 cases. Original lighting selection has
+separate evidence in [#109](https://github.com/jhurliman/glsmac/pull/109).
+Actual conventional-unit rendering, caller inputs, gameplay definitions and
+commands remain unfinished. Component results do not establish visual fidelity.
 
-Live center yields follow only after the adapter can supply authoritative
-economy, facilities, terrain/bonus, faction and phase-specific event inputs.
-The calculator's resolved event flags are not a replacement for persistent
-event state. Original SMAC evidence must not silently become SMAX behavior.
+### Next three implementation slices
 
-The original installation was found on aleph0 and SMAX PRACX reached setup, but
-full-game rule observations remain blocked by the reproduced startup/base-creation
-crash in the reference notes. Original executable research proceeds separately;
-keep its evidence level distinct from full-game observations. See each PR's
-reviewed commit and checks for current validation, rather than treating this
-plan as proof that queued work has landed.
+1. Finish publication of the production profile and V4 world binding. Preserve
+   strict early client rejection and actual body-restoration checks. Every
+   changed PR head needs its own GitHub review and relevant checks.
+2. Import the real SMAC technology catalog and classify facility prerequisites
+   against it. Preserve identities and raw priority positions. Distinguish no
+   prerequisite, disabled definitions, known technology and unavailable
+   references; this is not a buildability decision. Synchronize host settings
+   without inventing technology ownership or social ratings.
+3. Establish actual faction and predefined-design startup producers, then connect
+   founding to base creation. Inputs include owned technologies, selected social
+   models/faction modifiers, current ratings, separately retained founding
+   SUPPORT, active designs and cached costs. Retain original difficulty and
+   world-size identities, and process initial creation before FirstTurn advances
+   the counter. Connect support/intake, posting, completion and queues afterward.
 
-The [October 17 integration receipt](validation/faction-transform-2026-10-17.md)
-records Linux sanitizer 8/8 and unchanged Windows follow-up 8/8 at `e52da37f`.
-It retains the earlier Windows native-filter child timeout as an unresolved
-intermittent failure. The corrected aggregate test allowance is a distinct
-change (#105), not a fix for that child timeout. No M0/M1 completion or playable
-conquest match is claimed by these results.
+Reverse engineering is prioritized around those consumers. New bounded founding
+and upkeep compositions execute original target selection, resource/citizen
+processing, completion and baseline writers with explicit supplied boundaries.
+They establish ordering, including resource recalculation after a facility
+grant, but do not prove normal startup selections or a whole game turn. The
+first base → Scout/Former/Colony → second base loop still needs real producers,
+legal commands and persistence checks. Native lifetime repairs and conventional
+rendering continue in parallel. SMAC evidence must never silently become SMAX rules.
 
-GitHub Codex review reported quota failures on #85, #87, #88 and later new
-PRs through #106 on October 16.
-PR #86 did receive a clean receipt for its older `43a14890bb` head; that does
-not review its replacement head after prerequisites were merged forward.
-The new #81, #82, #86 and #87 heads still require their own completed reviews.
-New and revised PR heads remain unmerged until their required reviews complete.
-Local implementation, independent review and tests continue; neither a review
-request nor local success substitutes for that GitHub gate. No retry is planned
-for an unchanged head while the reported review quota remains unchanged. Each
-new PR or materially revised head receives its own review request.
+### Review and evidence discipline
+
+GitHub Codex review became available again on October 17 after the retained
+October 16 quota failures. New reviews identified x87-only rounding validation,
+classification before binary32 underflow rounding, and case-sensitive asset
+lookup. Each was fixed, checked against a reproducing regression, and received
+a clean review on its corrected head. Dependency merges that change the head
+receive another review. Each PR owns its current review/check evidence; a
+request or local success is not a completed GitHub review.
+
+Production, research, terraforming, conventional combat, AI, diplomacy, victories
+and the expansion remain substantial work. Original executable evidence is
+tracked separately from interactive PRACX observations. Original assets,
+binaries and the researcher's uncommitted files are excluded from implementation
+PRs. Golden 1.0.0 still requires every release gate above.

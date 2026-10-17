@@ -21,6 +21,8 @@ public:
 	const types::Vec2< ui::coord_t > FindLargestArea() const;
 
 	void Update( ui::dom::Widget* const widget, const void* const data ) override;
+	// Consumes a fresh capture response; Update continues to borrow cached data.
+	void UpdateCapture( types::texture::Texture* texture );
 
 	void SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom );
 

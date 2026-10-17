@@ -433,7 +433,7 @@ void Game::Iterate() {
 
 		auto minimap_texture = GetMinimapTextureResult();
 		if ( minimap_texture ) {
-			m_widgets.Minimap->Update( nullptr, minimap_texture );
+			m_widgets.Minimap->UpdateCapture( minimap_texture );
 		}
 
 		bool is_camera_position_updated = false;

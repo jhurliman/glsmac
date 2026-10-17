@@ -1,6 +1,9 @@
 #include "Settings.h"
 
 #include "util/FS.h"
+#include "loader/txt/SmacRulesTXTLoader.h"
+
+#include <limits>
 
 #include "gse/value/Float.h"
 #include "gse/value/Ptr.h"
@@ -60,6 +63,7 @@ void MapSettings::Deserialize( types::Buffer buf ) {
 	erosive_forces = buf.ReadFloat();
 	native_lifeforms = buf.ReadFloat();
 	cloud_cover = buf.ReadFloat();
+	if ( buf.lenr != buf.lenw ) { THROW( "Unexpected fields in map settings" ); }
 }
 
 void GlobalSettings::Initialize() {
@@ -84,11 +88,31 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 		THROW( "Gameplay ruleset is locked; return to the main menu to start a new game" );
 	}
 	m_ruleset = selected;
+	m_smac_base_square_rules.reset();
+}
+
+void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
+	if ( m_ruleset_locked ) { return; } // Already frozen for this session.
+	if ( m_ruleset == RULESET_UNSELECTED ) { THROW( "Select a gameplay ruleset before starting a game" ); }
+	std::optional< resource::smac::BaseSquareRules > parsed;
+	if ( m_ruleset == RULESET_SMAC ) {
+		parsed = loader::txt::SmacRulesTXTLoader::ParseBaseSquareRules( read_source( "alpha.txt" ) );
+	}
+	// Only publish after file reading and all parsing succeeded.
+	m_smac_base_square_rules = parsed;
+	LockRuleset();
+}
+
+const std::optional< resource::smac::BaseSquareRules >& GlobalSettings::GetSmacBaseSquareRules() const {
+	return m_smac_base_square_rules;
 }
 
 void GlobalSettings::LockRuleset() {
 	if ( m_ruleset == RULESET_UNSELECTED ) {
 		THROW( "Select a gameplay ruleset before starting a game" );
+	}
+	if ( m_ruleset == RULESET_SMAC && !m_smac_base_square_rules ) {
+		THROW( "SMAC base-square rules have not been loaded" );
 	}
 	m_ruleset_locked = true;
 }
@@ -96,6 +120,7 @@ void GlobalSettings::LockRuleset() {
 void GlobalSettings::ResetRuleset() {
 	m_ruleset = RULESET_UNSELECTED;
 	m_ruleset_locked = false;
+	m_smac_base_square_rules.reset();
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
@@ -116,9 +141,18 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( m_ruleset == RULESET_UNSELECTED ) {
 		THROW( "Cannot serialize global settings without a gameplay ruleset" );
 	}
+	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_base_square_rules.has_value() ) {
+		THROW( "Gameplay ruleset and SMAC base-square rules do not match" );
+	}
 	// The integer prefix rejects the old string-first format in both directions.
-	buf.WriteInt( 1 );
+	buf.WriteInt( 2 );
 	buf.WriteString( GetRulesetId() );
+	buf.WriteBool( m_smac_base_square_rules.has_value() );
+	if ( m_smac_base_square_rules ) {
+		for ( const auto& row : { m_smac_base_square_rules->base_square, m_smac_base_square_rules->bonus_square, m_smac_base_square_rules->recycling } ) {
+			for ( const auto value : row ) { buf.WriteInt( value ); }
+		}
+	}
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
@@ -127,22 +161,57 @@ const types::Buffer GlobalSettings::Serialize() const {
 	return buf;
 }
 
+static bool SameSmacRules( const std::optional< resource::smac::BaseSquareRules >& a, const std::optional< resource::smac::BaseSquareRules >& b ) {
+	return a.has_value() == b.has_value() && ( !a || ( a->base_square == b->base_square && a->bonus_square == b->bonus_square && a->recycling == b->recycling ) );
+}
+
 void GlobalSettings::Deserialize( types::Buffer buf ) {
-	if ( buf.ReadInt() != 1 ) {
-		THROW( "Unsupported global settings format (expected version 1)" );
+	if ( buf.ReadInt() != 2 ) {
+		THROW( "Unsupported global settings format (expected version 2)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
+	const auto has_smac_rules = buf.ReadBool();
+	if ( ( ruleset == RULESET_SMAC ) != has_smac_rules ) {
+		THROW( "Gameplay ruleset and SMAC base-square rules do not match" );
+	}
+	std::optional< resource::smac::BaseSquareRules > parsed;
+	if ( has_smac_rules ) {
+		std::array< resource::smac::RuleTriple, 3 > rows;
+		for ( auto& row : rows ) {
+			for ( auto& field : row ) {
+				const auto value = buf.ReadInt();
+				if ( value < std::numeric_limits< int32_t >::min() || value > std::numeric_limits< int32_t >::max() ) {
+					THROW( "SMAC base-square rule is outside signed int32 range" );
+				}
+				field = static_cast< int32_t >( value );
+			}
+		}
+		parsed.emplace( rows[ 0 ], rows[ 1 ], rows[ 2 ] );
+	}
 	if ( m_ruleset_locked && m_ruleset != ruleset ) {
 		THROW( "Host changed the gameplay ruleset of an initialized session" );
 	}
-	map.Deserialize( buf.ReadString() );
-	rules.Deserialize( buf.ReadString() );
-	difficulty_level = buf.ReadInt();
-	game_name = buf.ReadString();
+	if ( m_ruleset_locked && !SameSmacRules( m_smac_base_square_rules, parsed ) ) {
+		THROW( "Host changed the numeric rules of an initialized session" );
+	}
+	MapSettings next_map;
+	next_map.Deserialize( buf.ReadString() );
+	const auto rules_data = buf.ReadString();
+	// Default rules currently serialize no fields; V2 must not silently drop
+	// unknown payload bytes. A future rules format requires an explicit version.
+	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
+	const auto next_difficulty = buf.ReadInt();
+	const auto next_name = buf.ReadString();
 	if ( buf.lenr != buf.lenw ) {
 		THROW( "Unexpected fields in global settings" );
 	}
+	// Parsing and identity validation above cannot partially change live data.
+	map = next_map;
+	rules.Deserialize( rules_data );
+	difficulty_level = next_difficulty;
+	game_name = next_name;
 	m_ruleset = ruleset;
+	m_smac_base_square_rules = parsed;
 	m_ruleset_locked = true;
 }
 
@@ -215,6 +284,14 @@ WRAPIMPL_BEGIN( Settings )
 			},
 		};
 WRAPIMPL_END_PTR()
+
+void Settings::PrepareRuleset( const GlobalSettings::RulesSource& read_source ) {
+	if ( local.network_role == LocalSettings::NR_CLIENT ) {
+		// Joining accepts the host's identity and values, never a local rules file.
+		global.ResetRuleset();
+	}
+	else { global.InitializeHostRules( read_source ); }
+}
 
 const types::Buffer Settings::Serialize() const {
 	types::Buffer buf;

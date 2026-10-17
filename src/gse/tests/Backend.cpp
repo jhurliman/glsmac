@@ -2503,6 +2503,19 @@ public:
                 && std::filesystem::equivalent(completed_path,path),"save completion was missing, repeated, or delivered off the UI owner");
             GT_OK();
         });if(!notify.empty()){return notify;}
+        const auto failed_request=WithScriptValues([&](GSE_CALLABLE)->std::string{
+            request_id=static_cast<value::Int*>(save_call->Run(GSE_CALL,{VALUE(value::String,,path+".invalid")}))->value;
+            GT_OK();
+        });if(!failed_request.empty()){return failed_request;}
+        std::thread failing_backend([&]{try{m_game.Iterate();}catch(...){worker_failure=std::current_exception();}});failing_backend.join();
+        if(worker_failure){std::rethrow_exception(worker_failure);}ProcessAccumulations();
+        const auto failure_notification=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+            frontend->PollCampaignSave();frontend->PollCampaignSave();
+            GT_ASSERT(completions==2 && completed_path.empty() && !completed_error.empty()
+                && HasActiveAdmission(ticket) && m_game.IsRunning()
+                && campaign::Read(path).world==expected,"save error retired the campaign, damaged the file, or lost its one completion");
+            GT_OK();
+        });if(!failure_notification.empty()){return failure_notification;}
         // A queued owner save must lose authority on reset before the callback
         // is drained. It must not write or notify a replacement session.
         m_game.QueueCampaignSave(session,cancelled_path);
@@ -2512,7 +2525,7 @@ public:
         const auto reset=WithScriptValues([&](GSE_CALLABLE)->std::string{ResetRequest();m_state->SetGame(&m_game);GT_OK();});
         if(!reset.empty()){return reset;}ProcessAccumulations();
         GT_ASSERT(!std::filesystem::exists(cancelled_path) && !m_game.TakeCampaignSaveResult(ticket)
-            && completions==1,"retired save wrote a file or delivered old completion");
+            && completions==2,"retired save wrote a file or delivered old completion");
         return WithScriptValues([&](GSE_CALLABLE)->std::string{
             bool rejected=false;try{save_call->Run(GSE_CALL,{VALUE(value::String,,cancelled_path)});}catch(const gse::Exception&){rejected=true;}
             GT_ASSERT(rejected,"retired save callable acquired a replacement session");GT_OK();

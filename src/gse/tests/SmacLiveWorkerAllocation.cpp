@@ -23,6 +23,7 @@
 #include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/FrontendRequest.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
@@ -129,6 +130,28 @@ void RecalculateViaWrapper( GSE_CALLABLE, Base* base ) {
 	value::array_elements_t specialists; for ( const auto& role : Roles().specialists ) { specialists.push_back( VALUE( value::String,, role ) ); }
 	Call( GSE_CALL, static_cast< value::Object* >( base->Wrap( GSE_CALL ) ), "recalculate_smac_workers",
 		{ VALUE( value::String,, Roles().worker ), VALUE( value::Array,, specialists ) } );
+}
+std::string SelectionSource( const std::string& filename ) {
+	auto source = UpkeepSource( filename ); if ( filename != "alpha.txt" ) { return source; }
+	std::istringstream input( source ); std::string line, section, output; size_t row = 0;
+	while ( std::getline( input, line ) ) {
+		if ( !line.empty() && line[ 0 ] == '#' ) { section = line; row = 0; }
+		else { ++row; if ( section == "#RULES" && row >= 43 && row <= 45 ) {
+			line.replace( 0, line.find( ',' ), row == 43 ? "50" : row == 44 ? "2" : "10" );
+		} }
+		output += line + '\n';
+	} return output;
+}
+void SelectionPresentations( ConventionalUnitFixture& fixture ) {
+	using namespace game::backend::unit;
+	auto* um = fixture.Game()->GetUM(); auto* morale = um->GetMoraleSet( "live-morale" );
+	um->DefineUnit( new StaticDef( "choice-scout", morale, "Scout", MT_LAND, 0,
+		new CvrScoutRender( 2, 0, 100, 100, { 1, 1 }, { 128, 128 }, CvrScoutRender::Composition::InitializedScout ) ) );
+	um->DefineUnit( new StaticDef( "choice-rover", morale, "Rover", MT_LAND, 0,
+		new CvrScoutRender( 2, 0, 100, 100, { 1, 1 }, { 128, 128 }, CvrScoutRender::Composition::SpartanRover ) ) );
+	um->DefineUnit( new StaticDef( "choice-former", morale, "Former", MT_LAND, 0, new FormerMarkerRender() ) );
+	um->DefineUnit( new StaticDef( "choice-colony", morale, "Colony", MT_LAND, 0, new ColonyMarkerRender() ) );
+	fixture.ProductionPresentations( { "choice-scout", "choice-rover", "choice-former", "choice-colony" } );
 }
 }
 
@@ -269,6 +292,93 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(despawns==1,"existing Unit did not emit one despawn"); GT_OK();
         });
     });
+	task->AddTest( "SMAC production picker selects Former and Colony through real events and upkeep", []( GSE*, context::Context* ) -> std::string {
+		for ( const int target_id : { 1, 0 } ) {
+			ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
+			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+				auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 0, 1, 2 );
+				game->GetMap()->GetTile( 3, 1 )->terraforming = TERRAFORMING_FOREST;
+				SelectionPresentations( fixture ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+				const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+				const auto target = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, target_id );
+				base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, target ) - 5,
+					scout, 0, std::vector< ProductionItem >{ scout } } ); base->SetAccumulatedNutrients( 0 );
+				const auto original = *base->GetProductionState(); const auto random = fixture.GameplayRandom(); const auto saved = fixture.Snapshot();
+				auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_production_selection" ) );
+				auto* picker = static_cast< value::Callable* >( setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ) } ) );
+				const auto click = [ & ]( const char* action ) { return static_cast< value::Bool* >( picker->Run( GSE_CALL,
+					{ VALUE( value::Int,, target_id ), VALUE( value::String,, action ) } ) )->value; };
+				GT_ASSERT( click( "open" ) && fixture.Snapshot() == saved, "picker query changed authoritative state" );
+				GT_ASSERT( !click( "cancel" ) && *base->GetProductionState() == original, "picker cancel changed production" );
+				click( "open" ); GT_ASSERT( !click( "ok" ) && *base->GetProductionState() == original, "UI selection applied before event dispatch" );
+				fixture.DrainEvents();
+				const auto selected = *base->GetProductionState();
+				GT_ASSERT( selected.current_item == target && selected.minerals == original.minerals && selected.baseline_item == original.baseline_item
+					&& selected.baseline_minerals == original.baseline_minerals && selected.queue == original.queue
+					&& fixture.GameplayRandom() == random, "selection changed baselines, queue, minerals or RNG" );
+				const auto result = base->ProcessSmacUpkeep( GSE_CALL, Roles(), [ & ]( int32_t id ) {
+					return game->ResolveSmacProductionPresentation( base->m_owner, id ); }, unit::SmacMoraleMode::Mode0 );
+				GT_ASSERT( result.completed_unit && game->GetUM()->GetUnit( *result.completed_unit )->Conventional().design_id == target_id
+					&& game->GetUM()->GetUnit( *result.completed_unit )->Conventional().home_base_id == base->m_id
+					&& base->GetProductionState()->current_item == scout && base->GetProductionState()->queue->empty(),
+					"chosen unit did not manufacture through actual upkeep and saved queue" ); GT_OK();
+			} ); GT_ASSERT( error.empty(), "production picker completion: " + error );
+		} GT_OK();
+	} );
+	task->AddTest( "SMAC production picker confirms actual loss and rejects stale or invalid commands atomically", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureProduction( SelectionSource, "GAIANS" );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false ); SelectionPresentations( fixture );
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( false, true, 128, 64 ) );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, 30, scout, 30, std::vector< ProductionItem >{} } );
+			const auto original = *base->GetProductionState(); const auto random = fixture.GameplayRandom();
+			auto* setup = static_cast< value::Callable* >( fixture.Script( GSE_CALL, "./GLSMAC_data/tests/_base_production_selection" ) );
+			auto* picker = static_cast< value::Callable* >( setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ), base->Wrap( GSE_CALL ) } ) );
+			const auto click = [ & ]( const char* action ) { return static_cast< value::Bool* >( picker->Run( GSE_CALL,
+				{ VALUE( value::Int,, 1 ), VALUE( value::String,, action ) } ) )->value; };
+			click( "open" ); GT_ASSERT( click( "ok" ), "penalty selection did not wait for confirmation" );
+			click( "cancel" ); fixture.DrainEvents(); GT_ASSERT( *base->GetProductionState() == original, "penalty cancellation altered production" );
+			const auto expected = SerializeProductionState( base->GetProductionState() ).ToString();
+			value::object_properties_t args{ { "base", base->Wrap( GSE_CALL ) }, { "source_id", VALUE( value::Int,, 1 ) },
+				{ "expected_state", VALUE( value::String,, expected ) }, { "expected_minerals", VALUE( value::Int,, 20 ) }, { "confirm", VALUE( value::Bool,, true ) } };
+			click( "open" ); click( "ok" ); GT_ASSERT( !click( "ok" ), "confirmed selection did not enqueue" );
+			game->Event( GSE_CALL, "select_smac_production", args ); // duplicate queued old confirmation
+			fixture.DrainEvents();
+			GT_ASSERT( base->GetProductionState()->current_item.smac_source_id == 1 && base->GetProductionState()->minerals == 20
+				&& base->GetProductionState()->baseline_item == scout && base->GetProductionState()->baseline_minerals == 30
+				&& fixture.GameplayRandom() == random, "penalty applied twice or baselines/RNG changed" );
+			args[ "expected_state" ] = VALUE( value::String,, SerializeProductionState( base->GetProductionState() ).ToString() );
+			args[ "source_id" ] = VALUE( value::Int,, 500 ); const auto saved = fixture.Snapshot();
+			GT_ASSERT( Rejects( [ & ] { game->Event( GSE_CALL, "select_smac_production", args ); } ) && fixture.Snapshot() == saved,
+				"unsupported target changed authority" );
+			args[ "source_id" ] = VALUE( value::Int,, 2 ); args[ "expected_minerals" ] = VALUE( value::Int,, 30 );
+			game->Event( GSE_CALL, "select_smac_production", args ); fixture.DrainEvents();
+			GT_ASSERT( *base->GetProductionState() == original, "valid next command did not restore baseline via manual switch" );
+			// Eligibility is read again at dispatch, rather than trusting the UI's
+			// previous choice list. The owned technology change is fixture input.
+			args[ "expected_state" ] = VALUE( value::String,, expected ); args[ "source_id" ] = VALUE( value::Int,, 1 );
+			args[ "expected_minerals" ] = VALUE( value::Int,, 20 );
+			game->Event( GSE_CALL, "select_smac_production", args );
+			fixture.ResourceState( []( auto& state ) { state.technology.factions[ 0 ].owned[ 6 ] = false; } );
+			GT_ASSERT( Rejects( [ & ] { fixture.DrainEvents(); } ) && *base->GetProductionState() == original,
+				"queued selection bypassed current technology eligibility" ); GT_OK();
+		} );
+	} );
+	task->AddTest( "SMAC production picker rejects another human Base owner", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture fixture; fixture.ConfigureTwoResourceParticipants( SelectionSource );
+		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, false, false, 6, 2 ); SelectionPresentations( fixture );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
+			base->SetProductionState( GSE_CALL, ProductionState{ scout, 0, scout, 0, std::vector< ProductionItem >{} } );
+			const auto before = fixture.Snapshot();
+			const value::object_properties_t args{ { "base", base->Wrap( GSE_CALL ) }, { "source_id", VALUE( value::Int,, 2 ) },
+				{ "expected_state", VALUE( value::String,, SerializeProductionState( base->GetProductionState() ).ToString() ) },
+				{ "expected_minerals", VALUE( value::Int,, 0 ) }, { "confirm", VALUE( value::Bool,, true ) } };
+			GT_ASSERT( Rejects( [ & ] { game->Event( GSE_CALL, "select_smac_production", args ); } ) && fixture.Snapshot() == before,
+				"local command selected another human's Base production" ); GT_OK();
+		} );
+	} );
 	task->AddTest( "SMAC Colony completion debits population before growth and repeats its queue", []( GSE*, context::Context* ) -> std::string {
 		for ( const int food : { 0, 20 } ) {
 			// Housing2 distinguishes the staged post-debit population from the live P2.

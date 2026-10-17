@@ -496,6 +496,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_production_choices",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return CopySmacProductionChoices( GSE_CALL );
+		} )
+	},
+	{
 		"get_production_state",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

@@ -42,6 +42,7 @@ class Tile;
 namespace base {
 
 class FacilityDef;
+struct SmacManualSwitchResult;
 
 class Base : public gse::Wrappable, public MapObject, public ResourceRelated {
 public:
@@ -79,6 +80,8 @@ public:
 	int64_t GetAccumulatedNutrients() const;
 	void SetAccumulatedNutrients( const int64_t nutrients );
 	const std::optional< ProductionState >& GetProductionState() const;
+	// Detached chooser projection; execution rechecks the complete saved state.
+	gse::Value* CopySmacProductionChoices( GSE_CALLABLE ) const;
 	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
 	bool HasSmacResourceContext() const;
 	SmacBaseResourceContext GetSmacResourceContext() const;
@@ -140,6 +143,11 @@ public:
 
 private:
 	friend class backend::Game;
+	struct ProductionChoice { int32_t source_id; std::string name; int32_t cost; int64_t minerals; bool confirmation; };
+	void RequireSmacProductionSelection() const;
+	std::vector< ProductionChoice > GetSmacProductionChoices() const;
+	SmacManualSwitchResult PrepareSmacProductionSelection( int32_t source_id, bool confirm ) const;
+	void SelectSmacProduction( GSE_CALLABLE, int32_t source_id, const std::string& expected, bool confirm );
 	friend class BaseManager;
 	// Only complete native record decoding can request snapshot construction.
 	// A running/initializing phase or script callback is not restore authority.

@@ -666,6 +666,7 @@ private:
 
 	void ProcessEvents();
 	bool HandleSmacWorkerEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	bool HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	class EventBatchRoots;
 	struct EventBatchHandoff {
 		EventBatchHandoff( Game* game, State* state, State::game_session_t session, std::shared_ptr< EventBatchRoots > roots );

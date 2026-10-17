@@ -273,6 +273,7 @@ public:
 			m_game.m_map->m_resource_policy = present ? std::optional( game::backend::map::GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
 		} );
 	}
+	void ProductionPresentations( const std::array< std::string, 4 >& roles ) { m_game.m_smac_presentations = roles; }
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
@@ -4655,6 +4656,7 @@ void ConventionalUnitFixture::ResourceState( const std::function< void( game::ba
 void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
 }
+void ConventionalUnitFixture::ProductionPresentations( const std::array< std::string, 4 >& roles ) { fixture->ProductionPresentations( roles ); }
 void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source ) {
 	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source ); fixture->ResourcePolicy( true );
 }

@@ -126,6 +126,7 @@ return {
 		const faction = owner.get_faction();
 
 		this.base_id = base.id;
+		this.base = base;
 
 		const canonical = base.has_smac_resource_context;
 		let intake = undefined;
@@ -304,6 +305,12 @@ return {
 
 	show_production_selection: () => {
 		if (this.production_selection == null) {
+			// Query before hiding anything: a stale/unavailable Base leaves the
+			// ordinary screen intact. All gameplay values come from the native Base.
+			let selection = undefined;
+			if (this.base.has_smac_resource_context && this.base.get_owner().id == this.p.game.get_player().id) {
+				selection = this.base.get_smac_production_choices();
+			}
 			for (s in this.sections) {
 				if (!#is_defined(this.production_selection_no_hiding[s])) {
 					this.sections[s].body.hide();
@@ -317,14 +324,48 @@ return {
 				bottom: 0,
 			});
 			this.sections.buttons.show_production_selection();
+			this.production_choice = undefined;
+			this.production_confirming = false;
+			this.production_data = selection;
+			this.production_prompt = this.production_selection.text({
+				class: 'base-screen-frame-text-important', left: 20, top: 20,
+				text: #is_defined(selection) ? 'Choose production (stored: ' + #to_string(selection.minerals) + ')' : 'Production selection unavailable for this Base',
+			});
+			if (#is_defined(selection)) {
+				let top = 60;
+				for (choice of selection.choices) {
+					const selected = choice;
+					this.production_selection.button({
+						class: 'game-popup-button', left: 20, right: 20, top: top, height: 30,
+						text: selected.name + ' — ' + #to_string(selected.cost) + ' minerals',
+					}).on('click', () => {
+						this.production_choice = selected;
+						this.production_confirming = false;
+						this.production_prompt.text = selected.name + ': stored ' + #to_string(selection.minerals)
+							+ ', after switch ' + #to_string(selected.minerals) + '. Select OK.';
+						return true;
+					});
+					top += 40;
+				}
+			}
 		}
 	},
 
 	update_production_selection: () => {
 		if (this.production_selection != null) {
-
-			// TODO: update selection to selected item
-
+			if (!#is_defined(this.production_choice)) { return; }
+			const choice = this.production_choice;
+			if (choice.confirmation && !this.production_confirming) {
+				this.production_confirming = true;
+				this.production_prompt.text = 'Retooling: ' + #to_string(this.production_data.minerals)
+					+ ' → ' + #to_string(choice.minerals) + ' minerals. OK to confirm; Cancel keeps production.';
+				return;
+			}
+			this.p.game.event('select_smac_production', {
+				base: this.base, source_id: choice.source_id,
+				expected_state: this.production_data.expected_state, confirm: this.production_confirming,
+				expected_minerals: choice.minerals,
+			});
 			this.hide_production_selection();
 		}
 	},

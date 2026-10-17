@@ -599,6 +599,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 		|| HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacFoundingEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacProductionEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 		return;
@@ -924,6 +925,7 @@ WRAPIMPL_BEGIN( Game )
 					&& !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacFoundingEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacProductionEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
 					std::lock_guard guard( m_event_handlers_mutex );
@@ -1831,6 +1833,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacProductionEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacProductionEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
 				if ( event->GetSource() == event::Event::ES_LOCAL

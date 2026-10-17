@@ -172,8 +172,12 @@ void GLSMAC::Iterate() {
 		auto* game = g_engine->GetGame();
 		const auto mt_id = game->MT_Reset();
 		const auto& response = game->MT_WaitResponse( mt_id );
-		ASSERT( response.result == game::backend::R_SUCCESS, "failed to reset game thread" );
+		if ( response.result != game::backend::R_SUCCESS ) {
+			game->MT_DestroyResponse( response );
+			THROW( "failed to reset game thread" );
+		}
 		game->MT_DestroyResponse( response );
+		m_is_game_running = false;
 		RunMain();
 	}
 	if ( m_console ) {
@@ -412,6 +416,9 @@ void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& 
 }
 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
+	if ( m_is_game_running || m_reset_needed ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Cannot run while a game or reset is active" );
+	}
 	const auto& c = g_engine->GetConfig();
 	auto* r = g_engine->GetResourceManager();
 	if ( !m_state || r->GetDetectedSMACType() == config::ST_UNKNOWN ) {
@@ -497,7 +504,6 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 	const auto& c = g_engine->GetConfig();
 
 	HideLoader();
-	m_is_game_running = false;
 
 	if ( m_game ) {
 		m_game->Stop();

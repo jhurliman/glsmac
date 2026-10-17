@@ -63,6 +63,10 @@ void Scene::AddLight( Light* light ) {
 	m_lights.insert( light );
 }
 
+void Scene::RemoveLight( Light* light ) {
+	m_lights.erase( light );
+}
+
 std::unordered_set< Light* >* Scene::GetLights() {
 	return &m_lights;
 }

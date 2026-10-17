@@ -5,6 +5,7 @@
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
 #include "SmacScoutCombat.h"
+#include "SmacEmptyGroundMovement.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -79,6 +80,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );
+		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );

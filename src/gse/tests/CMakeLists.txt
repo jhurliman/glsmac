@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 	${PWD}/RosterRecords.cpp
 	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/SmacScoutCombat.cpp
+	${PWD}/SmacEmptyGroundMovement.cpp
 	${PWD}/LiveRoster.cpp
 	${PWD}/Buffer.cpp
 	${PWD}/Mesh.cpp

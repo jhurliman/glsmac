@@ -56,6 +56,7 @@ public:
 	void RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start );
 	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
 	void DrainEvents();
+	static std::string WithControllerViewport( const std::function<std::string()>& check );
 	std::string CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor );
 	void RetainedMorale( int32_t retained, int32_t current );
 	void Early();

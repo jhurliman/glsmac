@@ -84,10 +84,12 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
     task->AddTest("Former selected controller latches actual work and retires queued visits",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string{
             auto* actor=Populate(GSE_CALL,fixture);Event(GSE_CALL,fixture,actor,Order::Farm);
             return fixture.CheckSelectedWorkController(GSE_CALL,actor);
+        });
         });
     });
     task->AddTest("Former selected controller turn stamp rejects stale work after real upkeep",GT(){

@@ -2190,6 +2190,24 @@ public:
 		m_game.m_event_handlers.emplace( name, handler );
 	}
 
+	static std::string WithControllerViewport( const std::function<std::string()>& check ) {
+		class SizedNull final : public graphics::Null {
+		public:
+			SizedNull() { OnWindowResize(); }
+			const unsigned short GetWindowWidth() const override { return 64; }
+			const unsigned short GetWindowHeight() const override { return 64; }
+			const unsigned short GetViewportWidth() const override { return 64; }
+			const unsigned short GetViewportHeight() const override { return 64; }
+		} graphics;
+		auto* previous = g_engine->m_graphics;
+		{ std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_graphics = &graphics; }
+		util::FinallyGuard restore( [ & ] {
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex ); g_engine->m_graphics = previous;
+		} );
+		// The callback constructs and destroys the fixture/GC while graphics lives.
+		return check();
+	}
+
 	std::string CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) {
 		auto* ui = new ::ui::UI( GSE_CALL ); m_gse->AddRootObject( ui );
 		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
@@ -4859,6 +4877,7 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckSelectedWorkController( GSE_CALLABLE, game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( GSE_CALL, actor ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }
 void ConventionalUnitFixture::Early() { fixture->ConventionalEarly(); }

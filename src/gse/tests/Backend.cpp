@@ -2479,7 +2479,7 @@ public:
                 completed_error=static_cast<value::String*>(result.at("error"))->value;
                 return VALUE(value::Undefined);
             }));
-            QueueKnowledgeProbeEvent(GSE_CALL,[&]{
+            auto* apply=NATIVE_CALL(&){
                 m_game.GetRandom()->GetUInt(0,100); // first half of an actual extracted callback
                 request_id=static_cast<value::Int*>(save_call->Run(GSE_CALL,{VALUE(value::String,,path)}))->value;
                 queued_only=!std::filesystem::exists(path);
@@ -2489,7 +2489,11 @@ public:
                 backend.join();
                 blocked=m_game.OwnerBlocksNative() && !m_game.TakeCampaignSaveResult(ticket) && !std::filesystem::exists(path);
                 m_game.GetRandom()->GetUInt(0,100); // snapshot must include this later write, too
+                return VALUE(value::Undefined);
             });
+            auto* noop=NATIVE_CALL(){return VALUE(value::Undefined);});
+            RegisterEvent("campaign_save_probe",new event::EventHandler(gc_space,"campaign_save_probe",noop,nullptr,apply,noop));
+            m_game.Event(GSE_CALL,"campaign_save_probe",{});
             ProcessEvents();
             expected=m_game.SerializeWorldSnapshot();GT_OK();
         });if(!setup.empty()){return setup;}

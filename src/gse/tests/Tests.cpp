@@ -4,6 +4,7 @@
 #include "Backend.h"
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
+#include "SmacScoutCombat.h"
 #include "LiveRoster.h"
 #include "Buffer.h"
 #include "Mesh.h"
@@ -32,6 +33,7 @@
 #include "Scripts.h"
 #include "SmacProductionSwitch.h"
 #include "SmacMineralCostFactor.h"
+#include "SmacConventionalStats.h"
 
 #include "engine/Engine.h"
 #include "config/Config.h"
@@ -77,6 +79,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddUnitDesignResolverTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
+		tests::AddSmacScoutCombatTests( task );
 		tests::AddLiveRosterTests( task );
 		tests::AddCvrContainerReaderTests( task );
 		tests::AddCvrSceneReaderTests( task );
@@ -87,6 +90,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacMineralCostFactorTests( task );
+		tests::AddSmacConventionalStatsTests( task );
 		task->AddTest(
 			"test if tests work",
 			GT() {

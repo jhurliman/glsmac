@@ -1,4 +1,23 @@
 #include "Backend.h"
+#include "CvrScoutRenderer.h"
+#include "game/backend/unit/CvrScoutRender.h"
+#include "game/frontend/unit/Unit.h"
+#include "game/frontend/unit/UnitDef.h"
+#include "game/frontend/unit/UnitManager.h"
+#include "game/frontend/unit/BadgeDefs.h"
+#include "game/frontend/faction/Faction.h"
+#include "game/frontend/Slot.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "game/frontend/sprite/InstancedSprite.h"
+#include "game/frontend/widget/UnitPreview.h"
+#include "scene/Scene.h"
+#include "scene/actor/Sprite.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Mesh.h"
+#include "ui/dom/Widget.h"
+#include "ui/dom/Root.h"
+#include "ui/geometry/Geometry.h"
+#include <cstdlib>
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/WorldSnapshotRules.h"
 #include "GLSMAC.h"
@@ -15,6 +34,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
+#include "gse/value/Float.h"
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
@@ -1431,6 +1451,244 @@ public:
 		GT_ASSERT( mains == 1 && script_iterations == 1 && !old_bodies && owner_destroyed == 1 && ui_iterations == 1 && frontend_iterations == 1 && load_completions == 1,
 			"post-reset iteration did not drain canceled roots and resume stages exactly once" );
 		GT_OK();
+	}
+	static std::string CheckScoutUnitPreview() {
+		class SizedNull final : public graphics::Null {
+		public:
+			SizedNull() { OnWindowResize(); }
+			const unsigned short GetWindowWidth() const override { return 64; }
+			const unsigned short GetWindowHeight() const override { return 64; }
+			const unsigned short GetViewportWidth() const override { return 64; }
+			const unsigned short GetViewportHeight() const override { return 64; }
+			void AddScene( scene::Scene* scene ) override { if ( scene->GetType() == scene::SCENE_TYPE_UI ) { ui_scene = scene; } }
+			void UnloadTexture( const types::texture::Texture* texture ) override {
+				std::lock_guard guard( mutex );
+				++unloads[ texture ];
+				if ( watched.count( texture ) ) {
+					ui_scene->WithActors( [ & ]( const auto& actors ) {
+						for ( const auto* actor : actors ) {
+							const auto* mesh = dynamic_cast< const scene::actor::Mesh* >( actor );
+							if ( mesh && mesh->GetTexture() == texture ) { released_while_borrowed = true; }
+						}
+					} );
+				}
+			}
+			void Watch( const std::unordered_set< const types::texture::Texture* >& textures ) { std::lock_guard guard( mutex ); watched = textures; }
+			bool ReleasedWhileBorrowed() { std::lock_guard guard( mutex ); return released_while_borrowed; }
+			size_t Count( const types::texture::Texture* texture ) { std::lock_guard guard( mutex ); return unloads[ texture ]; }
+			scene::Scene* ui_scene = nullptr;
+			std::mutex mutex;
+			std::unordered_map< const types::texture::Texture*, size_t > unloads;
+			std::unordered_set< const types::texture::Texture* > watched;
+			bool released_while_borrowed = false;
+		} graphics;
+		// Only badge assets are doubled; Scout files use the installed resolver,
+		// complete production readers, camera/lighting/composition and texture.
+		class BadgeLoader final : public loader::texture::TextureLoader {
+		public:
+			types::texture::Texture bitmap{ 512, 512 };
+		protected:
+			types::texture::Texture* LoadTextureImpl( const std::string&, types::texture::texture_flag_t ) override { return &bitmap; }
+			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override { return &bitmap; }
+		};
+		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-scout-unit-" + util::UUID::Generate() );
+		std::filesystem::create_directory( directory );
+		std::filesystem::create_directory( directory / "default" );
+		util::FinallyGuard remove_directory( [ & ] { std::filesystem::remove_all( directory ); } );
+		for ( const bool reactor : { false, true } ) {
+			std::ofstream file( directory / "default" / ( reactor ? "Viptr00.cvr" : "VI.cvr" ), std::ios::binary );
+			const auto bytes = MakeScoutTestAsset( reactor ); file.write( bytes.data(), bytes.size() );
+		}
+		const char* installed = std::getenv( "GLSMAC_SCOUT_ASSETS" );
+		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
+		if ( installed && *installed ) { resources.m_smac_path = installed; }
+		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
+		auto badges_loader = std::make_unique< BadgeLoader >();
+		auto* old_graphics = g_engine->m_graphics;
+		auto* old_resources = g_engine->m_resource_manager;
+		auto* old_textures = g_engine->m_texture_loader;
+		{
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
+			g_engine->m_graphics = &graphics; g_engine->m_resource_manager = &resources; g_engine->m_texture_loader = badges_loader.get();
+		}
+		util::FinallyGuard restore( [ & ] {
+			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
+			badges_loader.reset();
+			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
+		} );
+		BackendFixture fixture; // runtime dies before services are restored
+		fixture.EnableTurns();
+		return fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
+			using namespace game::backend::unit;
+			auto* manager = fixture.m_game.GetUM();
+			MoraleSet::morale_values_t morale;
+			for ( size_t i = 0; i < 7; ++i ) { morale.emplace_back( "Rank" ); }
+			manager->DefineMoraleSet( new MoraleSet( "SCOUT_TEST", morale ) );
+			auto* descriptor = new value::Object( GSE_CALL, {
+				{ "type", new value::String( gc_space, "cvr_scout" ) },
+				{ "facing", new value::Int( gc_space, 0 ) }, { "zoom", new value::Int( gc_space, 0 ) },
+				{ "scale_numerator", new value::Int( gc_space, 1 ) }, { "scale_denominator", new value::Int( gc_space, 1 ) },
+				{ "world_width", new value::Float( gc_space, 2 ) }, { "world_height", new value::Float( gc_space, 4 ) },
+				{ "center_x", new value::Float( gc_space, 64 ) }, { "center_y", new value::Float( gc_space, 192 ) }
+			} );
+			auto* definition = new value::Object( GSE_CALL, {
+				{ "name", new value::String( gc_space, "Explicit Scout preview" ) }, { "morale", new value::String( gc_space, "SCOUT_TEST" ) },
+				{ "type", new value::String( gc_space, "static" ) }, { "movement_type", new value::String( gc_space, "land" ) },
+				{ "movement_per_turn", new value::Int( gc_space, 1 ) }, { "render", descriptor }
+			} );
+			auto* define = static_cast< value::Callable* >( static_cast< value::Object* >( manager->Wrap( GSE_CALL ) )->Get( "define_unit" ) );
+			const auto call = [ & ]( const char* id ) { define->Run( GSE_CALL, { new value::String( gc_space, id ), definition } ); };
+			bool rejected = false;
+			try { call( "readonly" ); } catch ( const Exception& ) { rejected = true; }
+			GT_ASSERT( rejected && !manager->GetUnitDef( "readonly" ), "Scout define bypassed normal mutation authority" );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 0 ) );
+			rejected = false;
+			try { fixture.WithRW( [ & ] { call( "invalid" ); } ); } catch ( const Exception& ) { rejected = true; }
+			GT_ASSERT( rejected && !manager->GetUnitDef( "invalid" ), "invalid descriptor published a definition" );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 1 ) );
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, INT32_MAX ) );
+			bool script_anchor_rejected = false;
+			try { fixture.WithRW( [ & ] { call( "ANCHOR_OVERFLOW" ); } ); } catch ( const Exception& ) { script_anchor_rejected = true; }
+			// Construct raw wire independently: the public descriptor constructor
+			// must reject this record, so it cannot serve as the malformed writer.
+			types::Buffer bad_anchor;
+			for ( const int64_t field : { INT64_C( 0x43565253 ), INT64_C( 1 ), INT64_C( 0 ), INT64_C( 0 ), INT64_C( 0 ), int64_t( INT32_MAX ), INT64_C( 1 ) } ) { bad_anchor.WriteInt( field ); }
+			for ( const float field : { 2.0f, 4.0f, 64.0f, 192.0f } ) { bad_anchor.WriteFloat( field ); }
+			types::Buffer bad_definition;
+			bad_definition.WriteString( "WIRE_ANCHOR_OVERFLOW" ); bad_definition.WriteString( "SCOUT_TEST" ); bad_definition.WriteString( "Invalid anchor" );
+			bad_definition.WriteInt( DT_STATIC ); bad_definition.WriteInt( MT_LAND ); bad_definition.WriteFloat( 1 );
+			bad_definition.WriteInt( Render::RT_CVR_SCOUT ); bad_definition.WriteString( bad_anchor.ToString() );
+			bool snapshot_anchor_rejected = false;
+			try { std::unique_ptr< Def > unexpected( Def::Deserialize( bad_definition, manager ) ); }
+			catch ( const std::runtime_error& ) { snapshot_anchor_rejected = true; }
+			GT_ASSERT( script_anchor_rejected && snapshot_anchor_rejected && !manager->GetUnitDef( "ANCHOR_OVERFLOW" ) && !manager->GetUnitDef( "WIRE_ANCHOR_OVERFLOW" ),
+				"script or UnitDef snapshot admitted overflowing derived Scout anchor" );
+			// A quotient of INT32_MAX with a remainder remains admitted through
+			// actual script definition and the complete UnitDef snapshot codec.
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, 2104533975 ) );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 49 ) );
+			fixture.WithRW( [ & ] { call( "ANCHOR_BOUNDARY" ); } );
+			auto boundary_bytes = Def::Serialize( manager->GetUnitDef( "ANCHOR_BOUNDARY" ) );
+			std::unique_ptr< Def > boundary_copy( Def::Deserialize( boundary_bytes, manager ) );
+			GT_ASSERT( boundary_bytes.lenr == boundary_bytes.lenw && boundary_copy->m_id == "ANCHOR_BOUNDARY", "valid script/snapshot anchor boundary rejected" );
+			boundary_copy.reset(); manager->UndefineUnit( "ANCHOR_BOUNDARY" );
+			descriptor->Assign( "scale_numerator", new value::Int( gc_space, 1 ) );
+			descriptor->Assign( "scale_denominator", new value::Int( gc_space, 1 ) );
+			fixture.WithRW( [ & ] { call( "SCOUT_TEST" ); } );
+			auto def_bytes = Def::Serialize( manager->GetUnitDef( "SCOUT_TEST" ) );
+			std::unique_ptr< Def > copied( Def::Deserialize( def_bytes, manager ) );
+			GT_ASSERT( def_bytes.lenr == def_bytes.lenw && static_cast< StaticDef* >( copied.get() )->m_render->m_type == Render::RT_CVR_SCOUT,
+				"actual UnitDef snapshot lost Scout descriptor" );
+			types::Buffer oversized;
+			oversized.WriteString( "TOO_LARGE" ); oversized.WriteString( "SCOUT_TEST" ); oversized.WriteString( "Rejected descriptor" );
+			oversized.WriteInt( DT_STATIC ); oversized.WriteInt( MT_LAND ); oversized.WriteFloat( 1 );
+			oversized.WriteInt( Render::RT_CVR_SCOUT );
+			const auto frame_begin = oversized.lenw;
+			oversized.WriteString( std::string( CvrScoutRender::MAX_WIRE_BYTES + 1, 'x' ) );
+			rejected = false;
+			try { std::unique_ptr< Def > unexpected( Def::Deserialize( oversized, manager ) ); }
+			catch ( const std::runtime_error& ) { rejected = true; }
+			GT_ASSERT( rejected && oversized.lenr == frame_begin && !manager->GetUnitDef( "TOO_LARGE" ),
+				"actual Render dispatch materialized an oversized Scout frame" );
+			auto* ui = new ::ui::UI( GSE_CALL );
+			fixture.m_gse->AddRootObject( ui );
+			auto* root = static_cast< value::Object* >( ui->GetRoot()->Wrap( GSE_CALL ) );
+			auto* widget = static_cast< ::ui::dom::Widget* >( ::ui::dom::Object::Unwrap(
+				static_cast< value::Callable* >( root->Get( "widget" ) )->Run( GSE_CALL, {} ) ) );
+			util::FinallyGuard cleanup( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
+			widget->GetGeometry()->SetWidth( 32 ); widget->GetGeometry()->SetHeight( 32 );
+			game::frontend::Game frontend( fixture.m_glsmac.get(), fixture.m_state, ui, {}, {} );
+			scene::Scene scene( "Scout unit test", scene::SCENE_TYPE_WORLD );
+			auto ism = std::make_unique< game::frontend::sprite::InstancedSpriteManager >( &scene );
+			frontend.m_ism = ism.get();
+			auto um = std::make_unique< game::frontend::unit::UnitManager >( &frontend );
+			game::backend::faction::Faction faction_source( "TEST", "Test" );
+			game::frontend::faction::Faction faction( &faction_source, ism.get() );
+			game::frontend::Slot slot( 0, &faction );
+			um->DefineSlotBadges( 0, &faction );
+			auto badges = std::make_unique< game::frontend::unit::BadgeDefs >( ism.get() );
+			auto def = std::make_unique< game::frontend::unit::UnitDef >( ism.get(), copied.get() );
+			StaticDef other_source( "OTHER_SCOUT", manager->GetMoraleSet( "SCOUT_TEST" ), "Other explicit Scout", MT_LAND, 1,
+				new CvrScoutRender( *static_cast< const CvrScoutRender* >( static_cast< StaticDef* >( copied.get() )->m_render ) ) );
+			game::frontend::unit::UnitDef other_def( ism.get(), &other_source );
+			auto* other_sprite = other_def.GetSprite( 0 )->instanced_sprite;
+			copied.reset(); // frontend owns its descriptor, not a backend pointer
+			game::frontend::tile::Tile tile( { 2, 2 } );
+			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
+				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
+			// Publish the real Unit for the production Game widget lookup. Its
+			// scoped owner remains here; remove the entry before either teardown.
+			um->m_units.emplace( 1, unit.get() );
+			util::FinallyGuard unlink_unit( [ & ] { if ( um ) { um->m_units.erase( 1 ); } } );
+			frontend.m_um = um.get();
+			auto* instanced = unit->GetSprite()->instanced_sprite;
+			auto* actor = instanced->actor->GetSpriteActor();
+			GT_ASSERT( other_sprite->actor != instanced->actor && other_sprite->texture_owner == instanced->texture_owner,
+				"independent UnitDef instance counters share an actor or duplicate immutable pixels" );
+			GT_ASSERT( instanced->actor->HasInstance( 1 ) && actor->GetDimensions() == types::Vec2< float >( 2, 4 ) &&
+				actor->GetDstOffsets() == types::Vec2< float >( 0.5f, -1 ), "actual Unit/GetSprite placement or instance missing" );
+			GT_ASSERT( actor->NormalizePosition( { 3, 5, 0 } ) == types::Vec3( 3.5f, 4, 0 ), "actual Sprite offset sign differs from image-center mapping" );
+			const auto baseline = std::string( reinterpret_cast< char* >( actor->GetTexture()->GetBitmap() ), actor->GetTexture()->GetBitmapSize() );
+			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
+			frontend.m_widgets.UnitPreview = presenter.get();
+			auto* backend_unit = new Unit( GSE_CALL, manager, 1, manager->GetUnitDef( "SCOUT_TEST" ),
+				&fixture.m_state->m_slots->GetSlot( 0 ), fixture.m_game.GetMap()->GetTile( 2, 2 ), 1, 0, 1, false );
+			manager->SpawnUnit( GSE_CALL, backend_unit );
+			const auto preview_data = [ & ] { return new value::Object( GSE_CALL, { { "unit", backend_unit->Wrap( GSE_CALL ) } } ); };
+			widget->WrapSet( "data", preview_data(), GSE_CALL );
+			widget->WrapSet( "type", new value::String( gc_space, "unit-preview" ), GSE_CALL );
+			widget->Show(); // real AttachWidget -> Register -> relation -> Update
+			GT_ASSERT( frontend.m_widget_relations.at( ::ui::WT_UNIT_PREVIEW ).at( widget ) == 1 && widget->GetTexture( 1 ),
+				"real registration did not bind and render the Unit" );
+			// Exercise the real game unregister path and stale Update, then rebind
+			// the same DOM widget to a new presenter (no new backend identity).
+			presenter.release(); frontend.UnregisterWidgets();
+			widget->WrapSet( "data", new value::Object( GSE_CALL, {} ), GSE_CALL );
+			GT_ASSERT( frontend.m_widget_relations.empty(), "retired presenter callback re-established a relation" );
+			widget->Hide();
+			presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );
+			frontend.m_widgets.UnitPreview = presenter.get();
+			widget->WrapSet( "data", preview_data(), GSE_CALL );
+			widget->Show();
+			GT_ASSERT( frontend.m_widget_relations.at( ::ui::WT_UNIT_PREVIEW ).at( widget ) == 1 && widget->GetTexture( 1 ),
+				"retained widget did not replace its retired update callback" );
+			presenter->Update( widget, unit.get() ); // real repeated clear/update
+			auto* scout_texture = actor->GetTexture();
+			std::weak_ptr< types::texture::Texture > retained = instanced->texture_owner;
+			auto* badge_copy = widget->GetTexture( 1 ); auto* health_copy = widget->GetTexture( 2 );
+			GT_ASSERT( badge_copy != unit->GetRenderData().badge.texture && health_copy != unit->GetRenderData().healthbar.texture,
+				"retained Scout preview still borrows badge manager textures" );
+			const auto before_scout = graphics.Count( scout_texture ), before_badge = graphics.Count( badge_copy ), before_health = graphics.Count( health_copy );
+			graphics.Watch( { scout_texture, badge_copy, health_copy } );
+			util::FinallyGuard stop_watching( [ & ] { graphics.Watch( {} ); } );
+			presenter.reset(); // actual unregister does not clear detached DOM actors
+			frontend.m_widgets.UnitPreview = nullptr;
+			widget->WrapSet( "data", new value::Object( GSE_CALL, {} ), GSE_CALL ); // old callback must skip before this/Game access
+			um->m_units.erase( 1 );
+			unit.reset(); def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
+			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
+				"scene/cache retirement released a still-borrowed Scout image" );
+			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,
+				"preview image changed after native owner retirement" );
+			size_t preview_actors = 0;
+			graphics.ui_scene->WithActors( [ & ]( const auto& actors ) {
+				for ( const auto* candidate : actors ) {
+					const auto* mesh = dynamic_cast< const scene::actor::Mesh* >( candidate );
+					if ( mesh && ( mesh->GetTexture() == scout_texture || mesh->GetTexture() == badge_copy || mesh->GetTexture() == health_copy ) ) {
+						++preview_actors; (void)mesh->GetTexture()->GetPixel( 0, 0 );
+					}
+				}
+			} );
+			GT_ASSERT( preview_actors == 3, "actual retained preview actors missing" );
+			widget->GetGeometry()->SetWidth( 40 ); // copied meshes remain independently usable
+			// Parent removal invokes real Widget::Destroy and its retained OnRemove.
+			ui->GetRoot()->Container::Destroy( GSE_CALL );
+			cleanup.f_after = nullptr;
+			GT_ASSERT( !graphics.ReleasedWhileBorrowed() && retained.expired() && graphics.Count( scout_texture ) == before_scout + 1 &&
+				graphics.Count( badge_copy ) == before_badge + 1 && graphics.Count( health_copy ) == before_health + 1,
+				"preview did not release each owned texture exactly once after its actors" );
+			GT_OK();
+		} );
 	}
 	static std::string CheckFrontendQuitAdmission() {
 		class SizedNull final : public graphics::Null {
@@ -6869,6 +7127,10 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "CVR Scout real definition unit preview and retained texture teardown", GT() {
+		try { return BackendFixture::CheckScoutUnitPreview(); }
+		catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout unit/preview: " ) + error.what() ); }
+	} );
 	for ( const bool active : { false, true } ) {
 		for ( const bool reset_pending : { false, true } ) {
 			for ( const bool retained_prompt : { false, true } ) {

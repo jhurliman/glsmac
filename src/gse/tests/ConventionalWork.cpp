@@ -86,6 +86,15 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Former command panel refreshes after actual frontend work and cancel updates",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            Unit* actor=nullptr;
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{actor=Populate(GSE_CALL,fixture,1);GT_OK();});
+            if(!error.empty()){return error;}
+            return fixture.CheckUnitCommandCompletion(actor,fixture.Game()->GetUM()->GetUnit(72));
+        });
+    });
     task->AddTest("Former command panel displays saved work and rejects stale selection callbacks",GT(){
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string{

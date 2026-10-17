@@ -44,7 +44,7 @@ return {
 					else if (selected_action == 0) { this.p.game.event('cancel_unit_work', {unit: unit}); }
 					else { this.p.game.event('work_unit', {unit: unit, action: selected_action}); }
 				}
-				this.refresh();
+				// The native event is queued. Refresh when its committed Unit update arrives.
 				return true;
 			});
 			this.buttons :+button;

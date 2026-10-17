@@ -1137,6 +1137,9 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			}
 			else {
 				unit->Refresh();
+				// Work orders may change without changing any rendered stat. Notify
+				// the retained selection only after this committed update is applied.
+				if ( m_um->GetSelectedUnit() == unit ) { UpdateUnitPreview( unit ); }
 			}
 			break;
 		}
@@ -2467,19 +2470,17 @@ void Game::UpdateTilePreview( tile::Tile* const tile ) {
 }
 
 void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
-	auto* const u = unit
-		? m_game->GetUM()->GetUnit( unit->GetId() )
-		: nullptr;
-	Trigger(
-		m_game->GetMap(), "unit_preview", ARGS_F( &u ) {
-			{
-				"unit",
-				u
-					? u->Wrap( GSE_CALL )
-					: VALUE( gse::value::Null ),
-			},
-		}; }
-	);
+	const auto id = unit ? std::optional<size_t>( unit->GetId() ) : std::nullopt;
+	auto* state = m_game->GetState();
+	// Delivery may run later on the script thread. Retain the session and ID,
+	// never a frontend pointer, local reference, or retired backend wrapper.
+	state->WithGame( state, [ id ]( backend::Game* game, GSE_CALLABLE ) {
+		if ( !game->IsRunning() || !game->GetMap() || !game->GetUM() ) { return; }
+		auto* current = id ? game->GetUM()->GetUnit( *id ) : nullptr;
+		game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( current ) {
+			{ "unit", current ? current->Wrap( GSE_CALL ) : VALUE( gse::value::Null ) },
+		}; } );
+	} );
 }
 
 void Game::UpdateBasePreview( const base::Base* const base ) {

@@ -57,6 +57,7 @@ public:
 	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
 	void DrainEvents();
 	static std::string WithControllerViewport( const std::function<std::string()>& check );
+	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper );
 	std::string CheckSelectedWorkController( game::backend::unit::Unit* actor );
 	std::string CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout );
 	void RetainedMorale( int32_t retained, int32_t current );

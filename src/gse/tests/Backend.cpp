@@ -2213,6 +2213,92 @@ public:
 		return check();
 	}
 
+
+	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) {
+		class BadgeLoader final : public loader::texture::TextureLoader {
+		public:
+			types::texture::Texture bitmap{512,512};
+		protected:
+			types::texture::Texture* LoadTextureImpl(const std::string&,types::texture::texture_flag_t) override {return &bitmap;}
+			types::texture::Texture* LoadTextureImpl(const std::string&,size_t,size_t,size_t,size_t,uint8_t,float,types::texture::texture_flag_t) override {return &bitmap;}
+		} textures;
+		resource::ResourceManager resources( "" );
+		resources.m_resource_paths[resource::PCX_FLAGS]="synthetic-command-badges";
+		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_game=g_engine->m_game;
+		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_game=&m_game;}
+		util::FinallyGuard restore_services([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_game=old_game;});
+		scene::Scene scene("Command completion fixture",scene::SCENE_TYPE_WORLD);
+		game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+		game::backend::faction::Faction faction_source("COMMAND_TEST","Commands");
+		game::frontend::faction::Faction faction(&faction_source,&sprites);
+		game::frontend::Slot slot(0,&faction);
+		game::frontend::tile::Tile tile(actor->GetTile()->coord);
+		::ui::UI* ui=nullptr;value::Callable* check=nullptr;
+		std::unique_ptr<game::frontend::Game> frontend;
+		std::unique_ptr<game::frontend::unit::UnitDef> definition;
+		std::unique_ptr<game::frontend::unit::UnitManager> controller;
+		util::FinallyGuard cleanup([&]{
+			controller.reset();definition.reset();
+			if(frontend){frontend->m_is_initialized=false;frontend->m_um=nullptr;frontend->m_ism=nullptr;frontend->m_game=nullptr;frontend.reset();}
+			WithScriptValues([&](GSE_CALLABLE)->std::string{if(check){m_gse->RemoveRootObject(check);}if(ui){ui->GetRoot()->Container::Destroy(GSE_CALL);}GT_OK();});
+		});
+		const auto setup=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+			ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+			frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
+			frontend->m_game=&m_game;frontend->m_ism=&sprites;
+			controller=std::make_unique<game::frontend::unit::UnitManager>(frontend.get());frontend->m_um=controller.get();
+			controller->DefineSlotBadges(0,&faction);
+			definition=std::make_unique<game::frontend::unit::UnitDef>(&sprites,actor->m_def);
+			for(auto* unit:{actor,helper}) {
+				const auto stats=unit->GetPresentation();
+				auto* rendered=new game::frontend::unit::Unit(controller.get(),controller->m_badge_defs,unit->m_id,definition.get(),&slot,&tile,
+					types::Vec3{},true,stats.movement,stats.morale,unit->GetMoraleString(),stats.health,true,unit->HasMovesLeft(),stats.full_movement);
+				controller->m_units.emplace(unit->m_id,rendered);
+			}
+			controller->m_selected_unit=controller->GetUnitById(actor->m_id);
+			auto* initialize=static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/tests/_unit_commands"));
+			check=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)}));m_gse->AddRootObject(check);
+			m_state->TriggerObject(&m_game,"unit_select",ARGS_F(actor){{"unit",actor->Wrap(GSE_CALL)}};});
+			GT_OK();
+		});if(!setup.empty()){return setup;}
+		const auto script=[&](const char* operation,const char* labels="",const char* heading="") {
+			return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+				check->Run(GSE_CALL,{VALUE(value::String,,operation),VALUE(value::String,,labels),VALUE(value::String,,heading)});GT_OK();
+			});
+		};
+		const auto publish=[&]() -> std::string {
+			const auto& requests=PushUnitUpdates();size_t delivered=0;std::exception_ptr failure;
+			// Exercise real FR dispatch outside accumulation. Preview notification
+			// must survive deferred delivery without a frontend/local pointer borrow.
+			std::thread receiver([&]{try{for(const auto& request:requests){if(request.type==game::FrontendRequest::FR_UNIT_UPDATE){frontend->ProcessRequest(&request);++delivered;}}}catch(...){failure=std::current_exception();}});receiver.join();
+			if(failure){std::rethrow_exception(failure);}ProcessAccumulations();
+			GT_ASSERT(delivered==1,"command did not publish exactly one actual Unit update");GT_OK();
+		};
+		const char* idle="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]";
+		const char* working="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]";
+		const char* none="Former — Order: None  |  Stored work: 0";
+		const char* farm="Former — Order: Farm  |  Stored work: 0";
+		const auto before=WorldSnapshot();
+		auto error=script("check",idle,none);if(!error.empty()){return error;}
+		error=script("click","Farm [F]");if(!error.empty()){return error;}
+		GT_ASSERT(actor->Conventional().work_order==game::backend::unit::ConventionalUnitState::WorkOrder::None,"button applied native order synchronously");
+		error=script("check",idle,none);if(!error.empty()){return error;}
+		error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{ProcessEvents();GT_OK();});if(!error.empty()){return error;}
+		error=publish();if(!error.empty()){return error;}
+		error=script("check",working,farm);if(!error.empty()){return error;}
+		error=script("click","Cancel [C]");if(!error.empty()){return error;}
+		error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{ProcessEvents();GT_OK();});if(!error.empty()){return error;}
+		error=publish();if(!error.empty()){return error;}
+		error=script("check",idle,none);if(!error.empty()){return error;}
+		GT_ASSERT(WorldSnapshot()==before,"order then cancellation changed unrelated authority");
+		// A same-tile, unselected Unit completion must not replace the panel.
+		error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+			m_game.Event(GSE_CALL,"work_unit",{{"unit",helper->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,1)}});ProcessEvents();GT_OK();
+		});if(!error.empty()){return error;}
+		error=publish();if(!error.empty()){return error;}
+		return script("check",idle,none);
+	}
+
 	std::string CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) {
 		auto* ui = new ::ui::UI( GSE_CALL ); m_gse->AddRootObject( ui );
 		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
@@ -4940,6 +5026,7 @@ void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::stri
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
+std::string ConventionalUnitFixture::CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) { return fixture->CheckUnitCommandCompletion( actor, helper ); }
 std::string ConventionalUnitFixture::CheckSelectedWorkController( game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( actor ); }
 std::string ConventionalUnitFixture::CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) { return fixture->CheckRetainedWorkSelection( GSE_CALL, actor, scout ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }

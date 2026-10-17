@@ -351,6 +351,8 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void HideLoader();
 
 	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
+	// Passive human-controller poll; never retains a frontend or Unit pointer.
+	bool QueueSelectedConventionalWork( GSE_CALLABLE, size_t unit_id, size_t turn_id );
 	void AddEvent( event::Event* const event );
 	void AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved );
 

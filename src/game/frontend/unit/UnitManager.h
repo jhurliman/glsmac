@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 #include <vector>
+#include <memory>
+#include <optional>
 
 #include "common/Common.h"
 
@@ -101,6 +103,10 @@ private:
 	std::unordered_map< Unit*, moving_unit_info_t > m_moving_units = {};
 
 	Unit* m_previously_deselected_unit = nullptr;
+
+	struct WorkVisit { size_t unit_id; size_t turn_id; };
+	std::shared_ptr< const WorkVisit > m_work_visit;
+	void PumpSelectedWork( std::optional< size_t > selected );
 
 	void AddSelectable( Unit* unit );
 	void RemoveSelectable( Unit* unit );

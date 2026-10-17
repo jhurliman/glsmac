@@ -29,10 +29,22 @@ intake reads the completed improvement on its next query without changing worker
 allocation or posting resources.
 
 The provisional GLSMAC keys F/R/O/S/M assign the corresponding action; C cancels.
-They do not invoke work themselves. Native continuation is the mechanism for the
-human selected-unit controller, whose new original receipt establishes automatic
-selected-unit work. The frontend scheduling/latch connection is a separate follow-up;
-there is no new Continue key and no work loop inside faction upkeep here.
+They do not invoke work themselves. The active frontend selected-unit controller
+now queues saved work automatically. A transient visit latch permits one request
+per selection/turn or Unit presentation update; the backend reads the saved order
+and allowance. Session-bound callbacks retain copied IDs and a weak visit token,
+so selection changes, manager destruction and session retirement cancel delayed
+visits. Every `continue_unit_work` event carries its captured `turn_id`, checked
+again before wrapper access at dispatch. Old events cannot consume a later turn's
+refilled allowance. There is no new Continue key or work loop in faction upkeep.
+
+The `former-human-controller` receipt establishes selected work continuation;
+GLSMAC's current active-world/turn flag and existing nearest/selectable selection
+policy still supply controller admission and selection. The newer
+`local-unit-selection` receipt additionally proves a different distance/tie rule
+and retention of the selected Former across subsequent upkeeps. Those selection
+policy changes are not included here: the current frontend can choose a different
+ready unit after exhaustion. No complete original outer-loop/modal policy is claimed.
 
 ## Evidence and focused checks
 
@@ -55,3 +67,11 @@ collaboration and atomic rejection. The synthetic restore initializes asset-free
 preview coordinates before applying terrain presentation updates. Eight changed
 production translation units pass LLVM 15 analysis (19.71 seconds). No full suite,
 platform matrix, rendered-game or automatic-controller claim is made for this source.
+
+The selected-controller follow-up adds two actual native regression groups: real
+work/upkeep with exact event-count latching and delayed callback retirement, and
+an old stamped visit queued behind real upkeep. The asset-free controller fixture
+supplies selected identity to the same private pump used by frontend Iterate; it
+does not assert the existing renderer/selection policy. Four affected production
+and fixture translation units pass syntax checks. Runtime execution of these new
+groups is reserved for the shared cached integration build.

@@ -76,13 +76,38 @@ Unit* Populate(GSE_CALLABLE,ConventionalUnitFixture& fixture,size_t helpers=0,bo
 }
 void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order,bool dispatch=false) {
     auto* game=fixture.Game();
-    if(dispatch){game->Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});}
+    if(dispatch){game->Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});}
     else if(order==Order::None){game->Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});}
     else{game->Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,static_cast<int32_t>(order))}});}
     fixture.DrainEvents();
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Former selected controller latches actual work and retires queued visits",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);Event(GSE_CALL,fixture,actor,Order::Farm);
+            return fixture.CheckSelectedWorkController(GSE_CALL,actor);
+        });
+    });
+    task->AddTest("Former selected controller turn stamp rejects stale work after real upkeep",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();Event(GSE_CALL,fixture,actor,Order::Farm);
+            const auto old_turn=game->GetTurnId();
+            game->Event(GSE_CALL,"complete_turn",{});
+            GT_ASSERT(game->QueueSelectedConventionalWork(GSE_CALL,actor->m_id,old_turn),"current selected work was not queued behind upkeep");
+            fixture.DrainEvents();
+            GT_ASSERT(game->GetTurnId()==old_turn+1&&actor->Conventional().spent==0&&actor->Conventional().work_progress==0,
+                "old controller visit spent the next turn's allowance");
+            GT_ASSERT(!game->QueueSelectedConventionalWork(GSE_CALL,actor->m_id,old_turn),"stale frontend turn queued work");
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});}),"unstamped continuation admitted");
+            GT_ASSERT(game->QueueSelectedConventionalWork(GSE_CALL,actor->m_id,game->GetTurnId()),"fresh selected work did not queue");fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().spent==3&&actor->Conventional().work_progress==2,"fresh controller visit failed");
+            GT_ASSERT(!game->QueueSelectedConventionalWork(GSE_CALL,actor->m_id,game->GetTurnId())
+                &&!game->QueueSelectedConventionalWork(GSE_CALL,9999,game->GetTurnId()),"exhausted or missing Unit queued work");GT_OK();
+        });
+    });
     task->AddTest("Former work actual command dispatch upkeep and completion preserve repeat guard",GT(){
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string{

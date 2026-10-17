@@ -11,6 +11,7 @@
 #include "BadgeDefs.h"
 #include "types/mesh/Rectangle.h"
 #include "game/backend/Game.h"
+#include "game/backend/State.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/map/Map.h"
@@ -27,6 +28,7 @@ UnitManager::UnitManager( Game* game )
 }
 
 UnitManager::~UnitManager() {
+	m_work_visit.reset();
 	for ( const auto& it : m_units ) {
 		delete it.second;
 	}
@@ -43,6 +45,9 @@ void UnitManager::Iterate() {
 	if ( m_selected_unit ) {
 		m_selected_unit->Iterate();
 	}
+	PumpSelectedWork( m_selected_unit && m_selected_unit->IsOwned() && m_selected_unit->IsActive() && !m_selected_unit->IsMoving()
+		? std::optional< size_t >( m_selected_unit->GetId() ) : std::nullopt );
+
 	auto it = m_moving_units.begin();
 	while ( it != m_moving_units.end() ) {
 		const auto& unit = it->first;
@@ -63,6 +68,26 @@ void UnitManager::Iterate() {
 			it++;
 		}
 	}
+}
+
+void UnitManager::PumpSelectedWork( std::optional< size_t > selected ) {
+	if ( !selected || !m_game->m_is_initialized || m_game->m_world_retired || !m_game->IsTurnActive()
+		|| m_game->m_mt_ids.init || m_game->m_mt_ids.get_map_data ) {
+		m_work_visit.reset();
+		return;
+	}
+	const auto turn = m_game->m_turn_id;
+	if ( m_work_visit && m_work_visit->unit_id == *selected && m_work_visit->turn_id == turn ) { return; }
+	m_work_visit = std::make_shared< const WorkVisit >( WorkVisit{ *selected, turn } );
+	const std::weak_ptr< const WorkVisit > visit = m_work_visit;
+	auto* state = m_game->m_state;
+	state->WithGameSession( state->CaptureGameSession(), state, [ visit ]( backend::Game* const game, GSE_CALLABLE ) {
+		// Selection/update/teardown retires this visit before a delayed callback.
+		// Only copied IDs cross threads; session retirement cancels old-world work.
+		if ( const auto current = visit.lock() ) {
+			game->QueueSelectedConventionalWork( GSE_CALL, current->unit_id, current->turn_id );
+		}
+	} );
 }
 
 Unit* UnitManager::GetUnitById( const size_t id ) const {
@@ -179,6 +204,7 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 }
 
 void UnitManager::RefreshUnit( Unit* unit ) {
+	if ( m_work_visit && m_work_visit->unit_id == unit->GetId() ) { m_work_visit.reset(); }
 	const auto was_active = unit->IsActive();
 	UpdateSelectable( unit );
 	m_game->RenderTile( unit->GetTile(), m_selected_unit );
@@ -279,6 +305,7 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 }
 
 void UnitManager::DeselectUnit() {
+	m_work_visit.reset();
 	m_previously_deselected_unit = m_selected_unit;
 	if ( m_selected_unit ) {
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();

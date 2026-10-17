@@ -11,6 +11,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacHostRules.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacTechnologyRules.cpp
+	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/CvrContainerReader.cpp
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp

@@ -8,6 +8,14 @@ the existing Single/Player human roster roles. The existing initial resource
 context producer retains its first-owner-Base and global-difficulty-3 boundary.
 This entry does not replace the default world script yet.
 
+The knowledge-present first transition is intercepted natively before script
+event handlers: only local claimed Start, current turn zero and requested turn
+one are accepted, and the complete startup entity projection is checked again
+at dispatch. It refreshes social and seals pending Units. Canonical Bases skip
+legacy `base_turn` callbacks. This intermediate checkpoint does not yet post
+the original first upkeep mineral increment; the complete native two-pass
+upkeep entry must replace that deliberate gap before default activation.
+
 The producer consumes the frozen faction, resource, specialist, technology,
 production and territory rules. It grants HQ and the owner's admitted FACILITY
 records, chooses predefined Former 1 when its actual prerequisite is available

@@ -593,7 +593,8 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	if ( HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
+	if ( HandleCanonicalStartupTurnEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 		return;
@@ -896,7 +897,8 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
-				if ( !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
+				if ( !HandleCanonicalStartupTurnEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
 					std::lock_guard guard( m_event_handlers_mutex );
@@ -1434,7 +1436,7 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
-	RequireWorkerKnowledgeMutation();
+	RequireCanonicalStartupTurn( turn_id );
 	// Stage the first-command social refresh before publishing the new turn or
 	// invoking any upkeep consumer. A malformed context leaves both unchanged.
 	RefreshSimulationForTurn( turn_id );
@@ -1470,6 +1472,9 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 		for ( auto& it : m_bm->GetBases() ) {
 			auto* base = it.second;
+			// Canonical posting belongs to the native two-pass upkeep entry. It
+			// must never fall through to legacy event-driven economy callbacks.
+			if ( base->HasSmacResourceContext() ) { m_bm->RefreshBase(base); continue; }
 			m_state->TriggerObject(
 				m_bm, "base_turn", ARGS_F( &base ) {
 					{
@@ -1515,7 +1520,7 @@ void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 }
 
 void Game::FirstTurn( GSE_CALLABLE ) {
-	RequireWorkerKnowledgeMutation();
+	RequireCanonicalStartupTurn( 1 );
 	ASSERT( m_state->IsMaster(), "not master" );
 
 	// Startup events already queued by create_world/start still belong to turn 0.
@@ -1769,6 +1774,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 			for ( const auto& event : batch->events ) {
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleCanonicalStartupTurnEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacWorkerEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );

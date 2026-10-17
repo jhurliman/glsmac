@@ -416,6 +416,8 @@ public:
 
 private:
 	friend class gse::tests::BackendFixture;
+	bool HandleCanonicalStartupTurnEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	void RequireCanonicalStartupTurn( size_t turn_id ) const;
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

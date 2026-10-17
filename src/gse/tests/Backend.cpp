@@ -3348,6 +3348,9 @@ public:
 		GT_ASSERT(result.empty(),"canonical first Base actual Start: "+result);
 		GT_ASSERT(callbacks==created.size() && callbacks==(scenario==9?2u:1u),"first Base callback replay/loss");
 		return WithScriptValues([&](GSE_CALLABLE)->std::string {
+			const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize();
+			bool repeated=false;try{m_game.AdvanceTurn(1);}catch(const std::exception&){repeated=true;}
+			GT_ASSERT(repeated && m_game.GetTurnId()==1 && m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeated first transition changed turn/knowledge");
 			for(const auto id:created) {
 				auto* base=m_game.GetBM()->GetBase(id);GT_ASSERT(base && base->GetSmacAllocation(),"first turn lost Base authority");
 				const auto context=base->GetSmacResourceContext();GT_ASSERT(m_game.m_simulation->value.social.Find(context.owner_simulation_id)->retained.has_value(),"actual first transition failed");

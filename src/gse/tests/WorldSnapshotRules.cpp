@@ -51,7 +51,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 6 && wire.ReadString() == id, "writer omitted the V6 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 7 && wire.ReadString() == id, "writer omitted the V7 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { for ( size_t field = 0; field < 9; ++field ) { wire.ReadInt(); } }
@@ -68,6 +68,8 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( wire.ReadString() == settings.GetSmacWorldSizeRules()->Serialize().ToString(), "world-size profile changed" );
 				GT_ASSERT( wire.ReadString() == settings.map.GetSmacWorldSize()->Serialize().ToString(), "accepted selection changed" );
 			}
+			GT_ASSERT( wire.ReadBool() == smac, "faction startup presence changed" );
+			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacFactionStartupRules()->Serialize( *settings.GetSmacTechnologyRules() ).ToString(), "faction startup metadata changed" ); }
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );
@@ -172,6 +174,49 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			}
 			auto changed = smac_rules_fixture::Technologies(); changed.technologies[ row ].flags ^= 1;
 			GT_ASSERT( reject( changed ), "world accepted different technology flags" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header binds every ordered faction bonus and scalar without changing settings", GT() {
+		using game::backend::settings::SmacFactionStartupRules;
+		using game::backend::settings::SmacFactionStartupBonus;
+		GlobalSettings source; source.SelectRuleset( "smac" ); source.InitializeHostRules( smac_rules_fixture::Source );
+		smac_rules_fixture::AcceptWorldSize( source );
+		types::Buffer snapshot; WriteHeader( snapshot, source );
+		const auto technologies = smac_rules_fixture::Technologies();
+		const auto reject = [ & ]( const SmacFactionStartupRules& changed ) {
+			GlobalSettings destination;
+			destination.Deserialize( smac_rules_fixture::Payload( "smac", true,
+				{ 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, {}, {}, {}, changed.Serialize( technologies ).ToString() ) );
+			smac_rules_fixture::AcceptWorldSize( destination );
+			const auto before = destination.Serialize().ToString(); auto input = snapshot;
+			return Rejects( [ & ]() { ValidateHeader( input, destination ); } ) && destination.Serialize().ToString() == before;
+		};
+		const std::array< const char*, 12 > values = { "Tech3", "tech2 ", "Disable", "None", "--SUPPORT", "17", "POLICE", "2", "3", "+1suffix", "7", "23" };
+		for ( size_t faction = 0; faction < 7; ++faction ) {
+			for ( size_t index = 0; index < values.size(); ++index ) {
+				auto changed = smac_rules_fixture::Factions(); auto& bonus = changed.factions[ faction ].bonuses[ index ];
+				bonus = SmacFactionStartupBonus::Parse( bonus.keyword, values[ index ], technologies );
+				GT_ASSERT( reject( changed ), "world accepted a changed raw/derived faction bonus" );
+			}
+			auto changed = smac_rules_fixture::Factions(); std::swap( changed.factions[ faction ].bonuses[ 0 ], changed.factions[ faction ].bonuses[ 2 ] );
+			GT_ASSERT( reject( changed ), "world ignored faction record order" );
+			changed = smac_rules_fixture::Factions(); changed.factions[ faction ].bonuses.pop_back();
+			GT_ASSERT( reject( changed ), "world accepted omitted numeric metadata" );
+			changed = smac_rules_fixture::Factions(); changed.factions[ faction ].bonuses.back() = SmacFactionStartupBonus::Parse( "DRONE", "16", technologies );
+			GT_ASSERT( reject( changed ), "world accepted changed scalar keyword/tag" );
+		}
+		GT_OK();
+	} );
+	task->AddTest( "world rules header rejects missing mistyped and late malformed faction metadata", GT() {
+		for ( const auto* id : { "smac", "smax" } ) {
+			GlobalSettings settings; settings.SelectRuleset( id ); settings.InitializeHostRules( smac_rules_fixture::Source ); smac_rules_fixture::AcceptWorldSize( settings );
+			const auto before = settings.Serialize().ToString();
+			for ( const auto& invalid : world_rules_fixture::InvalidFactionHeaders( id ) ) {
+				types::Buffer input( invalid.second ); input.WriteString( "unread world body" );
+				GT_ASSERT( Rejects( [ & ]() { ValidateHeader( input, settings ); } ), "accepted " + invalid.first );
+				GT_ASSERT( settings.Serialize().ToString() == before, "faction rejection changed frozen settings" );
+			}
 		}
 		GT_OK();
 	} );

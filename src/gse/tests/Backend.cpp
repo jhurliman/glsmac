@@ -5244,6 +5244,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				rejected.emplace_back( "technology: " + invalid.first, invalid.second );
 			}
 			for ( const auto& invalid : world_rules_fixture::InvalidWorldSizeHeaders( ruleset ) ) { rejected.emplace_back( "world-size: " + invalid.first, invalid.second ); }
+			for ( const auto& invalid : world_rules_fixture::InvalidFactionHeaders( ruleset ) ) { rejected.emplace_back( "faction: " + invalid.first, invalid.second ); }
 			if ( std::string( ruleset ) == "smac" ) {
 				const auto profile_rejected = world_rules_fixture::InvalidSmacHeaders();
 				rejected.insert( rejected.end(), profile_rejected.begin(), profile_rejected.end() );
@@ -5266,7 +5267,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 				}
 			}
 			for ( const auto& invalid : rejected ) {
-				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0;
+				const bool retain_map = invalid.first.compare( 0, 12, "technology: " ) == 0 || invalid.first.compare( 0, 12, "world-size: " ) == 0 || invalid.first.compare( 0, 9, "faction: " ) == 0;
 				size_t callbacks = 0;
 				BackendFixture fixture;
 				fixture.EnableWorldSnapshot();
@@ -5341,9 +5342,9 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( fixture.IsDownloadFinished( client ) && !client->m_on_download_complete && !client->m_on_download_progress, "completion did not retire download state and callbacks" );
 					GT_ASSERT( fixture.HasMap() == retain_map && fixture.IsPreparingMap(), "invalid profile allocated or retired a map" );
 					if ( retain_map ) {
-						GT_ASSERT( game->GetMap() == prior_map, "late technology rejection replaced the existing map" );
+						GT_ASSERT( game->GetMap() == prior_map, "late profile rejection replaced the existing map" );
 						types::Buffer after; game->GetMap()->SaveToBuffer( after );
-						GT_ASSERT( after.ToString() == map_before.ToString(), "late technology rejection changed existing map bytes" );
+						GT_ASSERT( after.ToString() == map_before.ToString(), "late profile rejection changed existing map bytes" );
 					}
 					GT_ASSERT( game->GetRandom()->GetStateString() == before_rng && !fixture.HasPendingSnapshotRandom(), "rejected header changed or staged RNG" );
 					GT_ASSERT( !fixture.HasPendingSnapshotTurn() && !state->m_slots->GetSlot( 0 ).GetPlayer()->IsTurnCompleted() && state->m_slots->GetSlot( 2 ).GetPlayer()->IsTurnCompleted(), "rejected header changed or staged completion flags" );

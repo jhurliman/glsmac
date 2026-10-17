@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrSceneReader.cpp
 	${PWD}/CvrGeometryReader.cpp
 	${PWD}/CvrFrameAssembler.cpp
+	${PWD}/CvrIndexedRasterizer.cpp
 	${PWD}/GSE.cpp
 	${PWD}/Parser.cpp
 	${PWD}/Runner.cpp

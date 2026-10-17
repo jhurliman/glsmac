@@ -64,8 +64,11 @@ than repaired or reclassified.
 This parser's ingestion policy requires a unique section, exactly five complete
 three-column rows and a count of five. Numeric fields consume the complete signed
 decimal spelling, with checked int32 conversion. Source X is bounded to 2..256
-and source Y to 4..256. Odd Y is retained as source metadata but cannot be
-selected: current `Tiles` storage and pole-row processing require even heights.
+and source Y to even values in 4..256. Odd Y is rejected when parsing or
+restoring the catalog: current `Tiles` storage and pole-row processing require
+even heights. This guarantees every category exposed by the setup menus and
+lobby settings event can be selected before an event is broadcast. Rejected
+catalogs publish neither partial host profiles nor peer settings.
 Accepted presets require even coordinate spans within 4..512 by 4..256. Those
 storage bounds are not a promise that every modified tiny preset generates a
 playable map or supplies enough faction starting positions. Native asset-free

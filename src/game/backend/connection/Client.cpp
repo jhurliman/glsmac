@@ -118,6 +118,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							m_are_global_settings_received = true;
 							OnOpen();
+							AnnounceGameState();
 							break;
 						}
 						case types::Packet::PT_SLOT_UPDATE:
@@ -185,16 +186,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 							Log( "Got game state: " + std::to_string( packet.udata.game_state.state ) );
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
-								if ( m_on_game_state_change ) {
-									m_on_game_state_change( m_game_state );
-								}
-								WTrigger(
-									"game_state", ARGS_F( this ) {
-										{
-											"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
-										}
-									}; }
-								);
+								AnnounceGameState();
 							}
 							break;
 						}
@@ -245,8 +237,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 								}
 								else {
 									Log( "Download completed successfully" );
-									if ( m_on_download_complete ) {
-										m_on_download_complete( m_download_state.buffer );
+									// The completion callback may clear its own installed handler.
+									const auto on_complete = m_on_download_complete;
+									if ( on_complete ) {
+										on_complete( m_download_state.buffer );
 									}
 									m_download_state.buffer.clear();
 									m_download_state.is_downloading = false;
@@ -343,6 +337,21 @@ void Client::SendMessage( const std::string& message ) {
 
 const Connection::game_state_t Client::GetGameState() const {
 	return m_game_state;
+}
+
+bool Client::HasGlobalSettings() const {
+	return m_are_global_settings_received;
+}
+
+void Client::AnnounceGameState() {
+	// The server sends game state before settings, including when rejoining a
+	// running match. Never start profile-dependent scripts using local defaults.
+	if ( !m_are_global_settings_received || m_announced_game_state == m_game_state ) { return; }
+	m_announced_game_state = m_game_state;
+	if ( m_on_game_state_change ) { m_on_game_state_change( m_game_state ); }
+	WTrigger( "game_state", ARGS_F( this ) {
+		{ "state", VALUE( gse::value::String,, GetGameStateStr( m_game_state ) ) }
+	}; } );
 }
 
 void Client::RequestDownload() {

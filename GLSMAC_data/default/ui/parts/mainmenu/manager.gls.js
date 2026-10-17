@@ -18,11 +18,16 @@ const manager = {
 		this.data_stack[#sizeof(this.data_stack) - 1].index = index;
 	},
 
-	pop: (m, reset) => {
+	// Remove a transient step without reopening or clearing its ancestors.
+	discard: () => {
 		const last_entry = this.data_stack :~;
 		if (#is_defined(last_entry) && #is_defined(last_entry.data.destructor)) {
 			last_entry.data.destructor();
 		}
+	},
+
+	pop: (m, reset) => {
+		this.discard();
 		if ( !#is_empty(this.data_stack)) {
 			const entry = this.data_stack :~;
 			this.modules[entry.type].show(entry.data);

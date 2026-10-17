@@ -624,7 +624,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
-        {"save_campaign", NATIVE_CALL(this, session = m_state->CaptureGameSession()) {
+        {"save_campaign", NATIVE_CALL(this, session = m_state ? m_state->CaptureGameSession() : State::game_session_t{}) {
             N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
             try {return VALUE(gse::value::Int,,QueueCampaignSave(session,path));}
             catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}

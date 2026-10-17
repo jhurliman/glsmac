@@ -22,6 +22,9 @@ bool SmacWorkerAvailabilitySquare::operator==( const SmacWorkerAvailabilitySquar
 uint32_t SmacWorkerAvailability::Build( const SmacWorkerAvailabilityContext& c, const Squares& squares,
 	const std::vector< SmacWorkerOtherBase >& other_bases ) {
 	PlayerOwner( c.owner );
+	if ( c.pact[ 0 ] || c.treaty[ 0 ] ) {
+		throw std::invalid_argument( "Native units cannot be SMAC diplomacy partners" );
+	}
 	std::array< std::optional< std::array< int32_t, 2 > >, 21 > coordinates;
 	for ( int32_t i = 0; i <= 20; ++i ) {
 		coordinates[ i ] = SmacWorkedSquareCollection::Resolve( c.map, i );

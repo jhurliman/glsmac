@@ -26,6 +26,7 @@ struct SmacWorkerAvailabilityContext {
 	SmacWorkerRadiusMap map;
 	bool all_map_revealed;
 	// Each relation is directed from this evaluator to the indexed owner.
+	// Native identity 0 is not a diplomacy partner; both entries must be false.
 	std::array< bool, 8 > pact, treaty;
 };
 

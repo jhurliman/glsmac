@@ -36,7 +36,7 @@ Texture::Texture( const std::string& filename, const size_t width, const size_t 
 }
 
 Texture::~Texture() {
-	if ( g_engine ) { // may be null if shutting down
+	if ( g_engine && !HasFlag( TF_CPU_ONLY ) ) { // CPU canvases never acquire a graphics object
 		g_engine->GetGraphics()->UnloadTexture( this );
 	}
 	if ( m_bitmap ) {

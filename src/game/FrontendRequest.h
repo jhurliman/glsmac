@@ -10,6 +10,7 @@
 namespace game {
 
 namespace backend {
+namespace map { struct TerrainRenderUpdate; }
 namespace map::tile {
 class Tile;
 class TileState;
@@ -27,6 +28,7 @@ public:
 		FR_QUIT,
 		FR_ERROR,
 		FR_UPDATE_TILES,
+		FR_UPDATE_TERRAIN,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_FACTION_DEFINE,
@@ -92,6 +94,7 @@ public:
 		struct {
 			const tile_updates_t* tile_updates;
 		} update_tiles;
+		struct { const backend::map::TerrainRenderUpdate* update; } update_terrain;
 		struct {
 			size_t tile_x;
 			size_t tile_y;

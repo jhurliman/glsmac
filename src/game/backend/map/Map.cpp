@@ -53,47 +53,7 @@ static inline unsigned char S_to_binary_( const char* s ) {
 Map::Map( Game* game )
 	: gse::GCWrappable( nullptr )
 	, m_game( game ) {
-	// add texture variant bitmap maps
-	CalculateTextureVariants(
-		TVT_TILES, {
-			{ B( 00000000 ), B( 10101010 ) }, // 0
-			{ B( 00001000 ), B( 10101010 ) }, // 1
-			{ B( 00101000 ), B( 10111010 ) }, // 2
-			{ B( 00111000 ), B( 10111010 ) }, // 3
-			{ B( 10001000 ), B( 10101010 ) }, // 4
-			{ B( 10101000 ), B( 11111010 ) }, // 5
-			{ B( 10111000 ), B( 11111010 ) }, // 6
-			{ B( 11101000 ), B( 11111010 ) }, // 7
-			{ B( 11111000 ), B( 11111010 ) }, // 8
-			{ B( 10101010 ), B( 11111111 ) }, // 9
-			{ B( 10101110 ), B( 11111111 ) }, // 10
-			{ B( 10111110 ), B( 11111111 ) }, // 11
-			{ B( 11101110 ), B( 11111111 ) }, // 12
-			{ B( 11111110 ), B( 11111111 ) }, // 13
-			{ B( 11111111 ), B( 11111111 ) }, // 14
-			// 15 ???
-		}
-	);
-	CalculateTextureVariants(
-		TVT_RIVERS_FORESTS, {
-			{ B( 00000000 ), B( 10101010 ) }, // 0
-			{ B( 00100000 ), B( 10101010 ) }, // 1
-			{ B( 10000000 ), B( 10101010 ) }, // 2
-			{ B( 10100000 ), B( 10101010 ) }, // 3
-			{ B( 00000010 ), B( 10101010 ) }, // 4
-			{ B( 00100010 ), B( 10101010 ) }, // 5
-			{ B( 10000010 ), B( 10101010 ) }, // 6
-			{ B( 10100010 ), B( 10101010 ) }, // 7
-			{ B( 00001000 ), B( 10101010 ) }, // 8
-			{ B( 00101000 ), B( 10101010 ) }, // 9
-			{ B( 10001000 ), B( 10101010 ) }, // 10
-			{ B( 10101000 ), B( 10101010 ) }, // 11
-			{ B( 00001010 ), B( 10101010 ) }, // 12
-			{ B( 00101010 ), B( 10101010 ) }, // 13
-			{ B( 10001010 ), B( 10101010 ) }, // 14
-			{ B( 10101010 ), B( 10101010 ) }, // 15
-		}
-	);
+	InitTextureVariants();
 
 	// main source textures
 	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TEXTURE );
@@ -307,6 +267,16 @@ void Map::ClearTexture() {
 void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
+	if ( m_land_canvas ) {
+		if ( tile_layer != tile::LAYER_LAND ) throw std::runtime_error( "land canvas layer mismatch" );
+		m_land_canvas->AddFrom( m_textures.source.texture_pcx, mode, tc.x, tc.y,
+			tc.x + s_consts.tc.texture_pcx.dimensions.x - 1, tc.y + s_consts.tc.texture_pcx.dimensions.y - 1,
+			0, 0, rotate, alpha, GetRandom(), perlin );
+		return;
+	}
+	if ( tile_layer == tile::LAYER_WATER ) RecordWaterPaint( m_textures.source.texture_pcx, tc.x, tc.y,
+		m_current_ts->tex_coord.x1, tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		mode, rotate, alpha, perlin );
 	ASSERT( m_textures.terrain, "terrain texture not set" );
 	m_textures.terrain->AddFrom(
 		m_textures.source.texture_pcx,
@@ -327,6 +297,11 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 void Map::CopyTextureFromLayer( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
+	if ( tile_layer == tile::LAYER_WATER ) RecordWaterPaint( m_textures.terrain, tx_from,
+		tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
+		m_current_ts->tex_coord.x1, tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		mode, rotate, alpha, perlin,
+		tile_layer_from == tile::LAYER_LAND ? std::make_optional( TerrainCoastRecipes::Key{ tx_from, ty_from } ) : std::nullopt );
 	m_textures.terrain->AddFrom(
 		m_textures.terrain,
 		mode,
@@ -417,6 +392,15 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState* ts, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
+	if ( m_land_canvas ) {
+		if ( tile_layer != tile::LAYER_LAND ) throw std::runtime_error( "land canvas layer mismatch" );
+		m_land_canvas->AddFrom( src_texture, mode, 0, 0, s_consts.tc.texture_pcx.dimensions.x - 1,
+			s_consts.tc.texture_pcx.dimensions.y - 1, 0, 0, rotate, alpha, GetRandom() );
+		return;
+	}
+	if ( tile_layer == tile::LAYER_WATER ) RecordWaterPaint( src_texture, 0, 0,
+		ts->tex_coord.x1, tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ts->tex_coord.y1,
+		mode, rotate, alpha, nullptr );
 	ASSERT( m_textures.terrain, "terrain texture not set" );
 	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
 	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
@@ -461,7 +445,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 				}
 				case TG_TERRAFORMING: {
 					matches[ idx++ ] = (
-						( t->terraforming & value ) == ( tile->terraforming & value ) &&
+						( GetRenderTerraforming( t ) & value ) == ( GetRenderTerraforming( tile ) & value ) &&
 							t->is_water_tile == tile->is_water_tile // terraforming doesn't continue into water
 					);
 					break;
@@ -526,7 +510,11 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 }
 
 Random* Map::GetRandom() const {
-	return m_game->GetRandom();
+	return m_land_random ? m_land_random : m_game->GetRandom();
+}
+
+uint16_t Map::GetRenderTerraforming( const tile::Tile* tile ) const {
+	return tile == m_land_changed ? m_land_terraforming : tile->terraforming;
 }
 
 const size_t Map::GetWidth() const {
@@ -782,7 +770,11 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 	const auto tiles = m_tiles->GetVector( MT_C );
 	MT_RETIFV( EC_ABORTED );
 
+	m_coast_recipes.Clear();
+	m_terrain_updates_ready = false;
+	m_capture_coast = true;
 	LoadTiles( tiles, MT_C );
+	m_capture_coast = false;
 	MT_RETIFV( EC_ABORTED );
 
 	m_meshes.terrain->Finalize();
@@ -797,6 +789,7 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
+	m_terrain_updates_ready = true;
 
 	return EC_NONE;
 }
@@ -881,6 +874,10 @@ void Map::LoadTiles( const tiles_t& tiles, MT_CANCELABLE ) {
 	MT_RETIF();
 
 	for ( auto& c : m_map_state->copy_from_after ) {
+		const auto layer_height = m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y;
+		if ( c.ty_to / layer_height == tile::LAYER_WATER ) RecordWaterPaint( m_textures.terrain,
+			c.tx1_from, c.ty1_from, c.tx_to, c.ty_to, c.mode, c.rotate, c.alpha, c.perlin,
+			c.ty1_from / layer_height == tile::LAYER_LAND ? std::make_optional( TerrainCoastRecipes::Key{ c.tx1_from, c.ty1_from } ) : std::nullopt );
 		m_textures.terrain->AddFrom( m_textures.terrain, c.mode, c.tx1_from, c.ty1_from, c.tx2_from, c.ty2_from, c.tx_to, c.ty_to, c.rotate, c.alpha, GetRandom(), c.perlin );
 	}
 	m_map_state->copy_from_after.clear();
@@ -976,6 +973,51 @@ void Map::FixNormals( const tiles_t& tiles, MT_CANCELABLE ) {
 			) / 4
 		);
 	}
+}
+
+void Map::InitTextureVariants() {
+	// add texture variant bitmap maps
+	CalculateTextureVariants(
+		TVT_TILES, {
+			{ B( 00000000 ), B( 10101010 ) }, // 0
+			{ B( 00001000 ), B( 10101010 ) }, // 1
+			{ B( 00101000 ), B( 10111010 ) }, // 2
+			{ B( 00111000 ), B( 10111010 ) }, // 3
+			{ B( 10001000 ), B( 10101010 ) }, // 4
+			{ B( 10101000 ), B( 11111010 ) }, // 5
+			{ B( 10111000 ), B( 11111010 ) }, // 6
+			{ B( 11101000 ), B( 11111010 ) }, // 7
+			{ B( 11111000 ), B( 11111010 ) }, // 8
+			{ B( 10101010 ), B( 11111111 ) }, // 9
+			{ B( 10101110 ), B( 11111111 ) }, // 10
+			{ B( 10111110 ), B( 11111111 ) }, // 11
+			{ B( 11101110 ), B( 11111111 ) }, // 12
+			{ B( 11111110 ), B( 11111111 ) }, // 13
+			{ B( 11111111 ), B( 11111111 ) }, // 14
+			// 15 ???
+		}
+	);
+	CalculateTextureVariants(
+		TVT_RIVERS_FORESTS, {
+			{ B( 00000000 ), B( 10101010 ) }, // 0
+			{ B( 00100000 ), B( 10101010 ) }, // 1
+			{ B( 10000000 ), B( 10101010 ) }, // 2
+			{ B( 10100000 ), B( 10101010 ) }, // 3
+			{ B( 00000010 ), B( 10101010 ) }, // 4
+			{ B( 00100010 ), B( 10101010 ) }, // 5
+			{ B( 10000010 ), B( 10101010 ) }, // 6
+			{ B( 10100010 ), B( 10101010 ) }, // 7
+			{ B( 00001000 ), B( 10101010 ) }, // 8
+			{ B( 00101000 ), B( 10101010 ) }, // 9
+			{ B( 10001000 ), B( 10101010 ) }, // 10
+			{ B( 10101000 ), B( 10101010 ) }, // 11
+			{ B( 00001010 ), B( 10101010 ) }, // 12
+			{ B( 00101010 ), B( 10101010 ) }, // 13
+			{ B( 10001010 ), B( 10101010 ) }, // 14
+			{ B( 10101010 ), B( 10101010 ) }, // 15
+		}
+	);
+
 }
 
 void Map::CalculateTextureVariants( const texture_variants_type_t type, const texture_variants_rules_t& rules ) {

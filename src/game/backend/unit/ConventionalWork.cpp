@@ -140,11 +140,17 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
         if(pending.unit!=entry.first || (pending.ops&UUO_DESPAWN)){throw std::runtime_error("Terraforming has a stale Unit update");}
         pending.ops=static_cast<unit_update_op_t>(pending.ops|UUO_REFRESH);
     }
-    // Copy presentation storage before authority writes. This refreshes semantic
-    // terrain/preview data; rendering new improvement graphics is a separate job.
+    // Stage owned atlas/sprite payloads before any Unit, terrain or knowledge write.
+    std::unique_ptr<map::Map::PreparedTerrainUpdate> render;
+    if(prepared.terraforming){render=GetMap()->PrepareOrdinaryTerrainUpdate(prepared.tile,*prepared.terraforming);}
     std::optional<std::vector<FrontendRequest>> frontend;
     if(prepared.terraforming) {
         frontend.emplace(*m_game->m_pending_frontend_requests);
+        if(render) {
+            FrontendRequest request(FrontendRequest::FR_UPDATE_TERRAIN);
+            NEW(request.data.update_terrain.update,map::TerrainRenderUpdate,GetMap()->GetTerrainUpdatePayload(*render));
+            frontend->push_back(request);
+        }
         FrontendRequest request(FrontendRequest::FR_UPDATE_TILES);
         const FrontendRequest::tile_updates_t changed{{prepared.tile,GetMap()->GetTileState(prepared.tile)}};
         NEW(request.data.update_tiles.tile_updates,FrontendRequest::tile_updates_t,changed);
@@ -154,6 +160,7 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
     static_assert(noexcept(m_unit_updates.swap(updates)));
     for(const auto& entry:prepared.units){entry.first->CommitConventionalMove(entry.second,prepared.tile);}
     if(prepared.terraforming){prepared.tile->terraforming=*prepared.terraforming;}
+    if(render){GetMap()->CommitOrdinaryTerrainUpdate(*render);}
     m_game->CommitConventionalSight(prepared.knowledge);
     m_unit_updates.swap(updates);
     if(frontend){m_game->m_pending_frontend_requests->swap(*frontend);}

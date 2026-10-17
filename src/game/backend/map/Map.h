@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
+#include "TerrainRenderUpdate.h"
 
 #include "types/Serializable.h"
 #include "gse/GCWrappable.h"
@@ -19,6 +21,7 @@
 
 namespace gse::tests {
 class BackendFixture;
+class TerrainRenderFixture;
 }
 
 namespace types {
@@ -120,6 +123,21 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const tile::Tile* tile, const tile_grouping_criteria_t criteria, const tile::feature_t feature = tile::FEATURE_NONE ) const;
 	Random* GetRandom() const;
+	uint16_t GetRenderTerraforming( const tile::Tile* tile ) const;
+
+	class PreparedTerrainUpdate {
+	public:
+		~PreparedTerrainUpdate();
+	private:
+		friend class Map;
+		struct Data;
+		PreparedTerrainUpdate();
+		std::unique_ptr< Data > data;
+	};
+	// No live terrain/atlas mutation; empty only for headless maps without render state.
+	std::unique_ptr< PreparedTerrainUpdate > PrepareOrdinaryTerrainUpdate( const tile::Tile* tile, uint16_t terraforming );
+	const TerrainRenderUpdate& GetTerrainUpdatePayload( const PreparedTerrainUpdate& prepared ) const;
+	void CommitOrdinaryTerrainUpdate( PreparedTerrainUpdate& prepared ) noexcept;
 
 	const size_t GetWidth() const;
 	const size_t GetHeight() const;
@@ -146,6 +164,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 private:
 	friend class gse::tests::BackendFixture;
+	friend class gse::tests::TerrainRenderFixture;
 	// Backend snapshot fixtures need only the tile grid. This constructor does
 	// not initialize render state, textures, meshes, or terrain render modules.
 	Map( Game* game, const uint32_t width, const uint32_t height );
@@ -176,6 +195,19 @@ private:
 	std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > m_sprite_instances_to_add = {};
 
 private:
+
+	void InitTextureVariants();
+	TerrainCoastRecipes m_coast_recipes;
+	bool m_capture_coast = false;
+	bool m_terrain_updates_ready = false;
+	// Private synchronous LandSurface canvas; never points at the frontend atlas.
+	types::texture::Texture* m_land_canvas = nullptr;
+	Random* m_land_random = nullptr;
+	const tile::Tile* m_land_changed = nullptr;
+	uint16_t m_land_terraforming = 0;
+	void RecordWaterPaint( const types::texture::Texture* source, size_t x, size_t y,
+		size_t dx, size_t dy, types::texture::add_flag_t flags, uint8_t rotate, float alpha,
+		util::Perlin* perlin, std::optional< TerrainCoastRecipes::Key > land = std::nullopt );
 
 	Game* m_game = nullptr;
 

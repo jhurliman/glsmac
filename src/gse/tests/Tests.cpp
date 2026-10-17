@@ -1,5 +1,6 @@
 #include "Tests.h"
 #include "SmacOrdinaryLandExploration.h"
+#include "TerrainRenderUpdate.h"
 #include "Async.h"
 
 #include "Backend.h"
@@ -128,6 +129,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		tests::AddSmacOrdinaryLandExplorationTests( task );
+		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );

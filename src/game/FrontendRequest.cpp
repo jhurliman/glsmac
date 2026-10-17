@@ -1,6 +1,7 @@
 #include "FrontendRequest.h"
 
 #include <cstring>
+#include "backend/map/TerrainRenderUpdate.h"
 
 #include "common/Common.h"
 
@@ -26,6 +27,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			if ( other.data.error.stacktrace ) {
 				NEW( data.error.stacktrace, std::string, *other.data.error.stacktrace );
 			}
+			break;
+		}
+		case FR_UPDATE_TERRAIN: {
+			NEW( data.update_terrain.update, backend::map::TerrainRenderUpdate, *other.data.update_terrain.update );
 			break;
 		}
 		case FR_UPDATE_TILES: {
@@ -122,6 +127,10 @@ FrontendRequest::~FrontendRequest() {
 			if ( data.error.stacktrace ) {
 				DELETE( data.error.stacktrace );
 			}
+			break;
+		}
+		case FR_UPDATE_TERRAIN: {
+			DELETE( data.update_terrain.update );
 			break;
 		}
 		case FR_UPDATE_TILES: {

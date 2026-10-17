@@ -71,6 +71,7 @@ static constexpr uint8_t LT_CONTRAST = 32;
 enum texture_flag_t {
 	TF_NONE = 0,
 	TF_MIPMAPS = 1 << 0,
+	TF_CPU_ONLY = 1 << 1, // owned compositor canvases: never submitted to graphics
 };
 
 }

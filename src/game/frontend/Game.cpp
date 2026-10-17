@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "game/backend/map/TerrainRenderUpdate.h"
 
 #include <algorithm>
 #include <map>
@@ -952,6 +953,21 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					f_exit( errmsg );
 				}
 			);
+		}
+		case FrontendRequest::FR_UPDATE_TERRAIN: {
+			// All atlas/actor access stays on the frontend thread. A reset can retire
+			// the renderer before a previously queued presentation payload is drained.
+			if ( !m_textures.terrain ) break;
+			const auto& update = *request->data.update_terrain.update;
+			for ( const auto& [key, actor] : update.actors ) GetTerrainInstancedSprite( actor );
+			update.ApplyTexture( *m_textures.terrain );
+			for ( const auto& [id, key] : update.removed ) {
+				auto* actor = m_ism->GetInstancedSpriteByKey( key )->actor;
+				if ( actor->HasInstance( id ) ) actor->RemoveInstance( id );
+			}
+			for ( const auto& instance : update.added )
+				m_ism->GetInstancedSpriteByKey( instance.actor )->actor->SetInstance( instance.id, instance.coords );
+			break;
 		}
 		case FrontendRequest::FR_UPDATE_TILES: {
 			const auto& tiles_data = *request->data.update_tiles.tile_updates;

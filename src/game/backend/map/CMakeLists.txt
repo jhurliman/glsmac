@@ -7,6 +7,8 @@ SET( SRC ${SRC}
 	${PWD}/SmacOrdinaryLandExploration.cpp
 	${PWD}/Consts.cpp
 	${PWD}/Map.cpp
+	${PWD}/MapTerrainUpdate.cpp
+	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp
 	${PWD}/SmacWorkerMapFrame.cpp
 	${PWD}/SmacWorkerKnowledge.cpp

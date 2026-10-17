@@ -134,7 +134,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 
 	if ( !tile->is_water_tile ) {
 
-		if ( tile->terraforming & tile::TERRAFORMING_FARM || tile->terraforming & tile::TERRAFORMING_SOIL_ENRICHER ) {
+		if ( m_map->GetRenderTerraforming( tile ) & tile::TERRAFORMING_FARM || m_map->GetRenderTerraforming( tile ) & tile::TERRAFORMING_SOIL_ENRICHER ) {
 			// TODO: select based on nutrients yields instead of moisture
 			m_map->AddTexture(
 				tile::LAYER_LAND,
@@ -144,7 +144,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			);
 		}
 
-		if ( tile->terraforming & tile::TERRAFORMING_FOREST ) {
+		if ( m_map->GetRenderTerraforming( tile ) & tile::TERRAFORMING_FOREST ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_TERRAFORMING, tile::TERRAFORMING_FOREST );
 			auto& tc = s_consts.tc.texture_pcx.forest[ txinfo.texture_variant ];
 			auto add_flags = types::texture::AM_MERGE | txinfo.texture_flags;
@@ -195,12 +195,12 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			tile::TERRAFORMING_ROAD,
 			tile::TERRAFORMING_MAG_TUBE
 		} ) {
-			if ( tile->terraforming & t ) {
+			if ( m_map->GetRenderTerraforming( tile ) & t ) {
 				std::vector< uint8_t > road_variants = {};
 				road_variants.reserve( 9 ); // to minimize reallocations
 
 #define x( _side, _variant ) { \
-                    if ( tile->_side->terraforming & t ) \
+                    if ( m_map->GetRenderTerraforming( tile->_side ) & t ) \
                         road_variants.push_back( _variant ); \
                     }
 				x( NE, 1 );

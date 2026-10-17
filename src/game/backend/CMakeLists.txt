@@ -19,11 +19,13 @@ SET( SRC ${SRC}
 	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
 	${PWD}/WorldSnapshotRules.cpp
+	${PWD}/WorldSnapshotWorkerKnowledge.cpp
 	${PWD}/WorldSnapshotRandom.cpp
 	${PWD}/WorldSnapshotTurn.cpp
 	${PWD}/Game.cpp
 	${PWD}/GameSimulation.cpp
 	${PWD}/GameTileResources.cpp
+	${PWD}/GameWorkerKnowledge.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/RosterRecords.cpp

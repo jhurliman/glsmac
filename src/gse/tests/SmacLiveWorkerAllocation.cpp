@@ -754,6 +754,48 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(base->GetSmacUpkeepCache()->calculation.nutrients.stored_before==1,"final resource pass did not replace prefix cache");GT_OK();
 		});
 	} );
+	task->AddTest( "SMAC Colony saved question restores without replay and Delay consumes the saved tail once", []( GSE*, context::Context* ) -> std::string {
+		ConventionalUnitFixture source;source.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+		source.ResourceState([](auto& state){state.economy.at(1).rates={0,0};});
+		std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
+		source.BasePresentationRoles(roles);
+		std::string snapshot,base_record,random;
+		const auto setup=source.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=source.Game();auto* base=Populate(GSE_CALL,source,false);
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");SelectionPresentations(source);
+			auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+			const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+			base->SetProductionState(GSE_CALL,ProductionState{target,27,target,77,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(0);
+			source.BeginColonyChoice(GSE_CALL,base->m_id);
+			snapshot=source.Snapshot();base_record=Base::Serialize(base).ToString();random=game->GetRandom()->GetStateString();GT_OK();
+		});GT_ASSERT(setup.empty(),"save Colony question: "+setup);
+		ConventionalUnitFixture restored;restored.ConfigureProduction(ColonyChoiceSource,"GAIANS");restored.BasePresentationRoles(roles);
+		const auto load=restored.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=restored.Game();game->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");
+			restored.RestoreThroughStart(GSE_CALL,snapshot,[&](GSE_CALLABLE) {
+				if(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony")->type!=VT_NULL) {
+					throw std::runtime_error("restored question published before manager reconstruction");
+				}
+			});
+			auto* base=game->GetBM()->GetBase(701);
+			GT_ASSERT(Base::Serialize(base).ToString()==base_record && game->GetRandom()->GetStateString()==random,
+				"restoration replayed the first pass or replaced saved cache/RNG");
+			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
+			const auto request=static_cast<value::Int*>(pending->Get("request_id"))->value;
+			GT_ASSERT(request>0 && base->GetProductionState()->minerals==30 && base->GetProductionState()->baseline_minerals==77
+				&& base->GetAccumulatedNutrients()==0,"loaded question advanced its population or baseline");
+			for(int i=0;i<2;++i) {game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"delay")}});}
+			GT_OK();
+		});GT_ASSERT(load.empty(),"restore Colony question: "+load);
+		restored.DrainEvents();
+		return restored.Run([&](GSE_CALLABLE) -> std::string {
+			auto* game=restored.Game();const auto* base=game->GetBM()->GetBase(701);
+			GT_ASSERT(base->GetProductionState()->minerals==30 && base->GetProductionState()->baseline_minerals==30
+				&& base->GetAccumulatedNutrients()==1,"loaded Delay replayed mineral posting or population collection");
+			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony")->type==VT_NULL,"loaded answer did not retire");GT_OK();
+		});
+	} );
 	task->AddTest( "SMAC Colony retained calculation changes only at actual calculation publication", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
 		return fixture.Run([&](GSE_CALLABLE) -> std::string {

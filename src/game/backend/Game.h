@@ -469,6 +469,11 @@ private:
 		std::optional<size_t> screen_base;
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
+	std::optional<CanonicalTurnContinuation> m_pending_canonical_continuation;
+	types::Buffer SerializeCanonicalContinuation() const;
+	std::optional<CanonicalTurnContinuation> ReadCanonicalContinuation(types::Buffer buffer,size_t turn) const;
+	void ValidateCanonicalContinuation(const CanonicalTurnContinuation&) const;
+	void ApplySnapshotContinuation(GSE_CALLABLE);
 	std::optional<CanonicalResearchRequest> m_research_request;
 	struct CanonicalColonyRequest { int64_t id; int32_t owner; size_t base, turn; };
 	std::optional<CanonicalColonyRequest> m_colony_request;

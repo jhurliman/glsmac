@@ -2,6 +2,9 @@
 
 #include "BaseResourceCalculation.h"
 #include "SmacUnitSupport.h"
+#include <optional>
+
+namespace types { class Buffer; }
 
 namespace game::backend::base {
 
@@ -14,5 +17,12 @@ struct SmacBaseUpkeepCache {
     SmacBaseResourceCalculation calculation;
     SmacUnitSupportResult support;
 };
+
+// Preserve historical values and record order; decoding never queries the
+// current map, Unit registry or rules to recompute the saved pass.
+void WriteSmacResourceCalculation(types::Buffer&, const SmacBaseResourceCalculation&);
+SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer&);
+types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCache>&);
+std::optional<SmacBaseUpkeepCache> DeserializeSmacBaseUpkeepCache(types::Buffer);
 
 }

@@ -1679,6 +1679,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		DiscardSnapshotTurn();
 		m_pending_simulation.reset();
 		if ( !completed ) { m_simulation.reset(); }
+		m_pending_canonical_continuation.reset();
 	} );
 	ValidatePendingSnapshotTurn();
 	PublishPendingSimulation();
@@ -1730,6 +1731,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 			? turn::TS_WAITING_FOR_PLAYERS
 			: m_is_turn_complete ? turn::TS_TURN_COMPLETE : turn::TS_TURN_ACTIVE );
 	}
+	ApplySnapshotContinuation(GSE_CALL);
 	if ( m_state->m_connection ) {
 		m_state->m_connection->IfServer(
 			[]( connection::Server* connection ) -> void {
@@ -2749,7 +2751,7 @@ void Game::DiscardInitializationMap( map::Map*& candidate ) {
 }
 
 std::string Game::SerializeWorldSnapshot() const {
-	if (m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) { THROW("Canonical transition is incomplete; snapshot unavailable"); }
+	const auto continuation = SerializeCanonicalContinuation();
 	if ( m_um ) { m_um->RequireConventionalUnitsReady(); }
 	if ( !m_map ) {
 		// map not generated yet
@@ -2811,6 +2813,7 @@ std::string Game::SerializeWorldSnapshot() const {
 		m_am->Serialize( b );
 		buf.WriteString( b.ToString() );
 	}
+	buf.WriteString( continuation.ToString() );
 
 	return buf.ToString();
 }
@@ -2832,6 +2835,7 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
+	m_pending_canonical_continuation.reset();
 	connection->m_on_download_progress = [ this, is_current ]( const float progress ) {
 		if ( !is_current() ) { return; }
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
@@ -2892,6 +2896,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
+	m_pending_canonical_continuation.reset();
 	auto map_buffer = types::Buffer( map_payload );
 	const auto ec = m_map->LoadFromBuffer( map_buffer );
 	if ( ec != map::Map::EC_NONE ) {
@@ -2923,6 +2928,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 		auto animations = types::Buffer( body.ReadString() );
 		m_am->Deserialize( animations );
 	}
+	auto continuation = ReadCanonicalContinuation(types::Buffer(body.ReadString()),turn_state.id);
 	StageSnapshotTurn( GSE_CALL, turn_state );
 	MTModule::Log( "Received turn ID: " + std::to_string( turn_state.id ) );
 	// Turn's setter only assigns the ID. Game::AdvanceTurn also runs gameplay
@@ -2930,6 +2936,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	m_current_turn.AdvanceTurn( turn_state.id );
 	m_pending_snapshot_random = random_state;
 	m_pending_simulation = std::move( simulation );
+	m_pending_canonical_continuation = std::move( continuation );
 	m_game_state = GS_INITIALIZING;
 }
 
@@ -3077,7 +3084,7 @@ void Game::ResetGame() {
 
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
-		m_pending_simulation.reset(); m_simulation.reset();
+		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;

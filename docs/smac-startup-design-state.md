@@ -147,3 +147,25 @@ generic-header rejection matrix. Final production correctness analysis covers
 317 translation units with zero failures in 243.71 seconds. The Release probe
 also rejects six invalid supplied-context requests. No Windows, macOS, live
 rendering or full-match result is claimed for this source receipt.
+
+## Focused publication receipt
+
+Publication implementation `0bd69fe3` applies the source change directly to
+PR136 head `55b1331f`. The parent retains the canonical roster, frozen profiles,
+live simulation admission and initial-turn prerequisites. PR136 remains an
+explicit merge dependency; this receipt does not claim that it has landed.
+
+The feature delta remains 22 files. Production changes, dedicated test files,
+synthetic source fixture, probe and comparator match source `19518262`.
+Only the new test source/include/Add registration placement is adapted to the
+parent's registry order; all existing registrations remain. An independent
+read-only review checked that union and the automatic Backend fixture merge.
+
+On this actual publication implementation, full normal CTest passes 8/8 in
+74.68 seconds, and all 54 selected native groups pass with allocation tracking.
+The six separately compiled production controls each fail their intended
+assertions. Focused LLVM 15 analysis covers Game, GameSimulation,
+SmacSimulationState and SmacStartupDesignState with zero failures in 17.79
+seconds. Logs use the `design-publication-` prefix in the retained validation
+directory above. The full sanitizer and original-comparison receipts remain
+the source receipts; they were not rerun unchanged on this publication ancestry.

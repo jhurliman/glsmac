@@ -398,23 +398,33 @@ extreme social/resource inputs or a complete base economy.
    Destination fungus without an admitted
    nearby HQ is now rejected: the old empty-world fixture supplied a zero
    nearest-base distance and did not establish general encounter behavior.
-2. Connect the canonical evaluating-base query to real worker intake using the
-   integrated complete resource profile, fungal capability producer, specialist
-   catalog and global resource modifier state. Canonical per-base context,
-   positional facility/specialist identities and saved map-resource semantics
-   are integrated. Preserve worker choices while connecting live intake and a
-   separately named nutrient-demand scalar. Complete allocation/repair and
-   specialist eligibility before activating manual worker commands; intake alone
-   cannot substitute for the handler's full forced calculation.
-   The seven-faction first-worker and reset
-   compositions supply the next acceptance cases. Preserve valid specialist
-   allocations through recalculation and the measured manual-handler order;
-   keep map-generation policy distinct from original generator equivalence.
+2. Canonical tile/Base gross intake, the separate nutrient-demand scalar and
+   actual-owner specialist eligibility now consume the integrated profiles and
+   contexts. Automatic priority/scoring/ranking and worker add/swap stages are
+   implemented as detached calculations. Complete existing collection, repair,
+   specialist competition/final fill and their live publication before activating
+   manual worker commands; gross intake alone cannot substitute for the handler's
+   full forced calculation. Preserve valid allocations through the measured early
+   exit, including shortages, and keep recalculation separate from turn posting.
+   Initial exploration, territorial recognition and unit visibility still need
+   persistent world inputs. The new original startup composition executes the
+   21-square reveal before founding, territory rebuilding and native visibility
+   without a later explored/owned overlay. Subsequent Scout sight and second-base
+   territory transitions are the next reference priorities. Keep the declared
+   GLSMAC map policy distinct from original map-generator equivalence.
 3. Complete support, production posting/completion/queues and research, retaining
    independent stored minerals and switching baseline. Add legal persistent
    Colony Pod founding and Former commands, then conventional combat, to close
    the first-base to second-base conquest loop. Recalculation must not post an
    extra turn of nutrients, minerals or treasury income.
+
+The [live-intake and worker-stage checkpoint](validation/worker-intake-2026-10-17.md)
+at `ce47b2b1` passes all eight tests on Windows, Linux sanitizer and native macOS,
+with the same 111 affected allocation-tracked groups on Windows and Linux and
+zero failures in the full 346-unit correctness scan. It connects canonical gross
+intake and actual-owner specialist queries, and adds detached automatic worker
+scoring/assignment stages. Full allocation and default campaign activation remain
+pending. Existing collection is validated separately for the next integration.
 
 The [base-intake foundation checkpoint](validation/base-intake-foundation-2026-10-17.md)
 at `990cc59a` passes all eight tests on Windows, Linux sanitizer and native macOS,

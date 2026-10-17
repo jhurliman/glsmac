@@ -45,6 +45,7 @@
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacSpecialistAllocation.h"
+#include "SmacWorkedSquareCollection.h"
 #include "SmacUnitSupport.h"
 #include "SmacMineralCostFactor.h"
 #include "SmacConventionalStats.h"
@@ -252,6 +253,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacWorkerAllocationTests( task );
 		tests::AddSmacSpecialistAllocationTests( task );
+		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacUnitSupportTests( task );
 	}
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_NATIVE_FILTER ) ) {

@@ -1,7 +1,8 @@
 # C++ correctness checks
 
-Run analysis when preparing a C++ change for review. It is separate from the
-normal edit/build/test loop and does not require the original game assets.
+Run analysis when preparing a C++ change for review. Use targeted production
+units and their known consumers for bounded gameplay changes. It is separate from
+the normal edit/build/test loop and does not require the original game assets.
 The `C++ correctness` pull-request workflow runs the same command as local use.
 
 Pull requests that change only Markdown skip the engine build, regression and
@@ -40,8 +41,11 @@ python3 tools/analyze_cpp.py --source src/game/backend/unit/Unit.cpp
 Repeat `--source PATH` to check several files. Paths are relative to the checkout
 root or absolute paths inside it; equivalent paths are normalized and checked
 once. Explicit selection does not query Git or expand after header changes. It
-is useful while editing, but does not replace the default branch check before
-review. `--source`, `--base`, and `--all` are mutually exclusive. Headers,
+is useful while editing and is sufficient before review when the affected
+production consumers are explicitly bounded. Use the conservative branch check
+for shared ownership, GC, threading/build changes or uncertain dependencies;
+do not widen every isolated gameplay rule into a full scan merely to produce
+another receipt. `--source`, `--base`, and `--all` are mutually exclusive. Headers,
 included fragments, generated/test files, platform-excluded sources, missing
 files, and sources absent from the compilation database are rejected rather
 than silently skipped. The JSON summary reports `scope: "explicit"` and the

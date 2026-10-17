@@ -122,6 +122,14 @@ exist. A speculative list of hundreds of tickets is not an implementation plan.
 
 ## PR and review workflow
 
+Development uses cached incremental builds, focused affected tests and targeted
+correctness analysis. Ownership/serialization changes get focused sanitizers.
+Full Linux/Windows/macOS runs belong at platform-sensitive changes, meaningful
+integration or playable milestones, and release gates; they are not a gate on
+every gameplay tweak. Reuse existing CI and unchanged-source evidence instead
+of duplicating runs. Spend implementation effort on connecting complete gameplay
+loops; keep validation notes proportionate to the change.
+
 - Use small `codex/` branches targeting the fork. Keep upstream-facing portability
   contributions separate from the larger gameplay effort.
 - Each PR describes the observable problem, the resulting behavior, the reference

@@ -2,7 +2,7 @@
 
 World header V8 appends an explicit presence flag and the complete frozen SMAC
 predefined-unit profile after the existing faction profile. SMAC requires it;
-SMAX requires absence. V1Ã¢â‚¬â€œV7 and unknown world header versions are rejected.
+SMAX requires absence. V1-V7 and unknown world header versions are rejected.
 GlobalSettings remains V7 and the nested unit profile remains V1. This is a
 versioned download contract, not a stable disk-save format.
 
@@ -42,8 +42,8 @@ The same invalid prefixes pass through the actual Client final-chunk dispatcher
 both immediately and queued. These new cases retain an existing map and check
 its identity and bytes, the other simulation state, and zero startup/gameplay
 callbacks. This is an asset-free rejection test; it does not claim a successful
-asset-bearing Client map constructor. The existing real snapshot writer Ã¢â€ â€™ body
-decoder Ã¢â€ â€™ InitComplete fixture covers SMAC and SMAX continuation, canonical
+asset-bearing Client map constructor. The existing real snapshot writer -> body
+decoder -> InitComplete fixture covers SMAC and SMAX continuation, canonical
 instances, RNG and turn/completion state, and requires the complete resulting
 snapshot to equal the source bytes, including the new profile.
 
@@ -70,3 +70,22 @@ for this source branch.
 
 Receipts are retained outside Git at
 `/home/jhurliman/src/glsmac-unit-weapon-parser/world-units-*`.
+
+
+## Focused publication
+
+Publication commit `e3c91cf4fc87dece22772ff16f5aa81811f093eb` applies this exact
+codec/test change atop host PR #128 at
+`79f9cbf386508934157aaad141a65ae0fb0cdc25`. Its joined prerequisite base retains
+#124, #125 and #115 histories. No integration branch or later canonical roster
+implementation is imported; the preceding source/integration distinction still
+applies.
+
+The actual publication application passed all six registered CTests in 45.75
+seconds. Its world codec and Game consumer passed explicit correctness analysis
+with zero failures in 16.50 seconds. A copied-production control removing only
+complete unit-profile equality fails the intended changed-catalog assertion
+through this ancestry's full native/script suite. The earlier source-branch
+sanitizer and tracked-filter receipts are not publication-head sanitizer claims.
+The three non-ASCII arrow/dash sequences in the original note are corrected to
+plain ASCII here; production and regression source are unchanged.

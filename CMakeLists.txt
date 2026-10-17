@@ -183,6 +183,14 @@ INCLUDE( CTest )
 IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" ) )
 	ADD_TEST( NAME gse COMMAND ${PROJECT_NAME} --gse-tests --quiet --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data" )
 	SET_TESTS_PROPERTIES( gse PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300 )
+	IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+		ADD_TEST( NAME gse_uuid_memorydebug
+			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet
+				--gse-tests-script "${PROJECT_SOURCE_DIR}/tools/tests/uuid-memorydebug.gls.js"
+				--prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-uuid-memorydebug"
+		)
+		SET_TESTS_PROPERTIES( gse_uuid_memorydebug PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 )
+	ENDIF ()
 
 	FOREACH ( CASE success failure missing )
 		ADD_TEST( NAME gse_exit_${CASE}

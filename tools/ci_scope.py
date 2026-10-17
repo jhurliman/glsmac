@@ -19,7 +19,7 @@ PLATFORM_PREFIXES = (
 )
 PLATFORM_FILES = {
     "CMakeLists.txt", "CMakePresets.json", "CMakeUserPresets.json",
-    "src/main.cpp", "src/Engine.cpp", "src/Engine.h",
+    "src/main.cpp", "src/GLSMAC.cpp", "src/GLSMAC.h",
     "src/config/Config.h", "src/util/UUID.cpp", "src/util/UUID.h",
     "src/util/System.cpp", "src/util/System.h", "src/util/FS.cpp",
     "src/util/FS.h", "src/util/String.cpp", "src/util/Thread.cpp",

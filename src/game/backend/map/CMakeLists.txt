@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 
 	${PWD}/SmacOrdinaryLandExploration.cpp
 	${PWD}/Consts.cpp
+	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/Map.cpp
 	${PWD}/MapState.cpp
 

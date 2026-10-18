@@ -648,6 +648,7 @@ private:
 	// words until actual per-owner initialization. An absent old save stays absent.
 	std::optional<faction::SmacEcologyHistory> m_smac_cross_world_ecology{std::in_place};
 	std::array<std::optional<uint32_t>,8> m_smac_cross_world_governor{};
+	faction::SmacFactionStatusWords m_smac_cross_world_faction_status=faction::SmacFactionStatusWords::Cold();
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;

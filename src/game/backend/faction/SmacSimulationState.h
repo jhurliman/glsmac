@@ -3,6 +3,7 @@
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
 #include "SmacEconomyState.h"
+#include "SmacHostileState.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
@@ -57,7 +58,7 @@ struct SmacSimulationState {
 	enum class MovementCapability : int64_t { Unavailable = 0, NoProjectsOrdinaryTerrain = 1 };
 	explicit SmacSimulationState( SmacGameplayRandomState random, MovementCapability capability, SmacGlobalResourceModifiers modifiers ) noexcept
 		: gameplay_random( random ), movement_capability( capability ), resource_modifiers( modifiers ) {}
-	static constexpr size_t MAX_WIRE_BYTES = 64 * 1024;
+	static constexpr size_t MAX_WIRE_BYTES = 256 * 1024;
 	static constexpr size_t MAX_TEXT_BYTES = 32 * 1024;
 	std::vector< SmacSimulationParticipant > roster;
 	SmacTechnologyState technology;
@@ -72,6 +73,7 @@ struct SmacSimulationState {
 	// Required per-owner financial authority. Absence never means neutral
 	// allocation rates or a zero treasury; restoration never posts income.
 	std::map< int32_t, SmacEconomyState > economy;
+	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;
 	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;

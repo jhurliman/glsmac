@@ -24,7 +24,7 @@ int32_t Checked( const int64_t value ) {
 void Validate( const Participant& p ) {
 	Require( p.reactor >= 1 && p.reactor <= 4, "SMAC Scout combat requires reactor 1..4" );
 	Require( p.health >= 1 && p.health <= 10 * p.reactor, "SMAC Scout combat requires positive HP within 10*reactor" );
-	Require( p.stored_morale >= 0 && p.stored_morale <= 6 && p.effective_morale == p.stored_morale, "SMAC Scout combat requires neutral equal stored/effective morale 0..6" );
+	Require( p.stored_morale >= 0 && p.stored_morale <= 6 && p.effective_morale >= 0 && p.effective_morale <= 6, "SMAC Scout combat requires stored/effective morale 0..6" );
 	Require( p.spent >= 0 && p.spent <= 255, "SMAC Scout combat requires byte-domain spent movement 0..255" );
 }
 void ValidateAllowance( const int32_t allowance ) {
@@ -52,11 +52,18 @@ Participant::Participant( const UnitId identity, const int32_t reactor, const in
 References::References( const std::optional< UnitId > selected, const std::optional< UnitId > secondary ) : selected( selected ), secondary( secondary ) {}
 
 AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Participant& defender, const int32_t attacker_allowance, const SmacGameplayRandomState& initial_random, const References& references ) {
+	Require(attacker.stored_morale==attacker.effective_morale && defender.stored_morale==defender.effective_morale,"Neutral Scout combat requires equal stored/effective morale");
+	return ResolveFlatScoutAttack(attacker,defender,attacker_allowance,initial_random,references,false);
+}
+
+AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, const int32_t attacker_allowance,
+	const SmacGameplayRandomState& initial_random, const References& references, bool fanatic ) {
 	Validate( attacker ); Validate( defender ); ValidateAllowance( attacker_allowance );
 	Require( attacker.identity != defender.identity, "SMAC Scout participants require distinct stable identities" );
 	Require( Names( references.selected, attacker.identity, defender.identity ) && Names( references.secondary, attacker.identity, defender.identity ), "SMAC Scout references must name a participant or be absent" );
 	Require( attacker.spent <= 255 - Q, "SMAC Scout attack spending would exceed the verified nonwrapping byte domain" );
-	const std::array< int32_t, 2 > strengths{ Checked( INT64_C( 32 ) * ( 6 + attacker.effective_morale ) ), Checked( INT64_C( 32 ) * ( 6 + std::max( 1, defender.effective_morale ) ) ) };
+	const auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale));
+	const std::array< int32_t, 2 > strengths{ fanatic ? Checked(int64_t(attack)*5/4) : attack, Checked( INT64_C( 32 ) * ( 6 + std::max( 1, defender.effective_morale ) ) ) };
 	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
 	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
 	std::array< int32_t, 2 > health{ attacker.health, defender.health };

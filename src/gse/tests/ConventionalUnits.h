@@ -29,6 +29,8 @@ public:
 	void ProductionPresentations( const std::array< std::string, 4 >& roles );
 	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map = false );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
+	std::optional<uint16_t> BattlePalette() const;
+	void BattlePalette(std::optional<uint16_t> value);
 	void PostEconomy( const game::backend::base::Base& base );
 	void SettleEconomy( int32_t owner );
 	bool HasTechnologyReveal( int32_t owner ) const;

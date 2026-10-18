@@ -1413,7 +1413,11 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					}
 					destination->terraforming = TERRAFORMING_BUNKER;
 				}
-				if ( scenario == 7 ) { auto foreign=record;foreign.owner_simulation_id=2;auto* other = Spawn( GSE_CALL, fixture, foreign, 72,6 ); other->SetTile( GSE_CALL, destination ); }
+				if ( scenario == 7 ) {
+					auto foreign=record;foreign.owner_simulation_id=2;auto* other=Spawn(GSE_CALL,fixture,foreign,72,6);other->SetTile(GSE_CALL,destination);
+					unit->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");other->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+					fixture.ResourceState([](auto& state){state.hostility.owners.at(1).directions[2].primary=1;});
+				}
 				if ( scenario == 8 ) { unit->m_animation_id = 99; }
 				if ( scenario == 9 ) { destination->Lock( 0 ); }
 				if ( scenario == 10 ) { destination = source; }
@@ -1433,7 +1437,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				std::string rejection;
 				try { manager->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& error ) { rejection = error.what(); }
 				GT_ASSERT( !rejection.empty(), "unsupported command was admitted at " + std::to_string( scenario ) );
-				if(scenario==7) {GT_ASSERT(rejection.find("same-owner")!=std::string::npos,"foreign occupied rejection did not reach the destination ownership check");}
+				if(scenario==7) {GT_ASSERT(rejection.find("diplomacy context")!=std::string::npos,"protected foreign rejection did not reach diplomacy admission");}
 				if ( scenario == 2 ) { GT_ASSERT( rejection.find( "exhausted" ) != std::string::npos, "zero-cost pricing preceded actionability" ); }
 				fixture.MoveEvent( GSE_CALL, unit, destination, caller );
 				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == source_members && destination->units == destination_members

@@ -16,6 +16,7 @@ namespace game::backend::base {
 struct BaseManager::SmacDispositionPlan {
     size_t participant, technology;
     faction::SmacEconomyState economy;
+    faction::SmacHostileState hostility;
     map::tile::Tile* site=nullptr;
     std::vector<std::pair<unit::Def*,unit::ConventionalUnitState>> units;
 };
@@ -32,7 +33,8 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     const auto technology=std::find_if(state.technology.factions.begin(),state.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
     if(participant==state.roster.end() || !participant->active || technology==state.technology.factions.end()) {THROW("Faction disposition has no active saved owner");}
     SmacDispositionPlan plan{static_cast<size_t>(participant-state.roster.begin()),static_cast<size_t>(technology-state.technology.factions.begin()),
-        m_game->PrepareSmacNonzeroInitialization(owner),nullptr,{}};
+        m_game->PrepareSmacNonzeroInitialization(owner),state.hostility,nullptr,{}};
+    plan.hostility.Reinitialize(owner);
     const auto* map=m_game->GetMap();auto* center=base.GetTile();
     if(!center || center->tiles!=map->GetTilesPtr() || center->base!=&base || !map->GetSmacWorkerKnowledge()) {THROW("Faction disposition has no canonical center or knowledge");}
     if(state.do_or_die || participant->restart_prohibited || m_game->GetTurnId()>100) {return plan;}
@@ -67,7 +69,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
 
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,
     unit::Def* transient_definition,unit::SmacMoraleMode mode) {
-    const auto plan=PrepareLastSmacBaseDisposition(base);
+    auto plan=PrepareLastSmacBaseDisposition(base);
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
     if(!territory) {THROW("Faction disposition requires staged territory");}
     auto* um=m_game->GetUM();
@@ -92,6 +94,7 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
     m_bases.swap(bases);m_base_order.swap(order);m_work_assignments.swap(assignments);
     m_base_updates.swap(updates);m_updated_bases.swap(triggers);base.GetTile()->base=nullptr;
     economy=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
+    state.hostility.owners.swap(plan.hostility.owners);
     state.roster[plan.participant].active=plan.site!=nullptr;
     units.Commit();std::unique_ptr<Base> retired(&base);lock.unlock();
     units.Notify(GSE_CALL);

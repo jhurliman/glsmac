@@ -232,11 +232,13 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 }
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
+	if(HasForeignOccupant(unit,destination)) {(void)PrepareConventionalAttack(unit,destination,caller);return;}
 	(void)PrepareConventionalMove( unit, destination, caller ); // owned copied RNG only
 }
 
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->CheckRW( GSE_CALL );
+	if(HasForeignOccupant(unit,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(unit,destination,caller));return;}
 	auto prepared = PrepareConventionalMove( unit, destination, caller );
 	if ( !prepared.result ) {
 		m_game->CommitConventionalSight(prepared.sight); return;

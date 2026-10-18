@@ -34,7 +34,7 @@ namespace slot {
 class Slot;
 }
 namespace faction { class Faction; }
-namespace unit { class Unit; class Def; enum class SmacMoraleMode : uint8_t; }
+namespace unit { class Unit; class Def; class UnitManager; enum class SmacMoraleMode : uint8_t; }
 
 namespace base {
 
@@ -110,6 +110,7 @@ public:
 
 private:
 	friend class backend::Game;
+	friend class unit::UnitManager;
 	friend class Base;
 	friend class gse::tests::BaseAllocationFixture;
 	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;

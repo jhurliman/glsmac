@@ -1,0 +1,115 @@
+{
+  "research_id": "RE-SMAC-RESTART-HOSTILE-HISTORY-001",
+  "turn": 6,
+  "restarting_faction": 1,
+  "return_value": 1,
+  "primary_transition": {
+    "clear_mask": 2415984456,
+    "keep_mask": 1878982839,
+    "initial_word": 4294967295,
+    "affected_word_after": 1878982839,
+    "affects_all_outgoing_slots": true,
+    "affects_reverse_slots_to_restarting_faction": true,
+    "other_foreign_slots_unchanged": true,
+    "existing_vendetta_preserved": true,
+    "existing_pact_treaty_truce_preserved": true
+  },
+  "preserved": [
+    "secondary relations",
+    "directed transition dates",
+    "paired counter A",
+    "paired counter B",
+    "all512 per-design loss history entries",
+    "integrity blemishes",
+    "faction bookkeeping"
+  ],
+  "literal": {
+    "secondary_before": [
+      2882396168,
+      2882396169,
+      2882396170,
+      2882396171,
+      2882396172,
+      2882396173,
+      2882396174,
+      2882396175
+    ],
+    "secondary_after": [
+      2882396168,
+      2882396169,
+      2882396170,
+      2882396171,
+      2882396172,
+      2882396173,
+      2882396174,
+      2882396175
+    ],
+    "dates_before": [
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115
+    ],
+    "dates_after": [
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115
+    ],
+    "paired_A_before": [
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215
+    ],
+    "paired_A_after": [
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215
+    ],
+    "paired_B_before": [
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315
+    ],
+    "paired_B_after": [
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315
+    ],
+    "integrity_before": 18,
+    "integrity_after": 18,
+    "bookkeeping_before": 20,
+    "bookkeeping_after": 20,
+    "loss_design2_before": 1514,
+    "loss_design2_after": 1514
+  },
+  "scope": "Actual original nonzero initializer entry through pre-search prefix and admitted-site package continuation to normal return; actual revoke helper. Synthetic history poison only. No placement search or new package rule."
+}

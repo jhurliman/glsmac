@@ -1,0 +1,422 @@
+{
+  "research_id": "RE-SMAC-HOSTILE-WAR-CALLER-001",
+  "scope": "Three focused local two-human contexts / four complete original hostile movement returns. Ordinary no-existing-peace versus already-Vendetta, no Base/instigator/alliances; initialized diplomacy display. Last context has two actually preallocated pairs and no RNG/world reset between battles. Original presentation services declared.",
+  "metadata_schema": "Self-authored diagnostic schema; primary/secondary are opaque compatibility relation values, paired counters are tracked separately without claiming complete names/lifetimes.",
+  "cases": [
+    {
+      "id": "no_peace",
+      "human_factions": [
+        1,
+        2
+      ],
+      "current_turn": 6,
+      "no_existing_peace": true,
+      "initial_vendetta": false,
+      "history_inputs_are_supplied": true,
+      "battles": [
+        {
+          "initial_crt": 3,
+          "final_crt": 1369276809,
+          "initial_shared": 3,
+          "final_shared": 1018897798,
+          "crt_draws": 38,
+          "shared_draws": 1,
+          "warning_prompt": false,
+          "war_break_handler_called": false,
+          "mutual_relation_setter_called": true,
+          "metadata_before": {
+            "primary": [
+              0,
+              0
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              5,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              0,
+              0
+            ],
+            "presentation_initialized": false,
+            "palette_identifier": 0
+          },
+          "metadata_after": {
+            "primary": [
+              2147516696,
+              2147516696
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              6,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              1,
+              0
+            ],
+            "presentation_initialized": true,
+            "palette_identifier": 9605
+          },
+          "survivor": {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          "selected": 0,
+          "secondary": -1,
+          "wrapper_return": 0
+        }
+      ]
+    },
+    {
+      "id": "already_vendetta",
+      "human_factions": [
+        1,
+        2
+      ],
+      "current_turn": 6,
+      "no_existing_peace": true,
+      "initial_vendetta": true,
+      "history_inputs_are_supplied": true,
+      "battles": [
+        {
+          "initial_crt": 3,
+          "final_crt": 1369276809,
+          "initial_shared": 3,
+          "final_shared": 1018897798,
+          "crt_draws": 38,
+          "shared_draws": 1,
+          "warning_prompt": false,
+          "war_break_handler_called": false,
+          "mutual_relation_setter_called": true,
+          "metadata_before": {
+            "primary": [
+              16,
+              16
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              5,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              0,
+              0
+            ],
+            "presentation_initialized": false,
+            "palette_identifier": 0
+          },
+          "metadata_after": {
+            "primary": [
+              2147516696,
+              2147516696
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              6,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              1,
+              0
+            ],
+            "presentation_initialized": true,
+            "palette_identifier": 9605
+          },
+          "survivor": {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          "selected": 0,
+          "secondary": -1,
+          "wrapper_return": 0
+        }
+      ]
+    },
+    {
+      "id": "two_battles_same_process",
+      "human_factions": [
+        1,
+        2
+      ],
+      "current_turn": 6,
+      "no_existing_peace": true,
+      "initial_vendetta": false,
+      "history_inputs_are_supplied": true,
+      "battles": [
+        {
+          "initial_crt": 3,
+          "final_crt": 1369276809,
+          "initial_shared": 3,
+          "final_shared": 1018897798,
+          "crt_draws": 38,
+          "shared_draws": 1,
+          "warning_prompt": false,
+          "war_break_handler_called": false,
+          "mutual_relation_setter_called": true,
+          "metadata_before": {
+            "primary": [
+              0,
+              0
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              5,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              0,
+              0
+            ],
+            "presentation_initialized": false,
+            "palette_identifier": 0
+          },
+          "metadata_after": {
+            "primary": [
+              2147516696,
+              2147516696
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              6,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              1,
+              0
+            ],
+            "presentation_initialized": true,
+            "palette_identifier": 9605
+          },
+          "survivor": {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          "selected": 0,
+          "secondary": -1,
+          "wrapper_return": 0
+        },
+        {
+          "initial_crt": 1369276809,
+          "final_crt": 928401183,
+          "initial_shared": 1018897798,
+          "final_shared": 1018897798,
+          "crt_draws": 38,
+          "shared_draws": 0,
+          "warning_prompt": false,
+          "war_break_handler_called": false,
+          "mutual_relation_setter_called": true,
+          "metadata_before": {
+            "primary": [
+              2147516696,
+              2147516696
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              6,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              1,
+              0
+            ],
+            "presentation_initialized": true,
+            "palette_identifier": 9605
+          },
+          "metadata_after": {
+            "primary": [
+              2147516696,
+              2147516696
+            ],
+            "secondary": [
+              0,
+              0
+            ],
+            "transition_turn": [
+              2,
+              3
+            ],
+            "paired_counter": [
+              7,
+              7
+            ],
+            "blemishes": [
+              0,
+              0
+            ],
+            "bookkeeping": [
+              4,
+              7
+            ],
+            "paired_combat_count": [
+              2,
+              0
+            ],
+            "presentation_initialized": true,
+            "palette_identifier": 9605
+          },
+          "survivor": {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              12,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          "selected": 1,
+          "secondary": -1,
+          "wrapper_return": 0
+        }
+      ]
+    }
+  ]
+}

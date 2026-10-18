@@ -171,6 +171,16 @@ std::string MaintenanceSource(const std::string& filename) {
     auto source=EnergyFacilitySource(filename);if(filename!="alpha.txt") {return source;}
     const auto at=source.find("Forest,2,2,2");source.replace(at,std::string("Forest,2,2,2").size(),"Forest,2,2,1");return source;
 }
+std::string BattleSource(const std::string& filename) {
+    auto source=TanksSource(filename);
+    if(filename=="gaians.txt") {const std::string bonus=",SOCIAL,-MORALE";const auto at=source.find(bonus);source.erase(at,bonus.size());}
+    return source;
+}
+std::string FanaticBattleSource(const std::string& filename) {
+    auto source=BattleSource(filename);
+    if(filename=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FANATIC,1");}
+    return source;
+}
 Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
@@ -244,6 +254,118 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC nonzero initialization clears mutual relation mask and retains battle history",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            fixture.ResourceState([](auto& state){auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
+                a.directions[2]={UINT32_MAX,77,-9,17,23};d.directions[1]={0x80008118u,99,42,31,41};d.directions[3].primary=UINT32_MAX;
+                a.losses[2]=9;a.losses[511]=UINT16_MAX;a.integrity=4;a.bookkeeping=7;});
+            fixture.SettleEconomy(1);bool exact=false;
+            fixture.ResourceState([&](auto& state){const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
+                exact=a.directions[2]==faction::SmacHostileDirection{0x6fff00b7u,77,-9,17,23}
+                    && d.directions[1]==faction::SmacHostileDirection{0x10u,99,42,31,41} && d.directions[3].primary==UINT32_MAX
+                    && a.losses[2]==9 && a.losses[511]==UINT16_MAX && a.integrity==4 && a.bookkeeping==7;});
+            GT_ASSERT(exact,"actual faction-tail initialization reset loss/diplomatic history or touched an unrelated pair");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC live hostile Scout movement joins battle history casualties palette and actual Start",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        for(int scenario=0;scenario<6;++scenario) {
+            const auto provider=scenario==5 ? FanaticBattleSource : BattleSource;
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(provider,true);
+            std::string saved;uint32_t saved_crt=0;size_t survivor_id=0;int32_t winner=0,loser=0;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,scenario==4);auto* um=game->GetUM();auto* actor=um->GetUnit(91);
+                const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+                base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+                base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");
+                auto record=actor->Conventional();if(scenario==2) {record.stored_morale=6;}if(scenario==3) {record.damage=9;}
+                um->UpdateConventionalUnit(GSE_CALL,actor,record);actor->SetTile(GSE_CALL,game->GetMap()->GetTile(8,8));
+                const ConventionalUnitState enemy{2,2,1,static_cast<uint8_t>(scenario==3 ? 9 : 0),0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                auto* defender=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),foreign,game->GetMap()->GetTile(9,9),enemy);
+                if(scenario==0) {
+                    auto own=record;um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(10,10),own);
+                    um->SpawnConventionalUnit(GSE_CALL,94,um->GetUnitDef("live-scout"),foreign,game->GetMap()->GetTile(11,11),enemy);
+                }
+                fixture.ResourceState([&](auto& state){
+                    auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
+                    a.directions[2].primary=d.directions[1].primary=scenario==1 ? 16 : 0;
+                    a.directions[2].transition_turn=2;d.directions[1].transition_turn=3;
+                    a.directions[2].paired_b=5;d.directions[1].paired_b=7;a.bookkeeping=4;d.bookkeeping=7;
+                    if(scenario==4) {state.social.factions[0].retained->at(4)=-1;}
+                });
+                auto data=KnowledgeValue(true,true,128,64).CopyData();data.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                data.units={{91,4,false},{92,2,false}};if(scenario==0) {data.units.push_back({93,4,false});data.units.push_back({94,2,false});}
+                for(auto& tile:data.tiles) {tile.explored_by=6;}
+                for(int observer=1;observer<=2;++observer) {
+                    data.remembered[observer].resize(data.tiles.size());
+                    for(const auto xy:{std::pair<int,int>{8,8},{9,9},{10,10},{11,11}}) {data.remembered[observer][xy.second*64+xy.first/2]=Knowledge::Improvements{0,0,false,true};}
+                }
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                fixture.GameplayRandom({3,scenario==2 ? 1u : scenario==3 ? 308u : 3u});
+                const auto next=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();fixture.Updates();const auto before=fixture.Snapshot();
+                um->ValidateConventionalMove(actor,defender->GetTile(),0);
+                GT_ASSERT(fixture.Snapshot()==before && !fixture.BattlePalette(),"attack validation published random, palette, war or Unit state");
+                size_t hooks=0;bool coherent=true;
+                um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&fixture,game,scenario,&hooks,&coherent) {
+                    ++hooks;bool history=false;fixture.ResourceState([&](auto& state){history=state.hostility.owners.at(1).directions[2].primary==0x80008118u
+                        && state.hostility.owners.at(2).directions[1].primary==0x80008118u;});
+                    coherent=coherent && history && fixture.BattlePalette()==9605 && game->GetUM()->GetUnits().size()==(scenario==0 ? 4-hooks : 1);
+                    return VALUE(value::Undefined);
+                }));
+                auto* retained_actor=actor->Wrap(GSE_CALL);auto* retained_defender=defender->Wrap(GSE_CALL);
+                if(scenario==3) {
+                    const value::object_properties_t args{{"unit",retained_actor},{"tile",defender->GetTile()->Wrap(GSE_CALL)}};
+                    try {game->Event(GSE_CALL,"move_unit",args);} catch(const std::exception& error) {return std::string("first battle enqueue: ")+error.what();}
+                    try {game->Event(GSE_CALL,"move_unit",args);} catch(const std::exception& error) {return std::string("second battle enqueue: ")+error.what();}
+                    try {fixture.DrainEvents();} catch(const std::exception& error) {return std::string("battle dispatch: ")+error.what();}
+                } else {fixture.MoveEvent(GSE_CALL,actor,defender->GetTile());}
+                const bool defender_wins=scenario==3 || scenario==4 || scenario==5;
+                GT_ASSERT((defender_wins ? retained_actor : retained_defender)->type==VT_UNDEFINED,"casualty left a callable native Unit wrapper linked");
+                survivor_id=defender_wins ? 92 : 91;winner=defender_wins ? 2 : 1;loser=defender_wins ? 1 : 2;
+                auto* survivor=um->GetUnit(survivor_id);
+                const auto expected_damage=scenario==2 ? 1 : scenario==4 || scenario==5 ? 7 : 9;
+                saved_crt=scenario==2 ? 255755822u : scenario==3 ? 2715072846u : scenario==4 || scenario==5 ? 4127244341u : 1369276809u;
+                GT_ASSERT(survivor && !um->GetUnit(defender_wins ? 91 : 92) && survivor->GetTile()==game->GetMap()->GetTile(defender_wins ? 9 : 8,defender_wins ? 9 : 8)
+                    && survivor->Conventional().damage==expected_damage && survivor->Conventional().stored_morale==(scenario==2 ? 6 : 2)
+                    && survivor->Conventional().spent==(defender_wins ? 0 : 3) && fixture.GameplayRandom()==SmacGameplayRandomState(1018897798u,saved_crt)
+                    && fixture.BattlePalette()==9605 && hooks==1 && coherent,"live attack differs at scenario "+std::to_string(scenario)
+                    +" units="+std::to_string(um->GetUnits().size())+" damage="+std::to_string(survivor ? survivor->Conventional().damage : -1)
+                    +" morale="+std::to_string(survivor ? survivor->Conventional().stored_morale : -1)+" spent="+std::to_string(survivor ? survivor->Conventional().spent : -1)
+                    +" shared="+std::to_string(fixture.GameplayRandom().Shared())+" crt="+std::to_string(fixture.GameplayRandom().Crt())
+                    +" palette="+std::to_string(fixture.BattlePalette().value_or(0))+" hooks="+std::to_string(hooks)+" coherent="+std::to_string(coherent));
+                if(scenario==0) {
+                    auto* second=um->GetUnit(93);fixture.MoveEvent(GSE_CALL,second,game->GetMap()->GetTile(11,11));saved_crt=928401183u;
+                    GT_ASSERT(second->Conventional().damage==9 && second->Conventional().stored_morale==2 && second->Conventional().spent==3
+                        && !um->GetUnit(94) && hooks==2 && coherent && fixture.GameplayRandom()==SmacGameplayRandomState(1018897798u,saved_crt),
+                        "second actual attack recreated palette, reseeded streams or lost casualty compaction");
+                }
+                if(scenario==2) {
+                    fixture.MoveEvent(GSE_CALL,survivor,game->GetMap()->GetTile(9,9));
+                    GT_ASSERT(survivor->GetTile()==game->GetMap()->GetTile(9,9) && survivor->Conventional().spent==6 && hooks==1
+                        && fixture.GameplayRandom()==SmacGameplayRandomState(1018897798u,saved_crt),"Elite survivor could not take the real next movement without reseeding or repeating combat");
+                }
+                bool history=false;fixture.ResourceState([&](auto& state){const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
+                    const auto& victorious=state.hostility.owners.at(winner).directions[loser];
+                    history=a.directions[2].transition_turn==2 && d.directions[1].transition_turn==3 && a.bookkeeping==4 && d.bookkeeping==7
+                        && a.integrity==0 && d.integrity==0 && victorious.paired_a==(scenario==0 ? 2u : 1u)
+                        && victorious.paired_b==(defender_wins ? 8u : scenario==0 ? 7u : 6u) && state.hostility.owners.at(loser).losses[2]==(scenario==0 ? 2u : 1u);});
+                GT_ASSERT(history && Unit::GetNextId()==next && game->GetRandom()->GetStateString()==jsf,"battle dropped history, changed war-break fields or used JSF/Unit IDs");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!result.empty()) {return "hostile scenario "+std::to_string(scenario)+": "+result;}
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(provider,true);restored.BattlePalette(12345);
+            const auto restore=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* survivor=game->GetUM()->GetUnit(survivor_id);
+                bool history=false;restored.ResourceState([&](auto& state){history=state.hostility.owners.at(loser).losses[2]==(scenario==0 ? 2u : 1u)
+                    && state.hostility.owners.at(winner).directions[loser].paired_a==(scenario==0 ? 2u : 1u);});
+                GT_ASSERT(survivor && history && restored.BattlePalette()==12345 && restored.GameplayRandom()==SmacGameplayRandomState(1018897798u,saved_crt),
+                    "actual Start replayed battle, lost nonderived history, reseeded streams or overwrote process presentation state");GT_OK();
+            });if(!restore.empty()) {return restore;}
+        }GT_OK();
+    });
 
     task->AddTest("SMAC live friendly stack movement retains Base occupancy and saved sight",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;

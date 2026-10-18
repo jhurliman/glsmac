@@ -1,0 +1,911 @@
+{
+  "research_id": "RE-SMAC-FOCUSED-SCOUT-BATTLE-001",
+  "scope": "Eleven full focused-human ordinary Scout wrapper returns and one partial-movement confirmation boundary. Supplied home records/current-vs-retained inputs and diplomatic display state; actual FANATIC parser in paired controls; guarded headless rendering/event/notification/stack cleanup services. CRT round/promotion state is acceptance data. First-use presentation shared-stream consumption is private diagnostic, not a per-battle port requirement. Manufacturing, all diplomatic admission, complete UI/event loop and Base capture remain separate.",
+  "cases": [
+    {
+      "name": "focused_neutral",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": -1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "focused_defender_wins",
+      "inputs": {
+        "seed": 308,
+        "damage": [
+          9,
+          9
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 2,
+              "position": [
+                9,
+                9
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 0,
+              "home": -1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0,
+          "crt": 2715072846,
+          "map_present": [
+            false,
+            true
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 1,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "focused_partial",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          9
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 2,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "boundary": "partial-movement confirmation request",
+        "units_selection_and_rng_unchanged": true,
+        "battle_rounds": 0
+      }
+    },
+    {
+      "name": "homed_neutral",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": 0,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "homed_negative_retained",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          -1,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 2,
+              "position": [
+                9,
+                9
+              ],
+              "damage": 7,
+              "morale": 2,
+              "spent": 0,
+              "home": 1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0,
+          "crt": 4127244341,
+          "map_present": [
+            false,
+            true
+          ]
+        },
+        "strength_before_partial": [
+          192,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 17,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "homed_creche",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          -1,
+          0
+        ],
+        "creche": [
+          true,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": 0,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "homed_riots",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          -1,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          true,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": 0,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "defender_negative_retained",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          4
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          0,
+          -2
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 2,
+              "position": [
+                9,
+                9
+              ],
+              "damage": 4,
+              "morale": 4,
+              "spent": 0,
+              "home": 1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0,
+          "crt": 3975787809,
+          "map_present": [
+            false,
+            true
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          288
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            3
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 14,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "defender_riots",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          4
+        ],
+        "spent": 0,
+        "homed": true,
+        "retained": [
+          0,
+          -2
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          true
+        ],
+        "vendetta": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 2,
+              "position": [
+                9,
+                9
+              ],
+              "damage": 6,
+              "morale": 5,
+              "spent": 0,
+              "home": 1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0,
+          "crt": 4127244341,
+          "map_present": [
+            false,
+            true
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          320
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 16,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "parsed_neutral",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true,
+        "parsed_fanatic": false
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": -1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "parsed_fanatic",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": true,
+        "parsed_fanatic": true
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 2,
+              "position": [
+                9,
+                9
+              ],
+              "damage": 7,
+              "morale": 2,
+              "spent": 0,
+              "home": -1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0,
+          "crt": 4127244341,
+          "map_present": [
+            false,
+            true
+          ]
+        },
+        "strength_before_partial": [
+          280,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 17,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    },
+    {
+      "name": "foreign_without_vendetta",
+      "inputs": {
+        "seed": 3,
+        "damage": [
+          0,
+          0
+        ],
+        "morale": [
+          1,
+          1
+        ],
+        "spent": 0,
+        "homed": false,
+        "retained": [
+          0,
+          0
+        ],
+        "creche": [
+          false,
+          false
+        ],
+        "riots": [
+          false,
+          false
+        ],
+        "vendetta": false
+      },
+      "expected": {
+        "normal_wrapper_return": 0,
+        "post_return_state": {
+          "units": [
+            {
+              "owner": 1,
+              "position": [
+                8,
+                8
+              ],
+              "damage": 9,
+              "morale": 2,
+              "spent": 3,
+              "home": -1,
+              "facing": 2,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0,
+          "crt": 1369276809,
+          "map_present": [
+            true,
+            false
+          ]
+        },
+        "strength_before_partial": [
+          224,
+          224
+        ],
+        "initial_effective_morale_modes_0_1": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "attack_query_mode": 1,
+        "defense_query_mode": 1,
+        "promotion_query_mode": 1,
+        "battle_rounds": 19,
+        "post_core_cleanup_preserves_recorded_state": true
+      }
+    }
+  ]
+}

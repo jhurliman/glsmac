@@ -3109,6 +3109,9 @@ void Game::ResetGame() {
 
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
+		if(m_simulation) {for(const auto& owner:m_simulation->value.hostility.owners) {
+			for(size_t i=0;i<8;++i) {m_smac_secondary_relations.at(owner.first)[i]=owner.second.directions[i].secondary;}
+		}}
 		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();

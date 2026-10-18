@@ -320,6 +320,15 @@ bool Game::HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name,
 	const auto found=args.find("unit"), target=args.find("tile");
 	if ( found==args.end() || !found->second ) { return false; }
 	const auto* object=found->second->Deref();
+	if(object->type==gse::VT_UNDEFINED) {
+		// A casualty unlinks every existing Unit wrapper. A second direction
+		// already in the extracted batch must not bind to a compacted survivor.
+		const auto* retired=dynamic_cast<const gse::value::Object*>(object);
+		if(retired && retired->object_class==unit::Unit::WRAP_CLASS && !retired->wrapobj) {
+			if(caller!=m_slot_num || args.size()!=2 || target==args.end() || !target->second) {throw std::runtime_error("Retired move has invalid authority or arguments");}
+			return true;
+		}
+	}
 	if ( object->type!=gse::VT_OBJECT || static_cast<const gse::value::Object*>(object)->object_class!=unit::Unit::WRAP_CLASS ) { return false; }
 	auto* unit=unit::Unit::Unwrap(found->second);
 	if ( !unit->IsConventional() ) { return false; }

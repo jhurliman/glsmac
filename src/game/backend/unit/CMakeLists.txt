@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 
 	${PWD}/UnitManager.cpp
 	${PWD}/ConventionalMovement.cpp
+	${PWD}/ConventionalCombat.cpp
 	${PWD}/ConventionalWork.cpp
 	${PWD}/Def.cpp
 	${PWD}/StaticDef.cpp

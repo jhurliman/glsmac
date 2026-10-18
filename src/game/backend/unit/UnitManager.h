@@ -7,6 +7,8 @@
 #include "Types.h"
 #include "ConventionalUnitState.h"
 #include "SmacEmptyGroundMovement.h"
+#include "SmacScoutCombat.h"
+#include "game/backend/faction/SmacHostileState.h"
 #include "game/backend/map/SmacWorkerKnowledge.h"
 
 #include <deque>
@@ -109,7 +111,7 @@ public:
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;
 	};
-	PreparedConventionalRemoval PrepareConventionalRemoval( GSE_CALLABLE, const std::vector<size_t>& ids, PreparedConventionalUnit* created = nullptr );
+	PreparedConventionalRemoval PrepareConventionalRemoval( GSE_CALLABLE, const std::vector<size_t>& ids, PreparedConventionalUnit* created = nullptr, Unit* battle_survivor = nullptr );
 	// Last-base disposition: retire this owner's complete old roster and stage
 	// the admitted restart package at one site. The Base caller commits its own
 	// registry and faction state in the same accumulation, before Notify.
@@ -160,6 +162,17 @@ private:
 	friend class game::backend::Game;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
+	struct PreparedConventionalAttack {
+		Unit* survivor;
+		Unit* loser;
+		ConventionalUnitState survivor_state;
+		faction::SmacHostileState history;
+		smac_scout::AttackResult result;
+		std::optional<uint16_t> palette_identifier;
+	};
+	bool HasForeignOccupant(const Unit* actor,const map::tile::Tile* destination) const;
+	PreparedConventionalAttack PrepareConventionalAttack(Unit* actor,map::tile::Tile* destination,size_t caller) const;
+	void ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttack prepared);
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
 		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false, bool defer_home = false ) const;
 	struct PreparedConventionalMove {

@@ -6,14 +6,53 @@
 #include <utility>
 
 namespace game::backend::faction {
+bool SmacHostileDirection::operator==(const SmacHostileDirection& other) const {
+	return primary==other.primary && secondary==other.secondary && transition_turn==other.transition_turn && paired_a==other.paired_a && paired_b==other.paired_b;
+}
+SmacHostileOwner SmacHostileOwner::NewWorld(const std::array<uint32_t,8>& retained_secondary) {
+	SmacHostileOwner result;for(size_t i=0;i<8;++i) {result.directions[i].secondary=retained_secondary[i];}return result;
+}
+bool SmacHostileOwner::operator==(const SmacHostileOwner& other) const {
+	return directions==other.directions && losses==other.losses && integrity==other.integrity && bookkeeping==other.bookkeeping;
+}
+bool SmacHostileState::operator==(const SmacHostileState& other) const {return owners==other.owners;}
+void SmacHostileState::Reinitialize(int32_t owner) {
+	if(owner<1 || owner>7) {throw std::runtime_error("Invalid reinitialized history owner");}
+	auto& row=owners.at(owner);
+	// Actual nonzero initializer revokes this mask mutually, retaining history.
+	for(auto& direction:row.directions) {direction.primary&=0x6fff00b7u;}
+	for(auto& entry:owners) {entry.second.directions.at(owner).primary&=0x6fff00b7u;}
+}
+void SmacHostileState::RequireOrdinaryHostility(int32_t actor,int32_t target) const {
+	if(actor<1 || actor>7 || target<1 || target>7 || actor==target || !owners.count(actor) || !owners.count(target)) {throw std::runtime_error("Hostile action requires two admitted factions");}
+	for(const auto& pair:{std::pair<int32_t,int32_t>{actor,target},{target,actor}}) {
+		const auto& direction=owners.at(pair.first).directions[pair.second];
+		if(direction.secondary || (direction.primary!=0 && direction.primary!=16 && direction.primary!=0x80008118u)) {
+			throw std::runtime_error("Hostile movement requires its ordinary no-peace or Vendetta diplomacy context");
+		}
+	}
+}
+void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t winner,int32_t loser,int32_t lost_design) {
+	RequireOrdinaryHostility(actor,target);
+	if(!((winner==actor && loser==target)||(winner==target && loser==actor)) || lost_design<0 || lost_design>=512) {throw std::runtime_error("Invalid Scout battle history identity");}
+	// Hostile movement uses mask32784 in the mutual setter, not war-break work.
+	owners.at(actor).directions[target].primary=0x80008118u;owners.at(target).directions[actor].primary=0x80008118u;
+	auto& direction=owners.at(winner).directions[loser];++direction.paired_a;++direction.paired_b;
+	++owners.at(loser).losses[lost_design]; // actual unsigned DWORD/WORD stores
+}
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 11;
+constexpr int64_t VERSION = 12;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC simulation integer outside signed32" ); }
 	return static_cast< int32_t >( value );
+}
+uint32_t ReadUInt32(types::Buffer& buffer) {
+	const auto value=buffer.ReadInt();
+	if(value<0 || value>UINT32_MAX) {throw std::runtime_error("SMAC history integer outside unsigned32");}
+	return static_cast<uint32_t>(value);
 }
 }
 
@@ -72,6 +111,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		const auto finances = economy.find( participant.simulation_id );
 		if ( finances == economy.end() ) { throw std::runtime_error( "Missing SMAC faction economy" ); }
 		finances->second.Validate();
+		if(!hostility.owners.count(participant.simulation_id)) {throw std::runtime_error("Missing SMAC faction hostile history");}
 		if ( ( participant.slot == 0 && participant.role != roster::Role::Single && participant.role != roster::Role::Host )
 			|| ( participant.slot != 0 && participant.role != roster::Role::Player ) ) { throw std::runtime_error( "Invalid SMAC simulation controller role" ); }
 		for ( const auto* value : { &participant.gsid, &participant.faction_id } ) {
@@ -86,9 +126,10 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		if ( !state || state->admission.faction_id != participant.faction_id || !designs.Find( participant.simulation_id )
 			|| !social_state || social_state->admission.faction_id != participant.faction_id ) { throw std::runtime_error( "SMAC simulation roster and technology identities differ" ); }
 	}
+	if(hostility.owners.size()!=roster.size()) {throw std::runtime_error("Unexpected SMAC hostile-history owner");}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -139,6 +180,17 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	for ( const auto& participant : roster ) {
 		buffer.WriteInt( participant.simulation_id ); buffer.WriteBool( participant.active ); buffer.WriteBool( participant.restart_prohibited );
 	}
+	buffer.WriteInt(hostility.owners.size());
+	for(const auto& entry:hostility.owners) {
+		buffer.WriteInt(entry.first);const auto& owner=entry.second;
+		for(const auto& direction:owner.directions) {
+			buffer.WriteInt(direction.primary);buffer.WriteInt(direction.secondary);buffer.WriteInt(direction.transition_turn);
+			buffer.WriteInt(direction.paired_a);buffer.WriteInt(direction.paired_b);
+		}
+		buffer.WriteInt(owner.integrity);buffer.WriteInt(owner.bookkeeping);
+		buffer.WriteInt(std::count_if(owner.losses.begin(),owner.losses.end(),[](auto value){return value!=0;}));
+		for(size_t i=0;i<owner.losses.size();++i) {if(owner.losses[i]) {buffer.WriteInt(i);buffer.WriteInt(owner.losses[i]);}}
+	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -148,7 +200,9 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	try {
 		types::Buffer buffer( wire );
-		if ( buffer.ReadInt() != MAGIC || buffer.ReadInt() != VERSION ) { throw std::runtime_error( "Unsupported SMAC simulation state format" ); }
+		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		const auto version=buffer.ReadInt();
+		if(version!=VERSION && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -193,6 +247,29 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		for ( auto& participant : roster ) {
 			if ( buffer.ReadInt() != participant.simulation_id ) { throw std::runtime_error( "SMAC faction lifecycle identity differs from its roster" ); }
 			participant.active = buffer.ReadBool(); participant.restart_prohibited = buffer.ReadBool();
+		}
+		if(version==11) {
+			// V11 had no legal combat/diplomacy-history writer. Its native campaigns
+			// therefore migrate to the same pristine history, without replaying play.
+			for(const auto& participant:roster) {result.hostility.owners.emplace(participant.simulation_id,SmacHostileOwner::NewWorld({}));}
+		} else {
+			if(buffer.ReadInt()!=count) {throw std::runtime_error("Invalid SMAC hostile-history owner count");}
+			for(int64_t i=0;i<count;++i) {
+				const auto id=ReadInt32(buffer);SmacHostileOwner owner;
+				for(auto& direction:owner.directions) {
+					direction.primary=ReadUInt32(buffer);direction.secondary=ReadUInt32(buffer);direction.transition_turn=ReadInt32(buffer);
+					direction.paired_a=ReadUInt32(buffer);direction.paired_b=ReadUInt32(buffer);
+				}
+				owner.integrity=ReadUInt32(buffer);owner.bookkeeping=ReadUInt32(buffer);
+				const auto losses=buffer.ReadInt();if(losses<0 || losses>512) {throw std::runtime_error("Invalid SMAC loss-history count");}
+				int32_t previous=-1;
+				for(int64_t j=0;j<losses;++j) {
+					const auto design=ReadInt32(buffer);const auto value=ReadUInt32(buffer);
+					if(design<=previous || design>=512 || value==0 || value>UINT16_MAX) {throw std::runtime_error("Invalid SMAC sparse loss history");}
+					owner.losses[design]=static_cast<uint16_t>(value);previous=design;
+				}
+				if(id<1 || id>7 || !result.hostility.owners.emplace(id,std::move(owner)).second) {throw std::runtime_error("Invalid SMAC hostile-history owner");}
+			}
 		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

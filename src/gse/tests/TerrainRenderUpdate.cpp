@@ -12,6 +12,7 @@
 #include "graphics/opengl/TexturePaging.h"
 #include "graphics/PresentationViewport.h"
 #include <cstring>
+#include <algorithm>
 #include <stdexcept>
 
 namespace gse::tests {
@@ -68,12 +69,103 @@ public:
 			map::TerrainCoastRecipes::Key{ size_t( ts->tex_coord.x1 ), size_t( ts->tex_coord.y1 ) } );
 		world.m_capture_coast = false; world.m_land_random = nullptr;
 	}
+    void RecordEmptyWater(tile::Tile* t) {
+        world.m_capture_coast=true;world.m_current_ts=world.GetTileState(t);
+        world.EnsureWaterFungusRecipe();world.m_current_ts=nullptr;world.m_capture_coast=false;
+    }
+    size_t NextId() const { return world.m_next_sprite_instance_id; }
+    bool InstancesEmpty() const { return world.m_sprite_instances.empty(); }
+    bool ContextIdle() const { return !world.m_land_canvas && !world.m_current_ts; }
+    auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
 		t->terraforming = bits; world.CommitOrdinaryTerrainUpdate( update );
 	}
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("Bloom terrain appearance stages land fungus rockiness sprites and neighbors atomically", GT() {
+        TerrainRenderFixture f; auto* t=f.world.GetTile(2,2); auto* peer=f.world.GetTile(4,4);
+        auto farm=f.world.PrepareOrdinaryTerrainUpdate(t,tile::TERRAFORMING_FARM);
+        f.Commit(t,tile::TERRAFORMING_FARM,*farm);
+        f.world.GetTileState(t)->sprites.push_back({"bonus",77,"NutrientBonusLand",{}});
+        for (const auto coords : map::s_consts.tc.texture_pcx.fungus_land)
+            f.source.Fill(coords.x,coords.y,coords.x+dim.x-1,coords.y+dim.y-1,Color(0.8f,0.1f,0.2f,1));
+        const auto rng=f.gameplay.GetStateString();
+        const map::Map::TerrainAppearances changes{{t,{tile::FEATURE_XENOFUNGUS,0,tile::ROCKINESS_ROLLING}},
+            {peer,{tile::FEATURE_NONE,0,tile::ROCKINESS_ROCKY}}};
+        auto first=f.world.PrepareTerrainAppearanceUpdate(changes);
+        auto second=f.world.PrepareTerrainAppearanceUpdate(changes);
+        const auto& a=f.world.GetTerrainUpdatePayload(*first); const auto& b=f.world.GetTerrainUpdatePayload(*second);
+        GT_ASSERT(a.patches.size()>=9 && a.patches.size()==b.patches.size() && a.removed.size()==1 && a.added.empty(),
+            "Batch omitted fungus edges, indirect rockiness or removed Farm");
+        for (size_t i=0;i<a.patches.size();++i) GT_ASSERT(Equal(*a.patches[i].pixels,*b.patches[i].pixels),"Repeated preparation changed presentation RNG");
+        GT_ASSERT(t->features==tile::FEATURE_NONE && t->terraforming==tile::TERRAFORMING_FARM
+            && peer->rockiness==tile::ROCKINESS_FLAT && f.world.GetTileState(t)->sprites.size()==2,
+            "Preparation published live terrain or sprites");
+        second.reset();
+        t->features=tile::FEATURE_XENOFUNGUS;t->terraforming=0;t->rockiness=tile::ROCKINESS_ROLLING;
+        peer->rockiness=tile::ROCKINESS_ROCKY;f.world.CommitOrdinaryTerrainUpdate(*first);
+        GT_ASSERT(f.world.GetTileState(t)->sprites.size()==1 && f.world.GetTileState(t)->sprites.front().instance==77
+            && f.gameplay.GetStateString()==rng,"Commit replaced bonus identity or gameplay RNG");
+        GT_OK();
+    });
+    task->AddTest("Bloom water fungus replaces final overlay and survives later coast replay", GT() {
+        TerrainRenderFixture f; auto* t=f.world.GetTile(2,2);auto* ts=f.world.GetTileState(t);
+        t->is_water_tile=true;ts->has_water=true;ts->layers[tile::LAYER_WATER].coords={};
+        for (const auto coords : map::s_consts.tc.texture_pcx.fungus_water)
+            f.source.Fill(coords.x,coords.y,coords.x+dim.x-1,coords.y+dim.y-1,Color(0.9f,0.1f,0.2f,1));
+        const size_t water_y=tile::LAYER_WATER*8*dim.y+size_t(ts->tex_coord.y1);
+        f.RecordCoast(t,size_t(ts->tex_coord.x1),water_y,types::texture::AM_MERGE | types::texture::AM_ROUND_LEFT,1);
+        const auto rng=f.gameplay.GetStateString();
+        auto bloom=f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_XENOFUNGUS,0,tile::ROCKINESS_FLAT}}});
+        const auto& payload=f.world.GetTerrainUpdatePayload(*bloom);
+        const auto water=std::find_if(payload.patches.begin(),payload.patches.end(),[&](const auto& patch){return patch.y==water_y;});
+        GT_ASSERT(water!=payload.patches.end() && t->features==tile::FEATURE_NONE,"Water bloom missing or mutated live state");
+        auto pixels=water->pixels;
+        t->features=tile::FEATURE_XENOFUNGUS;f.world.CommitOrdinaryTerrainUpdate(*bloom);
+        map::TerrainCoastRecipes::Land land;
+        land.emplace(map::TerrainCoastRecipes::Key{size_t(ts->tex_coord.x1),size_t(ts->tex_coord.y1)},
+            std::shared_ptr<const Texture>(ts->moisture_original,[](const Texture*){}));
+        const auto replay=f.Replay(land);
+        GT_ASSERT(replay.size()==1 && Equal(*replay.front().pixels,*pixels),"Later coast refresh erased committed water fungus");
+        auto* ocean=f.world.GetTile(6,6);ocean->is_water_tile=true;
+        auto* ocean_state=f.world.GetTileState(ocean);ocean_state->has_water=true;ocean_state->layers[tile::LAYER_WATER].coords={};
+        f.RecordEmptyWater(ocean);
+        auto ocean_bloom=f.world.PrepareTerrainAppearanceUpdate({{ocean,{tile::FEATURE_XENOFUNGUS,0,tile::ROCKINESS_FLAT}}});
+        GT_ASSERT(ocean_bloom!=nullptr,"Open ocean without coast recipe could not bloom");
+        auto clear=f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,0,tile::ROCKINESS_FLAT}}});
+        const auto& cleared=f.world.GetTerrainUpdatePayload(*clear);
+        const auto bare=std::find_if(cleared.patches.begin(),cleared.patches.end(),[&](const auto& patch){return patch.y==water_y;});
+        GT_ASSERT(bare!=cleared.patches.end() && !Equal(*bare->pixels,*pixels) && f.gameplay.GetStateString()==rng,
+            "Water overlay could not be replaced or changed gameplay RNG");
+        GT_OK();
+    });
+    task->AddTest("Bloom terrain appearance failure and disposal retain caches and live identities", GT() {
+        TerrainRenderFixture f;auto* t=f.world.GetTile(2,2);auto* peer=f.world.GetTile(4,4);
+        const auto next=f.NextId();
+        auto staged=f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,tile::TERRAFORMING_SOLAR,tile::ROCKINESS_FLAT}}});
+        staged.reset();
+        GT_ASSERT(f.NextId()==next && f.InstancesEmpty(),"Discarded batch published sprite identities");
+        auto* canvas=f.world.GetTileState(peer)->moisture_original;f.world.GetTileState(peer)->moisture_original=nullptr;
+        bool rejected=false;
+        try {(void)f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,0,tile::ROCKINESS_FLAT}},
+            {peer,{tile::FEATURE_NONE,0,tile::ROCKINESS_FLAT}}});}catch(const std::exception&){rejected=true;}
+        f.world.GetTileState(peer)->moisture_original=canvas;
+        GT_ASSERT(rejected && !f.world.IsPreparingTerrain() && f.ContextIdle()
+            && f.NextId()==next && t->terraforming==0,"Late failure retained candidate context or partly published");
+        t->features=tile::FEATURE_RIVER;
+        auto* ts=f.world.GetTileState(t);ts->has_water=true;
+        NEW(ts->river_original,Texture,dim.x,dim.y);
+        ts->river_original->Fill(0,0,dim.x-1,dim.y-1,Color(0.1f,0.7f,0.2f,1));
+        Texture river(dim.x,dim.y);river.AddFrom(ts->river_original,types::texture::AM_DEFAULT,0,0,dim.x-1,dim.y-1);
+        f.RecordEmptyWater(t);
+        auto river_bloom=f.world.PrepareTerrainAppearanceUpdate({{t,{uint16_t(tile::FEATURE_RIVER|tile::FEATURE_XENOFUNGUS),0,tile::ROCKINESS_ROLLING}}});
+        GT_ASSERT(Equal(river,*ts->river_original) && t->features==tile::FEATURE_RIVER,"Detached preparation changed cached river-exit pixels");
+        GT_ASSERT(f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_RIVER,0,tile::ROCKINESS_FLAT}}})!=nullptr,
+            "Failure prevented a subsequent terrain preparation");
+        GT_OK();
+    });
 	task->AddTest("Selected Unit badge shared phase coalesces150ms deliveries and retains gates",GT(){
         using Blink=game::frontend::unit::SelectionBlink;using namespace std::chrono;
         Blink phase;const auto epoch=Blink::Clock::time_point{}+seconds(10);

@@ -384,27 +384,23 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 }
 
 void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
-	// check if property was set by any of previous classes with higher modifier
-	for ( const auto& c : m_classes ) {
-		const auto kv = c->GetProperty( key, m_modifiers );
-		if ( kv.first && kv.second > modifier ) {
-			return;
-		}
+	const auto winner = GetClassProperty( key );
+	if ( winner.first && winner.second >= modifier ) {
+		FORWARD_CALL( SetPropertyFromClass,, winner.first, winner.second );
 	}
-	FORWARD_CALL( SetPropertyFromClass,, value, modifier );
+	else {
+		FORWARD_CALL( SetPropertyFromClass,, value, modifier );
+	}
 }
 
 void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
-	// check in other classes
-	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
-		const auto kv = (*it)->GetProperty( key, m_modifiers );
-		if ( kv.first ) {
-			FORWARD_CALL( SetPropertyFromClass,, kv.first, kv.second );
-			return;
-		}
+	const auto winner = GetClassProperty( key );
+	if ( winner.first ) {
+		FORWARD_CALL( SetPropertyFromClass,, winner.first, winner.second );
 	}
-	// not found
-	FORWARD_CALL( UnsetPropertyFromClass );
+	else {
+		FORWARD_CALL( UnsetPropertyFromClass );
+	}
 }
 
 void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords ) {

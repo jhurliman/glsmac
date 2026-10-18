@@ -43,7 +43,12 @@ UnitManager::~UnitManager() {
 	DELETE( m_badge_defs );
 }
 
+bool UnitManager::IsSelectionBlinkAdmitted(const Unit* unit) const {
+    return unit && unit==m_selected_unit && unit->IsOwned() && unit->IsActive() && !unit->IsMoving() && m_game->IsTurnActive();
+}
+
 void UnitManager::Iterate() {
+    m_badge_defs->AdvanceSelectionBlink(SelectionBlink::Clock::now(),IsSelectionBlinkAdmitted(m_selected_unit));
 	ReceiveAutomaticSelection();
 	if ( m_selected_unit ) {
 		m_selected_unit->Iterate();
@@ -338,8 +343,8 @@ Unit* UnitManager::GetSelectedUnit() const {
 void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 	Log( "Selecting unit " + std::to_string( unit->GetId() ) );
 	//m_tile_at_query_purpose = backend::TQP_UNIT_SELECT; // ???
-	m_game->DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
+		m_game->DeselectTileOrUnit();
 
 		unit->SetActiveOnTile();
 
@@ -391,6 +396,7 @@ void UnitManager::DeselectUnit() {
 			m_selected_unit->StopBadgeBlink( true );
 		}
 		else if ( most_important_unit ) {
+			m_selected_unit->StopBadgeBlink( false );
 			m_selected_unit->Hide();
 			most_important_unit->Show();
 		}

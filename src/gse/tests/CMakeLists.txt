@@ -4,6 +4,7 @@ SET( SRC ${SRC}
 
 	${PWD}/SmacOrdinaryLandExploration.cpp
 	${PWD}/Tests.cpp
+	${PWD}/UIClass.cpp
 	${PWD}/Sound.cpp
 	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
@@ -68,6 +69,8 @@ SET( SRC ${SRC}
 	${PWD}/SmacEconomyState.cpp
 	${PWD}/SmacLiveEconomy.cpp
 	${PWD}/SmacResearch.cpp
+	${PWD}/HumanResearchValue.cpp
+	${PWD}/AutomaticResearch.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp

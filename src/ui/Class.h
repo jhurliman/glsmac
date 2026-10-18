@@ -19,7 +19,7 @@ class Object;
 
 class Class : public gse::GCWrappable {
 public:
-	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master = true );
+	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master = true, const class_modifier_t modifier = CM_NONE );
 	~Class();
 
 	const std::string& GetDOMClassName() const;
@@ -42,6 +42,7 @@ private:
 	const UI* const m_ui;
 	const std::string m_name;
 	const bool m_is_master;
+	const class_modifier_t m_modifier;
 
 	properties_t m_local_properties = {};
 	properties_t m_properties = {};

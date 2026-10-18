@@ -6,6 +6,7 @@ return (m) => {
 
 		const popup = m.root.window({
 			class: 'window',
+			zindex: 0.95,
 			title: 'ERROR',
 			width: 440,
 			height: 120,

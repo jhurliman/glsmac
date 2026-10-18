@@ -23,6 +23,22 @@ SmacNativeUnitRecord SmacNativeUnitRecord::InitializeMindWorm(int32_t identity, 
     result.Validate(); return result;
 }
 
+SmacNativeUnitRecord SmacNativeUnitRecord::AfterUnlinkedIndexErasure(int32_t removed) const {
+    Validate();
+    if(removed<0 || removed>=2048 || id==removed || stack_next==removed || stack_previous==removed) {
+        throw std::invalid_argument("Dense Unit erasure requires an already unlinked survivor");
+    }
+    auto result=*this;
+    if(result.id>removed) {--result.id;}
+    if(result.stack_next>removed) {--result.stack_next;}
+    if(result.stack_previous>removed) {--result.stack_previous;}
+    if(result.order==1) {
+        if(result.waypoint_x[0]==removed) {result.order=0;}
+        else if(result.waypoint_x[0]>removed) {--result.waypoint_x[0];}
+    }
+    return result;
+}
+
 void SmacNativeUnitRecord::Validate() const {
     const bool unplaced=x==-4 && y==-4;
     if (id>=2048 || design<0 || design>=512 || owner>7 || ecology_owner_tag>7 || waypoint_count>4

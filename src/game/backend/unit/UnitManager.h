@@ -112,6 +112,7 @@ public:
 		friend class UnitManager;
 		friend class base::BaseManager;
 		void Query(const std::function<void()>& query) const;
+        void QueryWithNativeRecords(const std::function<void()>& query) const;
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
@@ -172,6 +173,7 @@ private:
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
 	void SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept;
 	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
+    void ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const;
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	struct PreparedConventionalAttack {
 		Unit* survivor;

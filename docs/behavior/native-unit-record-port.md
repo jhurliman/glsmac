@@ -60,3 +60,30 @@ retained. Targeted correctness analysis passes Unit.cpp, NativeUnit.cpp and
 UnitManager.cpp. The same six groups pass ASan/UBSan with those three production
 TUs plus SmacNativeUnitRecord.cpp instrumented; remaining normal objects are
 reused and leak detection is disabled. No platform matrix was repeated locally.
+
+The following integration checkpoint binds native owner0 in authenticated worker
+knowledge. Its live coordinates and retained observation mask must match the
+complete Unit record. Sight publication updates the native record mask in the
+same nonallocating commit as the knowledge swap; it does not rebuild stationary
+native visibility from current observer radii. Human support and owner-summary
+consumers validate native state and keep it separate from positive-owner totals.
+
+An actual Unit-manager restore followed by world snapshot/restore now preserves
+an explicitly supplied native record and knowledge together. A mismatched mask
+rejects before publication; an admitted sight commit keeps both representations
+consistent. This test supplies saved native state and invokes the real manager,
+world codec and sight committer. It is not an ecology-birth, native sight-producer,
+interactive frontend resume or native AI test.
+
+The installed original identity handoff also establishes dense append/erase
+indices with survivor-order preservation, independently of stable positive port
+IDs. Dense native indices and reference repairs must be maintained by the live
+creation/removal transaction; an old source index is not a permanent identity.
+
+Additional validation: thirty focused native groups pass for the native world
+record, live worker knowledge/sight/ZOC, technology reveal and resource/economy
+consumers. Six production TUs pass targeted correctness analysis. The same
+thirty groups pass ASan/UBSan with Unit.cpp, NativeUnit.cpp,
+GameWorkerKnowledge.cpp, GameTileResources.cpp and GameEconomy.cpp instrumented;
+remaining normal objects are reused and leak detection is disabled. No local
+platform matrix was repeated.

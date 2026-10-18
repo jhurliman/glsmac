@@ -65,6 +65,7 @@ public:
 	};
 	static SmacWorkerKnowledge Create( const Data& data );
 	Data CopyData() const;
+	const std::vector<UnitObservation>& UnitObservations() const noexcept {return m_data.units;}
 	std::string Serialize() const;
 	static SmacWorkerKnowledge Deserialize( const std::string& wire );
 	bool operator==( const SmacWorkerKnowledge& other ) const noexcept;

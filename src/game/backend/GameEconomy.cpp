@@ -306,7 +306,9 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     const auto& order=m_um->GetUnitRecordOrder();
     for(size_t cursor=order.size();cursor>0;--cursor) {
         const auto id=order[cursor-1];const auto* unit=m_um->GetUnit(id);
-        if(!unit || !unit->IsConventional() || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered conventional Unit records");}
+        if(!unit || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered Unit records");}
+        if(unit->IsNative()) {(void)m_um->QueryNativeUnit(unit->Native());continue;}
+        if(!unit->IsConventional()) {throw std::runtime_error("Faction summary requires typed Unit authority");}
         const auto& record=unit->Conventional();
         if(record.owner_simulation_id!=owner) {continue;}
         ++design_counts.at(record.design_id);

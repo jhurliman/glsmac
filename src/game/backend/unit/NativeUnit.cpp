@@ -58,6 +58,15 @@ SmacNativeUnitStats UnitManager::QueryNativeUnit(const SmacNativeUnitRecord& rec
     return {level,quantum,quantum,std::max(0,quantum-int32_t(record.movement_spent)),10-record.damage,10};
 }
 
+void UnitManager::SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept {
+    for(const auto& row:knowledge.UnitObservations()) {
+        const auto found=m_units.find(row.id);
+        if(found!=m_units.end() && found->second->IsNative()) {
+            std::get<SmacNativeUnitRecord>(found->second->m_state).observation_mask=row.visible_to;
+        }
+    }
+}
+
 void UnitManager::ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& record) const {
     record.Validate();
     (void)NativeQuantum(*m_game);

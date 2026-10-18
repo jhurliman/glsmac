@@ -90,6 +90,9 @@ const SmacNativeUnitRecord& Unit::Native() const {
     if(!IsNative()) { THROW("Unit is not native"); }
     return std::get<SmacNativeUnitRecord>(m_state);
 }
+int32_t Unit::SimulationOwner() const {
+    return IsNative() ? Native().owner : Conventional().owner_simulation_id;
+}
 bool Unit::IsConventional() const { return std::holds_alternative< ConventionalUnitState >( m_state ); }
 bool Unit::IsConventionalPending() const { return m_early_startup; }
 void Unit::RequireConventionalReady() const {

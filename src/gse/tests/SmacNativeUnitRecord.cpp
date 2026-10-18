@@ -3,6 +3,7 @@
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacWorkerKnowledge.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/MoraleSet.h"
@@ -30,6 +31,64 @@ std::string Replace(const Record& record,size_t index,int64_t value) {
 }
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC native Unit world snapshot restores faction zero and retained observation authority",GT(){
+        std::string snapshot,unit_wire,knowledge_wire;
+        ConventionalUnitFixture fixture;
+        fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            using Knowledge=game::backend::map::SmacWorkerKnowledge;
+            auto* game=fixture.Game();auto* manager=game->GetUM();
+            for(size_t y=0;y<40;++y) {for(size_t x=y&1;x<80;x+=2) {
+                auto* tile=game->GetMap()->GetTile(x,y);
+                for(auto* corner:tile->elevation.corners) {*corner=100;}tile->Update();
+            }}
+            MoraleSet::morale_values_t names;
+            for(const auto* name:{"Hatchling","Larval Mass","Pre-Boil","Boil","Mature Boil","Great Boil","Demon Boil"}) {names.emplace_back(name);}
+            manager->DefineMoraleSet(new MoraleSet("NATIVE_MORALE",names));
+            manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("NATIVE_MORALE"),"Mind Worms",MT_LAND,999,
+                new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            // Supplied saved native record, not an ecology-birth or sight-producer claim.
+            auto record=smac_native_record_fixture::records.front();record.observation_mask=2;
+            types::Buffer unit;unit.WriteInt(5);unit.WriteInt(2);unit.WriteInt(71);unit.WriteString("MindWorms");
+            unit.WriteInt(-1);unit.WriteInt(record.x);unit.WriteInt(record.y);unit.WriteString(record.Serialize().ToString());
+            types::Buffer current;manager->Serialize(current);types::Buffer loaded;loaded.WriteString(current.ReadString());
+            for(int group=0;group<2;++group) {
+                const auto count=current.ReadInt();loaded.WriteInt(count);
+                for(int64_t i=0;i<count;++i) {loaded.WriteString(current.ReadString());loaded.WriteString(current.ReadString());}
+            }
+            GT_ASSERT(current.ReadInt()==0,"Native fixture unexpectedly contains Units");
+            loaded.WriteInt(1);loaded.WriteString(unit.ToString());loaded.WriteInt(std::max<int64_t>(72,current.ReadInt()));
+            manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+            auto* native=manager->GetUnit(71);
+            GT_ASSERT(native && native->Native()==record && native->SimulationOwner()==0 && !native->m_owner,
+                "Production manager restore did not retain independent native ownership");
+            Knowledge::Data data{80,40,true,true,0,{},{},{}};
+            data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+            data.tiles.resize(1600,{2,std::nullopt});data.units.push_back({71,2,false});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            auto stale=data;stale.units[0].visible_to=0;
+            GT_ASSERT(Rejects([&]{game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(stale));})
+                && native->Native().observation_mask==2,"Mismatched native observation was silently accepted");
+            fixture.CommitTechnologyReveal(Knowledge::Create(stale));
+            GT_ASSERT(native->Native().observation_mask==0,"Sight publication left native record visibility stale");
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(stale));
+            unit_wire=Unit::Serialize(native).ToString();knowledge_wire=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+            snapshot=fixture.Snapshot();GT_OK();
+        });
+        if(!error.empty()) {return error;}
+        ConventionalUnitFixture restored;
+        restored.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,snapshot,true);
+            const auto* native=restored.Game()->GetUM()->GetUnit(71);
+            GT_ASSERT(native && native->IsNative() && !native->m_owner && native->SimulationOwner()==0
+                && game::backend::unit::Unit::Serialize(native).ToString()==unit_wire
+                && restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge_wire,
+                "World restore lost native state, identity or retained visibility");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC native Unit live record roundtrip keeps owner zero separate from controllers and ecology",GT(){
         ConventionalUnitFixture fixture;
         fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);

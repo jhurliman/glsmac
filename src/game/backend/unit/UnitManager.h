@@ -170,6 +170,7 @@ public:
 private:
 	friend class game::backend::Game;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
+	void SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept;
 	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	struct PreparedConventionalAttack {

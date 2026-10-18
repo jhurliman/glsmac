@@ -59,6 +59,7 @@ public:
 	bool IsConventional() const;
 	bool IsNative() const;
 	const SmacNativeUnitRecord& Native() const;
+	int32_t SimulationOwner() const;
 	bool IsConventionalPending() const;
 	void RequireConventionalReady() const;
 	LegacyState& Legacy();

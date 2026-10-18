@@ -3192,6 +3192,7 @@ void Game::ResetGame() {
 		if(m_simulation) {
 			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
 			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
+			m_smac_cross_world_ecology=m_simulation->value.ecology_history;
 		}
 		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();

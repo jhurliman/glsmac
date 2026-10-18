@@ -151,11 +151,13 @@ void Game::PrepareNewSimulation() {
 	value.retained_base_totals=faction::SmacBaseTotals{};
 	value.regional_strategy=m_smac_cross_world_strategy;
 	value.ranking_scores=m_smac_cross_world_scores;
+	value.ecology_history=m_smac_cross_world_ecology;
 	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
 	for(int32_t owner=0;owner<=7;++owner) {value.victory_history->Initialize(owner,0);}
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
+		if(value.ecology_history) {value.ecology_history->Initialize(participant.simulation_id,0);}
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );

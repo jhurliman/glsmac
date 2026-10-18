@@ -37,3 +37,5 @@ rebuild/postpass separation, V1 migration, malformed metadata, live field
 conversion and actual Start retaining a deliberately stale fertility total.
 Eleven affected production units (including the ocean-lock review fix) passed
 LLVM15 correctness analysis in 18.30s.
+Five focused geography/topology groups also passed ASan/UBSan with leak
+detection enabled and clean process exit.

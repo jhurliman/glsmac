@@ -61,12 +61,12 @@ return {
 			blocker: 'rgba(0, 0, 0, 180)',
 		});
 		this.window.hide();
-		this.prompt = this.window.text({class: 'game-popup-text', top: 12, left: 12, right: 12});
-		this.list = this.window.scrollview({left: 8, right: 8, top: 42, bottom: 86, has_vscroll: true, has_hscroll: false});
-		this.selection = this.window.text({class: 'game-popup-text', bottom: 55, left: 12, right: 12});
-		this.confirm_button = this.window.button({class: 'game-popup-button', bottom: 12, left: 12, right: 320, height: 28, text: 'Confirm Research'});
+		this.prompt = this.window.text({class: 'game-popup-text', align: 'top left', top: 12, left: 12, right: 12});
+		this.list = this.window.scrollview({left: 8, right: 8, top: 42, bottom: 86, vscroll_class: 'default-scroll-v', has_vscroll: true, has_hscroll: false});
+		this.selection = this.window.text({class: 'game-popup-text', align: 'bottom left', bottom: 55, left: 12, right: 12});
+		this.confirm_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 12, right: 320, height: 28, text: 'Confirm Research'});
 		this.confirm_button.on('click', () => { this.submit(); return true; });
-		this.reset_button = this.window.button({class: 'game-popup-button', bottom: 12, left: 320, right: 12, height: 28, text: 'Return to Main Menu'});
+		this.reset_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 320, right: 12, height: 28, text: 'Return to Main Menu'});
 		this.reset_button.on('click', () => { this.p.glsmac.reset(); return true; });
 		this.window.on('keydown', (e) => {
 			if (e.modifiers == {} && e.code == 'ENTER') { this.submit(); }

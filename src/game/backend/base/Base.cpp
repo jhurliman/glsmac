@@ -868,6 +868,29 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_base_navigation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			const auto* bm = m_game->GetBM();
+			if ( !m_owner || m_owner->GetPlayer() != m_game->GetPlayer() || bm->GetBase(m_id) != this
+				|| !m_resource_context || !m_allocation || !m_production ) { return VALUE(gse::value::Undefined); }
+			std::vector<Base*> owned;
+			size_t position = SIZE_MAX;
+			for ( const auto id : bm->GetBaseRecordOrder() ) {
+				auto* candidate = bm->GetBase(id);
+				if ( !candidate || candidate->m_owner != m_owner || !candidate->m_resource_context
+					|| !candidate->m_allocation || !candidate->m_production ) { continue; }
+				if ( candidate == this ) { position = owned.size(); }
+				owned.push_back(candidate);
+			}
+			if ( owned.size() < 2 || position >= owned.size() ) { return VALUE(gse::value::Undefined); }
+			return VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
+				{"previous", owned[(position + owned.size() - 1) % owned.size()]->Wrap(GSE_CALL)},
+				{"next", owned[(position + 1) % owned.size()]->Wrap(GSE_CALL)}
+			}));
+		} )
+	},
+	{
 		"get_smac_nutrient_presentation",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

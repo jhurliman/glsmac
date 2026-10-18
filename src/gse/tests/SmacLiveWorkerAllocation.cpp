@@ -1000,13 +1000,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});})
 				&& Rejects([&]{game->Event(GSE_CALL,"unwork_base_tile",{{"base",second->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(8,2)->Wrap(GSE_CALL)}});}),"Screen admitted another Base or unrelated turn mutation");
 			game->Event(GSE_CALL,"unwork_base_tile",{{"base",first->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(4,2)->Wrap(GSE_CALL)}});
-			std::optional<int64_t> shown;
+			std::optional<int64_t> shown;bool confirmation=false;
 			auto* choices=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(first->Wrap(GSE_CALL)),"get_smac_production_choices"));
 			for(auto* entry:static_cast<value::Array*>(choices->Get("choices"))->value) {
 				auto* choice=static_cast<value::Object*>(entry);
-				if(static_cast<value::Int*>(choice->Get("source_id"))->value==1) {shown=static_cast<value::Int*>(choice->Get("minerals"))->value;}
+				if(static_cast<value::Int*>(choice->Get("source_id"))->value==1) {
+					shown=static_cast<value::Int*>(choice->Get("minerals"))->value;
+					confirmation=static_cast<value::Bool*>(choice->Get("confirmation"))->value;
+				}
 			}
-			GT_ASSERT(shown==30,"Screen production selector omitted the admitted Former quote");
+			// Gaia owns Tech6, admitting the Former package and row. This fixture
+			// deliberately uses strictness2: distinct Unit identities incur the
+			// accepted loss, 10 + (baseline30 - exemption10) * 50 / 100 =20.
+			// The Screen receipt supplies selection after its separate loss decision.
+			GT_ASSERT(shown==20 && confirmation,"Screen Former quote must retain20 with the measured manual-loss confirmation");
 			game->Event(GSE_CALL,"select_smac_production",{{"base",first->Wrap(GSE_CALL)},{"source_id",VALUE(value::Int,,1)},
 				{"expected_state",VALUE(value::String,,SerializeProductionState(first->GetProductionState()).ToString())},
 				{"expected_minerals",VALUE(value::Int,,*shown)},{"confirm",VALUE(value::Bool,,true)}});GT_OK();
@@ -1015,7 +1022,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
 			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==2;});
 			GT_ASSERT(first->GetSmacAllocation()->specialists.total_count==1 && first->GetProductionState()->current_item.smac_source_id==1
-				&& first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==30
+				&& first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==20 && first->GetProductionState()->baseline_minerals==30
 				&& game->GetCanonicalEconomy(first->m_owner).credits==101 && research && second->GetProductionState()->minerals==0,
 				"Screen edits failed or retroactively reposted the current Base");
 			GT_ASSERT((game->GetCanonicalBaseEnergy(*first).tail.final==SmacEnergyCategories{1,2,1}),"Screen worker click did not refresh actual E/P/L outputs");
@@ -1027,7 +1034,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		return fixture.Run([&](GSE_CALLABLE)->std::string {
 			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
 			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==3;});
-			GT_ASSERT(first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==30 && first->GetSmacAllocation()->specialists.total_count==1
+			GT_ASSERT(first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==20 && first->GetProductionState()->baseline_minerals==30
+				&& first->GetSmacAllocation()->specialists.total_count==1
 				&& second->GetAccumulatedNutrients()==1 && second->GetProductionState()->minerals==3
 				&& game->GetCanonicalEconomy(first->m_owner).credits==102 && research,"Screen close replayed current posting, stale edit or next Base upkeep");
 			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony_screen")->type==VT_NULL,"closed Screen remained pending");GT_OK();

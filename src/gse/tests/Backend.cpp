@@ -8102,6 +8102,11 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			// Append the old body frames independently of the production writer.
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
+			// V31 appends one versioned, absent continuation after the managers.
+			// The preceding map/manager payload and ordering stay unchanged.
+			types::Buffer idle_continuation;
+			idle_continuation.WriteInt( 1 ); idle_continuation.WriteBool( false );
+			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();
 			const auto snapshot = fixture.WorldSnapshot();

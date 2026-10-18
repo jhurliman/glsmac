@@ -43,13 +43,18 @@ public:
 		util::random::state_t random;
 		util::Perlin* perlin;
 	};
+	using Fungus = std::map<Key, std::optional<Paint>>;
 	void Record( Key destination, Paint paint );
-	std::vector< TerrainRenderUpdate::Patch > Prepare( const Land& replacements ) const;
-	void Commit( const Land& replacements ) noexcept;
+    void RecordFungus(Key destination, Paint paint);
+    void EnsureWater(Key destination, size_t width, size_t height);
+	std::vector< TerrainRenderUpdate::Patch > Prepare( const Land& replacements, const Fungus& fungus = {} ) const;
+	void Commit( const Land& replacements, const Fungus& fungus = {} ) noexcept;
 	void Clear();
 private:
 	std::map< Key, std::vector< Paint > > m_recipes;
 	Land m_land;
+    Fungus m_fungus;
+    Pixels m_blank_water;
 };
 
 }

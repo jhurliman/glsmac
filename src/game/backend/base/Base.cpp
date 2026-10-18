@@ -600,8 +600,12 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
             const auto kind=m_production->current_item.kind;
             if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()
                 && (kind==ProductionItemKind::Unit || kind==ProductionItemKind::Facility)) {
-                const auto cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);
-                fields.emplace("cost",VALUE(gse::value::Int,,cost));
+                std::optional<int32_t> cost;
+                // Unsupported cost domains must not hide an otherwise valid
+                // retained target/queue. This projection does not admit building it.
+                try {cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);}
+                catch(const std::runtime_error&) {}
+                if(cost) {fields.emplace("cost",VALUE(gse::value::Int,,*cost));}
                 bool unbuilt=true;
                 if(kind==ProductionItemKind::Facility) {
                     for(const auto& facility:m_facilities) {
@@ -612,8 +616,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
                 }
                 // Installed-facility/special panel branches are outside the
                 // measured ordinary-unbuilt-item forecast, not a zero-turn guess.
-                if(surplus && unbuilt && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
-                    const auto label=FormatSmacProductionForecast(cost,m_production->minerals,*surplus);
+                if(cost && surplus && unbuilt && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
+                    const auto label=FormatSmacProductionForecast(*cost,m_production->minerals,*surplus);
                     if(label) {fields.emplace("forecast",VALUE(gse::value::String,,*label));}
                 }
             }

@@ -18,9 +18,13 @@
 #include <stdexcept>
 #include <tuple>
 
+#include "game/backend/base/SmacEcologyNativeSpawn.h"
+#include "fixtures/SmacEcologyNativeSpawn.h"
+
 namespace gse::tests {
 namespace {
 namespace b=game::backend::base;
+using SpawnCoordinate=std::array<int32_t,2>;
 using game::backend::settings::SmacEcologyRules;
 bool Rejects(const std::function<void()>& call) {try {call();}catch(const std::exception&) {return true;}return false;}
 std::string EcologySource(const std::string& value) {
@@ -37,6 +41,73 @@ auto Values(const b::SmacEcologyDamage& v) {
 bool Overflows(const std::function<void()>& call) {try {call();}catch(const std::overflow_error&) {return true;}return false;}
 }
 void AddSmacEcologyTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC ecology native spawn plan matches six original ordered sweep fallback and capacity streams",GT(){
+        for(const auto& c:smac_native_spawn_fixture::cases) {
+            const b::SmacNativeSpawnInput input{{{40,40},80,80,true},1,c.history,9,c.population};
+            const auto plan=b::PrepareSmacNativeSpawn(input,{{{16,16},1}},[&](int32_t x,int32_t y) {
+                if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1)) {throw std::runtime_error("Invalid spawn query coordinate");}
+                return b::SmacNativeSpawnTile{c.region<64?3:2,!c.no_fungus,static_cast<uint8_t>(c.region),static_cast<uint8_t>(!c.absent),false,15};
+            });
+            GT_ASSERT(plan.Requests().size()==c.calls.size() && plan.SweepAttempts()==c.sweep_attempts && plan.SpecialCounter()==c.special_counter,"Original sweep attempt/special counters differ");
+            size_t successful=0;
+            for(size_t n=0;n<c.calls.size();++n) {
+                const auto& expected=c.calls[n];const auto& actual=plan.Requests()[n];
+                GT_ASSERT(actual.design==expected.design && actual.coordinate==SpawnCoordinate({expected.x,expected.y})
+                    && actual.sweep_attempts==expected.sweep_attempts && actual.special_counter==expected.special_counter,"Original factory attempt order or metadata differs");
+                GT_ASSERT(actual.ecology_owner.has_value()==(n<static_cast<size_t>(c.sweep_attempts)),"Fallback incorrectly writes ecology-owner attribution");
+                if(expected.result>=0) {
+                    const auto& born=c.born.at(successful++);
+                    GT_ASSERT(actual.design==born.design && actual.coordinate==SpawnCoordinate({born.x,born.y}) && actual.ecology_owner.value_or(0)==born.tag,"Captured successful birth attribution differs from plan");
+                }
+            }
+            GT_ASSERT(successful==c.born.size() && (c.count!=2048 || (successful==0 && plan.Requests().size()==9)),"Failed factory attempts were dropped or retried as successes");
+        }GT_OK();
+    });
+    task->AddTest("SMAC ecology native spawn keeps nearest-owner ties cached occupancy and fallback gates distinct",GT(){
+        b::SmacNativeSpawnInput input{{{20,20},80,80,true},1,9,9,0};
+        b::SmacNativeSpawnTile center{3,true,1,1,false,15};
+        const auto query=[&](int32_t x,int32_t y) {auto tile=center;if(x!=20 || y!=20) {tile.fungus=false;}return tile;};
+        auto denied=b::PrepareSmacNativeSpawn(input,{{{18,20},1},{{22,20},2}},query);
+        auto allowed=b::PrepareSmacNativeSpawn(input,{{{22,20},2},{{18,20},1}},query);
+        GT_ASSERT(denied.Requests().empty() && allowed.SweepAttempts()==1,"Nearest Base tie did not use later record owner");
+        GT_ASSERT(b::PrepareSmacNativeSpawn(input,{{{18,20},1},{{22,20},1}},query).SweepAttempts()==1,"Different same-owner nearest Base incorrectly blocks spawning");
+        for(const auto owner:{0,1,7,15}) {
+            center.unit_or_base=true;center.cached_owner=owner;
+            const auto plan=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},query);
+            GT_ASSERT(plan.SweepAttempts()==(owner==0 || owner==15?1:0),"Native0 or invalid cached owner became positive ownership");
+        }
+        center.unit_or_base=false;center.cached_owner=1;
+        GT_ASSERT(b::PrepareSmacNativeSpawn(input,{{{20,20},1}},query).SweepAttempts()==1,"Stale positive nibble blocked an empty square");
+        center.fungus=false;input.history=INT32_MAX;input.population=127;
+        const auto maximum=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},query);
+        GT_ASSERT(maximum.SweepAttempts()==0 && maximum.Requests().size()==127,"Fallback does not use signed current population independently of sweep");
+        for(const auto& request:maximum.Requests()) {GT_ASSERT(!request.ecology_owner && request.coordinate==input.map.center && request.design==8,"Fallback changed selected-square design or wrote actor tag");}
+        input.population=-1;
+        GT_ASSERT(b::PrepareSmacNativeSpawn(input,{{{20,20},1}},query).Requests().empty(),"Negative signed population produced fallback births");
+        input.history=9;input.population=0;input.actor=7;center.fungus=true;center.unit_or_base=true;center.cached_owner=0;
+        const auto native=b::PrepareSmacNativeSpawn(input,{{{20,20},7}},query);
+        GT_ASSERT(native.Requests().size()==1 && native.Requests()[0].ecology_owner==7,"Actor attribution borrowed native owner0 or ignored actor7");
+        GT_OK();
+    });
+    task->AddTest("SMAC ecology native spawn preserves ordinal clipping and strict special-design limits",GT(){
+        b::SmacNativeSpawnInput input{{{0,0},32,24,true},1,7,9,0};
+        const auto query=[](int32_t x,int32_t y) {
+            if(x<0 || x>=32 || y<0 || y>=24 || ((x^y)&1)) {throw std::runtime_error("Clipped spawn queried outside map");}
+            return b::SmacNativeSpawnTile{3,true,1,1,false,15};
+        };
+        const auto wrapped=b::PrepareSmacNativeSpawn(input,{{{0,0},1}},query);input.map.horizontal_wrap=false;
+        const auto flat=b::PrepareSmacNativeSpawn(input,{{{0,0},1}},query);
+        GT_ASSERT(wrapped.Requests().size()==6 && flat.Requests().size()==4 && wrapped.Requests()[4].coordinate==SpawnCoordinate({31,1}),"Clipping normalized wrong ordinal or reordered valid attempts");
+        input.map={{20,20},80,80,true};input.population=3;input.history=9;
+        const auto special=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[](int32_t,int32_t){return b::SmacNativeSpawnTile{3,true,1,0,false,15};});
+        GT_ASSERT(special.SweepAttempts()==2 && special.SpecialCounter()==9 && special.Requests().size()==3 && !special.Requests().back().ecology_owner,"Skipped non-Mind-Worm candidates lost special-counter increments or fallback");
+        input.retained_base_count=1;
+        const auto small_plan=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[](int32_t,int32_t){return b::SmacNativeSpawnTile{2,true,65,1,false,15};});
+        GT_ASSERT(small_plan.SweepAttempts()==0 && small_plan.SpecialCounter()==9 && small_plan.Requests().size()==3 && small_plan.Requests()[0].design==9,"Strict Base-count limit was applied to fallback or skipped special counters");
+        input.history=6;int queries=0;
+        GT_ASSERT(Rejects([&]{b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[&](int32_t,int32_t){++queries;return b::SmacNativeSpawnTile{};});}) && queries==0,"Pre-hold history reached spawn query");
+        GT_OK();
+    });
     task->AddTest("SMAC bloom class-only setter matches11 native exact turn rockiness and landmark controls",GT(){
         for(const auto& row:smac_bloom_class_fixture::cases) {
             const b::SmacBloomTerrainCell cell{row.before,row.rockiness,0xa5a5a5a5u,row.landmarks,7};

@@ -182,13 +182,38 @@ ENDIF ()
 
 INCLUDE( CTest )
 IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" ) )
-	ADD_TEST( NAME gse COMMAND ${PROJECT_NAME} --gse-tests --quiet --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data" )
-	SET_TESTS_PROPERTIES( gse PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300 )
-	# The growing Debug suite reaches its final native groups at the five-minute
-	# limit on hosted Windows. Keep a bounded full-suite budget on that platform.
-	IF ( WIN32 )
-		SET_TESTS_PROPERTIES( gse PROPERTIES TIMEOUT 600 )
-	ENDIF ()
+    # Preserve every native registration exactly once; scripts get independent
+    # deadlines/logs instead of borrowing the tail of one growing suite timeout.
+    FOREACH ( SHARD RANGE 0 7 )
+        ADD_TEST( NAME gse_native_${SHARD}
+            COMMAND ${CMAKE_COMMAND} -E env --unset=GLSMAC_GSE_TEST_SOURCE_FILTER "GLSMAC_GSE_TEST_SHARD=${SHARD}/8"
+                $<TARGET_FILE:${PROJECT_NAME}> --gse-tests --gse-tests-native-filter ".*" --quiet
+                --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-native-${SHARD}" )
+        SET_TESTS_PROPERTIES( gse_native_${SHARD} PROPERTIES
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 180 LABELS "gse;native" )
+    ENDFOREACH ()
+    IF ( NOT IS_DIRECTORY "${PROJECT_SOURCE_DIR}/GLSMAC_data/tests" )
+        MESSAGE( FATAL_ERROR "Missing GSE script test directory" )
+    ENDIF ()
+    FILE( GLOB GSE_SCRIPTS CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/GLSMAC_data/tests/*.gls.js" )
+    FOREACH ( SCRIPT IN LISTS GSE_SCRIPTS )
+        GET_FILENAME_COMPONENT( SCRIPT_NAME "${SCRIPT}" NAME )
+        IF ( SCRIPT_NAME MATCHES "^_" )
+            CONTINUE() # Include modules were never standalone tests.
+        ENDIF ()
+        STRING( REPLACE ".gls.js" "" SCRIPT_NAME "${SCRIPT_NAME}" )
+        ADD_TEST( NAME gse_script_${SCRIPT_NAME} COMMAND ${CMAKE_COMMAND} -E env
+            --unset=GLSMAC_GSE_TEST_SOURCE_FILTER --unset=GLSMAC_GSE_TEST_SHARD
+            $<TARGET_FILE:${PROJECT_NAME}> --gse-tests --gse-tests-script "./GLSMAC_data/tests/${SCRIPT_NAME}.gls.js" --quiet
+            --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-script-${SCRIPT_NAME}" )
+        SET_TESTS_PROPERTIES( gse_script_${SCRIPT_NAME} PROPERTIES
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 30 LABELS "gse;script" )
+    ENDFOREACH ()
+    FIND_PACKAGE( Python3 COMPONENTS Interpreter REQUIRED )
+    ADD_TEST( NAME gse_selection_cli COMMAND ${Python3_EXECUTABLE}
+        "${PROJECT_SOURCE_DIR}/tools/tests/check_gse_selection.py"
+        --executable $<TARGET_FILE:${PROJECT_NAME}> --source "${PROJECT_SOURCE_DIR}" )
+    SET_TESTS_PROPERTIES( gse_selection_cli PROPERTIES TIMEOUT 60 )
 	IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 		ADD_TEST( NAME gse_uuid_memorydebug
 			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet

@@ -932,7 +932,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto equivalent=fixture.Snapshot();
             auto* dome_blocked=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
             GT_ASSERT(dome_blocked->value.count("cost")==1 && dome_blocked->value.count("forecast")==0
-                && fixture.Snapshot()==equivalent && fixture.GameplayRandom()==random,"Pressure Dome did not withhold the unbuildable Tanks forecast");GT_OK();
+                && fixture.Snapshot()==equivalent && fixture.GameplayRandom()==random,"Pressure Dome did not withhold the unbuildable Tanks forecast");
+            const auto& designs=rules.GetSmacPredefinedUnitRules()->catalog.units;
+            const auto native=std::find_if(designs.begin(),designs.end(),[](const auto& row){return row.source_id==2;});
+            GT_ASSERT(native!=designs.end(),"missing actual Scout design");
+            fixture.ResourceState([&](auto& state){state.designs.owners.front().designs.push_back({64,native->chassis_id,native->weapon_id,native->defense_id,native->reactor,
+                native->cost,native->plan,native->carry,native->abilities,native->faction_exclusion,true,false});});
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
+            base->SetProductionState(GSE_CALL,ProductionState{custom,7,custom,7,std::vector<ProductionItem>{custom,scout}});
+            const auto unprototyped=fixture.Snapshot();
+            auto* unsupported=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(unsupported->value.count("cost")==0 && unsupported->value.count("forecast")==0
+                && static_cast<value::Array*>(unsupported->Get("queue"))->value.size()==2
+                && !static_cast<value::String*>(unsupported->Get("name"))->value.empty()
+                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"unavailable custom cost hid a retained target/queue or changed authority");GT_OK();
         });
     });
 

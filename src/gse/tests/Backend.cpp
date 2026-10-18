@@ -2000,7 +2000,11 @@ public:
             const auto blink_epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
             badges->AdvanceSelectionBlink(blink_epoch,true);
             badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD,true);
+            badges->SetSelectionBlinkAdmission(false); // previous frame had no selection
+            um->m_selected_unit=unit.get();frontend.m_is_turn_active=true;
+            util::FinallyGuard clear_selection([&]{if(um){um->m_selected_unit=nullptr;}frontend.m_is_turn_active=false;});
             unit->StartBadgeBlink();
+            GT_ASSERT(!unit->IsBadgeVisible(),"live selection start flashed before next manager frame");
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(!badges->IsSelectionBlinkVisible() && !unit->IsBadgeVisible(),"actual tile redraw flashed an off-phase selected badge");
             frontend.RenderTile(&tile,unit.get());
@@ -2012,6 +2016,7 @@ public:
             badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD*2,true);
             unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"next shared callback did not display selected badge");
             unit->StopBadgeBlink(true);
+            um->m_selected_unit=nullptr;frontend.m_is_turn_active=false;
 			// Publish the real Unit for the production Game widget lookup. Its
 			// scoped owner remains here; remove the entry before either teardown.
 			um->m_units.emplace( 1, unit.get() );

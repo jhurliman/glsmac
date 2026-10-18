@@ -1975,7 +1975,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.nutrients.demand==(population==3 ? 4 : 2),"actual Start lost the captured population's resource cache");
                     if(paid) {GT_ASSERT(game->GetBM()->GetBase(scenario==7 ? 704 : 703)->m_facilities.count("capture-hq"),"actual Start lost relocated Headquarters");}
                     base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
-                    GT_ASSERT(base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,49}),"captured and reloaded Base did not reach the next assimilation tail");GT_OK();
+                    GT_ASSERT(base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,49}),"captured and reloaded Base did not reach the next assimilation tail");
+                    if(with_native) {
+                        restored.ResourceState([](auto& state){for(auto& technology:state.technology.factions) {
+                            technology.target=5;technology.cached_threshold=100000;technology.labs=0;
+                        }});
+                        const auto turn=game->GetTurnId();const auto* body=game->GetUM()->GetUnit(native_id);
+                        game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+                        std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
+                        GT_ASSERT(game->GetTurnId()==turn+1 && game->GetUM()->GetUnit(native_id)==body
+                            && Unit::Serialize(body).ToString()==native_wire && factory==native_factory,
+                            "Actual human turn rejected or rewrote the independently owned native body/factory");
+                        GT_ASSERT(game->GetUM()->GetUnit(91)->Conventional().spent==0,
+                            "Native coexistence bypassed human movement upkeep");
+                    }GT_OK();
                 });if(!result.empty()) {return "capture restore: "+result;}
             }
         }GT_OK();

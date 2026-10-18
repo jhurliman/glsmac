@@ -30,3 +30,18 @@ The completed world passes actual Start restore with that same native body,
 then reaches the captured Base's next assimilation tail. Six focused capture/
 dense groups and targeted BaseCapture.cpp correctness analysis pass. No codec
 or lifetime format changed in this guard.
+
+## Human-turn coexistence
+
+The positive-owner turn-start reset validates wild native records without treating
+owner0 as a human controller or resetting its retained movement byte. Faction
+existence during economy settlement uses the canonical owner identity for both
+Unit variants. This fixes the first ordinary complete_turn after a native birth;
+it does not implement a native AI/controller turn.
+
+The actual capture/save/Start fixture now advances a full human turn with the
+factory-born native still registered. It checks stable identity, complete native
+wire and factory counters, alongside the human Scout movement reset. The new
+case failed at the former non-conventional-unit guard before the fix and passes
+after it. Both changed production translation units passed targeted correctness
+analysis. No new platform matrix or native AI fidelity is claimed.

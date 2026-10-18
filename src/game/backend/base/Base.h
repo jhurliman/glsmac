@@ -101,6 +101,7 @@ public:
 	bool CanSmacRename() const;
 	void OpenSmacRename(GSE_CALLABLE,bool apply);
 	gse::Value* CopySmacRenameChoices(GSE_CALLABLE) const;
+	gse::Value* CopySmacQueueEditor(GSE_CALLABLE) const;
 	// Explicit native publication only, in the owning writable GSE scope. No
 	// allocation calculation or founding/adoption policy is implied. Existing
 	// Pop nodes/IDs/variants survive; ascending IDs receive ascending worker

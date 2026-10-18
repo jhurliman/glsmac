@@ -89,7 +89,7 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 	}
 	if(version>=32) {
 		result.WriteBool(id=="smac");
-		if(id=="smac") {result.WriteString(game::backend::settings::SmacCombatRules{25,25,25}.Serialize().ToString());}
+		if(id=="smac") {result.WriteString(smac_rules_fixture::Combat().Serialize().ToString());}
 	}
     if(version>=33) {
         result.WriteInt(game::backend::settings::MapSettings::MT_RANDOM);

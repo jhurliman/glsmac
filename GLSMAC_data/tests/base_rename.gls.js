@@ -13,7 +13,7 @@ const base = {id: 701, get_smac_rename_state: () => { return state; }};
 const request = {request_id: 7, expected_state: 'prepared', name: 'Duplicate', max_bytes: 24};
 dialog.open(base, request);
 test.assert(dialog.active && !window.hidden && field.value == 'Duplicate');
-input_handlers.change({value: '12345678901234567890123456789'});
+test.assert(input_handlers.change({value: '12345678901234567890123456789'}) == true);
 test.assert(field.value == '123456789012345678901234');
 field.value = ''; actions[0](); actions[0]();
 test.assert(!dialog.active && window.hidden && #sizeof(commands) == 1 && commands[0].name == 'commit_smac_rename' && commands[0].data.name == ''

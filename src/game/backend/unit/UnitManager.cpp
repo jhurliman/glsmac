@@ -444,7 +444,7 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,
             knowledge.tiles[i].explored_by|=explored.tiles[i].explored_by;
             // Preserve any transient-factory reveal, then apply the new site's
             // actual refreshes rather than replacing the complete old memory.
-            if(actual.remembered[simulation_id].empty() || explored.remembered[simulation_id][i]!=actual.remembered[simulation_id][i]) {
+            if(actual.remembered[simulation_id].empty() || !(explored.remembered[simulation_id][i]==actual.remembered[simulation_id][i])) {
                 remembered[i]=explored.remembered[simulation_id][i];
             }
         }

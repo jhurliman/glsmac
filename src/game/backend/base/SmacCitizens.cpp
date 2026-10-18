@@ -67,6 +67,13 @@ SmacCitizenFinalStages FinishSmacCitizens(SmacCitizenCounts c,int32_t p,int32_t 
     Population(p,x);c.talents=Checked(int64_t(c.talents)+talents);if(longevity) {c.drones=Checked(int64_t(c.drones)-(economics==1?0:economics==2?2:1));}
     SmacCitizenFinalStages r;r.projects=c;if(sphere || nerve) {c.talents=c.drones=0;}r.suppressed=c;Bound(c,p,x);r.final=c;return r;
 }
+bool SmacCitizenCalculation::operator==(const SmacCitizenCalculation& b) const {
+    return population==b.population && excluded==b.excluded && bureaucracy==b.bureaucracy && social_talent==b.social_talent
+        && psych_points==b.psych_points && police==b.police && facility_drones==b.facility_drones && paradise_talents==b.paradise_talents
+        && prefix.content_allowance==b.prefix.content_allowance && prefix.ordinary==b.prefix.ordinary && prefix.assimilation==b.prefix.assimilation
+        && prefix.after_faction==b.prefix.after_faction && prefix.faction_talents==b.prefix.faction_talents
+        && early.initial==b.early.initial && early.psych==b.early.psych && early.facilities==b.early.facilities && after_police==b.after_police && final==b.final;
+}
 SmacCitizenStatus CalculateSmacCitizenStatus(int32_t turn,int32_t p,SmacCitizenCounts c,bool golden,bool riots,bool matrix,uint8_t nerve) {
     Population(p);if(turn<0 || c.talents<0 || c.drones<0) {throw std::invalid_argument("Invalid citizen status input");}
     SmacCitizenStatus r{};r.golden=golden;r.riots=riots;if(turn<2) {return r;}r.admitted=true;
@@ -74,4 +81,55 @@ SmacCitizenStatus CalculateSmacCitizenStatus(int32_t turn,int32_t p,SmacCitizenC
     r.riot_dispatch=c.drones>c.talents && !matrix && !nerve;r.riot_new=r.riot_dispatch && !riots;r.riots=r.riot_dispatch;
     r.riots_over=riots && !r.riots && !r.golden;r.map_refresh=riots && !r.riots;return r;
 }
+SmacRiotFacilityResult CalculateSmacRiotFacilityLoss(bool ongoing,int32_t police,int32_t population,
+    int32_t owner_bases,uint8_t assimilation,int32_t difficulty,const std::array<bool,39>& facilities,
+    const std::array<bool,39>& grants,const std::function<int32_t()>& retained_rank,const std::function<int32_t()>& draw) {
+    if(population<0 || population>127 || owner_bases<0 || difficulty<0 || difficulty>5 || !draw || !retained_rank) {
+        throw std::invalid_argument("Riot search requires resolved ordinary Base inputs");
+    }
+    SmacRiotFacilityResult result;
+    const auto next=[&]() {const auto value=draw();if(value<0 || value>32767) {throw std::runtime_error("Riot search requires raw CRT15 output");}++result.draws;return value;};
+    if(!ongoing) {return result;}
+    if(police>-6 && next()%(int64_t(police)+7)!=0) {return result;}
+    if(facilities[1] || owner_bases<=1 || assimilation>=45) {return result;}
+    if(population<4 && next()%3!=0) {return result;}
+    const auto rank=retained_rank();
+    if(rank<1 || rank>7) {throw std::invalid_argument("Riot search requires retained active faction rank");}
+    const auto limit=population+20-difficulty-rank;
+    for(int32_t i=0;i<=limit;++i) {
+        const auto candidate=next()%39;++result.attempts;
+        if(candidate>=2 && candidate<=33 && facilities[candidate] && !grants[candidate]) {
+            result.removed=candidate;return result;
+        }
+    }
+    result.exhausted=true;return result;
+}
+
+SmacRiotRecipient CalculateSmacRiotRecipient(int32_t police,bool human,int32_t owner,int32_t former,
+    uint32_t stamp,int32_t x,int32_t y,int32_t width,bool wraps,const std::vector<SmacRiotBase>& bases,
+    const std::array<SmacRiotRelationship,8>& relationships) {
+    if(owner<1 || owner>7 || former<0 || former>7 || width<2 || width%2 || x<0 || x>=width || y<0) {
+        throw std::invalid_argument("Riot recipient requires resolved faction and map inputs");
+    }
+    SmacRiotRecipient result;
+    if(police>-3 || !human) {return result;}
+    if(former!=owner) {result.selected=former;return result;}
+    int32_t best=9999;
+    for(const auto& base:bases) {
+        if(base.owner<0 || base.owner>7 || base.x<0 || base.x>=width || base.y<0) {throw std::invalid_argument("Invalid riot recipient Base record");}
+        if(base.owner==owner) {continue;}
+        auto dx=std::abs(int64_t(x)-base.x);const auto dy=std::abs(int64_t(y)-base.y);
+        if(wraps) {dx=std::min(dx,int64_t(width)-dx);}
+        auto score=(3*std::max(dx,dy)+std::min(dx,dy)+1)/4;
+        const auto relation=result.selected ? relationships.at(*result.selected):SmacRiotRelationship{bool(stamp&1u),bool(stamp&2u),bool(stamp&4u)};
+        if(relation.pact) {score*=2;}
+        if(relation.treaty) {score=score*3/2;}
+        if(relation.half_distance) {score/=2;}
+        const auto value=Checked(score);
+        result.candidates.push_back({base.record_position,base.owner,result.selected,value});
+        if(value<best) {best=value;result.selected=base.owner;}
+    }
+    return result;
+}
+
 }

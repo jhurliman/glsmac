@@ -163,6 +163,7 @@ return {
 		let intake = undefined;
 		let consumption = undefined;
 		let energy = undefined;
+        let citizens = undefined;
 		let ecodamage = canonical ? 'N/A' : 0;
         let mineral_surplus = undefined;
 		if (canonical) {
@@ -171,6 +172,7 @@ return {
 			const calculation = base.get_smac_resource_calculation();
 			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
             mineral_surplus = calculation.minerals.surplus;
+            citizens = {current: calculation.citizens, retained: calculation.retained_citizens, reason: calculation.citizens_unavailable};
 			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
@@ -277,7 +279,7 @@ return {
 		}
 
 		this.sections.middle_area.set({
-			base: base,
+			base: base, citizens: citizens,
 		});
 
 		this.sections.bottom_bar.set({

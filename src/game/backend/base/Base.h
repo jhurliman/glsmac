@@ -15,6 +15,7 @@
 #include "Pop.h"
 #include "ProductionState.h"
 #include "SmacHurry.h"
+#include "SmacBaseEnergy.h"
 #include "BaseResourceCalculation.h"
 #include "SmacColonyContinuation.h"
 #include "SmacBaseUpkeepCache.h"
@@ -135,6 +136,7 @@ public:
 		std::vector<size_t> removed_units; // shortage order; may include completed_unit
 		bool removed_base = false; // caller must not dereference the retired Base
 		std::optional<SmacColonyUpkeepPause> colony_pause;
+        std::optional<SmacBaseEnergyCalculation> retained_energy;
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
@@ -237,7 +239,7 @@ private:
 		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {}, std::vector<std::pair<Base*,facilities_t>> facility_changes = {}, slot::Slot* captured_owner = nullptr, std::vector<Base*> refresh_only = {}, bool finish_upkeep = false, PreparedSmacWorkerState* previous = nullptr );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
-		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;
+		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr, const std::vector<size_t>& removed = {} ) const;
 	std::optional<int32_t> CalculateSmacEcologyDamage( const SmacBaseResourceCalculation& calculation,
 		const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;

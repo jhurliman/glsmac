@@ -203,5 +203,224 @@ task->AddTest("SMAC citizen Golden Age and riot status match original caller con
 {const auto r=CalculateSmacCitizenStatus(1,7,SmacCitizenCounts{4,0,0},false,true,false,0);GT_ASSERT((r.admitted==false && r.golden==false && r.riots==true && r.riot_dispatch==false && r.map_refresh==false && r.golden_start==false && r.golden_over==false && r.riots_over==false),"CITIZEN-STATUS-023");}
 {const auto r=CalculateSmacCitizenStatus(2,127,SmacCitizenCounts{64,0,0},false,false,false,0);GT_ASSERT((r.admitted==true && r.golden==true && r.riots==false && r.riot_dispatch==false && r.map_refresh==false && r.golden_start==true && r.golden_over==false && r.riots_over==false),"CITIZEN-STATUS-024");}
 return "";});
+ task->AddTest("SMAC citizen ongoing riot facility gates and ordered search", [](GSE*,context::Context*) -> std::string {
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-001"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(false,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==0 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-002"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{1,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-003"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,-6,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-004"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,-7,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-005"); }
+ { std::array<bool,39> facilities{},grants{};facilities[1]=true;facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-006"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,1,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-007"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,44,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-008"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,45,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-009"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,255,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==1 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-010"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,1,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,3,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==0 && r.removed==std::nullopt && r.exhausted==false,"RIOT-FACILITY-011"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,3,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==3 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-012"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,4,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-013"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;grants[6]=true;
+ // The receipt gives the selection prefix; every remaining zero is an
+ // explicitly rejected candidate, completing its exhausted-search control.
+ const std::vector<int32_t> draws{0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==22 && r.attempts==21 && r.removed==std::nullopt && r.exhausted==true,"RIOT-FACILITY-014"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;facilities[7]=true;grants[6]=true;
+ const std::vector<int32_t> draws{0,6,7};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==3 && r.attempts==2 && r.removed==std::optional<int32_t>(7) && r.exhausted==false,"RIOT-FACILITY-015"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,7,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==3 && r.attempts==2 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-016"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,45};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==1 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-017"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,0,1,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==4 && r.attempts==3 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-018"); }
+ { std::array<bool,39> facilities{},grants{};facilities[34]=true;facilities[6]=true;
+ const std::vector<int32_t> draws{0,34,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==3 && r.attempts==2 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-019"); }
+ { std::array<bool,39> facilities{},grants{};facilities[33]=true;
+ const std::vector<int32_t> draws{0,33};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==2 && r.attempts==1 && r.removed==std::optional<int32_t>(33) && r.exhausted==false,"RIOT-FACILITY-020"); }
+ { std::array<bool,39> facilities{},grants{};
+ // The receipt gives the selection prefix; every remaining zero is an
+ // explicitly rejected candidate, completing its exhausted-search control.
+ const std::vector<int32_t> draws{0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,7,2,0,3,facilities,grants,[]{return 4;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==22 && r.attempts==21 && r.removed==std::nullopt && r.exhausted==true,"RIOT-FACILITY-021"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,0,0,0,0,0,0,0,0,0,0,0,0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,4,2,0,5,facilities,grants,[]{return 7;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==14 && r.attempts==13 && r.removed==std::optional<int32_t>(6) && r.exhausted==false,"RIOT-FACILITY-022"); }
+ { std::array<bool,39> facilities{},grants{};facilities[6]=true;
+ const std::vector<int32_t> draws{0,0,0,0,0,0,0,0,0,0,0,0,0,0,6};size_t cursor=0;
+ const auto r=CalculateSmacRiotFacilityLoss(true,0,4,2,0,5,facilities,grants,[]{return 7;},[&]{return draws.at(cursor++);});
+ GT_ASSERT(r.draws==14 && r.attempts==13 && r.removed==std::nullopt && r.exhausted==true,"RIOT-FACILITY-023"); }
+ GT_OK(); });
+
+ task->AddTest("SMAC citizen riot recipient weighting preserves retained best owner", [](GSE*,context::Context*) -> std::string {
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==1,"RIOT-RECIPIENT-001");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==12,"RIOT-RECIPIENT-001 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-2,true,1,1,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::nullopt && r.TransferAdmitted()==false && r.candidates.size()==0,"RIOT-RECIPIENT-002");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,false,1,1,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::nullopt && r.TransferAdmitted()==false && r.candidates.size()==0,"RIOT-RECIPIENT-003");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,3,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==0,"RIOT-RECIPIENT-004");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,7,0,2,2,128,true,{},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(7) && r.TransferAdmitted()==true && r.candidates.size()==0,"RIOT-RECIPIENT-005");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,0,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(0) && r.TransferAdmitted()==false && r.candidates.size()==0,"RIOT-RECIPIENT-006");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{},relationships);
+ GT_ASSERT(r.selected==std::nullopt && r.TransferAdmitted()==false && r.candidates.size()==0,"RIOT-RECIPIENT-007");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,1,2,2},{3,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==1,"RIOT-RECIPIENT-008");
+ GT_ASSERT(r.candidates[0].record_position==3 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==12,"RIOT-RECIPIENT-008 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,18,2},{3,3,10,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-009");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==12,"RIOT-RECIPIENT-009 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==6,"RIOT-RECIPIENT-009 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,18,2},{3,3,2,18}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-010");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==12,"RIOT-RECIPIENT-010 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==12,"RIOT-RECIPIENT-010 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+relationships[2]={true,false,false};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,14,2},{3,3,12,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-011");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==9,"RIOT-RECIPIENT-011 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==14,"RIOT-RECIPIENT-011 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+relationships[2]={true,false,false};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,3,12,2},{3,2,14,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-012");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==3 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==7,"RIOT-RECIPIENT-012 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==2 && r.candidates[1].weight_owner==std::optional<int32_t>(3) && r.candidates[1].score==9,"RIOT-RECIPIENT-012 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+relationships[2]={true,false,false};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==1,"RIOT-RECIPIENT-013");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==12,"RIOT-RECIPIENT-013 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,3,2,2,128,true,{{2,2,14,2},{3,3,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-014");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==27,"RIOT-RECIPIENT-014 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==12,"RIOT-RECIPIENT-014 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,7,2,2,128,true,{{2,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==1,"RIOT-RECIPIENT-015");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==18,"RIOT-RECIPIENT-015 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+relationships[2]={false,false,true};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,14,2},{3,3,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-016");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==9,"RIOT-RECIPIENT-016 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==6,"RIOT-RECIPIENT-016 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,2,126,2},{3,3,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-017");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==3,"RIOT-RECIPIENT-017 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==12,"RIOT-RECIPIENT-017 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,false,{{2,2,126,2},{3,3,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(3) && r.TransferAdmitted()==true && r.candidates.size()==2,"RIOT-RECIPIENT-018");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==93,"RIOT-RECIPIENT-018 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==3 && r.candidates[1].weight_owner==std::optional<int32_t>(2) && r.candidates[1].score==12,"RIOT-RECIPIENT-018 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,2,2,128,true,{{2,0,2,2},{3,2,18,2}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(0) && r.TransferAdmitted()==false && r.candidates.size()==2,"RIOT-RECIPIENT-019");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==0 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==0,"RIOT-RECIPIENT-019 weighted trace");
+ GT_ASSERT(r.candidates[1].record_position==3 && r.candidates[1].owner==2 && r.candidates[1].weight_owner==std::optional<int32_t>(0) && r.candidates[1].score==12,"RIOT-RECIPIENT-019 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,0,0,32768,false,{{2,2,13331,1}},relationships);
+ GT_ASSERT(r.selected==std::optional<int32_t>(2) && r.TransferAdmitted()==true && r.candidates.size()==1,"RIOT-RECIPIENT-020");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==9998,"RIOT-RECIPIENT-020 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,0,0,32768,false,{{2,2,13332,0}},relationships);
+ GT_ASSERT(r.selected==std::nullopt && r.TransferAdmitted()==false && r.candidates.size()==1,"RIOT-RECIPIENT-021");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==9999,"RIOT-RECIPIENT-021 weighted trace");
+ }
+ {std::array<SmacRiotRelationship,8> relationships{};
+ const auto r=CalculateSmacRiotRecipient(-3,true,1,1,0,0,0,32768,false,{{2,2,20000,0}},relationships);
+ GT_ASSERT(r.selected==std::nullopt && r.TransferAdmitted()==false && r.candidates.size()==1,"RIOT-RECIPIENT-022");
+ GT_ASSERT(r.candidates[0].record_position==2 && r.candidates[0].owner==2 && r.candidates[0].weight_owner==std::nullopt && r.candidates[0].score==15000,"RIOT-RECIPIENT-022 weighted trace");
+ }
+ GT_OK(); });
+
 }
 }

@@ -8,6 +8,10 @@
 #include "gse/value/Object.h"
 #include "gse/value/Int.h"
 #include "gse/value/Null.h"
+#include "gse/value/Array.h"
+#include "gse/value/String.h"
+#include "game/backend/slot/Slot.h"
+#include "game/backend/Player.h"
 #include <limits>
 #include <stdexcept>
 
@@ -46,7 +50,7 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
     return CalculateSmacResourceCalculation( phase, nullptr );
 }
 
-SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support, const FacilityDef* granted ) const {
+SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support, const FacilityDef* granted, const std::vector<size_t>& removed ) const {
     const auto population = candidate_population.value_or( m_pops.size() );
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
@@ -94,12 +98,36 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     result = FinishSmacResourceIntake(result.raw_intake,m_game->CalculateCanonicalNutrientDemand(*this,population),
         stored.value_or(m_accumulated_nutrients),support,multiplier_steps);
     result.eco_damage = CalculateSmacEcologyDamage(result, allocation, population, granted);
+    result.citizens = m_game->CalculateCanonicalCitizens(*this,result,allocation,population,prepared_unit,removed,granted);
     return result;
 }
 
 gse::Value* Base::CopySmacResourceCalculation( GSE_CALLABLE ) const {
     const auto result = PrepareSmacResourceCalculation();
+    const bool owned=m_owner && m_owner->GetPlayer()==m_game->GetPlayer();
+    const auto snapshot=[&](const std::optional<SmacCitizenCalculation>& value)->gse::Value* {
+        if(!owned || !value) {return VALUE(gse::value::Null);}
+        const auto& c=*value;
+        const auto counts=[&](const SmacCitizenCounts& n)->gse::Value* {
+            return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                {"talents",VALUE(gse::value::Int,,n.talents)},{"content",VALUE(gse::value::Int,,c.population-c.excluded-n.talents-n.drones)},
+                {"drones",VALUE(gse::value::Int,,n.drones)},{"extra_drone_steps",VALUE(gse::value::Int,,n.extra_drone_steps)}}));
+        };
+        return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+            {"population",VALUE(gse::value::Int,,c.population)},{"specialists",VALUE(gse::value::Int,,c.excluded)},
+            {"psych_points",VALUE(gse::value::Int,,c.psych_points)},{"police",VALUE(gse::value::Int,,c.police)},
+            {"initial",counts(c.early.initial)},{"after_psych",counts(c.early.psych)},{"after_facilities",counts(c.early.facilities)},
+            {"after_police",counts(c.after_police)},{"final",counts(c.final)}}));
+    };
+    std::string unavailable;
+    if(owned && !result.citizens) {(void)m_game->CalculateCanonicalCitizens(*this,result,nullptr,{},nullptr,{},nullptr,&unavailable);}
+    if(!owned) {unavailable="Citizen details are available for your Bases";}
+    const std::optional<SmacCitizenCalculation> retained=m_smac_upkeep_cache ? m_smac_upkeep_cache->calculation.citizens:std::nullopt;
+
     return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+        {"citizens",snapshot(result.citizens)},
+        {"retained_citizens",snapshot(retained)},
+        {"citizens_unavailable",VALUE(gse::value::String,,unavailable)},
         { "eco_damage", result.eco_damage ? static_cast<gse::Value*>(VALUE(gse::value::Int,, *result.eco_damage)) : static_cast<gse::Value*>(VALUE(gse::value::Null)) },
         { "raw_intake", VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
             { "NUTRIENTS", VALUE( gse::value::Int,, result.raw_intake[ 0 ] ) },

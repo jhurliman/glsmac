@@ -176,6 +176,9 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	const auto expected_context=finish_upkeep ? prior_context.AfterUpkeep() : prior_context;
 	context.Validate();
 	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
+    // Only the private completed upkeep transaction may publish status admitted
+    // from its second citizen pass. Ordinary allocation/query edits retain it.
+    if(finish_upkeep) {unchanged_context.golden_age=expected_context.golden_age;unchanged_context.drone_riots=expected_context.drone_riots;}
 	if(captured_owner) {
 		m_game->RequireSmacLocalHumanOwner(captured_owner);
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());

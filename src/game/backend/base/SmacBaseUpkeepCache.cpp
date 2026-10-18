@@ -38,16 +38,39 @@ void ValidateSupport(const SmacUnitSupportResult& support) {
 }
 }
 
-void WriteSmacResourceCalculation(types::Buffer& buffer,const SmacBaseResourceCalculation& value, bool include_ecology) {
+namespace {
+std::array<int32_t*,28> CitizenFields(SmacCitizenCalculation& c) {
+    return {{&c.population,&c.excluded,&c.bureaucracy,&c.social_talent,&c.psych_points,&c.police,&c.facility_drones,&c.paradise_talents,
+        &c.prefix.content_allowance,&c.prefix.ordinary,&c.prefix.assimilation,&c.prefix.after_faction,&c.prefix.faction_talents,
+        &c.early.initial.talents,&c.early.initial.drones,&c.early.initial.extra_drone_steps,
+        &c.early.psych.talents,&c.early.psych.drones,&c.early.psych.extra_drone_steps,
+        &c.early.facilities.talents,&c.early.facilities.drones,&c.early.facilities.extra_drone_steps,
+        &c.after_police.talents,&c.after_police.drones,&c.after_police.extra_drone_steps,
+        &c.final.talents,&c.final.drones,&c.final.extra_drone_steps}};
+}
+void ValidateCitizens(const SmacCitizenCalculation& c) {
+    if(c.population<0 || c.population>127 || c.excluded<0 || c.excluded>c.population || c.excluded>16
+        || c.bureaucracy<0 || c.bureaucracy>c.population || c.psych_points<0 || c.prefix.content_allowance<1 || c.prefix.content_allowance>6
+        || c.prefix.ordinary<0 || c.prefix.ordinary>c.population || c.prefix.assimilation<0 || c.prefix.assimilation>26
+        || c.prefix.after_faction<0 || c.prefix.faction_talents<0) {throw std::runtime_error("Invalid saved citizen input snapshot");}
+    for(const auto* n:{&c.early.initial,&c.early.psych,&c.early.facilities,&c.after_police,&c.final}) {
+        if(n->talents<0 || n->drones<0 || n->extra_drone_steps<0 || n->extra_drone_steps>c.population
+            || int64_t(n->talents)+n->drones>c.population-c.excluded) {throw std::runtime_error("Invalid saved citizen count snapshot");}
+    }
+}
+}
+
+void WriteSmacResourceCalculation(types::Buffer& buffer,const SmacBaseResourceCalculation& value, bool include_ecology, bool include_citizens) {
     for(const auto raw:value.raw_intake) {buffer.WriteInt(raw);}
     buffer.WriteInt(value.nutrients.intake);buffer.WriteInt(value.nutrients.demand);buffer.WriteInt(value.nutrients.surplus);
     buffer.WriteInt(value.nutrients.stored_before);buffer.WriteInt(value.nutrients.normalized_stored);
     buffer.WriteInt(value.minerals.multiplier_steps);buffer.WriteInt(value.minerals.intake);buffer.WriteInt(value.minerals.demand);
     buffer.WriteInt(value.minerals.surplus);buffer.WriteInt(value.minerals.pre_orbital_surplus);
     if(include_ecology) {buffer.WriteBool(value.eco_damage.has_value());if(value.eco_damage) {buffer.WriteInt(*value.eco_damage);}}
+    if(include_citizens) {buffer.WriteBool(value.citizens.has_value());if(value.citizens) {ValidateCitizens(*value.citizens);auto copy=*value.citizens;for(const auto* field:CitizenFields(copy)) {buffer.WriteInt(*field);}}}
 }
 
-SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer& buffer, bool include_ecology) {
+SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer& buffer, bool include_ecology, bool include_citizens) {
     SmacBaseResourceCalculation value{};
     for(auto& raw:value.raw_intake) {raw=buffer.ReadInt();}
     value.nutrients.intake=ReadInt32(buffer);value.nutrients.demand=ReadInt32(buffer);value.nutrients.surplus=ReadInt32(buffer);
@@ -55,13 +78,14 @@ SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer& buffer, b
     value.minerals.multiplier_steps=ReadInt32(buffer);value.minerals.intake=ReadInt32(buffer);value.minerals.demand=ReadInt32(buffer);
     value.minerals.surplus=ReadInt32(buffer);value.minerals.pre_orbital_surplus=ReadInt32(buffer);
     if(include_ecology && buffer.ReadBool()) {value.eco_damage=ReadInt32(buffer);}
+    if(include_citizens && buffer.ReadBool()) {value.citizens.emplace();for(auto* field:CitizenFields(*value.citizens)) {*field=ReadInt32(buffer);}ValidateCitizens(*value.citizens);}
     return value;
 }
 
 types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCache>& cache) {
     if(cache) {ValidateSupport(cache->support);}
     types::Buffer buffer;
-    buffer.WriteInt(2);buffer.WriteBool(cache.has_value());
+    buffer.WriteInt(3);buffer.WriteBool(cache.has_value());
     if(cache) {
         WriteSmacResourceCalculation(buffer,cache->calculation);
         const auto& support=cache->support;
@@ -78,10 +102,10 @@ types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCac
 
 std::optional<SmacBaseUpkeepCache> DeserializeSmacBaseUpkeepCache(types::Buffer buffer) {
     const auto version=buffer.ReadInt();
-    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported Base upkeep cache");}
+    if(version!=1 && version!=2 && version!=3) {throw std::runtime_error("Unsupported Base upkeep cache");}
     std::optional<SmacBaseUpkeepCache> cache;
     if(buffer.ReadBool()) {
-        cache.emplace();cache->calculation=ReadSmacResourceCalculation(buffer,version>=2);
+        cache.emplace();cache->calculation=ReadSmacResourceCalculation(buffer,version>=2,version>=3);
         auto& support=cache->support;
         support.free_allowance=ReadInt32(buffer);support.minerals_per_paid_unit=ReadInt32(buffer);
         support.eligible_count=ReadInt32(buffer);support.paid_count=ReadInt32(buffer);support.mineral_support=ReadInt32(buffer);

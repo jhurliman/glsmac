@@ -824,13 +824,14 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
+	std::optional<base::SmacCitizenCalculation> CalculateCanonicalCitizens(const base::Base&,const base::SmacBaseResourceCalculation&,const base::SmacBaseAllocationState* allocation = nullptr,std::optional<size_t> population = {},const unit::Unit* prepared = nullptr,const std::vector<size_t>& removed = {},const base::FacilityDef* granted = nullptr,std::string* unavailable = nullptr) const;
 	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population, const base::FacilityDef* granted = nullptr ) const;
 	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
 	base::SmacUnitSupportResult CalculateCanonicalUnitSupport( const base::Base& base, size_t population,
 		const unit::Unit* prepared_unit, const std::vector<size_t>& removed = {} ) const;
 	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
 	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;
-	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates = nullptr, const base::SmacBaseAllocationState* candidate_allocation = nullptr ) const;
+	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates = nullptr, const base::SmacBaseAllocationState* candidate_allocation = nullptr, const base::FacilityDef* granted = nullptr ) const;
 	// Native controller stages these calls in its once-only Base/faction order.
 	// They are deliberately not script callbacks or independently queued events.
 	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );

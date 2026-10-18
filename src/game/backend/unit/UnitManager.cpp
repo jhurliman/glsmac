@@ -928,7 +928,12 @@ void UnitManager::PushUpdates() {
 			const auto unit_id = it.first;
 			const auto& uu = it.second;
 			const auto& unit = uu.unit;
-			if ( uu.ops & UUO_SPAWN ) {
+			// Rebuild only the frontend view. Backend identity and wrapper stay live.
+            if((uu.ops & UUO_OWNER_CHANGE) && !(uu.ops & UUO_SPAWN)) {
+                auto fr=FrontendRequest(FrontendRequest::FR_UNIT_DESPAWN);
+                fr.data.unit_despawn.unit_id=unit_id;m_game->AddFrontendRequest(fr);
+            }
+            if ( uu.ops & (UUO_SPAWN | UUO_OWNER_CHANGE) ) {
 				const auto presentation = unit->GetPresentation();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;

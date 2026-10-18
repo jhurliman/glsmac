@@ -51,8 +51,9 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 // Independent typed fixture: deliberately retained history, not a query of any
 // current world. Marking order is unrelated to numeric Unit identity.
 struct UpkeepCacheWire {
-    int64_t version = 2;
+    int64_t version = 3;
     std::optional<int64_t> ecology;
+    std::optional<std::array<int64_t,28>> citizens;
     bool present = true;
     std::array<int64_t,13> calculation{4,3,2, 4,2,2,19,19, 2,3,2,1,1};
     std::array<int64_t,5> support{1,2,2,1,2};
@@ -63,6 +64,7 @@ struct UpkeepCacheWire {
         if (present) {
             for (const auto value : calculation) { out.WriteInt(value); }
             if(version>=2) {out.WriteBool(ecology.has_value());if(ecology) {out.WriteInt(*ecology);}}
+            if(version>=3) {out.WriteBool(citizens.has_value());if(citizens) {for(const auto value:*citizens) {out.WriteInt(value);}}}
             for (const auto value : support) { out.WriteInt(value); }
             out.WriteInt(count);
             for (const auto& unit : units) { out.WriteInt(unit.first); out.WriteInt(unit.second); }
@@ -330,6 +332,109 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             close(old,true);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==1,"Retired modal rolled back a newer edit");
             close(request,false);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==2 && restored.GameplayRandom()==random,"Enter failed to keep live rates without RNG");
             GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC defection Unit publication preserves identity counts and stale selection",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(SelectionSource,true);std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Populate(GSE_CALL,fixture,false);auto* um=game->GetUM();auto* actor=um->GetUnit(91);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            auto* previous=actor->m_owner;auto* recipient=&game->GetState()->m_slots->GetSlot(6);
+            auto* wrapper=actor->Wrap(GSE_CALL);const auto record_order=um->GetUnitRecordOrder();const auto random=fixture.GameplayRandom();
+            fixture.Updates(); // The original frontend view already exists.
+            const auto before=fixture.Snapshot();auto next=actor->Conventional();next.owner_simulation_id=2;
+            {auto dropped=um->PrepareDefectionUnits(GSE_CALL,recipient,{{91,next}});}
+            GT_ASSERT(fixture.Snapshot()==before,"abandoned Unit transfer published authority");
+            GT_ASSERT(Rejects([&]{auto invalid=um->PrepareDefectionUnits(GSE_CALL,recipient,{{91,next},{91,next}});})
+                && fixture.Snapshot()==before,"late duplicate Unit transfer partially published");
+            GT_ASSERT(game->SelectLocalConventionalUnit(game->GetTurnId(),{},{},actor->GetTile()->coord,false)==91,
+                "fixture Unit was not selectable before ownership changed");
+            auto plan=um->PrepareDefectionUnits(GSE_CALL,recipient,{{91,next}});plan.Commit();
+            GT_ASSERT(um->GetUnit(91)==actor && unit::Unit::Unwrap(wrapper)==actor && actor->m_owner==recipient
+                && actor->Conventional()==next && um->GetUnitRecordOrder()==record_order && fixture.GameplayRandom()==random,
+                "Unit transfer replaced identity/wrapper/order or consumed RNG");
+            GT_ASSERT(!game->SelectLocalConventionalUnit(game->GetTurnId(),91,91,actor->GetTile()->coord,false),
+                "retained selection kept a transferred foreign Unit actionable");
+            std::vector<game::FrontendRequest::request_type_t> published;
+            for(const auto& update:fixture.Updates()) {
+                if(update.type==game::FrontendRequest::FR_UNIT_DESPAWN && update.data.unit_despawn.unit_id==91) {published.push_back(update.type);}
+                if(update.type==game::FrontendRequest::FR_UNIT_SPAWN && update.data.unit_spawn.unit_id==91) {
+                    published.push_back(update.type);GT_ASSERT(update.data.unit_spawn.slot_index==6,"replacement view kept old faction");
+                }
+            }
+            GT_ASSERT(published==std::vector<game::FrontendRequest::request_type_t>({game::FrontendRequest::FR_UNIT_DESPAWN,game::FrontendRequest::FR_UNIT_SPAWN}),
+                "existing view was not replaced in removal/creation order");
+            bool counts=false;fixture.ResourceState([&](auto& state){counts=state.economy.at(1).design_counts->at(2)==0 && state.economy.at(2).design_counts->at(2)==1;});
+            GT_ASSERT(counts,"Unit transfer did not move saved active design counts");
+            auto back=next;back.owner_simulation_id=1;auto returning=um->PrepareDefectionUnits(GSE_CALL,previous,{{91,back}});returning.Commit();fixture.Updates();
+            GT_ASSERT(game->SelectLocalConventionalUnit(game->GetTurnId(),{},{},actor->GetTile()->coord,false)==91 && unit::Unit::Unwrap(wrapper)==actor,
+                "foreign-to-local transfer lost stable selection identity");
+            auto born=back;auto* pending=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),previous,game->GetMap()->GetTile(8,6),born);
+            born.owner_simulation_id=2;auto newborn=um->PrepareDefectionUnits(GSE_CALL,recipient,{{92,born}});newborn.Commit();
+            bool spawn=false;for(const auto& update:fixture.Updates()) {
+                GT_ASSERT(update.type!=game::FrontendRequest::FR_UNIT_DESPAWN || update.data.unit_despawn.unit_id!=92,"unpublished newborn view was removed");
+                if(update.type==game::FrontendRequest::FR_UNIT_SPAWN && update.data.unit_spawn.unit_id==92) {spawn=update.data.unit_spawn.slot_index==6;}
+            }
+            GT_ASSERT(spawn && um->GetUnit(92)==pending,"pending factory view did not publish its final recipient");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"Unit transfer: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(SelectionSource,true);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            const auto* one=restored.Game()->GetUM()->GetUnit(91);const auto* two=restored.Game()->GetUM()->GetUnit(92);
+            GT_ASSERT(one && two && one->Conventional().owner_simulation_id==1 && two->Conventional().owner_simulation_id==2,
+                "actual Start lost transferred Unit ownership");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC citizen live allocation status and retained Save Start",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& name){return HabitationGrowthSource(name,4);};
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,4);SelectionPresentations(fixture);
+            auto known=KnowledgeValue(true,true,128,64).CopyData();
+            for(auto& tile:known.tiles) {tile.explored_by|=2;tile.claimant=1;}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            base->m_owner->GetPlayer()->SetDifficultyLevel("Transcend");
+            auto context=base->GetSmacResourceContext();context.governor_options=0;base->SetSmacResourceContext(GSE_CALL,context);
+            fixture.ResourceState([](auto& state){state.social.factions[0].current[3]=0;state.social.factions[0].current[5]=0;
+                state.economy.at(1).credits=100;state.technology.factions[0].owned[5]=false;
+                state.technology.factions[0].target=5;state.technology.factions[0].cached_threshold=100000;});
+            SmacBaseAllocationState workers{31,{{},0}};base->PublishSmacAllocation(GSE_CALL,workers,Roles());
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            const auto random=fixture.GameplayRandom();const auto first=base->PrepareSmacResourceCalculation();
+            GT_ASSERT(first.citizens && first.citizens->population==4 && first.citizens->excluded==0
+                && first.citizens->early.initial.drones==3 && first.citizens->final.drones>first.citizens->final.talents,
+                "actual provider did not consume current population/allocation and difficulty: "+(first.citizens ? std::to_string(first.citizens->population)+"/"+std::to_string(first.citizens->excluded)+" initialD="+std::to_string(first.citizens->early.initial.drones)+" finalD="+std::to_string(first.citizens->final.drones)+" T="+std::to_string(first.citizens->final.talents):"absent"));
+            GT_ASSERT(base->PrepareSmacResourceCalculation().citizens==first.citizens && fixture.GameplayRandom()==random
+                && !base->GetSmacResourceContext().drone_riots,"read-only citizen query made draws or admitted status");
+            game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+            GT_ASSERT(game->GetTurnId()==2 && base->GetSmacResourceContext().drone_riots && base->GetSmacUpkeepCache()->calculation.citizens,
+                "actual owner upkeep did not admit riots after its second pass");
+            const auto minerals=base->GetProductionState()->minerals;
+            SmacBaseAllocationState doctors{1,{{},4}};doctors.specialists.types.fill(1);base->PublishSmacAllocation(GSE_CALL,doctors,Roles());
+            const auto calm=base->PrepareSmacResourceCalculation();
+            GT_ASSERT(calm.citizens && calm.citizens->excluded==4 && calm.citizens->final.drones==0
+                && base->GetSmacResourceContext().drone_riots,"Doctor query changed status before actual upkeep");
+            game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+            GT_ASSERT(game->GetTurnId()==3 && !base->GetSmacResourceContext().drone_riots
+                && base->GetProductionState()->minerals==minerals
+                && base->GetSmacUpkeepCache()->calculation.citizens->excluded==4,
+                "recovery used new calm status for incoming mineral posting or lost second-pass history");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"live citizen caller: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            const auto* base=restored.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && !base->GetSmacResourceContext().drone_riots && base->GetSmacUpkeepCache()
+                && base->GetSmacUpkeepCache()->calculation.citizens
+                && base->GetSmacUpkeepCache()->calculation.citizens->excluded==4
+                && base->PrepareSmacResourceCalculation().citizens->final.drones==0,
+                "actual Save Start lost citizen history or status");GT_OK();
         });
     });
 
@@ -2485,7 +2590,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const auto old=DeserializeSmacBaseUpkeepCache(wire.Encode());
         GT_ASSERT(old && !old->calculation.eco_damage,"legacy cache invented eco-damage");
         GT_ASSERT(!DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(old))->calculation.eco_damage,"migration filled missing history");
-        wire.version=2;
+        wire.version=3;
         for(const auto damage:{INT32_MIN,-1,0,137,INT32_MAX}) {
             wire.ecology=damage;const auto decoded=DeserializeSmacBaseUpkeepCache(wire.Encode());
             GT_ASSERT(decoded && decoded->calculation.eco_damage==damage
@@ -2496,6 +2601,38 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }
         wire.ecology=23;const auto valid=wire.Encode().ToString();
         GT_ASSERT(Rejects([&]{DeserializeSmacBaseUpkeepCache(types::Buffer(valid.substr(0,14+6+13*14+6+13)));}),"truncated eco-damage admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC citizen cache retains ordered stages and legacy absence", [](GSE*,context::Context*) -> std::string {
+        UpkeepCacheWire wire;
+        wire.citizens=std::array<int64_t,28>{7,1,0,0,4,0,-2,0, 1,6,0,6,0,
+            0,6,0, 1,5,0, 1,3,0, 1,2,0, 1,2,0};
+        const auto decoded=DeserializeSmacBaseUpkeepCache(wire.Encode());
+        GT_ASSERT(decoded && decoded->calculation.citizens
+            && decoded->calculation.citizens->population==7 && decoded->calculation.citizens->excluded==1
+            && decoded->calculation.citizens->early.initial.drones==6
+            && decoded->calculation.citizens->early.psych.talents==1
+            && decoded->calculation.citizens->early.facilities.drones==3
+            && decoded->calculation.citizens->after_police.drones==2
+            && decoded->calculation.citizens->final.drones==2
+            && SerializeSmacBaseUpkeepCache(decoded).ToString()==wire.Encode().ToString(),
+            "citizen snapshot changed ordered historical stages");
+        auto copy=DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(decoded));
+        copy->calculation.citizens->final.drones=0;
+        GT_ASSERT(decoded->calculation.citizens->final.drones==2,"citizen snapshots share storage");
+        for(const auto version:{1,2}) {
+            wire.version=version;const auto old=DeserializeSmacBaseUpkeepCache(wire.Encode());
+            GT_ASSERT(old && !old->calculation.citizens
+                && !DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(old))->calculation.citizens,
+                "legacy citizen history was invented on migration");
+        }
+        wire.version=3;
+        for(const auto field:{0u,1u,13u,27u}) {
+            auto invalid=wire;(*invalid.citizens)[field]=field==0 ? 128 : -1;
+            GT_ASSERT(CacheError(invalid.Encode(),"citizen"),"invalid citizen history admitted");
+        }
+        (*wire.citizens)[0]=int64_t(INT32_MAX)+1;
+        GT_ASSERT(CacheError(wire.Encode(),"signed32"),"citizen population narrowed");
         GT_OK();
     });
     task->AddTest("SMAC Base upkeep cache preserves historical values order and absent state", [](GSE*,context::Context*) -> std::string {
@@ -2555,7 +2692,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(CacheError(trailing,"Trailing"), "trailing cache data admitted");
         wire.present = false; trailing = wire.Encode(); trailing.WriteInt(0);
         GT_ASSERT(CacheError(trailing,"Trailing"), "absent cache ignored trailing fields");
-        wire.version = 3;
+        wire.version = 4;
         GT_ASSERT(CacheError(wire.Encode(),"Unsupported"), "unknown cache version admitted");
         for (const auto count : {int64_t(-1), int64_t(SmacUnitSupport::MAX_ORDERED_UNITS)+1,
                 int64_t(SmacUnitSupport::MAX_ORDERED_UNITS), int64_t(5)}) {

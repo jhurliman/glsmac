@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacEmptyGroundMovement.cpp
 
 	${PWD}/UnitManager.cpp
+	${PWD}/UnitTransfer.cpp
 	${PWD}/ConventionalMovement.cpp
 	${PWD}/ConventionalCombat.cpp
 	${PWD}/ConventionalWork.cpp

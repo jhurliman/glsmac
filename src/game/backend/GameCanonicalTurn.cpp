@@ -354,7 +354,7 @@ bool Game::BeginCanonicalBaseUpkeep(GSE_CALLABLE) {
 	}
 	if(result.removed_base) {++next.base_index;return true;}
 	if(!result.final_calculation) {throw std::runtime_error("Colony upkeep omitted its final resource pass");}
-	next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+	next.energy=result.retained_energy ? *result.retained_energy:CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
 	next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 	return true;
 }
@@ -453,7 +453,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 				if(tail.removed_base || tail.completed_unit || !tail.final_calculation) {
 					throw std::runtime_error("Abandonment successor produced an unsupported tail");
 				}
-				next.energy=CalculateCanonicalBaseEnergy(*successor,*tail.final_calculation);
+				next.energy=tail.retained_energy ? *tail.retained_energy:CalculateCanonicalBaseEnergy(*successor,*tail.final_calculation);
 				next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 			} else {next.stage=CanonicalTurnContinuation::Stage::Base;}
 			ContinueCanonicalTurn(GSE_CALL);
@@ -474,7 +474,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		if(result.completed_unit || !result.final_calculation) {
 			throw std::runtime_error("Deferred Colony tail produced an invalid completion");
 		}
-		next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+		next.energy=result.retained_energy ? *result.retained_energy:CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
 		next.colony.reset();next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 		if(selected==base::SmacColonyChoice::Screen) {next.screen_base=pending.base;next.screen_request_id=pending.id;}
 		m_colony_request.reset();

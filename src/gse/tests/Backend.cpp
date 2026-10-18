@@ -375,7 +375,7 @@ public:
 			legacy.WriteInt(owner.first);legacy.WriteInt(owner.second.size());
 			for(const auto id:owner.second) {legacy.WriteInt(id);}
 		}
-		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation,false);
+		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation,false,false);
 		legacy.WriteInt(static_cast<int64_t>(paused.colony->morale_mode));
 		const auto decoded=m_game.ReadCanonicalContinuation(types::Buffer(legacy.ToString()),paused.turn);
 		if(!decoded) {throw std::runtime_error("V1 Colony continuation was lost");}

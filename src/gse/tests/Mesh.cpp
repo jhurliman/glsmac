@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "Mesh.h"
+#include "loader/texture/SmacPalette.h"
 
 #include "task/gsetests/GSETests.h"
 #include "types/mesh/Rectangle.h"
@@ -652,6 +653,26 @@ static std::string CheckTextureCopyUpdates() {
 
 static std::string CheckDisplayPalette() {
 	try {
+		{
+			auto* image = SDL_CreateRGBSurfaceWithFormat( 0, 3, 2, 8, SDL_PIXELFORMAT_INDEX8 );
+			GT_ASSERT( image, "could not allocate palette boundary fixture" );
+			util::FinallyGuard release( [ & ] { SDL_FreeSurface( image ); } );
+			SDL_Color colors[ 256 ] = {};
+			colors[ 235 ] = { 255, 245, 240, 255 };
+			SDL_Palette common = { 256, colors, 0, 1 };
+			auto* pixels = static_cast< uint8_t* >( image->pixels );
+			std::fill_n( pixels, image->pitch * image->h, uint8_t( 255 ) );
+			for ( int y = 0; y < image->h; ++y ) { std::fill_n( pixels + y * image->pitch, image->w, uint8_t( 235 ) ); }
+			loader::texture::ApplySmacPalette( image, &common );
+			GT_ASSERT( image->format->palette->colors[ 235 ].r == 235, "last admitted PCX index was not gamma corrected" );
+			for ( const uint8_t index : { 236, 255 } ) {
+				pixels[ image->pitch + 2 ] = index;
+				bool rejected = false;
+				try { loader::texture::ApplySmacPalette( image, &common ); }
+				catch ( const std::invalid_argument& ) { rejected = true; }
+				GT_ASSERT( rejected, "unsupported system-reserved PCX index was accepted" );
+			}
+		}
 		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-palette-" + util::UUID::Generate() );
 		const auto data = directory / "default";
 		std::filesystem::create_directories( data );

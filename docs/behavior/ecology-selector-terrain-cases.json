@@ -1,0 +1,1807 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-SELECTOR-TERRAIN-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "installed_Planet_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "source_sha256": "524da6cf8ffaa84e192da9a3b7762491fe2f93fcee351e618e520af04e95db09",
+  "default_fields": {
+    "altitude_class": 3,
+    "fungus": false,
+    "real_Base": false,
+    "affiliation": 15,
+    "removable_improvements": 0
+  },
+  "ordered_candidate_offsets": [
+    [
+      1,
+      -1
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      -1,
+      1
+    ],
+    [
+      -2,
+      0
+    ],
+    [
+      -1,
+      -1
+    ],
+    [
+      0,
+      -2
+    ],
+    [
+      2,
+      -2
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      -2,
+      2
+    ],
+    [
+      -2,
+      -2
+    ],
+    [
+      1,
+      -3
+    ],
+    [
+      3,
+      -1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      -1,
+      3
+    ],
+    [
+      -3,
+      1
+    ],
+    [
+      -3,
+      -1
+    ],
+    [
+      -1,
+      -3
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      -4,
+      0
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      -4
+    ],
+    [
+      1,
+      -5
+    ],
+    [
+      2,
+      -4
+    ],
+    [
+      3,
+      -3
+    ],
+    [
+      4,
+      -2
+    ],
+    [
+      5,
+      -1
+    ],
+    [
+      5,
+      1
+    ],
+    [
+      4,
+      2
+    ],
+    [
+      3,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      1,
+      5
+    ],
+    [
+      -1,
+      5
+    ],
+    [
+      -2,
+      4
+    ],
+    [
+      -3,
+      3
+    ],
+    [
+      -4,
+      2
+    ],
+    [
+      -5,
+      1
+    ],
+    [
+      -5,
+      -1
+    ],
+    [
+      -4,
+      -2
+    ],
+    [
+      -3,
+      -3
+    ],
+    [
+      -2,
+      -4
+    ],
+    [
+      -1,
+      -5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      0,
+      -6
+    ],
+    [
+      -6,
+      0
+    ]
+  ],
+  "diagonal_offsets": [
+    [
+      1,
+      -1
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      -1,
+      1
+    ],
+    [
+      -1,
+      -1
+    ]
+  ],
+  "cases": [
+    {
+      "id": "published_Planet_neighborhood",
+      "inputs": {
+        "id": "published_Planet_neighborhood",
+        "width": 80,
+        "height": 80,
+        "topology": "horizontal_cylinder",
+        "current_Base_id": 0,
+        "ordered_Bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "x": 64,
+            "y": 16
+          }
+        ],
+        "default_cell": {
+          "altitude_class": 3,
+          "fungus": false,
+          "real_Base": false,
+          "affiliation": 15,
+          "removable_improvements": 0
+        },
+        "overrides": [
+          {
+            "x": 63,
+            "y": 9,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 9,
+            "altitude_class": 2,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 10,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 10,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 11,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 11,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 11,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 60,
+            "y": 12,
+            "altitude_class": 2,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 12,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 12,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 12,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 68,
+            "y": 12,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 13,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 13,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 13,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 13,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 69,
+            "y": 13,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 60,
+            "y": 14,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 4,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 14,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 14,
+            "altitude_class": 5,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 14,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 68,
+            "y": 14,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 70,
+            "y": 14,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 57,
+            "y": 15,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 59,
+            "y": 15,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 15,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 15,
+            "altitude_class": 5,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 15,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 15,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 69,
+            "y": 15,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 71,
+            "y": 15,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 58,
+            "y": 16,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 60,
+            "y": 16,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 4,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 16,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 4,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 16,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 16,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 68,
+            "y": 16,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 70,
+            "y": 16,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 57,
+            "y": 17,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 59,
+            "y": 17,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 17,
+            "altitude_class": 5,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 17,
+            "altitude_class": 5,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 17,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 17,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 69,
+            "y": 17,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 58,
+            "y": 18,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 60,
+            "y": 18,
+            "altitude_class": 5,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 18,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 18,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 18,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 68,
+            "y": 18,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 70,
+            "y": 18,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 59,
+            "y": 19,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 19,
+            "altitude_class": 5,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 19,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 19,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 19,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 69,
+            "y": 19,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 60,
+            "y": 20,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 62,
+            "y": 20,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 20,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 20,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 68,
+            "y": 20,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 61,
+            "y": 21,
+            "altitude_class": 4,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 21,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 65,
+            "y": 21,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 67,
+            "y": 21,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 64,
+            "y": 22,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 22,
+            "altitude_class": 4,
+            "fungus": false,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 63,
+            "y": 23,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          }
+        ],
+        "exact_original_projection_footprint": [
+          [
+            63,
+            9
+          ],
+          [
+            65,
+            9
+          ],
+          [
+            62,
+            10
+          ],
+          [
+            64,
+            10
+          ],
+          [
+            66,
+            10
+          ],
+          [
+            61,
+            11
+          ],
+          [
+            63,
+            11
+          ],
+          [
+            65,
+            11
+          ],
+          [
+            67,
+            11
+          ],
+          [
+            60,
+            12
+          ],
+          [
+            62,
+            12
+          ],
+          [
+            64,
+            12
+          ],
+          [
+            66,
+            12
+          ],
+          [
+            68,
+            12
+          ],
+          [
+            59,
+            13
+          ],
+          [
+            61,
+            13
+          ],
+          [
+            63,
+            13
+          ],
+          [
+            65,
+            13
+          ],
+          [
+            67,
+            13
+          ],
+          [
+            69,
+            13
+          ],
+          [
+            58,
+            14
+          ],
+          [
+            60,
+            14
+          ],
+          [
+            62,
+            14
+          ],
+          [
+            64,
+            14
+          ],
+          [
+            66,
+            14
+          ],
+          [
+            68,
+            14
+          ],
+          [
+            70,
+            14
+          ],
+          [
+            57,
+            15
+          ],
+          [
+            59,
+            15
+          ],
+          [
+            61,
+            15
+          ],
+          [
+            63,
+            15
+          ],
+          [
+            65,
+            15
+          ],
+          [
+            67,
+            15
+          ],
+          [
+            69,
+            15
+          ],
+          [
+            71,
+            15
+          ],
+          [
+            58,
+            16
+          ],
+          [
+            60,
+            16
+          ],
+          [
+            62,
+            16
+          ],
+          [
+            64,
+            16
+          ],
+          [
+            66,
+            16
+          ],
+          [
+            68,
+            16
+          ],
+          [
+            70,
+            16
+          ],
+          [
+            57,
+            17
+          ],
+          [
+            59,
+            17
+          ],
+          [
+            61,
+            17
+          ],
+          [
+            63,
+            17
+          ],
+          [
+            65,
+            17
+          ],
+          [
+            67,
+            17
+          ],
+          [
+            69,
+            17
+          ],
+          [
+            71,
+            17
+          ],
+          [
+            58,
+            18
+          ],
+          [
+            60,
+            18
+          ],
+          [
+            62,
+            18
+          ],
+          [
+            64,
+            18
+          ],
+          [
+            66,
+            18
+          ],
+          [
+            68,
+            18
+          ],
+          [
+            70,
+            18
+          ],
+          [
+            59,
+            19
+          ],
+          [
+            61,
+            19
+          ],
+          [
+            63,
+            19
+          ],
+          [
+            65,
+            19
+          ],
+          [
+            67,
+            19
+          ],
+          [
+            69,
+            19
+          ],
+          [
+            60,
+            20
+          ],
+          [
+            62,
+            20
+          ],
+          [
+            64,
+            20
+          ],
+          [
+            66,
+            20
+          ],
+          [
+            68,
+            20
+          ],
+          [
+            61,
+            21
+          ],
+          [
+            63,
+            21
+          ],
+          [
+            65,
+            21
+          ],
+          [
+            67,
+            21
+          ],
+          [
+            62,
+            22
+          ],
+          [
+            64,
+            22
+          ],
+          [
+            66,
+            22
+          ],
+          [
+            63,
+            23
+          ],
+          [
+            65,
+            23
+          ]
+        ],
+        "CRT_seed": 65,
+        "stored_damage": 51,
+        "perihelion": false,
+        "native_life_event_suppression": false,
+        "editor_hold": false
+      },
+      "expected": {
+        "CRT_draws": [
+          {
+            "raw": 250,
+            "seed_after": 16441856
+          },
+          {
+            "raw": 18237,
+            "seed_after": 1195243715
+          },
+          {
+            "raw": 2761,
+            "seed_after": 2328461434
+          },
+          {
+            "raw": 26456,
+            "seed_after": 1733854549
+          },
+          {
+            "raw": 23942,
+            "seed_after": 3716588228
+          },
+          {
+            "raw": 4890,
+            "seed_after": 320521847
+          },
+          {
+            "raw": 14066,
+            "seed_after": 921888606
+          },
+          {
+            "raw": 5852,
+            "seed_after": 2531057833
+          },
+          {
+            "raw": 2359,
+            "seed_after": 2302140616
+          },
+          {
+            "raw": 24204,
+            "seed_after": 3733724267
+          },
+          {
+            "raw": 29007,
+            "seed_after": 4048532866
+          },
+          {
+            "raw": 30964,
+            "seed_after": 2029258301
+          }
+        ],
+        "candidates": [
+          {
+            "ordinal": 1,
+            "x": 65,
+            "y": 15,
+            "weight": 30,
+            "score": 27,
+            "prior_best": 0
+          },
+          {
+            "ordinal": 3,
+            "x": 65,
+            "y": 17,
+            "weight": 30,
+            "score": 1,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 4,
+            "x": 64,
+            "y": 18,
+            "weight": 50,
+            "score": 6,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 9,
+            "x": 66,
+            "y": 14,
+            "weight": 20,
+            "score": 2,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 11,
+            "x": 62,
+            "y": 18,
+            "weight": 40,
+            "score": 10,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 12,
+            "x": 62,
+            "y": 14,
+            "weight": 60,
+            "score": 26,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 15,
+            "x": 67,
+            "y": 17,
+            "weight": 20,
+            "score": 12,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 17,
+            "x": 63,
+            "y": 19,
+            "weight": 40,
+            "score": 39,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 19,
+            "x": 61,
+            "y": 15,
+            "weight": 20,
+            "score": 4,
+            "prior_best": 39
+          },
+          {
+            "ordinal": 22,
+            "x": 60,
+            "y": 16,
+            "weight": 20,
+            "score": 7,
+            "prior_best": 39
+          },
+          {
+            "ordinal": 24,
+            "x": 64,
+            "y": 12,
+            "weight": 40,
+            "score": 4,
+            "prior_best": 39
+          }
+        ],
+        "outer_nearest_Bases": [],
+        "selected_ordinal": 17,
+        "best_score": 39,
+        "CRT_seed_after": 2029258301
+      }
+    },
+    {
+      "id": "flat_corner_clipping",
+      "inputs": {
+        "id": "flat_corner_clipping",
+        "width": 80,
+        "height": 80,
+        "topology": "flat",
+        "current_Base_id": 0,
+        "ordered_Bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "default_cell": {
+          "altitude_class": 3,
+          "fungus": false,
+          "real_Base": false,
+          "affiliation": 15,
+          "removable_improvements": 0
+        },
+        "overrides": [
+          {
+            "x": 0,
+            "y": 0,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          }
+        ],
+        "CRT_seed": 65,
+        "stored_damage": 51,
+        "perihelion": false,
+        "native_life_event_suppression": false,
+        "editor_hold": false
+      },
+      "expected": {
+        "CRT_draws": [
+          {
+            "raw": 250,
+            "seed_after": 16441856
+          },
+          {
+            "raw": 18237,
+            "seed_after": 1195243715
+          },
+          {
+            "raw": 2761,
+            "seed_after": 2328461434
+          },
+          {
+            "raw": 26456,
+            "seed_after": 1733854549
+          }
+        ],
+        "candidates": [
+          {
+            "ordinal": 2,
+            "x": 2,
+            "y": 0,
+            "weight": 30,
+            "score": 27,
+            "prior_best": 0
+          },
+          {
+            "ordinal": 4,
+            "x": 0,
+            "y": 2,
+            "weight": 30,
+            "score": 1,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 10,
+            "x": 2,
+            "y": 2,
+            "weight": 20,
+            "score": 16,
+            "prior_best": 27
+          }
+        ],
+        "outer_nearest_Bases": [],
+        "selected_ordinal": 2,
+        "best_score": 27,
+        "CRT_seed_after": 1733854549
+      }
+    },
+    {
+      "id": "cylinder_corner_wrap_and_clipping",
+      "inputs": {
+        "id": "cylinder_corner_wrap_and_clipping",
+        "width": 80,
+        "height": 80,
+        "topology": "horizontal_cylinder",
+        "current_Base_id": 0,
+        "ordered_Bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "default_cell": {
+          "altitude_class": 3,
+          "fungus": false,
+          "real_Base": false,
+          "affiliation": 15,
+          "removable_improvements": 0
+        },
+        "overrides": [
+          {
+            "x": 0,
+            "y": 0,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          },
+          {
+            "x": 79,
+            "y": 1,
+            "altitude_class": 3,
+            "fungus": true,
+            "real_Base": false,
+            "affiliation": 15,
+            "removable_improvements": 0
+          }
+        ],
+        "CRT_seed": 65,
+        "stored_damage": 51,
+        "perihelion": false,
+        "native_life_event_suppression": false,
+        "editor_hold": false
+      },
+      "expected": {
+        "CRT_draws": [
+          {
+            "raw": 250,
+            "seed_after": 16441856
+          },
+          {
+            "raw": 18237,
+            "seed_after": 1195243715
+          },
+          {
+            "raw": 2761,
+            "seed_after": 2328461434
+          },
+          {
+            "raw": 26456,
+            "seed_after": 1733854549
+          },
+          {
+            "raw": 23942,
+            "seed_after": 3716588228
+          },
+          {
+            "raw": 4890,
+            "seed_after": 320521847
+          }
+        ],
+        "candidates": [
+          {
+            "ordinal": 2,
+            "x": 2,
+            "y": 0,
+            "weight": 30,
+            "score": 27,
+            "prior_best": 0
+          },
+          {
+            "ordinal": 4,
+            "x": 0,
+            "y": 2,
+            "weight": 50,
+            "score": 11,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 6,
+            "x": 78,
+            "y": 0,
+            "weight": 30,
+            "score": 26,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 10,
+            "x": 2,
+            "y": 2,
+            "weight": 20,
+            "score": 2,
+            "prior_best": 27
+          },
+          {
+            "ordinal": 11,
+            "x": 78,
+            "y": 2,
+            "weight": 20,
+            "score": 10,
+            "prior_best": 27
+          }
+        ],
+        "outer_nearest_Bases": [],
+        "selected_ordinal": 2,
+        "best_score": 27,
+        "CRT_seed_after": 320521847
+      }
+    },
+    {
+      "id": "outer_tie_later_peer_wins",
+      "inputs": {
+        "id": "outer_tie_later_peer_wins",
+        "width": 80,
+        "height": 80,
+        "topology": "horizontal_cylinder",
+        "current_Base_id": 0,
+        "ordered_Bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "x": 64,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "x": 66,
+            "y": 16
+          }
+        ],
+        "default_cell": {
+          "altitude_class": 3,
+          "fungus": false,
+          "real_Base": false,
+          "affiliation": 15,
+          "removable_improvements": 0
+        },
+        "overrides": [
+          {
+            "x": 64,
+            "y": 16,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 16,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          }
+        ],
+        "CRT_seed": 65,
+        "stored_damage": 51,
+        "perihelion": false,
+        "native_life_event_suppression": false,
+        "editor_hold": false
+      },
+      "expected": {
+        "CRT_draws": [
+          {
+            "raw": 250,
+            "seed_after": 16441856
+          },
+          {
+            "raw": 18237,
+            "seed_after": 1195243715
+          }
+        ],
+        "candidates": [
+          {
+            "ordinal": 36,
+            "x": 62,
+            "y": 20,
+            "weight": 10,
+            "score": 7,
+            "prior_best": 0
+          }
+        ],
+        "outer_nearest_Bases": [
+          {
+            "ordinal": 25,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 26,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 27,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 28,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 29,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 30,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 31,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 32,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 33,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 34,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 35,
+            "Base_id": 1
+          },
+          {
+            "ordinal": 36,
+            "Base_id": 0
+          }
+        ],
+        "selected_ordinal": 36,
+        "best_score": 7,
+        "CRT_seed_after": 1195243715
+      }
+    },
+    {
+      "id": "outer_tie_later_current_wins",
+      "inputs": {
+        "id": "outer_tie_later_current_wins",
+        "width": 80,
+        "height": 80,
+        "topology": "horizontal_cylinder",
+        "current_Base_id": 1,
+        "ordered_Bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "x": 66,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "x": 64,
+            "y": 16
+          }
+        ],
+        "default_cell": {
+          "altitude_class": 3,
+          "fungus": false,
+          "real_Base": false,
+          "affiliation": 15,
+          "removable_improvements": 0
+        },
+        "overrides": [
+          {
+            "x": 64,
+            "y": 16,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          },
+          {
+            "x": 66,
+            "y": 16,
+            "altitude_class": 3,
+            "fungus": false,
+            "real_Base": true,
+            "affiliation": 1,
+            "removable_improvements": 0
+          }
+        ],
+        "CRT_seed": 65,
+        "stored_damage": 51,
+        "perihelion": false,
+        "native_life_event_suppression": false,
+        "editor_hold": false
+      },
+      "expected": {
+        "CRT_draws": [
+          {
+            "raw": 250,
+            "seed_after": 16441856
+          },
+          {
+            "raw": 18237,
+            "seed_after": 1195243715
+          }
+        ],
+        "candidates": [
+          {
+            "ordinal": 25,
+            "x": 65,
+            "y": 11,
+            "weight": 10,
+            "score": 7,
+            "prior_best": 0
+          }
+        ],
+        "outer_nearest_Bases": [
+          {
+            "ordinal": 25,
+            "Base_id": 1
+          }
+        ],
+        "selected_ordinal": 25,
+        "best_score": 7,
+        "CRT_seed_after": 1195243715
+      }
+    }
+  ],
+  "scope": "Five original ecology prefixes stop immediately after48-candidate selection before H/terrain/spawn. Baseline semantic inputs projected from actual loaded Planet neighborhood and replayed after replacing entire native map by declared sparse/default world; exact same11 candidate results and12 CRT values as frozen handler receipt. Four edge/tie controls are synthetic declared maps. No supplied selector weights/results.",
+  "warming_count_storage": {
+    "before": 17,
+    "poison_between_save_load": 777,
+    "after": 17,
+    "save_return": 0,
+    "load_return": 0,
+    "RNG_calls": 0
+  },
+  "coordinate_contract": "Valid cells satisfy0<=x<width,0<=y<height,(x+y)%2==0. All unlisted valid cells use default_cell; invalid cells are absent. Width80,height80 mean3200 parity cells. Bases are the complete ordered global Base list; IDs are saved record order, distinct from owner.",
+  "selection_boundary": "Stops before history increment and tile/landmark/spawn stages. Those stages need additional inputs from parent receipt."
+}

@@ -331,7 +331,12 @@ public:
 				m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( resource_faction ) );
 			}
 			if ( movement_campaign || production_map ) {
-				settings.SelectSmacCustomSize( width, height );
+				if(width<32 || height<16) {
+					// Small source presets are valid even below custom-size limits.
+					settings.SelectSmacWorldSize(0);
+					const auto selected=settings.GetSmacWorldSizeRules()->SelectPreset(0);
+					if(selected.width!=width || selected.height!=height) {throw std::runtime_error("Small fixture map must match its frozen first preset");}
+				} else {settings.SelectSmacCustomSize( width, height );}
 				auto* tiles = m_game.GetMap()->GetTilesPtr();
 				tiles->Resize( width, height ); tiles->Clear();
 			}

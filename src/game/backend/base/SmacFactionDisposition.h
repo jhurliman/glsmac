@@ -17,5 +17,6 @@ struct BaseManager::SmacDispositionPlan {
     SmacGameplayRandomState random;
     std::optional<map::SmacWorkerKnowledge> territory;
     std::optional<map::GlsmacTerritoryTopology> topology;
+	std::optional<int32_t> initialization_history_turn;
 };
 }

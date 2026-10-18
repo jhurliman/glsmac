@@ -349,11 +349,17 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	if (!has_base && !has_unit) {
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
 		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);
+		auto victory=m_simulation->value.victory_history;
+		if(victory) {
+			if(GetTurnId()>INT32_MAX) {throw std::runtime_error("Faction initialization history exceeds signed32");}
+			victory->Initialize(owner,static_cast<int32_t>(GetTurnId()));
+		}
 		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
 		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
 		saved=initialized;technology->cached_threshold.reset();
 		if(m_simulation->value.capabilities) {m_simulation->value.capabilities->factions.at(owner-1)={};}
 		m_simulation->value.hostility.owners.swap(hostility.owners);
+		m_simulation->value.victory_history=std::move(victory);
 	}
 	const auto next = saved.SettleDebit(); saved = next;
 }

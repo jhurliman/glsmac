@@ -14,15 +14,11 @@ return {
 		if (#is_defined(e.data.smac_starting_resource_context)) {
 			options.smac_starting_resource_context = e.data.smac_starting_resource_context;
 		}
-		const base = e.game.bm.spawn_base(e.data.owner, e.data.tile, options);
-
-		return {
-			base: base,
-		};
+		return e.game.bm.spawn_base(e.data.owner, e.data.tile, options, true);
 	},
 
 	rollback: (e) => {
-		e.game.bm.despawn_base(e.applied.base);
+		e.game.bm.rollback_spawn_base(e.applied.base, e.applied.expansion_history);
 	},
 
 };

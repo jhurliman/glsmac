@@ -86,6 +86,19 @@ struct SmacSatelliteCounts {
 	bool operator==( const SmacSatelliteCounts& other ) const noexcept { return resources == other.resources; }
 };
 
+// Original retained signed words, including native slot0. Query-time pressure
+// is derived; it is not a saved latch. A history turn is not a faction birth.
+struct SmacVictoryHistory {
+	std::array<int32_t,8> economic_deadlines{},economic_paid_costs{},last_base_expansion_or_advice_turn{};
+	int32_t voice_host=-1;
+	void Initialize(int32_t owner,int32_t turn);
+	void RecordBaseExpansion(int32_t owner,int32_t turn);
+	bool operator==(const SmacVictoryHistory& other) const noexcept {
+		return economic_deadlines==other.economic_deadlines && economic_paid_costs==other.economic_paid_costs
+			&& last_base_expansion_or_advice_turn==other.last_base_expansion_or_advice_turn && voice_host==other.voice_host;
+	}
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -115,6 +128,9 @@ struct SmacSimulationState {
 	std::optional<SmacCapabilityState> capabilities;
 	// Absent before V18. Loading cannot reconstruct stale owner-summary counts.
 	std::optional<SmacRegionalMilitaryState> regional_military;
+	// Absent in V11-V20. Migration cannot invent economic attempts or parity of
+	// history words from the current map; subsequent Base events preserve absence.
+	std::optional<SmacVictoryHistory> victory_history;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

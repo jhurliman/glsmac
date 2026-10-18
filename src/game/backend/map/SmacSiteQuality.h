@@ -31,5 +31,8 @@ struct Score {
 // cached rating, infer stored region areas, or consume either RNG stream.
 // Sea-centered and late-turn branches are separate, unclosed contracts.
 Score LandQuality(Geometry geometry, Coordinate center, int32_t turn, const Areas& areas, const Query& query);
+// Shared land/water query, including the RE-SMAC-SEA-SITE-QUALITY-001 water
+// center, outer-Base multiplier and rejection branches. Same ordinary turns.
+Score Quality(Geometry geometry, Coordinate center, int32_t turn, const Areas& areas, const Query& query);
 
 }

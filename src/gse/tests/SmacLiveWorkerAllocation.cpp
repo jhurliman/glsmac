@@ -1977,7 +1977,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
 			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); auto* um = game->GetUM(); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
-			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 ); const auto facility = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Facility, 1 );
+			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 ); const auto facility = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Facility, 2 );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, scout ), scout, 17, std::vector< ProductionItem >{ facility } } );
 			fixture.Updates(); const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId(); auto* pop = &base->m_pops.at( 19 );
 			const auto resolver = [ & ]( int32_t ) { return um->GetUnitDef( "live-scout" ); };

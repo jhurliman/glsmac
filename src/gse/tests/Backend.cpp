@@ -2387,8 +2387,8 @@ public:
 		};
 		const char* idle="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]";
 		const char* working="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]";
-		const char* none="Former — Order: None  |  Stored work: 0";
-		const char* farm="Former — Order: Farm  |  Stored work: 0";
+		const char* none="Former â€” Order: None  |  Stored work: 0";
+		const char* farm="Former â€” Order: Farm  |  Stored work: 0";
 		const auto before=WorldSnapshot();
 		auto error=script("check",idle,none);if(!error.empty()){return error;}
 		error=script("click","Farm [F]");if(!error.empty()){return error;}
@@ -2723,7 +2723,16 @@ public:
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
             util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
-            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);ProcessRequests();
+            const auto restore_mode=[&]() {
+                auto* wrapped=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
+                auto* query=static_cast<value::Callable*>(wrapped->Get("is_campaign_restore"));
+                return static_cast<value::Bool*>(query->Run(GSE_CALL,{}))->value;
+            };
+            GT_ASSERT(!restore_mode(),"empty controller invented a restore admission");
+            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);
+            GT_ASSERT(!m_game.m_active_admission && restore_mode(),"configure mode lost the published restore before OP_INIT consumption");
+            ProcessRequests();
+            GT_ASSERT(restore_mode(),"active restore changed configuration mode");
             GT_ASSERT(m_game.MT_GetResponse(pending.request).result==R_SUCCESS,"campaign restore request was not admitted");
             util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
             for(int i=0;i<4;++i){m_game.Iterate();}

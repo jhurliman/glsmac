@@ -86,14 +86,22 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
         || next.turn!=GetTurnId() || next.owner_index>=next.owners.size()) {
         throw std::runtime_error("Only an explicit Colony question is a saved turn boundary");
     }
-    std::set<int32_t> roster;
-    for(const auto& participant:m_simulation->value.roster) {if(participant.active) {roster.insert(participant.simulation_id);}}
-    if(roster.size()!=next.owners.size()) {throw std::runtime_error("Saved Colony owners differ from the current roster");}
-    std::set<size_t> ids;auto participant=roster.begin();
+    std::map<int32_t,bool> roster;std::set<int32_t> required;
+    for(const auto& participant:m_simulation->value.roster) {
+        roster.emplace(participant.simulation_id,participant.active);
+        if(participant.active) {required.insert(participant.simulation_id);}
+    }
+    std::set<size_t> ids;int32_t previous=0;
     const auto& records=m_bm->GetBaseRecordOrder();
-    for(size_t i=0;i<next.owners.size();++i,++participant) {
+    for(size_t i=0;i<next.owners.size();++i) {
         const auto& owner=next.owners[i];
-        if(owner.first!=*participant) {throw std::runtime_error("Saved Colony owner order differs from the current roster");}
+        const auto participant=roster.find(owner.first);
+        // A faction lost earlier in this same upkeep can remain in the visited
+        // traversal. Previously inactive factions need not be present at all.
+        if(owner.first<=previous || participant==roster.end() || (!participant->second && i>=next.owner_index)) {
+            throw std::runtime_error("Saved Colony owner order or activity differs from the current roster");
+        }
+        previous=owner.first;required.erase(owner.first);
         std::vector<size_t> live;
         for(size_t j=0;j<owner.second.size();++j) {
             const auto id=owner.second[j];
@@ -111,6 +119,7 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
         for(const auto id:records) {if(m_bm->GetBase(id)->GetSmacResourceContext().owner_simulation_id==owner.first) {expected.push_back(id);}}
         if(live!=expected) {throw std::runtime_error("Saved Colony traversal differs from live Base record order");}
     }
+    if(!required.empty()) {throw std::runtime_error("Saved Colony traversal omits an active faction");}
     const auto& owner=next.owners[next.owner_index];
     if(next.base_index>=owner.second.size()) {throw std::runtime_error("Saved Colony Base cursor is outside its owner");}
     const auto* base=m_bm->GetBase(owner.second[next.base_index]);

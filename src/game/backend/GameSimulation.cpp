@@ -120,6 +120,10 @@ void Game::PrepareNewSimulation() {
 	// This is not a claim about original setup or a missing-project fallback.
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
 		faction::SmacGlobalResourceModifiers::NewWorld() );
+    // Every occupied controller admitted by the current startup path is an
+    // explicitly selected human Player. AI admission must supply its own
+    // control authority; it must not inherit a transport-role heuristic.
+    for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	for ( const auto& participant : value.roster ) {
 		value.hostility.owners.emplace(participant.simulation_id,faction::SmacHostileOwner::NewWorld(m_smac_secondary_relations.at(participant.simulation_id)));

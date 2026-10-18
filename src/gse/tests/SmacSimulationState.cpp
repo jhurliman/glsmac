@@ -18,6 +18,7 @@ using faction::SmacSimulationState;
 SmacSimulationState State() {
 	SmacSimulationState value( SmacGameplayRandomState( 0, UINT32_MAX ), SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain, faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
+    value.human_membership=(1u<<7)|(1u<<2);
 	for ( const auto& owner : value.roster ) { value.satellites.emplace( owner.simulation_id, faction::SmacSatelliteCounts::NewWorld() ); }
 	for ( const auto& owner : value.roster ) { value.economy.emplace( owner.simulation_id, faction::SmacEconomyState::NewWorld( { 5, 0 }, 100, 0 ) ); }
 	for(const auto& owner:value.roster) {value.hostility.owners.emplace(owner.simulation_id,faction::SmacHostileOwner::NewWorld({}));}
@@ -35,7 +36,7 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false, bool v12 = false ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( legacy ? 11 : v12 ? 12 : 14 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( legacy ? 11 : v12 ? 12 : 15 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -81,6 +82,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	}
 	if(!legacy && !v12) {buffer.WriteBool(value.human_defeat_request.has_value());if(value.human_defeat_request) {buffer.WriteInt(*value.human_defeat_request);}}
 	if(!legacy && !v12) {buffer.WriteBool(value.rank_order.has_value());if(value.rank_order) {for(auto owner:value.rank_order->faction_at_rank) {buffer.WriteInt(owner);}}}
+    if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
 }
@@ -127,12 +129,36 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(restored==value && restored.rank_order->DispositionReference(2)==0,"restore rebuilt saved counts or compacted retained rank gaps");
         auto duplicate=value;duplicate.rank_order->faction_at_rank[6]=2;
         GT_ASSERT(Rejects([&]{duplicate.Serialize(technologies,profiles,units);}),"duplicate retained rank identity accepted");
-        auto old=State();auto raw=Wire(old,1,13);types::Buffer suffix;suffix.WriteBool(false);raw.resize(raw.size()-suffix.lenw);
+        auto old=State();auto raw=Wire(old,1,13);types::Buffer suffix;suffix.WriteBool(false);suffix.WriteInt(0);raw.resize(raw.size()-suffix.lenw);
         const auto migrated=SmacSimulationState::Deserialize(raw,technologies,profiles,units);
         GT_ASSERT(!migrated.rank_order,"V13 migration fabricated a retained ranking");
         GT_OK();
     });
 
+    task->AddTest("SMAC human membership is saved independently of transport activity and ending requests",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        for(const uint8_t membership:{0,4,128,132}) {
+            auto value=State();value.human_membership=membership;value.roster[0].active=false;
+            const auto restored=SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units);
+            GT_ASSERT(restored==value && restored.IsHuman(7)==bool(membership&128) && restored.IsHuman(2)==bool(membership&4)
+                && !restored.IsHuman(0) && !restored.IsHuman(8) && !restored.human_defeat_request,"membership followed activity/transport or invented a loss");
+        }
+        for(const uint8_t membership:{1,2,255}) {
+            auto invalid=State();invalid.human_membership=membership;
+            GT_ASSERT(Rejects([&]{invalid.Serialize(technologies,profiles,units);}),"unknown/native human identity accepted");
+        }
+        auto invalid=State();invalid.roster[0].active=false;invalid.human_membership=4;invalid.human_defeat_request=7;
+        GT_ASSERT(Rejects([&]{invalid.Serialize(technologies,profiles,units);}),"nonhuman loss request accepted");
+        auto value=State();auto old=Wire(value,1,14);types::Buffer frame;frame.WriteInt(0);old.resize(old.size()-frame.lenw);
+        const auto legacy=SmacSimulationState::Deserialize(old,technologies,profiles,units);
+        GT_ASSERT(legacy.human_membership==132,"known all-human V14 port campaign migration changed accepted controllers");
+        const auto current=Wire(value);
+        for(const int64_t membership:{int64_t(-1),int64_t(1),int64_t(2),int64_t(256),INT64_MAX}) {
+            types::Buffer malformed;malformed.WriteInt(membership);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(current.substr(0,current.size()-frame.lenw)+malformed.ToString(),technologies,profiles,units);}),"malformed saved membership accepted");
+        }
+        GT_OK();
+    });
 	task->AddTest("SMAC retained ranking keeps inactive gaps ties and disposition references",GT(){
 		using faction::SmacRankOrder;
 		// Literal first-command producer: stale references are replaced only by

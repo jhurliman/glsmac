@@ -54,14 +54,22 @@ return {
 		return this.frame;
 	},
 
-	set_stored: (filled) => {
-		this.growth_cells.clear();
-		this.growth_cells.text({
-			class: 'base-screen-frame-text',
-			align: 'center',
-			text: 'Stored: ' + #to_string(filled),
-		});
-		this.growth_label.text = 'Growth unavailable';
+	// Canonical current box only. This is not a prediction of the next upkeep:
+	// production and allocation can change before the population step runs.
+	set_stored: (data) => {
+		const known = #is_defined(data.threshold);
+		const label = known ? 'Stored: ' + #to_string(data.stored) + ' / ' + #to_string(data.threshold) : 'Growth unavailable';
+		// Keep modded or zero-width boxes numeric rather than dividing by zero
+		// or creating an unbounded number of invisible one-pixel cells.
+		if (known && data.cost_per_step > 0 && data.cost_per_step <= 56 && data.rows > 0 && data.rows <= 45) {
+			this.p.utils.set_cells(112, 90, data.cost_per_step, data.rows,
+				data.normalized_stored, 0, 0, this.growth_cells,
+				'base-screen-nutrients-cell', this.growth_label, (progress) => { return label; });
+		} else {
+			this.growth_cells.clear();
+			this.growth_cells.text({class: 'base-screen-frame-text', align: 'center', text: 'Stored: ' + #to_string(data.stored)});
+			this.growth_label.text = label;
+		}
 	},
 
 	set: (data) => {

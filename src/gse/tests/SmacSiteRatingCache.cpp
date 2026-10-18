@@ -20,6 +20,15 @@ bool SameSet(std::vector<site::Coordinate> left,std::vector<site::Coordinate> ri
 }
 }
 void AddSmacSiteRatingCacheTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC site cache direct misses preserve exclusions and do not refill neighbors",GT(){
+		const site::Coordinate point{{10,8}};const auto before=Cache::Fresh({32,16,true}).FoundBase(point);
+		size_t reads=0;const auto zero=before.Resolve(point,[&](auto actual)->uint8_t {if(actual!=point) {throw std::runtime_error("direct query visited another tile");}++reads;return 0;});
+		const auto filled=zero.Resolve(point,[&](auto)->uint8_t {++reads;return 7;});
+		const auto reused=filled.Resolve(point,[&](auto)->uint8_t {throw std::runtime_error("nonzero cache recalculated");});
+		GT_ASSERT(reads==2 && zero==before && filled.Excluded(point) && filled.Rating(point)==7 && reused==filled,"direct miss lost exclusions or cached zero as a hit");
+		auto packed=filled.Serialize();packed[8*16+5]=16;
+		GT_ASSERT(packed==before.Serialize(),"direct miss rewrote neighbor history");GT_OK();
+	});
 	task->AddTest("SMAC site cache matches seven original mixed refill passes and zero misses",GT(){
 		for(const auto& row:cases) {
 			const auto before=Cache::Restore(row.geometry,Decode(row.before));size_t visited=0;

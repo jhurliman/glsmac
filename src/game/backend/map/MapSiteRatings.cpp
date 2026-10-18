@@ -6,6 +6,15 @@
 namespace game::backend::map {
 GlsmacTerritoryTopology Map::PrepareSiteRatingRefill(const GlsmacTerritoryTopology& topology,
 	const std::vector<smac_site::Coordinate>& bases,size_t turn) const {
+	return PrepareSiteRatings(topology,bases,turn,{});
+}
+GlsmacTerritoryTopology Map::PrepareSiteRatingQuery(const GlsmacTerritoryTopology& topology,
+	const std::vector<smac_site::Coordinate>& bases,size_t turn,smac_site::Coordinate point) const {
+	if(!topology.SiteRatings()) {throw std::runtime_error("Direct site query lacks saved rating history");}
+	return PrepareSiteRatings(topology,bases,turn,point);
+}
+GlsmacTerritoryTopology Map::PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
+	const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const {
 	// Legacy absence is history unavailable, not a request to reconstruct it.
 	if(!topology.SiteRatings()) {return topology;}
 	if(topology.Width()!=GetWidth() || topology.Height()!=GetHeight() || !topology.Wraps()) {
@@ -46,12 +55,13 @@ GlsmacTerritoryTopology Map::PrepareSiteRatingRefill(const GlsmacTerritoryTopolo
 			topology.LandmarkDetails() ? topology.LandmarkDetails()->at(at) : uint8_t(0)};
 		return *resolved[at];
 	};
-	auto sites=topology.SiteRatings()->Refill([&](auto point) {
+	const smac_site::RatingCache::RatingQuery score=[&](auto square) {
 		if(!m_resource_policy || !topology.Areas() || !topology.Postpass() || turn>INT32_MAX) {
 			throw std::runtime_error("Uncached site query requires owned terrain semantics and geography");
 		}
-		return static_cast<uint8_t>(smac_site::Quality({width,height,true},point,static_cast<int32_t>(turn),*topology.Areas(),query).rating);
-	});
+		return static_cast<uint8_t>(smac_site::Quality({width,height,true},square,static_cast<int32_t>(turn),*topology.Areas(),query).rating);
+	};
+	auto sites=point ? topology.SiteRatings()->Resolve(*point,score) : topology.SiteRatings()->Refill(score);
 	return topology.WithSiteRatings(std::move(sites));
 }
 }

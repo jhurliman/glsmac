@@ -30,20 +30,39 @@ draws; one calculates/stores1 and the monolith discriminator calculates/stores0.
 The tests cover these original results without hardcoding a selected location
 in production or requiring a positive rating.
 
-This commit owns the candidate loop, not its live future-world producer. Scale,
-landmark proximity, wet neighbors, region-filtered nearest Base and retained
-metadata must be supplied by their owning producers. The two long traces have
-no positive shared-landmark detail; the separate S/Q receipt now closes their
-broader helpers. Current live disposition still uses its explicitly approximate
-farthest-site policy until the joined caller replaces it. Last-Base capture
-remains refused until that transaction is complete. No original generation,
-AI/startup placement or golden1.0.0 acceptance is implied here.
+The live last-Base starvation/Colony-abandonment caller now stages territory,
+site history and the owner's regional-count removal delta before this search.
+It excludes the lost Base and every retiring owner Unit from its occupancy
+view. Wet neighbors use the existing21-square resolver; region-filtered nearest
+Bases retain record order and the original integer metric. Regional presence
+reads saved per-owner counts, including stale nonzero counts. Shared-byte Q,
+actual geometry scale, retained ocean choice and Player difficulty supply the
+other inputs. Missing required history fails preparation instead of selecting
+an approximate site.
+
+Search RNG and direct cache-miss writes commit with faction/Unit/territory
+authority before callbacks, including failed searches and post-search
+Do-or-Die/history/turn100 vetoes. Direct site queries preserve exclusions and
+nonzero scores without refilling neighboring tiles. The package selector runs
+only after search and later guards permit restart. Preparation changes neither
+current authority nor either random stream.
+
+Last-Base capture remains refused until its larger capture/disposition
+transaction supplies the captor and its different future Base/Unit context.
+No original generation, AI/startup placement or golden1.0.0 acceptance is
+implied here.
 
 Wrapped64×32 search is dynamically checked. Nonwrapping margins, range≤1 draw
 suppression and margin clamps follow the original static continuation; those
 full candidate paths still need distinct native dynamic coverage.
 
-Validation: cached Linux Debug build; two focused native groups with allocation
-tracking; LLVM15 correctness analysis of the new production unit passes in1.16s.
-Unchanged scorer/cache checks are reused. This bounded arithmetic loop introduces
-no new ownership, save codec or platform dependency requiring another matrix.
+Validation: cached Linux Debug build;80 affected native groups pass with
+allocation tracking. The live64×32 caller matches the native starvation site's
+coordinates and exact CRT result, retains those draws through both post-search
+vetoes, and preserves the terminal1,025-pair consumption when all terrain is
+blocked. Saved-world Start retains the replacement package and advanced RNG.
+Missing old landmark history leaves IDs, wrappers, queues, streams and world
+authority unchanged. Existing actual Accept/founding/reload/next-upkeep tests
+pass under the joined caller. LLVM15 correctness analysis passes six affected
+production/consumer units in14.62s; unchanged query/preprocessing analysis is
+reused. Focused ownership sanitizers cover the prepared disposition transaction.

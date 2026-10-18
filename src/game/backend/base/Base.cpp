@@ -602,7 +602,16 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
                 && (kind==ProductionItemKind::Unit || kind==ProductionItemKind::Facility)) {
                 const auto cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);
                 fields.emplace("cost",VALUE(gse::value::Int,,cost));
-                if(surplus && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
+                bool unbuilt=true;
+                if(kind==ProductionItemKind::Facility) {
+                    for(const auto& facility:m_facilities) {
+                        if(!facility.second || !facility.second->m_smac_source_id
+                            || facility.second->m_smac_source_id==m_production->current_item.smac_source_id) {unbuilt=false;break;}
+                    }
+                }
+                // Installed-facility/special panel branches are outside the
+                // measured ordinary-unbuilt-item forecast, not a zero-turn guess.
+                if(surplus && unbuilt && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
                     const auto label=FormatSmacProductionForecast(cost,m_production->minerals,*surplus);
                     if(label) {fields.emplace("forecast",VALUE(gse::value::String,,*label));}
                 }

@@ -902,7 +902,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto wide=fixture.Snapshot();
             auto* unavailable=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
             GT_ASSERT(unavailable->value.count("cost")==1 && unavailable->value.count("forecast")==0 && fixture.Snapshot()==wide,
-                "wide port store crashed or fabricated an original forecast");GT_OK();
+                "wide port store crashed or fabricated an original forecast");
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,7,scout,888,queue});
+            auto* bm=game->GetBM();bm->DefineFacility(new FacilityDef("progress-tanks","Tanks","",40,{},3));
+            base->m_facilities.emplace("progress-tanks",bm->GetFacilityDef("progress-tanks"));
+            const auto installed=fixture.Snapshot();
+            auto* built=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(built->value.count("cost")==1 && built->value.count("forecast")==0 && fixture.Snapshot()==installed,
+                "already installed facility entered the ordinary-unbuilt forecast branch");GT_OK();
         });
     });
 

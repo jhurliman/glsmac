@@ -4,6 +4,7 @@ SUBDIR( tile )
 
 SET( SRC ${SRC}
 
+	${PWD}/SmacClimate.cpp
 	${PWD}/SmacOrdinaryLandExploration.cpp
 	${PWD}/Consts.cpp
 	${PWD}/Map.cpp

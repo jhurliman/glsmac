@@ -1,4 +1,5 @@
 #include "SmacEcology.h"
+#include "fixtures/SmacClimate.h"
 #include "fixtures/SmacEcology.h"
 #include "fixtures/SmacBloom.h"
 #include "fixtures/SmacBloomTerrain.h"
@@ -24,6 +25,7 @@
 namespace gse::tests {
 namespace {
 namespace b=game::backend::base;
+using game::backend::SmacGameplayRandomState;
 using SpawnCoordinate=std::array<int32_t,2>;
 using game::backend::settings::SmacEcologyRules;
 bool Rejects(const std::function<void()>& call) {try {call();}catch(const std::exception&) {return true;}return false;}
@@ -41,6 +43,49 @@ auto Values(const b::SmacEcologyDamage& v) {
 bool Overflows(const std::function<void()>& call) {try {call();}catch(const std::overflow_error&) {return true;}return false;}
 }
 void AddSmacEcologyTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC climate rivers match seven complete original synthetic worlds and shared traces",GT(){
+        namespace c=game::backend::map::smac_climate;
+        const auto fields=[](const c::Tile& t){return std::make_tuple(t.elevation,t.temperature,t.moisture,t.contour,t.aux,t.items,t.landmarks,t.cached_occupant,t.rockiness,t.remembered_items);};
+        for(const auto& row:smac_climate_fixture::rivers) {
+            c::World world{80,80,!row.flat,{}};world.tiles.reserve(3200);
+            for(int32_t y=0;y<80;++y) {for(int32_t x=y&1;x<80;x+=2) {
+                const bool sea=row.sea && (y<8 || y>71);world.tiles.push_back({sea?2:3,2,0,sea?44:50+x%8,0,0,0,0,0,{}});
+            }}
+            world.At(40,40)->items=0x100u;
+            if(row.feature) {world.At(40,40)->items|=0x1000000u;}
+            if(row.crowd) {for(const auto& delta:std::vector<c::Coordinate>{{1,-1},{1,1},{-1,1},{-1,-1}}) {world.At(40+delta[0],40+delta[1])->items=0x100u;}}
+            if(row.seam) {world.At(40,40)->items=0;world.At(0,40)->items=0x100u;}
+            auto expected=world;for(const auto& change:row.changes) {expected.tiles.at(change.index)=change.after;}
+            SmacGameplayRandomState random(2000,0);c::Streams streams{random};std::vector<uint32_t> seeds;streams.seed_requests=&seeds;
+            c::Rivers(world,streams);
+            for(size_t i=0;i<world.tiles.size();++i) {GT_ASSERT(fields(world.tiles[i])==fields(expected.tiles[i]),"Original full river plane differs: "+std::string(row.id)+" tile"+std::to_string(i));}
+            GT_ASSERT(random.Shared()==row.shared_after && random.Crt()==0 && streams.shared_draws==row.draws && streams.crt_draws==0 && seeds==row.seeds,
+                "Original river random trace differs: "+std::string(row.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC climate class conversion masks memory before entity cleanup and stores class last",GT(){
+        namespace c=game::backend::map::smac_climate;
+        c::World world{80,80,true,std::vector<c::Tile>(3200,c::Tile{3,2,1,60,0,0,0,15,0,{}})};
+        auto* center=world.At(40,40);center->items=UINT32_MAX;center->landmarks=2;center->cached_occupant=0;
+        center->remembered_items.fill(0x12345678u);
+        SmacGameplayRandomState random(7,9);c::Streams streams{random};int invalidated=0,coupled=0;bool exact=false;
+        c::Context context{0,90,false,[](const c::World&,int32_t,int32_t){return false;},
+            [&](uint32_t prior,uint8_t detail){if(prior==2 && detail==0) {++invalidated;}},
+            [&](c::World& staged,int32_t x,int32_t y,int32_t old,int32_t next,c::Streams&) {
+                const auto& t=*staged.At(x,y);std::array<uint32_t,7> memory;memory.fill(0x7e1377a3u);
+                exact=invalidated==1 && old==3 && next==2 && t.elevation==3 && t.items==0x7e1377a3u && t.remembered_items==memory;++coupled;
+            }};
+        c::AssignSurfaceClass(world,40,40,2,streams,context);
+        GT_ASSERT(exact && coupled==1 && world.At(40,40)->elevation==2 && streams.crt_draws==0 && random==SmacGameplayRandomState(7,9),
+            "Class conversion reordered entity/memory/random work");
+        context.entity_change={};world.At(40,40)->elevation=3;
+        GT_ASSERT(Rejects([&]{c::AssignSurfaceClass(world,40,40,2,streams,context);}),"Occupied class conversion silently omitted cleanup");
+        world.At(40,40)->items=0;world.At(40,40)->elevation=3;world.flood_counts.fill(7);world.affected_bases.fill(19);
+        c::ShapeHeight(world,40,40,3,streams,context);
+        GT_ASSERT((world.flood_counts==std::array<int32_t,8>{}) && std::all_of(world.affected_bases.begin(),world.affected_bases.end(),[](int32_t v){return v==-1;}),
+            "Height shaping retained prior-call flood scratch");GT_OK();
+    });
+
     task->AddTest("SMAC ecology native spawn plan matches six original ordered sweep fallback and capacity streams",GT(){
         for(const auto& c:smac_native_spawn_fixture::cases) {
             const b::SmacNativeSpawnInput input{{{40,40},80,80,true},1,c.history,9,c.population};

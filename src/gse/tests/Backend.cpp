@@ -4089,7 +4089,7 @@ public:
 	}
 
 
-	std::string CheckCanonicalFirstBase( int scenario, bool queued, int32_t original_difficulty = 3 ) {
+	std::string CheckCanonicalFirstBase( int scenario, bool queued, int32_t original_difficulty = 3, bool installed_planet = false ) {
 		using namespace game::backend;
 		using namespace game::backend::base;
 		const bool multiple=scenario>=9;
@@ -4117,6 +4117,7 @@ public:
 		std::vector<size_t> created; std::map<size_t,int64_t> initial_minerals; size_t callbacks=0;
 		const auto create=[&](GSE_CALLABLE) {
 			auto* bm=m_game.GetBM();auto* map=m_game.GetMap();
+			if(!installed_planet) {
 			map->m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
 			for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
 				auto* tile=map->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
@@ -4125,6 +4126,7 @@ public:
 				auto* tile=map->GetTile(x,y);tile->Update();tile->moisture=map::tile::MOISTURE_ARID;
 				tile->rockiness=map::tile::ROCKINESS_FLAT;tile->features=0;tile->terraforming=0;tile->bonus=map::tile::BONUS_NONE;
 			}}
+			}
 			if(scenario==1) {map->GetTile(6,4)->moisture=map::tile::MOISTURE_RAINY;map->GetTile(6,4)->terraforming=map::tile::TERRAFORMING_FARM;}
 			for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 			const std::array<std::string,7> roles{{"TECHNICIAN","DOCTOR","LIBRARIAN","ENGINEER","EMPATH","THINKER","TRANSCEND"}};
@@ -4197,7 +4199,7 @@ public:
 			require(m_game.m_simulation->value.gameplay_random==rng && m_game.GetRandom()->GetStateString()==jsf,"first Base consumed a random stream");
 		};
 		const char* faction=scenario==2?"SPARTANS":scenario==4?"HIVE":scenario==5?"UNIVERSITY":scenario==6?"MORGANITES":scenario==7?"BELIEVERS":scenario==8?"PEACEKEEPERS":"GAIANS";
-		const auto result=CheckSimulationStartup(queued,0,!multiple,false,original_difficulty-3,false,0,false,false,create,source,multiple?"":faction,definitions,true);
+		const auto result=CheckSimulationStartup(queued,0,!multiple,false,original_difficulty-3,false,0,false,false,create,source,multiple?"":faction,definitions,true,installed_planet);
 		GT_ASSERT(result.empty(),"canonical first Base actual Start: "+result);
 		GT_ASSERT(callbacks==created.size() && callbacks==(multiple?2u:1u),"first Base callback replay/loss");
 		return WithScriptValues([&](GSE_CALLABLE)->std::string {
@@ -4312,7 +4314,7 @@ public:
 	std::string CheckSimulationStartup( const bool queued, const int cancellation, const bool single = false, const bool host = false, const int64_t difficulty = 2, const bool customs = false, const int failure = 0, const bool consumers = false, const bool zero_random = false,
 		const std::function< void( GSE_CALLABLE ) >& create_base = {},
 		const std::function< std::string(const std::string&) >& startup_source = {}, const std::string& first_faction = {},
-		const std::function< void( GSE_CALLABLE ) >& before_create_event = {}, const bool copy_human_difficulty = false ) {
+		const std::function< void( GSE_CALLABLE ) >& before_create_event = {}, const bool copy_human_difficulty = false, const bool installed_planet = false ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
 		auto& settings = m_state->m_settings.global;
@@ -4338,6 +4340,25 @@ public:
 		if (copy_human_difficulty) {
 			for (auto* player:m_state->m_players) {player->SetDifficultyLevel(settings.rules.m_difficulty_levels.GetVK().at(static_cast<int>(difficulty)));}
 		}
+
+        if(installed_planet) {
+            settings.SelectInstalledPlanet();settings.SelectSmacCampaignRules(false);
+            const auto setup=WithScriptValues([&](GSE_CALLABLE)->std::string {
+                using Planet=map::SmacPlanetMap;
+                std::string bytes(Planet::FILE_BYTES,'\0');bytes.replace(0,11,"TERRANMAP\0\x1a",11);
+                const auto put=[&](size_t at,uint32_t word) {for(size_t i=0;i<4;++i) {bytes.at(at+i)=static_cast<char>(word>>(8*i));}};
+                put(11,5);put(15,80);put(19,80);put(23,27067);put(15+0xa30,4);
+                for(size_t i=0;i<Planet::TILE_COUNT;++i) {const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;bytes[at]=3<<5;bytes[at+1]=65;}
+                const auto path=std::filesystem::temp_directory_path()/("glsmac-start-planet-"+util::UUID::Generate()+".MP");
+                util::FinallyGuard remove([&]{std::filesystem::remove(path);});
+                {std::ofstream output(path,std::ios::binary);output.write(bytes.data(),bytes.size());}
+                auto* map=m_game.GetMap();DELETE(map->m_tiles);map->m_tiles=nullptr;map->m_resource_policy.reset();map->m_territory_topology.reset();
+                const common::mt_flag_t active=false;
+                GT_ASSERT(map->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Synthetic Planet startup import failed");
+                GT_OK();
+            });
+            GT_ASSERT(setup.empty(),"Planet preparation: "+setup);
+        }
 		size_t entropy_calls = 0, random_observations = 0; bool random_valid = true;
 		const SmacGameplayRandomState expected_random( 0, zero_random ? 0 : UINT32_MAX );
 		auto original_source = m_game.m_gameplay_entropy_word_source;
@@ -4404,7 +4425,7 @@ public:
 			auto* handlers = static_cast< value::Object* >( RunScript( GSE_CALL, "./GLSMAC_data/default/game/event/advance_turn" ) );
 			RegisterEvent( "advance_turn", new event::EventHandler( gc_space, "advance_turn", static_cast< value::Callable* >( handlers->Get( "validate" ) ), nullptr,
 				static_cast< value::Callable* >( handlers->Get( "apply" ) ), static_cast< value::Callable* >( handlers->Get( "rollback" ) ) ) );
-			ticket = FixtureWorldTicket(); m_game.m_active_admission->connection = m_state->GetConnection(); m_game.m_active_admission->stage = Game::StartupStage::Start; m_game.m_game_state = Game::GS_STARTING;
+			ticket = FixtureWorldTicket(); m_game.m_active_admission->installed_planet=installed_planet; m_game.m_active_admission->connection = m_state->GetConnection(); m_game.m_active_admission->stage = Game::StartupStage::Start; m_game.m_game_state = Game::GS_STARTING;
 			if ( cancellation == 2 ) {
 				m_game.On( GSE_CALL, "start", NATIVE_CALL( this, &reset, ticket ) {
 					std::thread worker( [ & ]() { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); } ); worker.join();
@@ -5454,7 +5475,7 @@ private:
 	std::unique_ptr< GLSMAC > m_glsmac;
 };
 
-std::string CheckSmacFirstBaseFixture(int scenario,bool queued,int32_t difficulty) { BackendFixture fixture; return fixture.CheckCanonicalFirstBase(scenario,queued,difficulty); }
+std::string CheckSmacFirstBaseFixture(int scenario,bool queued,int32_t difficulty,bool installed_planet) { BackendFixture fixture; return fixture.CheckCanonicalFirstBase(scenario,queued,difficulty,installed_planet); }
 
 std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t difficulty ) {
 	BackendFixture fixture; return fixture.CheckStartingBaseContext( queued, difficulty );

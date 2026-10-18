@@ -42,8 +42,9 @@ regions still count toward the whole-screen gate. No tolerance, mask, scaling
 or automatic alignment is allowed. Also exercise keyboard selection, mouse
 selection and a menu transition; a static passing picture cannot prove input.
 
-The comparator's synthetic acceptance tests run in one small Ubuntu Python
-CI job. They require no game installation, graphics driver or platform builds;
+Run the comparator's synthetic acceptance tests with
+`python -B -m unittest discover -s tools/tests -p test_compare_title_screen.py -v`.
+They require no game installation, graphics driver or platform builds;
 the real original-versus-GLSMAC capture remains a separate visual gate.
 
 ## Initial diagnosis, 2026-10-18

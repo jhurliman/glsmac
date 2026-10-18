@@ -24,6 +24,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
+#include "game/backend/unit/Def.h"
 #include "Pop.h"
 #include "PopDef.h"
 #include "FacilityDef.h"
@@ -515,6 +516,45 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
 			return CopySmacProductionChoices( GSE_CALL );
+		} )
+	},
+	{
+		"get_smac_production_presentation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			if ( !m_resource_context || !m_production || !m_production->queue ) { return VALUE( gse::value::Undefined ); }
+			const auto available = [ & ]( const ProductionItem& item ) {
+				return item.smac_source_id && (item.kind!=ProductionItemKind::Unit || *item.smac_source_id<64
+					|| (m_owner && m_owner->GetPlayer()==m_game->GetPlayer()));
+			};
+			if (!available(m_production->current_item)) {return VALUE(gse::value::Undefined);}
+			for (const auto& item:*m_production->queue) {if(!available(item)) {return VALUE(gse::value::Undefined);}}
+			const auto& settings = m_game->GetState()->m_settings.global;
+			if ( !settings.GetSmacProductionRules() || !settings.GetSmacPredefinedUnitRules() ) { THROW( "Production presentation requires frozen source catalogs" ); }
+			const auto label = [ & ]( const ProductionItem& item ) -> std::string {
+				item.Validate();
+				if ( !item.smac_source_id ) { THROW( "Production presentation requires a source identity" ); }
+				const auto id = *item.smac_source_id;
+				if ( item.kind != ProductionItemKind::Unit ) {
+					if ( id < 1 || id > 71 ) { THROW( "Production presentation facility identity is out of range" ); }
+					return settings.GetSmacProductionRules()->facilities.at( id - 1 ).name;
+				}
+				if ( id >= 0 && id < 64 ) {
+					const auto& rows = settings.GetSmacPredefinedUnitRules()->catalog.source.units;
+					if ( static_cast< size_t >( id ) >= rows.size() ) { THROW( "Production presentation predefined identity is unavailable" ); }
+					return rows.at( id ).name;
+				}
+				return m_game->ResolveSmacProductionPresentation( m_owner, id )->m_name;
+			};
+			gse::value::object_properties_t fields{
+				{ "name", VALUE( gse::value::String,, label( m_production->current_item ) ) },
+			};
+			if ( m_production->queue ) {
+				gse::value::array_elements_t queue;
+				for ( const auto& item : *m_production->queue ) { queue.push_back( VALUE( gse::value::String,, label( item ) ) ); }
+				fields.emplace( "queue", VALUE( gse::value::Array,, queue ) );
+			}
+			return new gse::value::Object( GSE_CALL, fields );
 		} )
 	},
 	{

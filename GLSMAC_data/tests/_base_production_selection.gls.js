@@ -13,6 +13,7 @@ return (game, base) => {
 		result.hide = () => {};
 		const child = (properties) => { const value = node(properties); result.children :+value; return value; };
 		result.panel = child;
+		result.listview = child;
 		result.button = child;
 		if (!#is_defined(result.text)) { result.text = child; }
 		return result;
@@ -36,7 +37,7 @@ return (game, base) => {
 			let found = false;
 			for (choice of screen.production_data.choices) {
 				if (choice.source_id == source_id) {
-					screen.production_selection.children[position + 1].handlers.click({});
+					screen.production_choices.children[position].handlers.click({});
 					found = true;
 				}
 				position++;

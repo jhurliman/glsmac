@@ -229,19 +229,26 @@ and friendly occupied movement ([#188](https://github.com/jhurliman/glsmac/pull/
 and the relevant hosted checks passed. It joins actual casualties, saved hostile history,
 mode1 morale and subsequent movement; it does not implement Base capture.
 
+Frontend ownership refresh merged in
+[#190](https://github.com/jhurliman/glsmac/pull/190), retaining stable Base identity,
+owner badges/labels and navigation membership. The saved post-upkeep faction
+population aggregate merged in [#191](https://github.com/jhurliman/glsmac/pull/191).
+[Ordinary undefended capture](smac-base-capture.md) is submitted in
+[#192](https://github.com/jhurliman/glsmac/pull/192); its live transfer, loot,
+facility draws, remote home repair and actual Start tests pass. It remains a
+bounded population2 first-capture slice, pending current-head review and CI.
+
 The next three actionable slices are:
 
-1. Finish review and integration of frontend Base ownership refresh. Its live
-   update path must retain stable Base identity, refresh owner badges and
-   labels, and move the Base between owner navigation rings. Focused rendered
-   tests use synthetic pixels and glyphs; original interactive capture remains
-   an integration check.
-2. Connect ordinary undefended enemy-Base entry through the actual capture
-   return or authentic choice continuation. Original capture research has
-   reached the nonmodal Base-screen construction boundary; that is not proof
-   of a required management choice or close before movement can return.
-   Transfer Base/Unit homes, production, population, treasury, territory and
-   saved history together, using the frontend ownership update above.
+1. Connect conquered-Base assimilation decay at the original upkeep phase,
+   preserving stored history through save/reload and read-only recalculation.
+   Check complete original upkeep before using direct tail-block evidence as
+   the scheduling contract; connect citizen contribution when that live
+   citizen consumer exists.
+2. Finish captured-Base presentation through the nonmodal Base-screen entry.
+   Keep the original construction/show limitation distinct from a mandatory
+   gameplay choice: mode0 does not wait for the player to close the screen.
+   Verify movement, badges, owner navigation and Base management together.
 3. Compose defended capture and last-Base disposition with conquest and the
    M2 save checkpoints. Establish the original remaining-unit/pod and victory
    conditions first. Then exercise the same scenario through network authority;

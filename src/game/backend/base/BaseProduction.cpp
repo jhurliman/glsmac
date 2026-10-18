@@ -284,7 +284,10 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	}
 	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{result.final_calculation.value_or(result.first_calculation),support}};
 	static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
-	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population, std::move(facility_changes) );
+	// Both resource passes consume incoming conquest history. Its one tail step
+	// publishes with the finished Base state and does not trigger another pass.
+	const auto next_context=population_step ? context.AfterUpkeep() : context;
+	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, next_context, production, food, population, std::move(facility_changes), nullptr, {}, population_step );
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }

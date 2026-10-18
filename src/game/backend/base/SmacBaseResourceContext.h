@@ -36,6 +36,7 @@ struct SmacBaseResourceContext {
 	std::optional<SmacConquestState> conquest;
 
 	void Validate() const;
+	SmacBaseResourceContext AfterUpkeep() const;
 	// Global startup difficulty precedes stored owner difficulty in the original.
 	// The current port has no governor-preference editor: new Bases copy this
 	// unchanged default; saved Base options are never reset from it.

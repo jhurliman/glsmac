@@ -885,6 +885,60 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} ),
 	},
 	{
+		"get_smac_support_presentation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			// Visible foreign Bases can open this screen too. Their remote home
+			// roster is private even when the Base tile itself is explored.
+			if ( !m_resource_context || !m_allocation || !m_production || !m_owner
+				|| m_owner->GetPlayer() != m_game->GetPlayer() ) { return VALUE( gse::value::Undefined ); }
+			const auto current = m_game->CalculateCanonicalUnitSupport( *this, m_pops.size(), nullptr );
+			const auto totals = [ & ]( const SmacUnitSupportResult& support ) {
+				return gse::value::object_properties_t{
+					{ "free_allowance", VALUE( gse::value::Int,, support.free_allowance ) },
+					{ "eligible", VALUE( gse::value::Int,, support.eligible_count ) },
+					{ "paid", VALUE( gse::value::Int,, support.paid_count ) },
+					{ "minerals", VALUE( gse::value::Int,, support.mineral_support ) }
+				};
+			};
+			gse::value::array_elements_t units;
+			for ( const auto& row : current.units ) {
+				const auto* unit = m_game->GetUM()->GetUnit( row.id );
+				if ( !unit || !unit->IsConventional() ) { THROW( "Support presentation lost its current Unit" ); }
+				const auto& state = unit->Conventional();
+				// Provider order is the saved Unit-record order. Other homes and
+				// other owners are not this Base's Forces Supported roster.
+				if ( unit->m_owner != m_owner || state.home_base_id != m_id ) { continue; }
+				const char* status = nullptr;
+				switch ( row.disposition ) {
+					case SmacSupportDisposition::Ignored: status = "Ignored"; break;
+					case SmacSupportDisposition::Exempt: status = "Exempt"; break;
+					case SmacSupportDisposition::Free: status = "Free"; break;
+					case SmacSupportDisposition::Paid: status = "Paid"; break;
+					default: THROW( "Unknown support disposition" );
+				}
+				units.push_back( VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+					{ "id", VALUE( gse::value::Int,, unit->m_id ) },
+					{ "name", VALUE( gse::value::String,, unit->m_def->m_name ) },
+					{ "home", VALUE( gse::value::Int,, m_id ) },
+					{ "x", VALUE( gse::value::Int,, unit->GetTile()->coord.x ) },
+					{ "y", VALUE( gse::value::Int,, unit->GetTile()->coord.y ) },
+					{ "status", VALUE( gse::value::String,, status ) },
+					{ "minerals", VALUE( gse::value::Int,, row.disposition == SmacSupportDisposition::Paid ? current.minerals_per_paid_unit : 0 ) }
+				} ) ) );
+			}
+			auto preview = totals( current );
+			preview.emplace( "units", VALUE( gse::value::Array,, units ) );
+			gse::value::object_properties_t fields{
+				{ "current", new gse::value::Object( GSE_CALL, preview ) },
+				{ "retained", m_smac_upkeep_cache ? static_cast<gse::Value*>(new gse::value::Object( GSE_CALL, totals( m_smac_upkeep_cache->support ) )) : VALUE( gse::value::Undefined ) }
+			};
+			// Historical support IDs may name retired Units. Expose retained
+			// totals without pretending that history is the current live roster.
+			return new gse::value::Object( GSE_CALL, fields );
+		} )
+	},
+	{
 		"get_smac_mineral_support",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

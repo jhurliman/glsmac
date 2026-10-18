@@ -2,20 +2,21 @@
 const view = #include('../default/ui/parts/game/popup/base_screen/facilities');
 return (game, base) => {
     const listeners = {};
-    const node = (properties, interactive = true) => {
+    const node = (properties, interactive) => {
+        if (!interactive && (#is_defined(properties.height) || #is_defined(properties.width))) { throw TestError('Decorative Text has measured dimensions, not Area height/width properties'); }
         const result = properties; result.children = []; result.handlers = {};
         result.on = (name, callback) => { if (!interactive && (name == 'mousedown' || name == 'click')) { throw TestError('Decorative Text cannot receive pointer input'); } result.handlers[name] = callback; };
         result.listen = (object, name, callback) => { listeners[name] = callback; };
         result.hide = () => {}; result.show = () => {};
         result.clear = () => { result.children = []; };
         result.measure = () => { return {width: #sizeof(#split(result.text, ' ')) * 70, height: 20}; };
-        const child = (props) => { const value = node(props); result.children :+ value; return value; };
+        const child = (props) => { const value = node(props, true); result.children :+ value; return value; };
         result.panel = child; result.listview = child; result.window = child; result.button = child;
         result.surface = child; result.scrollview = child;
         if (!#is_defined(result.text)) { result.text = (props) => { const value = node(props, false); result.children :+value; return value; }; }
         return result;
     };
-    const root = node({});
+    const root = node({}, true);
     view.init({body: root, ui: {root: root}, game: game});
     view.set({base: base, entries: base.get_facilities()});
     const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };

@@ -45,14 +45,14 @@ return {
         this.content.text({class: 'game-popup-text', left: 232, top: 52, text: 'Requires: ' + prerequisite});
         const description = this.content.scrollview({left: 232, top: 84, right: 0, bottom: 0, has_hscroll: false, has_vscroll: true, vscroll_class: 'default-scroll-v'});
         let line = ''; let top = 0;
-        let label = description.text({class: 'game-popup-text', left: 0, top: top, height: 20, text: ''});
+        let label = description.text({class: 'game-popup-text', left: 0, top: top, text: ''});
         const text = data.description == '' ? 'Description unavailable.' : data.description;
         for (word of #split(text, ' ')) {
             const candidate = line == '' ? word : line + ' ' + word;
             label.text = candidate;
             if (label.measure().width > 350 && line != '') {
                 label.text = line; top += 20; line = word;
-                label = description.text({class: 'game-popup-text', left: 0, top: top, height: 20, text: line});
+                label = description.text({class: 'game-popup-text', left: 0, top: top, text: line});
             } else { line = candidate; }
         }
         this.active = true; this.window.show();

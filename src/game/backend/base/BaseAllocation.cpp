@@ -4,6 +4,7 @@
 #include <set>
 #include <type_traits>
 #include "BaseManager.h"
+#include "FacilityDef.h"
 #include "PopDef.h"
 #include "SmacWorkedSquareCollection.h"
 #include "game/backend/Game.h"
@@ -116,6 +117,7 @@ struct Base::PreparedSmacWorkerState::Data {
 	std::optional< SmacBaseResourceContext > context;
 	std::optional< ProductionState > production;
 	int64_t nutrients;
+	std::vector<std::pair<Base*,facilities_t>> facility_changes;
 };
 Base::PreparedSmacWorkerState::PreparedSmacWorkerState( std::unique_ptr< Data > data ) : m_data( std::move( data ) ) {}
 Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
@@ -131,6 +133,8 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	data.base->m_resource_context.swap( data.context );
 	data.base->m_production.swap( data.production );
 	data.base->m_accumulated_nutrients = data.nutrients;
+	static_assert(std::is_nothrow_swappable_v<facilities_t>);
+	for(auto& change:data.facility_changes) {change.first->m_facilities.swap(change.second);}
 	data.manager->m_work_assignments.swap( data.assignments );
 	data.manager->m_base_updates.swap( data.updates );
 	data.manager->m_updated_bases.swap( data.triggers );
@@ -149,7 +153,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
@@ -225,9 +229,22 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	auto& update = updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
 	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "SMAC allocation has an incompatible pending Base update" ); }
 	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
+	std::set<size_t> changed;
+	for(const auto& change:facility_changes) {
+		if(!change.first || bm->GetBase(change.first->m_id)!=change.first || change.first->m_owner!=m_owner || !changed.insert(change.first->m_id).second) {
+			THROW("Joined facility publication requires distinct current same-owner Bases");
+		}
+		change.first->GetSmacResourceContext();
+		for(const auto& entry:change.second) {
+			if(!entry.second || bm->GetFacilityDef(entry.first)!=entry.second || entry.second->m_id!=entry.first) {THROW("Joined facility publication has an invalid definition");}
+			bm->ValidateSmacFacilityDef(entry.second);
+		}
+		BaseManager::QueueBaseUpdateInto(updates,change.first,BaseManager::BUO_REFRESH);
+	}
 	std::unique_lock lock( bm->m_updated_bases_mutex );
 	auto triggers = bm->m_updated_bases;
 	triggers.insert( this );
+	for(const auto& change:facility_changes) {triggers.insert(change.first);}
 	std::optional< SmacBaseAllocationState > replacement = allocation;
 	std::optional< SmacBaseResourceContext > replacement_context = context;
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement_context ) > );
@@ -243,6 +260,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	data->retired.reserve( data->removals.size() ); data->next_pop_id = next_pop_id; data->assignments = std::move( assignments );
 	data->updates = std::move( updates ); data->triggers = std::move( triggers ); data->lock = std::move( lock );
 	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
+	data->facility_changes=std::move(facility_changes);
 	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );
 	return PreparedSmacWorkerState( std::move( data ) );
 }

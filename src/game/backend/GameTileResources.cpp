@@ -225,10 +225,12 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	const auto& global = m_simulation->value.resource_modifiers;
 	auto facilities = ReadFacilityRoles( evaluating_base, *m_bm );
 	if(granted) {
-		if(startup || founding || m_bm->GetFacilityDef(granted->m_id)!=granted || granted->m_smac_source_id!=3) {
-			throw std::runtime_error("Prepared resource grant requires registered ordinary Recycling Tanks");
+		if(startup || founding || m_bm->GetFacilityDef(granted->m_id)!=granted || !granted->m_smac_source_id || !SupportsSmacFacilityProduction(*granted->m_smac_source_id)) {
+			throw std::runtime_error("Prepared resource grant requires a supported registered local facility");
 		}
-		m_bm->ValidateSmacFacilityDef(granted);facilities.recycling=true;
+		m_bm->ValidateSmacFacilityDef(granted);
+		facilities.recycling |= granted->m_smac_source_id==3;
+		facilities.headquarters |= granted->m_smac_source_id==1;
 	}
 	uint32_t base_count = ( startup || founding ) ? 1 : 0;
 	for ( const auto& entry : m_bm->GetBases() ) {

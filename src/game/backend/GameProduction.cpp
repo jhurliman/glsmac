@@ -99,21 +99,28 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 	return IsSmacUnitProductionEligibleAt( base.m_owner, base.GetTile(), item );
 }
 
+bool Game::SupportsSmacFacilityProduction(int32_t source_id) noexcept {
+	return source_id==1 || source_id==3 || source_id==7 || source_id==8;
+}
+
 bool Game::IsSmacFacilityProductionEligible(const base::Base& base,const base::ProductionItem& item,const base::FacilityDef* granted) const {
 	base.GetSmacResourceContext();
-	if(base.GetGame()!=this || m_bm->GetBase(base.m_id)!=&base || item.kind!=base::ProductionItemKind::Facility || item.smac_source_id!=3) {
-		throw std::runtime_error("Live facility construction currently supports registered Recycling Tanks");
+	if(base.GetGame()!=this || m_bm->GetBase(base.m_id)!=&base || item.kind!=base::ProductionItemKind::Facility || !item.smac_source_id || !SupportsSmacFacilityProduction(*item.smac_source_id)) {
+		throw std::runtime_error("Live facility construction requires a supported registered local facility");
 	}
 	RequireSmacLocalHumanOwner(base.m_owner);
+	if(m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
+		throw std::runtime_error("Facility eligibility requires the admitted no-project campaign");
+	}
 	if(!HasSmacProductionPrerequisite(base.m_owner,item)) {return false;}
 	if(granted) {
-		if(m_bm->GetFacilityDef(granted->m_id)!=granted || granted->m_smac_source_id!=3) {throw std::runtime_error("Staged facility grant is not the registered Tanks definition");}
-		m_bm->ValidateSmacFacilityDef(granted);return false;
+		if(m_bm->GetFacilityDef(granted->m_id)!=granted || !granted->m_smac_source_id || !SupportsSmacFacilityProduction(*granted->m_smac_source_id)) {throw std::runtime_error("Staged facility grant is not a supported registered definition");}
+		m_bm->ValidateSmacFacilityDef(granted);if(granted->m_smac_source_id==item.smac_source_id) {return false;}
 	}
 	for(const auto& row:base.m_facilities) {
 		if(!row.second || m_bm->GetFacilityDef(row.first)!=row.second) {throw std::runtime_error("Facility eligibility has an invalid local definition");}
 		m_bm->ValidateSmacFacilityDef(row.second);
-		if(row.second->m_smac_source_id==3 || row.second->m_smac_source_id==26) {return false;}
+		if(row.second->m_smac_source_id==item.smac_source_id || (item.smac_source_id==3 && row.second->m_smac_source_id==26)) {return false;}
 	}
 	return true;
 }

@@ -431,26 +431,40 @@ research UI script; the subsequent preview-retirement and arithmetic-boundary
 changes pass their two affected groups. These are focused checks, not a new
 platform matrix or interactive playthrough.
 
-1. Finish the current integration of saved Former work, selected-unit
-   continuation, world atlas/sprite updates and selection ordering. Use the
-   cached Linux build and affected tests for this batch; do not repeat the
-   platform matrix for each gameplay edit.
-2. Deliver the [visually reviewed first session](first-session-checkpoint.md) before adding more gameplay
-   breadth. Acceptance covers start/new-game setup; correct unit placement,
-   movement/animation, selection and displayed stats; the Base screen;
-   production and research; close/reopen; and actual disk save/reload. Capture
-   screenshots or a short recording alongside the original and keep a concrete
-   visual-defect list. Fix defects on that path before expanding combat. Native
-   snapshot tests do not satisfy the disk-save acceptance criterion: Load Game
-   currently remains a menu stub. Earlier macOS smoke receipts validate their
-   recorded revisions, not this renderer. This combined renderer/session
-   checkpoint warrants supported-platform builds and interactive validation.
-3. Then close the two-base conquest loop: conventional combat and Base capture,
-   last-base disposition, victory, and network replay. Extend founding/production
-   beyond the current ordinary land and non-last-base boundary using accepted
-   original caller evidence, then expand rules/content and AI. Hurry spending
-   and maintenance-deficit disposal remain separate economy producers; the
-   research continuation already settles ordinary faction debit.
+Current update after PR #183 (accepted commit `3f76f742`): faction/difficulty
+selection, Former work and controls, required research choice, campaign disk
+save/load, Colony choices, last-base restart/elimination and refounding are
+connected. PR #183 passes completed GitHub Codex review, regression/lifecycle/
+correctness CI, 72 affected native groups, two GSE scripts and ten focused
+ASan/UBSan groups. A restart → founding → world save/Start → next upkeep
+composition matches its measured treasury/research and production boundaries.
+These are engine/script checks, not a completed human playthrough or M2 exit.
+
+1. Continue playable production/economy slices using existing rule evidence.
+   [Recycling Tanks construction](smac-recycling-tanks-production.md) is merged
+   in PR #184 after completed Codex review and relevant CI, with real picker →
+   saved ordinary turns → completion coverage. The next extension joins HQ
+   relocation and Bank/Node production to their current energy consumers.
+   Node/Artifact link state, citizen-status facilities and conventional defense
+   effects remain separate dependencies. Hurry spending and maintenance-deficit
+   disposal remain separate economy producers.
+2. Keep the [visually reviewed first session](first-session-checkpoint.md) as an
+   integration acceptance task while gameplay development continues. It covers
+   normal setup, units/commands, Base/production/research screens and disk
+   save/reload. Current rendered validation remains incomplete; older Mac smoke
+   receipts apply only to their recorded revisions. Use platform builds at the
+   combined presentation checkpoint, not for every gameplay tweak. Load Game is
+   implemented through PR #175; its rendered menu workflow still needs review.
+3. Close M2 with actual opposing-faction control, conventional attacks, capture,
+   conquest and network replay. Current live attack entry points explicitly
+   reject conventional Units. The saved roster represents human network roles;
+   it has no AI-controller identity. The retained neutral Scout calculator is
+   limited to its measured Human/AI, Vendetta, flat/no-base context. Connect
+   authenticated controller/diplomacy inputs and the real command/retirement
+   callers rather than treating calculator success as a playable battle.
+   Base capture and victory need their own original caller evidence. M2's
+   two-human local/network acceptance and the initial legal AI opponent remain
+   required; full SMAC, SMAX and presentation gates are unchanged.
 
 The [worker-authority checkpoint](validation/worker-authority-2026-10-17.md) at
 `dacac744` passes all eight tests on Windows, Linux Debug, Linux sanitizers and
@@ -541,10 +555,11 @@ a clean review on its corrected head. Dependency merges that change the head
 receive another review. Each PR owns its current review/check evidence; a
 request or local success is not a completed GitHub review.
 
-The review usage quota was reached again later on October 17. New current heads
-are held unmerged until a completed Codex review is available; repeated quota
-requests are not used as a substitute. Implementation, local validation and
-focused draft publications continue independently.
+The review usage quota was reached again earlier on October 17. Those failures
+are historical evidence, not a claim about every later PR: review subsequently
+completed without findings for PRs #180–183. A current head still waits for its
+own completed review and relevant CI; repeated quota requests never substitute
+for review. Implementation continues independently while reviews run.
 
 Production, research, terraforming, conventional combat, AI, diplomacy, victories
 and the expansion remain substantial work. Original executable evidence is

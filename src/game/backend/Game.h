@@ -419,6 +419,7 @@ public:
 	bool HasSmacProductionPrerequisite( const slot::Slot* owner, const base::ProductionItem& item ) const;
 	bool IsSmacUnitProductionEligible( const base::Base& base, const base::ProductionItem& item ) const;
 	bool IsSmacFacilityProductionEligible( const base::Base& base, const base::ProductionItem& item, const base::FacilityDef* granted = nullptr ) const;
+	static bool SupportsSmacFacilityProduction( int32_t source_id ) noexcept;
 	// Explicit local human-controlled port roster. No AI controller is inferred.
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
 	// Explicit session presentation roles; saved Unit/Def records remain authority.

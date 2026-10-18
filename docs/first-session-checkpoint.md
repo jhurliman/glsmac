@@ -106,6 +106,18 @@ Honey's human result and Linux interactive validation remain pending. These
 presentation checks do not trigger another platform build for routine gameplay
 changes.
 
+The Tanks source tree equivalent to PR #184 (`007cf9bf`) was subsequently
+launched from the cached Linux build at 1280×800, with software rendering and
+the installed GOG assets. The binary title still embeds its pre-edit commit
+`6f4cc00f`. A fresh Windows helper capture now shows the rendered menu, with
+another window occluding part of it. Explicit activation and a screenshot-bound
+input attempt both fail with `failed to activate captured window`. No gameplay
+interaction is verified. The owned test process closed normally after SIGTERM,
+with no reported memory/OpenGL leaks; allocation tracking was not enabled.
+Private log: `C:/Users/jhurliman/.codex-validation/first-session-tanks-007cf9bf/interactive.log`.
+This narrows the current automation problem to activation/input; it does not
+establish a working rendered Base/picker/save session.
+
 ## Visual-defect record
 
 Populate this from actual checkpoint screenshots, not source assumptions. Earlier

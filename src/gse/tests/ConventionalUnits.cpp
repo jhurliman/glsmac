@@ -507,11 +507,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             auto* destination=game->GetMap()->GetTile(3,3);HQ(GSE_CALL,game,actor,source);
             destination->features=map::tile::FEATURE_XENOFUNGUS;
             destination->rockiness=map::tile::ROCKINESS_ROLLING;
+            fixture.MoveEvent(GSE_CALL,actor,destination); // install the actual default event adapter; this request is rejected
             fixture.Updates();
             std::string message;
             game->On(GSE_CALL,"message",NATIVE_CALL(&message) {
                 N_EXPECT_ARGS(1);N_GETVALUE(event,0,Object);
-                message=static_cast<value::String*>(event->Get("text"))->value;
+                message=static_cast<value::String*>(event.at("text"))->value;
                 return VALUE(value::Undefined);
             }));
             const auto before=fixture.Snapshot(),unit=Unit::Serialize(actor).ToString();

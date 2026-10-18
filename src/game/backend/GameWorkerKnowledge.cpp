@@ -25,6 +25,7 @@ bool QueueLocalConventionalMove(GSE_CALLABLE, Game& game, size_t unit_id, size_t
             throw std::runtime_error("The selected Unit or destination is no longer available");
         }
         auto* destination=game.GetMap()->GetTile(x,y);
+        game.GetUM()->ValidateConventionalMove(actor,destination,game.GetSlotNum());
         game.Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}});
         return true;
     } catch(const std::runtime_error& error) {

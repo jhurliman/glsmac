@@ -52,7 +52,8 @@ The live starvation/Colony-abandonment restart now uses direct query-on-miss
 at the original search stage. A direct miss calculates even when excluded,
 preserves the exclusion bit, and changes only the queried score. Cached
 nonzero values bypass the query; calculated zero remains a miss next time.
-Last-Base capture still requires its joined disposition transaction.
+Last-Base capture joins the same owned cache to its prepared faction/Unit
+transaction, including successful restart and failed placement.
 
 Validation: cached Linux Debug build;64 affected native groups pass with
 allocation tracking, including capture, founding/abandonment, actual Start and

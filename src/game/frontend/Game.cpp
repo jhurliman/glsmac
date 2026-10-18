@@ -1081,6 +1081,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			SelectTileOrUnit( tile, 0 );
 			break;
 		}
+		case FrontendRequest::FR_MAP_CENTER: {
+			auto* const tile=m_tm->GetTile(request->data.map_center.x,request->data.map_center.y);
+			ASSERT(tile,"map center tile not found");ScrollToTile(tile,true);break;
+		}
 		case FrontendRequest::FR_UNIT_SELECT: {
 			auto* const unit = m_um->GetUnitById( request->data.unit_select.unit_id );
 			if ( unit && unit->IsActive() ) {

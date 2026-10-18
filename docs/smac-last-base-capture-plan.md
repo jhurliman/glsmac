@@ -1,79 +1,61 @@
-# Last-Base capture integration
+# Last-Base capture and faction disposition
 
-The ordinary capture, assimilation tail and screen-entry slices are PRs192–194.
-Last-Base capture remains an explicit refusal in `BaseCapture.cpp`. The next
-implementation must use the original disposition caller rather than interpreting
-zero Bases as a conquest victory.
+The ordinary capture, assimilation and screen-entry slices now join the same
+faction-disposition producer as last-Base starvation and Colony abandonment.
+Capture supplies its captor and post-transfer Base list, preserves retained
+regional Base counts, and removes both homed and remaining defender Units.
+The captured Base remains at its original ID with the new owner, population
+one, assimilation50 and the original food/production continuation.
 
-The [bounded original investigation](behavior/last-base-capture.md) reaches the captured-Base screen
-after losing the final population2 Base. Its remote homed Former or Colony Pod
-is removed before disposition; the Pod does not exempt that lost-home scan.
-Disposition removes remaining faction units, reinitializes nonzero-turn faction
-state, attempts restart, and can request an ending on failure. A successful
-notification acknowledgment does not establish a global victory result. The
-public last-base-capture receipt is frozen and retained with this plan;
-private executable research and original assets stay outside the PR.
+The [failed native capture](behavior/last-base-capture.md) and
+[successful native capture/restart](behavior/successful-capture-restart.md)
+establish caller ordering. Both use a human Librarian Scout entering an
+undefended population-two Base. Failed placement consumes the terminal1,025th
+coordinate pair; successful placement creates the original ordered package.
+Nonzero initialization follows loot, including the starting-energy grant on
+failure. Technologies/research survive, with the cost cache invalidated.
 
-## Required dependencies and live callers
+## Prepared world and publication
 
-Current prerequisites: PR195 owns human-defeat requests and their saved/controller
-path; PR196 owns retained regional Base counts and their incremental writers;
-PR197 preserves the original ocean-choice index. PR198 adds saved region areas,
-fertility and coastal postpass values. PR199 implements the31-case original land
-site-quality query. PR200 adds the40-case sea query and PR201 the40-case
-startup/late-turn extension; all are accepted after current-head review and CI.
-None replaces restart search
-by itself.
+Unit-removal and faction-replacement plans provide private native query views
+inside the owning accumulation. Registry/order, tile membership, unplaced
+candidate positions and knowledge restore on every exit. These views invoke
+no scripts or yields, advance no IDs and retire no objects. Captured-Base worker
+and resource calculations see the future roster, including replacements,
+before any gameplay authority is committed.
 
-The [joined site-cache producer](smac-site-rating-cache.md) now owns ratings and
-exclusions, retains them through save/Start, and stages founding/removal/capture
-refill with their future Base list. Ordinary Road/Farm/Solar/Mine/Forest preserve
-nonzero history; water/polar/startup/late queries use the original formula.
-Old saves retain unavailable history, since a fresh recount cannot recover a
-stale score or stray exclusion. PR202 is accepted with18 focused sanitizer
-groups and current-head review/CI. The [original candidate loop](smac-restart-search.md)
-now matches both full native traces; its live future-world producer is next.
-The next [shared landmark history](smac-shared-landmark-history.md) slice owns
-raw detail through fresh admission, save/Start and ordinary map mutations.
-The live starvation/Colony-abandonment restart now uses that owned future
-world and the original search. Original world generation and the combined
-last-Base capture/disposition transaction remain open.
+Capture stages owner/population, facilities/production, loot, faction
+initialization, hostility, research-cache invalidation, RNG, roster activity,
+ending request, Units, territory, site history and remembered knowledge. Commit
+publishes these before retiring wrappers or notifying scripts. Failed
+preparation preserves entities, IDs, wrappers, queues and both random streams.
+The captured-Base owner refresh precedes its one screen-entry request.
 
-1. Extend the joined restart caller used by `PrepareLastSmacBaseDisposition`.
-   Starvation/Colony abandonment now use the original candidate loop. Capture
-   introduces a captor identity and a reached same-land-region/nearest-captor-Base
-   rejection. Original candidate generation and retry consumption use the CRT
-   stream. Establish success and all-attempts-failed outputs before substituting
-   this policy into capture. Keep reference coordinates as expected outputs,
-   never hardcoded sites. Reuse the existing restart package selector.
-2. Reuse the owned ending request and actual controller accepted in PR195.
-   The checked two-human local capture sets an ending request on
-   defender loss even though focus remains the attacker; that does not prove
-   the attacker has won. Existing last-Base starvation/disposition must share
-   this producer, save ownership and controller instead of silently dropping
-   the request. Establish the separate conquest/survivor-count caller before
-   claiming a conquest result.
-3. Join the capture and faction transactions. Stage post-loot defender economy,
-   nonzero initialization, retained technologies/research with invalidated cost
-   cache, hostile-history reset, roster activity, Unit retirement/replacement,
-   territory, worker calculation, capture RNG and ending request together. Native
-   queries need a future Unit registry/occupancy view so workers and sight cannot
-   observe units that disposition will remove. Do not invoke callbacks or retire
-   wrappers until the combined authority is coherent. Preparation and failures
-   must preserve current entities, queues, IDs, RNG and retained script objects.
+## Successful tracking continuation
 
-## Acceptance for the next functional PR
+After a successful local, non-network restart, the captor/focus caller consumes
+one further CRT draw. Primary relation bit0x1000 selects bound2; clear selects4.
+Its player-facing name remains unknown. Zero remainder tracks the nearest
+restarted Unit to(0,0), using the original integer metric and later-ID ties.
+The native example ends at CRT1632431389 after37 capture,4 search and1 tracking
+draws, with shared RNG unchanged.
 
-Use real `move_unit` and saved-world Start. Cover a failed restart, a successful
-restart with its actual package and next founding/upkeep, and an explicit
-Do or Die/late-turn refusal under the established rule. Check old homed and
-unhomed Units, a homed Pod discriminator, retained Base/Pop identities, exact
-loot and initializer credits, stale faction population aggregate, diplomacy
-history, RNG, roster/controller identity and pending ending state. Separate
-screen entry from unverified dynamic screen return and final victory UI.
+Tracking reveals the ordered center/eight neighbors to the captor and refreshes
+remembered terrain. Factories prepend, the initializer demotes the first
+Former, then promotes its second Pod after all optional grants. Fresh creation
+identities C1..Cn therefore traverse C3,Cn..C4,C1,C2. Tracking clears that stack's
+visibility and exposes only its first Pod. The four-unit order is observed
+natively; the appended-Scout extension follows the same static producer.
+The camera recenter leaves unit selection intact. Save/Start retains the final
+knowledge, package and RNG instead of replaying tracking.
 
-Use the cached incremental build, affected capture/restart/upkeep test groups
-and targeted production analysis. Unit retirement/replacement and the future
-query view warrant focused ownership sanitizers. Full platform and network
-acceptance belong to the playable conquest milestone and release gates; this
-slice alone cannot close M2 or golden1.0.0.
+## Remaining match and presentation work
+
+The human-loss branch records an ending request while preserving the captor's
+controller. It does not establish the separate conquest/survivor-count result.
+Defended capture, other population/facility rules, technology choice, AI/network
+capture, and complete ending/controller behavior remain separate work. Full
+capture-screen closure and visual/dialog fidelity still need original-executable
+interaction and screenshot comparison. The native reference stops at screen
+entry without answering it; no original world generation or golden1.0.0
+acceptance is implied by this transaction.

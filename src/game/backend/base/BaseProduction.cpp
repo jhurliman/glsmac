@@ -297,7 +297,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
             // The original second pass is retained before status and facility
             // destruction. A later query may refresh; this pass's income may not.
             result.retained_energy=m_game->CalculateCanonicalBaseEnergy(*this,*result.final_calculation,nullptr,&allocation,granted);
-            next_context.golden_age=status.golden;next_context.drone_riots=status.riots;
+            next_context.golden_age=status.golden;next_context.drone_riots=status.riots;next_context.SyncKnownStatusBits();
             if(status.golden_start) {status_messages.push_back(m_name+": Golden Age begins.");}
             if(status.golden_over) {status_messages.push_back(m_name+": Golden Age ends.");}
             if(status.riots_over) {status_messages.push_back(m_name+": drone riots end.");}

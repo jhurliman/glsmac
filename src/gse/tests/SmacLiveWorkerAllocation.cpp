@@ -370,7 +370,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto back=next;back.owner_simulation_id=1;auto returning=um->PrepareDefectionUnits(GSE_CALL,previous,{{91,back}});returning.Commit();fixture.Updates();
             GT_ASSERT(game->SelectLocalConventionalUnit(game->GetTurnId(),{},{},actor->GetTile()->coord,false)==91 && unit::Unit::Unwrap(wrapper)==actor,
                 "foreign-to-local transfer lost stable selection identity");
+            auto cleanup=back;cleanup.retained_state_word=0xffffffffu;cleanup.SetAccountingMarkers(6);
+            auto marker_plan=um->PrepareDefectionUnits(GSE_CALL,previous,{{91,cleanup}});
             auto born=back;auto* pending=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),previous,game->GetMap()->GetTile(8,6),born);
+            marker_plan.Commit();
+            GT_ASSERT(actor->Conventional()==cleanup && actor->m_owner==previous && unit::Unit::Unwrap(wrapper)==actor,
+                "Same-owner accounting cleanup changed identity or dropped opaque state");
+            bool same_counts=false;fixture.ResourceState([&](auto& state){same_counts=state.economy.at(1).design_counts->at(2)==2 && state.economy.at(2).design_counts->at(2)==0;});
+            GT_ASSERT(same_counts,"State-only cleanup changed active design counts");
             born.owner_simulation_id=2;auto newborn=um->PrepareDefectionUnits(GSE_CALL,recipient,{{92,born}});newborn.Commit();
             bool spawn=false;for(const auto& update:fixture.Updates()) {
                 GT_ASSERT(update.type!=game::FrontendRequest::FR_UNIT_DESPAWN || update.data.unit_despawn.unit_id!=92,"unpublished newborn view was removed");
@@ -384,7 +391,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
             const auto* one=restored.Game()->GetUM()->GetUnit(91);const auto* two=restored.Game()->GetUM()->GetUnit(92);
             GT_ASSERT(one && two && one->Conventional().owner_simulation_id==1 && two->Conventional().owner_simulation_id==2,
-                "actual Start lost transferred Unit ownership");GT_OK();
+                "actual Start lost transferred Unit ownership");
+            GT_ASSERT(one->Conventional().retained_state_word==0xffffffefu && one->Conventional().accounting_markers==6,
+                "Actual Start lost known full-word and accounting marker history");GT_OK();
         });
     });
 

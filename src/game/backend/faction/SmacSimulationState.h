@@ -192,6 +192,9 @@ struct SmacSimulationState {
 	std::optional<int32_t> ecology_warming_count;
 	// Absent before V29; restore never initializes or recounts native state.
 	std::optional<SmacNativeFactoryState> native_factory;
+	// V11-V29 did not retain battle-plan targets. IDs are stable manager IDs,
+	// not dense original record indices. Preserve unknown and stale history.
+	std::array<std::optional<int64_t>,8> battle_plan_target{};
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

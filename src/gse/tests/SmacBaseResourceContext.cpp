@@ -96,7 +96,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 					for ( uint32_t governor : { 0u, 0x40u, 0x80000000u, 0xffffffffu } ) {
 						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor, flags % 3 == 0 };
 						const auto bytes = SerializeSmacBaseResourceContext( input );
-						GT_ASSERT( bytes.lenw == 105 && SmacBaseResourceContext::MAX_WIRE_BYTES == 133, "context frame extent changed" );
+						GT_ASSERT( bytes.lenw == 112 && SmacBaseResourceContext::MAX_WIRE_BYTES == 154, "context frame extent changed" );
 						const auto restored = DeserializeSmacBaseResourceContext( bytes );
 						GT_ASSERT( restored && *restored == input && SerializeSmacBaseResourceContext( restored ).ToString() == bytes.ToString(), "restore reset or normalized persistent context" );
 						GT_ASSERT( restored->GovernorActive() == ( governor >= 0x80000000u ) && restored->ManageCitizens() == ( governor == 0x40u || governor == 0xffffffffu ), "citizen and active flags became coupled" );
@@ -106,11 +106,21 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		}
 		GT_ASSERT( !DeserializeSmacBaseResourceContext( SerializeSmacBaseResourceContext( std::nullopt ) ), "legacy absence invented neutral context" ); GT_OK();
 	} );
+	task->AddTest("SMAC Base full status preserves opaque bits and migrates unknown history",GT(){
+		auto input=Record();input.recent_defender_loss=true;input.retained_status_word=0xfffffff1u;input.SyncKnownStatusBits();
+		const auto wire=SerializeSmacBaseResourceContext(input);
+		GT_ASSERT(DeserializeSmacBaseResourceContext(wire)==input,"Full status lost opaque or named bits");
+		const auto next=input.AfterUpkeep();GT_ASSERT(next.retained_status_word==(*input.retained_status_word&~8u),"Tail erased unrelated status history");
+		auto bad=input;bad.retained_status_word=0;
+		GT_ASSERT(Rejects([&]{SerializeSmacBaseResourceContext(bad);}),"Contradictory status history accepted");
+		auto legacy=Frame(4,1,37,-7,0x8f000041u);legacy.WriteBool(false);legacy.WriteBool(false);
+		GT_ASSERT(DeserializeSmacBaseResourceContext(legacy)==Record(),"V4 invented full status history");GT_OK();
+	});
 	task->AddTest( "SMAC conquered Base context preserves history and migrates V2 without inventing it", GT() {
 		for ( const auto former : { 1, 2, 7 } ) { for ( const auto timer : { 0, 1, 50, 255 } ) {
 			auto input = Record(); input.conquest = SmacConquestState{ former, static_cast<uint8_t>(timer) };
 			const auto bytes = SerializeSmacBaseResourceContext(input);
-			GT_ASSERT(bytes.lenw == SmacBaseResourceContext::MAX_WIRE_BYTES && DeserializeSmacBaseResourceContext(bytes) == input, "conquest history did not round trip");
+			GT_ASSERT(bytes.lenw == SmacBaseResourceContext::MAX_WIRE_BYTES-14 && DeserializeSmacBaseResourceContext(bytes) == input, "conquest history did not round trip");
 		} }
 		const auto migrated = DeserializeSmacBaseResourceContext(Frame(2,1,37,-7,0x8f000041u));
 		GT_ASSERT(migrated == Record() && !migrated->conquest, "V2 migration invented capture history");

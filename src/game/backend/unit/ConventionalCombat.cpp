@@ -127,7 +127,7 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	m_game->m_simulation->value.hostility.owners.swap(prepared.history.owners);
 	m_game->m_simulation->value.gameplay_random=prepared.result.random;
 	if(prepared.palette_identifier) {m_game->m_smac_hit_palette_identifier=prepared.palette_identifier;}
-	if(prepared.defeated_base) {prepared.defeated_base->m_resource_context->recent_defender_loss=true;}
+	if(prepared.defeated_base) {prepared.defeated_base->m_resource_context->recent_defender_loss=true;prepared.defeated_base->m_resource_context->SyncKnownStatusBits();}
 	removal.Commit();removal.Notify(GSE_CALL);m_game->Message(message);
 }
 

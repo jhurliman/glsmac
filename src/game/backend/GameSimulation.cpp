@@ -168,6 +168,7 @@ void Game::PrepareNewSimulation() {
 	value.remembered_governor=m_smac_cross_world_governor;
 	value.ecology_world=ecology_world;
 	value.perihelion=false; // accepted fresh-world reset, never replayed on restore
+	for(auto& target:value.battle_plan_target) {target=-1;} // actual whole-world owner initialization, including slot0
 	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
 	for(int32_t owner=0;owner<=7;++owner) {value.victory_history->Initialize(owner,0);}
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
@@ -342,6 +343,7 @@ unit::ConventionalUnitState Game::PrepareStartingConventionalUnit( const slot::S
 		}
 		unit::ConventionalUnitState result{ designs->starting_scout, participant.simulation_id, 1, 0, 0, false,
 			unit::ConventionalUnitState::Home::None, mode };
+		result.retained_state_word=0; // measured fresh Unit initialization; restore never calls this producer
 		ResolveConventionalIdentity( result, owner, *m_simulation );
 		return result;
 	}

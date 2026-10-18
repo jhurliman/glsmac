@@ -267,6 +267,12 @@ private:
 	friend class Unit;
 	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
+    PreparedDefectionUnits PrepareDefectionUnitsCore(slot::Slot* recipient,
+        const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+        const std::unordered_map<size_t,unit_update_t>& updates);
+    PreparedDefectionUnits PrepareDefectionUnitsForQuery(slot::Slot* recipient,
+        const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+        const PreparedConventionalUnit* created=nullptr,const PreparedConventionalRemoval* removed=nullptr);
 	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr);
 	PreparedFactionUnits PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
 		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,

@@ -20,7 +20,8 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     if(unavailable) {unavailable->clear();}
     const auto context=target.GetSmacResourceContext();
     if(target.GetGame()!=this || !m_bm || m_bm->GetBase(target.m_id)!=&target || !m_map) {throw std::runtime_error("Citizens require a registered Base in this world");}
-    if(!target.m_owner || target.m_owner->GetPlayer()!=GetPlayer()) {return missing("Citizen details are available for your own Bases");}
+    // Engine upkeep processes every admitted human owner; the copied UI DTO
+    // separately withholds another faction's citizen details.
     RequireSmacLocalHumanOwner(target.m_owner);ValidateCurrentSimulation();
     const auto& simulation=m_simulation->value;
     if(simulation.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {return missing("Citizen project ownership is unavailable for this campaign");}
@@ -74,6 +75,7 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     }
     m_um->RequireConventionalUnitsReady();std::vector<base::SmacCitizenPoliceUnit> garrison;int32_t pacifism=0;
     const auto append=[&](const unit::Unit* u,bool staged) {
+        if(u && u->IsNative()) {return;} // owner0 natives are outside positive-owner citizen support
         if(!u || !u->IsConventional()) {throw std::runtime_error("Citizens require authenticated conventional units");}
         const auto& state=u->Conventional();
         (void)ResolveConventionalUnit(state,u->m_owner);const auto design=ResolveConventionalDesign(state,*m_simulation);

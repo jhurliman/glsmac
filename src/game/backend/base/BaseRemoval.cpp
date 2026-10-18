@@ -134,6 +134,7 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
 		state.victory_history->last_base_expansion_or_advice_turn[owner]=*plan.initialization_history_turn;
 	}
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
+    if(plan.site) {state.battle_plan_target.at(owner)=-1;} // nonzero faction initializer resets only this owner
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}
 }

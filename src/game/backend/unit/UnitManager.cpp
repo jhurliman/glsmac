@@ -391,6 +391,17 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
     return PreparedConventionalRemoval(std::move(data));
 }
+UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(slot::Slot* recipient,
+    const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+    const PreparedConventionalUnit* created,const PreparedConventionalRemoval* removed) {
+    // Called inside the owning private future registry view. Publication must
+    // retain the factory/removal queue that will be installed before transfer.
+    const auto* creation=created ? created->m_data.get():nullptr;
+    const auto* removal=removed ? removed->m_data.get():nullptr;
+    if((created && (!creation || creation->manager!=this || !creation->candidate || creation->published))
+        || (removed && (!removal || removal->manager!=this || removal->committed))) {THROW("Defection has a stale future Unit plan");}
+    return PrepareDefectionUnitsCore(recipient,changes,removal ? removal->updates:creation ? creation->updates:m_unit_updates);
+}
 void UnitManager::PreparedConventionalRemoval::DiscoverDefendedBase(base::Base* target,int32_t observer) {
     auto& d=*m_data;
     if(d.committed || !target || !d.knowledge || !d.base_updates || observer<1 || observer>7) {THROW("Battle discovery requires a prepared casualty and Base");}
@@ -695,7 +706,8 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 	// these two local training categories precede the ordinary baseline one.
 	int32_t training = ( command_center ? 2 : 0 ) + ( bioenhancement ? 2 : 0 );
 	if ( social->current[ 4 ] < -1 ) { training /= 2; }
-	const ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	state.retained_state_word=0; // new manufactured record; no legacy state reconstruction
 	const auto design = m_game->ResolveConventionalDesign( state, *m_game->m_simulation );
 	if ( design.id >= 64 && !design.prototyped ) { THROW( "First custom prototype completion is not yet admitted" ); }
 	return PrepareConventionalUnit( GSE_CALL, Unit::GetNextId(), def, home.m_owner, home.GetTile(), state );

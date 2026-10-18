@@ -178,7 +178,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
     // Only the private completed upkeep transaction may publish status admitted
     // from its second citizen pass. Ordinary allocation/query edits retain it.
-    if(finish_upkeep) {unchanged_context.golden_age=expected_context.golden_age;unchanged_context.drone_riots=expected_context.drone_riots;}
+    if(finish_upkeep) {unchanged_context.golden_age=expected_context.golden_age;unchanged_context.drone_riots=expected_context.drone_riots;unchanged_context.SyncKnownStatusBits();}
 	if(captured_owner) {
 		m_game->RequireSmacLocalHumanOwner(captured_owner);
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
@@ -186,7 +186,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
 		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
 		if(context.recent_defender_loss) {THROW("Capture must clear defender-loss history");}
-		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;
+		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;unchanged_context.SyncKnownStatusBits();
 		if(!(unchanged_context==prior_context)) {THROW("Capture publication changed unrelated Base context");}
 	} else if ( !( unchanged_context == expected_context ) || ( context.governor_options != prior_context.governor_options
 		&& context.governor_options != ( prior_context.governor_options & ~SmacBaseResourceContext::MANAGE_CITIZENS ) ) ) {

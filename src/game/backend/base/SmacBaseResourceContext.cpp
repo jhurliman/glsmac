@@ -27,7 +27,14 @@ SmacWorkerPriorityContext SmacBaseResourceContext::WorkerPriorities( const std::
 		{ faction[0], faction[1], faction[2], faction[3], faction[4] } };
 }
 
+void SmacBaseResourceContext::SyncKnownStatusBits() noexcept {
+	if(retained_status_word) {*retained_status_word=(*retained_status_word&~14u)
+		| (drone_riots ? 2u:0u) | (golden_age ? 4u:0u) | (recent_defender_loss ? 8u:0u);}
+}
 void SmacBaseResourceContext::Validate() const {
+	if(retained_status_word && ((*retained_status_word&14u)!=((drone_riots ? 2u:0u)|(golden_age ? 4u:0u)|(recent_defender_loss ? 8u:0u)))) {
+		throw std::runtime_error("Base status word disagrees with named status");
+	}
 	if ( owner_simulation_id < 1 || owner_simulation_id > 7 || resource_events > 63 ) {
 		throw std::runtime_error( "Invalid SMAC base resource context" );
 	}
@@ -38,12 +45,12 @@ bool SmacBaseResourceContext::operator==( const SmacBaseResourceContext& other )
 	return owner_simulation_id == other.owner_simulation_id && golden_age == other.golden_age
 		&& resource_events == other.resource_events && resource_event_timer == other.resource_event_timer
 		&& governor_options == other.governor_options && drone_riots == other.drone_riots && conquest==other.conquest
-		&& recent_defender_loss==other.recent_defender_loss;
+		&& recent_defender_loss==other.recent_defender_loss && retained_status_word==other.retained_status_word;
 }
 
 SmacBaseResourceContext SmacBaseResourceContext::AfterUpkeep() const {
 	auto next=*this;
-	next.recent_defender_loss=false;
+	next.recent_defender_loss=false;next.SyncKnownStatusBits();
 	if(next.conquest && next.conquest->assimilation) {
 		--next.conquest->assimilation;
 		if(next.conquest->former_owner==next.owner_simulation_id && next.conquest->assimilation) {--next.conquest->assimilation;}
@@ -55,7 +62,7 @@ SmacBaseResourceContext SmacBaseResourceContext::AfterUpkeep() const {
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value ) {
 	if ( value ) { value->Validate(); }
 	types::Buffer buffer;
-	buffer.WriteInt( 4 );
+	buffer.WriteInt( 5 );
 	buffer.WriteBool( value.has_value() );
 	if ( value ) {
 		buffer.WriteInt( value->owner_simulation_id );
@@ -67,6 +74,7 @@ types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseRes
 		buffer.WriteBool(value->conquest.has_value());
 		if(value->conquest) {buffer.WriteInt(value->conquest->former_owner);buffer.WriteInt(value->conquest->assimilation);}
 		buffer.WriteBool(value->recent_defender_loss);
+		buffer.WriteBool(value->retained_status_word.has_value());if(value->retained_status_word) {buffer.WriteInt(*value->retained_status_word);}
 	}
 	return buffer;
 }
@@ -75,7 +83,7 @@ std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( typ
 	if ( buffer.lenw > SmacBaseResourceContext::MAX_WIRE_BYTES ) {
 		throw std::runtime_error( "Unsupported SMAC base resource context" );
 	}
-	const auto version=buffer.ReadInt();if(version!=2 && version!=3 && version!=4) {throw std::runtime_error("Unsupported SMAC base resource context");}
+	const auto version=buffer.ReadInt();if(version!=2 && version!=3 && version!=4 && version!=5) {throw std::runtime_error("Unsupported SMAC base resource context");}
 	std::optional< SmacBaseResourceContext > result;
 	if ( buffer.ReadBool() ) {
 		const auto owner = buffer.ReadInt();
@@ -96,6 +104,11 @@ std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( typ
 			result->conquest=SmacConquestState{static_cast<int32_t>(former),static_cast<uint8_t>(assimilation)};
 		}
 		if(version>=4) {result->recent_defender_loss=buffer.ReadBool();}
+		if(version>=5 && buffer.ReadBool()) {
+			const auto word=buffer.ReadInt();if(word<0 || uint64_t(word)>UINT32_MAX) {throw std::runtime_error("Invalid Base full status word");}
+			result->retained_status_word=static_cast<uint32_t>(word);
+		}
+		result->Validate();
 	}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Trailing SMAC base resource context" ); }
 	return result;

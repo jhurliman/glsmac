@@ -11,11 +11,13 @@ return {
 		'energy',
 		'buttons',
 		'bottom_bar',
+		'specialist_selection',
 	],
 
 	production_selection_no_hiding: {
 		buttons: true,
 		bottom_bar: true,
+		specialist_selection: true,
 	},
 
 	init: (p) => {
@@ -94,8 +96,12 @@ return {
 					});
 				}
 			});
+			body.listen(p.game, 'smac_specialist_menu', (e) => {
+				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.specialist_selection.open(e.base, e.selection); }
+			});
 			body.listen(p.game, 'base_despawn', (e) => {
 				if (this.base_id == e.base_id) {
+					this.sections.specialist_selection.hide_view();
 					if (this.is_open) { this.p.modules.popup.hide('base_screen'); }
 					this.base = null;
 					this.base_id = null;
@@ -111,6 +117,7 @@ return {
 				utils: {
 					set_cells: parent.parent.set_cells,
 					navigate_base: parent.parent.navigate_base,
+					open_specialist_selection: parent.parent.open_specialist_selection,
 					show_production_selection: parent.parent.show_production_selection,
 					hide_production_selection: parent.parent.hide_production_selection,
 					update_production_selection: parent.parent.update_production_selection,
@@ -157,6 +164,7 @@ return {
 		}
 
 		this.hide_production_selection();
+		this.sections.specialist_selection.on_base_update(base);
 
 		if (canonical) {
 			let nutrients = base.get_smac_nutrient_presentation();
@@ -259,6 +267,14 @@ return {
 		});
 	},
 
+	open_specialist_selection: (base, pop_id) => {
+		if (!this.is_open || base.id != this.base_id) { return; }
+		const expected = base.get_smac_specialist_selection_state();
+		if (!#is_defined(expected)) { return; }
+		this.hide_production_selection();
+		this.p.game.event('open_smac_specialist', {base: base, pop_id: pop_id, expected_state: expected});
+	},
+
 	navigate_base: (direction) => {
 		// A required Colony Screen owns its completion callback and viewed Base.
 		if (!this.is_open || this.p.game.get_pending_smac_colony_screen() != null) { return; }
@@ -269,6 +285,7 @@ return {
 	},
 
 	on_hide: () => {
+		this.sections.specialist_selection.hide_view();
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;

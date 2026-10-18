@@ -1,0 +1,508 @@
+{
+  "research_id": "RE-SMAC-MANUAL-SPECIALIST-COMMIT-001",
+  "specification": "manual-specialist-selection.md",
+  "defaults": {
+    "slot": 0,
+    "choice": "Engineer",
+    "specialist_count": 3,
+    "stored_types": [
+      "Doctor",
+      "Engineer",
+      "Thinker"
+    ],
+    "unused_stored_type": "Doctor",
+    "selected_indices": [
+      0,
+      1,
+      3
+    ],
+    "provisional_count": 0,
+    "manage_citizens_specialists": true,
+    "governor_active": true,
+    "lock_refused": false,
+    "creation_source": "worker_hit",
+    "worker_source_index": 1
+  },
+  "scope": "Original current type read, cancel/same/lock result and commit core. Menu choice eligibility supplied; valid stored types; some slot/count combinations are synthetic. Actual overflow selector, supplied edit lock and worker hit index.",
+  "cases": [
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-001",
+      "name": "change existing type",
+      "overrides": {},
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Engineer",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-002",
+      "name": "cancel leaves management and types unchanged",
+      "overrides": {
+        "choice": "Cancel"
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "canceled",
+        "manage_citizens_specialists_after": true,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-003",
+      "name": "same type leaves management enabled",
+      "overrides": {
+        "choice": "Doctor"
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "unchanged",
+        "manage_citizens_specialists_after": true,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-004",
+      "name": "lock refusal leaves management and types unchanged",
+      "overrides": {
+        "lock_refused": true
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "lock_refused",
+        "manage_citizens_specialists_after": true,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-005",
+      "name": "Worker choice decreases count without shifting clicked slot",
+      "overrides": {
+        "choice": "Worker"
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 2,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-006",
+      "name": "Worker choice count zero floors",
+      "overrides": {
+        "choice": "Worker",
+        "specialist_count": 0,
+        "stored_types": []
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 0,
+        "provisional_count_after": 0,
+        "active_stored_types_after": []
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-007",
+      "name": "new specialist replaces hit worker",
+      "overrides": {
+        "slot": -1
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          3
+        ],
+        "specialist_count_after": 4,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-008",
+      "name": "background creation removes highest selected index",
+      "overrides": {
+        "slot": -1,
+        "creation_source": "background",
+        "selected_indices": [
+          0,
+          1,
+          3,
+          20
+        ]
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 4,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-009",
+      "name": "background with center only does not remove center",
+      "overrides": {
+        "slot": -1,
+        "creation_source": "background",
+        "selected_indices": [
+          0
+        ]
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0
+        ],
+        "specialist_count_after": 4,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-010",
+      "name": "missing worker hit still increments local count",
+      "overrides": {
+        "slot": -1,
+        "worker_source_index": -1
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 4,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-011",
+      "name": "new specialist beyond sixteen increments without stored type",
+      "overrides": {
+        "slot": -1,
+        "specialist_count": 16,
+        "stored_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ]
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          3
+        ],
+        "specialist_count_after": 17,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-012",
+      "name": "editing overflow specialist does not persist chosen type",
+      "overrides": {
+        "slot": 16,
+        "specialist_count": 17,
+        "stored_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ]
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 17,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-013",
+      "name": "last stored slot can change",
+      "overrides": {
+        "slot": 15,
+        "specialist_count": 16,
+        "stored_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ]
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 16,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Engineer"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-014",
+      "name": "Worker current selection is unchanged",
+      "overrides": {
+        "slot": -1,
+        "choice": "Worker"
+      },
+      "expected": {
+        "current_type": "Worker",
+        "outcome": "unchanged",
+        "manage_citizens_specialists_after": true,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 0,
+        "active_stored_types_after": [
+          "Doctor",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-COMMIT-015",
+      "name": "provisional counter retained",
+      "overrides": {
+        "provisional_count": 4
+      },
+      "expected": {
+        "current_type": "Doctor",
+        "outcome": "committed",
+        "manage_citizens_specialists_after": false,
+        "governor_active_after": true,
+        "selected_indices_after": [
+          0,
+          1,
+          3
+        ],
+        "specialist_count_after": 3,
+        "provisional_count_after": 4,
+        "active_stored_types_after": [
+          "Engineer",
+          "Engineer",
+          "Thinker"
+        ]
+      }
+    }
+  ]
+}

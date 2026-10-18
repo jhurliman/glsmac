@@ -21,14 +21,14 @@ static Score Evaluate(Geometry geometry,Coordinate center,int32_t turn,const Are
 	Require(geometry.width>=2 && geometry.width<=512 && !(geometry.width&1) && geometry.height>=2 && geometry.height<=256,
 		"Site-quality geometry is not a bounded parity grid");
 	Require(center[0]>=0 && center[0]<geometry.width && center[1]>=0 && center[1]<geometry.height
-		&& !((center[0]^center[1])&1) && turn>=1 && turn<=100 && bool(query),"Unsupported site-quality center, turn or query");
+		&& !((center[0]^center[1])&1) && turn>=0 && bool(query),"Unsupported site-quality center, turn or query");
 	const auto resolve=[&](Coordinate delta)->std::optional<Coordinate> {
 		Coordinate point{{center[0]+delta[0],center[1]+delta[1]}};
 		if(geometry.wrap) {point[0]=(point[0]%geometry.width+geometry.width)%geometry.width;}
 		if(point[0]<0 || point[0]>=geometry.width || point[1]<0 || point[1]>=geometry.height) {return {};}
 		return point;
 	};
-	Score result{};Tile middle{};bool sea_center=false;
+	Score result{};Tile middle{};bool sea_center=false;int32_t land_fungus=0;
 	for(size_t index=0;index<inner.size();++index) {
 		const auto point=resolve(inner[index]);if(!point) {continue;}
 		const auto tile=query(*point);Validate(tile);if(index==0) {middle=tile;sea_center=tile.elevation<3;Require(!require_land || !sea_center,"Land-site query requires a land center");}
@@ -39,6 +39,7 @@ static Score Evaluate(Geometry geometry,Coordinate center,int32_t turn,const Are
 			if(index<=8 && areas[tile.region]>=50) {result.large_water=true;}
 			continue;
 		}
+		if(tile.fungus) {++land_fungus;}
 		if(index && tile.rockiness>=2) {++result.rocky_neighbors;}
 		const bool active=!(tile.landmark_detail&128);
 		if(!tile.fungus) {
@@ -74,7 +75,7 @@ static Score Evaluate(Geometry geometry,Coordinate center,int32_t turn,const Are
 	}}
 	result.raw=result.points+result.rivers/4+4*int(result.large_water)+4*int(result.coastal)
 		+(3*result.production+6)/4-(result.water-int(result.large_water))/2+(result.fungus_production+1)/3
-		-result.deep_water/2-(sea_center ? 2 : 1)*result.outer_bases-result.rocky_neighbors/4;
+		-result.deep_water/2-(turn>150 ? land_fungus/3 : 0)-(sea_center ? 2 : 1)*result.outer_bases-result.rocky_neighbors/4;
 	const bool rejected=middle.monolith || (middle.fungus && middle.elevation>=2)
 		|| (!sea_center && middle.rockiness>=2) || (sea_center && result.outer_bases>=4);
 	result.rating=rejected ? 0 : std::clamp(result.raw,1,15);

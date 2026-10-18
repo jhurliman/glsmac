@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include "SmacSiteGeometry.h"
 
 namespace game::backend::map::smac_site {
 
@@ -15,8 +16,6 @@ struct Tile {
 	bool planet, crater, uranium, jungle;
 	uint8_t landmark_detail;
 };
-struct Geometry { int32_t width, height; bool wrap; };
-using Coordinate = std::array<int32_t,2>;
 using Query = std::function<Tile(Coordinate)>;
 using Areas = std::array<int32_t,128>;
 struct Score {
@@ -26,13 +25,14 @@ struct Score {
 	Coordinate last;
 };
 
-// RE-SMAC-SITE-QUALITY-001: pure land-center query for ordinary turns1..100.
+// RE-SMAC-SITE-QUALITY-001 with verified startup and late-turn extension.
 // Visits the measured inner21 order then the outer28. Does not read/write a
 // cached rating, infer stored region areas, or consume either RNG stream.
-// Sea-centered and late-turn branches are separate, unclosed contracts.
+// Land-only entry; nonnegative signed32 turns, including startup turn0.
 Score LandQuality(Geometry geometry, Coordinate center, int32_t turn, const Areas& areas, const Query& query);
 // Shared land/water query, including the RE-SMAC-SEA-SITE-QUALITY-001 water
-// center, outer-Base multiplier and rejection branches. Same ordinary turns.
+// center, outer-Base multiplier and rejection branches. Includes the original
+// turn>150 land-fungus adjustment before rejection/clamping.
 Score Quality(Geometry geometry, Coordinate center, int32_t turn, const Areas& areas, const Query& query);
 
 }

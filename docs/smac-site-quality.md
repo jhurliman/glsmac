@@ -20,9 +20,10 @@ Base penalties are included.
 This is a pure query: no cache, world mutation or RNG draw. The decoded inputs
 use original terrain ordinals, not GLSMAC Tile enum values. Live resource/site
 resolution and saved cache ownership must remain explicit at the caller. This
-PR does not replace last-Base restart search, add a rating gate to nonzero-turn
-restart, or establish sea-centered and late-turn fungus branches. Those are
-separate callers/contracts; ordinary admitted restart turns are1..100.
+query does not replace last-Base restart search or add a rating gate to nonzero
+restart. The [water branch](smac-sea-site-quality.md) and
+[startup/late-turn extension](smac-site-quality-turns.md) now share this query;
+ordinary restart admission remains a separate caller.
 
 Next integration: own saved ratings and Base-radius exclusions, wire world
 postpass/founding/removal invalidation and territory query-on-miss, then consume

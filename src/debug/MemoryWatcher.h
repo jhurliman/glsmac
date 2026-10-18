@@ -35,6 +35,8 @@ public:
 	void GLBindTexture( GLenum target, GLuint texture, const std::string& file, const size_t line );
 	void GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line );
 	void GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line );
+	void GLTexImage3D(GLenum target,GLint level,GLint internalformat,GLsizei width,GLsizei height,GLsizei depth,GLint border,GLenum format,GLenum type,const void* pixels,const std::string& file,size_t line);
+	void GLTexSubImage3D(GLenum target,GLint level,GLint x,GLint y,GLint z,GLsizei width,GLsizei height,GLsizei depth,GLenum format,GLenum type,const void* pixels,const std::string& file,size_t line);
 	void GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line );
 	void GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line );
 	void GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line );
@@ -110,6 +112,7 @@ private:
 		GLuint current_vertex_buffer = 0;
 		GLuint current_index_buffer = 0;
 		GLuint current_texture = 0;
+		std::unordered_map<GLenum,GLuint> current_array_textures;
 		GLuint current_framebuffer = 0;
 		GLuint current_program = 0;
 		framebuffer_mode_t current_framebuffer_mode = FM_NONE;

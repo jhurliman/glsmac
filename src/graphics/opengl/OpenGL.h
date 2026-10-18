@@ -16,6 +16,7 @@
 #include "types/Vec2.h"
 #include "types/mesh/Types.h"
 #include "util/Clamper.h"
+#include "TexturePaging.h"
 
 namespace graphics {
 namespace opengl {
@@ -112,10 +113,15 @@ private:
 		GLuint obj = 0;
 		size_t last_texture_update_counter = 0;
 		types::Vec2< size_t > last_dimensions = {};
+		TexturePaging paging;
+		GLenum target = 0;
+		bool smoothen = false;
 	};
 	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
 	GLuint m_no_texture = 0;
+	GLint m_texture_limit = 0, m_array_layer_limit = 0;
+	mutable shader_program::ShaderProgram* m_bound_shader_program = nullptr;
 
 	std::unordered_map< uint8_t, types::Vec2< ssize_t > > m_active_mousedowns = {};
 

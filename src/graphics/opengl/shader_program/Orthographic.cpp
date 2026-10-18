@@ -53,6 +53,11 @@ in vec4 tintcolor; \
 in vec3 fragpos; \
 in vec3 normal; \
 uniform sampler2D uTexture; \
+uniform sampler2DArray uPagedTexture; \
+uniform ivec2 uLogicalSize; \
+uniform ivec2 uPageSize; \
+uniform int uPageColumns; \
+uniform bool uTextureSmoothen; \
 uniform vec3 uLightPos[" + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "]; \
 uniform vec4 uLightColor[" + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "]; \
 uniform uint uFlags; \
@@ -60,6 +65,22 @@ uniform vec4 uTintColor; \
 uniform vec3 uAreaLimitsMin; \
 uniform vec3 uAreaLimitsMax; \
 out vec4 FragColor; \
+\
+vec4 logicalTexel(ivec2 p) { \
+	p = (p % uLogicalSize + uLogicalSize) % uLogicalSize; \
+	ivec2 page = p / uPageSize; \
+	return texelFetch(uPagedTexture, ivec3(p % uPageSize, page.y * uPageColumns + page.x), 0); \
+} \
+vec4 sampleTexture(vec2 uv) { \
+	if (uPageColumns == 0) return texture(uTexture, uv); \
+	vec2 pixel = fract(uv) * vec2(uLogicalSize); \
+	if (!uTextureSmoothen) return logicalTexel(ivec2(floor(pixel))); \
+	pixel -= vec2(0.5); \
+	ivec2 p = ivec2(floor(pixel)); \
+	vec2 weight = fract(pixel); \
+	return mix(mix(logicalTexel(p), logicalTexel(p+ivec2(1,0)), weight.x), \
+	           mix(logicalTexel(p+ivec2(0,1)), logicalTexel(p+ivec2(1,1)), weight.x), weight.y); \
+} \
 \
 void main(void) { \
 	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_AREA_LIMITS ) + " ) { \
@@ -86,7 +107,7 @@ void main(void) { \
 		) + " \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
-	vec4 tex = texture( uTexture, texpos.xy ); \
+	vec4 tex = sampleTexture(texpos.xy); \
 	float gamma = 1.1 ; /* TODO: pass via uniform */ \
 	float contrast = 0.1; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
@@ -113,6 +134,13 @@ void Orthographic::Initialize() {
 	attributes.normal = GetAttributeLocation( "aNormal" );
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
+	uniforms.paged_texture=GetUniformLocation("uPagedTexture");
+	uniforms.logical_size=GetUniformLocation("uLogicalSize");
+	uniforms.page_size=GetUniformLocation("uPageSize");
+	uniforms.page_columns=GetUniformLocation("uPageColumns");
+	uniforms.smoothen=GetUniformLocation("uTextureSmoothen");
+	glUniform1i(uniforms.texture,0);
+	glUniform1i(uniforms.paged_texture,1);
 	uniforms.light_pos = GetUniformLocation( "uLightPos" );
 	uniforms.light_color = GetUniformLocation( "uLightColor" );
 	uniforms.world = GetUniformLocation( "uWorld" );
@@ -122,6 +150,15 @@ void Orthographic::Initialize() {
 	uniforms.area_limits.min = GetUniformLocation( "uAreaLimitsMin" );
 	uniforms.area_limits.max = GetUniformLocation( "uAreaLimitsMax" );
 };
+
+void Orthographic::SetTexturePaging(const TexturePaging* paging,bool smoothen) const {
+	glUniform1i(uniforms.page_columns,paging ? paging->columns : 0);
+	if(paging) {
+		glUniform2i(uniforms.logical_size,paging->width,paging->height);
+		glUniform2i(uniforms.page_size,paging->page_width,paging->page_height);
+		glUniform1i(uniforms.smoothen,smoothen);
+	}
+}
 
 void Orthographic::EnableAttributes() const {
 	const size_t tsz = sizeof( types::mesh::coord_t );

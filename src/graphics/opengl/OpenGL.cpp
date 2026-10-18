@@ -13,6 +13,7 @@
 #include "FBO.h"
 #include "types/texture/Texture.h"
 #include "gc/GC.h"
+#include "util/FinallyGuard.h"
 
 namespace graphics {
 namespace opengl {
@@ -443,6 +444,15 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 	const auto tw = texture->GetWidth();
 	const auto th = texture->GetHeight();
+	if(!m_texture_limit) {
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE,&m_texture_limit);
+		glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS,&m_array_layer_limit);
+		ASSERT(m_texture_limit>0 && m_array_layer_limit>0,"Invalid OpenGL texture limits");
+	}
+	const auto paging=TexturePaging::Make(tw,th,m_texture_limit,m_array_layer_limit);
+	if(paging.Paged() && texture->HasFlag(types::texture::TF_MIPMAPS)) {
+		THROW("Oversized mipmapped textures require paged mipmap support");
+	}
 
 	if ( it == m_textures.end() ) {
 
@@ -468,6 +478,12 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 	}
 
 	auto& t = it->second;
+	const GLenum target=paging.Paged() ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+	if(t.target && t.target!=target) {
+		glDeleteTextures(1,&t.obj);glGenTextures(1,&t.obj);
+		is_reload_needed=need_full_update=true;
+	}
+	t.target=target;t.paging=paging;t.smoothen=smoothen;
 	if ( t.last_dimensions.x != tw || t.last_dimensions.y != th ) {
 		is_reload_needed = true;
 		need_full_update = true;
@@ -481,6 +497,35 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 	}
 
 	if ( is_reload_needed ) {
+		if(paging.Paged()) {
+			glBindTexture(GL_TEXTURE_2D_ARRAY,t.obj);
+			util::FinallyGuard unbind([] {glPixelStorei(GL_UNPACK_ROW_LENGTH,0);glBindTexture(GL_TEXTURE_2D_ARRAY,0);});
+			glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+			if(need_full_update) {
+				glTexImage3D(GL_TEXTURE_2D_ARRAY,0,GL_RGBA8,paging.page_width,paging.page_height,paging.Layers(),0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D_ARRAY,GL_TEXTURE_MAX_LEVEL,0);
+			}
+			// Read logical CPU rows directly; split patches only where GPU pages
+			// meet. No second atlas allocation or change to saved UV/pixel layout.
+			if(!texture->IsEmpty()) {
+				glPixelStorei(GL_UNPACK_ROW_LENGTH,tw);
+				const auto upload=[&](size_t left,size_t top,size_t right,size_t bottom) {
+					for(const auto& area:paging.Updates(left,top,right,bottom)) {
+						const auto offset=(area.top*tw+area.left)*4;
+						const auto span=((area.bottom-area.top-1)*tw+area.right-area.left)*4;
+						glTexSubImage3D(GL_TEXTURE_2D_ARRAY,0,area.x,area.y,area.layer,area.right-area.left,area.bottom-area.top,1,
+							GL_RGBA,GL_UNSIGNED_BYTE,ptr(texture->GetBitmap(),offset,span));
+					}
+				};
+				if(need_full_update) {upload(0,0,tw,th);}
+				else {for(const auto& area:texture->GetUpdatedAreas()) {upload(area.left,area.top,area.right,area.bottom);}}
+			}
+			texture->ClearUpdatedAreas();
+			ASSERT(!glGetError(),"Error loading paged texture");
+			return;
+		}
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
@@ -681,10 +726,12 @@ void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
 
 void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f ) {
 	GLuint obj;
+	const texture_data_t* data=nullptr;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
 		if ( it != m_textures.end() ) {
 			obj = it->second.obj;
+			data=&it->second;
 		}
 		else {
 			obj = m_no_texture;
@@ -692,6 +739,19 @@ void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f )
 	}
 	else {
 		obj = m_no_texture;
+	}
+	if(data && data->paging.Paged()) {
+		if(m_bound_shader_program && m_bound_shader_program->GetType()==shader_program::ShaderProgram::TYPE_ORTHO) {
+			static_cast<shader_program::Orthographic*>(m_bound_shader_program)->SetTexturePaging(&data->paging,data->smoothen);
+		}
+		glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D_ARRAY,obj);glActiveTexture(GL_TEXTURE0);
+		util::FinallyGuard restore([&] {
+			glActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D_ARRAY,0);glActiveTexture(GL_TEXTURE0);
+			if(m_bound_shader_program && m_bound_shader_program->GetType()==shader_program::ShaderProgram::TYPE_ORTHO) {
+				static_cast<shader_program::Orthographic*>(m_bound_shader_program)->SetTexturePaging(nullptr,false);
+			}
+		});
+		WithBindTexture(m_no_texture,f);return;
 	}
 	WithBindTexture( obj, f );
 }
@@ -760,8 +820,10 @@ void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
 
 void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const {
 	sp->Enable();
+	auto* previous=m_bound_shader_program;m_bound_shader_program=sp;
+	util::FinallyGuard restore([&] {m_bound_shader_program=previous;sp->Disable();});
+	if(sp->GetType()==shader_program::ShaderProgram::TYPE_ORTHO) {static_cast<shader_program::Orthographic*>(sp)->SetTexturePaging(nullptr,false);}
 	f();
-	sp->Disable();
 }
 
 void OpenGL::CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f ) {

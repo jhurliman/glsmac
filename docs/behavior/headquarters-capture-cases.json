@@ -1,0 +1,4363 @@
+{
+  "research_id": "RE-SMAC-HEADQUARTERS-CAPTURE-001",
+  "scope": "One actual local two-human Librarian population-three HQ capture with a surviving defender Base, original movement/capture caller to unanswered Base screen. No paid relocation branch, upkeep, screen close or ordinary population-one razing claim.",
+  "inputs": {
+    "changes": [
+      "native facility setter clears defender Base2 HQ and installs target Base1 HQ",
+      "target population3 and matching defender total population4"
+    ],
+    "turn": 6,
+    "difficulty": 3,
+    "captured_base": 1,
+    "surviving_defender_base": 2,
+    "attacker": 1,
+    "crt_seed": 3,
+    "shared_seed": 3,
+    "starting_state": {
+      "bases": [
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "former_owner": 1,
+          "population": 1,
+          "assimilation": 0,
+          "status": 28672,
+          "governor": 14663233,
+          "food": 0,
+          "minerals": 11,
+          "baseline_item": 1,
+          "baseline_minerals": 11,
+          "target": 1,
+          "queue": [],
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            20,
+            16
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 3,
+          "assimilation": 0,
+          "status": 0,
+          "governor": 0,
+          "food": 5,
+          "minerals": 7,
+          "baseline_item": 1,
+          "baseline_minerals": 7,
+          "target": 1,
+          "queue": [
+            2,
+            1
+          ],
+          "facilities": [
+            1,
+            3,
+            4,
+            7,
+            8
+          ]
+        },
+        {
+          "id": 2,
+          "coordinate": [
+            26,
+            16
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 1,
+          "assimilation": 0,
+          "status": 0,
+          "governor": 0,
+          "food": 0,
+          "minerals": 10,
+          "baseline_item": 2,
+          "baseline_minerals": 10,
+          "target": 2,
+          "queue": [],
+          "facilities": []
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            16,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            19,
+            15
+          ],
+          "home": 0,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "owner": 2,
+          "design": 1,
+          "position": [
+            30,
+            16
+          ],
+          "home": 1,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        }
+      ],
+      "credits": [
+        100,
+        200
+      ],
+      "owned_bases": [
+        1,
+        2
+      ],
+      "technologies": [
+        [
+          6
+        ],
+        [
+          6
+        ]
+      ],
+      "selected": 1,
+      "secondary": -1,
+      "crt": 3,
+      "shared": 3,
+      "active_mask": 6,
+      "human_mask": 6,
+      "focus": 1,
+      "controller": 1,
+      "active_faction": 1,
+      "ending_state": 0,
+      "game_flags": 16640,
+      "total_population": [
+        1,
+        4
+      ],
+      "current_base": 2
+    }
+  },
+  "expected_screen_entry": {
+    "bases": [
+      {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "former_owner": 1,
+        "population": 1,
+        "assimilation": 0,
+        "status": 28672,
+        "governor": 14663233,
+        "food": 0,
+        "minerals": 11,
+        "baseline_item": 1,
+        "baseline_minerals": 11,
+        "target": 1,
+        "queue": [],
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "coordinate": [
+          20,
+          16
+        ],
+        "owner": 1,
+        "former_owner": 2,
+        "population": 2,
+        "assimilation": 50,
+        "status": 0,
+        "governor": 14663233,
+        "food": 5,
+        "minerals": 0,
+        "baseline_item": -38,
+        "baseline_minerals": 0,
+        "target": 2,
+        "queue": [],
+        "facilities": [
+          4,
+          7,
+          8
+        ]
+      },
+      {
+        "id": 2,
+        "coordinate": [
+          26,
+          16
+        ],
+        "owner": 2,
+        "former_owner": 2,
+        "population": 1,
+        "assimilation": 0,
+        "status": 0,
+        "governor": 0,
+        "food": 0,
+        "minerals": 10,
+        "baseline_item": 2,
+        "baseline_minerals": 10,
+        "target": 2,
+        "queue": [],
+        "facilities": []
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          16,
+          16
+        ],
+        "home": -1,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 1,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          20,
+          16
+        ],
+        "home": 0,
+        "spent": 3,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 2,
+        "owner": 2,
+        "design": 1,
+        "position": [
+          30,
+          16
+        ],
+        "home": 2,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      }
+    ],
+    "credits": [
+      220,
+      80
+    ],
+    "owned_bases": [
+      2,
+      1
+    ],
+    "technologies": [
+      [
+        6
+      ],
+      [
+        6
+      ]
+    ],
+    "selected": 1,
+    "secondary": -1,
+    "crt": 1951609278,
+    "shared": 3,
+    "active_mask": 6,
+    "human_mask": 6,
+    "focus": 1,
+    "controller": 1,
+    "active_faction": 1,
+    "ending_state": 0,
+    "game_flags": 16640,
+    "total_population": [
+      1,
+      4
+    ],
+    "current_base": 1
+  },
+  "events": [
+    {
+      "order": 23,
+      "stage": "capture_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 24,
+      "stage": "plunder_population_formula",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 25,
+      "stage": "hq_relocation_credit_gate",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 26,
+      "stage": "hq_after_relocation_branch",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 29,
+      "stage": "credits_transferred",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 30,
+      "stage": "population_decrement",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 32,
+      "stage": "population_decrement_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 42,
+      "stage": "donor_selector_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 43,
+      "stage": "donor_selector_exit",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 45,
+      "stage": "governor_copied",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 47,
+      "stage": "random_facility_loop_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 107,
+      "stage": "forced_hq_clear_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 114,
+      "stage": "capture_facility_cleanup_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 118,
+      "stage": "home_repair_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 122,
+      "stage": "home_reassignment_write",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 124,
+      "stage": "home_repair_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 125,
+      "stage": "production_selection_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 129,
+      "stage": "production_selection_return",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 131,
+      "stage": "disposition_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 132,
+      "stage": "base_recalculation_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 133,
+      "stage": "captured_base_recalculation_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2
+      }
+    },
+    {
+      "order": 134,
+      "stage": "captured_base_resource_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 1
+      }
+    },
+    {
+      "order": 240,
+      "stage": "base_resource_calculation_return",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 1
+      }
+    },
+    {
+      "order": 241,
+      "stage": "captured_base_screen_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ]
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": []
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 1
+      }
+    }
+  ],
+  "plunder": {
+    "population_before_loss": 3,
+    "defender_cached_population": 4,
+    "defender_credits_before": 200,
+    "amount": 120,
+    "credits_after": [
+      220,
+      80
+    ]
+  },
+  "population_transition": [
+    3,
+    2
+  ],
+  "governor_donor": 0,
+  "home_reassignment": {
+    "unit": 2,
+    "old_home": 1,
+    "new_home": 2,
+    "nearest_query_origin": [
+      20,
+      16
+    ],
+    "position_unchanged": [
+      30,
+      16
+    ],
+    "owner_unchanged": 2
+  },
+  "headquarters": {
+    "random_first_draw": {
+      "raw": 48,
+      "modulus": 3,
+      "remainder": 0,
+      "crt_before": 3,
+      "crt_after": 3173050,
+      "removes_hq": true
+    },
+    "mandatory_clear_after_random_loop": true,
+    "mandatory_clear_in_this_case_idempotent": true,
+    "defender_hq_relocated": false,
+    "defender_hq_queued": false,
+    "defender_remaining_base_record_untouched": true,
+    "paid_relocation_credit_gate": 1000,
+    "paid_relocation_branch_runtime_tested": false
+  },
+  "facility_removal_calls": [
+    {
+      "order": 49,
+      "facility": 1,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 53,
+      "facility": 3,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 58,
+      "facility": 6,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 64,
+      "facility": 10,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 67,
+      "facility": 11,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 70,
+      "facility": 12,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 82,
+      "facility": 22,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 85,
+      "facility": 23,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 90,
+      "facility": 27,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 95,
+      "facility": 30,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 98,
+      "facility": 31,
+      "base": 1,
+      "random": true
+    },
+    {
+      "order": 108,
+      "facility": 1,
+      "base": 1,
+      "random": false
+    },
+    {
+      "order": 110,
+      "facility": 6,
+      "base": 1,
+      "random": false
+    },
+    {
+      "order": 112,
+      "facility": 3,
+      "base": 1,
+      "random": false
+    }
+  ],
+  "captured_base_resources_after_native_recalculation": {
+    "nutrient_intake": 2,
+    "mineral_intake": 1,
+    "energy_intake": 1,
+    "nutrient_surplus": -2,
+    "mineral_surplus": 1,
+    "net_energy": 1,
+    "energy_waste": 0,
+    "nutrient_demand": 4,
+    "mineral_demand": 0,
+    "economy": 2,
+    "psych": 0,
+    "labs": 0
+  },
+  "resource_write_evidence": [
+    {
+      "field": "nutrient_intake",
+      "write_count": 7,
+      "last_write_order": 189,
+      "signed_value": 2
+    },
+    {
+      "field": "mineral_intake",
+      "write_count": 8,
+      "last_write_order": 193,
+      "signed_value": 1
+    },
+    {
+      "field": "energy_intake",
+      "write_count": 7,
+      "last_write_order": 205,
+      "signed_value": 1
+    },
+    {
+      "field": "nutrient_surplus",
+      "write_count": 1,
+      "last_write_order": 191,
+      "signed_value": -2
+    },
+    {
+      "field": "mineral_surplus",
+      "write_count": 2,
+      "last_write_order": 197,
+      "signed_value": 1
+    },
+    {
+      "field": "net_energy",
+      "write_count": 2,
+      "last_write_order": 210,
+      "signed_value": 1
+    },
+    {
+      "field": "energy_waste",
+      "write_count": 2,
+      "last_write_order": 209,
+      "signed_value": 0
+    },
+    {
+      "field": "nutrient_demand",
+      "write_count": 1,
+      "last_write_order": 190,
+      "signed_value": 4
+    },
+    {
+      "field": "mineral_demand",
+      "write_count": 1,
+      "last_write_order": 194,
+      "signed_value": 0
+    },
+    {
+      "field": "economy",
+      "write_count": 3,
+      "last_write_order": 221,
+      "signed_value": 2
+    },
+    {
+      "field": "psych",
+      "write_count": 2,
+      "last_write_order": 216,
+      "signed_value": 0
+    },
+    {
+      "field": "labs",
+      "write_count": 4,
+      "last_write_order": 220,
+      "signed_value": 0
+    }
+  ],
+  "resource_scope": "Final captured Base outputs decoded from complete native write journal between real resource entry and return. No correctly sampled pre-capture resource comparison or surviving-Base recalculation is asserted.",
+  "expected_rng": {
+    "crt_draws": 37,
+    "crt_before": 3,
+    "crt_after": 1951609278,
+    "shared_draws": 0,
+    "shared_before": 3,
+    "shared_after": 3,
+    "draws": [
+      {
+        "facility": 1,
+        "raw": 48,
+        "crt_before": 3,
+        "crt_after": 3173050
+      },
+      {
+        "facility": 2,
+        "raw": 7196,
+        "crt_before": 3173050,
+        "crt_after": 471647893
+      },
+      {
+        "facility": 3,
+        "raw": 9294,
+        "crt_before": 471647893,
+        "crt_after": 2756632324
+      },
+      {
+        "facility": 4,
+        "raw": 9091,
+        "crt_before": 2756632324,
+        "crt_after": 2743275959
+      },
+      {
+        "facility": 5,
+        "raw": 7031,
+        "crt_before": 2743275959,
+        "crt_after": 460785054
+      },
+      {
+        "facility": 6,
+        "raw": 23577,
+        "crt_before": 460785054,
+        "crt_after": 1545176553
+      },
+      {
+        "facility": 7,
+        "raw": 17702,
+        "crt_before": 1545176553,
+        "crt_after": 1160179976
+      },
+      {
+        "facility": 8,
+        "raw": 23503,
+        "crt_before": 1160179976,
+        "crt_after": 1540352939
+      },
+      {
+        "facility": 9,
+        "raw": 27217,
+        "crt_before": 1540352939,
+        "crt_after": 3931195330
+      },
+      {
+        "facility": 10,
+        "raw": 12168,
+        "crt_before": 3931195330,
+        "crt_after": 2944946045
+      },
+      {
+        "facility": 11,
+        "raw": 5409,
+        "crt_before": 2944946045,
+        "crt_after": 354542668
+      },
+      {
+        "facility": 12,
+        "raw": 28233,
+        "crt_before": 354542668,
+        "crt_after": 1850286559
+      },
+      {
+        "facility": 13,
+        "raw": 2023,
+        "crt_before": 1850286559,
+        "crt_after": 2280092966
+      },
+      {
+        "facility": 14,
+        "raw": 17152,
+        "crt_before": 2280092966,
+        "crt_after": 1124095825
+      },
+      {
+        "facility": 15,
+        "raw": 21578,
+        "crt_before": 1124095825,
+        "crt_after": 1414143184
+      },
+      {
+        "facility": 16,
+        "raw": 2399,
+        "crt_before": 1414143184,
+        "crt_after": 157255763
+      },
+      {
+        "facility": 17,
+        "raw": 23863,
+        "crt_before": 157255763,
+        "crt_after": 3711373770
+      },
+      {
+        "facility": 18,
+        "raw": 16025,
+        "crt_before": 3711373770,
+        "crt_after": 1050218853
+      },
+      {
+        "facility": 19,
+        "raw": 8489,
+        "crt_before": 1050218853,
+        "crt_after": 556351124
+      },
+      {
+        "facility": 20,
+        "raw": 19718,
+        "crt_before": 556351124,
+        "crt_after": 1292251911
+      },
+      {
+        "facility": 21,
+        "raw": 22454,
+        "crt_before": 1292251911,
+        "crt_after": 1471603118
+      },
+      {
+        "facility": 22,
+        "raw": 12798,
+        "crt_before": 1471603118,
+        "crt_after": 838742457
+      },
+      {
+        "facility": 23,
+        "raw": 1164,
+        "crt_before": 838742457,
+        "crt_after": 2223779224
+      },
+      {
+        "facility": 24,
+        "raw": 14182,
+        "crt_before": 2223779224,
+        "crt_after": 929461755
+      },
+      {
+        "facility": 25,
+        "raw": 29498,
+        "crt_before": 929461755,
+        "crt_after": 4080724178
+      },
+      {
+        "facility": 27,
+        "raw": 1731,
+        "crt_before": 4080724178,
+        "crt_after": 2260970573
+      },
+      {
+        "facility": 28,
+        "raw": 27271,
+        "crt_before": 2260970573,
+        "crt_after": 1787235804
+      },
+      {
+        "facility": 29,
+        "raw": 18899,
+        "crt_before": 1787235804,
+        "crt_after": 3386107183
+      },
+      {
+        "facility": 30,
+        "raw": 6936,
+        "crt_before": 3386107183,
+        "crt_after": 2602068790
+      },
+      {
+        "facility": 31,
+        "raw": 27897,
+        "crt_before": 2602068790,
+        "crt_after": 3975787809
+      },
+      {
+        "facility": 32,
+        "raw": 11449,
+        "crt_before": 3975787809,
+        "crt_after": 2897822560
+      },
+      {
+        "facility": 33,
+        "raw": 31232,
+        "crt_before": 2897822560,
+        "crt_after": 4194325667
+      },
+      {
+        "facility": 34,
+        "raw": 9865,
+        "crt_before": 4194325667,
+        "crt_after": 646573274
+      },
+      {
+        "facility": 35,
+        "raw": 30208,
+        "crt_before": 646573274,
+        "crt_after": 4127244341
+      },
+      {
+        "facility": 36,
+        "raw": 4561,
+        "crt_before": 4127244341,
+        "crt_after": 2446422564
+      },
+      {
+        "facility": 37,
+        "raw": 17263,
+        "crt_before": 2446422564,
+        "crt_after": 1131403351
+      },
+      {
+        "facility": 38,
+        "raw": 29779,
+        "crt_before": 1131403351,
+        "crt_after": 1951609278
+      }
+    ]
+  },
+  "limits": [
+    "Captured-Base screen not constructed/answered; capture and movement have not returned.",
+    "No paid relocation execution, subsequent defender upkeep/production choice, or arbitrary facility/AI/network matrix.",
+    "Population3-to2 is separate from prior population2-to1 evidence; no population1 razing inference.",
+    "Stored defender population aggregate4 is retained despite changed live population."
+  ],
+  "static_paid_relocation_admission": {
+    "original_hq_required": true,
+    "treasury_threshold": 1000,
+    "treasury_timing": "pre-loot, before relocation cost; booty amount already calculated from old treasury/population cache",
+    "candidate_filters": "other losing-faction Base; ascending IDs; best score strictly below9999; resulting selected ID must be greater than0",
+    "score": "truncate(256 * (1 + sum(distance_to_other_remaining_loser_Bases, doubled across regions)) / (retained_regional_base_count + 2*candidate_population))",
+    "confirmation": "network mode bypasses; local losing faction equal to focus requires nonzero response; other local focus bypasses",
+    "cost": 1000,
+    "install_hq_immediately": true,
+    "queue_hq": false,
+    "runtime_paid_path_tested": false
+  },
+  "static_population_timer_contract": {
+    "population_loss_for_size_above1_requires": {
+      "capture_mode_argument_zero": true,
+      "stored_former_owner_differs_from_recipient": true,
+      "base_status_mask_262144_clear": true,
+      "objective_protection_query_false": true
+    },
+    "population_change": "old population minus1 before ownership/donor/home/production/resource queries",
+    "timer": "surviving transferred Base: stored former owner equals recipient -> timer0; otherwise former owner becomes losing owner and timer50",
+    "population1_runtime_tested": false
+  }
+}

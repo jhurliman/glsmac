@@ -1,0 +1,6968 @@
+{
+  "research_id": "RE-SMAC-HEADQUARTERS-PAID-RELOCATION-001",
+  "scope": "One paid-path population3 HQ capture using the frozen ordinary fixture, sole new gameplay input defender credits1200. Actual native selection/payment/facility/home/production/resource path to unanswered Base screen. Exact timed ESCAPED presentation service, return unused.",
+  "before": {
+    "bases": [
+      {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "former_owner": 1,
+        "population": 1,
+        "assimilation": 0,
+        "status": 28672,
+        "governor": 14663233,
+        "food": 0,
+        "minerals": 11,
+        "baseline_item": 1,
+        "baseline_minerals": 11,
+        "target": 1,
+        "queue": [],
+        "facilities": [
+          1
+        ],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 2,
+          "nutrient_surplus": 0,
+          "mineral_surplus": 1,
+          "net_energy": 2,
+          "energy_waste": 0,
+          "nutrient_demand": 2,
+          "mineral_demand": 0,
+          "economy": 2,
+          "psych": 2,
+          "labs": 0
+        }
+      },
+      {
+        "id": 1,
+        "coordinate": [
+          20,
+          16
+        ],
+        "owner": 2,
+        "former_owner": 2,
+        "population": 3,
+        "assimilation": 0,
+        "status": 0,
+        "governor": 0,
+        "food": 5,
+        "minerals": 7,
+        "baseline_item": 1,
+        "baseline_minerals": 7,
+        "target": 1,
+        "queue": [
+          2,
+          1
+        ],
+        "facilities": [
+          1,
+          3,
+          4,
+          7,
+          8
+        ],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 1,
+          "nutrient_surplus": 0,
+          "mineral_surplus": 1,
+          "net_energy": 1,
+          "energy_waste": 0,
+          "nutrient_demand": 2,
+          "mineral_demand": 0,
+          "economy": 1,
+          "psych": 2,
+          "labs": 0
+        }
+      },
+      {
+        "id": 2,
+        "coordinate": [
+          26,
+          16
+        ],
+        "owner": 2,
+        "former_owner": 2,
+        "population": 1,
+        "assimilation": 0,
+        "status": 0,
+        "governor": 0,
+        "food": 0,
+        "minerals": 10,
+        "baseline_item": 2,
+        "baseline_minerals": 10,
+        "target": 2,
+        "queue": [],
+        "facilities": [],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 1,
+          "nutrient_surplus": 0,
+          "mineral_surplus": 1,
+          "net_energy": 1,
+          "energy_waste": 0,
+          "nutrient_demand": 2,
+          "mineral_demand": 0,
+          "economy": 1,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          16,
+          16
+        ],
+        "home": -1,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 1,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          19,
+          15
+        ],
+        "home": 0,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 2,
+        "owner": 2,
+        "design": 1,
+        "position": [
+          30,
+          16
+        ],
+        "home": 1,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      }
+    ],
+    "credits": [
+      100,
+      1200
+    ],
+    "owned_bases": [
+      1,
+      2
+    ],
+    "technologies": [
+      [
+        6
+      ],
+      [
+        6
+      ]
+    ],
+    "selected": 1,
+    "secondary": -1,
+    "crt": 3,
+    "shared": 3,
+    "active_mask": 6,
+    "human_mask": 6,
+    "focus": 1,
+    "controller": 1,
+    "active_faction": 1,
+    "ending_state": 0,
+    "game_flags": 16640,
+    "total_population": [
+      1,
+      4
+    ],
+    "regional_base_counts": {
+      "1": {
+        "1": 3
+      },
+      "2": {
+        "1": 3
+      }
+    }
+  },
+  "expected_screen_entry": {
+    "bases": [
+      {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "former_owner": 1,
+        "population": 1,
+        "assimilation": 0,
+        "status": 28672,
+        "governor": 14663233,
+        "food": 0,
+        "minerals": 11,
+        "baseline_item": 1,
+        "baseline_minerals": 11,
+        "target": 1,
+        "queue": [],
+        "facilities": [
+          1
+        ],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 2,
+          "nutrient_surplus": 0,
+          "mineral_surplus": 1,
+          "net_energy": 2,
+          "energy_waste": 0,
+          "nutrient_demand": 2,
+          "mineral_demand": 0,
+          "economy": 2,
+          "psych": 2,
+          "labs": 0
+        }
+      },
+      {
+        "id": 1,
+        "coordinate": [
+          20,
+          16
+        ],
+        "owner": 1,
+        "former_owner": 2,
+        "population": 2,
+        "assimilation": 50,
+        "status": 0,
+        "governor": 14663233,
+        "food": 5,
+        "minerals": 0,
+        "baseline_item": -38,
+        "baseline_minerals": 0,
+        "target": 2,
+        "queue": [],
+        "facilities": [
+          4,
+          7,
+          8
+        ],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 1,
+          "nutrient_surplus": -2,
+          "mineral_surplus": 1,
+          "net_energy": 1,
+          "energy_waste": 0,
+          "nutrient_demand": 4,
+          "mineral_demand": 0,
+          "economy": 2,
+          "psych": 0,
+          "labs": 0
+        }
+      },
+      {
+        "id": 2,
+        "coordinate": [
+          26,
+          16
+        ],
+        "owner": 2,
+        "former_owner": 2,
+        "population": 1,
+        "assimilation": 0,
+        "status": 0,
+        "governor": 0,
+        "food": 0,
+        "minerals": 10,
+        "baseline_item": 2,
+        "baseline_minerals": 10,
+        "target": 2,
+        "queue": [],
+        "facilities": [
+          1
+        ],
+        "region": 1,
+        "resources": {
+          "nutrient_intake": 2,
+          "mineral_intake": 1,
+          "energy_intake": 1,
+          "nutrient_surplus": 0,
+          "mineral_surplus": 1,
+          "net_energy": 1,
+          "energy_waste": 0,
+          "nutrient_demand": 2,
+          "mineral_demand": 0,
+          "economy": 1,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          16,
+          16
+        ],
+        "home": -1,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 1,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          20,
+          16
+        ],
+        "home": 0,
+        "spent": 3,
+        "morale": 1,
+        "damage": 0
+      },
+      {
+        "id": 2,
+        "owner": 2,
+        "design": 1,
+        "position": [
+          30,
+          16
+        ],
+        "home": 2,
+        "spent": 0,
+        "morale": 1,
+        "damage": 0
+      }
+    ],
+    "credits": [
+      820,
+      0
+    ],
+    "owned_bases": [
+      2,
+      1
+    ],
+    "technologies": [
+      [
+        6
+      ],
+      [
+        6
+      ]
+    ],
+    "selected": 1,
+    "secondary": -1,
+    "crt": 1951609278,
+    "shared": 3,
+    "active_mask": 6,
+    "human_mask": 6,
+    "focus": 1,
+    "controller": 1,
+    "active_faction": 1,
+    "ending_state": 0,
+    "game_flags": 16640,
+    "total_population": [
+      1,
+      4
+    ],
+    "regional_base_counts": {
+      "1": {
+        "1": 3
+      },
+      "2": {
+        "1": 3
+      }
+    }
+  },
+  "events": [
+    {
+      "order": 23,
+      "stage": "capture_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 24,
+      "stage": "plunder_population_formula",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 25,
+      "stage": "hq_relocation_credit_gate",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 26,
+      "stage": "relocation_candidate_scan",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 27,
+      "stage": "relocation_candidate_scan",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 28,
+      "stage": "relocation_candidate_scan",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 29,
+      "stage": "relocation_candidate_score",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 30,
+      "stage": "relocation_selected_id_gate",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 31,
+      "stage": "paid_relocation_commit_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          1200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 33,
+      "stage": "paid_relocation_install_hq_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 38,
+      "stage": "paid_relocation_facilities_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 40,
+      "stage": "hq_after_relocation_branch",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 43,
+      "stage": "credits_transferred",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 44,
+      "stage": "population_decrement",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 46,
+      "stage": "population_decrement_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 56,
+      "stage": "donor_selector_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 57,
+      "stage": "donor_selector_exit",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 59,
+      "stage": "governor_copied",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 61,
+      "stage": "random_facility_loop_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 121,
+      "stage": "forced_hq_clear_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 128,
+      "stage": "capture_facility_cleanup_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 132,
+      "stage": "home_repair_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 136,
+      "stage": "home_reassignment_write",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 138,
+      "stage": "home_repair_done",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 139,
+      "stage": "production_selection_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": -38,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 143,
+      "stage": "production_selection_return",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 145,
+      "stage": "disposition_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 146,
+      "stage": "base_recalculation_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 147,
+      "stage": "captured_base_recalculation_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 148,
+      "stage": "captured_base_resource_entry",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 254,
+      "stage": "base_resource_calculation_return",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": -2,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 4,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 0,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    },
+    {
+      "order": 255,
+      "stage": "captured_base_screen_call",
+      "state": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 2,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 2,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": -2,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 4,
+              "mineral_demand": 0,
+              "economy": 2,
+              "psych": 0,
+              "labs": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "region": 1,
+            "resources": {
+              "nutrient_intake": 2,
+              "mineral_intake": 1,
+              "energy_intake": 1,
+              "nutrient_surplus": 0,
+              "mineral_surplus": 1,
+              "net_energy": 1,
+              "energy_waste": 0,
+              "nutrient_demand": 2,
+              "mineral_demand": 0,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          820,
+          0
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "regional_base_counts": {
+          "1": {
+            "1": 3
+          },
+          "2": {
+            "1": 3
+          }
+        }
+      }
+    }
+  ],
+  "selector": {
+    "evidence": "one native candidate and full static rule; no tie/cross-region runtime matrix",
+    "candidates": [
+      {
+        "base": 2,
+        "population": 1,
+        "region": 1,
+        "retained_regional_count": 3,
+        "distance_sum_with_initial_one": 1,
+        "numerator": 256,
+        "denominator": 5,
+        "score": 51
+      }
+    ],
+    "selected_base": 2,
+    "best_score": 51,
+    "distance_formula": "max(dx,dy) - ((dx+dy)//2 - min(dx,dy) + 1)//2; wrapped dx when applicable",
+    "score_formula": "truncate_toward_zero((distance_sum_with_initial_one << 8) / (retained_region_count + 2*population))",
+    "cross_region_weight": 2,
+    "ascending_id_scan": true,
+    "strict_improvement": true,
+    "initial_best_score": 9999,
+    "selected_id_must_be_greater_than_zero": true,
+    "retained_count_authority": {
+      "owner": 2,
+      "region": 1,
+      "value": 3,
+      "live_defender_bases_at_read": 2,
+      "recomputed_from_live_bases": false
+    }
+  },
+  "treasury": {
+    "booty_calculated_first": 720,
+    "credits_before": [
+      100,
+      1200
+    ],
+    "relocation_cost": 1000,
+    "credits_after_payment_before_loot": [
+      100,
+      200
+    ],
+    "credits_after_loot": [
+      820,
+      0
+    ],
+    "defender_negative_result_clamped_to_zero": true,
+    "booty_recomputed_after_cost": false
+  },
+  "headquarters": {
+    "new_defender_hq": 2,
+    "captured_base_hq_removed_before_random_rolls": true,
+    "instant_installation": true,
+    "queued": false,
+    "surviving_defender_base_recalculated": false,
+    "surviving_defender_production_changed": false
+  },
+  "expected_rng": {
+    "crt_before": 3,
+    "crt_after": 1951609278,
+    "crt_draws": 37,
+    "shared_before": 3,
+    "shared_after": 3,
+    "shared_draws": 0,
+    "extra_draws_from_paid_path": 0
+  },
+  "presentation": {
+    "timed_notice": "ESCAPED",
+    "duration_ms": 5000,
+    "return_used": false,
+    "display_only_service": true,
+    "captured_base_screen_answered": false
+  },
+  "limits": [
+    "Single candidate2; score51 observed. Tie, cross-region and signed-division general rules are static.",
+    "Local focused-loser confirmation, networking, nonhuman production policy and later upkeep remain unexecuted.",
+    "Both full captured-Base resource calculations return; screen/capture/movement completion is not supplied.",
+    "Base2 cached resources remain unchanged until a later real recalculation; no immediate resource rebuild inferred."
+  ]
+}

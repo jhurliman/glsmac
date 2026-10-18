@@ -7,8 +7,10 @@ and saves the conquered Base's former owner and assimilation timer.
 
 The implemented slice is local human Librarian play, adjacent clear flat land,
 full ordinary Infantry/Gun/Scout/Fission movement, mutual Vendetta, first capture
-of a population2 non-HQ Base, no technology gain, and a remaining defender Base.
-Defended cities, last-Base elimination, recapture, headquarters relocation and
+of an ordinary Base with population at least2 and no technology gain. Native
+references cover population2-to1 and population3-to2; population1 razing and
+recapture remain separate rules. Last-Base cleanup/restart is joined as described
+in the [disposition plan](smac-last-base-capture-plan.md). Defended cities and
 other capture domains remain explicit refusals. This is not the complete conquest
 milestone.
 
@@ -58,6 +60,41 @@ Six focused groups passed ASan/UBSan/LSan with leak detection and halt-on-error,
 including future-query rollback, late publication failure, actual Start, citizen
 retirement and the subsequent hostile relation value. No per-tweak platform
 matrix was added.
+
+## Headquarters and candidate population
+
+[Original HQ capture](behavior/headquarters-capture.md) establishes that HQ
+presence does not refuse capture. The same random facility scan and mandatory
+HQ removal run. Workers, support, resource calculations and citizen publication
+use the population after ordinary capture loss, rather than hardcoding1. Food
+and the retained population aggregate keep their separate lifetimes.
+
+[Paid relocation](behavior/headquarters-paid-relocation.md) checks the original
+HQ and pre-loot defender treasury. It scans
+remaining defender Bases in ascending ID order, scores retained regional counts,
+population and wrapped distances, and retains the first strict minimum below9999.
+A final selected ID0 is rejected without retry. In the admitted local caller,
+focus is the captor, so no losing-focus confirmation is entered. Successful
+relocation installs HQ immediately and pays1000 before transferring the booty
+already calculated from the original treasury. It does not queue HQ or recompute
+booty. Both facility changes and treasury changes publish with the captured Base
+before citizen retirement or notifications. Resource history is not reposted.
+
+The live checks include ordinary and paid HQ capture, population3-to2, late
+publication rollback, control-Base records, exact treasury/RNG, screen ordering,
+and actual save/Start followed by assimilation upkeep. Existing population2 and
+last-Base capture checks remain in the affected group.
+
+The original paid case ends at820/0 credits after saving720 booty and paying1000,
+with37 CRT draws and shared RNG unchanged. The live composition checks those
+results and retains the supplied regional count3 rather than deriving2 from the
+Base list. A separate static-rule extension selects a larger farther HQ Base
+while home repair still chooses the nearest Base. The focused Linux checks cover
+17 affected native groups; two production/consumer translation units pass LLVM15
+analysis in4.46s. Four ownership groups pass leak-enabled ASan/UBSan, including
+ordinary/paid capture, rollback and save/Start; unchanged production evidence is
+reused after the final test-only selector extension. The original timed escape
+notice and full captured-Base screen/return rendering remain presentation work.
 
 ## Assimilation upkeep
 

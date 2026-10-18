@@ -19,9 +19,19 @@ bool Game::HandleSmacHurryEvent(GSE_CALLABLE,const std::string& name,
         return found->second->Deref();
     };
     if(args.size()!=4) {THROW("Hurry requires Base, expected state, full/partial choice and credits");}
-    const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
-    if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Hurry requires an actual Base");}
-    auto* base=base::Base::Unwrap(args.at("base"));
+    const auto target=args.find("base");
+    const auto* object=target!=args.end() && target->second
+        ? dynamic_cast<const gse::value::Object*>(target->second->Deref()) : nullptr;
+    if(!object || object->object_class!=base::Base::WRAP_CLASS || caller!=m_slot_num) {THROW("Hurry requires an actual local Base");}
+    // The wrapper owns its cached scalar identity, not the C++ Base lifetime.
+    // Retirement can unlink it between enqueue and dispatch; never dereference
+    // its former pointer to discover whether the registry still owns it.
+    const auto id=object->value.find("id");
+    if(id==object->value.end() || !id->second || id->second->type!=gse::VT_INT) {THROW("Hurry requires a stable Base identity");}
+    const auto number=static_cast<const gse::value::Int*>(id->second)->value;
+    if(number<0 || static_cast<uint64_t>(number)>SIZE_MAX) {THROW("Invalid Hurry Base identity");}
+    auto* base=m_bm->GetBase(static_cast<size_t>(number));
+    if(!base || object->wrapobj!=base) {return true;}
     const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
     const bool full=static_cast<const gse::value::Bool*>(field("full",gse::VT_BOOL))->value;
     const auto amount=static_cast<const gse::value::Int*>(field("amount",gse::VT_INT))->value;

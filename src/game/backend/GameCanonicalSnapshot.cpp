@@ -50,7 +50,7 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
         if(!m_state || m_state->GetConnection() || m_state->m_settings.global.GetRulesetId()!="smac") {
             throw std::runtime_error("Saved Colony choice requires a local SMAC campaign");
         }
-        result.emplace();auto& next=*result;
+        result=CanonicalTurnContinuation{turn};auto& next=*result;
         next.stage=CanonicalTurnContinuation::Stage::Colony;
         next.turn=ReadIdentity(buffer);next.owner_index=ReadIdentity(buffer);next.base_index=ReadIdentity(buffer);
         const auto owners=ReadIdentity(buffer);

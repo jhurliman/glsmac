@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <cstdint>
 #include <optional>
 #include <regex>
 #include <string>
@@ -44,13 +45,22 @@ CLASS( GSETests, common::Task )
 	void Stop() override;
 	void Iterate() override;
 
-	void AddTest( const std::string& name, const gse_test_t test );
+    // Capture the registration call site without changing existing AddTest callers.
+    // Other compilers retain coverage conservatively when provenance is unavailable.
+#if defined( __clang__ ) || defined( __GNUC__ )
+    void AddTest( const std::string& name, const gse_test_t test, const char* source = __builtin_FILE() );
+#else
+    void AddTest( const std::string& name, const gse_test_t test, const char* source = nullptr );
+#endif
 	void LogTest( const std::string& text, bool is_debug = false );
 
 private:
 	size_t current_test_index = 0;
-	std::optional< std::regex > m_native_filter;
-	std::vector< std::pair< std::string, gse_test_t >> m_tests = {};
+    std::optional< std::regex > m_native_filter;
+    std::optional< std::regex > m_source_filter;
+    uint32_t m_shard_index = 0, m_shard_count = 1;
+    struct Test { std::string name; gse_test_t run; std::string source; };
+	std::vector< Test > m_tests = {};
 
 	struct {
 		size_t passed = 0;

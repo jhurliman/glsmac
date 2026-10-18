@@ -30,11 +30,13 @@ struct BaseManager::PreparedSmacCapture::Data {
 	map::tile::Tile* source=nullptr;
 	slot::Slot* owner=nullptr;
 	int32_t old_owner=0,new_owner=0,loot=0;
+	size_t population=0;
 	SmacGameplayRandomState random;
 	faction::SmacHostileState history;
 	faction::SmacEconomyState actor_economy,defender_economy;
 	SmacBaseResourceContext context{};
 	Base::facilities_t facilities;
+	std::vector<std::pair<Base*,Base::facilities_t>> facility_changes;
 	std::optional<ProductionState> production;
 	SmacBaseAllocationState allocation{};
 	std::optional<SmacBaseUpkeepCache> cache;
@@ -76,7 +78,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto registered=std::find_if(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second==destination->base;});
 	if(registered==m_bases.end() || registered->second->m_id!=registered->first) {THROW("Capture target is not a current Base");}
 	auto* captured=registered->second;const auto before=captured->GetSmacResourceContext();
-	if(captured->m_owner==actor->m_owner || captured->m_pops.size()!=2 || before.conquest || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
+	if(captured->m_owner==actor->m_owner || captured->m_pops.size()<2 || before.conquest || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
 	m_game->RequireSmacLocalHumanOwner(actor->m_owner);m_game->RequireSmacLocalHumanOwner(captured->m_owner);
 	const auto resolved=um->ResolveConventional(actor->Conventional(),actor->m_owner);
 	const auto design=m_game->ResolveConventionalDesign(actor->Conventional(),*m_game->m_simulation);
@@ -103,19 +105,53 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		|| defender_economy.credits<0 || simulation.economy.at(new_owner).credits<0) {THROW("Capture needs the defender's saved population summary and ordinary treasuries");}
 	auto data=std::make_unique<PreparedSmacCapture::Data>(simulation.gameplay_random,simulation.hostility,simulation.economy.at(new_owner),defender_economy);
 	data->actor=actor;data->base=captured;data->source=source;data->owner=actor->m_owner;data->old_owner=old_owner;data->new_owner=new_owner;
+	data->population=captured->m_pops.size()-1;
 	const int64_t numerator=int64_t(defender_economy.credits)*static_cast<int64_t>(captured->m_pops.size());
 	if(numerator>INT32_MAX) {THROW("Capture treasury multiplication exceeds the admitted ordinary domain");}
 	const int64_t booty=numerator/(*defender_economy.population_aggregate+1);
 	if(booty>INT32_MAX || int64_t(data->actor_economy.credits)+booty>INT32_MAX) {THROW("Capture treasury arithmetic exceeds the admitted ordinary domain");}
 	data->loot=static_cast<int32_t>(booty);data->actor_economy.credits+=data->loot;
-	data->defender_economy.credits=static_cast<int32_t>(std::clamp(int64_t(data->defender_economy.credits)-data->loot,INT64_C(0),INT64_C(9999999)));
 	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};
 	data->facilities=captured->m_facilities;
+	bool headquarters=false;
 	for(const auto& entry:data->facilities) {
 		if(!entry.second || GetFacilityDef(entry.first)!=entry.second) {THROW("Capture facility is not registered");}
 		ValidateSmacFacilityDef(entry.second);
-		if(!entry.second->m_smac_source_id || *entry.second->m_smac_source_id>33 || *entry.second->m_smac_source_id==1) {THROW("Headquarters and advanced facility capture need their separate rules");}
+		if(!entry.second->m_smac_source_id || *entry.second->m_smac_source_id>33) {THROW("Advanced facility capture needs its separate rules");}
+		headquarters=headquarters || *entry.second->m_smac_source_id==1;
 	}
+	// Original HQ relocation precedes loot transfer and random facility loss.
+	// Booty retains the old treasury calculation even after the relocation fee.
+	if(headquarters && defender_economy.credits>=1000) {
+		const auto& topology=map->GetTerritoryTopology();
+		if(!topology || !defender_economy.regional_base_counts) {THROW("HQ relocation needs retained regional Base counts");}
+		const auto region=[&](const Base* base) {const auto* tile=base->GetTile();return topology->Regions().at(size_t(tile->coord.y)*(map->GetWidth()/2)+tile->coord.x/2);};
+		Base* selected=nullptr;int64_t best=9999;
+		for(const auto& row:m_bases) {
+			auto* candidate=row.second;if(candidate==captured || candidate->m_owner!=captured->m_owner) {continue;}
+			int64_t distance_sum=1;const auto* center=candidate->GetTile();const auto candidate_region=region(candidate);
+			for(const auto& other:m_bases) {
+				if(other.second==captured || other.second==candidate || other.second->m_owner!=captured->m_owner) {continue;}
+				const auto* tile=other.second->GetTile();auto dx=std::abs(int64_t(center->coord.x)-int64_t(tile->coord.x));
+				if(topology->Wraps()) {dx=std::min(dx,int64_t(map->GetWidth())-dx);}
+				const auto dy=std::abs(int64_t(center->coord.y)-int64_t(tile->coord.y));
+				const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
+				distance_sum+=distance*(candidate_region==region(other.second) ? 1 : 2);
+			}
+			const auto divisor=int64_t(defender_economy.regional_base_counts->at(candidate_region))+2*int64_t(candidate->m_pops.size());
+			if(divisor<=0) {THROW("HQ relocation has an invalid population/region denominator");}
+			const auto score=256*distance_sum/divisor;
+			if(score<best) {best=score;selected=candidate;}
+		}
+		// The admitted local capture keeps focus on the captor, so the original
+		// losing-focus confirmation is not entered. ID zero is not retried.
+		if(selected && selected->m_id>0) {
+			const auto* facility=GetSmacFacilityDef(1);if(!facility) {THROW("HQ relocation has no registered Headquarters");}
+			auto facilities=selected->m_facilities;facilities[facility->m_id]=facility;
+			data->facility_changes.emplace_back(selected,std::move(facilities));data->defender_economy.credits-=1000;
+		}
+	}
+	data->defender_economy.credits=static_cast<int32_t>(std::clamp(int64_t(data->defender_economy.credits)-data->loot,INT64_C(0),INT64_C(9999999)));
 	const auto remove=[&](int32_t source_id) {for(auto it=data->facilities.begin();it!=data->facilities.end();) {if(it->second->m_smac_source_id==source_id) {it=data->facilities.erase(it);}else{++it;}}};
 	for(int32_t id=1;id<=38;++id) {if(id!=26 && data->random.NextCrtRaw15()%3==0) {remove(id);}}
 	remove(1);remove(6);remove(3);
@@ -194,8 +230,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	std::swap(query_simulation.economy.at(new_owner),preview_actor_economy);std::swap(query_simulation.economy.at(old_owner),preview_defender_economy);
 	m_game->CommitBaseTerritory(preview_knowledge);
 	const auto calculate=[&] {
-		data->allocation=captured->CalculateSmacWorkers(*captured->m_allocation,data->context,SmacBaseResourcePhase::Ordinary,1,nullptr,&*data->production);
-		data->cache=SmacBaseUpkeepCache{captured->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&data->allocation,1),m_game->CalculateCanonicalUnitSupport(*captured,1,nullptr)};
+		data->allocation=captured->CalculateSmacWorkers(*captured->m_allocation,data->context,SmacBaseResourcePhase::Ordinary,data->population,nullptr,&*data->production);
+		data->cache=SmacBaseUpkeepCache{captured->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&data->allocation,data->population),m_game->CalculateCanonicalUnitSupport(*captured,data->population,nullptr)};
 		data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();data->topology=m_game->GetMap()->GetTerritoryTopology();
 	};
 	const auto prepare=[&] {
@@ -273,7 +309,8 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	m_game->CheckRW(GSE_CALL);auto& data=*prepared.m_data;
 	if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Capture needs its owning accumulation");}
 	const auto& names=m_game->GetSmacBasePresentations();Base::SmacAllocationRoles roles{names[0],{names[1],names[2],names[3],names[4],names[5],names[6],names[7]}};
-	auto workers=data.base->PrepareSmacWorkerState(GSE_CALL,data.allocation,roles,data.context,data.production,data.base->m_accumulated_nutrients,1,{{data.base,data.facilities}},data.owner,data.refresh);
+	auto facilities=data.facility_changes;facilities.emplace_back(data.base,data.facilities);
+	auto workers=data.base->PrepareSmacWorkerState(GSE_CALL,data.allocation,roles,data.context,data.production,data.base->m_accumulated_nutrients,data.population,std::move(facilities),data.owner,data.refresh);
 	auto* um=m_game->GetUM();auto updates=um->m_unit_updates;
 	for(const auto& entry:data.units) {
 		auto& pending=updates.try_emplace(entry.first->m_id,unit::UnitManager::unit_update_t{unit::UnitManager::UUO_NONE,entry.first}).first->second;

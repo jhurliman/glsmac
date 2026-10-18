@@ -37,8 +37,9 @@ Presentation currently posts the capture message and refreshes the Base's owner.
 Automatic captured-Base screen entry remains to connect; the original constructor
 is a [documented research boundary](behavior/captured-base-screen-close.md), with
 [static return-tail evidence](behavior/capture-return-tail-static.md) distinguished
-from a successful dynamic return. Assimilation history is stored, but its citizen
-contribution and upkeep decay remain a following gameplay slice. No full original
+from a successful dynamic return. Assimilation history is stored and its upkeep
+tail is connected as described below; its citizen contribution awaits the live
+citizen-processing slice. No full original
 capture-screen-close or SMAX fidelity is claimed by these tests.
 
 Validation uses live native movement, exact RNG/treasury/history expectations,
@@ -54,3 +55,24 @@ Six focused groups passed ASan/UBSan/LSan with leak detection and halt-on-error,
 including future-query rollback, late publication failure, actual Start, citizen
 retirement and the subsequent hostile relation value. No per-tweak platform
 matrix was added.
+
+## Assimilation upkeep
+
+Completed native Base upkeep now decrements positive conquest history once,
+after both resource passes, without another recalculation. Matching former and
+current owner decrements by up to two; expiration sets former owner to current
+owner. An incoming zero preserves stale former-owner identity. Production-only
+processing and ordinary resource recalculation do not age it. The prepared Base
+transaction joins this tail step to population/production publication, so a
+failed upkeep cannot consume it before a retry.
+
+The [complete original owner-upkeep receipt](behavior/assimilation-owner-upkeep.md)
+establishes the ordinary phase and distinguishes the skipped modal FINISHED view
+branch. The [timer receipt](behavior/assimilation-timer.md) establishes matching
+owners and zero handling separately. The port tests use eight supplied-history
+combinations and actual Start, plus real capture → save/Start → next upkeep.
+They cover failed publication and read-only recalculation. The 34 affected upkeep,
+Colony, starvation and capture groups pass; final next-upkeep checks pass too.
+Correctness analysis passed five production translation units in6.40 seconds.
+The capture ownership sanitizer evidence above is reused; this following timer
+arithmetic/publication slice does not add another ownership or platform matrix.

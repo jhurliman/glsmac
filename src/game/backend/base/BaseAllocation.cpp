@@ -157,7 +157,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
@@ -165,16 +165,17 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	auto* bm = m_game->GetBM();
 	if ( bm->m_dispatching_updates ) { THROW( "SMAC allocation publication cannot reenter update dispatch" ); }
 	const auto prior_context = GetSmacResourceContext();
+	const auto expected_context=finish_upkeep ? prior_context.AfterUpkeep() : prior_context;
 	context.Validate();
 	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
 	if(captured_owner) {
 		m_game->RequireSmacLocalHumanOwner(captured_owner);
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
-		if(captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
+		if(finish_upkeep || captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
 			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
 		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
 		if(!(unchanged_context==prior_context)) {THROW("Capture publication changed unrelated Base context");}
-	} else if ( !( unchanged_context == prior_context ) || ( context.governor_options != prior_context.governor_options
+	} else if ( !( unchanged_context == expected_context ) || ( context.governor_options != prior_context.governor_options
 		&& context.governor_options != ( prior_context.governor_options & ~SmacBaseResourceContext::MANAGE_CITIZENS ) ) ) {
 		THROW( "SMAC worker publication may only clear citizen management in Base context" );
 	}

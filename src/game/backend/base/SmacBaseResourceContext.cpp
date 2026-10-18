@@ -28,6 +28,16 @@ bool SmacBaseResourceContext::operator==( const SmacBaseResourceContext& other )
 		&& governor_options == other.governor_options && drone_riots == other.drone_riots && conquest==other.conquest;
 }
 
+SmacBaseResourceContext SmacBaseResourceContext::AfterUpkeep() const {
+	auto next=*this;
+	if(next.conquest && next.conquest->assimilation) {
+		--next.conquest->assimilation;
+		if(next.conquest->former_owner==next.owner_simulation_id && next.conquest->assimilation) {--next.conquest->assimilation;}
+		if(!next.conquest->assimilation) {next.conquest->former_owner=next.owner_simulation_id;}
+	}
+	return next;
+}
+
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value ) {
 	if ( value ) { value->Validate(); }
 	types::Buffer buffer;

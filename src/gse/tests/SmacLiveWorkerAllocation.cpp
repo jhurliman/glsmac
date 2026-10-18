@@ -255,6 +255,43 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC conquered Base upkeep ages incoming history once after resource passes",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        for(const int former:{1,2}) {for(const int timer:{0,1,2,50}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);std::string saved;
+            const auto expected=timer==0 ? 0 : std::max(0,timer-(former==1 ? 2 : 1));
+            const SmacConquestState next{timer && !expected ? 1 : former,static_cast<uint8_t>(expected)};
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);auto* bm=game->GetBM();
+                own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+                const auto stockpile=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Stockpile,38);
+                auto context=own->GetSmacResourceContext();context.conquest=SmacConquestState{former,static_cast<uint8_t>(timer)};
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+                auto* base=new Base(game,702,own->m_owner,own->m_faction,game->GetMap()->GetTile(8,8),"Assimilation",{},pops,41,5,
+                    ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}},context);
+                bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+                base->RecalculateSmacWorkers(GSE_CALL,Roles());
+                GT_ASSERT(base->GetSmacResourceContext()==context,"ordinary recalculation aged conquest history");
+                auto changed=context;changed.conquest->assimilation^=1;
+                GT_ASSERT(Rejects([&]{base->SetSmacResourceContext(GSE_CALL,changed);}) && base->GetSmacResourceContext()==context,"generic setter rewrote conquest history");
+                fixture.Updates();const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();auto bad=Roles();bad.specialists[6]="missing-role";
+                GT_ASSERT(Rejects([&]{base->ProcessSmacUpkeep(GSE_CALL,bad,{},SmacMoraleMode::Mode0);}) && fixture.Snapshot()==before && fixture.Updates().empty(),
+                    "failed upkeep published timer decay before Base transaction");
+                const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
+                GT_ASSERT(base->GetSmacResourceContext().conquest==next && base->m_pops.size()==1 && result.final_calculation
+                    && fixture.GameplayRandom()==random,"finished Base upkeep missed tail decay or changed unrelated streams/population");
+                base->RecalculateSmacWorkers(GSE_CALL,Roles());GT_ASSERT(base->GetSmacResourceContext().conquest==next,"subsequent query aged timer twice");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!result.empty()) {return "assimilation timer="+std::to_string(timer)+" former="+std::to_string(former)+": "+result;}
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);
+            const auto restored_result=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+                GT_ASSERT(restored.Game()->GetBM()->GetBase(702)->GetSmacResourceContext().conquest==next,"actual Start replayed assimilation tail or normalized stale zero history");GT_OK();
+            });if(!restored_result.empty()) {return restored_result;}
+        }}GT_OK();
+    });
+
     task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
@@ -342,7 +379,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(base && base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50}) && base->m_owner->GetIndex()==0
                         && base->m_pops.size()==1 && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
                         && restored.GameplayRandom()==SmacGameplayRandomState(3,1951609278u) && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record
-                        && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,"actual Start replayed capture or lost saved ownership/history/home/control Bases");GT_OK();
+                        && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,"actual Start replayed capture or lost saved ownership/history/home/control Bases");
+                    base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
+                    GT_ASSERT(base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,49}),"captured and reloaded Base did not reach the next assimilation tail");GT_OK();
                 });if(!result.empty()) {return "capture restore: "+result;}
             }
         }GT_OK();

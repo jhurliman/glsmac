@@ -1,0 +1,67 @@
+{
+  "research_id": "RE-SMAC-ASSIMILATION-OWNER-UPKEEP-001",
+  "ruleset": "SMAC",
+  "scope": "Independent full owner upkeeps on actual capture-entry state with next-turn context and closed headless Base view supplied; timer1 is supplied aged history. No capture-screen continuation or modal FINISHED refresh claim.",
+  "cases": [
+    {
+      "id": "different_owner_timer_50",
+      "population": 1,
+      "human_difficulty": 3,
+      "current_owner": 1,
+      "former_owner_before": 2,
+      "timer_before": 50,
+      "timer_after": 49,
+      "former_owner_after": 2,
+      "citizen_calculations": 2,
+      "citizen_raw_assimilation_inputs": [
+        0,
+        0
+      ],
+      "citizen_timers": [
+        50,
+        50
+      ],
+      "decays": 1,
+      "citizen_calculation_after_decay": false,
+      "normal_base_returns": 2,
+      "normal_owner_return": true,
+      "nutrients_after": 5,
+      "minerals_before": 0,
+      "minerals_after": 1,
+      "modal_finished_view_executed": false,
+      "view_cache_check_completed_before_decay": true,
+      "crt_draws": 2,
+      "shared_draws": 0
+    },
+    {
+      "id": "different_owner_timer_1",
+      "population": 1,
+      "human_difficulty": 3,
+      "current_owner": 1,
+      "former_owner_before": 2,
+      "timer_before": 1,
+      "timer_after": 0,
+      "former_owner_after": 1,
+      "citizen_calculations": 2,
+      "citizen_raw_assimilation_inputs": [
+        0,
+        0
+      ],
+      "citizen_timers": [
+        1,
+        1
+      ],
+      "decays": 1,
+      "citizen_calculation_after_decay": false,
+      "normal_base_returns": 2,
+      "normal_owner_return": true,
+      "nutrients_after": 5,
+      "minerals_before": 0,
+      "minerals_after": 1,
+      "modal_finished_view_executed": false,
+      "view_cache_check_completed_before_decay": true,
+      "crt_draws": 2,
+      "shared_draws": 0
+    }
+  ]
+}

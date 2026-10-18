@@ -1,0 +1,251 @@
+{
+  "research_id": "RE-SMAC-ASSIM-TIMER-001",
+  "status": "Original-x86 checked citizen prefix and local upkeep-tail timer decay; capture initialization and complete upkeep unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "assimilation-timer.md",
+  "scope": "Current population held constant for before/after recalculation; faction DRONE/TALENT and bureaucracy inputs neutral. All timer values 0..255 allowed as supplied state. No actual capture, base upkeep or game observed.",
+  "defaults": {
+    "faction": 1,
+    "human": true,
+    "faction_difficulty": 5,
+    "population": 7,
+    "assimilation_timer": 11,
+    "former_owner_matches": false
+  },
+  "cases": [
+    {
+      "id": "ASSIM-TIMER-001",
+      "name": "eleven turns crosses into lower band after ordinary decay",
+      "overrides": {},
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 2,
+        "timer_after_upkeep_tail": 10,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-002",
+      "name": "ten turns remains in one-point timer band",
+      "overrides": {
+        "assimilation_timer": 10
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 9,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-003",
+      "name": "one turn expires",
+      "overrides": {
+        "assimilation_timer": 1
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 0,
+        "former_owner_matches_after": true,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-004",
+      "name": "two turns with foreign former owner",
+      "overrides": {
+        "assimilation_timer": 2
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 1,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-005",
+      "name": "matching former owner ages twice",
+      "overrides": {
+        "assimilation_timer": 11,
+        "former_owner_matches": true
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 2,
+        "timer_after_upkeep_tail": 9,
+        "former_owner_matches_after": true,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-006",
+      "name": "matching former owner timer 2 reaches zero",
+      "overrides": {
+        "assimilation_timer": 2,
+        "former_owner_matches": true
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 0,
+        "former_owner_matches_after": true,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-007",
+      "name": "matching former owner timer 1 does not underflow",
+      "overrides": {
+        "assimilation_timer": 1,
+        "former_owner_matches": true
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 0,
+        "former_owner_matches_after": true,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-008",
+      "name": "zero timer with matching former owner",
+      "overrides": {
+        "assimilation_timer": 0,
+        "former_owner_matches": true
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 0,
+        "timer_after_upkeep_tail": 0,
+        "former_owner_matches_after": true,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-009",
+      "name": "stale foreign former owner with zero timer stays unchanged (synthetic)",
+      "overrides": {
+        "assimilation_timer": 0
+      },
+      "expected": {
+        "ordinary_drone_input": 6,
+        "assimilation_input_before": 0,
+        "timer_after_upkeep_tail": 0,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-010",
+      "name": "population difficulty bound caps timer contribution",
+      "overrides": {
+        "assimilation_timer": 255,
+        "population": 1
+      },
+      "expected": {
+        "ordinary_drone_input": 0,
+        "assimilation_input_before": 1,
+        "timer_after_upkeep_tail": 254,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-011",
+      "name": "low difficulty can give zero contribution despite timer",
+      "overrides": {
+        "assimilation_timer": 255,
+        "population": 1,
+        "faction_difficulty": 0
+      },
+      "expected": {
+        "ordinary_drone_input": 0,
+        "assimilation_input_before": 0,
+        "timer_after_upkeep_tail": 254,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 0
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-012",
+      "name": "high timer unsigned boundary",
+      "overrides": {
+        "assimilation_timer": 255,
+        "population": 127
+      },
+      "expected": {
+        "ordinary_drone_input": 126,
+        "assimilation_input_before": 26,
+        "timer_after_upkeep_tail": 254,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 26
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-013",
+      "name": "timer 20 and larger population",
+      "overrides": {
+        "assimilation_timer": 20,
+        "population": 20
+      },
+      "expected": {
+        "ordinary_drone_input": 19,
+        "assimilation_input_before": 2,
+        "timer_after_upkeep_tail": 19,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 2
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-014",
+      "name": "timer 21 and larger population",
+      "overrides": {
+        "assimilation_timer": 21,
+        "population": 20
+      },
+      "expected": {
+        "ordinary_drone_input": 19,
+        "assimilation_input_before": 3,
+        "timer_after_upkeep_tail": 20,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 2
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-015",
+      "name": "AI ignores stored difficulty zero",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 0
+      },
+      "expected": {
+        "ordinary_drone_input": 4,
+        "assimilation_input_before": 2,
+        "timer_after_upkeep_tail": 10,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    },
+    {
+      "id": "ASSIM-TIMER-016",
+      "name": "AI ignores stored difficulty five",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 5
+      },
+      "expected": {
+        "ordinary_drone_input": 4,
+        "assimilation_input_before": 2,
+        "timer_after_upkeep_tail": 10,
+        "former_owner_matches_after": false,
+        "assimilation_input_after_at_same_population": 1
+      }
+    }
+  ]
+}

@@ -241,6 +241,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	auto& update = updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
 	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "SMAC allocation has an incompatible pending Base update" ); }
 	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
+	if(captured_owner) {update.ops=static_cast<BaseManager::base_update_op_t>(update.ops|BaseManager::BUO_SELECT);}
 	for(auto* related:refresh_only) {
 		if(!related || bm->GetBase(related->m_id)!=related) {THROW("Related capture Base is not current");}
 		BaseManager::QueueBaseUpdateInto(updates,related,BaseManager::BUO_REFRESH);

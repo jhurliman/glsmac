@@ -157,6 +157,7 @@ private:
 		BUO_SPAWN = 1 << 0,
 		BUO_REFRESH = 1 << 1,
 		BUO_DESPAWN = 1 << 2,
+		BUO_SELECT = 1 << 3,
 	};
 	struct base_update_t {
 		base_update_op_t ops = BUO_NONE;

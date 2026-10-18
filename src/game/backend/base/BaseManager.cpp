@@ -473,6 +473,13 @@ void BaseManager::PushUpdates() {
 				}
 				m_game->AddFrontendRequest( fr );
 			}
+			if ( ( bu.ops & BUO_SELECT ) && !( bu.ops & BUO_DESPAWN ) ) {
+				// Owner badges, population and navigation must refresh before the
+				// existing selection event opens the captured Base's screen.
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SELECT );
+				fr.data.base_select.base_id = base_id;
+				m_game->AddFrontendRequest( fr );
+			}
 			if ( bu.ops & BUO_DESPAWN ) {
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_DESPAWN );
 				fr.data.base_despawn.base_id = base_id;

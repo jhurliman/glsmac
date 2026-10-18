@@ -370,6 +370,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && state.economy.at(2).population_aggregate==3 && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
                         && a.directions[2].paired_a==4 && a.directions[2].paired_b==4 && d.directions[1].paired_a==0 && d.losses[2]==0;
                 });GT_ASSERT(exact,"capture differs from original loot and nondeduced history");
+                size_t captured_refresh=SIZE_MAX,captured_select=SIZE_MAX,selections=0;
+                const auto& requests=fixture.Updates();
+                for(size_t i=0;i<requests.size();++i) {
+                    const auto& request=requests[i];
+                    if(request.type==game::FrontendRequest::FR_BASE_UPDATE && request.data.base_update.base_id==702
+                        && request.data.base_update.slot_index==0 && request.data.base_update.pops->size()==1) {captured_refresh=i;}
+                    if(request.type==game::FrontendRequest::FR_BASE_SELECT) {++selections;if(request.data.base_select.base_id==702) {captured_select=i;}}
+                }
+                GT_ASSERT(selections==1 && captured_refresh<captured_select,"captured Base screen opened before owner/population refresh or more than once");
+                for(const auto& request:fixture.Updates()) {GT_ASSERT(request.type!=game::FrontendRequest::FR_BASE_SELECT,"capture screen selection replayed during later update flush");}
                 saved=fixture.Snapshot();GT_OK();
             });if(!result.empty()) {return "capture: "+result;}
             if(scenario==0) {

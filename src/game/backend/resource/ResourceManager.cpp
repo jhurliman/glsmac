@@ -268,8 +268,8 @@ void ResourceManager::Deserialize( types::Buffer& buf ) {
 		auto b = types::Buffer( buf.ReadString() );
 		DefineResource( resource::Resource::Deserialize( b ) );
 	}
-	m_noresource_defined = buf.ReadBool();
-	if ( m_noresource_defined ) {
+	const bool has_noresource = buf.ReadBool();
+	if ( has_noresource ) {
 		Log( "Deserializing no-resource" );
 		render_info_t info = {
 			buf.ReadString(),

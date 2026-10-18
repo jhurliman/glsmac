@@ -3,12 +3,17 @@
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacOrdinaryLandExploration.h"
+#include <set>
 #include "game/backend/map/SmacWorkerKnowledge.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/SpriteRender.h"
+#include "game/backend/unit/CvrScoutRender.h"
+#include "game/backend/State.h"
+#include "game/backend/slot/Slots.h"
 #include "util/FinallyGuard.h"
 #include <memory>
 #include "fixtures/SmacNativeUnitRecord.h"
@@ -31,6 +36,147 @@ std::string Replace(const Record& record,size_t index,int64_t value) {
 }
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC native Unit live ZOC and stationary visibility match five original movement controls",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
+        struct Case {const char* name;int32_t destination,count;std::array<std::array<int32_t,2>,2> native;uint8_t pacts,spent;std::array<uint8_t,3> masks;std::set<std::pair<int32_t,int32_t>> explored;};
+        const std::array<Case,5> cases{{
+{"source_only",30,1,{{{{33,15}},{{0,0}}}},0,3,{{0,2,0}},{{28,16},{29,15},{29,17},{30,14},{30,18}}},
+{"both",34,1,{{{{33,15}},{{0,0}}}},0,0,{{1,2,0}},{}},
+{"split_reveal",34,2,{{{{31,15}},{{35,15}}}},0,0,{{1,2,2}},{{35,15}}},
+{"positive_Pacts_do_not_exempt_native",34,2,{{{{31,15}},{{35,15}}}},254,0,{{1,2,2}},{{35,15}}},
+{"raw_native_slot_Pact_diagnostic",34,1,{{{{33,15}},{{0,0}}}},1,3,{{1,2,0}},{{34,14},{34,18},{35,15},{35,17},{36,16}}}
+        }};
+        for(const auto& c:cases) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+            std::string snapshot,knowledge;
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();
+                for(size_t y=0;y<40;++y) {for(size_t x=y&1;x<80;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+                }}
+                MoraleSet::morale_values_t names;for(int i=0;i<7;++i) {names.emplace_back("level"+std::to_string(i));}
+                manager->DefineMoraleSet(new MoraleSet("native-zoc",names));
+                manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("native-zoc"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                manager->DefineUnit(new StaticDef("human-zoc",manager->GetMoraleSet("native-zoc"),"Human",MT_LAND,999,new CvrScoutRender(2,0,100,100,{1,1},{128,128})));
+                manager->SpawnConventionalUnit(GSE_CALL,71,manager->GetUnitDef("human-zoc"),&game->GetState()->m_slots->GetSlot(0),game->GetMap()->GetTile(32,16),
+                    {2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                types::Buffer current;manager->Serialize(current);types::Buffer loaded;loaded.WriteString(current.ReadString());
+                for(int group=0;group<2;++group) {const auto count=current.ReadInt();loaded.WriteInt(count);
+                    for(int64_t i=0;i<count;++i) {loaded.WriteString(current.ReadString());loaded.WriteString(current.ReadString());}}
+                GT_ASSERT(current.ReadInt()==1,"Native ZOC fixture has wrong actor count");
+                loaded.WriteInt(1+c.count);loaded.WriteString(current.ReadString());
+                for(int n=0;n<c.count;++n) {
+                    auto record=Record::InitializeMindWorm(1+n,0);record.x=c.native[n][0];record.y=c.native[n][1];record.observation_mask=n==0?2:0;
+                    types::Buffer native;native.WriteInt(5);native.WriteInt(2);native.WriteInt(72+n);native.WriteString("MindWorms");native.WriteInt(-1);
+                    native.WriteInt(record.x);native.WriteInt(record.y);native.WriteString(record.Serialize().ToString());loaded.WriteString(native.ToString());
+                }
+                loaded.WriteInt(72+c.count);
+                // This fixture replaces the manager on the same synthetic map;
+                // detach its old actor membership before retiring that registry.
+                game->GetMap()->GetTile(32,16)->units.erase(71);
+                manager->Clear();manager->Deserialize(GSE_CALL,loaded);auto* actor=manager->GetUnit(71);
+                Knowledge::Data data{80,40,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=c.pacts;
+                data.tiles.resize(1600,{0,std::nullopt});data.units.push_back({71,1,false});
+                const auto initial=map::smac_exploration::Explore({80,40,true,{32,16},1,std::vector<uint8_t>(1600,0),std::vector<uint8_t>(1600,0)});
+                for(size_t k=0;k<data.tiles.size();++k) {data.tiles[k].explored_by=initial.explored[k];}
+                for(int n=0;n<c.count;++n) {data.units.push_back({uint64_t(72+n),uint8_t(n==0?2:0),false});}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto random=fixture.GameplayRandom();const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto actor_wire=Unit::Serialize(actor).ToString();
+                auto* destination=game->GetMap()->GetTile(c.destination,16);manager->ValidateConventionalMove(actor,destination,0);
+                GT_ASSERT(before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && Unit::Serialize(actor).ToString()==actor_wire && fixture.GameplayRandom()==random,"Native ZOC validation published refusal/reveal effects");
+                game->Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}});fixture.DrainEvents();
+                const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(actor->GetTile()->coord.x==static_cast<size_t>(c.spent?c.destination:32) && actor->Conventional().spent==c.spent && fixture.GameplayRandom()==random,"Original native ZOC movement/spending/RNG differs");
+                for(size_t n=0;n<after.units.size();++n) {
+                    GT_ASSERT(after.units[n].visible_to==c.masks[n],"Native ZOC changed the wrong retained observation");
+                    if(n) {GT_ASSERT(manager->GetUnit(after.units[n].id)->Native().observation_mask==c.masks[n],"Native record mask not committed with knowledge");}
+                }
+                std::set<std::pair<int32_t,int32_t>> explored;
+                for(int32_t y=0;y<40;++y) {for(int32_t x=y&1;x<80;x+=2) {const auto k=size_t(y)*40+x/2;
+                    if(after.tiles[k].explored_by!=data.tiles[k].explored_by) {explored.emplace(x,y);}
+                }}
+                GT_ASSERT(explored==c.explored,"Native refusal or movement explored different cells");
+                if(c.count==2) {const auto k=size_t(15)*40+35/2;GT_ASSERT(after.remembered[1][k] && after.remembered[1][k]->unit_present,"Native refusal omitted remembered destination Unit");}
+                if(std::string(c.name)=="source_only") {
+                    for(const auto x:{28,30,32}) {
+                        manager->ResetConventionalSpent(GSE_CALL,actor);
+                        game->Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(x,16)->Wrap(GSE_CALL)}});fixture.DrainEvents();
+                        const auto next=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                        GT_ASSERT(actor->GetTile()->coord.x==static_cast<size_t>(x) && next.units[0].visible_to==(x==32?1:0)
+                            && next.units[1].visible_to==2 && manager->GetUnit(72)->Native().observation_mask==2 && fixture.GameplayRandom()==random,
+                            "Observer departure/return globally reset stationary native visibility");
+                    }
+                }
+                knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();snapshot=fixture.Snapshot();
+                GT_OK();
+            });GT_ASSERT(error.empty(),"Native ZOC "+std::string(c.name)+": "+error);
+            ConventionalUnitFixture restored;restored.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+            const auto restore_error=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Restore(GSE_CALL,snapshot,true);
+                GT_ASSERT(restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"Native movement/refusal knowledge changed on restore");
+                for(int n=0;n<c.count;++n) {
+                    const auto* native=restored.Game()->GetUM()->GetUnit(72+n);
+                    GT_ASSERT(native && native->IsNative() && !native->m_owner && native->Native().observation_mask==c.masks[1+n],"Native move/refusal record lost owner0 or visibility after restore");
+                }GT_OK();
+            });GT_ASSERT(restore_error.empty(),"Native ZOC restore "+std::string(c.name)+": "+restore_error);
+        }GT_OK();
+    });
+    task->AddTest("SMAC native Unit actual human placement detects adjacent eight across five terrain families",GT(){
+        using namespace game::backend;
+        using namespace game::backend::unit;
+        using Knowledge=map::SmacWorkerKnowledge;
+        // Original native detection family: eight adjacent and sixteen outer
+        // offsets, both produced human designs, five supplied land terrains.
+        const std::array<std::array<int32_t,2>,24> offsets{{
+            {{-2,0}},{{-1,-1}},{{0,-2}},{{1,-1}},{{2,0}},{{1,1}},{{0,2}},{{-1,1}},
+            {{-4,0}},{{-3,-1}},{{-2,-2}},{{-1,-3}},{{0,-4}},{{1,-3}},{{2,-2}},{{3,-1}},
+            {{4,0}},{{3,1}},{{2,2}},{{1,3}},{{0,4}},{{-1,3}},{{-2,2}},{{-3,1}}
+        }};
+        for(const bool rover:{false,true}) {for(int terrain=0;terrain<5;++terrain) {for(size_t position=0;position<offsets.size();++position) {
+            ConventionalUnitFixture fixture;
+            fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,rover?"SPARTANS":"GAIANS",80,40);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();
+                for(size_t y=0;y<40;++y) {for(size_t x=y&1;x<80;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=terrain==4?map::tile::FEATURE_XENOFUNGUS:0;
+                    tile->terraforming=terrain==3?map::tile::TERRAFORMING_FOREST:0;
+                    tile->rockiness=terrain==1?map::tile::ROCKINESS_ROLLING:terrain==2?map::tile::ROCKINESS_ROCKY:map::tile::ROCKINESS_FLAT;
+                    tile->Update();
+                }}
+                MoraleSet::morale_values_t names;for(int i=0;i<7;++i) {names.emplace_back("level"+std::to_string(i));}
+                manager->DefineMoraleSet(new MoraleSet("native-sight",names));
+                manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("native-sight"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                manager->DefineUnit(new StaticDef("human-sight",manager->GetMoraleSet("native-sight"),"Human",MT_LAND,999,
+                    new CvrScoutRender(2,0,100,100,{1,1},{128,128},rover?CvrScoutRender::Composition::SpartanRover:CvrScoutRender::Composition::Scout)));
+                auto record=Record::InitializeMindWorm(0,0);record.x=32+offsets[position][0];record.y=16+offsets[position][1];
+                types::Buffer native;native.WriteInt(5);native.WriteInt(2);native.WriteInt(71);native.WriteString("MindWorms");
+                native.WriteInt(-1);native.WriteInt(record.x);native.WriteInt(record.y);native.WriteString(record.Serialize().ToString());
+                types::Buffer current;manager->Serialize(current);types::Buffer loaded;loaded.WriteString(current.ReadString());
+                for(int group=0;group<2;++group) {const auto count=current.ReadInt();loaded.WriteInt(count);
+                    for(int64_t i=0;i<count;++i) {loaded.WriteString(current.ReadString());loaded.WriteString(current.ReadString());}}
+                GT_ASSERT(current.ReadInt()==0,"Detection fixture unexpectedly contains Units");
+                loaded.WriteInt(1);loaded.WriteString(native.ToString());loaded.WriteInt(72);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+                Knowledge::Data data{80,40,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+                data.tiles.resize(1600,{0,std::nullopt});data.units.push_back({71,0,false});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto random=fixture.GameplayRandom();const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+                auto prepared=manager->PrepareConventionalUnit(GSE_CALL,72,manager->GetUnitDef("human-sight"),&game->GetState()->m_slots->GetSlot(0),
+                    game->GetMap()->GetTile(32,16),{rover?64:2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                GT_ASSERT(before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && manager->GetUnit(71)->Native()==record && !manager->GetUnit(72),"Native sight preparation published entities or visibility");
+                prepared.Commit();
+                const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                const auto detected=position<8;
+                GT_ASSERT(after.units.size()==2 && after.units[0].visible_to==(detected?2:0) && after.units[1].visible_to==(detected?1:0)
+                    && manager->GetUnit(71)->Native().observation_mask==(detected?2:0) && !manager->GetUnit(71)->m_owner
+                    && fixture.GameplayRandom()==random,"Actual human placement differs from original native detection family or consumes RNG");
+                GT_OK();
+            });
+            GT_ASSERT(error.empty(),"Native sight rover="+std::to_string(rover)+" terrain="+std::to_string(terrain)+" offset="+std::to_string(position)+": "+error);
+        }}}
+        GT_OK();
+    });
     task->AddTest("SMAC native Unit world snapshot restores faction zero and retained observation authority",GT(){
         std::string snapshot,unit_wire,knowledge_wire;
         ConventionalUnitFixture fixture;

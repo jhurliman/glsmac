@@ -193,8 +193,8 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 	for ( const auto* endpoint : {source,destination} ) {
 		for ( const auto* neighbour : endpoint->neighbours ) {
 			for ( const auto& entry : neighbour->units ) {
-				if ( !entry.second || !entry.second->IsConventional() ) { throw std::runtime_error("ZOC requires actual conventional foreign units"); }
-				foreign |= entry.second->Conventional().owner_simulation_id != owner;
+				if (!entry.second || (!entry.second->IsConventional() && !entry.second->IsNative())) {throw std::runtime_error("ZOC requires canonical foreign units");}
+				foreign |= entry.second->SimulationOwner() != owner;
 			}
 		}
 	}
@@ -219,8 +219,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 	for ( const auto* endpoint : {source,destination} ) { for ( const auto* neighbour : endpoint->neighbours ) {
 		for ( const auto& entry : neighbour->units ) {
 			const auto* other = entry.second;
-			if ( other->Conventional().owner_simulation_id == owner ) { continue; }
-			if ( ResolveConventionalUnit( other->Conventional(), other->m_owner ).package != unit::ConventionalUnitContext::Package::Combat ) {
+			if ( other->SimulationOwner() == owner ) { continue; }
+			if (other->IsNative()) { (void)m_um->QueryNativeUnit(other->Native()); }
+            else if ( ResolveConventionalUnit( other->Conventional(), other->m_owner ).package != unit::ConventionalUnitContext::Package::Combat ) {
 				throw std::runtime_error("Foreign noncombat ZOC influence is not established");
 			}
 			ordinary(neighbour);
@@ -232,7 +233,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 		for ( const auto* neighbour : endpoint->neighbours ) {
 			if ( neighbour->is_water_tile != endpoint->is_water_tile ) { continue; }
 			for ( const auto& entry : neighbour->units ) {
-				const auto faction = entry.second->Conventional().owner_simulation_id;
+				const auto faction = entry.second->SimulationOwner();
 				if ( faction != owner && !(pacts & (1u<<faction)) ) { return true; }
 			}
 		}
@@ -243,7 +244,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 	// Only its unseen non-Pact destination neighbors are revealed. Validation
 	// returns this owned candidate without publishing it or running ordinary sight.
 	for ( const auto* neighbour : destination->neighbours ) { for ( const auto& entry : neighbour->units ) {
-		const auto faction = entry.second->Conventional().owner_simulation_id;
+		const auto faction = entry.second->SimulationOwner();
 		if ( faction==owner || (pacts & (1u<<faction)) ) { continue; }
 		auto& observation = *std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
 		const auto bit = uint8_t(1u<<owner);
@@ -322,7 +323,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 			|| tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight() ) { throw std::runtime_error("Foreign sight requires evidenced unobscured interior flat land"); }
 	};
 	bool foreign=false;
-	for ( const auto& entry:m_um->GetUnits() ) { foreign |= entry.second->Conventional().owner_simulation_id!=owner; }
+	for ( const auto& entry:m_um->GetUnits() ) {
+        foreign |= entry.second->IsConventional() && entry.second->Conventional().owner_simulation_id!=owner;
+    }
 	for ( const auto& entry:m_bm->GetBases() ) { foreign |= entry.second->GetSmacResourceContext().owner_simulation_id!=owner; }
 	if ( foreign ) {
 		ordinary(destination);
@@ -331,10 +334,30 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 		} }
 	}
 	for ( const auto& entry:m_um->GetUnits() ) {
-		const auto* other=entry.second; const auto faction=other->Conventional().owner_simulation_id;
+		const auto* other=entry.second; const auto faction=other->SimulationOwner();
 		if(entry.first==id || faction==owner) {continue;}
 		const auto* tile=other->GetTile();
-		// No wrapping foreign detection has been established, even when the
+		if(other->IsNative()) {
+            // Native detection is adjacent-eight on all five captured land
+            // terrain families. It does not inherit positive-owner flat-land
+            // restrictions or globally clear stationary masks.
+            const auto interior=[&](const map::tile::Tile* position) {
+                if(position->is_water_tile || position->coord.x<2 || position->coord.x+2>=m_map->GetWidth()
+                    || position->coord.y<2 || position->coord.y+2>=m_map->GetHeight()) {
+                    throw std::runtime_error("Native detection requires interior land geometry");
+                }
+            };
+            if(destination!=tile && !destination->IsAdjactentTo(tile)) {continue;}
+            interior(destination);interior(tile);
+            if(destination==tile || tile->units.size()!=1) {throw std::runtime_error("Native detection requires distinct singleton placement");}
+            if(adjacent(destination,tile)) {
+                moving.visible_to |= 1u; // Faction0 is independent of controller slot0.
+                auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
+                observation.visible_to |= static_cast<uint8_t>(1u<<owner);
+            }
+            continue;
+        }
+        // No wrapping foreign detection has been established, even when the
 		// exploration kernel independently supports periodic-X geometry.
 		if(tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth() || tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight()) {ordinary(tile);}
 		if(adjacent(destination,tile) || destination==tile) {

@@ -2,6 +2,7 @@
 #include "game/backend/base/SmacCitizens.h"
 #include "task/gsetests/GSETests.h"
 #include <climits>
+#include <stdexcept>
 namespace gse::tests {
 using namespace game::backend::base;
 void AddSmacCitizensTests(task::gsetests::GSETests* task) {
@@ -171,6 +172,11 @@ task->AddTest("SMAC citizen late projects and suppression preserve original orde
 {const auto r=FinishSmacCitizens(SmacCitizenCounts{1,5,0},7,7,2,false,0,false,0);GT_ASSERT((r.projects==SmacCitizenCounts{3,5,0} && r.suppressed==SmacCitizenCounts{3,5,0} && r.final==SmacCitizenCounts{0,0,0}),"CITIZEN-FINAL-021");}
 {const auto r=FinishSmacCitizens(SmacCitizenCounts{1,0,0},1,0,3,false,0,false,0);GT_ASSERT((r.projects==SmacCitizenCounts{4,0,0} && r.suppressed==SmacCitizenCounts{4,0,0} && r.final==SmacCitizenCounts{1,0,0}),"CITIZEN-FINAL-022");}
 return "";});
+task->AddTest("SMAC citizen normalization bounds extreme supplied talent counts",GT(){
+    const auto c=ConvertSmacCitizens({7,0,6,0,INT32_MAX,0,0,0,0});
+    GT_ASSERT((c.facilities==SmacCitizenCounts{7,0,0}),"Large talent normalization changed counts");
+    bool rejected=false;try {PoliceSmacCitizens({0,INT32_MIN,0},7,0,0,0,false,{});}catch(const std::exception&) {rejected=true;}
+    GT_ASSERT(rejected,"Negative police demand reached subtraction");return "";});
 task->AddTest("SMAC citizen Golden Age and riot status match original caller controls",GT(){
 {const auto r=CalculateSmacCitizenStatus(2,7,SmacCitizenCounts{4,0,0},false,false,false,0);GT_ASSERT((r.admitted==true && r.golden==true && r.riots==false && r.riot_dispatch==false && r.map_refresh==false && r.golden_start==true && r.golden_over==false && r.riots_over==false),"CITIZEN-STATUS-001");}
 {const auto r=CalculateSmacCitizenStatus(2,7,SmacCitizenCounts{4,0,0},true,false,false,0);GT_ASSERT((r.admitted==true && r.golden==true && r.riots==false && r.riot_dispatch==false && r.map_refresh==false && r.golden_start==false && r.golden_over==false && r.riots_over==false),"CITIZEN-STATUS-002");}

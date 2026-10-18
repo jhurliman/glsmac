@@ -54,7 +54,7 @@ SmacCitizenEarlyStages ConvertSmacCitizens(const SmacCitizenConversion& i) {
     c.drones=Clamp(int64_t(c.drones)+i.facility_drones,i.population);c.talents=Clamp(int64_t(c.talents)+i.paradise_talents,i.population);Normalize(c,i.population-i.excluded);r.facilities=c;return r;
 }
 SmacCitizenPoliceStages PoliceSmacCitizens(SmacCitizenCounts c,int32_t p,int32_t x,int32_t police,int32_t pacifism,bool self_aware,const std::vector<SmacCitizenPoliceUnit>& units) {
-    Population(p,x);if(pacifism<0) {throw std::invalid_argument("Negative pacifism count");}
+    Population(p,x);if(pacifism<0 || c.talents<0 || c.drones<0 || c.extra_drone_steps<0) {throw std::invalid_argument("Police requires nonnegative citizen counts");}
     int slots=police<=-2?0:police<=0?1:police==1?2:3;const int strength=police>=3?2:1;
     const auto apply=[&](int reduction) {c.drones=std::max(0,c.drones-reduction);--slots;};
     if(self_aware && slots) {apply(strength);}

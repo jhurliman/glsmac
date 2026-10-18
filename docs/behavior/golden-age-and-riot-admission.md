@@ -7,6 +7,8 @@ including recovery or entry into the riot handler. Notification/map callbacks
 are logged and omitted without state changes. Riot consequences and callback
 interventions are outside the checked scope.
 
+Caller-order correction: the later [complete upkeep composition](citizen-upkeep-composition.md) establishes population/food, then the second resource/citizen pass, then status admission. Its measured ordering supersedes the earlier static before-population statement below; the status predicates and literal cases are unchanged.
+
 ## Upkeep gate and Golden Age
 
 The checked base-upkeep caller skips this status stage on turn indices 0 and

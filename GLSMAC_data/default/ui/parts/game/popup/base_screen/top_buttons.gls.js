@@ -45,7 +45,8 @@ return {
         if (!this.active || this.unavailable) { return; }
         let controls = 0; let power = 1;
         for (selected of this.options) { if (selected) { controls += power; } power *= 2; }
-        this.p.game.event('apply_smac_governor', {base: this.base, expected_state: this.selection.expected_state, controls: controls});
+        const base = this.base; const expected = this.selection.expected_state;
+        this.p.game.event('apply_smac_governor', {base: base, expected_state: expected, controls: controls});
         this.hide_view();
     },
     hide_view: () => { this.active = false; this.window.hide(); },

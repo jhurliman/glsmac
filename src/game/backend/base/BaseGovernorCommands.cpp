@@ -18,9 +18,16 @@ bool Game::HandleSmacGovernorEvent(GSE_CALLABLE,const std::string& name,
         return found->second->Deref();
     };
     if(args.size()!=3) {THROW("Governor Apply requires Base, expected state and nineteen selections");}
-    const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
-    if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Governor Apply requires an actual Base");}
-    auto* base=base::Base::Unwrap(args.at("base"));
+    const auto target=args.find("base");
+    const auto* object=target!=args.end() && target->second
+        ? dynamic_cast<const gse::value::Object*>(target->second->Deref()) : nullptr;
+    if(!object || object->object_class!=base::Base::WRAP_CLASS || caller!=m_slot_num) {THROW("Governor Apply requires an actual local Base");}
+    const auto id=object->value.find("id");
+    if(id==object->value.end() || !id->second || id->second->type!=gse::VT_INT) {THROW("Governor Apply requires a stable Base identity");}
+    const auto number=static_cast<const gse::value::Int*>(id->second)->value;
+    if(number<0 || static_cast<uint64_t>(number)>SIZE_MAX) {THROW("Invalid Governor Base identity");}
+    auto* base=m_bm->GetBase(static_cast<size_t>(number));
+    if(!base || object->wrapobj!=base) {return true;}
     const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
     const auto controls=static_cast<const gse::value::Int*>(field("controls",gse::VT_INT))->value;
     if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>2*1024*1024 || controls<0 || controls>0x7ffff) {THROW("Governor Apply has invalid authority or selections");}

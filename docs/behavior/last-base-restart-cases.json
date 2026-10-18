@@ -1,0 +1,4585 @@
+{
+  "research_id": "RE-SMAC-LAST-BASE-RESTART-001",
+  "scope": "Four complete original faction upkeeps for last-base starvation at turns3/100/101 and Do or Die, plus a continuous successful restart replay, actual manual founding-preflight prefix, full admitted founding and next complete faction upkeep. Six complete faction returns total. Controlled rainy64x32 wrapped land with actual region rebuild and original map-scale producer32, inherited empty secondary summaries, actual placement search/RNG/factories/deletion and supplied UI/runtime services. Two option-mapping fragments execute independently. Replay starts research0 to avoid discovery UI; no supplied placement decision or gameplay return. Complete procedural worlds, other factions/difficulties/network/scenarios and ending presentation remain separate.",
+  "cases": [
+    {
+      "name": "restart_turn_three",
+      "turn": 3,
+      "do_or_die": false,
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "surplus": [
+              0,
+              1,
+              2
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              10,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              24,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              28,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              30,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 5,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": true,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 1,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 100,
+        "pending_debit": 7,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": 1000
+      },
+      "after": {
+        "bases": [],
+        "units": [
+          {
+            "id": 0,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 0,
+            "owner": 1,
+            "coordinate": [
+              0,
+              18
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              0,
+              18
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 0,
+            "owner": 1,
+            "coordinate": [
+              0,
+              18
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              0,
+              18
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            1,
+            15
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            63,
+            15
+          ],
+          [
+            0,
+            16
+          ],
+          [
+            2,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            62,
+            16
+          ],
+          [
+            1,
+            17
+          ],
+          [
+            3,
+            17
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            61,
+            17
+          ],
+          [
+            63,
+            17
+          ],
+          [
+            0,
+            18
+          ],
+          [
+            2,
+            18
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            62,
+            18
+          ],
+          [
+            1,
+            19
+          ],
+          [
+            3,
+            19
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ],
+          [
+            61,
+            19
+          ],
+          [
+            63,
+            19
+          ],
+          [
+            0,
+            20
+          ],
+          [
+            2,
+            20
+          ],
+          [
+            62,
+            20
+          ],
+          [
+            1,
+            21
+          ],
+          [
+            63,
+            21
+          ]
+        ],
+        "faction_base_count": 0,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 110,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": -1
+      },
+      "disposition_calls": 1
+    },
+    {
+      "name": "restart_turn_hundred",
+      "turn": 100,
+      "do_or_die": false,
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "surplus": [
+              0,
+              1,
+              2
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              10,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              24,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              28,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              30,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 5,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": true,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 1,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 100,
+        "pending_debit": 7,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": 1000
+      },
+      "after": {
+        "bases": [],
+        "units": [
+          {
+            "id": 0,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 0,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 0,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 5,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 6,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 7,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              62,
+              22
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ],
+          [
+            61,
+            19
+          ],
+          [
+            63,
+            19
+          ],
+          [
+            0,
+            20
+          ],
+          [
+            60,
+            20
+          ],
+          [
+            62,
+            20
+          ],
+          [
+            1,
+            21
+          ],
+          [
+            59,
+            21
+          ],
+          [
+            61,
+            21
+          ],
+          [
+            63,
+            21
+          ],
+          [
+            0,
+            22
+          ],
+          [
+            60,
+            22
+          ],
+          [
+            62,
+            22
+          ],
+          [
+            1,
+            23
+          ],
+          [
+            59,
+            23
+          ],
+          [
+            61,
+            23
+          ],
+          [
+            63,
+            23
+          ],
+          [
+            0,
+            24
+          ],
+          [
+            60,
+            24
+          ],
+          [
+            62,
+            24
+          ],
+          [
+            61,
+            25
+          ],
+          [
+            63,
+            25
+          ]
+        ],
+        "faction_base_count": 0,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 110,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": -1
+      },
+      "disposition_calls": 1
+    },
+    {
+      "name": "refuse_turn_hundred_one",
+      "turn": 101,
+      "do_or_die": false,
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "surplus": [
+              0,
+              1,
+              2
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              10,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              24,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              28,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              30,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 5,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": true,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 1,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 100,
+        "pending_debit": 7,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": 1000
+      },
+      "after": {
+        "bases": [],
+        "units": [
+          {
+            "id": 0,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 0,
+        "faction_active": false,
+        "ending_requested": true,
+        "treasury": 120,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": -1
+      },
+      "disposition_calls": 2
+    },
+    {
+      "name": "do_or_die_refuses_restart",
+      "turn": 3,
+      "do_or_die": true,
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "surplus": [
+              0,
+              1,
+              2
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "design": 2,
+            "owner": 1,
+            "coordinate": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              10,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              24,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 3,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              28,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 4,
+            "design": 1,
+            "owner": 1,
+            "coordinate": [
+              30,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          },
+          {
+            "id": 5,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": 0,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": true,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": true,
+            "claimed_by": 1,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 1,
+        "faction_active": true,
+        "ending_requested": false,
+        "treasury": 100,
+        "pending_debit": 7,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": 1000
+      },
+      "after": {
+        "bases": [],
+        "units": [
+          {
+            "id": 0,
+            "design": 1,
+            "owner": 2,
+            "coordinate": [
+              32,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "order": 0,
+            "damage": 0
+          }
+        ],
+        "sites": [
+          {
+            "coordinate": [
+              16,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": true
+          },
+          {
+            "coordinate": [
+              18,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              20,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              22,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          },
+          {
+            "coordinate": [
+              24,
+              16
+            ],
+            "base_present": false,
+            "unit_present": false,
+            "claimed_by": null,
+            "remembered_base_present": false
+          }
+        ],
+        "explored": [
+          [
+            15,
+            13
+          ],
+          [
+            17,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            18,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            30,
+            14
+          ],
+          [
+            32,
+            14
+          ],
+          [
+            9,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            25,
+            15
+          ],
+          [
+            27,
+            15
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            31,
+            15
+          ],
+          [
+            33,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            26,
+            16
+          ],
+          [
+            28,
+            16
+          ],
+          [
+            30,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            34,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            25,
+            17
+          ],
+          [
+            27,
+            17
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            31,
+            17
+          ],
+          [
+            33,
+            17
+          ],
+          [
+            10,
+            18
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            16,
+            18
+          ],
+          [
+            18,
+            18
+          ],
+          [
+            24,
+            18
+          ],
+          [
+            28,
+            18
+          ],
+          [
+            30,
+            18
+          ],
+          [
+            32,
+            18
+          ],
+          [
+            15,
+            19
+          ],
+          [
+            17,
+            19
+          ]
+        ],
+        "faction_base_count": 0,
+        "faction_active": false,
+        "ending_requested": true,
+        "treasury": 120,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 0,
+        "research_progress": 40,
+        "research_fraction": 70,
+        "research_target": 0,
+        "owned_technologies": [
+          6
+        ],
+        "map_scale": 32,
+        "research_cost_cache": -1
+      },
+      "disposition_calls": 2
+    }
+  ],
+  "continuation": {
+    "name": "restart_then_found_and_upkeep",
+    "initial_turn": 3,
+    "following_turn": 4,
+    "initial_research_progress": 0,
+    "after_restart": {
+      "bases": [],
+      "units": [
+        {
+          "id": 0,
+          "design": 1,
+          "owner": 2,
+          "coordinate": [
+            32,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "design": 0,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "design": 1,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 3,
+          "design": 0,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 4,
+          "design": 2,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        }
+      ],
+      "sites": [
+        {
+          "coordinate": [
+            16,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": true
+        },
+        {
+          "coordinate": [
+            18,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            20,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            22,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            24,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        }
+      ],
+      "explored": [
+        [
+          15,
+          13
+        ],
+        [
+          17,
+          13
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          14,
+          14
+        ],
+        [
+          16,
+          14
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          24,
+          14
+        ],
+        [
+          28,
+          14
+        ],
+        [
+          30,
+          14
+        ],
+        [
+          32,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          11,
+          15
+        ],
+        [
+          13,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          17,
+          15
+        ],
+        [
+          19,
+          15
+        ],
+        [
+          23,
+          15
+        ],
+        [
+          25,
+          15
+        ],
+        [
+          27,
+          15
+        ],
+        [
+          29,
+          15
+        ],
+        [
+          31,
+          15
+        ],
+        [
+          33,
+          15
+        ],
+        [
+          63,
+          15
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          2,
+          16
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          10,
+          16
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          14,
+          16
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          18,
+          16
+        ],
+        [
+          22,
+          16
+        ],
+        [
+          24,
+          16
+        ],
+        [
+          26,
+          16
+        ],
+        [
+          28,
+          16
+        ],
+        [
+          30,
+          16
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          34,
+          16
+        ],
+        [
+          62,
+          16
+        ],
+        [
+          1,
+          17
+        ],
+        [
+          3,
+          17
+        ],
+        [
+          9,
+          17
+        ],
+        [
+          11,
+          17
+        ],
+        [
+          13,
+          17
+        ],
+        [
+          15,
+          17
+        ],
+        [
+          17,
+          17
+        ],
+        [
+          19,
+          17
+        ],
+        [
+          23,
+          17
+        ],
+        [
+          25,
+          17
+        ],
+        [
+          27,
+          17
+        ],
+        [
+          29,
+          17
+        ],
+        [
+          31,
+          17
+        ],
+        [
+          33,
+          17
+        ],
+        [
+          61,
+          17
+        ],
+        [
+          63,
+          17
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          2,
+          18
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          14,
+          18
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          24,
+          18
+        ],
+        [
+          28,
+          18
+        ],
+        [
+          30,
+          18
+        ],
+        [
+          32,
+          18
+        ],
+        [
+          62,
+          18
+        ],
+        [
+          1,
+          19
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          15,
+          19
+        ],
+        [
+          17,
+          19
+        ],
+        [
+          61,
+          19
+        ],
+        [
+          63,
+          19
+        ],
+        [
+          0,
+          20
+        ],
+        [
+          2,
+          20
+        ],
+        [
+          62,
+          20
+        ],
+        [
+          1,
+          21
+        ],
+        [
+          63,
+          21
+        ]
+      ],
+      "faction_base_count": 0,
+      "faction_active": true,
+      "ending_requested": false,
+      "treasury": 110,
+      "pending_debit": 0,
+      "psych_tenths": 0,
+      "labs_tenths": 5,
+      "research_progress": 0,
+      "research_fraction": 70,
+      "research_target": 0,
+      "owned_technologies": [
+        6
+      ],
+      "map_scale": 32,
+      "research_cost_cache": -1
+    },
+    "after_founding": {
+      "bases": [
+        {
+          "id": 0,
+          "coordinate": [
+            0,
+            18
+          ],
+          "owner": 1,
+          "population": 1,
+          "food": 0,
+          "minerals": 10,
+          "baseline_minerals": 10,
+          "surplus": [
+            2,
+            1,
+            2
+          ]
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "design": 1,
+          "owner": 2,
+          "coordinate": [
+            32,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "design": 1,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "design": 0,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 3,
+          "design": 2,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        }
+      ],
+      "sites": [
+        {
+          "coordinate": [
+            16,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": true
+        },
+        {
+          "coordinate": [
+            18,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            20,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            22,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            24,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        }
+      ],
+      "explored": [
+        [
+          15,
+          13
+        ],
+        [
+          17,
+          13
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          14,
+          14
+        ],
+        [
+          16,
+          14
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          24,
+          14
+        ],
+        [
+          28,
+          14
+        ],
+        [
+          30,
+          14
+        ],
+        [
+          32,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          11,
+          15
+        ],
+        [
+          13,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          17,
+          15
+        ],
+        [
+          19,
+          15
+        ],
+        [
+          23,
+          15
+        ],
+        [
+          25,
+          15
+        ],
+        [
+          27,
+          15
+        ],
+        [
+          29,
+          15
+        ],
+        [
+          31,
+          15
+        ],
+        [
+          33,
+          15
+        ],
+        [
+          63,
+          15
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          2,
+          16
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          10,
+          16
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          14,
+          16
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          18,
+          16
+        ],
+        [
+          22,
+          16
+        ],
+        [
+          24,
+          16
+        ],
+        [
+          26,
+          16
+        ],
+        [
+          28,
+          16
+        ],
+        [
+          30,
+          16
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          34,
+          16
+        ],
+        [
+          62,
+          16
+        ],
+        [
+          1,
+          17
+        ],
+        [
+          3,
+          17
+        ],
+        [
+          9,
+          17
+        ],
+        [
+          11,
+          17
+        ],
+        [
+          13,
+          17
+        ],
+        [
+          15,
+          17
+        ],
+        [
+          17,
+          17
+        ],
+        [
+          19,
+          17
+        ],
+        [
+          23,
+          17
+        ],
+        [
+          25,
+          17
+        ],
+        [
+          27,
+          17
+        ],
+        [
+          29,
+          17
+        ],
+        [
+          31,
+          17
+        ],
+        [
+          33,
+          17
+        ],
+        [
+          61,
+          17
+        ],
+        [
+          63,
+          17
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          2,
+          18
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          14,
+          18
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          24,
+          18
+        ],
+        [
+          28,
+          18
+        ],
+        [
+          30,
+          18
+        ],
+        [
+          32,
+          18
+        ],
+        [
+          62,
+          18
+        ],
+        [
+          1,
+          19
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          15,
+          19
+        ],
+        [
+          17,
+          19
+        ],
+        [
+          61,
+          19
+        ],
+        [
+          63,
+          19
+        ],
+        [
+          0,
+          20
+        ],
+        [
+          2,
+          20
+        ],
+        [
+          62,
+          20
+        ],
+        [
+          1,
+          21
+        ],
+        [
+          63,
+          21
+        ]
+      ],
+      "faction_base_count": 1,
+      "faction_active": true,
+      "ending_requested": false,
+      "treasury": 110,
+      "pending_debit": 0,
+      "psych_tenths": 0,
+      "labs_tenths": 5,
+      "research_progress": 0,
+      "research_fraction": 70,
+      "research_target": 0,
+      "owned_technologies": [
+        6
+      ],
+      "map_scale": 32,
+      "research_cost_cache": -1
+    },
+    "after_following_upkeep": {
+      "bases": [
+        {
+          "id": 0,
+          "coordinate": [
+            0,
+            18
+          ],
+          "owner": 1,
+          "population": 1,
+          "food": 2,
+          "minerals": 1,
+          "baseline_minerals": 1,
+          "surplus": [
+            2,
+            1,
+            2
+          ]
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "design": 1,
+          "owner": 2,
+          "coordinate": [
+            32,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "design": 1,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "design": 0,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 3,
+          "design": 2,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": -1,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        },
+        {
+          "id": 4,
+          "design": 2,
+          "owner": 1,
+          "coordinate": [
+            0,
+            18
+          ],
+          "home": 0,
+          "spent": 0,
+          "order": 0,
+          "damage": 0
+        }
+      ],
+      "sites": [
+        {
+          "coordinate": [
+            16,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": true
+        },
+        {
+          "coordinate": [
+            18,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            20,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            22,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        },
+        {
+          "coordinate": [
+            24,
+            16
+          ],
+          "base_present": false,
+          "unit_present": false,
+          "claimed_by": null,
+          "remembered_base_present": false
+        }
+      ],
+      "explored": [
+        [
+          15,
+          13
+        ],
+        [
+          17,
+          13
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          14,
+          14
+        ],
+        [
+          16,
+          14
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          24,
+          14
+        ],
+        [
+          28,
+          14
+        ],
+        [
+          30,
+          14
+        ],
+        [
+          32,
+          14
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          11,
+          15
+        ],
+        [
+          13,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          17,
+          15
+        ],
+        [
+          19,
+          15
+        ],
+        [
+          23,
+          15
+        ],
+        [
+          25,
+          15
+        ],
+        [
+          27,
+          15
+        ],
+        [
+          29,
+          15
+        ],
+        [
+          31,
+          15
+        ],
+        [
+          33,
+          15
+        ],
+        [
+          63,
+          15
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          2,
+          16
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          10,
+          16
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          14,
+          16
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          18,
+          16
+        ],
+        [
+          22,
+          16
+        ],
+        [
+          24,
+          16
+        ],
+        [
+          26,
+          16
+        ],
+        [
+          28,
+          16
+        ],
+        [
+          30,
+          16
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          34,
+          16
+        ],
+        [
+          62,
+          16
+        ],
+        [
+          1,
+          17
+        ],
+        [
+          3,
+          17
+        ],
+        [
+          9,
+          17
+        ],
+        [
+          11,
+          17
+        ],
+        [
+          13,
+          17
+        ],
+        [
+          15,
+          17
+        ],
+        [
+          17,
+          17
+        ],
+        [
+          19,
+          17
+        ],
+        [
+          23,
+          17
+        ],
+        [
+          25,
+          17
+        ],
+        [
+          27,
+          17
+        ],
+        [
+          29,
+          17
+        ],
+        [
+          31,
+          17
+        ],
+        [
+          33,
+          17
+        ],
+        [
+          61,
+          17
+        ],
+        [
+          63,
+          17
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          2,
+          18
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          14,
+          18
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          24,
+          18
+        ],
+        [
+          28,
+          18
+        ],
+        [
+          30,
+          18
+        ],
+        [
+          32,
+          18
+        ],
+        [
+          62,
+          18
+        ],
+        [
+          1,
+          19
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          15,
+          19
+        ],
+        [
+          17,
+          19
+        ],
+        [
+          61,
+          19
+        ],
+        [
+          63,
+          19
+        ],
+        [
+          0,
+          20
+        ],
+        [
+          2,
+          20
+        ],
+        [
+          62,
+          20
+        ],
+        [
+          1,
+          21
+        ],
+        [
+          63,
+          21
+        ]
+      ],
+      "faction_base_count": 1,
+      "faction_active": true,
+      "ending_requested": false,
+      "treasury": 111,
+      "pending_debit": 0,
+      "psych_tenths": 0,
+      "labs_tenths": 5,
+      "research_progress": 1,
+      "research_fraction": 70,
+      "research_target": 0,
+      "owned_technologies": [
+        6
+      ],
+      "map_scale": 32,
+      "research_cost_cache": -1
+    }
+  },
+  "option_mapping": [
+    {
+      "do_or_die": false,
+      "prevents_restart": false
+    },
+    {
+      "do_or_die": true,
+      "prevents_restart": true
+    }
+  ]
+}

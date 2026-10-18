@@ -61,7 +61,8 @@ SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomT
                 && cell.rockiness <= 2 && cell.affiliation <= 15;
         };
         if (!valid(before) || !valid(after) || (before.altitude_class < 3) != (after.altitude_class < 3)
-            || before.affiliation != after.affiliation || ((before.items ^ after.items) & ~event_items)) {
+            || before.affiliation != after.affiliation || ((before.items ^ after.items) & ~event_items)
+            || (before.items != after.items && after.items != ((before.items | 0x20u) & ~0x00288050u))) {
             throw std::invalid_argument("Planet bloom changes fields outside the terrain producer");
         }
         auto& tile = result.m_tiles.at(size_t(y) * (WIDTH / 2) + size_t(x) / 2);

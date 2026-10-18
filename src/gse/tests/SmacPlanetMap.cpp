@@ -89,6 +89,9 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         auto bad = valid; bad.coordinate = {-1,1}; GT_ASSERT(rejects({valid,bad}), "Negative coordinate accepted");
         bad = valid; bad.coordinate = {1,0}; GT_ASSERT(rejects({bad}), "Parity mismatch accepted");
         GT_ASSERT(rejects({valid,valid}), "Duplicate coordinate accepted");
+        bad = valid; bad.before.items = 0x20; bad.after.items = 0; GT_ASSERT(rejects({bad}), "Bloom removed existing fungus");
+        bad = valid; bad.after.items = 0x10; GT_ASSERT(rejects({bad}), "Bloom created a Mine");
+        bad = valid; bad.before.items = 0x50; bad.after.items = 0x60; GT_ASSERT(rejects({bad}), "Bloom retained a removable improvement");
         bad = valid; bad.after.items |= 1; GT_ASSERT(rejects({bad}), "Live Base presence copied into source metadata");
         bad = valid; bad.after.altitude_class = 3; GT_ASSERT(rejects({bad}), "Unimplemented sea to land conversion accepted");
         bad = valid; bad.after.affiliation = 1; GT_ASSERT(rejects({bad}), "Affiliation changed through terrain producer");

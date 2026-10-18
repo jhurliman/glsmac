@@ -1,5 +1,6 @@
 #include "SmacSimulationState.h"
 #include "fixtures/SmacRegionalMilitary.h"
+#include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
 #include "game/backend/faction/SmacRankOrder.h"
@@ -88,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=19,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=20,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -114,6 +115,12 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=19,bool
                     packed+=static_cast<char>(flags&255);packed+=static_cast<char>(flags>>8);
                 }}
             }}
+            if(version>=20) {for(const auto& owner:value.regional_military->factions) {
+                packed+=owner.base_phase_flags ? char(1) : char(0);
+                if(owner.base_phase_flags) {for(const auto flags:*owner.base_phase_flags) {
+                    packed+=static_cast<char>(flags&255);packed+=static_cast<char>(flags>>8);
+                }}
+            }}
             suffix.WriteString(packed);
         }
     }
@@ -134,6 +141,43 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base-phase flags match51 native reset and immediate-sea projections",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        for(const auto& row:regional_base_flags_fixture::Cases()) {
+            auto flags=row.initial;Military::ResetBaseFlags(flags,row.turn,row.owner);
+            GT_ASSERT(flags==row.reset,"Native Base flag reset differs: "+std::string(row.id));
+            std::array<uint8_t,128> counts{};std::vector<uint8_t> directions;
+            for(const auto& base:row.bases) {if(base.owner==row.owner) {
+                const auto direction=game::backend::map::smac_territory::ImmediateSeaNeighbor(row.width,row.height,row.wrap,row.sea,base.point);
+                directions.push_back(direction);++counts.at(base.region);Military::AccumulateBaseFlag(flags,base.region,direction!=0);
+            }}
+            GT_ASSERT(flags==row.expected && counts==row.counts && directions==row.directions,"Native Base flags/coastal direction/count differ: "+std::string(row.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC Base-phase flags V20 retain bit8 history and preserve V19 absence",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        auto value=State();value.regional_military.emplace();
+        for(size_t owner=0;owner<7;++owner) {
+            auto& flags=value.regional_military->factions[owner].base_phase_flags;flags.emplace();
+            for(size_t region=0;region<128;++region) {flags->at(region)=std::array<uint16_t,4>{0,8,128,136}[(owner+region)%4];}
+        }
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V20 lost Base-stage flags or polar/unoccupied regions");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,19),technologies,profiles,units);
+        for(const auto& owner:old.regional_military->factions) {GT_ASSERT(!owner.base_phase_flags,"V19 acquired invented retained bit8 history");}
+        for(int variant=0;variant<4;++variant) {
+            std::string packed(Military::V18_WIRE_BYTES+7,0); // all unit rows absent
+            if(variant==0) {packed+=char(2);packed.append(6,0);}
+            if(variant==1) {packed+=char(1);packed.append(6,0);}
+            if(variant==2) {packed+=char(1);packed+=char(1);packed.append(255+6,0);}
+            if(variant==3) {packed.append(8,0);}
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(packed);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,20,true,false)+invalid.ToString(),technologies,profiles,units);}),"Malformed Base-phase flags accepted");
+        }
+        value.regional_military->factions.front().base_phase_flags->at(0)=2;
+        GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);}),"Unit/peer flags leaked into Base-phase snapshot");GT_OK();
+    });
     task->AddTest("SMAC retained capability scans match 31 original binding and width controls",GT(){
         for(const auto& test:smac_capability_fixture::Cases()) {
             auto catalog=CapabilityCatalog();auto technologies=smac_rules_fixture::Technologies();

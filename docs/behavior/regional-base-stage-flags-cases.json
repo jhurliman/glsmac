@@ -760,5 +760,44 @@
     [-2,0],
     [-1,-1],
     [0,-2]
-  ]
+  ],
+  "profile": {
+    "query_owner": 1,
+    "map_width": 64,
+    "map_height": 32,
+    "valid_coordinates": "0<=x<64,0<=y<32,x%2==y%2",
+    "baseline_all_valid_tiles": {
+      "elevation_class": 3,
+      "stored_region": 1
+    },
+    "initial_flags": {
+      "query_owner": 65535,
+      "other_owners": 42330,
+      "case_initial_owner_flags_override_this_default": true
+    },
+    "base_records_are_explicit_controlled_inputs": true,
+    "neighbor_offset_units": "original parity coordinates",
+    "sea_offsets_apply_relative_to_each_controlled_base": true,
+    "sea_x_is_wrapped_for_field_placement_even_in_flat_map_controls": true,
+    "sea_Y_outside_map_is_not_written": true,
+    "sea_qualification_uses_elevation_not_region": true,
+    "sequence_inland_second": "Use literal initial_owner_flags; same single owned Base/region/position as defaults, with all eight adjacent tiles land class3."
+  },
+  "defaults": {
+    "turn": 1,
+    "bases": 1,
+    "positions": [
+      [16,16],
+      [24,16]
+    ],
+    "base_owner": 1,
+    "region": 1,
+    "flat": false,
+    "base_water": false,
+    "sea": [],
+    "elevation": 2,
+    "sea_region": 65,
+    "foreign_visible": false
+  },
+  "input_application": "Start with profile baseline; merge each case.inputs over defaults. Use first bases positions. Set each Base tile region, optional base_water class2, then write each supplied sea offset at elevation and sea_region. Bounds for the native neighbor query use flat. Use per-case literal initial_owner_flags rather than inventing prior history. Unspecified fields are outside this flag/count predicate."
 }

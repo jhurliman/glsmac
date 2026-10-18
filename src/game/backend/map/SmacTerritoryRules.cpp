@@ -162,4 +162,17 @@ RegionalRouteMap ProjectRegionalRoutes(const SmacWorkerKnowledge& knowledge,cons
 	return result;
 }
 
+uint8_t ImmediateSeaNeighbor(int32_t width,int32_t height,bool horizontal_wrap,
+	const std::vector<bool>& sea,const Coordinate& center) {
+	Require(width>=2 && width<=512 && !(width&1) && height>=1 && height<=256
+		&& sea.size()==size_t(width)*height/2,"Coastal query requires the bounded parity map");
+	Require(center[0]>=0 && center[0]<width && center[1]>=0 && center[1]<height && !((center[0]^center[1])&1),"Coastal Base coordinate is invalid");
+	for(size_t direction=0;direction<ROUTE_NEIGHBORS.size();++direction) {
+		auto x=center[0]+ROUTE_NEIGHBORS[direction][0];const auto y=center[1]+ROUTE_NEIGHBORS[direction][1];
+		if(horizontal_wrap) {x=(x%width+width)%width;}
+		if(x>=0 && x<width && y>=0 && y<height && sea[size_t(y)*(width/2)+x/2]) {return static_cast<uint8_t>(direction+1);}
+	}
+	return 0;
+}
+
 }

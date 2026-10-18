@@ -5,9 +5,8 @@
 #include <string>
 #include <array>
 #include <memory>
-#include <vector>
 
-namespace game::backend::base { struct SmacBloomTerrainDelta; }
+namespace game::backend::base { class SmacBloomTerrainPlan; }
 
 #include "types/Buffer.h"
 #include "game/backend/resource/SmacResourceBonus.h"
@@ -27,7 +26,7 @@ public:
 	bool operator==( const GlsmacResourceMapPolicy& other ) const;
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
 	bool AutomaticLandResources() const { return m_automatic_land_resources; }
-    GlsmacResourceMapPolicy WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes, bool nonzero_turn) const;
+    GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
 	resource::smac::AltitudeBand Altitude( const tile::Tile& tile ) const;
 	std::array<bool,3> LandmarkBonuses( const tile::Tile& tile ) const;
 

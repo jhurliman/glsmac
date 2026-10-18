@@ -14,27 +14,30 @@ the live registry and is never copied into the source map. The existing policy
 codec saves the updated records; no new wire version or missing-value default
 is introduced. Automatic-resource policy remains independent and unchanged.
 
-Construction is detached. Invalid coordinates/parity, duplicate coordinates,
-out-of-range fields, affiliation changes, unrelated item changes and cross
-land/sea category conversions reject. Source class, rockiness and landmarks
-must match each delta's preimage. Item changes must be the exact fungus-set /
-five-improvement-clear transformation. Classes can only rise within sea or
-fall within land. Rockiness and landmark results must match the original class
-setter for the supplied zero/nonzero turn, enumerating its zero/nonzero branch
-outcomes without consuming either gameplay RNG stream. A failure on a late peer returns no replacement
-and leaves the original authority untouched. Before publishing, the future live
-caller must also validate the complete live item/presence preimage, stage the
-render batch, and atomically publish tiles, resource policy, history and CRT
-state. This API does not replace that live transaction or add an event caller.
+Construction is detached and accepts only a completed `SmacBloomTerrainPlan`.
+Its constructor and deltas are private to the original terrain producer;
+consumers receive read-only changes. They cannot forge class/item combinations,
+combine multiple direct fungus writes, or substitute a different turn context.
+This keeps the publication boundary tied to the measured algorithm instead of
+maintaining a second, incomplete imitation of its semantic constraints.
+
+The saved-map adapter checks coordinates/parity and duplicates against its own
+container, and matches source class, rockiness and landmarks to each delta's
+preimage. A failure on a late peer returns no replacement and leaves the
+original authority untouched. Before publishing, the future live caller must
+also validate the complete live item/presence preimage, stage the render batch,
+and atomically publish tiles, resource policy, history and CRT state. This API
+does not replace that live transaction or add an event caller.
 Generated maps still lack original class authority and reject this operation.
 
 Validation: eleven focused native groups pass, including all 26 original
-terrain fixtures projected into saved Planet records, byte-exact preservation
+terrain fixtures replayed through the actual producer and projected into saved Planet records, byte-exact preservation
 of all unrelated data, resource altitude after policy save/reload, stale late
 peer rejection, and the installed Planet classification/resource regression.
-Four map/publication groups pass ASan/UBSan with SmacPlanetMap.cpp and
-GlsmacResourceMapPolicy.cpp instrumented, remaining objects from the normal
+Ten producer/map/publication groups pass ASan/UBSan with SmacEcology.cpp,
+SmacPlanetMap.cpp and GlsmacResourceMapPolicy.cpp instrumented, remaining objects from the normal
 cached build and leak checking disabled. Targeted correctness analysis passes
-those two production TUs plus the resource consumer BaseEcology.cpp. This is
+those three production TUs. Earlier analysis of the unchanged resource
+consumer BaseEcology.cpp is retained. This is
 saved authority preparation; live map/render publication and native life
 creation remain unfinished.

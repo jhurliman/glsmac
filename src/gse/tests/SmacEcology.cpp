@@ -89,12 +89,12 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
             GT_ASSERT(winner && winner->coordinate==row.winner && winner->ordinal==row.ordinal,"Terrain fixture selected a different cell: "+std::string(row.id));
             auto region=row.map;region.center=winner->coordinate;
             const auto plan=b::PrepareSmacBloomTerrain(region,row.history,row.difficulty,true,query,draw);
-            GT_ASSERT(plan.history==row.after_history && plan.nominal_cell_budget==row.budget && plan.native_dirty_mask==row.dirty
-                && plan.fungus_cell==row.fungus && draws==row.draws.size() && rng.Shared()==1234 && source==original,
+            GT_ASSERT(plan.History()==row.after_history && plan.NominalCellBudget()==row.budget && plan.NativeDirtyMask()==row.dirty
+                && plan.FungusCell()==row.fungus && draws==row.draws.size() && rng.Shared()==1234 && source==original,
                 "Native terrain history/budget/dirty/direct mutation/RNG differs: "+std::string(row.id));
             std::map<Coordinate,std::pair<b::SmacBloomTerrainCell,b::SmacBloomTerrainCell>> expected,actual;
             for(const auto& delta:row.changes) {expected.emplace(delta.coordinate,std::make_pair(delta.before,delta.after));}
-            for(const auto& delta:plan.changes) {
+            for(const auto& delta:plan.Changes()) {
                 GT_ASSERT(actual.emplace(delta.coordinate,std::make_pair(delta.before,delta.after)).second,"Duplicate terrain delta");
             }
             GT_ASSERT(actual==expected,"Native final terrain cells differ: "+std::string(row.id));

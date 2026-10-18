@@ -40,7 +40,7 @@ std::string SmacPlanetMap::Encode() const {
     return result;
 }
 
-SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes, bool nonzero_turn) const {
+SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
     if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }
     auto result = *this;
     std::set<std::array<int32_t,2>> visited;
@@ -48,7 +48,7 @@ SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomT
     const auto write32 = [](uint8_t* bytes, uint32_t value) {
         for (size_t byte = 0; byte < 4; ++byte) { bytes[byte] = static_cast<uint8_t>(value >> (8 * byte)); }
     };
-    for (const auto& delta : changes) {
+    for (const auto& delta : plan.Changes()) {
         const auto x = delta.coordinate[0], y = delta.coordinate[1];
         if (x < 0 || y < 0 || x >= static_cast<int32_t>(WIDTH) || y >= static_cast<int32_t>(HEIGHT)
             || ((x ^ y) & 1) || !visited.insert(delta.coordinate).second) {
@@ -56,28 +56,6 @@ SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomT
         }
         const auto& before = delta.before;
         const auto& after = delta.after;
-        const auto valid = [](const base::SmacBloomTerrainCell& cell) {
-            return cell.altitude_class >= 0 && cell.altitude_class <= 7 && cell.rockiness >= 0
-                && cell.rockiness <= 2 && cell.affiliation <= 15;
-        };
-        if (!valid(before) || !valid(after) || (before.altitude_class < 3) != (after.altitude_class < 3)
-            || before.affiliation != after.affiliation || ((before.items ^ after.items) & ~event_items)
-            || (before.items != after.items && after.items != ((before.items | 0x20u) & ~0x00288050u))) {
-            throw std::invalid_argument("Planet bloom changes fields outside the terrain producer");
-        }
-        // Enumerate the class setter's possible branch results without consuming
-        // gameplay RNG. The bloom shaper can raise sea only, and lower land only.
-        if ((before.altitude_class >= 3 && after.altitude_class > before.altitude_class)
-            || (before.altitude_class < 3 && after.altitude_class < before.altitude_class)) {
-            throw std::invalid_argument("Planet bloom class transition is outside the terrain shaper");
-        }
-        const auto matches = [&](int32_t raw) {
-            const auto expected = base::ChangeSmacBloomClassOnly(before, after.altitude_class, nonzero_turn, [raw] { return raw; }).cell;
-            return expected.rockiness == after.rockiness && expected.landmarks == after.landmarks;
-        };
-        if (!matches(0) && !matches(1)) {
-            throw std::invalid_argument("Planet bloom rockiness or landmark transition is outside the class setter");
-        }
         auto& tile = result.m_tiles.at(size_t(y) * (WIDTH / 2) + size_t(x) / 2);
         if ((tile.Climate() >> 5) != before.altitude_class || (tile.bytes[5] >> 6) != before.rockiness
             || tile.Landmarks() != before.landmarks) {

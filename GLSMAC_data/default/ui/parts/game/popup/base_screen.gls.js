@@ -172,6 +172,7 @@ return {
 		}
 
 		this.hide_production_selection();
+		this.sections.buttons.show_default(); // Recompute availability after the viewed Base is bound.
 		this.sections.specialist_selection.on_base_update(base);
 		this.sections.rename.on_base_update(base);
 

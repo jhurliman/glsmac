@@ -17,6 +17,8 @@ return (game, base, ui) => {
 			result.children :+value;
 			return value;
 		};
+		result.input = child;
+		result.remove = () => {};
 		result.window = child;
 		result.panel = child;
 		result.area = child;
@@ -64,7 +66,7 @@ return (game, base, ui) => {
 		screen.set({ base: base });
 		let section_count = 0;
 		for (section in screen.sections) { section_count++; }
-		check(section_count == 11, 'complete screen sections were not initialized');
+		check(section_count == 12, 'complete screen sections were not initialized');
 		if (#is_defined(expected.canonical) && expected.canonical) {
 			check(screen.sections.nutrients.growth_label.text == 'Growth unavailable', 'canonical growth forecast was invented');
 			const stored = screen.sections.nutrients.growth_cells.children;

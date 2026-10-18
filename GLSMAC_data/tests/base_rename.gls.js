@@ -29,3 +29,16 @@ screen.base = base; screen.is_open = true; screen.production_selection = null;
 screen.p = {game: {event: (name, data) => { commands :+ {name: name, data: data}; }}};
 screen.open_rename(); test.assert(#sizeof(commands) == 4 && commands[3].name == 'open_smac_rename' && commands[3].data.base == base && commands[3].data.expected_state == 'prepared');
 state = undefined; screen.open_rename(); test.assert(#sizeof(commands) == 4 && !screen.can_rename());
+
+// Default buttons are initialized before a Base is bound and refreshed on set.
+const buttons = #include('../default/ui/parts/game/popup/base_screen/buttons');
+let available = false; let opened = 0;
+const child = (data) => { data.remove = () => {}; data.on = (event, cb) => { data.click = cb; }; return data; };
+const frame = {text: child, button: child};
+frame.panel = (data) => { return frame; };
+const style = {extend: (name) => { return this; }, set: (data) => {}};
+buttons.init({body: frame, ui: {class: (name) => { return style; }}, hide: () => {}, utils: {
+    can_rename: () => { return available; }, open_rename: () => { opened++; }}});
+test.assert(buttons.buttons[0].text == 'Rename unavailable');
+available = true; buttons.show_default(); buttons.buttons[0].click();
+test.assert(buttons.buttons[0].text == 'RENAME' && opened == 1);

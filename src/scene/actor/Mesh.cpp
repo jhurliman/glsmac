@@ -74,6 +74,7 @@ void Mesh::SetTexture( types::texture::Texture* texture ) {
 	if ( m_texture != texture || counter != m_texture_update_counter ) {
 		m_texture = texture;
 		m_texture_update_counter = counter;
+		++m_texture_revision;
 		UpdateCache();
 	}
 }
@@ -81,6 +82,11 @@ void Mesh::SetTexture( types::texture::Texture* texture ) {
 types::texture::Texture* Mesh::GetTexture() const {
 	return m_texture;
 }
+
+size_t Mesh::GetTextureRevision() const {
+	return m_texture_revision;
+}
+
 
 void Mesh::SetDataMesh( const types::mesh::Data* data_mesh ) {
 	ASSERT( !m_data_mesh, "data mesh already set" );

@@ -1,9 +1,11 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <optional>
 #include <filesystem>
 
 #include "Mesh.h"
+#include "graphics/opengl/actor/TextureReloadState.h"
 #include "loader/texture/SmacPalette.h"
 
 #include "task/gsetests/GSETests.h"
@@ -772,6 +774,32 @@ static std::string CheckViewportEdges() {
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
+	task->AddTest("Mesh texture reload survives hidden replacements at a reused address", [](GSE*,context::Context*) -> std::string {
+		WidgetGraphicsFixture graphics;
+		types::texture::Texture intermediate(1,1);
+		std::optional<types::texture::Texture> reused;
+		reused.emplace(1,1);
+		scene::actor::Mesh actor("texture-replacement",nullptr);
+		graphics::opengl::TextureReloadState reload;
+		const auto sample=[&]() {const auto* texture=actor.GetTexture();return reload.Update(texture,texture?texture->UpdatedCount():0,actor.GetTextureRevision());};
+		actor.SetTexture(&*reused);
+		GT_ASSERT(sample() && !sample(),"Initial texture was not loaded exactly once");
+		for(int repeat=0;repeat<16;++repeat) {
+			const auto* previous=&*reused;const auto updates=previous->UpdatedCount();
+			const auto revision=actor.GetTextureRevision();
+			actor.SetTexture(&intermediate); // No renderer samples this hidden intermediate.
+			reused.reset();reused.emplace(1,1);
+			GT_ASSERT(&*reused==previous && reused->UpdatedCount()==updates,"Fixture did not recreate the pointer/count ABA condition");
+			actor.SetTexture(&*reused);
+			GT_ASSERT(actor.GetTextureRevision()!=revision && sample() && !sample(),"Hidden replacement skipped GPU reload");
+			const auto stable=actor.GetTextureRevision();actor.SetTexture(&*reused);
+			GT_ASSERT(actor.GetTextureRevision()==stable && !sample(),"Stable texture caused redundant uploads");
+		}
+		reused->FullUpdate();GT_ASSERT(sample() && !sample(),"In-place texture changes stopped reloading");
+		actor.SetTexture(nullptr);GT_ASSERT(sample() && !sample(),"Texture clearing was not observed once");
+		GT_OK();
+	});
+
 	task->AddTest( "UI viewport cache includes the bottom-right pixel", GT() { return CheckViewportEdges(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );

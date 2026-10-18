@@ -79,24 +79,9 @@ bool Mesh::DataMeshReloadNeeded() {
 }
 
 bool Mesh::TextureReloadNeeded() {
-	auto* texture = GetMeshActor()->GetTexture();
-	if ( m_last_texture != texture ) {
-		//Log( "Texture reload needed ( texture was replaced )" );
-		m_last_texture = texture;
-		m_last_texture_update_counter = texture
-			? texture->UpdatedCount()
-			: 0;
-		return true;
-	}
-	if ( texture ) {
-		size_t last_texture_update_counter = texture->UpdatedCount();
-		if ( m_last_texture_update_counter != last_texture_update_counter ) {
-			//Log( "Texture reload needed ( " + std::to_string( m_last_texture_update_counter ) + " != " + std::to_string( last_texture_update_counter ) + " )" );
-			m_last_texture_update_counter = last_texture_update_counter;
-			return true;
-		}
-	}
-	return false;
+	const auto* actor = GetMeshActor();
+	const auto* texture = actor->GetTexture();
+	return m_texture_reload_state.Update( texture, texture ? texture->UpdatedCount() : 0, actor->GetTextureRevision() );
 }
 
 void Mesh::LoadMesh() {

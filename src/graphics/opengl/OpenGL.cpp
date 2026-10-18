@@ -447,6 +447,10 @@ void OpenGL::OnWindowResize() {
 
 void OpenGL::LoadTexture( types::texture::Texture* texture, const bool requested_smoothen ) {
 	ASSERT( texture, "texture is null" );
+	// A callback/routine may retire a texture after the frame's initial drain.
+	// Retirement is queued before that address can be allocated again, so flush
+	// before looking up/loading a replacement at a potentially reused address.
+	ProcessPendingUnloads();
 	// Indexed display-palette artwork must retain actual palette entries when
 	// stretched: the native menu's tint lookup addresses those same indices.
 	const bool smoothen = requested_smoothen && !texture->HasFlag( types::texture::TF_SMAC_PALETTE );

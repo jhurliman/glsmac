@@ -18,17 +18,20 @@ its semantic outputs. A hash-verified prepared Planet input was reconstructed
 locally from the purchased installed asset plus the existing private native
 admission receipt. That original map is not distributed with the port.
 
-Reproduce the asset-free seven original synthetic river controls:
+Reproduce twelve asset-free controls: the seven original synthetic river worlds
+and five retained-altitude-band7 controls:
 
 ```sh
 g++ -std=c++17 -O1 -g -Isrc tools/tests/smac_climate_probe.cpp \
   src/game/backend/map/SmacClimate.cpp \
+  src/game/backend/map/SmacPlanetMap.cpp \
   src/game/backend/SmacGameplayRandomState.cpp -o /tmp/smac-climate-probe
 python3 tools/verify_smac_climate.py --probe /tmp/smac-climate-probe
 ```
 
 The optional `--prepared-planet PATH` accepts the local140,800-byte prepared plane
-with the exact frozen hash and enables all34 controls. It validates every test
+with the exact frozen hash and enables all43 controls, including nine
+[retained-band7 comparisons](climate-retained-class7.md). It validates every test
 input hash before evaluating any expected output. Recipe edits for synthetic
 worlds and feature discriminators are explicit; no output is used to manufacture
 its own expected result. The after-volcano input is separately pinned by the

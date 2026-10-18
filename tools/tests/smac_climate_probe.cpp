@@ -1,6 +1,7 @@
 // Read-only detached climate probe. Input/output are semantic numeric fields;
 // no original assets or executable bytes are distributed with this driver.
 #include "game/backend/map/SmacClimate.h"
+#include "game/backend/map/SmacPlanetMap.h"
 #include <iostream>
 #include <string>
 using namespace game::backend;
@@ -32,6 +33,7 @@ int main() {
         else if(mode=="rivers") {c::Rivers(world,streams);}
         else if(mode=="rainfall") {c::Rainfall(world,r);}
         else if(mode=="altitude") {c::RecalculateAltitudes(world,streams,context);}
+        else if(mode=="assign") {c::AssignSurfaceClass(world,sx,sy,category,streams,context);}
         else if(mode=="shape") {c::ShapeHeight(world,sx,sy,category,streams,context);}
         else if(mode=="volcano") {c::EcologyVolcano(world,sx,sy,streams,context);}
         else if(mode=="complete") {c::Recalculate(world,r,streams,context);}
@@ -39,7 +41,14 @@ int main() {
         std::cout<<random.Shared()<<' '<<random.Crt()<<' '<<streams.shared_draws<<' '<<streams.crt_draws<<' '<<world.dirty_flags<<'\n';
         std::cout<<seeds.size();for(const auto v:seeds) {std::cout<<' '<<v;}std::cout<<'\n';
         std::cout<<draws.size();for(const auto v:draws) {std::cout<<' '<<v;}std::cout<<'\n';
-        for(const auto& t:world.tiles) {
+        // Exercise the production container publication rather than validating
+        // only the probe's independent numeric encoder.
+        std::string container(map::SmacPlanetMap::FILE_BYTES,'\0');container.replace(0,11,"TERRANMAP\0\x1a",11);
+        const auto put=[&](size_t at,uint32_t value) {for(size_t i=0;i<4;++i) {container[at+i]=static_cast<char>(value>>(8*i));}};
+        put(11,5);put(15,80);put(19,80);
+        const auto stored=world.width==80 && world.height==80
+            ? map::SmacPlanetMap::Decode(container).WithClimateTerrain(world,sea,r.extra).ExportClimateTerrain(world.horizontal_wrap):world;
+        for(const auto& t:stored.tiles) {
             std::cout<<t.elevation<<' '<<t.temperature<<' '<<t.moisture<<' '<<t.contour<<' '<<t.aux<<' '<<t.items<<' '<<t.landmarks<<' '<<t.cached_occupant<<' '<<t.rockiness;
             for(const auto v:t.remembered_items) {std::cout<<' '<<v;}std::cout<<'\n';
         }

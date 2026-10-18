@@ -1,4 +1,5 @@
 #include "SmacPlanetMap.h"
+#include "SmacClimate.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -27,8 +28,10 @@ int32_t SmacPlanetMap::OceanCoverageCategory() const {
     return value<=INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value)-(int64_t(1)<<32));
 }
 int32_t SmacPlanetMap::WorldSizeCategory() const { return static_cast<int32_t>(Read32(m_header.data() + 0xa30)); }
+int32_t SmacPlanetMap::TemperatureCategory() const { return ReadSigned32(m_header.data() + 0xa40); }
 int32_t SmacPlanetMap::CloudCoverCategory() const { return ReadSigned32(m_header.data() + 0xa44); }
 int32_t SmacPlanetMap::NativeLifeCategory() const { return ReadSigned32(m_header.data() + 0xa48); }
+int32_t SmacPlanetMap::ClimateExtra() const { return ReadSigned32(m_header.data() + 0x010); }
 int32_t SmacPlanetMap::CumulativeSeaLevelOffset() const { return ReadSigned32(m_header.data() + 0x00c); }
 
 std::string SmacPlanetMap::Encode() const {
@@ -67,6 +70,38 @@ SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& 
         // or current Former state. Copy only the event-owned terrain bits.
         write32(tile.bytes.data() + 8, (tile.Items() & ~event_items) | (after.items & event_items));
         write32(tile.bytes.data() + 12, after.landmarks);
+    }
+    return result;
+}
+
+smac_climate::World SmacPlanetMap::ExportClimateTerrain(bool horizontal_wrap) const {
+    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Standard Planet container is incomplete");}
+    smac_climate::World world{static_cast<int32_t>(WIDTH),static_cast<int32_t>(HEIGHT),horizontal_wrap,{}};
+    world.tiles.reserve(TILE_COUNT);
+    for(const auto& record:m_tiles) {
+        const auto& raw=record.bytes;
+        smac_climate::Tile tile{raw[0]>>5,raw[0]&7,(raw[0]>>3)&3,raw[1],raw[6],record.Items(),record.Landmarks(),record.CachedOccupant(),raw[5]>>6,{}};
+        for(size_t owner=0;owner<7;++owner) {tile.remembered_items[owner]=Read32(raw.data()+16+4*owner);}
+        world.tiles.push_back(tile);
+    }
+    world.Validate();return world;
+}
+SmacPlanetMap SmacPlanetMap::WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const {
+    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Standard Planet container is incomplete");}
+    world.Validate();
+    if(world.width!=static_cast<int32_t>(WIDTH) || world.height!=static_cast<int32_t>(HEIGHT)) {throw std::invalid_argument("Climate plane differs from installed Planet geometry");}
+    auto result=*this;
+    const auto write=[](uint8_t* raw,uint32_t value) {for(size_t i=0;i<4;++i) {raw[i]=static_cast<uint8_t>(value>>(8*i));}};
+    write(result.m_header.data()+0x0c,static_cast<uint32_t>(sea_level_offset));
+    write(result.m_header.data()+0x10,static_cast<uint32_t>(climate_extra));
+    for(size_t i=0;i<TILE_COUNT;++i) {
+        const auto& tile=world.tiles[i];auto& raw=result.m_tiles[i].bytes;
+        raw[0]=static_cast<uint8_t>((tile.elevation<<5)|(tile.moisture<<3)|tile.temperature);
+        raw[1]=static_cast<uint8_t>(tile.contour);raw[6]=static_cast<uint8_t>(tile.aux);
+        raw[2]=static_cast<uint8_t>((raw[2]&0xf0u)|tile.cached_occupant);
+        raw[5]=static_cast<uint8_t>((raw[5]&0x3fu)|(tile.rockiness<<6));
+        write(raw.data()+8,tile.items);write(raw.data()+12,tile.landmarks);
+        for(size_t owner=0;owner<7;++owner) {write(raw.data()+16+4*owner,tile.remembered_items[owner]);}
     }
     return result;
 }

@@ -74,7 +74,7 @@ void AddGlsmacResourceMapPolicyTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects( [ & ] { Policy::WriteOptional( out, policy, false ); } ) && out.ToString() == before, "SMAX writer appended unsupported policy" );
 
 		for ( const bool checksum : { false, true } ) {
-			auto bad = wire; if ( checksum ) { bad.back() ^= 1; } else { types::Buffer replacement; replacement.WriteInt( 2 ); bad.replace( 0, replacement.lenw, replacement.ToString() ); }
+			auto bad = wire; if ( checksum ) { bad.back() ^= 1; } else { types::Buffer replacement; replacement.WriteInt( 3 ); bad.replace( 0, replacement.lenw, replacement.ToString() ); }
 			types::Buffer input; input.WriteBool( true ); input.WriteString( bad ); const auto expected_cursor = input.lenw;
 			std::string error; try { Policy::ReadOptional( input, true ); } catch ( const std::runtime_error& e ) { error = e.what(); }
 			GT_ASSERT( input.lenr == expected_cursor && error.find( checksum ? "checksum mismatch" : "Unsupported GLSMAC resource map policy" ) != std::string::npos,

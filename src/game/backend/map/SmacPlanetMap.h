@@ -9,6 +9,7 @@
 namespace game::backend::base { class SmacBloomTerrainPlan; }
 
 namespace game::backend::map {
+namespace smac_climate { struct World; }
 
 // Bounded reader for the installed standard Planet v5 container. Keeps every
 // original byte: decoding a record is distinct from admitting gameplay rules
@@ -26,6 +27,8 @@ public:
         uint8_t Contour() const { return bytes[1]; }
         uint8_t Region() const { return bytes[3]; }
         uint8_t Owner() const { return bytes[7]; }
+        uint8_t CachedOccupant() const { return bytes[2]&15u; }
+        uint8_t SiteRating() const { return bytes[2]>>4; }
         uint32_t Items() const;
         uint32_t Landmarks() const;
     };
@@ -34,12 +37,18 @@ public:
     // Detached terrain publication: preserve contour/corners and every unrelated
     // source byte. Live item/presence preconditions remain the caller's responsibility.
     SmacPlanetMap WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
+    // Explicit climate projection/publication. These methods do not rebuild
+    // regions, territory, sites or entities; their owning transaction does so.
+    smac_climate::World ExportClimateTerrain(bool horizontal_wrap) const;
+    SmacPlanetMap WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
     int32_t OceanCoverageCategory() const;
+    int32_t TemperatureCategory() const;
     int32_t CloudCoverCategory() const;
     int32_t NativeLifeCategory() const;
     int32_t CumulativeSeaLevelOffset() const;
+    int32_t ClimateExtra() const;
     const Tile& At(uint32_t x, uint32_t y) const;
     const std::array<uint8_t, HEADER_BYTES>& Header() const { return m_header; }
     const std::array<uint8_t, TRAILER_BYTES>& Trailer() const { return m_trailer; }

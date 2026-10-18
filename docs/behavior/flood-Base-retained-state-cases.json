@@ -1,0 +1,632 @@
+{
+  "research_id": "RE-SMAC-FLOOD-BASE-RETAINED-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "new_cases": [
+    {
+      "id": "flood_Base_pop12",
+      "before": {
+        "population": 12,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": false,
+        "HQ": false
+      },
+      "after": {
+        "population": 6,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": true,
+        "HQ": false
+      },
+      "all_other_Base_bytes_preserved": true,
+      "resource_calculation_calls": 0,
+      "checked_Base_cache_and_notification_identities_preserved": true,
+      "population_aggregate_before": [
+        777,
+        888
+      ],
+      "population_aggregate_after": [
+        777,
+        888
+      ]
+    },
+    {
+      "id": "flood_Base_pop3_two_Bases",
+      "lost_Base": {
+        "population": 3,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": false,
+        "HQ": true
+      },
+      "survivor_before": {
+        "population": 7,
+        "worked_tiles_bitmap": 1,
+        "specialist_count": 0,
+        "provisional_specialist_count": 0,
+        "specialist_types": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "nutrient_store": 0,
+        "mineral_store": 0,
+        "baseline_item": 0,
+        "baseline_minerals": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "economy_psych_labs": [
+          0,
+          0,
+          0
+        ],
+        "resource_words": [
+          0,
+          0
+        ],
+        "Pressure_Dome": false,
+        "HQ": false
+      },
+      "survivor_after": {
+        "population": 7,
+        "worked_tiles_bitmap": 1,
+        "specialist_count": 0,
+        "provisional_specialist_count": 0,
+        "specialist_types": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "nutrient_store": 0,
+        "mineral_store": 0,
+        "baseline_item": 0,
+        "baseline_minerals": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "economy_psych_labs": [
+          0,
+          0,
+          0
+        ],
+        "resource_words": [
+          0,
+          0
+        ],
+        "Pressure_Dome": false,
+        "HQ": false
+      },
+      "HQ_relocated": false,
+      "Base_index_references_repaired": true,
+      "resource_cache_key_before": 0,
+      "resource_cache_key_after": -1,
+      "resource_calculation_calls": 0,
+      "Unit_deletion_order": [
+        9,
+        8
+      ]
+    },
+    {
+      "id": "flood_Base_dome",
+      "before": {
+        "population": 12,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": true,
+        "HQ": false
+      },
+      "after": {
+        "population": 12,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": true,
+        "HQ": false
+      },
+      "all_other_Base_bytes_preserved": true,
+      "resource_calculation_calls": 0,
+      "checked_Base_cache_and_notification_identities_preserved": true,
+      "population_aggregate_before": [
+        777,
+        888
+      ],
+      "population_aggregate_after": [
+        777,
+        888
+      ]
+    },
+    {
+      "id": "full_sea_step_Base_pop12",
+      "before": {
+        "population": 12,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": false,
+        "HQ": false
+      },
+      "after": {
+        "population": 6,
+        "worked_tiles_bitmap": 87381,
+        "specialist_count": 4,
+        "provisional_specialist_count": 91,
+        "specialist_types": [
+          0,
+          1,
+          2,
+          3,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "nutrient_store": 1234,
+        "mineral_store": 5678,
+        "baseline_item": 2,
+        "baseline_minerals": 9012,
+        "intake": [
+          101,
+          102,
+          103
+        ],
+        "support": 104,
+        "surplus": [
+          105,
+          106,
+          107
+        ],
+        "economy_psych_labs": [
+          108,
+          109,
+          110
+        ],
+        "resource_words": [
+          111,
+          112
+        ],
+        "Pressure_Dome": true,
+        "HQ": false
+      },
+      "all_other_Base_bytes_preserved": true,
+      "resource_calculation_calls": 0,
+      "checked_Base_cache_and_notification_identities_preserved": true,
+      "population_aggregate_before": [
+        777,
+        888
+      ],
+      "population_aggregate_after": [
+        777,
+        888
+      ]
+    }
+  ],
+  "reused_full_record_comparisons": [
+    {
+      "id": "flood_Base_pop12",
+      "population_before": 12,
+      "population_after": 6,
+      "Pressure_Dome_before": false,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "flood_Base_pop3_last",
+      "population_before": 3,
+      "population_after": 1,
+      "Pressure_Dome_before": false,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "flood_Base_pop40_loss_cap",
+      "population_before": 40,
+      "population_after": 30,
+      "Pressure_Dome_before": false,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "flood_Base_pop4_seed2",
+      "population_before": 4,
+      "population_after": 2,
+      "Pressure_Dome_before": false,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "flood_Base_dome",
+      "population_before": 12,
+      "population_after": 12,
+      "Pressure_Dome_before": true,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "Base_sea_to_land",
+      "population_before": 12,
+      "population_after": 12,
+      "Pressure_Dome_before": true,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    },
+    {
+      "id": "full_sea_step_Base_pop12",
+      "population_before": 12,
+      "population_after": 6,
+      "Pressure_Dome_before": false,
+      "Pressure_Dome_after": true,
+      "all_other_Base_bytes_preserved": true
+    }
+  ],
+  "objective_queries": [
+    {
+      "id": "ordinary_with_HQ",
+      "primary": 0,
+      "secondary": 0,
+      "Base_objective_flags": 0,
+      "project_host": -1,
+      "Pressure_Dome": true,
+      "HQ": true,
+      "returned": 0
+    },
+    {
+      "id": "all_Base_flag",
+      "primary": 536870912,
+      "secondary": 0,
+      "Base_objective_flags": 0,
+      "project_host": -1,
+      "Pressure_Dome": true,
+      "HQ": true,
+      "returned": 1
+    },
+    {
+      "id": "explicit_Base_objective",
+      "primary": 0,
+      "secondary": 0,
+      "Base_objective_flags": 32768,
+      "project_host": -1,
+      "Pressure_Dome": true,
+      "HQ": true,
+      "returned": 1
+    },
+    {
+      "id": "project_host",
+      "primary": 1073741824,
+      "secondary": 0,
+      "Base_objective_flags": 0,
+      "project_host": 0,
+      "Pressure_Dome": true,
+      "HQ": true,
+      "returned": 1
+    },
+    {
+      "id": "facility_objective_present",
+      "primary": 0,
+      "secondary": 67108864,
+      "Base_objective_flags": 0,
+      "project_host": -1,
+      "Pressure_Dome": true,
+      "HQ": true,
+      "returned": 1
+    },
+    {
+      "id": "facility_objective_absent",
+      "primary": 0,
+      "secondary": 67108864,
+      "Base_objective_flags": 0,
+      "project_host": -1,
+      "Pressure_Dome": false,
+      "HQ": true,
+      "returned": 0
+    }
+  ],
+  "scope": "Four existing complete flood/sea-step admissions: nonzero Base record canaries, source-call observations, and HQ on the deleted first-of-two Base; six direct complete objective-helper queries. Original full record source receipt reused for population4/40/last. No general population recalculation or new full removal matrix.",
+  "passed": true
+}

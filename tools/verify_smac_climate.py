@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Replay frozen climate controls through the production C++ probe.
 
-Default: seven original synthetic river worlds, without installed assets.
+Default: twelve original synthetic controls, without installed assets.
 --prepared-planet accepts a LOCAL 3200x44-byte plane with the frozen admission
-hash, for all34 original controls. No original map data is distributed here.
+hash, for all43 original controls. No original map data is distributed here.
 """
 import argparse,hashlib,json,struct,subprocess
 from pathlib import Path
@@ -91,6 +91,43 @@ def replay(binary,prepared=None,quiet=False):
         if not quiet:print('PASS',name,'tiles',case['changed_tile_count'],'shared',state[2],'CRT',state[3])
     return count
 
+def replay_retained7(binary,prepared=None):
+    data=json.loads((ROOT/'docs/behavior/climate-retained-class7-cases.json').read_bytes())
+    baseline=Path(prepared).read_bytes() if prepared else None
+    if baseline is not None:
+        old=json.loads((ROOT/'docs/behavior/climate-recalculation-rules-cases.json').read_bytes())
+        expected=next(c for c in old['cases'] if c['id']=='temperature_extra0')['map_before_sha256']
+        assert len(baseline)==140800 and hashlib.sha256(baseline).hexdigest()==expected
+    count=0
+    for case in data['cases']:
+        name=case['id']
+        mixed=name in ('temperature_retained7','rainfall_retained7','recalculate_altitudes_incoming7','full_recalculate_incoming7')
+        if mixed and baseline is None:continue
+        raw=bytearray(baseline if mixed else synthetic('river_uniform_land'))
+        if mixed:
+            for i in range(3200):
+                if name in ('recalculate_altitudes_incoming7','full_recalculate_incoming7') or (i//40==40 and i%40 in (10,11,12,13,14)):
+                    raw[44*i]=(raw[44*i]&31)|224
+        elif name in ('river_initial7_uphill7','assign_incoming7_to6','shape6_retains_neighbor7'):
+            for i in range(3200):
+                at=44*i;raw[at:at+44]=bytes(44);raw[at]=224|2;raw[at+1]=110 if name.startswith('river') else 150;raw[at+2]=15
+            if name.startswith('river'):
+                at=44*(40*40+20);raw[at+1]=100;struct.pack_into('<I',raw,at+8,0x100)
+        else:
+            struct.pack_into('<I',raw,44*(40*40+20)+8,0)
+            at=44*(16*40+12);raw[at]=(192 if name=='assign_requested7' else 224)|2;raw[at+1]=150
+        assert hashlib.sha256(raw).hexdigest()==case['before_map_sha256'],(name,'input differs from original control')
+        normalized=dict(case,width=80,height=80,flat=False,shared_draw_count=case['shared_draws'])
+        mode='temperature' if name.startswith('temperature') else 'rainfall' if name.startswith('rainfall') else 'rivers' if name.startswith('river') else 'assign' if name.startswith('assign') else 'shape' if name.startswith('shape') else 'altitude' if name.startswith('recalculate') else 'complete'
+        arguments=tuple(case['arguments'][:3]) if case['arguments'] else (0,0,0)
+        after,state,seeds,draws=probe(binary,mode,raw,normalized,arguments=arguments)
+        assert hashlib.sha256(after).hexdigest()==case['after_map_sha256'],(name,'complete output differs from original')
+        assert state[:4]==[case['shared_seed_after'],case['CRT_seed_after'],case['shared_draws'],len(case['CRT_draws'])],(name,'random state/count')
+        assert draws==case['CRT_draws'],(name,'CRT trace')
+        count+=1
+        print('PASS',name,'tiles',case['changed_tiles'],'shared',state[2],'CRT',state[3])
+    return count
+
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--probe',type=Path,required=True);parser.add_argument('--prepared-planet',type=Path);args=parser.parse_args()
-    print('Passed',replay(args.probe,args.prepared_planet),'original complete-plane controls')
+    print('Passed',replay(args.probe,args.prepared_planet)+replay_retained7(args.probe,args.prepared_planet),'original complete-plane controls')

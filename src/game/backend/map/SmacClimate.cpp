@@ -10,8 +10,8 @@ int32_t Checked(int64_t value) {
     if(value<INT32_MIN || value>INT32_MAX) {throw std::overflow_error("Climate exceeds measured signed32 arithmetic");}
     return static_cast<int32_t>(value);
 }
-constexpr std::array<int32_t,8> thresholds{{0,20,40,60,80,100,120,140}};
-constexpr std::array<int32_t,7> river_bounds{{0,20,40,60,80,100,120}};
+constexpr std::array<int32_t,9> thresholds{{0,20,40,60,80,100,120,140,160}};
+constexpr std::array<int32_t,8> river_bounds{{0,20,40,60,80,100,120,140}};
 constexpr std::array<Coordinate,4> directions{{{{1,-1}},{{1,1}},{{-1,1}},{{-1,-1}}}};
 constexpr std::array<Coordinate,225> shaping{{{{0,0}},{{1,-1}},{{2,0}},{{1,1}},{{0,2}},{{-1,1}},{{-2,0}},{{-1,-1}},{{0,-2}},{{2,-2}},{{2,2}},{{-2,2}},{{-2,-2}},{{1,-3}},{{3,-1}},{{3,1}},{{1,3}},{{-1,3}},{{-3,1}},{{-3,-1}},{{-1,-3}},{{4,0}},{{-4,0}},{{0,4}},{{0,-4}},{{1,-5}},{{2,-4}},{{3,-3}},{{4,-2}},{{5,-1}},{{5,1}},{{4,2}},{{3,3}},{{2,4}},{{1,5}},{{-1,5}},{{-2,4}},{{-3,3}},{{-4,2}},{{-5,1}},{{-5,-1}},{{-4,-2}},{{-3,-3}},{{-2,-4}},{{-1,-5}},{{0,6}},{{6,0}},{{0,-6}},{{-6,0}},{{0,-8}},{{1,-7}},{{2,-6}},{{3,-5}},{{4,-4}},{{5,-3}},{{6,-2}},{{7,-1}},{{8,0}},{{7,1}},{{6,2}},{{5,3}},{{4,4}},{{3,5}},{{2,6}},{{1,7}},{{0,8}},{{-1,7}},{{-2,6}},{{-3,5}},{{-4,4}},{{-5,3}},{{-6,2}},{{-7,1}},{{-8,0}},{{-7,-1}},{{-6,-2}},{{-5,-3}},{{-4,-4}},{{-3,-5}},{{-2,-6}},{{-1,-7}},{{0,-10}},{{1,-9}},{{2,-8}},{{3,-7}},{{4,-6}},{{5,-5}},{{6,-4}},{{7,-3}},{{8,-2}},{{9,-1}},{{10,0}},{{9,1}},{{8,2}},{{7,3}},{{6,4}},{{5,5}},{{4,6}},{{3,7}},{{2,8}},{{1,9}},{{0,10}},{{-1,9}},{{-2,8}},{{-3,7}},{{-4,6}},{{-5,5}},{{-6,4}},{{-7,3}},{{-8,2}},{{-9,1}},{{-10,0}},{{-9,-1}},{{-8,-2}},{{-7,-3}},{{-6,-4}},{{-5,-5}},{{-4,-6}},{{-3,-7}},{{-2,-8}},{{-1,-9}},{{0,-12}},{{1,-11}},{{2,-10}},{{3,-9}},{{4,-8}},{{5,-7}},{{6,-6}},{{7,-5}},{{8,-4}},{{9,-3}},{{10,-2}},{{11,-1}},{{12,0}},{{11,1}},{{10,2}},{{9,3}},{{8,4}},{{7,5}},{{6,6}},{{5,7}},{{4,8}},{{3,9}},{{2,10}},{{1,11}},{{0,12}},{{-1,11}},{{-2,10}},{{-3,9}},{{-4,8}},{{-5,7}},{{-6,6}},{{-7,5}},{{-8,4}},{{-9,3}},{{-10,2}},{{-11,1}},{{-12,0}},{{-11,-1}},{{-10,-2}},{{-9,-3}},{{-8,-4}},{{-7,-5}},{{-6,-6}},{{-5,-7}},{{-4,-8}},{{-3,-9}},{{-2,-10}},{{-1,-11}},{{0,-14}},{{1,-13}},{{2,-12}},{{3,-11}},{{4,-10}},{{5,-9}},{{6,-8}},{{7,-7}},{{8,-6}},{{9,-5}},{{10,-4}},{{11,-3}},{{12,-2}},{{13,-1}},{{14,0}},{{13,1}},{{12,2}},{{11,3}},{{10,4}},{{9,5}},{{8,6}},{{7,7}},{{6,8}},{{5,9}},{{4,10}},{{3,11}},{{2,12}},{{1,13}},{{0,14}},{{-1,13}},{{-2,12}},{{-3,11}},{{-4,10}},{{-5,9}},{{-6,8}},{{-7,7}},{{-8,6}},{{-9,5}},{{-10,4}},{{-11,3}},{{-12,2}},{{-13,1}},{{-14,0}},{{-13,-1}},{{-12,-2}},{{-11,-3}},{{-10,-4}},{{-9,-5}},{{-8,-6}},{{-7,-7}},{{-6,-8}},{{-5,-9}},{{-4,-10}},{{-3,-11}},{{-2,-12}},{{-1,-13}}}};
 constexpr std::array<size_t,8> ring_ends{{1,9,25,49,81,121,169,225}};
@@ -38,7 +38,7 @@ void ValidateRules(const World& world,const Rules& rules) {
 void World::Validate() const {
     Require(width>=16 && width<=512 && !(width&1) && height>=1 && height<=256
         && tiles.size()==size_t(width/2)*height,"Climate requires a complete bounded doubled-coordinate plane");
-    for(const auto& t:tiles) {Require(t.elevation>=0 && t.elevation<=6 && t.temperature>=0 && t.temperature<=2
+    for(const auto& t:tiles) {Require(t.elevation>=0 && t.elevation<=7 && t.temperature>=0 && t.temperature<=2
         && t.moisture>=0 && t.moisture<=2 && t.contour>=0 && t.contour<=255 && t.aux>=0 && t.aux<=255
         && t.cached_occupant>=0 && t.cached_occupant<=15 && t.rockiness>=0 && t.rockiness<=2,"Invalid retained climate tile");}
 }
@@ -60,7 +60,7 @@ int32_t ClassifyContour(int32_t contour,int32_t offset) {
     for(int32_t category=6;category>=0;--category) {if(value>=thresholds[category]) {return category;}}return 0;
 }
 void AssignSurfaceClass(World& world,int32_t x,int32_t y,int32_t category,Streams& random,const Context& context) {
-    Require(category>=0 && category<=6,"Invalid requested climate class");auto* t=world.At(x,y);Require(t,"Climate class center is outside world");
+    Require(category>=0 && category<=7,"Invalid requested climate class");auto* t=world.At(x,y);Require(t,"Climate class center is outside world");
     const auto old=t->elevation;
     if(context.turn!=0) {
         if(old!=category && t->landmarks) {
@@ -88,7 +88,7 @@ void AssignSurfaceClass(World& world,int32_t x,int32_t y,int32_t category,Stream
     t->elevation=category;world.dirty_flags|=4;
 }
 void ShapeHeight(World& world,int32_t x,int32_t y,int32_t category,Streams& random,const Context& context) {
-    Require(category>=0 && category<=6,"Invalid shaping class");world.flood_counts.fill(0);world.affected_bases.fill(-1);
+    Require(category>=0 && category<=7,"Invalid shaping class");world.flood_counts.fill(0);world.affected_bases.fill(-1);
     if(world.At(x,y)) {EnsureContour(world,x,y,category,random,context);}
     for(const auto direction:{-1,1}) {const auto maximum=direction<0?category:8-category;
         for(int32_t radius=1;radius<maximum;++radius) {const auto target=category+direction*radius;bool changed=false;

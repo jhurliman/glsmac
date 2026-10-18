@@ -63,6 +63,27 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
                 "Original river random trace differs: "+std::string(row.id));
         }GT_OK();
     });
+    task->AddTest("SMAC climate retained band7 uses original river floor and requested shaping endpoint",GT(){
+        namespace c=game::backend::map::smac_climate;
+        c::World world{80,80,true,std::vector<c::Tile>(3200,c::Tile{7,2,0,110,0,0,0,15,0,{}})};
+        world.At(40,40)->contour=100;world.At(40,40)->items=0x100u;
+        SmacGameplayRandomState random(2000,0);c::Streams streams{random};c::Rivers(world,streams);
+        GT_ASSERT(random.Shared()==4188853922u && random.Crt()==0 && streams.shared_draws==194 && streams.crt_draws==0,
+            "Original retained band7 river stream differs");
+        bool floor=false;for(const auto& tile:world.tiles) {
+            GT_ASSERT(tile.elevation==7,"River normalized retained altitude band7");floor|=tile.contour==140;
+        }
+        GT_ASSERT(floor,"Uphill river omitted original band7 lower bound140");
+        world.tiles.clear();for(int32_t y=0;y<80;++y) {for(int32_t x=y&1;x<80;x+=2) {world.tiles.push_back({3,2,0,50+x%8,0,0,0,0,0,{}});}}
+        auto* center=world.At(24,16);center->elevation=6;center->contour=150;
+        random=SmacGameplayRandomState(2000,0);c::Streams assignment{random};c::Context context{0,90,false,[](const auto&,int32_t,int32_t){return false;},{},{}};
+        c::AssignSurfaceClass(world,24,16,7,assignment,context);
+        GT_ASSERT(center->elevation==7 && center->contour==150 && assignment.crt_draws==1 && random.Crt()==2531011u,
+            "Explicit requested band7 assignment was rejected or changed contour");
+        random=SmacGameplayRandomState(2000,0);c::Streams shaping{random};c::ShapeHeight(world,24,16,7,shaping,context);
+        GT_ASSERT(center->elevation==7 && center->contour==158 && shaping.crt_draws==97 && shaping.shared_draws==0 && random.Crt()==2188405923u,
+            "Requested band7 shaping omitted endpoint160 or original CRT sequence");GT_OK();
+    });
     task->AddTest("SMAC climate class conversion masks memory before entity cleanup and stores class last",GT(){
         namespace c=game::backend::map::smac_climate;
         c::World world{80,80,true,std::vector<c::Tile>(3200,c::Tile{3,2,1,60,0,0,0,15,0,{}})};

@@ -1,5 +1,6 @@
 #include "SmacPlanetMap.h"
 #include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/map/SmacClimate.h"
 #include "game/backend/settings/Settings.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacBloomTerrain.h"
@@ -33,6 +34,71 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet retained altitude band7 survives policy publication and altitude reconstruction",GT(){
+        namespace c=game::backend::map::smac_climate;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;
+            wire[at]=static_cast<char>((7u<<5)|(1u<<3)|2u);wire[at+1]=static_cast<char>(140);
+            wire[at+2]=static_cast<char>(0xaf);wire[at+5]=static_cast<char>(0x80);
+        }
+        const auto original=Policy::InstalledPlanetV1(Planet::Decode(wire),true);
+        auto world=original.OriginalPlanet()->ExportClimateTerrain(true);
+        GT_ASSERT(world.tiles.front().elevation==7 && world.tiles.back().elevation==7,"Retained altitude band7 was lost on export");
+        const auto retained=original.WithClimateTerrain(world,0,0);
+        GT_ASSERT(retained.OriginalPlanet()->Encode()==wire && Policy::Deserialize(retained.Serialize().ToString())==retained,
+            "Retained altitude band7 failed byte-exact publication or V2 save roundtrip");
+        auto invalid=world;invalid.tiles.back().elevation=8;bool rejected=false;
+        try {(void)original.WithClimateTerrain(invalid,0,0);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected && original.OriginalPlanet()->Encode()==wire,"Unencodable altitude partly changed original policy");
+        game::backend::SmacGameplayRandomState state(123,456);c::Streams streams{state};
+        c::RecalculateAltitudes(world,streams,{0,90,true,[](const auto&,int32_t,int32_t){return false;},{},{}});
+        GT_ASSERT(streams.shared_draws==0 && streams.crt_draws==0,"Uniform retained band7 reconstruction consumed unexpected randomness");
+        for(const auto& tile:world.tiles) {GT_ASSERT(tile.elevation==6 && tile.contour==140,"Altitude reconstruction did not classify retained band7 contour to6");}
+        GT_OK();
+    });
+
+    task->AddTest("SMAC Planet climate publication preserves opaque bytes and retained policy history",GT(){
+        namespace c=game::backend::map::smac_climate;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);wire[15+0x30]=93;
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;
+            wire[at]=105;wire[at+1]=64;wire[at+2]=static_cast<char>(0xaf);wire[at+3]=static_cast<char>(i%128);
+            wire[at+4]=0;wire[at+5]=static_cast<char>(0x6d);wire[at+6]=27;wire[at+7]=static_cast<char>(0xe7);
+            Put(wire,at+8,0x1000u);Put(wire,at+12,0x12345678u);
+            for(size_t owner=0;owner<7;++owner) {Put(wire,at+16+4*owner,0x80000000u+uint32_t(i*7+owner));}
+        }
+        for(size_t i=wire.size()-Planet::TRAILER_BYTES;i<wire.size();++i) {wire[i]=static_cast<char>(i%256);}
+        const auto source=Planet::Decode(wire);auto world=source.ExportClimateTerrain(false);
+        GT_ASSERT(!world.horizontal_wrap && world.tiles.size()==3200 && source.WithClimateTerrain(world,0,0).Encode()==wire,"Climate export or identity publication rewrote source bytes");
+        const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES;
+        auto& tile=world.tiles[0];tile={6,2,2,255,129,0x81234567u,0xefa98765u,3,2,{{1,2,3,4,5,6,UINT32_MAX}}};
+        auto expected=wire;Put(expected,15+0x0c,static_cast<uint32_t>(-11));Put(expected,15+0x10,7);
+        expected[at]=static_cast<char>(210);expected[at+1]=static_cast<char>(255);expected[at+2]=static_cast<char>(0xa3);expected[at+5]=static_cast<char>(0xad);expected[at+6]=static_cast<char>(129);
+        Put(expected,at+8,0x81234567u);Put(expected,at+12,0xefa98765u);
+        for(size_t i=0;i<7;++i) {Put(expected,at+16+4*i,i==6?UINT32_MAX:uint32_t(i+1));}
+        const auto updated=source.WithClimateTerrain(world,-11,7);
+        GT_ASSERT(updated.Encode()==expected && source.Encode()==wire,"Climate publication changed territory, region, site nibble, opaque header/trailer or source");
+        world.horizontal_wrap=true;
+        const auto policy=Policy::InstalledPlanetV1(source,true);const auto legacy=policy.Serialize().ToString();
+        const auto current=policy.WithClimateTerrain(world,-11,7);const auto saved=current.Serialize().ToString();
+        GT_ASSERT(current.OriginalPlanet()->Encode()==expected && current.AutomaticLandResources() && Policy::Deserialize(saved)==current
+            && Policy::Deserialize(legacy).Serialize().ToString()==legacy,"Retained V2 climate policy failed to retain occupied fields, automatic-resource setting or old V1 bytes");
+        bool rejected=false;try {(void)Policy::InstalledPlanetV1(updated,true);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected,"Fresh import unexpectedly accepted retained occupied climate state");
+        auto malformed=world;malformed.tiles.back().rockiness=3;rejected=false;
+        try {(void)policy.WithClimateTerrain(malformed,0,0);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected && policy.Serialize().ToString()==legacy,"Late invalid tile partly published climate state");
+        malformed=world;malformed.width=40;malformed.tiles.resize(1600);rejected=false;
+        try {(void)source.WithClimateTerrain(malformed,0,0);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected,"Climate publication accepted different map geometry");
+        for(const auto length:{size_t(0),size_t(6),saved.size()-1}) {rejected=false;try {(void)Policy::Deserialize(saved.substr(0,length));}catch(const std::exception&){rejected=true;}GT_ASSERT(rejected,"Truncated retained climate policy accepted");}
+        auto flat=world;flat.horizontal_wrap=false;rejected=false;try {(void)policy.WithClimateTerrain(flat,0,0);}catch(const std::exception&){rejected=true;}GT_ASSERT(rejected,"Installed wrapped policy accepted a flat climate producer");
+        auto invalid_header=expected;Put(invalid_header,15+0xa34,3);types::Buffer malformed_policy;malformed_policy.WriteInt(2);malformed_policy.WriteInt(2);malformed_policy.WriteBool(true);malformed_policy.WriteString(invalid_header);
+        rejected=false;try {(void)Policy::Deserialize(malformed_policy.ToString());}catch(const std::exception&){rejected=true;}GT_ASSERT(rejected,"Retained climate policy accepted unsupported ocean category");
+        auto suffix=saved+"x";rejected=false;try {(void)Policy::Deserialize(suffix);}catch(const std::exception&){rejected=true;}GT_ASSERT(rejected,"Retained climate policy accepted suffix bytes");GT_OK();
+    });
+
     task->AddTest("SMAC Planet bloom authority preserves opaque geometry and survives saved resource policy", GT() {
         using Policy = game::backend::map::GlsmacResourceMapPolicy;
         using Coordinate = std::array<int32_t,2>;
@@ -83,6 +149,8 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
             GT_ASSERT(draws==row.draws.size() && rng.Shared()==1234, "Saved-map producer changed RNG consumption");
             const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), true);
             const auto prepared = original.WithBloomTerrain(plan);
+            const auto retained=original.WithClimateTerrain(original.OriginalPlanet()->ExportClimateTerrain(true),0,0).WithBloomTerrain(plan);
+            GT_ASSERT(retained.OriginalPlanet()->Encode()==prepared.OriginalPlanet()->Encode() && Policy::Deserialize(retained.Serialize().ToString())==retained,"Bloom publication lost retained climate policy mode or terrain");
             auto expected = wire;
             for (const auto& delta : row.changes) {
                 const auto at = offset(delta.coordinate);
@@ -132,6 +200,17 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         GT_ASSERT(rejected, "Generated terrain invented original class authority");
         GT_OK();
     });
+    task->AddTest("SMAC Planet keeps temperature category and cached occupant distinct from tile codes and territory",GT(){
+        for(const int32_t category:{-1,0,1,2,INT32_MAX}) {
+            auto wire=Synthetic();Put(wire,Planet::PREFIX_BYTES+0xa40,static_cast<uint32_t>(category));
+            Put(wire,Planet::PREFIX_BYTES+0x10,static_cast<uint32_t>(~category));
+            const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES;
+            wire[at]=static_cast<char>((3<<5)|(1<<3)|2);wire[at+2]=static_cast<char>(0xa6);wire[at+7]=1;
+            const auto planet=Planet::Decode(wire);const auto& tile=planet.At(0,0);
+            GT_ASSERT(planet.TemperatureCategory()==category && planet.ClimateExtra()==~category && (tile.Climate()&7)==2 && tile.CachedOccupant()==6
+                && tile.SiteRating()==10 && tile.Owner()==1 && planet.Encode()==wire,"Independent climate/occupancy fields were conflated or normalized");
+        }GT_OK();
+    });
     task->AddTest("SMAC Planet ecology header words retain independent signed32 authorities", GT() {
         for (const int32_t value : {0, 1, 2, -1, 16909060, INT32_MIN, INT32_MAX}) {
             auto wire = Synthetic();
@@ -151,7 +230,8 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
             GT_ASSERT(input.good(), "Installed Planet asset unavailable");
             const std::string bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
             const auto map = Planet::Decode(bytes);
-            GT_ASSERT(map.CloudCoverCategory() == 1 && map.NativeLifeCategory() == 1 && map.CumulativeSeaLevelOffset() == 0,
+            GT_ASSERT(map.WithClimateTerrain(map.ExportClimateTerrain(true),map.CumulativeSeaLevelOffset(),map.ClimateExtra()).Encode()==bytes,"Installed Planet climate export changed original bytes");
+            GT_ASSERT(map.TemperatureCategory()==1 && map.ClimateExtra()==0 && map.CloudCoverCategory() == 1 && map.NativeLifeCategory() == 1 && map.CumulativeSeaLevelOffset() == 0,
                 "Installed map ecology authority differs from original loader");
             GT_OK();
         });

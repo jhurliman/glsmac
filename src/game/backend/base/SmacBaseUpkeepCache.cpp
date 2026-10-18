@@ -38,28 +38,30 @@ void ValidateSupport(const SmacUnitSupportResult& support) {
 }
 }
 
-void WriteSmacResourceCalculation(types::Buffer& buffer,const SmacBaseResourceCalculation& value) {
+void WriteSmacResourceCalculation(types::Buffer& buffer,const SmacBaseResourceCalculation& value, bool include_ecology) {
     for(const auto raw:value.raw_intake) {buffer.WriteInt(raw);}
     buffer.WriteInt(value.nutrients.intake);buffer.WriteInt(value.nutrients.demand);buffer.WriteInt(value.nutrients.surplus);
     buffer.WriteInt(value.nutrients.stored_before);buffer.WriteInt(value.nutrients.normalized_stored);
     buffer.WriteInt(value.minerals.multiplier_steps);buffer.WriteInt(value.minerals.intake);buffer.WriteInt(value.minerals.demand);
     buffer.WriteInt(value.minerals.surplus);buffer.WriteInt(value.minerals.pre_orbital_surplus);
+    if(include_ecology) {buffer.WriteBool(value.eco_damage.has_value());if(value.eco_damage) {buffer.WriteInt(*value.eco_damage);}}
 }
 
-SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer& buffer) {
+SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer& buffer, bool include_ecology) {
     SmacBaseResourceCalculation value{};
     for(auto& raw:value.raw_intake) {raw=buffer.ReadInt();}
     value.nutrients.intake=ReadInt32(buffer);value.nutrients.demand=ReadInt32(buffer);value.nutrients.surplus=ReadInt32(buffer);
     value.nutrients.stored_before=buffer.ReadInt();value.nutrients.normalized_stored=buffer.ReadInt();
     value.minerals.multiplier_steps=ReadInt32(buffer);value.minerals.intake=ReadInt32(buffer);value.minerals.demand=ReadInt32(buffer);
     value.minerals.surplus=ReadInt32(buffer);value.minerals.pre_orbital_surplus=ReadInt32(buffer);
+    if(include_ecology && buffer.ReadBool()) {value.eco_damage=ReadInt32(buffer);}
     return value;
 }
 
 types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCache>& cache) {
     if(cache) {ValidateSupport(cache->support);}
     types::Buffer buffer;
-    buffer.WriteInt(1);buffer.WriteBool(cache.has_value());
+    buffer.WriteInt(2);buffer.WriteBool(cache.has_value());
     if(cache) {
         WriteSmacResourceCalculation(buffer,cache->calculation);
         const auto& support=cache->support;
@@ -75,10 +77,11 @@ types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCac
 }
 
 std::optional<SmacBaseUpkeepCache> DeserializeSmacBaseUpkeepCache(types::Buffer buffer) {
-    if(buffer.ReadInt()!=1) {throw std::runtime_error("Unsupported Base upkeep cache");}
+    const auto version=buffer.ReadInt();
+    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported Base upkeep cache");}
     std::optional<SmacBaseUpkeepCache> cache;
     if(buffer.ReadBool()) {
-        cache.emplace();cache->calculation=ReadSmacResourceCalculation(buffer);
+        cache.emplace();cache->calculation=ReadSmacResourceCalculation(buffer,version>=2);
         auto& support=cache->support;
         support.free_allowance=ReadInt32(buffer);support.minerals_per_paid_unit=ReadInt32(buffer);
         support.eligible_count=ReadInt32(buffer);support.paid_count=ReadInt32(buffer);support.mineral_support=ReadInt32(buffer);

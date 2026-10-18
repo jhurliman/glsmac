@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseRemoval.cpp
 	${PWD}/SmacEcology.cpp
 	${PWD}/BaseResourceCalculation.cpp
+	${PWD}/BaseEcology.cpp
 	${PWD}/BaseAllocation.cpp
 	${PWD}/BaseProduction.cpp
 	${PWD}/BaseProductionSelection.cpp

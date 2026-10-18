@@ -51,7 +51,8 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 // Independent typed fixture: deliberately retained history, not a query of any
 // current world. Marking order is unrelated to numeric Unit identity.
 struct UpkeepCacheWire {
-    int64_t version = 1;
+    int64_t version = 2;
+    std::optional<int64_t> ecology;
     bool present = true;
     std::array<int64_t,13> calculation{4,3,2, 4,2,2,19,19, 2,3,2,1,1};
     std::array<int64_t,5> support{1,2,2,1,2};
@@ -61,6 +62,7 @@ struct UpkeepCacheWire {
         types::Buffer out; out.WriteInt(version); out.WriteBool(present);
         if (present) {
             for (const auto value : calculation) { out.WriteInt(value); }
+            if(version>=2) {out.WriteBool(ecology.has_value());if(ecology) {out.WriteInt(*ecology);}}
             for (const auto value : support) { out.WriteInt(value); }
             out.WriteInt(count);
             for (const auto& unit : units) { out.WriteInt(unit.first); out.WriteInt(unit.second); }
@@ -2147,6 +2149,89 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC live ecology uses full radius current inputs and preserves cached history", [](GSE*,context::Context*) -> std::string {
+        const auto source=[](const std::string& filename) {
+            auto value=Source(filename);
+            if(filename=="alpha.txt") {value+="\n#WORLDBUILDER\n";for(int i=0;i<15;++i) {value+="5\n";}}
+            return value;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS",32,16);
+        fixture.ResourceState([](auto& state) {
+            state.ecology_world=faction::SmacEcologyWorld{1,2,0};state.perihelion=false;
+            state.ecology_history=faction::SmacEcologyHistory{};
+            for(auto& tech:state.technology.factions) {tech.score=100;tech.future_count=0;}
+        });
+        std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=Populate(GSE_CALL,fixture,false,false,0,1,1,4,4);auto* game=fixture.Game();
+            fixture.RetainedPlanet(0,0);
+            // Every radius position has a Borehole, including unworked and
+            // unowned squares. Center selection is an independent retained bit.
+            for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {game->GetMap()->GetTile(x,y)->terraforming=TERRAFORMING_BOREHOLE;}}
+            auto allocation=*base->GetSmacAllocation();
+            const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+            const auto first=base->PrepareSmacResourceCalculation();
+            // 21*9 + two explicit selected bits =191 -> floor/8=23.
+            // Gross minerals=3 (center1 plus capped worker2); clean allowance16 is consumed by terrain,
+            // giving residual7 + mineral3 = burden10. PLANET0, L1,
+            // technology100 and Citizen factor2 yield damage20.
+            GT_ASSERT(first.minerals.intake==3 && first.eco_damage==20,"live ecology did not consume measured full-radius and gross mineral inputs: minerals="+std::to_string(first.minerals.intake)+", damage="+(first.eco_damage ? std::to_string(*first.eco_damage) : "unavailable"));
+            const auto wrapped=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_resource_calculation"));
+            GT_ASSERT(static_cast<value::Int*>(wrapped->Get("eco_damage"))->value==20
+                && fixture.Snapshot()==before && fixture.GameplayRandom()==rng,"query mutated saved state/RNG or omitted GSE damage");
+            auto* remote=game->GetMap()->GetTile(1,3);remote->terraforming|=TERRAFORMING_ROAD;
+            GT_ASSERT(base->PrepareSmacResourceCalculation().eco_damage==22,"unworked road was omitted from the full radius");
+            allocation.selected&=~1u;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            GT_ASSERT(base->PrepareSmacResourceCalculation().eco_damage==20,"center worked bit was inferred from automatic center intake");
+            remote->terraforming&=~TERRAFORMING_ROAD;allocation.selected|=1u;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            fixture.ResourceState([](auto& state){state.perihelion=true;});
+            GT_ASSERT(base->PrepareSmacResourceCalculation().eco_damage==40,"live perihelion did not double damage");
+            fixture.ResourceState([](auto& state){state.perihelion=false;state.ecology_history->clean_minerals[1]=20;});
+            GT_ASSERT(base->PrepareSmacResourceCalculation().eco_damage==0,"retained clean history was inferred from installed facilities");
+            fixture.ResourceState([](auto& state){state.ecology_history->clean_minerals[1]=0;});
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}});
+            Knowledge::Data known{32,16,true,true,0,{},{},{{91,0,false}}};
+            known.observers[1]=Knowledge::Observer{false,{}};known.tiles.resize(32*16/2);
+            for(auto& tile:known.tiles) {tile.claimant=1;tile.explored_by=2;}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+            base->SetAccumulatedNutrients(0);
+            base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,"upkeep lost live final resource damage");
+            saved=fixture.Snapshot();
+            fixture.ResourceState([](auto& state){state.ecology_world.reset();});
+            GT_ASSERT(!base->PrepareSmacResourceCalculation().eco_damage
+                && base->GetSmacUpkeepCache()->calculation.eco_damage==20,"unknown world inputs fabricated a zero or rewrote retained damage");
+            GT_OK();
+        });
+        if(!result.empty()) {return result;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS",32,16);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);
+            const auto* base=restored.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,
+                "snapshot restore lost historical damage");
+            GT_OK();
+        });
+    });
+    task->AddTest("SMAC ecology cache retains signed damage and migrates legacy absence", [](GSE*,context::Context*) -> std::string {
+        UpkeepCacheWire wire;wire.version=1;
+        const auto old=DeserializeSmacBaseUpkeepCache(wire.Encode());
+        GT_ASSERT(old && !old->calculation.eco_damage,"legacy cache invented eco-damage");
+        GT_ASSERT(!DeserializeSmacBaseUpkeepCache(SerializeSmacBaseUpkeepCache(old))->calculation.eco_damage,"migration filled missing history");
+        wire.version=2;
+        for(const auto damage:{INT32_MIN,-1,0,137,INT32_MAX}) {
+            wire.ecology=damage;const auto decoded=DeserializeSmacBaseUpkeepCache(wire.Encode());
+            GT_ASSERT(decoded && decoded->calculation.eco_damage==damage
+                && SerializeSmacBaseUpkeepCache(decoded).ToString()==wire.Encode().ToString(),"retained eco-damage changed or was capped");
+        }
+        for(const auto damage:{int64_t(INT32_MIN)-1,int64_t(INT32_MAX)+1}) {
+            wire.ecology=damage;GT_ASSERT(CacheError(wire.Encode(),"signed32"),"eco-damage narrowed outside signed32");
+        }
+        wire.ecology=23;const auto valid=wire.Encode().ToString();
+        GT_ASSERT(Rejects([&]{DeserializeSmacBaseUpkeepCache(types::Buffer(valid.substr(0,14+6+13*14+6+13)));}),"truncated eco-damage admitted");
+        GT_OK();
+    });
     task->AddTest("SMAC Base upkeep cache preserves historical values order and absent state", [](GSE*,context::Context*) -> std::string {
         UpkeepCacheWire wire;
         auto decoded = DeserializeSmacBaseUpkeepCache(wire.Encode());
@@ -2204,7 +2289,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(CacheError(trailing,"Trailing"), "trailing cache data admitted");
         wire.present = false; trailing = wire.Encode(); trailing.WriteInt(0);
         GT_ASSERT(CacheError(trailing,"Trailing"), "absent cache ignored trailing fields");
-        wire.version = 2;
+        wire.version = 3;
         GT_ASSERT(CacheError(wire.Encode(),"Unsupported"), "unknown cache version admitted");
         for (const auto count : {int64_t(-1), int64_t(SmacUnitSupport::MAX_ORDERED_UNITS)+1,
                 int64_t(SmacUnitSupport::MAX_ORDERED_UNITS), int64_t(5)}) {

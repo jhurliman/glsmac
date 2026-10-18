@@ -20,8 +20,8 @@ struct SmacBaseUpkeepCache {
 
 // Preserve historical values and record order; decoding never queries the
 // current map, Unit registry or rules to recompute the saved pass.
-void WriteSmacResourceCalculation(types::Buffer&, const SmacBaseResourceCalculation&);
-SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer&);
+void WriteSmacResourceCalculation(types::Buffer&, const SmacBaseResourceCalculation&, bool include_ecology = true);
+SmacBaseResourceCalculation ReadSmacResourceCalculation(types::Buffer&, bool include_ecology = true);
 types::Buffer SerializeSmacBaseUpkeepCache(const std::optional<SmacBaseUpkeepCache>&);
 std::optional<SmacBaseUpkeepCache> DeserializeSmacBaseUpkeepCache(types::Buffer);
 

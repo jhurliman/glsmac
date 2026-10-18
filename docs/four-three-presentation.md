@@ -65,3 +65,18 @@ errors. A bar press left the menu pixel-identical, and the actual final Exit
 button closed the process with exit0. The current button styling remains a
 known discrepancy. Hosted Windows/macOS checks and native fullscreen/Retina
 interaction must be assessed separately before claiming platform validation.
+
+
+Review follow-up: an out-of-bounds mouse-up alone cannot reach the pressed DOM
+control. Input now establishes the hover path for a press without prior motion
+and sends mouse-out before a bar release. Root hover cleanup also runs when the
+pointer leaves the root. Scrollbar captures retire in their global left-release
+handler rather than waiting for a geometrically relevant slider event. Global
+handler dispatch snapshots IDs and copies the current callable so self-removal
+cannot invalidate iteration or destroy the executing callable.
+
+The private real-DOM SDL/GDB regression exercises a button press without motion,
+release in a bar (no click), a subsequent genuine click (one click), and repeated
+scrollbar drags released in bars. Handler retirement is observed at the real
+UI::RemoveGlobalHandler breakpoint, before widget destruction. Private controls
+exercise the production renderer/event path without changing gameplay rules.

@@ -56,12 +56,30 @@ void SDL2::Iterate() {
 			const auto* graphics = g_engine->GetGraphics();
 			if ( !graphics->MapWindowPoint( x, y ) ) {
 				if ( value.type == EV_MOUSE_SCROLL ) { return; }
+				if ( value.type == EV_MOUSE_UP ) {
+					// Cancel the owned hover/press path before the release. Merely
+					// sending an out-of-bounds UP cannot reach geometric children.
+					input::Event leave;
+					leave.SetType( EV_MOUSE_OUT );
+					leave.data.mouse = value.data.mouse;
+					leave.data.mouse.x = graphics->GetViewportWidth() + 1;
+					leave.data.mouse.y = graphics->GetViewportHeight() + 1;
+					ProcessEvent( leave );
+				}
 				// A move outside clears hover; a release clears captured drag/button
 				// state. Use a single out-of-bounds sentinel, never clamp onto a control.
 				x = graphics->GetViewportWidth() + 1;
 				y = graphics->GetViewportHeight() + 1;
 			}
 			value.data.mouse.x = x; value.data.mouse.y = y;
+		}
+		if ( value.type == EV_MOUSE_DOWN ) {
+			// Touch/pen devices may press without a preceding motion. Establish
+			// the normal hover path so a later outside release can cancel it.
+			input::Event move;
+			move.SetType( EV_MOUSE_MOVE );
+			move.data.mouse = value.data.mouse;
+			ProcessEvent( move );
 		}
 		ProcessEvent( value );
 	};

@@ -8,6 +8,7 @@
 #include "slot/Slots.h"
 #include "Player.h"
 #include "map/Map.h"
+#include "map/SmacPlanetMap.h"
 #include "util/FinallyGuard.h"
 #include "types/Buffer.h"
 #include <algorithm>

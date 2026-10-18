@@ -23,6 +23,7 @@
 #include "connection/Server.h"
 #include "connection/Client.h"
 #include "map/Map.h"
+#include "map/SmacPlanetMap.h"
 #include "map/Consts.h"
 #include "gse/value/String.h"
 #include "gse/value/Int.h"

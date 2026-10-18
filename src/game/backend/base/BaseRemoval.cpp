@@ -126,6 +126,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
 void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexcept {
     auto& state=m_game->m_simulation->value;const auto owner=state.roster[plan.participant].simulation_id;
     static_assert(std::is_nothrow_copy_assignable_v<faction::SmacEconomyState> && std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
+    if(state.retained_base_totals) {state.retained_base_totals->at(owner)=0;} // no-Base disposition, before nonzero initialization
     plan.economy.design_counts=state.economy.at(owner).design_counts;
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     if(state.capabilities) {state.capabilities->factions[owner-1]={};}
@@ -235,6 +236,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
     }
     if (!replacement) {return DisposeLastSmacBase(GSE_CALL,base,definition,mode);}
     const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
+    const auto totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base.GetSmacResourceContext().owner_simulation_id,-1);
     auto& economy=m_game->m_simulation->value.economy.at(base.GetSmacResourceContext().owner_simulation_id);
     auto* um=m_game->GetUM();
     if (!um) {THROW("Colony abandonment requires its Unit manager");}
@@ -262,6 +264,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
     newborn.Commit(); // also commits the joined sight/claims and old home repairs
     m_game->CommitBaseTerritoryTopology(topology);
     economy.regional_base_counts=regional;
+    m_game->m_simulation->value.retained_base_totals=totals;
     std::unique_ptr<Base> retired(&base);
     lock.unlock();
     newborn.Notify(GSE_CALL);
@@ -298,6 +301,7 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     }
     if (!replacement) {(void)DisposeLastSmacBase(GSE_CALL,base,nullptr,unit::SmacMoraleMode::Mode0);return;}
     const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
+    const auto totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base.GetSmacResourceContext().owner_simulation_id,-1);
     auto& economy=m_game->m_simulation->value.economy.at(base.GetSmacResourceContext().owner_simulation_id);
     std::optional<map::GlsmacTerritoryTopology> topology;
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&topology);
@@ -344,6 +348,7 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     m_base_updates.swap(updates); m_updated_bases.swap(triggers); tile->base=nullptr;
     m_game->CommitBaseTerritory(territory,topology);
     economy.regional_base_counts=regional;
+    m_game->m_simulation->value.retained_base_totals=totals;
     std::unique_ptr<Base> retired(&base);
     lock.unlock();
     // Stable IDs are unchanged; only record order compacts. Retire Pop/Base

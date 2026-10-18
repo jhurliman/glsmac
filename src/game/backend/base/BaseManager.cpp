@@ -291,9 +291,11 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	m_game->RequireSmacGameplayActive();
 	faction::SmacEconomyState* economy=nullptr;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	std::optional<faction::SmacBaseTotals> totals;
 	std::optional<faction::SmacVictoryHistory> victory;
 	if(base->HasSmacResourceContext()) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
+		totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base->m_resource_context->owner_simulation_id,1);
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
 		victory=m_game->m_simulation->value.victory_history;
 		if(victory) {
@@ -308,7 +310,7 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	PrepareBaseName( base );
 	RegisterBase( base );
 	m_game->CommitBaseTerritory( territory, topology );
-	if(economy) {economy->regional_base_counts=regional;}
+	if(economy) {economy->regional_base_counts=regional;m_game->m_simulation->value.retained_base_totals=totals;}
 	if(victory) {m_game->m_simulation->value.victory_history=std::move(victory);}
 
 	auto* state = m_game->GetState();
@@ -396,8 +398,10 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	auto* base = it->second;
 	faction::SmacEconomyState* economy=nullptr;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	std::optional<faction::SmacBaseTotals> totals;
 	if(base->HasSmacResourceContext()) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,-1,m_game->GetMap()->GetTerritoryTopology());
+		totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base->m_resource_context->owner_simulation_id,-1);
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
 	}
 	const auto ordered = std::find( m_base_order.begin(), m_base_order.end(), base_id );
@@ -426,7 +430,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	m_bases.erase( it );
 	m_base_order.erase( ordered );
 	m_game->CommitBaseTerritory( territory, topology );
-	if(economy) {economy->regional_base_counts=regional;}
+	if(economy) {economy->regional_base_counts=regional;m_game->m_simulation->value.retained_base_totals=totals;}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {

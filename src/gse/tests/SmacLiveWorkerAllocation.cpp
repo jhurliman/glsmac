@@ -709,7 +709,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                 state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;});
-			fixture.ResourceState([](auto& state){state.victory_history->last_base_expansion_or_advice_turn.fill(777);
+			fixture.ResourceState([&](auto& state){state.retained_land_region_concentration=(turn==100);state.victory_history->last_base_expansion_or_advice_turn.fill(777);
 				state.victory_history->economic_deadlines.fill(777);state.victory_history->economic_paid_costs.fill(777);});
             fixture.GameplayRandom({3,3});fixture.Updates();const auto before=fixture.Snapshot();const auto first=Unit::GetNextId();
             um->ValidateConventionalMove(actor,target->GetTile(),0);
@@ -717,7 +717,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             fixture.MoveEvent(GSE_CALL,actor,target->GetTile());GT_ASSERT(um->GetUnits().size()==count+1 && !um->GetUnit(92),"successful capture restart did not replace old faction Units");
 			bool stamped=false;fixture.ResourceState([&](auto& state){const auto& history=*state.victory_history;
 				stamped=history.last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(turn) && history.last_base_expansion_or_advice_turn[2]==static_cast<int32_t>(turn)
-					&& history.last_base_expansion_or_advice_turn[7]==777 && history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777;});
+					&& history.last_base_expansion_or_advice_turn[7]==777 && history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777
+					&& state.retained_land_region_concentration==std::optional<bool>{turn==100};});
 			GT_ASSERT(stamped,"Capture/restart failed owner history stamps or reset the retained economic attempt");
             const std::array<int32_t,4> designs{{0,1,0,2}};const auto& topology=*game->GetMap()->GetTerritoryTopology();
             const auto captured_region=topology.Regions().at(16*32+10);map::tile::Tile* site=nullptr;
@@ -745,7 +746,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
 			bool stamped=false;restored.ResourceState([&](auto& state){const auto& history=*state.victory_history;
 				stamped=history.last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(turn) && history.last_base_expansion_or_advice_turn[2]==static_cast<int32_t>(turn)
-					&& history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777;});
+					&& history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777
+					&& state.retained_land_region_concentration==std::optional<bool>{turn==100};});
 			GT_ASSERT(stamped,"Actual Start reconstructed capture/restart or economic history");
             GT_ASSERT(restored.Game()->GetUM()->GetUnits().size()==count+1 && restored.Game()->GetBM()->GetBases().size()==2
                 && restored.GameplayRandom()==SmacGameplayRandomState(3,smac_capture_restart_fixture::final_crt)

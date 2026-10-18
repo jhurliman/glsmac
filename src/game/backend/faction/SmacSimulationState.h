@@ -131,6 +131,10 @@ struct SmacSimulationState {
 	// Absent in V11-V20. Migration cannot invent economic attempts or parity of
 	// history words from the current map; subsequent Base events preserve absence.
 	std::optional<SmacVictoryHistory> victory_history;
+	// Secondary native status bit0x100, independent of Standard Rules and
+	// regional flags. New-world initialization clears it; restore retains it.
+	// Absent before V22: current terrain cannot recover its saved lifetime.
+	std::optional<bool> retained_land_region_concentration;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

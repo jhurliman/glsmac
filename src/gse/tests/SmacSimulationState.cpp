@@ -89,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=21,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=22,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -133,6 +133,10 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=21,bool
             suffix.WriteInt(value.victory_history->voice_host);
         }
     }
+    if(version>=22) {
+        suffix.WriteBool(value.retained_land_region_concentration.has_value());
+        if(value.retained_land_region_concentration) {suffix.WriteBool(*value.retained_land_region_concentration);}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -150,6 +154,22 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC retained land concentration V22 preserves false true and unavailable history",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        for(const auto retained:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {
+            auto value=State();value.retained_land_region_concentration=retained;
+            const auto random=value.gameplay_random;
+            const auto wire=value.Serialize(technologies,profiles,units).ToString();
+            auto restored=State();restored.retained_land_region_concentration=retained ? !*retained : true;
+            restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+            GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random,"V22 reconstructed or lost saved concentration authority");
+            const auto old=SmacSimulationState::Deserialize(CurrentWire(value,21),technologies,profiles,units);
+            GT_ASSERT(!old.retained_land_region_concentration,"V21 migration invented a terrain status");
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+                && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"Malformed concentration framing accepted");
+        }
+        GT_OK();
+    });
 	task->AddTest("SMAC fresh victory storage resets all8 native slot prefixes and absent Voice",GT(){
 		faction::SmacVictoryHistory history;history.economic_deadlines.fill(777);history.economic_paid_costs.fill(777);history.last_base_expansion_or_advice_turn.fill(777);
 		for(int32_t owner=0;owner<=7;++owner) {history.Initialize(owner,0);}
@@ -176,7 +196,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		for(const auto malformed:{wire.substr(0,wire.size()-1),wire+"x"}) {
 			GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(malformed,technologies,profiles,units);}),"Malformed V21 history framing admitted");
 		}
-		auto absent=value;absent.victory_history.reset();const auto absent_wire=absent.Serialize(technologies,profiles,units).ToString();
+		auto absent=value;absent.victory_history.reset();const auto absent_wire=CurrentWire(absent,21);
 		types::Buffer marker;marker.WriteBool(false);types::Buffer overflow;overflow.WriteBool(true);overflow.WriteInt(INT64_MAX);
 		const auto invalid=absent_wire.substr(0,absent_wire.size()-marker.ToString().size())+overflow.ToString();
 		GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(invalid,technologies,profiles,units);}),"History accepted a word outside signed32");

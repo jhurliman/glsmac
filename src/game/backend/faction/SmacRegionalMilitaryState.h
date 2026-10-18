@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 namespace game::backend::faction {
 
@@ -13,7 +14,11 @@ namespace game::backend::faction {
 struct SmacRegionalMilitaryState {
     struct Owner {
         std::array<uint16_t,128> units{}, attack{};
-        bool operator==(const Owner& other) const {return units==other.units && attack==other.attack;}
+        // Contribution bits from the owned-unit phase only, not the final
+        // regional flag word after Base/peer/strategy processing. V18 lacked
+        // this history; an actual owner summary can establish its own row.
+        std::optional<std::array<uint16_t,128>> unit_phase_flags;
+        bool operator==(const Owner& other) const {return units==other.units && attack==other.attack && unit_phase_flags==other.unit_phase_flags;}
     };
     struct Contribution {
         uint8_t region, plan, domain;
@@ -21,12 +26,15 @@ struct SmacRegionalMilitaryState {
         int32_t attack, armor, morale;
         uint8_t order;
         bool skip_strength;
+        bool valid_base = false;
     };
     // One already admitted surviving Unit; the caller owns cleanup, actual
     // component/morale queries and reverse record order. No combat-odds or HP.
     static void Accumulate(Owner& owner,const Contribution& unit);
     std::array<Owner,7> factions{};
-    static constexpr size_t WIRE_BYTES = 7*128*2*2;
+    static constexpr size_t V18_WIRE_BYTES = 7*128*2*2;
+    static constexpr size_t WIRE_BYTES = V18_WIRE_BYTES + 7*(1+128*2);
+    static constexpr uint16_t UNIT_PHASE_MASK = 2 | 2048 | 4096 | 8192;
     bool operator==(const SmacRegionalMilitaryState& other) const {return factions==other.factions;}
 };
 

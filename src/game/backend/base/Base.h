@@ -137,6 +137,8 @@ public:
 		bool removed_base = false; // caller must not dereference the retired Base
 		std::optional<SmacColonyUpkeepPause> colony_pause;
         std::optional<SmacBaseEnergyCalculation> retained_energy;
+        bool needs_former_owner=false; // no part of this Base attempt was published
+        bool ownership_changed=false; // skip old-owner research/income/tail
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
@@ -216,12 +218,14 @@ private:
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step,
-		bool allow_colony_pause = false, const SmacColonyUpkeepPause* pause = nullptr, const SmacBaseUpkeepCache* retained = nullptr );
+		bool allow_colony_pause = false, const SmacColonyUpkeepPause* pause = nullptr, const SmacBaseUpkeepCache* retained = nullptr, std::optional<int32_t> former_repair = {}, bool* publication = nullptr );
 	void ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const;
 	SmacProductionResult ResumeSmacAbandonmentTail( GSE_CALLABLE, const SmacBaseUpkeepCache& retained,
 		const SmacAllocationRoles& roles, unit::SmacMoraleMode mode );
 	SmacProductionResult ResumeSmacColonyUpkeep( GSE_CALLABLE, const SmacColonyUpkeepPause& pause,
 		SmacColonyChoice choice, const SmacAllocationRoles& roles, const std::function< unit::Def*( int32_t ) >& definition );
+    struct SmacDefectionAttempt;
+    SmacProductionResult CompleteSmacRiotDefection(GSE_CALLABLE,SmacProductionResult result,SmacDefectionAttempt& attempt);
 	class PreparedSmacWorkerState {
 	public:
 		~PreparedSmacWorkerState();
@@ -236,7 +240,7 @@ private:
 	};
 	PreparedSmacWorkerState PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 		const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {}, std::vector<std::pair<Base*,facilities_t>> facility_changes = {}, slot::Slot* captured_owner = nullptr, std::vector<Base*> refresh_only = {}, bool finish_upkeep = false, PreparedSmacWorkerState* previous = nullptr );
+		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {}, std::vector<std::pair<Base*,facilities_t>> facility_changes = {}, slot::Slot* captured_owner = nullptr, std::vector<Base*> refresh_only = {}, bool finish_upkeep = false, PreparedSmacWorkerState* previous = nullptr, bool riot_defection = false );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
 		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr, const std::vector<size_t>& removed = {} ) const;

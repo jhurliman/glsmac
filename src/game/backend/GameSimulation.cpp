@@ -443,19 +443,29 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 		result.package = unit::ConventionalUnitContext::Package::Colony;
 		result.presentation = unit::ConventionalUnitContext::Presentation::ColonyMarker;
 	}
-	if ( ground == Ground::Speeder ) {
-		const auto source_owner=state.design_id/64;
-		const auto* selected = simulation.value.designs.Find( source_owner );
-		const auto source=std::find_if(simulation.value.roster.begin(),simulation.value.roster.end(),[&](const auto& row){return row.simulation_id==source_owner;});
-		// The selected source material belongs to the global design, independently
-		// of its current Unit controller. Source-faction retirement retains it.
-		// Arbitrary/predefined Speeders still have no authenticated renderer.
-		if ( state.design_id < 64 || source==simulation.value.roster.end() || source->faction_id!="SPARTANS"
-			|| !selected || selected->starting_scout != state.design_id ) {
-			throw std::runtime_error( "Speeder presentation requires the selected owned Spartan startup design" );
-		}
-		result.presentation = unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
-	}
+    if(ground==Ground::Speeder) {
+        auto original=design;auto origin=state.design_id;std::array<bool,512> visited{};
+        while(original.riot) {
+            if(visited[origin]) {throw std::runtime_error("Cyclic retained Rover source");}visited[origin]=true;
+            const auto source_id=original.riot->source_design;const auto* block=simulation.value.designs.Find(source_id/64);
+            if(!block) {throw std::runtime_error("Rover prototype source block is unavailable");}
+            const auto found=std::find_if(block->designs.begin(),block->designs.end(),[&](const auto& row){return row.id==source_id;});
+            if(found==block->designs.end() || found->chassis!=original.chassis || found->weapon!=original.weapon
+                || found->defense!=original.defense || found->reactor!=original.reactor || found->abilities!=original.abilities
+                || found->cost!=original.cost || found->plan!=original.plan || found->carry!=original.carry
+                || original.riot->flags!=197 || original.riot->prerequisite!=0 || original.riot->auxiliary!=std::array<uint8_t,5>{10,0,2,255,0}) {
+                throw std::runtime_error("Rover prototype lost its measured source or result metadata");
+            }
+            origin=source_id;original=*found;
+        }
+        const auto source_owner=origin/64;const auto* selected=simulation.value.designs.Find(source_owner);
+        const auto source=std::find_if(simulation.value.roster.begin(),simulation.value.roster.end(),[&](const auto& row){return row.simulation_id==source_owner;});
+        if(origin<64 || source==simulation.value.roster.end() || source->faction_id!="SPARTANS" || !selected || selected->starting_scout!=origin) {
+            throw std::runtime_error("Speeder presentation needs retained Spartan startup or measured riot prototype provenance");
+        }
+        result.presentation=unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
+    }
+
 	return result;
 }
 

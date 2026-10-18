@@ -3,6 +3,7 @@
 #include "base/Base.h"
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
+#include "base/SmacUnitSupport.h"
 #include "faction/Faction.h"
 #include "map/Map.h"
 #include "slot/Slot.h"
@@ -11,6 +12,7 @@
 #include <algorithm>
 #include <climits>
 #include <stdexcept>
+#include <unordered_map>
 namespace game::backend {
 std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(const base::Base& target,
     const base::SmacBaseResourceCalculation& resources,const base::SmacBaseAllocationState* candidate,
@@ -110,4 +112,42 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     result.final=base::FinishSmacCitizens(result.after_police,p,x,facilities.project_talents,false,0,local[23],0).final;
     return result;
 }
+std::vector<std::pair<size_t,unit::ConventionalUnitState>> Game::CalculateCanonicalUnitAccounting(const base::Base& target,const base::SmacUnitSupportResult& support) const {
+    const auto context=target.GetSmacResourceContext();RequireSmacLocalHumanOwner(target.m_owner);
+    const auto* social=m_simulation->value.social.Find(context.owner_simulation_id);
+    if(!social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {throw std::runtime_error("Unit accounting needs current social ratings");}
+    const auto police=social->current.at(5);
+    const auto knowledge=m_map->GetSmacWorkerKnowledge();
+    if(police<-2 && !knowledge) {throw std::runtime_error("Unit pacifism accounting needs current territory");}
+    const auto terrain=knowledge ? std::optional<map::SmacWorkerKnowledge::Data>(knowledge->CopyData()):std::nullopt;
+    std::unordered_map<uint64_t,base::SmacSupportDisposition> dispositions;
+    for(const auto& row:support.units) {if(!dispositions.emplace(row.id,row.disposition).second) {throw std::runtime_error("Repeated support accounting identity");}}
+    std::vector<std::pair<size_t,unit::ConventionalUnitState>> changes;bool first=true;
+    for(const auto id:m_um->GetUnitRecordOrder()) {
+        const auto* unit=m_um->GetUnit(id);if(!unit || unit->m_id!=id) {throw std::runtime_error("Unit accounting record identity differs");}
+        if(unit->IsNative()) {continue;}
+        if(!unit->IsConventional()) {throw std::runtime_error("Unit accounting requires authenticated positive-owner Units");}
+        const auto& before=unit->Conventional();
+        if(before.owner_simulation_id!=context.owner_simulation_id || before.home_base_id!=target.m_id) {continue;}
+        const auto row=dispositions.find(id);if(row==dispositions.end()) {throw std::runtime_error("Matching home Unit is absent from the actual support pass");}
+        (void)ResolveConventionalUnit(before,unit->m_owner);const auto design=ResolveConventionalDesign(before,*m_simulation);
+        uint8_t markers=row->second==base::SmacSupportDisposition::Paid ? 1u:0u;
+        if(police<-2 && design.plan<=9 && m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog.weapons.weapons.at(design.weapon).offense!=0) {
+            const auto* tile=unit->GetTile();if(!tile) {throw std::runtime_error("Pacifism accounting Unit is unplaced");}
+            bool protected_tile=false;
+            if(tile->base) {
+                const auto owner=tile->base->GetSmacResourceContext().owner_simulation_id;protected_tile=owner>=0 && owner<=7;
+            }
+            if(!protected_tile) {const auto index=tile->coord.y*size_t(terrain->width/2)+tile->coord.x/2;protected_tile=terrain->tiles.at(index).claimant==context.owner_simulation_id;}
+            if(!protected_tile) {
+                if(police==-3 && first) {markers|=4u;}else {markers|=2u;}
+                first=false;
+            }
+        }
+        auto next=before;next.SetAccountingMarkers(markers);
+        if(!(next==before)) {changes.emplace_back(id,next);}
+    }
+    return changes;
+}
+
 }

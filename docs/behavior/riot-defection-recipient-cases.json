@@ -1,0 +1,639 @@
+{
+  "research_id": "RE-SMAC-RIOT-RECIPIENT-001",
+  "status": "Original post-search riot recipient gate/weighted scan through transfer admission; integrated failed-facility-search cases included; stop before ownership mutation",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "riot-defection-recipient.md",
+  "scope": "Current faction1, valid doubled-column coordinates, supplied former owner/relationship flags/activity stamp. half_distance is resolved third weighting flag; full identity/lifecycle of that flag/stamp unresolved. Transfer lifecycle excluded.",
+  "defaults": {
+    "police": -3,
+    "human": true,
+    "former_owner": 1,
+    "current_faction_stamp": 0,
+    "base_x": 2,
+    "base_y": 2,
+    "map_width": 128,
+    "horizontal_wrap": true,
+    "other_bases": [
+      {
+        "owner": 2,
+        "x": 18,
+        "y": 2
+      }
+    ],
+    "relationships": {}
+  },
+  "cases": [
+    {
+      "id": "RIOT-RECIPIENT-001",
+      "name": "ordinary foreign recipient",
+      "overrides": {},
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-002",
+      "name": "POLICE minus two blocks",
+      "overrides": {
+        "police": -2
+      },
+      "expected": {
+        "path": "none",
+        "selected_recipient": null,
+        "transfer_admitted": false,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-003",
+      "name": "AI blocks post-search defection",
+      "overrides": {
+        "human": false
+      },
+      "expected": {
+        "path": "none",
+        "selected_recipient": null,
+        "transfer_admitted": false,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-004",
+      "name": "former owner directly preferred",
+      "overrides": {
+        "former_owner": 3
+      },
+      "expected": {
+        "path": "former_owner",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-005",
+      "name": "former owner without bases still admitted",
+      "overrides": {
+        "former_owner": 7,
+        "other_bases": []
+      },
+      "expected": {
+        "path": "former_owner",
+        "selected_recipient": 7,
+        "transfer_admitted": true,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-006",
+      "name": "former owner zero stops without fallback",
+      "overrides": {
+        "former_owner": 0
+      },
+      "expected": {
+        "path": "former_owner",
+        "selected_recipient": 0,
+        "transfer_admitted": false,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-007",
+      "name": "no foreign bases yields no recipient",
+      "overrides": {
+        "other_bases": []
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": null,
+        "transfer_admitted": false,
+        "candidate_scores": []
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-008",
+      "name": "same owner records ignored",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 1,
+            "x": 2,
+            "y": 2
+          },
+          {
+            "owner": 2,
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 3,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-009",
+      "name": "closer base replaces first",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 18,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 10,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 12
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-010",
+      "name": "equal score retains earlier base",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 18,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 2,
+            "y": 18
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 12
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-011",
+      "name": "previous best pact affects next candidate",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 14,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 12,
+            "y": 2
+          }
+        ],
+        "relationships": {
+          "2": {
+            "pact": true
+          }
+        }
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 9
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-012",
+      "name": "reordering candidates changes result",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 3,
+            "x": 12,
+            "y": 2
+          },
+          {
+            "owner": 2,
+            "x": 14,
+            "y": 2
+          }
+        ],
+        "relationships": {
+          "2": {
+            "pact": true
+          }
+        }
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 3,
+            "weight_source_faction": null,
+            "score": 7
+          },
+          {
+            "base_index": 3,
+            "owner": 2,
+            "weight_source_faction": 3,
+            "score": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-013",
+      "name": "candidate own pact ignored before it becomes best",
+      "overrides": {
+        "relationships": {
+          "2": {
+            "pact": true
+          }
+        }
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-014",
+      "name": "initial stamp affects first stored score",
+      "overrides": {
+        "current_faction_stamp": 3,
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 14,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 27
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-015",
+      "name": "three weighting steps in order",
+      "overrides": {
+        "current_faction_stamp": 7
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-016",
+      "name": "best recipient half distance flag",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 14,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 18,
+            "y": 2
+          }
+        ],
+        "relationships": {
+          "2": {
+            "half_distance": true
+          }
+        }
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 9
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-017",
+      "name": "wrap seam recipient",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 126,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 3
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-018",
+      "name": "flat map differs",
+      "overrides": {
+        "horizontal_wrap": false,
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 126,
+            "y": 2
+          },
+          {
+            "owner": 3,
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 3,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 93
+          },
+          {
+            "base_index": 3,
+            "owner": 3,
+            "weight_source_faction": 2,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-019",
+      "name": "faction zero candidate can prevent transfer",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 0,
+            "x": 2,
+            "y": 2
+          },
+          {
+            "owner": 2,
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 0,
+        "transfer_admitted": false,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 0,
+            "weight_source_faction": null,
+            "score": 0
+          },
+          {
+            "base_index": 3,
+            "owner": 2,
+            "weight_source_faction": 0,
+            "score": 12
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-020",
+      "name": "large map score below initial bound",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 32768,
+        "horizontal_wrap": false,
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 13331,
+            "y": 1
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": 2,
+        "transfer_admitted": true,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 9998
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-021",
+      "name": "large map score equal initial bound rejects",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 32768,
+        "horizontal_wrap": false,
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 13332,
+            "y": 0
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": null,
+        "transfer_admitted": false,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 9999
+          }
+        ]
+      }
+    },
+    {
+      "id": "RIOT-RECIPIENT-022",
+      "name": "large map score above initial bound rejects",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 32768,
+        "horizontal_wrap": false,
+        "other_bases": [
+          {
+            "owner": 2,
+            "x": 20000,
+            "y": 0
+          }
+        ]
+      },
+      "expected": {
+        "path": "search",
+        "selected_recipient": null,
+        "transfer_admitted": false,
+        "candidate_scores": [
+          {
+            "base_index": 2,
+            "owner": 2,
+            "weight_source_faction": null,
+            "score": 15000
+          }
+        ]
+      }
+    }
+  ]
+}

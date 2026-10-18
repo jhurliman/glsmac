@@ -74,7 +74,7 @@ void Game::ResetCanonicalHurryMarkers(int32_t owner) {
     for(const auto& row:m_bm->GetBases()) {
         auto* base=row.second;
         if(base->m_resource_context && base->m_resource_context->owner_simulation_id==owner && base->m_production) {
-            base->m_production->hurry_partial_paid=false;
+            base->m_production->hurry_partial_paid=false;base->m_resource_context->SyncKnownHurryBit(false);
         }
     }
 }

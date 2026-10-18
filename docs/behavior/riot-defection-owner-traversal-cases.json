@@ -1,0 +1,4533 @@
+{
+  "research_id": "RE-SMAC-RIOT-DEFECTION-TRAVERSAL-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Two controlled full human owner-pass chains1then2, four owner returns/seven Base returns; not complete global controller.",
+  "caller_rule": "Live current-owner scan; nonzero Base return rechecks record position. Later recipient visits newly owned Base; earlier recipient is not reentered.",
+  "cases": [
+    {
+      "id": "transfer_to_later_owner",
+      "old_owner": 1,
+      "recipient": 2,
+      "before": {
+        "state": {
+          "Base_owner": 1,
+          "former_owner": 2,
+          "assimilation": 10,
+          "status": 2,
+          "policy": 0,
+          "population": 4,
+          "food": 0,
+          "production": 1,
+          "minerals": 0,
+          "resources": [
+            2,
+            2,
+            0,
+            0,
+            0
+          ],
+          "cache_Base": -1,
+          "counts": [
+            2,
+            1
+          ],
+          "stamps": [
+            777,
+            888
+          ],
+          "references": [
+            0,
+            0,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "credits": [
+            100,
+            200
+          ],
+          "labs": [
+            40,
+            30
+          ],
+          "unit_count": 7,
+          "units": [
+            {
+              "index": 0,
+              "design": 2,
+              "owner": 1,
+              "position": [
+                40,
+                24
+              ],
+              "home": -1,
+              "order": 0,
+              "state": 0,
+              "work_progress": 0,
+              "observation": 0
+            },
+            {
+              "index": 1,
+              "design": 2,
+              "owner": 1,
+              "position": [
+                16,
+                16
+              ],
+              "home": 0,
+              "order": 4,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 2,
+              "design": 1,
+              "owner": 1,
+              "position": [
+                17,
+                15
+              ],
+              "home": 0,
+              "order": 2,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 3,
+              "design": 0,
+              "owner": 1,
+              "position": [
+                18,
+                16
+              ],
+              "home": 1,
+              "order": 4,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 4,
+              "design": 1,
+              "owner": 1,
+              "position": [
+                40,
+                24
+              ],
+              "home": 0,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 5,
+              "design": 0,
+              "owner": 1,
+              "position": [
+                42,
+                24
+              ],
+              "home": 1,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 6,
+              "design": 2,
+              "owner": 2,
+              "position": [
+                48,
+                16
+              ],
+              "home": 2,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            }
+          ],
+          "CRT_seed": 65,
+          "shared_seed": 0,
+          "POLICE": [
+            -3,
+            0
+          ]
+        },
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "population": 4,
+            "food": 0,
+            "minerals": 0,
+            "status": 2,
+            "target": 1
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "status": 0,
+            "target": 1
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "status": 0,
+            "target": 1
+          }
+        ]
+      },
+      "expected": {
+        "after": {
+          "state": {
+            "Base_owner": 2,
+            "former_owner": 2,
+            "assimilation": 0,
+            "status": 8224,
+            "policy": 0,
+            "population": 4,
+            "food": 4,
+            "production": -38,
+            "minerals": 0,
+            "resources": [
+              2,
+              0,
+              2,
+              0,
+              0
+            ],
+            "cache_Base": -1,
+            "counts": [
+              1,
+              2
+            ],
+            "stamps": [
+              777,
+              6
+            ],
+            "references": [
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "credits": [
+              104,
+              206
+            ],
+            "labs": [
+              45,
+              37
+            ],
+            "unit_count": 6,
+            "units": [
+              {
+                "index": 0,
+                "design": 2,
+                "owner": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "home": -1,
+                "order": 0,
+                "state": 0,
+                "work_progress": 0,
+                "observation": 0
+              },
+              {
+                "index": 1,
+                "design": 2,
+                "owner": 2,
+                "position": [
+                  16,
+                  16
+                ],
+                "home": 0,
+                "order": 0,
+                "state": 393216,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 2,
+                "design": 1,
+                "owner": 2,
+                "position": [
+                  17,
+                  15
+                ],
+                "home": 0,
+                "order": 2,
+                "state": 393216,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 3,
+                "design": 0,
+                "owner": 2,
+                "position": [
+                  18,
+                  16
+                ],
+                "home": 0,
+                "order": 0,
+                "state": 393232,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 4,
+                "design": 0,
+                "owner": 1,
+                "position": [
+                  42,
+                  24
+                ],
+                "home": 1,
+                "order": 0,
+                "state": 50741760,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 5,
+                "design": 2,
+                "owner": 2,
+                "position": [
+                  48,
+                  16
+                ],
+                "home": 2,
+                "order": 0,
+                "state": 50741760,
+                "work_progress": 5,
+                "observation": 0
+              }
+            ],
+            "CRT_seed": 1009951888,
+            "shared_seed": 0,
+            "POLICE": [
+              -3,
+              0
+            ]
+          },
+          "bases": [
+            {
+              "id": 0,
+              "owner": 2,
+              "population": 4,
+              "food": 4,
+              "minerals": 0,
+              "status": 8224,
+              "target": -38
+            },
+            {
+              "id": 1,
+              "owner": 1,
+              "population": 1,
+              "food": 2,
+              "minerals": 1,
+              "status": 12288,
+              "target": 1
+            },
+            {
+              "id": 2,
+              "owner": 2,
+              "population": 1,
+              "food": 0,
+              "minerals": 1,
+              "status": 28672,
+              "target": 1
+            }
+          ]
+        },
+        "owner_pass_returns": [
+          {
+            "owner": 1,
+            "result": 2,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                200
+              ],
+              "labs": [
+                45,
+                30
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1391734502,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner": 2,
+            "result": 4,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 8224,
+              "policy": 0,
+              "population": 4,
+              "food": 4,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                206
+              ],
+              "labs": [
+                45,
+                37
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 393216,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 393216,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 393232,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1009951888,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 4,
+                "minerals": 0,
+                "status": 8224,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "Base_entries": [
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "current_owner": 1,
+            "state": {
+              "Base_owner": 1,
+              "former_owner": 2,
+              "assimilation": 10,
+              "status": 2,
+              "policy": 0,
+              "population": 4,
+              "food": 0,
+              "production": 1,
+              "minerals": 0,
+              "resources": [
+                2,
+                2,
+                0,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                2,
+                1
+              ],
+              "stamps": [
+                777,
+                888
+              ],
+              "references": [
+                0,
+                0,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                100,
+                200
+              ],
+              "labs": [
+                40,
+                30
+              ],
+              "unit_count": 7,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 1,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 6,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 65,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 4,
+                "food": 0,
+                "minerals": 0,
+                "status": 2,
+                "target": 1
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "current_owner": 1,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": 0,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                100,
+                200
+              ],
+              "labs": [
+                40,
+                30
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 3931147935,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "current_owner": 2,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                200
+              ],
+              "labs": [
+                45,
+                30
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1391734502,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "current_owner": 2,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 8192,
+              "policy": 0,
+              "population": 4,
+              "food": 4,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                202
+              ],
+              "labs": [
+                45,
+                32
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1886464529,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 4,
+                "minerals": 0,
+                "status": 8192,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "Base_returns": [
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "result": 1,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": 0,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                100,
+                200
+              ],
+              "labs": [
+                40,
+                30
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 3931147935,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "result": 0,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                200
+              ],
+              "labs": [
+                45,
+                30
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50610688,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1391734502,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "result": 0,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 8192,
+              "policy": 0,
+              "population": 4,
+              "food": 4,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                202
+              ],
+              "labs": [
+                45,
+                32
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1886464529,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 4,
+                "minerals": 0,
+                "status": 8192,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "result": 0,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 2,
+              "assimilation": 0,
+              "status": 8192,
+              "policy": 0,
+              "population": 4,
+              "food": 4,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                777,
+                6
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                104,
+                206
+              ],
+              "labs": [
+                45,
+                37
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50610688,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1009951888,
+              "shared_seed": 0,
+              "POLICE": [
+                -3,
+                0
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 4,
+                "minerals": 0,
+                "status": 8192,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "stage_entries": [
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 1,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "research"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "ecology"
+          },
+          {
+            "owner_pass": 1,
+            "base": 1,
+            "stage": "maintenance"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "research"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "ecology"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "maintenance"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "research"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "ecology"
+          },
+          {
+            "owner_pass": 2,
+            "base": 2,
+            "stage": "maintenance"
+          }
+        ],
+        "CRT_draws": [
+          {
+            "purpose": "POLICE_gate",
+            "native_raw": 250,
+            "used_raw": 0,
+            "seed_before": 65,
+            "seed_after": 16441856,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 18237,
+            "used_raw": 0,
+            "seed_before": 16441856,
+            "seed_after": 1195243715,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 2761,
+            "used_raw": 0,
+            "seed_before": 1195243715,
+            "seed_after": 2328461434,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 26456,
+            "used_raw": 0,
+            "seed_before": 2328461434,
+            "seed_after": 1733854549,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 23942,
+            "used_raw": 0,
+            "seed_before": 1733854549,
+            "seed_after": 3716588228,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 4890,
+            "used_raw": 0,
+            "seed_before": 3716588228,
+            "seed_after": 320521847,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 14066,
+            "used_raw": 0,
+            "seed_before": 320521847,
+            "seed_after": 921888606,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 5852,
+            "used_raw": 0,
+            "seed_before": 921888606,
+            "seed_after": 2531057833,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 2359,
+            "used_raw": 0,
+            "seed_before": 2531057833,
+            "seed_after": 2302140616,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 24204,
+            "used_raw": 0,
+            "seed_before": 2302140616,
+            "seed_after": 3733724267,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 29007,
+            "used_raw": 0,
+            "seed_before": 3733724267,
+            "seed_after": 4048532866,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 30964,
+            "used_raw": 0,
+            "seed_before": 4048532866,
+            "seed_after": 2029258301,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 31145,
+            "used_raw": 0,
+            "seed_before": 2029258301,
+            "seed_after": 2041167884,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 27216,
+            "used_raw": 0,
+            "seed_before": 2041167884,
+            "seed_after": 3931147935,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "ecology_roll",
+            "native_raw": 21236,
+            "used_raw": 21236,
+            "seed_before": 3931147935,
+            "seed_after": 1391734502,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "ecology_roll",
+            "native_raw": 28785,
+            "used_raw": 28785,
+            "seed_before": 1391734502,
+            "seed_after": 1886464529,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "ecology_roll",
+            "native_raw": 15410,
+            "used_raw": 15410,
+            "seed_before": 1886464529,
+            "seed_after": 1009951888,
+            "owner_pass": 2
+          }
+        ]
+      },
+      "omitted_services": [
+        {
+          "owner_pass": 1,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 1,
+          "service": "completion_dialog_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "notification"
+        },
+        {
+          "owner_pass": 1,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 1,
+          "service": "completion_dialog_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 2,
+          "service": "completion_dialog_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 2,
+          "service": "completion_dialog_destructor"
+        }
+      ]
+    },
+    {
+      "id": "transfer_to_already_processed_owner",
+      "old_owner": 2,
+      "recipient": 1,
+      "before": {
+        "state": {
+          "Base_owner": 2,
+          "former_owner": 1,
+          "assimilation": 10,
+          "status": 2,
+          "policy": 0,
+          "population": 4,
+          "food": 0,
+          "production": 1,
+          "minerals": 0,
+          "resources": [
+            2,
+            2,
+            0,
+            0,
+            0
+          ],
+          "cache_Base": -1,
+          "counts": [
+            1,
+            2
+          ],
+          "stamps": [
+            888,
+            777
+          ],
+          "references": [
+            0,
+            0,
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "credits": [
+            200,
+            100
+          ],
+          "labs": [
+            30,
+            40
+          ],
+          "unit_count": 7,
+          "units": [
+            {
+              "index": 0,
+              "design": 2,
+              "owner": 2,
+              "position": [
+                40,
+                24
+              ],
+              "home": -1,
+              "order": 0,
+              "state": 0,
+              "work_progress": 0,
+              "observation": 0
+            },
+            {
+              "index": 1,
+              "design": 2,
+              "owner": 2,
+              "position": [
+                16,
+                16
+              ],
+              "home": 0,
+              "order": 4,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 2,
+              "design": 1,
+              "owner": 2,
+              "position": [
+                17,
+                15
+              ],
+              "home": 0,
+              "order": 2,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 3,
+              "design": 0,
+              "owner": 2,
+              "position": [
+                18,
+                16
+              ],
+              "home": 1,
+              "order": 4,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 4,
+              "design": 1,
+              "owner": 2,
+              "position": [
+                40,
+                24
+              ],
+              "home": 0,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 5,
+              "design": 0,
+              "owner": 2,
+              "position": [
+                42,
+                24
+              ],
+              "home": 1,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            },
+            {
+              "index": 6,
+              "design": 2,
+              "owner": 1,
+              "position": [
+                48,
+                16
+              ],
+              "home": 2,
+              "order": 0,
+              "state": 56902160,
+              "work_progress": 5,
+              "observation": 0
+            }
+          ],
+          "CRT_seed": 65,
+          "shared_seed": 0,
+          "POLICE": [
+            0,
+            -3
+          ]
+        },
+        "bases": [
+          {
+            "id": 0,
+            "owner": 2,
+            "population": 4,
+            "food": 0,
+            "minerals": 0,
+            "status": 2,
+            "target": 1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "status": 0,
+            "target": 1
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "status": 0,
+            "target": 1
+          }
+        ]
+      },
+      "expected": {
+        "after": {
+          "state": {
+            "Base_owner": 1,
+            "former_owner": 1,
+            "assimilation": 0,
+            "status": 0,
+            "policy": 0,
+            "population": 4,
+            "food": 2,
+            "production": -38,
+            "minerals": 0,
+            "resources": [
+              2,
+              0,
+              2,
+              0,
+              0
+            ],
+            "cache_Base": -1,
+            "counts": [
+              2,
+              1
+            ],
+            "stamps": [
+              6,
+              777
+            ],
+            "references": [
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "credits": [
+              204,
+              104
+            ],
+            "labs": [
+              35,
+              45
+            ],
+            "unit_count": 6,
+            "units": [
+              {
+                "index": 0,
+                "design": 2,
+                "owner": 2,
+                "position": [
+                  40,
+                  24
+                ],
+                "home": -1,
+                "order": 0,
+                "state": 0,
+                "work_progress": 0,
+                "observation": 0
+              },
+              {
+                "index": 1,
+                "design": 2,
+                "owner": 1,
+                "position": [
+                  16,
+                  16
+                ],
+                "home": 0,
+                "order": 0,
+                "state": 262144,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 2,
+                "design": 1,
+                "owner": 1,
+                "position": [
+                  17,
+                  15
+                ],
+                "home": 0,
+                "order": 2,
+                "state": 262144,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 3,
+                "design": 0,
+                "owner": 1,
+                "position": [
+                  18,
+                  16
+                ],
+                "home": 0,
+                "order": 0,
+                "state": 262160,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 4,
+                "design": 0,
+                "owner": 2,
+                "position": [
+                  42,
+                  24
+                ],
+                "home": 1,
+                "order": 0,
+                "state": 50741760,
+                "work_progress": 5,
+                "observation": 0
+              },
+              {
+                "index": 5,
+                "design": 2,
+                "owner": 1,
+                "position": [
+                  48,
+                  16
+                ],
+                "home": 2,
+                "order": 0,
+                "state": 50741760,
+                "work_progress": 5,
+                "observation": 0
+              }
+            ],
+            "CRT_seed": 1886464529,
+            "shared_seed": 0,
+            "POLICE": [
+              0,
+              -3
+            ]
+          },
+          "bases": [
+            {
+              "id": 0,
+              "owner": 1,
+              "population": 4,
+              "food": 2,
+              "minerals": 0,
+              "status": 0,
+              "target": -38
+            },
+            {
+              "id": 1,
+              "owner": 2,
+              "population": 1,
+              "food": 2,
+              "minerals": 1,
+              "status": 12288,
+              "target": 1
+            },
+            {
+              "id": 2,
+              "owner": 1,
+              "population": 1,
+              "food": 0,
+              "minerals": 1,
+              "status": 28672,
+              "target": 1
+            }
+          ]
+        },
+        "owner_pass_returns": [
+          {
+            "owner": 1,
+            "result": 2,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 1,
+              "assimilation": 10,
+              "status": 2,
+              "policy": 0,
+              "population": 4,
+              "food": 0,
+              "production": 1,
+              "minerals": 0,
+              "resources": [
+                2,
+                2,
+                0,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                888,
+                777
+              ],
+              "references": [
+                0,
+                0,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                100
+              ],
+              "labs": [
+                35,
+                40
+              ],
+              "unit_count": 7,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 1,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 6,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 16441856,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 0,
+                "minerals": 0,
+                "status": 2,
+                "target": 1
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner": 2,
+            "result": 4,
+            "state": {
+              "Base_owner": 1,
+              "former_owner": 1,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                2,
+                1
+              ],
+              "stamps": [
+                6,
+                777
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                104
+              ],
+              "labs": [
+                35,
+                45
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1886464529,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "Base_entries": [
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "current_owner": 1,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 1,
+              "assimilation": 10,
+              "status": 2,
+              "policy": 0,
+              "population": 4,
+              "food": 0,
+              "production": 1,
+              "minerals": 0,
+              "resources": [
+                2,
+                2,
+                0,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                888,
+                777
+              ],
+              "references": [
+                0,
+                0,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                200,
+                100
+              ],
+              "labs": [
+                30,
+                40
+              ],
+              "unit_count": 7,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 1,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 6,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 65,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 0,
+                "minerals": 0,
+                "status": 2,
+                "target": 1
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "current_owner": 2,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 1,
+              "assimilation": 10,
+              "status": 2,
+              "policy": 0,
+              "population": 4,
+              "food": 0,
+              "production": 1,
+              "minerals": 0,
+              "resources": [
+                2,
+                2,
+                0,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                888,
+                777
+              ],
+              "references": [
+                0,
+                0,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                100
+              ],
+              "labs": [
+                35,
+                40
+              ],
+              "unit_count": 7,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 1,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 6,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 16441856,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 0,
+                "minerals": 0,
+                "status": 2,
+                "target": 1
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "current_owner": 2,
+            "state": {
+              "Base_owner": 1,
+              "former_owner": 1,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": 0,
+              "counts": [
+                2,
+                1
+              ],
+              "stamps": [
+                6,
+                777
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                100
+              ],
+              "labs": [
+                35,
+                40
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1391734502,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "Base_returns": [
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "result": 0,
+            "state": {
+              "Base_owner": 2,
+              "former_owner": 1,
+              "assimilation": 10,
+              "status": 2,
+              "policy": 0,
+              "population": 4,
+              "food": 0,
+              "production": 1,
+              "minerals": 0,
+              "resources": [
+                2,
+                2,
+                0,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                1,
+                2
+              ],
+              "stamps": [
+                888,
+                777
+              ],
+              "references": [
+                0,
+                0,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                100
+              ],
+              "labs": [
+                35,
+                40
+              ],
+              "unit_count": 7,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 1,
+                  "order": 4,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 1,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 6,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50610688,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 16441856,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 2,
+                "population": 4,
+                "food": 0,
+                "minerals": 0,
+                "status": 2,
+                "target": 1
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "result": 1,
+            "state": {
+              "Base_owner": 1,
+              "former_owner": 1,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": 0,
+              "counts": [
+                2,
+                1
+              ],
+              "stamps": [
+                6,
+                777
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                100
+              ],
+              "labs": [
+                35,
+                40
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 56902160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1391734502,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 0,
+                "minerals": 0,
+                "status": 0,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "result": 0,
+            "state": {
+              "Base_owner": 1,
+              "former_owner": 1,
+              "assimilation": 0,
+              "status": 0,
+              "policy": 0,
+              "population": 4,
+              "food": 2,
+              "production": -38,
+              "minerals": 0,
+              "resources": [
+                2,
+                0,
+                2,
+                0,
+                0
+              ],
+              "cache_Base": -1,
+              "counts": [
+                2,
+                1
+              ],
+              "stamps": [
+                6,
+                777
+              ],
+              "references": [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              "credits": [
+                204,
+                104
+              ],
+              "labs": [
+                35,
+                45
+              ],
+              "unit_count": 6,
+              "units": [
+                {
+                  "index": 0,
+                  "design": 2,
+                  "owner": 2,
+                  "position": [
+                    40,
+                    24
+                  ],
+                  "home": -1,
+                  "order": 0,
+                  "state": 0,
+                  "work_progress": 0,
+                  "observation": 0
+                },
+                {
+                  "index": 1,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    16,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 2,
+                  "design": 1,
+                  "owner": 1,
+                  "position": [
+                    17,
+                    15
+                  ],
+                  "home": 0,
+                  "order": 2,
+                  "state": 262144,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 3,
+                  "design": 0,
+                  "owner": 1,
+                  "position": [
+                    18,
+                    16
+                  ],
+                  "home": 0,
+                  "order": 0,
+                  "state": 262160,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 4,
+                  "design": 0,
+                  "owner": 2,
+                  "position": [
+                    42,
+                    24
+                  ],
+                  "home": 1,
+                  "order": 0,
+                  "state": 50610688,
+                  "work_progress": 5,
+                  "observation": 0
+                },
+                {
+                  "index": 5,
+                  "design": 2,
+                  "owner": 1,
+                  "position": [
+                    48,
+                    16
+                  ],
+                  "home": 2,
+                  "order": 0,
+                  "state": 50741760,
+                  "work_progress": 5,
+                  "observation": 0
+                }
+              ],
+              "CRT_seed": 1886464529,
+              "shared_seed": 0,
+              "POLICE": [
+                0,
+                -3
+              ]
+            },
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 4,
+                "food": 2,
+                "minerals": 0,
+                "status": 0,
+                "target": -38
+              },
+              {
+                "id": 1,
+                "owner": 2,
+                "population": 1,
+                "food": 2,
+                "minerals": 1,
+                "status": 12288,
+                "target": 1
+              },
+              {
+                "id": 2,
+                "owner": 1,
+                "population": 1,
+                "food": 0,
+                "minerals": 1,
+                "status": 28672,
+                "target": 1
+              }
+            ]
+          }
+        ],
+        "stage_entries": [
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "research"
+          },
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "ecology"
+          },
+          {
+            "owner_pass": 1,
+            "base": 2,
+            "stage": "maintenance"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 2,
+            "base": 0,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "citizens"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "status"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "research"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "ecology"
+          },
+          {
+            "owner_pass": 2,
+            "base": 1,
+            "stage": "maintenance"
+          }
+        ],
+        "CRT_draws": [
+          {
+            "purpose": "ecology_roll",
+            "native_raw": 250,
+            "used_raw": 250,
+            "seed_before": 65,
+            "seed_after": 16441856,
+            "owner_pass": 1
+          },
+          {
+            "purpose": "POLICE_gate",
+            "native_raw": 18237,
+            "used_raw": 0,
+            "seed_before": 16441856,
+            "seed_after": 1195243715,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 2761,
+            "used_raw": 0,
+            "seed_before": 1195243715,
+            "seed_after": 2328461434,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 26456,
+            "used_raw": 0,
+            "seed_before": 2328461434,
+            "seed_after": 1733854549,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 23942,
+            "used_raw": 0,
+            "seed_before": 1733854549,
+            "seed_after": 3716588228,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 4890,
+            "used_raw": 0,
+            "seed_before": 3716588228,
+            "seed_after": 320521847,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 14066,
+            "used_raw": 0,
+            "seed_before": 320521847,
+            "seed_after": 921888606,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 5852,
+            "used_raw": 0,
+            "seed_before": 921888606,
+            "seed_after": 2531057833,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 2359,
+            "used_raw": 0,
+            "seed_before": 2531057833,
+            "seed_after": 2302140616,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 24204,
+            "used_raw": 0,
+            "seed_before": 2302140616,
+            "seed_after": 3733724267,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 29007,
+            "used_raw": 0,
+            "seed_before": 3733724267,
+            "seed_after": 4048532866,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 30964,
+            "used_raw": 0,
+            "seed_before": 4048532866,
+            "seed_after": 2029258301,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 31145,
+            "used_raw": 0,
+            "seed_before": 2029258301,
+            "seed_after": 2041167884,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 27216,
+            "used_raw": 0,
+            "seed_before": 2041167884,
+            "seed_after": 3931147935,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "facility_candidate",
+            "native_raw": 21236,
+            "used_raw": 0,
+            "seed_before": 3931147935,
+            "seed_after": 1391734502,
+            "owner_pass": 2
+          },
+          {
+            "purpose": "ecology_roll",
+            "native_raw": 28785,
+            "used_raw": 28785,
+            "seed_before": 1391734502,
+            "seed_after": 1886464529,
+            "owner_pass": 2
+          }
+        ]
+      },
+      "omitted_services": [
+        {
+          "owner_pass": 1,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 1,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 1,
+          "service": "completion_dialog_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 2,
+          "service": "completion_dialog_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "notification"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_storage_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "dialog_base_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "widget_destructor"
+        },
+        {
+          "owner_pass": 2,
+          "service": "owned_UI_storage_cleanup"
+        },
+        {
+          "owner_pass": 2,
+          "service": "completion_dialog_destructor"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "full_owner_returns": 4,
+    "full_Base_returns": 7,
+    "global_controller_runs": 0,
+    "initial_current_rating_only_diagnostic_not_accepted": true,
+    "actual_social_refresh_uses_declared_resolved_intrinsic_POLICE": true
+  },
+  "raw_receipt_sha256": "13c09f0a9da76e27d8d7d94e02e47a22e6fe05fc2e5338fce2ee8d9edba5df5c",
+  "related_contracts": [
+    "riot-defection-completion.md",
+    "riot-defection-retained-authorities.md",
+    "two-base-upkeep-posting.md"
+  ]
+}

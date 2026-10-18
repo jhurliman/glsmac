@@ -155,6 +155,7 @@ public:
     private:
         friend class UnitManager;
         friend class base::BaseManager;
+        friend class base::Base;
         void Query(const std::function<void()>& query) const;
         struct Data;
         explicit PreparedDefectionUnits(std::unique_ptr<Data> data);
@@ -269,6 +270,7 @@ private:
 	friend class Unit;
 	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
+    void QueryDefectionUnits(const PreparedConventionalUnit* created,const PreparedConventionalRemoval& removed,const std::function<void()>& query);
     PreparedDefectionUnits PrepareDefectionUnitsCore(slot::Slot* recipient,
         const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
         const std::unordered_map<size_t,unit_update_t>& updates);

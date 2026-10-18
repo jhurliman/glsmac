@@ -44,7 +44,7 @@ void SmacBaseResourceContext::Validate() const {
 		throw std::runtime_error( "Invalid SMAC base resource context" );
 	}
 	if(uncaptured_former_owner && (conquest || *uncaptured_former_owner<0 || *uncaptured_former_owner>7)) {throw std::runtime_error("Invalid independent Base former-owner history");}
-	if(former_owner_migration && !uncaptured_former_owner) {throw std::runtime_error("Former-owner migration has no accepted answer");}
+	if(former_owner_migration && !FormerOwner()) {throw std::runtime_error("Former-owner migration has no accepted answer");}
 	if(conquest && (conquest->former_owner<0 || conquest->former_owner>7)) {throw std::runtime_error("Invalid SMAC conquered Base former owner");}
 }
 

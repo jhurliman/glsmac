@@ -1,0 +1,136 @@
+{
+  "research_id": "RE-SMAC-RIOT-DEFECTION-AUTHORITIES-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "relationship": {
+    "half_distance_flag": "Truce",
+    "primary_mask": 4,
+    "weight_source": "current best recipient; before selection aliases current faction history"
+  },
+  "history": {
+    "same_authority_as": "SmacVictoryHistory.last_base_expansion_or_advice_turn[8]",
+    "new_saved_field_required": false,
+    "initialization": "current initialization turn; fresh whole-world0",
+    "writers": [
+      "successful founding",
+      "capture/acquisition",
+      "defection recipient",
+      "gated SECOND BASE / BUILD MORE advice"
+    ],
+    "ordinary_save_retained": true
+  },
+  "battle_plan_Base": {
+    "absent": -1,
+    "storage": "signed32 Base reference",
+    "producers": [
+      "initializer-1",
+      "BATTLEPLANS/BATTLEPLAN selection",
+      "BATTLEYES accepted request"
+    ],
+    "transfer": "clear matching references across playable factions1..7",
+    "deletion": "equal clears; greater decrements",
+    "complete_UI_or_AI_policy_executed": false
+  },
+  "Unit_pacifism": {
+    "state_word_bits": {
+      "penalized": 2097152,
+      "first_exempt": 4194304,
+      "paid_support_distinct": 16
+    },
+    "producer": "current Base support calculation; selected owned/homed Units cleared then rebuilt",
+    "wrong_owner_or_home": "preserve prior bits during this Base calculation",
+    "POLICE_minus3": "first qualifying exempt; later penalized",
+    "POLICE_below_minus3": "all qualifying penalized",
+    "POLICE_at_least_minus2": "neither marker, even if count positive",
+    "defection_radius_conversion_clears_markers": false,
+    "final_defection_support_rebuilds_selected_markers": true
+  },
+  "native_active_plan_tally": {
+    "width_bits": 32,
+    "representation": "retain raw32 bits; producer arithmetic wraps modulo2^32",
+    "increment_wrap": {
+      "before": 4294967295,
+      "after": 0
+    },
+    "decrement_wrap": {
+      "before": 0,
+      "after": 4294967295
+    },
+    "wrap_evidence": "static INC/DEC register and DWORD store, not new overflow execution",
+    "counted_plan_predicate": "unsigned plan byte<=7",
+    "independent_of_design_bytes_and_registry_count": true
+  },
+  "ordinary_storage": {
+    "before": {
+      "Unit_states": [
+        2097168,
+        4194304
+      ],
+      "history": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "battle_plan_Base": [
+        -1,
+        0,
+        7,
+        -1,
+        -1,
+        -1,
+        -1,
+        999
+      ],
+      "native_active_plan_tally_bits": 4294967295,
+      "unit_count": 2
+    },
+    "after": {
+      "Unit_states": [
+        2097168,
+        4194304
+      ],
+      "history": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "battle_plan_Base": [
+        -1,
+        0,
+        7,
+        -1,
+        -1,
+        -1,
+        -1,
+        999
+      ],
+      "native_active_plan_tally_bits": 4294967295,
+      "unit_count": 2
+    },
+    "save_return": 0,
+    "load_return": 0,
+    "Unit_bytes": 104,
+    "Unit_sha256": "de3967e596abcf4a9e5c240fd96cafb59254dc488be2c0b4278f613ca74f9c08",
+    "RNG_entries": [],
+    "scope": "One complete ordinary save/load file-body pair with existing FILE/TLS/allocator/view services. Two record marker canaries and deliberately stale faction reference/tally words. Retention, not legal Base-target resolution or live owner recount; no frontend/upkeep."
+  },
+  "raw_receipt_sha256": "5d143c7c6d2e642de290b1e7c91b88485d25bd74221de4ebe591489ed8873642",
+  "related_contracts": [
+    "riot-defection-recipient.md",
+    "diplomatic-relation-primitives.md",
+    "leading-human-victory-pressure-shortcut.md",
+    "whole-world-pressure-input-reset.md",
+    "pacifism-unit-count.md",
+    "unit-dense-identity.md",
+    "active-design-count-cache.md"
+  ]
+}

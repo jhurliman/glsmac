@@ -28,6 +28,8 @@ return (game, reset) => {
 	return {
 		state: () => { return {pending: colony.pending, submitted: colony.submitted, visible: colony.window.visible, buttons: colony.choice_buttons}; },
 		choose: (index) => { colony.choice_buttons[index].handlers.click({}); },
+		confirm_former: () => { return colony.former_confirm.handlers.click({}); },
+		cancel_former: () => { return colony.former_cancel.handlers.click({}); },
 		key: (code, modifiers) => { colony.window.handlers.keydown({code: code, modifiers: modifiers}); },
 		reset: () => { colony.reset_button.handlers.click({}); },
 		save: () => { colony.save_button.handlers.click({}); },

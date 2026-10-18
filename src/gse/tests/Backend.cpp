@@ -8564,7 +8564,7 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			// Continuation V4 retains ordered citizens after V3 ecology and V2 research/V1 Colony choices.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 4 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 5 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();

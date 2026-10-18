@@ -237,6 +237,7 @@ void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionStat
 	if ( m_production == production ) { return; }
 	auto replacement = production;
 	m_production.swap( replacement );
+	if(m_resource_context && m_production) {m_resource_context->SyncKnownHurryBit(m_production->hurry_partial_paid);}
 	TriggerUpdate();
 }
 

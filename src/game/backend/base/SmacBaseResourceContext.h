@@ -47,6 +47,7 @@ struct SmacBaseResourceContext {
 	SmacBaseResourceContext WithFormerOwnerRepair(int32_t former) const;
 	std::optional<int32_t> FormerOwner() const noexcept {return conquest ? std::optional<int32_t>(conquest->former_owner):uncaptured_former_owner;}
 	void SyncKnownStatusBits() noexcept;
+	void SyncKnownHurryBit(bool paid) noexcept {if(retained_status_word) {*retained_status_word=(*retained_status_word&~0x40000000u)|(paid?0x40000000u:0u);}}
 
 	void Validate() const;
 	SmacBaseResourceContext AfterUpkeep() const;

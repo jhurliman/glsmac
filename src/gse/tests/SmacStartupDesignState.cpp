@@ -37,6 +37,56 @@ std::string Wire( const State& value, size_t index = SIZE_MAX, int64_t replaceme
 }
 
 void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC human riot Morgan armor prototypes retain their distinct measured payload",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;
+        const std::array<uint8_t,5> expected_aux{2,0,2,255,0};
+        for(const auto* recipient:{"GAIANS","MORGANITES","SPARTANS"}) {
+            auto state=State::NewWorld(Technologies({{1,recipient},{2,"MORGANITES"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),5);
+            const auto source=state.Find(2)->designs[0];const auto before=state.Find(1)->designs;
+            const bool exact=std::string(recipient)=="MORGANITES";const int32_t expected=exact ? -1:std::string(recipient)=="SPARTANS" ? 65:64;
+            GT_ASSERT(state.Find(2)->starting_scout==2,"Armored custom source was incorrectly treated as the Morgan starting Unit");
+            GT_ASSERT(state.RequestHumanRiotPrototype(128,1,exact,catalog)==expected && state.Find(2)->designs[0]==source,
+                "Morgan source allocation branch or retained source changed");
+            if(exact) {GT_ASSERT(state.Find(1)->designs==before,"Negative human match modified recipient block");}
+            else {
+                const auto& added=state.Find(1)->designs.back();GT_ASSERT(added.id==expected && added.chassis==0 && added.weapon==0 && added.defense==1
+                    && added.reactor==1 && added.cost==2 && added.plan==2 && added.carry==0 && added.riot
+                    && added.riot->source_design==128 && added.riot->flags==197 && added.riot->prerequisite==0
+                    && added.riot->auxiliary==expected_aux && !added.name,
+                    "Morgan allocated payload borrowed Rover bytes or invented its unknown name");
+                if(!before.empty()) {GT_ASSERT(state.Find(1)->designs[0]==before[0],"Morgan allocation overwrote existing Spartan64");}
+            }
+            GT_ASSERT(State::Deserialize(state.Serialize(catalog).ToString(),catalog)==state,"Morgan prototype metadata did not survive codec");
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC human riot Rover prototype retains measured result fields and legacy unknown names",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;
+        const std::array<uint8_t,5> expected_aux{10,0,2,255,0};
+        const auto create=[&](const char* recipient) {return State::NewWorld(Technologies({{1,recipient},{2,"SPARTANS"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),5);};
+        auto empty=create("GAIANS");const auto source=empty.owners[1].designs[0];
+        GT_ASSERT(empty.RequestHumanRiotPrototype(128,1,false,catalog)==64,"Empty human block did not allocate measured global64");
+        const auto& allocated=empty.Find(1)->designs[0];
+        GT_ASSERT(allocated.riot && allocated.riot->source_design==128 && allocated.riot->flags==197 && allocated.riot->prerequisite==0
+            && allocated.riot->auxiliary==expected_aux && !allocated.name && empty.Find(2)->designs[0]==source,
+            "Allocated definition dropped known result bytes, invented a name or changed the source");
+        const auto retained=empty;
+        GT_ASSERT(empty.RequestHumanRiotPrototype(128,1,false,catalog)==-1 && empty==retained,"Exact human prototype was incorrectly reused or changed");
+        auto morgan=create("MORGANITES");morgan.owners[0].designs[0].name="Startup design";morgan.owners[1].designs[0].name="Startup design";
+        const auto old_morgan=morgan.owners[0].designs[0],old_source=morgan.owners[1].designs[0];
+        GT_ASSERT(morgan.RequestHumanRiotPrototype(128,1,true,catalog)==65 && morgan.Find(1)->designs[0]==old_morgan
+            && morgan.Find(2)->designs[0]==old_source && morgan.Find(1)->designs[1].name==std::optional<std::string>("Startup design*"),
+            "Measured Morgan block allocation/name collision changed retained definitions");
+        for(const auto& state:{empty,morgan}) {
+            const auto wire=state.Serialize(catalog).ToString();GT_ASSERT(State::Deserialize(wire,catalog)==state,"Known prototype fields were lost on decode");
+            for(size_t n=0;n<wire.size();++n) {GT_ASSERT(Rejects([&]{State::Deserialize(wire.substr(0,n),catalog);}),"Truncated prototype metadata accepted");}
+            GT_ASSERT(Rejects([&]{State::Deserialize(wire+"x",catalog);}),"Trailing prototype metadata accepted");
+        }
+        const auto legacy=create("GAIANS");GT_ASSERT(legacy.Serialize(catalog).ToString()==Wire(legacy) && State::Deserialize(Wire(legacy),catalog)==legacy,
+            "Legacy design frame changed or gained invented metadata");
+        auto bad=empty;bad.owners[0].designs[0].riot->source_design=64;
+        GT_ASSERT(Rejects([&]{bad.Serialize(catalog);}),"Cyclic prototype source accepted");GT_OK();
+    });
 	task->AddTest( "SMAC startup designs separate generation from marking for explicit owners and difficulty", GT() {
 		const auto units = smac_startup_fixture::Units(); const auto technologies = smac_rules_fixture::Technologies();
 		const char* names[] = { "Citizen", "Specialist", "Talent", "Librarian", "Thinker", "Transcend" };

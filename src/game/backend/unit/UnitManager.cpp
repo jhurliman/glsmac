@@ -402,6 +402,23 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
     return PreparedConventionalRemoval(std::move(data));
 }
+void UnitManager::QueryDefectionUnits(const PreparedConventionalUnit* created,const PreparedConventionalRemoval& removed,const std::function<void()>& query) {
+    const auto* creation=created ? created->m_data.get():nullptr;const auto* removal=removed.m_data.get();
+    if(!removal || removal->manager!=this || removal->committed || !query
+        || (created && (!creation || creation->manager!=this || !creation->candidate || creation->published))) {
+        THROW("Defection query requires current unpublished same-manager plans");
+    }
+    auto occupants=removal->occupants;std::vector<std::pair<Unit*,map::tile::Tile*>> positions;
+    if(creation && removal->units.count(creation->candidate->m_id)) {
+        // Removal already owns this tile when it removed another occupant there.
+        occupants.try_emplace(creation->tile,creation->occupants);
+        positions.emplace_back(creation->candidate.get(),creation->tile);
+    }
+    removed.QueryWithNativeRecords([&]{
+        if(removal->knowledge) {SyncNativeObservationMasks(*removal->knowledge);}
+        QueryPreparedUnits(removal->units,removal->order,occupants,removal->knowledge,positions,query);
+    });
+}
 UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(slot::Slot* recipient,
     const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
     const PreparedConventionalUnit* created,const PreparedConventionalRemoval* removed) {

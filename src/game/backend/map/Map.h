@@ -157,6 +157,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const std::optional< SmacWorkerKnowledge >& GetSmacWorkerKnowledge() const { return m_worker_knowledge; }
 	const std::optional< GlsmacTerritoryTopology >& GetTerritoryTopology() const { return m_territory_topology; }
 	std::vector< bool > TerritorySea() const;
+	GlsmacTerritoryTopology PrepareFreshTerritoryTopology() const;
 
 	WRAPDEFS_PTR( Map )
 

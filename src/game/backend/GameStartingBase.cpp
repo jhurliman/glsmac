@@ -78,7 +78,7 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
     const auto sea = m_map->TerritorySea();
     auto topology = m_map->m_territory_topology;
     if ( topology ) { topology->ValidateTerrain(sea); }
-    else { topology = map::GlsmacTerritoryTopology::Build(m_map->GetWidth(),m_map->GetHeight(),true,sea); }
+    else { topology = m_map->PrepareFreshTerritoryTopology(); }
     map::SmacWorkerKnowledge::Data data;
     if ( m_map->m_worker_knowledge ) {
         if ( !m_map->m_worker_knowledge_ready ) { throw std::runtime_error("Starting Base cannot replace pending restored knowledge"); }

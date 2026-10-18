@@ -680,6 +680,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 		return EC_ABORTED;
 	}
 	m_resource_policy = policy; // publish only after successful, uncancelled generation
+	if(policy) {m_territory_topology=PrepareFreshTerritoryTopology();}
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it

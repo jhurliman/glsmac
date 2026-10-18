@@ -8,6 +8,7 @@
 
 #include "Types.h"
 #include "ConventionalUnitState.h"
+#include "SmacNativeUnitRecord.h"
 
 #include "types/Buffer.h"
 
@@ -56,6 +57,9 @@ public:
 	struct LegacyState { movement_t movement; morale_t morale; health_t health; bool moved_this_turn; };
 	struct Presentation { movement_t movement; morale_t morale; health_t health; movement_t full_movement = 0; };
 	bool IsConventional() const;
+	bool IsNative() const;
+	const SmacNativeUnitRecord& Native() const;
+	int32_t SimulationOwner() const;
 	bool IsConventionalPending() const;
 	void RequireConventionalReady() const;
 	LegacyState& Legacy();
@@ -86,13 +90,14 @@ private:
 	friend class base::BaseManager; // staged home repair before canonical Base removal
 	struct Unplaced {};
 	Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state );
+	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state );
 	void CommitInitialPlacement( map::tile::Tile* tile ) noexcept;
 	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true, bool pending_home = false );
 	void Publish( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	void Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement );
 	// Called only after manager validation and membership/update allocation.
 	void CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept;
-	std::variant< LegacyState, ConventionalUnitState > m_state;
+	std::variant< LegacyState, ConventionalUnitState, SmacNativeUnitRecord > m_state;
 	UnitManager* const m_um;
 	// Transient and deliberately not serializable. Only the claimed new-world
 	// Start producer may create it; the first-turn preflight seals all at once.

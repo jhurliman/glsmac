@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <set>
+#include "game/backend/base/SmacEcology.h"
 
 namespace game::backend::map {
 namespace {
@@ -35,6 +37,37 @@ std::string SmacPlanetMap::Encode() const {
     result.append(reinterpret_cast<const char*>(m_header.data()), m_header.size());
     for (const auto& tile : m_tiles) { result.append(reinterpret_cast<const char*>(tile.bytes.data()), tile.bytes.size()); }
     result.append(reinterpret_cast<const char*>(m_trailer.data()), m_trailer.size());
+    return result;
+}
+
+SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
+    if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }
+    auto result = *this;
+    std::set<std::array<int32_t,2>> visited;
+    constexpr uint32_t event_items = 0x00288070u; // fungus plus five removable improvements
+    const auto write32 = [](uint8_t* bytes, uint32_t value) {
+        for (size_t byte = 0; byte < 4; ++byte) { bytes[byte] = static_cast<uint8_t>(value >> (8 * byte)); }
+    };
+    for (const auto& delta : plan.Changes()) {
+        const auto x = delta.coordinate[0], y = delta.coordinate[1];
+        if (x < 0 || y < 0 || x >= static_cast<int32_t>(WIDTH) || y >= static_cast<int32_t>(HEIGHT)
+            || ((x ^ y) & 1) || !visited.insert(delta.coordinate).second) {
+            throw std::invalid_argument("Invalid or duplicate Planet bloom coordinate");
+        }
+        const auto& before = delta.before;
+        const auto& after = delta.after;
+        auto& tile = result.m_tiles.at(size_t(y) * (WIDTH / 2) + size_t(x) / 2);
+        if ((tile.Climate() >> 5) != before.altitude_class || (tile.bytes[5] >> 6) != before.rockiness
+            || tile.Landmarks() != before.landmarks) {
+            throw std::invalid_argument("Planet bloom terrain authority is stale");
+        }
+        tile.bytes[0] = static_cast<uint8_t>((tile.bytes[0] & 0x1f) | (after.altitude_class << 5));
+        tile.bytes[5] = static_cast<uint8_t>((tile.bytes[5] & 0x3f) | (after.rockiness << 6));
+        // Source items are an import projection, not the live Base/Unit registry
+        // or current Former state. Copy only the event-owned terrain bits.
+        write32(tile.bytes.data() + 8, (tile.Items() & ~event_items) | (after.items & event_items));
+        write32(tile.bytes.data() + 12, after.landmarks);
+    }
     return result;
 }
 

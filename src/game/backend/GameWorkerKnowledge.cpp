@@ -75,18 +75,32 @@ map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerK
 	std::vector< map::SmacWorkerKnowledge::LiveUnit > units;
 	for ( const auto& entry : m_um->GetUnits() ) {
 		const auto* unit = entry.second;
-		if ( !unit || unit->m_id != entry.first || !unit->IsConventional() ) { throw std::runtime_error( "Worker knowledge requires canonical live units" ); }
-		const auto& state = unit->Conventional();
-		if ( startup ) {
-			if ( !unit->IsConventionalPending() || state.home_base_id || state.home != unit::ConventionalUnitState::Home::None ) {
-				throw std::runtime_error( "Startup knowledge requires actual Early homeless units" );
-			}
-			ResolveConventionalIdentity( state, unit->m_owner, *m_simulation );
-		} else { unit->RequireConventionalReady(); ResolveConventionalUnit( state, unit->m_owner ); }
-		const auto position = coordinate( unit->GetTile() );
+        if(!unit || unit->m_id!=entry.first || (!unit->IsConventional() && !unit->IsNative())) {
+            throw std::runtime_error("Worker knowledge requires canonical live units");
+        }
+        const auto position=coordinate(unit->GetTile());
+        if(unit->IsNative()) {
+            const auto& record=unit->Native();
+            (void)m_um->QueryNativeUnit(record);
+            const auto observation=std::find_if(data.units.begin(),data.units.end(),[&](const auto& row){return row.id==entry.first;});
+            if(unit->m_owner || record.x!=static_cast<int64_t>(unit->GetTile()->coord.x)
+                || record.y!=static_cast<int64_t>(unit->GetTile()->coord.y) || observation==data.units.end()
+                || observation->visible_to!=record.observation_mask) {
+                throw std::runtime_error("Native owner, placement or saved observation differs from its live record");
+            }
+        } else {
+            const auto& state=unit->Conventional();
+            if(startup) {
+                if(!unit->IsConventionalPending() || state.home_base_id || state.home!=unit::ConventionalUnitState::Home::None) {
+                    throw std::runtime_error("Startup knowledge requires actual Early homeless units");
+                }
+                ResolveConventionalIdentity(state,unit->m_owner,*m_simulation);
+            } else {unit->RequireConventionalReady();ResolveConventionalUnit(state,unit->m_owner);}
+        }
+
 		const auto member = unit->GetTile()->units.find( entry.first );
 		if ( member == unit->GetTile()->units.end() || member->second != unit ) { throw std::runtime_error( "Worker unit is missing current tile membership" ); }
-		units.push_back( { entry.first, state.owner_simulation_id, position } );
+		units.push_back( { entry.first, unit->SimulationOwner(), position } );
 	}
 	std::vector< bool > sea;
 	sea.reserve( data.tiles.size() );
@@ -342,7 +356,10 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 }
 
 void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept {
-	if ( prepared ) { m_map->m_worker_knowledge.swap(prepared); }
+	if ( prepared ) {
+        m_map->m_worker_knowledge.swap(prepared);
+        m_um->SyncNativeObservationMasks(*m_map->m_worker_knowledge);
+    }
 }
 
 bool Game::HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name,

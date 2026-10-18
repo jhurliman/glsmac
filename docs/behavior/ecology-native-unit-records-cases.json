@@ -1,0 +1,2625 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-NATIVE-RECORDS-001",
+  "ruleset": "pinned stock SMAC",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Existing two complete human land H6-to-7 handlers, ten native factories, one complete native initializer, one original ordinary file-body round trip. No AI/combat or frontend resume.",
+  "complete_record_semantics": {
+    "x": -4,
+    "y": -4,
+    "state": 0,
+    "flags": 0,
+    "design": 8,
+    "aux_word": 0,
+    "owner": 0,
+    "aux_owner_control": 0,
+    "damage": 0,
+    "order": 0,
+    "automation_control": 0,
+    "waypoint_count": 0,
+    "stored_morale": 1,
+    "terraforming_progress": 0,
+    "ecology_owner_tag": 0,
+    "observation_mask": 0,
+    "movement_spent": 0,
+    "facing": 2,
+    "movement_iteration_control": 0,
+    "status_character": 0,
+    "probe_action_control": 0,
+    "probe_target_control": 0,
+    "home_Base": -1,
+    "stack_next": -1,
+    "stack_previous": -1,
+    "waypoint_x": [
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "waypoint_y": [
+      -1,
+      -1,
+      -1,
+      -1
+    ]
+  },
+  "field_limits": {
+    "aux_word": "Initialized carry-through value; broader meaning unclaimed.",
+    "aux_owner_control": "Initialized carry-through value; broader meaning unclaimed.",
+    "observation_mask": "Zero only in declared cleared-exploration/no-human-observer fixture; not universal.",
+    "status_character": "Numeric zero is NUL, not ASCII digit zero.",
+    "facing": "Literal direction index2; compass label unclaimed."
+  },
+  "identity": {
+    "native_owner": 0,
+    "valid_first_Unit_id": 0,
+    "absent_home_or_stack": -1,
+    "ecology_attribution_owner": 1,
+    "attribution_is_distinct_from_Unit_owner": true
+  },
+  "design": {
+    "id": 8,
+    "abilities": 0,
+    "chassis": 0,
+    "weapon": 12,
+    "armor": 9,
+    "reactor": 1,
+    "plan": 1,
+    "carry": 0,
+    "icon": 1,
+    "cached_cost": 5,
+    "flags": 1,
+    "weapon_power": -1,
+    "armor_power": -1,
+    "chassis_speed": 1,
+    "chassis_domain": 0
+  },
+  "health": {
+    "current_HP": 10,
+    "maximum_HP": 10,
+    "damage_taken": 0,
+    "evidence": "Derived from previously accepted reactor-based health contract; no new health helper/battle grid.",
+    "reactor_authority": "design",
+    "per_Unit_maximum_HP_field": false
+  },
+  "native_labels": {
+    "alpha_sha256": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "labels": [
+      "Hatchling",
+      "Larval Mass",
+      "Pre-Boil",
+      "Boil",
+      "Mature Boil",
+      "Great Boil",
+      "Demon Boil"
+    ]
+  },
+  "lifecycle": {
+    "authority": "global turn counter, not Unit age or stored morale",
+    "schedule": [
+      {
+        "first_turn": 0,
+        "base_level": 0
+      },
+      {
+        "first_turn": 45,
+        "base_level": 1
+      },
+      {
+        "first_turn": 90,
+        "base_level": 2
+      },
+      {
+        "first_turn": 170,
+        "base_level": 3
+      },
+      {
+        "first_turn": 250,
+        "base_level": 4
+      },
+      {
+        "first_turn": 330,
+        "base_level": 6
+      }
+    ],
+    "opposing_faction_modifier": "Plus1 for positive opposing context with nonzero retained major atrocities; clamp6. Attribution is independent.",
+    "schedule_evidence": "Existing lifecycle receipt; six existing-Unit boundary queries per profile repeated here."
+  },
+  "profiles": [
+    {
+      "id": "carried_parent_reference_coordinates",
+      "inputs": {
+        "turn": 90,
+        "unit_count": 0,
+        "native_count": 0,
+        "native_design8_count": 0,
+        "native_reference": [
+          0,
+          0
+        ],
+        "native_direct_morale": 0,
+        "native_life": 1,
+        "movement_quantum": 3,
+        "human_mask": 2,
+        "major_atrocities_owner1": 3,
+        "H": 6,
+        "warming": 0,
+        "shared_seed": 305419896,
+        "CRT_seed": 65
+      },
+      "expected_state": {
+        "turn": 90,
+        "unit_count": 5,
+        "native_count": 5,
+        "native_design8_count": 5,
+        "native_reference": [
+          0,
+          0
+        ],
+        "native_direct_morale": 0,
+        "native_life": 1,
+        "movement_quantum": 3,
+        "human_mask": 2,
+        "major_atrocities_owner1": 3,
+        "H": 7,
+        "warming": 1,
+        "shared_seed": 305419896,
+        "CRT_seed": 2029258301
+      },
+      "native_initializer": null,
+      "ecology_seed_supplied_after_native_initialization": false,
+      "factory_assignment_exit": "reference_region_mismatch",
+      "births": [
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "factory_return_record": {
+            "x": 63,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "completed_ecology_record": {
+            "x": 63,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "factory_return_record": {
+            "x": 65,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "completed_ecology_record": {
+            "x": 65,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "factory_return_record": {
+            "x": 64,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "completed_ecology_record": {
+            "x": 64,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "factory_return_record": {
+            "x": 63,
+            "y": 21,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "completed_ecology_record": {
+            "x": 63,
+            "y": 21,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "factory_return_record": {
+            "x": 62,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "completed_ecology_record": {
+            "x": 62,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        }
+      ],
+      "returned_state_queries": [
+        {
+          "id": 0,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 1,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 2,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 3,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 4,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        }
+      ],
+      "controlled_global_turn_queries": [
+        {
+          "turn": 89,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 1,
+          "owner1_context_level": 2,
+          "allowance": 3
+        },
+        {
+          "turn": 90,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 2,
+          "owner1_context_level": 3,
+          "allowance": 3
+        },
+        {
+          "turn": 169,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 2,
+          "owner1_context_level": 3,
+          "allowance": 3
+        },
+        {
+          "turn": 170,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 3,
+          "owner1_context_level": 4,
+          "allowance": 3
+        },
+        {
+          "turn": 329,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 4,
+          "owner1_context_level": 5,
+          "allowance": 3
+        },
+        {
+          "turn": 330,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 6,
+          "owner1_context_level": 6,
+          "allowance": 3
+        }
+      ],
+      "handler_CRT_raw_values": [
+        250,
+        18237,
+        2761,
+        26456,
+        23942,
+        4890,
+        14066,
+        5852,
+        2359,
+        24204,
+        29007,
+        30964
+      ],
+      "handler_CRT_draw_count": 12,
+      "query_RNG_draw_count": 0,
+      "shared_RNG_entry_count": 0
+    },
+    {
+      "id": "actual_initialized_native_runtime",
+      "inputs": {
+        "turn": 90,
+        "unit_count": 0,
+        "native_count": 0,
+        "native_design8_count": 0,
+        "native_reference": [
+          -1,
+          -1
+        ],
+        "native_direct_morale": 0,
+        "native_life": 1,
+        "movement_quantum": 3,
+        "human_mask": 2,
+        "major_atrocities_owner1": 3,
+        "H": 6,
+        "warming": 0,
+        "shared_seed": 305419896,
+        "CRT_seed": 65
+      },
+      "expected_state": {
+        "turn": 90,
+        "unit_count": 5,
+        "native_count": 5,
+        "native_design8_count": 5,
+        "native_reference": [
+          -1,
+          -1
+        ],
+        "native_direct_morale": 0,
+        "native_life": 1,
+        "movement_quantum": 3,
+        "human_mask": 2,
+        "major_atrocities_owner1": 3,
+        "H": 7,
+        "warming": 1,
+        "shared_seed": 305419896,
+        "CRT_seed": 2029258301
+      },
+      "native_initializer": {
+        "return_value": 0,
+        "native_reference": [
+          -1,
+          -1
+        ],
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852
+        ],
+        "localization_calls": 8,
+        "shared_RNG_entries": [],
+        "actor_Base_preserved": true
+      },
+      "ecology_seed_supplied_after_native_initialization": true,
+      "factory_assignment_exit": "negative_reference_before_assignment_tail",
+      "births": [
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "factory_return_record": {
+            "x": 63,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "completed_ecology_record": {
+            "x": 63,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 0
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "factory_return_record": {
+            "x": 65,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "completed_ecology_record": {
+            "x": 65,
+            "y": 19,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 1
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "factory_return_record": {
+            "x": 64,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "completed_ecology_record": {
+            "x": 64,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 2
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "factory_return_record": {
+            "x": 63,
+            "y": 21,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "completed_ecology_record": {
+            "x": 63,
+            "y": 21,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 3
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        },
+        {
+          "initializer_record": {
+            "x": -4,
+            "y": -4,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "factory_return_record": {
+            "x": 62,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "completed_ecology_record": {
+            "x": 62,
+            "y": 20,
+            "state": 0,
+            "flags": 0,
+            "design": 8,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 1,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "id": 4
+          },
+          "factory_CRT_draw_count": 0,
+          "initializer_wrote_every_record_byte": true
+        }
+      ],
+      "returned_state_queries": [
+        {
+          "id": 0,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 1,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 2,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 3,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        },
+        {
+          "id": 4,
+          "morale": [
+            {
+              "mode": 0,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opposing_faction": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opposing_faction": 1,
+              "value": 3
+            }
+          ],
+          "basic_allowance": 3,
+          "allowance": 3,
+          "allowance_elite_suppressed": 3
+        }
+      ],
+      "controlled_global_turn_queries": [
+        {
+          "turn": 89,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 1,
+          "owner1_context_level": 2,
+          "allowance": 3
+        },
+        {
+          "turn": 90,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 2,
+          "owner1_context_level": 3,
+          "allowance": 3
+        },
+        {
+          "turn": 169,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 2,
+          "owner1_context_level": 3,
+          "allowance": 3
+        },
+        {
+          "turn": 170,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 3,
+          "owner1_context_level": 4,
+          "allowance": 3
+        },
+        {
+          "turn": 329,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 4,
+          "owner1_context_level": 5,
+          "allowance": 3
+        },
+        {
+          "turn": 330,
+          "unit": 0,
+          "stored_morale": 1,
+          "neutral_level": 6,
+          "owner1_context_level": 6,
+          "allowance": 3
+        }
+      ],
+      "handler_CRT_raw_values": [
+        250,
+        18237,
+        2761,
+        26456,
+        23942,
+        4890,
+        14066,
+        5852,
+        2359,
+        24204,
+        29007,
+        30964
+      ],
+      "handler_CRT_draw_count": 12,
+      "query_RNG_draw_count": 0,
+      "shared_RNG_entry_count": 0
+    }
+  ],
+  "storage": {
+    "save_return": 0,
+    "load_return": 0,
+    "profile": "actual_initialized_native_runtime",
+    "pre_save": {
+      "turn": 90,
+      "unit_count": 5,
+      "native_count": 5,
+      "native_design8_count": 5,
+      "native_reference": [
+        -1,
+        -1
+      ],
+      "H": 7,
+      "warming": 1,
+      "shared_seed": 305419896,
+      "CRT_seed": 2029258301,
+      "Units": [
+        {
+          "x": 63,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 0,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 65,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 64,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 2,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 63,
+          "y": 21,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 3,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 62,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 4,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ]
+    },
+    "after_save": {
+      "turn": 90,
+      "unit_count": 5,
+      "native_count": 5,
+      "native_design8_count": 5,
+      "native_reference": [
+        -1,
+        -1
+      ],
+      "H": 7,
+      "warming": 1,
+      "shared_seed": 305419896,
+      "CRT_seed": 2029258301,
+      "Units": [
+        {
+          "x": 63,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 0,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 65,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 64,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 2,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 63,
+          "y": 21,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 3,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 62,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 4,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ]
+    },
+    "after_load": {
+      "turn": 90,
+      "unit_count": 5,
+      "native_count": 5,
+      "native_design8_count": 5,
+      "native_reference": [
+        -1,
+        -1
+      ],
+      "H": 7,
+      "warming": 1,
+      "shared_seed": 305419896,
+      "CRT_seed": 2029258301,
+      "Units": [
+        {
+          "x": 63,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 0,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 65,
+          "y": 19,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 64,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 2,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 63,
+          "y": 21,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 3,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 62,
+          "y": 20,
+          "state": 0,
+          "flags": 0,
+          "design": 8,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "id": 4,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ]
+    },
+    "poison_after_save": {
+      "all_Unit_record_bytes": 90,
+      "unit_count": 0,
+      "native_count": 777,
+      "native_design8_count": 77,
+      "native_reference": [
+        999,
+        999
+      ],
+      "H": 777,
+      "warming": 777
+    },
+    "byte_exact_record_comparison": {
+      "records": 5,
+      "bytes": 260,
+      "before_sha256": "ce5200fd4146bdb17a5420d349b6539171fb6be95a17f455df72bc90cfd9b2dd",
+      "after_sha256": "ce5200fd4146bdb17a5420d349b6539171fb6be95a17f455df72bc90cfd9b2dd"
+    },
+    "loaded_queries": [
+      {
+        "id": 0,
+        "neutral_level": 2,
+        "owner1_context_level": 3,
+        "allowance": 3
+      },
+      {
+        "id": 1,
+        "neutral_level": 2,
+        "owner1_context_level": 3,
+        "allowance": 3
+      },
+      {
+        "id": 2,
+        "neutral_level": 2,
+        "owner1_context_level": 3,
+        "allowance": 3
+      },
+      {
+        "id": 3,
+        "neutral_level": 2,
+        "owner1_context_level": 3,
+        "allowance": 3
+      },
+      {
+        "id": 4,
+        "neutral_level": 2,
+        "owner1_context_level": 3,
+        "allowance": 3
+      }
+    ],
+    "RNG_entry_count": 0,
+    "RNG_caveat": "Unchanged live seeds; ordinary file bodies are not claimed to restore RNG words."
+  },
+  "validation": {
+    "complete_ecology_handlers": 2,
+    "native_factories": 10,
+    "complete_native_initializers": 1,
+    "returned_state_and_time_query_calls": 106,
+    "loaded_query_calls": 15,
+    "original_save_load_pairs": 1,
+    "verified_from_existing_receipts": true,
+    "native_probes_rerun": false
+  },
+  "receipt_sha256": {
+    "ecology-native-records-development-20261018.json": "273857d511616e438b30b28c14d3e54b0571febc6db08f01dfd77114eda4f496",
+    "ecology-native-storage-development-20261018.json": "bbe0e1f3164b8681704333db7cd9f97caad34368a3b335107efee8fbb07fa134",
+    "native-combat-component-inputs-20261017.json": "77e98bb781a86be9e37df045788d2458722f86cbed786899948a6f0af53a87dd"
+  },
+  "related_contracts": [
+    "native-birth-producer.md",
+    "native-visibility-lifetime.md",
+    "scout-creation-morale-and-movement.md",
+    "native-component-combat.md",
+    "gameplay-rng-save-load.md"
+  ]
+}

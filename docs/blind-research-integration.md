@@ -123,6 +123,27 @@ trunc(historicalTechnologyScore/2)%5==1, absent an inhibiting shortcut. An empty
 priority mask is valid; cancellation retains existing integers and still selects.
 The automatic chooser consumes the shared bounded-range stream, not the CRT stream.
 
+## Current producer integration checkpoint
+
+The [live regional strategy adapter](behavior/live-regional-strategy-port.md)
+now connects owner summary, actual Base routing, retained peer inputs and saved
+strategy/score tables. Full ranking leaves positive score slots consumed at-1;
+dominance uses those retained words and tolerates empty leader rank gaps.
+The [ecology calculation](behavior/base-ecology-calculation-port.md) now matches
+the measured radius, burden, scaling and contribution stages, but is not yet
+connected to live Base recalculation or upkeep.
+
+Next: retain clean-mineral/atrocity/aggregate history at its actual initialization,
+reset and restore boundaries; publish imported Planet's native-life/cloud/sea
+inputs and frozen WORLDBUILDER Sea Level Rises authority; connect final damage
+and the post-research ecology/CRT stage. Then bind the complete human valuation
+inputs to the automatic selector. Standard Blind Research still uses the manual
+picker until that work is complete. Broader ecological events, projects and
+SMAX validation remain separate requirements.
+
+The receipt notes below record the successive producer contracts; the linked
+live adapter supersedes their earlier pending-regional-integration statements.
+
 ## Retained producer contracts
 
 The [live Base-stage flag snapshot](regional-base-phase-flags.md) now preserves

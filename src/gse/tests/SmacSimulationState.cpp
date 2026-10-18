@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=28,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=29,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -172,6 +172,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=28,bool
         for(const auto word:value.faction_status.values) {suffix.WriteBool(word.has_value());if(word) {suffix.WriteInt(*word);}}
         suffix.WriteBool(value.ecology_warming_count.has_value());if(value.ecology_warming_count) {suffix.WriteInt(*value.ecology_warming_count);}
     }
+    if(version>=29) {suffix.WriteBool(value.native_factory.has_value());if(value.native_factory) {suffix.WriteString(value.native_factory->Serialize().ToString());}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -189,6 +190,55 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native factory initialization and counters preserve original independent authorities",GT(){
+        SmacGameplayRandomState observed(0x12345678,65);
+        for(const auto raw:{250,18237,2761,26456,23942,4890,14066,5852}) {
+            GT_ASSERT(observed.NextCrtRaw15()==raw,"Original initializer CRT trace differs");
+        }
+        SmacGameplayRandomState random(0x12345678,65);
+        auto state=faction::SmacNativeFactoryState::Initialize(-7,random);
+        GT_ASSERT(random==observed && state.definition_morale==-7 && state.assignment_reference[0]==-1 && state.assignment_reference[1]==-1,"Native initialization changed supplied morale, references or RNG scope");
+        GT_ASSERT(state.active_plan_tally==0 && state.active_designs==faction::SmacDesignCounts{},"Native initialization did not clear counters");
+        state.active_plan_tally=UINT32_MAX;state.active_designs[8]=255;
+        state.Adjust(8,1,1);
+        GT_ASSERT(state.active_plan_tally==0 && state.active_designs[8]==0,"Native counters failed original word/byte wrap");
+        state.Adjust(8,1,-1);
+        GT_ASSERT(state.active_plan_tally==UINT32_MAX && state.active_designs[8]==255,"Native removal failed independent wrapping");
+        state.Adjust(8,9,1);
+        GT_ASSERT(state.active_plan_tally==UINT32_MAX && state.active_designs[8]==0,"Excluded plan changed active-plan tally");
+        const auto before=state;
+        for(const auto design:{-1,512}) {GT_ASSERT(Rejects([&]{state.Adjust(design,1,1);}) && state==before,"Invalid adjustment mutated retained state");}
+        GT_ASSERT(Rejects([&]{state.Adjust(8,1,0);}) && state==before,"Invalid delta mutated counters");
+        GT_OK();
+    });
+    task->AddTest("SMAC native factory V29 retains stale counters and migrates V28 without initialization",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();const auto random=value.gameplay_random;
+        value.native_factory=faction::SmacNativeFactoryState{INT32_MIN,{{73,INT32_MAX}},UINT32_MAX,{}};
+        for(size_t i=0;i<512;++i) {value.native_factory->active_designs[i]=static_cast<uint8_t>(i);}
+        const auto native=value.native_factory->Serialize().ToString();
+        GT_ASSERT(native.size()<=faction::SmacNativeFactoryState::MAX_WIRE_BYTES && faction::SmacNativeFactoryState::Deserialize(native)==*value.native_factory,"Native factory codec recounted or lost raw fields");
+        for(size_t n=0;n<native.size();++n) {GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(native.substr(0,n));}),"Truncated factory accepted");}
+        GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(native+"x");}),"Trailing native bytes accepted");
+        const auto framed=[](int64_t version,int64_t morale,int64_t x,int64_t y,int64_t tally,const std::string& counts) {
+            types::Buffer wire;for(const auto field:{version,morale,x,y,tally}) {wire.WriteInt(field);}wire.WriteString(counts);return wire.ToString();
+        };
+        const std::string counts(512,char(255));
+        for(const auto bad:{int64_t(INT32_MIN)-1,int64_t(INT32_MAX)+1}) {
+            GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(1,bad,0,0,0,counts));}),"Wide native morale narrowed");
+            GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(1,0,bad,0,0,counts));}),"Wide native X narrowed");
+            GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(1,0,0,bad,0,counts));}),"Wide native Y narrowed");
+        }
+        for(const auto bad:{int64_t(-1),int64_t(UINT32_MAX)+1}) {GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(1,0,0,0,bad,counts));}),"Native tally narrowed");}
+        for(const auto size:{511u,513u}) {GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(1,0,0,0,0,std::string(size,'x')));}),"Wrong native count extent accepted");}
+        GT_ASSERT(Rejects([&]{faction::SmacNativeFactoryState::Deserialize(framed(2,0,0,0,0,counts));}),"Unknown native version accepted");
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+        GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random,"V29 restored native state by initialization or recount");
+        auto legacy=value;legacy.native_factory.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,28),technologies,profiles,units)==legacy,"V28 invented native authority or consumed RNG");
+        GT_OK();
+    });
     task->AddTest("SMAC ecology event V28 preserves raw status independent warming and legacy absence",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();
@@ -210,7 +260,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
             suffix.WriteBool(warming.has_value());if(warming) {suffix.WriteInt(*warming);}
             // CurrentWire supplies the independent complete V28 header/body;
             // remove only our literal suffix, preserving all previous framing.
-            const auto body=CurrentWire(value).substr(0,CurrentWire(value).size()-suffix.lenw);
+            const auto body=CurrentWire(value,28).substr(0,CurrentWire(value,28).size()-suffix.lenw);
             for(size_t size=0;size<suffix.lenw;++size) {
                 GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(body+suffix.ToString().substr(0,size),technologies,profiles,units);}),"Truncated event words admitted");
             }
@@ -218,7 +268,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         auto absent=State();absent.ecology_warming_count=17;
         GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(absent),technologies,profiles,units)==absent,"Known warming required invented faction words");
         types::Buffer bad_status;bad_status.WriteBool(true);bad_status.WriteInt(int64_t(UINT32_MAX)+1);
-        const auto empty=CurrentWire(State());types::Buffer absent_suffix;for(int i=0;i<9;++i) {absent_suffix.WriteBool(false);}
+        const auto empty=CurrentWire(State(),28);types::Buffer absent_suffix;for(int i=0;i<9;++i) {absent_suffix.WriteBool(false);}
         const auto body=empty.substr(0,empty.size()-absent_suffix.lenw);
         GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(body+bad_status.ToString(),technologies,profiles,units);}),"Narrowing raw faction status admitted");
         for(const auto invalid:{int64_t(INT32_MIN)-1,int64_t(INT32_MAX)+1}) {

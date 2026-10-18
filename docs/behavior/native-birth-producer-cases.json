@@ -1,0 +1,2548 @@
+{
+  "research_id": "RE-SMAC-NATIVE-BIRTH-PRODUCER-001",
+  "scope": "Full native faction0 initialization with localized text supplied, then explicit command RNG input and actual encounter through normal return. Component-complete numeric preflight. All subsequent creation/query/optional attack calls use continuous streams; unreset-runtime and scalar poisons are diagnostics, not normal defaults.",
+  "cases": [
+    {
+      "id": "NATIVE-BIRTH-001",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-002",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-003",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-004",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-005",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-006",
+      "inputs": {
+        "birth_turn": 0,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-007",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-008",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-009",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": true
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 3,
+              "stored_morale": 1,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 3482245183,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-010",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": true
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 3,
+              "stored_morale": 2,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 1346778785,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-011",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-012",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-013",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-014",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-015",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-016",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-017",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-018",
+      "inputs": {
+        "birth_turn": 14,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-019",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-020",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-021",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-022",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-023",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-024",
+      "inputs": {
+        "birth_turn": 15,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-025",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-026",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-027",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-028",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-029",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-030",
+      "inputs": {
+        "birth_turn": 44,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-031",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-032",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-033",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-034",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-035",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-036",
+      "inputs": {
+        "birth_turn": 45,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 1,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-037",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-038",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-039",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-040",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-041",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-042",
+      "inputs": {
+        "birth_turn": 89,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 1,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-043",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-044",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-045",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-046",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-047",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-048",
+      "inputs": {
+        "birth_turn": 90,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 2,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-049",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-050",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-051",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-052",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-053",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-054",
+      "inputs": {
+        "birth_turn": 169,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 2,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-055",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-056",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-057",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-058",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-059",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-060",
+      "inputs": {
+        "birth_turn": 170,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 3,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-061",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-062",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-063",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-064",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-065",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-066",
+      "inputs": {
+        "birth_turn": 249,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 3,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-067",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-068",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-069",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-070",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-071",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-072",
+      "inputs": {
+        "birth_turn": 250,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 4,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-073",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-074",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-075",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-076",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-077",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-078",
+      "inputs": {
+        "birth_turn": 329,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 4,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-079",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-080",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-081",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-082",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-083",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-084",
+      "inputs": {
+        "birth_turn": 330,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-085",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-086",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-087",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-088",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-089",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-090",
+      "inputs": {
+        "birth_turn": 331,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-091",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 0,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-092",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 0,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-093",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 1,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-094",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 1,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-095",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 2,
+        "crt_seed": 19,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-096",
+      "inputs": {
+        "birth_turn": 1000,
+        "native_life": 2,
+        "crt_seed": 21,
+        "combat": false
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 6,
+        "effective_next_turn": 6,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7025284,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-097",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 20,
+        "combat": true,
+        "battle_turn": 1
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6811271,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 3,
+              "stored_morale": 1,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 267028336,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-098",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 23,
+        "combat": true,
+        "battle_turn": 1
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 7453310,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 1,
+              "stored_morale": 1,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 1533699983,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-099",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 27,
+        "combat": true,
+        "battle_turn": 1
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 8309362,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 3,
+              "stored_morale": 1,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 3530314183,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-100",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 210,
+        "combat": true,
+        "battle_turn": 15
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 47473741,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 2,
+              "stored_morale": 2,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 4107489716,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-101",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 234,
+        "combat": true,
+        "battle_turn": 15
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 52610053,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 6,
+              "stored_morale": 1,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 494514644,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-102",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 573,
+        "combat": true,
+        "battle_turn": 15
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 125160460,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 1,
+              "design": 64,
+              "position": [
+                16,
+                16
+              ],
+              "damage": 6,
+              "stored_morale": 2,
+              "spent": 3,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 2805060927,
+          "shared_state": 3,
+          "treasury": 10,
+          "selected": 0,
+          "secondary": -1,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-103",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 4558,
+        "combat": true,
+        "battle_turn": 1
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 978002265,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 0,
+              "design": 8,
+              "position": [
+                17,
+                17
+              ],
+              "damage": 8,
+              "stored_morale": 2,
+              "spent": 0,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 1446015885,
+          "shared_state": 3,
+          "treasury": 0,
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-104",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 13210,
+        "combat": true,
+        "battle_turn": 1
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 2829642741,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 0,
+              "design": 8,
+              "position": [
+                17,
+                17
+              ],
+              "damage": 7,
+              "stored_morale": 2,
+              "spent": 0,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 2514196663,
+          "shared_state": 3,
+          "treasury": 0,
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-105",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 52,
+        "combat": true,
+        "battle_turn": 15
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 13659687,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 0,
+              "design": 8,
+              "position": [
+                17,
+                17
+              ],
+              "damage": 9,
+              "stored_morale": 2,
+              "spent": 0,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 3536142349,
+          "shared_state": 3,
+          "treasury": 0,
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-106",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 85,
+        "combat": true,
+        "battle_turn": 15
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 20722116,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": {
+          "unit_count": 1,
+          "units": [
+            {
+              "owner": 0,
+              "design": 8,
+              "position": [
+                17,
+                17
+              ],
+              "damage": 8,
+              "stored_morale": 2,
+              "spent": 0,
+              "home": -1,
+              "links": [
+                -1,
+                -1
+              ]
+            }
+          ],
+          "crt_state": 114199784,
+          "shared_state": 3,
+          "treasury": 0,
+          "selected": -1,
+          "secondary": 0,
+          "continuation": 0
+        }
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-107",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 19,
+        "unreset_control": true
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 2,
+        "crt_after_creation": 3152234277,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": false,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-108",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 21,
+        "unreset_control": true
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 2,
+        "crt_after_creation": 266082103,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": false,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-109",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 19,
+        "native_scalar": -2
+      },
+      "expected": {
+        "stored_morale": 255,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-110",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 19,
+        "native_scalar": -1
+      },
+      "expected": {
+        "stored_morale": 0,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    },
+    {
+      "id": "NATIVE-BIRTH-111",
+      "inputs": {
+        "birth_turn": 1,
+        "native_life": 1,
+        "crt_seed": 19,
+        "native_scalar": 256
+      },
+      "expected": {
+        "stored_morale": 1,
+        "effective_at_birth": 0,
+        "effective_next_turn": 0,
+        "command_crt_draws": 1,
+        "crt_after_creation": 6597258,
+        "shared_after_creation": 3,
+        "creation_return": 0,
+        "native_runtime_initialized": true,
+        "after_attack": null
+      }
+    }
+  ]
+}

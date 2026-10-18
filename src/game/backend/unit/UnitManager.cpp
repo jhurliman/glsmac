@@ -959,12 +959,19 @@ void UnitManager::PushUpdates() {
 			const auto unit_id = it.first;
 			const auto& uu = it.second;
 			const auto& unit = uu.unit;
+            const auto presentation_for_viewer = [&] {
+                if(!unit->IsNative()) {return unit->GetPresentation();}
+                const auto* viewer=m_game->m_simulation ? m_game->m_simulation->value.FindSlot(m_game->GetSlotNum()) : nullptr;
+                if(!viewer) {THROW("Native map presentation requires the current viewing simulation faction");}
+                return unit->GetPresentation(viewer->simulation_id);
+            };
 			if ( uu.ops & UUO_SPAWN ) {
-				const auto presentation = unit->GetPresentation();
+				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;
 				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
-				fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
+				fr.data.unit_spawn.native = unit->IsNative();
+				fr.data.unit_spawn.slot_index = unit->IsNative() ? 0 : unit->m_owner->GetIndex();
 				const auto* tile = unit->GetTile();
 				fr.data.unit_spawn.tile_coords = {
 					tile->coord.x,
@@ -987,7 +994,7 @@ void UnitManager::PushUpdates() {
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
-				const auto presentation = unit->GetPresentation();
+				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
 				fr.data.unit_update.unit_id = unit->m_id;
 				fr.data.unit_update.movement = presentation.movement;

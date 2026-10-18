@@ -64,7 +64,7 @@ CLASS( UnitManager, common::Class )
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
 		const backend::unit::health_t health,
-		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0
+		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0, bool native = false
 	);
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
@@ -79,6 +79,7 @@ CLASS( UnitManager, common::Class )
 	void SelectNextUnitOrSwitchToTileSelection();
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
+	SlotBadges* GetNativeBadges();
 	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
 
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
@@ -95,6 +96,7 @@ private:
 	std::unordered_map< size_t, Unit* > m_units = {};
 	std::vector< Unit* > m_selectable_units = {};
 
+	SlotBadges* m_native_badges = nullptr;
 	BadgeDefs* m_badge_defs = nullptr;
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 

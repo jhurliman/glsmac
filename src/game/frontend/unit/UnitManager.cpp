@@ -40,6 +40,7 @@ UnitManager::~UnitManager() {
 	for ( const auto& it : m_slot_badges ) {
 		delete it.second;
 	}
+	delete m_native_badges;
 	DELETE( m_badge_defs );
 }
 
@@ -204,7 +205,7 @@ void UnitManager::SpawnUnit(
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
 	const backend::unit::health_t health,
-	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement
+	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
@@ -215,7 +216,8 @@ void UnitManager::SpawnUnit(
 	}
 
 	auto* unitdef = m_unitdefs.at( unitdef_id );
-	auto* slot = m_game->GetSlot( slot_index );
+	if(native && conventional) {THROW("Native unit cannot also be conventional");}
+	auto* slot = native ? nullptr : m_game->GetSlot( slot_index );
 	auto* tile = m_game->GetTM()->GetTile( tile_coords );
 
 	auto* unit = m_units.insert(
@@ -233,11 +235,11 @@ void UnitManager::SpawnUnit(
 					render_coords.y,
 					render_coords.z
 				},
-				slot_index == m_game->GetMySlotIndex(),
+				!native && slot_index == m_game->GetMySlotIndex(),
 				movement,
 				morale,
 				morale_string,
-				health, conventional, has_moves, full_movement
+				health, conventional, has_moves, full_movement, native
 			)
 		}
 	).first->second;
@@ -411,6 +413,11 @@ Unit* UnitManager::GetPreviouslyDeselectedUnit() const {
 SlotBadges* UnitManager::GetSlotBadges( const size_t slot_index ) const {
 	ASSERT( m_slot_badges.find( slot_index ) != m_slot_badges.end(), "slot unit badges for index " + std::to_string( slot_index ) + " not defined" );
 	return m_slot_badges.at( slot_index );
+}
+
+SlotBadges* UnitManager::GetNativeBadges() {
+    if(!m_native_badges) {m_native_badges=new SlotBadges(m_badge_defs,m_ism,0,nullptr);}
+    return m_native_badges;
 }
 
 void UnitManager::DefineSlotBadges( const size_t slot_index, const faction::Faction* faction ) {

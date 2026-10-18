@@ -14,6 +14,7 @@
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/Game.h"
 #include "game/backend/Random.h"
+#include "game/FrontendRequest.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/SmacOrdinaryLandExploration.h"
 #include <set>
@@ -299,7 +300,16 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                     })});
                 }
                 GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==shared
-                    && unit::Unit::GetNextId()==next && fixture.QueuedFrontendRequests().size()==queued,"Native preview changed world RNG IDs or frontend queue");GT_OK();
+                    && unit::Unit::GetNextId()==next && fixture.QueuedFrontendRequests().size()==queued,"Native preview changed world RNG IDs or frontend queue");
+                const auto& updates=fixture.Updates();const auto spawn=std::find_if(updates.begin(),updates.end(),[&](const auto& fr){return fr.type==game::FrontendRequest::FR_UNIT_SPAWN && fr.data.unit_spawn.unit_id==id;});
+                GT_ASSERT(spawn!=updates.end() && spawn->data.unit_spawn.native && !spawn->data.unit_spawn.conventional
+                    && spawn->data.unit_spawn.morale==(design==10?1:0) && !unit->m_owner,"Native publication borrowed human ownership or lost its identity");
+                game::FrontendRequest copy(*spawn);GT_ASSERT(copy.data.unit_spawn.native && copy.data.unit_spawn.morale_string!=spawn->data.unit_spawn.morale_string,"Native spawn copy lost its owned description");
+                fixture.ResourceState([](auto& state){state.ecology_history->major_atrocities[1]=1;});
+                manager->RefreshUnit(GSE_CALL,unit);const auto& refreshed=fixture.Updates();
+                const auto refresh=std::find_if(refreshed.begin(),refreshed.end(),[&](const auto& fr){return fr.type==game::FrontendRequest::FR_UNIT_UPDATE && fr.data.unit_update.unit_id==id;});
+                GT_ASSERT(refresh!=refreshed.end() && refresh->data.unit_update.morale==(design==10?2:1)
+                    && *refresh->data.unit_update.morale_string==(design==10?"level1":"level0"),"Native frontend badge did not use viewer context independently of neutral description");GT_OK();
             });GT_ASSERT(error.empty(),"Native preview "+std::to_string(design)+": "+error);
         }GT_OK();
     });

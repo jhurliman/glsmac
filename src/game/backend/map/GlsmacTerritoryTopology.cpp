@@ -85,6 +85,7 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Rebuild(const std::vector<bool>
 	Require(m_areas.has_value(),"Region rebuild requires retained area history");
 	auto result=BuildWithAreas(m_width,m_height,m_wrap,sea,*m_areas);
 	result.m_postpass=m_postpass; // region fill alone does not refresh F or coastal flags
+	result.m_sites=m_sites;
 	return result;
 }
 
@@ -112,7 +113,14 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::WithTerrainPostpass(const std::
 		}
 		pass.coastal[index]=static_cast<uint8_t>(((*m_areas)[region]>=80 && inner>=4 && outer>=4 ? 1 : 0) | (distinct ? 2 : 0));
 	}}
-	auto result=*this;result.m_postpass=std::move(pass);return result;
+	auto result=*this;result.m_postpass=std::move(pass);
+	if(result.m_sites) {result.m_sites=result.m_sites->ClearRatings();}return result;
+}
+
+GlsmacTerritoryTopology GlsmacTerritoryTopology::WithSiteRatings(smac_site::RatingCache sites) const {
+	const auto& geometry=sites.GetGeometry();
+	Require(geometry.width==m_width && geometry.height==m_height && geometry.wrap==m_wrap,"Site-cache topology geometry differs");
+	auto result=*this;result.m_sites=std::move(sites);return result;
 }
 
 void GlsmacTerritoryTopology::ValidateTerrain( const std::vector<bool>& sea ) const {
@@ -120,13 +128,14 @@ void GlsmacTerritoryTopology::ValidateTerrain( const std::vector<bool>& sea ) co
 }
 bool GlsmacTerritoryTopology::operator==( const GlsmacTerritoryTopology& other ) const {
 	return m_width == other.m_width && m_height == other.m_height && m_wrap == other.m_wrap && m_regions == other.m_regions
-		&& m_areas==other.m_areas && m_postpass==other.m_postpass;
+		&& m_areas==other.m_areas && m_postpass==other.m_postpass && m_sites==other.m_sites;
 }
 std::string GlsmacTerritoryTopology::Serialize() const {
 	const auto count=m_regions.size();
-	std::string wire(16+count+(m_areas ? 512 : 0)+(m_postpass ? 512+count : 0),'\0');wire.replace(0,8,"GLSTERR2");
+	std::string wire(16+count+(m_areas ? 512 : 0)+(m_postpass ? 512+count : 0)+(m_sites ? count : 0),'\0');wire.replace(0,8,"GLSTERR3");
 	Write16(wire,8,static_cast<uint16_t>(m_width)); Write16(wire,10,static_cast<uint16_t>(m_height)); wire[12] = m_wrap ? 1 : 0;
 	wire[13]=m_areas ? 1 : 0;wire[14]=m_postpass ? 1 : 0;
+	wire[15]=m_sites ? 1 : 0;
 	for (size_t i = 0; i < m_regions.size(); ++i) { wire[16+i] = static_cast<char>(m_regions[i]); }
 	size_t offset=16+count;
 	if(m_areas) {for(const auto value:*m_areas) {Write32(wire,offset,value);offset+=4;}}
@@ -134,17 +143,19 @@ std::string GlsmacTerritoryTopology::Serialize() const {
 		for(const auto value:m_postpass->fertility) {Write32(wire,offset,value);offset+=4;}
 		for(const auto value:m_postpass->coastal) {wire[offset++]=static_cast<char>(value);}
 	}
+	if(m_sites) {wire.replace(offset,count,m_sites->Serialize());}
 	return wire;
 }
 GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string& wire ) {
-	Require( wire.size() >= 16 && wire.size() <= MAX_WIRE_BYTES && (wire.compare(0,8,"GLSTERR1") == 0 || wire.compare(0,8,"GLSTERR2") == 0),
+	Require( wire.size() >= 16 && wire.size() <= MAX_WIRE_BYTES && (wire.compare(0,8,"GLSTERR1") == 0 || wire.compare(0,8,"GLSTERR2") == 0 || wire.compare(0,8,"GLSTERR3") == 0),
 		"Invalid territory topology header or size" );
 	const auto width = Read16(wire,8), height = Read16(wire,10); const auto count = Count(width,height);
 	const bool legacy=wire[7]=='1';
 	Require((wire[13]==0 || (!legacy && wire[13]==1)) && (wire[14]==0 || (!legacy && wire[14]==1))
 		&& (!wire[14] || wire[13]),"Invalid territory metadata flags");
 	const bool areas=wire[13]==1,postpass=wire[14]==1;
-	Require( wire.size() == 16+count+(areas ? 512 : 0)+(postpass ? 512+count : 0) && (wire[12] == 0 || wire[12] == 1) && !wire[15],
+	Require(wire[15]==0 || (wire[7]=='3' && wire[15]==1),"Invalid site-cache presence flag");const bool sites=wire[15]==1;
+	Require( wire.size() == 16+count+(areas ? 512 : 0)+(postpass ? 512+count : 0)+(sites ? count : 0) && (wire[12] == 0 || wire[12] == 1),
 		"Invalid territory topology framing" );
 	// Validate every byte before allocating the owned result.
 	for (size_t i = 0; i < count; ++i) {
@@ -158,7 +169,9 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string&
 	// publishing an owned topology.
 	const auto counter_end=16+count+(areas ? 512 : 0)+(postpass ? 512 : 0);
 	for(size_t offset=16+count;offset<counter_end;offset+=4) {Require(Read32(wire,offset)>=0,"Negative retained geography counter");}
-	if(postpass) {for(size_t i=16+count+1024;i<wire.size();++i) {Require(static_cast<uint8_t>(wire[i])<=3,"Invalid coastal metadata flags");}}
+	const auto coastal_end=16+count+(areas ? 512 : 0)+(postpass ? 512+count : 0);
+	if(postpass) {for(size_t i=16+count+1024;i<coastal_end;++i) {Require(static_cast<uint8_t>(wire[i])<=3,"Invalid coastal metadata flags");}}
+	if(sites) {for(size_t i=coastal_end;i<wire.size();++i) {Require(static_cast<uint8_t>(wire[i])<=31,"Invalid site-cache metadata flags");}}
 	std::vector<uint8_t> regions; regions.reserve(count);
 	for (size_t i = 0; i < count; ++i) { regions.push_back(static_cast<uint8_t>(wire[16+i])); }
 	auto result=GlsmacTerritoryTopology(width,height,wire[12] != 0,std::move(regions));size_t offset=16+count;
@@ -167,6 +180,7 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string&
 		result.m_postpass=TerrainPostpass{};for(auto& value:result.m_postpass->fertility) {value=Read32(wire,offset);offset+=4;}
 		result.m_postpass->coastal.reserve(count);for(size_t i=0;i<count;++i) {result.m_postpass->coastal.push_back(static_cast<uint8_t>(wire[offset++]));}
 	}
+	if(sites) {result.m_sites=smac_site::RatingCache::Restore({width,height,wire[12]!=0},wire.substr(offset,count));}
 	return result;
 }
 

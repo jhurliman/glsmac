@@ -104,7 +104,8 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     std::unique_ptr<Base> candidate(new Base(Base::ConstructionKind::PreparedStartup,m_game,Base::GetNextId(),owner,
         owner->GetPlayer()->GetFaction(),tile,"",facilities,pops,population+1,0,production,context,std::nullopt));
     candidate->m_allocation=SmacBaseAllocationState{0,{{},population}};
-    auto knowledge=m_game->PrepareBaseTerritory(candidate.get(),nullptr,false);
+    std::optional<map::GlsmacTerritoryTopology> topology;
+    auto knowledge=m_game->PrepareBaseTerritory(candidate.get(),nullptr,false,&topology);
     if (!knowledge) {THROW("Founding requires prepared saved territory");}
     // The normal projector authenticates actual entities before a private
     // candidate projection removes the consumed Pod and appends the new Base.
@@ -153,7 +154,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     auto& economy=m_game->m_simulation->value.economy.at(simulation_id);
     RegisterBase(base); // every allocating registry/queue operation precedes writes
     candidate.release(); base->CommitStartupPlacement(); removal.Commit();
-    m_game->CommitBaseTerritory(knowledge);
+    m_game->CommitBaseTerritory(knowledge,topology);
     economy.regional_base_counts=regional;
     removal.Notify(GSE_CALL); // retired wrappers are owned even if a hook throws
     m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});

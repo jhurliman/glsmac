@@ -295,12 +295,13 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
 	}
-	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
+	std::optional<map::GlsmacTerritoryTopology> topology;
+	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true, &topology );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
 	PrepareBaseName( base );
 	RegisterBase( base );
-	m_game->CommitBaseTerritory( territory );
+	m_game->CommitBaseTerritory( territory, topology );
 	if(economy) {economy->regional_base_counts=regional;}
 
 	auto* state = m_game->GetState();
@@ -397,7 +398,8 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	const auto* units = m_game->GetUM();
 	if ( !units && base->HasSmacResourceContext() ) { THROW( "Canonical Base removal requires the Unit registry" ); }
 	if ( units && units->HasConventionalHome( base_id ) ) { THROW( "Cannot remove a conventional home Base before explicit reassignment" ); }
-	auto territory = m_game->PrepareBaseTerritory( nullptr, base, false );
+	std::optional<map::GlsmacTerritoryTopology> topology;
+	auto territory = m_game->PrepareBaseTerritory( nullptr, base, false, &topology );
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
 	auto next_updates = m_base_updates;
@@ -416,7 +418,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 
 	m_bases.erase( it );
 	m_base_order.erase( ordered );
-	m_game->CommitBaseTerritory( territory );
+	m_game->CommitBaseTerritory( territory, topology );
 	if(economy) {economy->regional_base_counts=regional;}
 
 	auto* state = m_game->GetState();

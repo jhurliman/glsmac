@@ -107,6 +107,17 @@ void Game::PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowle
 	auto topology = m_map->m_territory_topology;
 	if ( topology ) { topology->ValidateTerrain( m_map->TerritorySea() ); }
 	else { topology = m_map->PrepareFreshTerritoryTopology(); }
+	// Initial fresh-world admission can follow diagnostic/legacy-script Base
+	// construction. Establish their radius marks once; later publication and
+	// restore must retain the owned history without replaying these writers.
+	if(!m_map->m_worker_knowledge && topology->SiteRatings()) {
+		auto sites=*topology->SiteRatings();
+		for(const auto id:m_bm->GetBaseRecordOrder()) {
+			const auto* base=m_bm->GetBase(id);if(!base) {throw std::runtime_error("Initial site-radius Base order is incomplete");}
+			const auto* center=base->GetTile();sites=sites.FoundBase({{static_cast<int32_t>(center->coord.x),static_cast<int32_t>(center->coord.y)}});
+		}
+		topology=topology->WithSiteRatings(std::move(sites));
+	}
 	std::optional< map::SmacWorkerKnowledge > replacement = knowledge;
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
 	static_assert( std::is_nothrow_swappable_v< decltype( topology ) > );

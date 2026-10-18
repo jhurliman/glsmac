@@ -118,7 +118,10 @@ Base::Base(
 	}
 	ValidateAllocationProjection( false );
 	if ( kind == ConstructionKind::PreparedStartup ) { return; }
-	if ( kind == ConstructionKind::Live ) { (void)game->PrepareBaseTerritory( this, nullptr, false ); }
+	if ( kind == ConstructionKind::Live ) {
+		std::optional<map::GlsmacTerritoryTopology> topology;
+		(void)game->PrepareBaseTerritory( this, nullptr, false, &topology );
+	}
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}

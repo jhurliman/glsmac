@@ -16,6 +16,24 @@ private executable research and original assets stay outside the PR.
 
 ## Required dependencies and live callers
 
+Current prerequisites: PR195 owns human-defeat requests and their saved/controller
+path; PR196 owns retained regional Base counts and their incremental writers;
+PR197 preserves the original ocean-choice index. PR198 adds saved region areas,
+fertility and coastal postpass values. PR199 implements the31-case original land
+site-quality query. PR200 adds the40-case sea query and PR201 the40-case
+startup/late-turn extension; all are accepted after current-head review and CI.
+None replaces restart search
+by itself.
+
+The [joined site-cache producer](smac-site-rating-cache.md) now owns ratings and
+exclusions, retains them through save/Start, and stages founding/removal/capture
+refill with their future Base list. Ordinary Road/Farm/Solar/Mine/Forest preserve
+nonzero history; water/polar/startup/late queries use the original formula.
+Old saves retain unavailable history, since a fresh recount cannot recover a
+stale score or stray exclusion. This slice still needs its own review and
+focused sanitizer acceptance. Native restart search remains the next consumer;
+original world generation and complete landmark-detail ownership remain open.
+
 1. Complete the restart search contract used by `PrepareLastSmacBaseDisposition`.
    Its current farthest-site policy is explicitly a port approximation. Capture
    introduces a captor identity and a reached same-land-region/nearest-captor-Base
@@ -23,8 +41,8 @@ private executable research and original assets stay outside the PR.
    stream. Establish success and all-attempts-failed outputs before substituting
    this policy into capture. Keep reference coordinates as expected outputs,
    never hardcoded sites. Reuse the existing restart package selector.
-2. Preserve ending requests as owned campaign state and connect their actual
-   controller. The checked two-human local capture sets an ending request on
+2. Reuse the owned ending request and actual controller accepted in PR195.
+   The checked two-human local capture sets an ending request on
    defender loss even though focus remains the attacker; that does not prove
    the attacker has won. Existing last-Base starvation/disposition must share
    this producer, save ownership and controller instead of silently dropping

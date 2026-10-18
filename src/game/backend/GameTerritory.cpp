@@ -13,7 +13,7 @@
 namespace game::backend {
 
 std::optional< map::SmacWorkerKnowledge > Game::PrepareBaseTerritory( const base::Base* added,
-	const base::Base* removed, bool attached ) const {
+	const base::Base* removed, bool attached,std::optional<map::GlsmacTerritoryTopology>* prepared_topology ) const {
 	if ( !m_map || !m_map->m_worker_knowledge ) { return {}; }
 	if ( !IsRunning() || !GetGCSpace()->IsAccumulating() || !m_map->m_worker_knowledge_ready
 		|| !m_map->m_territory_topology || ( added && removed ) ) {
@@ -67,12 +67,29 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareBaseTerritory( const base
 	if ( removed ) {
 		auto data=replacement.CopyData();
 		data.bases.erase(std::remove_if(data.bases.begin(),data.bases.end(),[&](const auto& observation){return observation.id==removed->m_id;}),data.bases.end());
-		return map::SmacWorkerKnowledge::Create(data);
+		replacement=map::SmacWorkerKnowledge::Create(data);
+	}
+	if(prepared_topology) {
+		auto next=topology;
+		if(next.SiteRatings()) {
+			std::vector<map::smac_site::Coordinate> centers;centers.reserve(input.bases.size());for(const auto& base:input.bases) {centers.push_back(base.coordinate);}
+			auto sites=*next.SiteRatings();
+			if(added) {sites=sites.FoundBase({{static_cast<int32_t>(added->GetTile()->coord.x),static_cast<int32_t>(added->GetTile()->coord.y)}});}
+			if(removed) {sites=sites.RemoveBase({{static_cast<int32_t>(removed->GetTile()->coord.x),static_cast<int32_t>(removed->GetTile()->coord.y)}},centers);}
+			next=m_map->PrepareSiteRatingRefill(next.WithSiteRatings(std::move(sites)),centers,GetTurnId());
+		}
+		*prepared_topology=std::move(next);
 	}
 	return replacement;
 }
 
 void Game::CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept {
 	if ( prepared ) { m_map->m_worker_knowledge.swap( prepared ); }
+}
+void Game::CommitBaseTerritoryTopology(std::optional<map::GlsmacTerritoryTopology>& topology) noexcept {
+	if(topology) {m_map->m_territory_topology.swap(topology);}
+}
+void Game::CommitBaseTerritory(std::optional<map::SmacWorkerKnowledge>& knowledge,std::optional<map::GlsmacTerritoryTopology>& topology) noexcept {
+	CommitBaseTerritory(knowledge);CommitBaseTerritoryTopology(topology);
 }
 }

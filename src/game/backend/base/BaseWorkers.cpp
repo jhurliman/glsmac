@@ -40,7 +40,7 @@ void Base::PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationS
 	prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
 }
 
-SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support, const FacilityDef* granted ) const {
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support, const FacilityDef* granted, std::optional<uint32_t> candidate_unavailable ) const {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( !candidate_production && m_production ) { candidate_production = &*m_production; }
 	Game::ResourceQueryPhase query_phase;
@@ -70,7 +70,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 	}
 	// This query authenticates the complete current Unit/Base/map projection.
 	// It retains raw selected32 on Base; only availability is taken from the frame.
-	const auto availability = m_game->GetSmacWorkerAvailability( *this );
+	const auto unavailable = candidate_unavailable ? *candidate_unavailable : m_game->GetSmacWorkerAvailability( *this ).unavailable;
 	const int32_t mineral_support = candidate_support ? *candidate_support : m_game->CalculateCanonicalMineralSupport( *this, population, prepared_unit );
 	const auto& global = state->m_settings.global;
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() || !global.GetSmacTechnologyRules() ) {
@@ -104,7 +104,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 		static_cast< int32_t >( population ), static_cast< int32_t >( m_game->GetTurnId() ),
 		global.GetSmacResourceRules()->nutrients_per_citizen, mineral_support, production,
 		context.WorkerPriorities(profile->worker_priorities), context.ManageCitizens(), phase == SmacBaseResourcePhase::Upkeep,
-		allocation.selected, availability.unavailable, prefix, allocation.specialists, catalog, std::nullopt
+		allocation.selected, unavailable, prefix, allocation.specialists, catalog, std::nullopt
 	}, query );
 	// Existing publication prepares reverse assignments/Pop projections/queues
 	// before one nonthrowing commit. No cache, turn, RNG or knowledge is changed.

@@ -41,7 +41,7 @@ base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& 
 }
 
 base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::Base& evaluating_base,
-	const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates ) const {
+	const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates, const base::SmacBaseAllocationState* candidate_allocation ) const {
 	using namespace base;
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_map ) {
 		throw std::runtime_error( "Energy calculation requires a registered Base in this world" );
@@ -113,7 +113,7 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 			maintenance_fees.emplace_back( id, fee );
 		}
 	}
-	const auto allocation = evaluating_base.GetSmacAllocation();
+	const auto allocation = candidate_allocation ? std::optional<SmacBaseAllocationState>(*candidate_allocation) : evaluating_base.GetSmacAllocation();
 	const auto& production = evaluating_base.GetProductionState();
 	if ( !allocation || !production ) { throw std::runtime_error( "Energy calculation requires exact allocation and production authority" ); }
 	ValidateSmacProductionState( evaluating_base.m_owner, *production );

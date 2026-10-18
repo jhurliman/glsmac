@@ -104,6 +104,7 @@ void Base::PublishSmacAllocation( GSE_CALLABLE, const SmacBaseAllocationState& a
 struct Base::PreparedSmacWorkerState::Data {
 	Base* base;
 	BaseManager* manager;
+	std::unique_ptr<Data> previous;
 	struct Projection { Pop* pop; const PopDef* def; Pop::worked_tile_t coordinates; };
 	std::vector< Projection > projection;
 	pops_t additions;
@@ -127,7 +128,8 @@ Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
 Base::PreparedSmacWorkerState::PreparedSmacWorkerState( PreparedSmacWorkerState&& ) noexcept = default;
 void Base::PreparedSmacWorkerState::Commit() noexcept {
 	if ( !m_data || m_data->committed ) { return; }
-	auto& data = *m_data;
+	const auto commit = [](auto&& self, Data& data) noexcept -> void {
+	if(data.previous) {self(self,*data.previous);}
 	for ( const auto& next : data.projection ) { next.pop->m_def = next.def; next.pop->m_worked_tile = next.coordinates; }
 	while ( !data.additions.empty() ) { data.base->m_pops.insert( data.additions.extract( data.additions.begin() ) ); }
 	for ( const auto id : data.removals ) { data.retired.push_back( data.base->m_pops.extract( id ) ); }
@@ -143,6 +145,8 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	data.manager->m_base_updates.swap( data.updates );
 	data.manager->m_updated_bases.swap( data.triggers );
 	data.committed = true;
+	};
+	commit(commit,*m_data);
 }
 void Base::PreparedSmacWorkerState::Finish() {
 	if ( !m_data || !m_data->committed ) { THROW( "Prepared Base state has not committed" ); }
@@ -157,7 +161,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep, PreparedSmacWorkerState* previous ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	m_game->RequireSmacGameplayActive();
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
@@ -165,7 +169,10 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "SMAC allocation publication requires its owning accumulation" ); }
 	auto* bm = m_game->GetBM();
 	if ( bm->m_dispatching_updates ) { THROW( "SMAC allocation publication cannot reenter update dispatch" ); }
-	const auto prior_context = GetSmacResourceContext();
+	if(previous && (!previous->m_data || previous->m_data->committed || previous->m_data->manager!=bm
+        || !previous->m_data->lock.owns_lock() || captured_owner || finish_upkeep || !facility_changes.empty()
+        || population!=m_pops.size())) {THROW("Joined worker preparation requires an unpublished same-manager population-preserving batch");}
+    const auto prior_context = GetSmacResourceContext();
 	const auto expected_context=finish_upkeep ? prior_context.AfterUpkeep() : prior_context;
 	context.Validate();
 	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
@@ -205,7 +212,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 			additions.emplace( std::piecewise_construct, std::forward_as_tuple( next_pop_id ), std::forward_as_tuple( this, next_pop_id, worker, 0 ) ); ++next_pop_id;
 		}
 	}
-	auto assignments = bm->m_work_assignments;
+	auto assignments = previous ? previous->m_data->assignments : bm->m_work_assignments;
 	// Validate the existing derived index even during explicit first adoption.
 	for ( auto it = assignments.begin(); it != assignments.end(); ) {
 		if ( it->second.first != m_id ) { ++it; continue; }
@@ -240,7 +247,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	for ( auto& item : additions ) { append( item.second ); }
 	// Prepare both native queues before publishing any authority or Pop fields.
 	// No script, yield query, queue dispatch, or allocator callback runs here.
-	auto updates = bm->m_base_updates;
+	auto updates = previous ? previous->m_data->updates : bm->m_base_updates;
 	auto& update = updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
 	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "SMAC allocation has an incompatible pending Base update" ); }
 	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
@@ -261,8 +268,9 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		}
 		BaseManager::QueueBaseUpdateInto(updates,change.first,BaseManager::BUO_REFRESH);
 	}
-	std::unique_lock lock( bm->m_updated_bases_mutex );
-	auto triggers = bm->m_updated_bases;
+	std::unique_lock lock(bm->m_updated_bases_mutex,std::defer_lock);
+	if(!previous) {lock.lock();}
+	auto triggers = previous ? previous->m_data->triggers : bm->m_updated_bases;
 	triggers.insert( this );
 	for(const auto& change:facility_changes) {triggers.insert(change.first);}
 	std::optional< SmacBaseAllocationState > replacement = allocation;
@@ -282,6 +290,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
 	data->facility_changes=std::move(facility_changes);
 	data->captured_owner=captured_owner;
+	if(previous) {data->lock=std::move(previous->m_data->lock);data->previous=std::move(previous->m_data);}
 	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );
 	return PreparedSmacWorkerState( std::move( data ) );
 }

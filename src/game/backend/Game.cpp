@@ -598,6 +598,7 @@ void Game::ClearEvents() {
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
 	RequireSmacGameplayActive();
+	if(!AllowsSmacEnergyRateEvent(name)) {THROW("Close the energy allocation window before another gameplay command");}
 	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyScreenClose(GSE_CALL,name,args,m_slot_num,false)) {
 		AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args));return;
 	}
@@ -999,6 +1000,7 @@ WRAPIMPL_BEGIN( Game )
 				N_GETVALUE( name, 0, String );
 				N_GET( args, 1, Object );
 				RequireSmacGameplayActive();
+				if(!AllowsSmacEnergyRateEvent(name)) {THROW("Close the energy allocation window before another gameplay command");}
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
@@ -1917,6 +1919,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if(m_simulation && m_simulation->value.human_defeat_request) {continue;} // queued gameplay cannot outlive the ending request
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
+				if(!AllowsSmacEnergyRateEvent(event->GetEventName())) {continue;} // queued before the modal opened
 				encountered_pause=encountered_pause || m_canonical_continuation.has_value();
 				if(event->GetSource()==event::Event::ES_LOCAL
 					&& HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
@@ -3203,6 +3206,7 @@ void Game::ResetGame() {
 			if ( !m_owner_transition || m_owner_transition->phase != OwnerTransition::Running ) { m_owner_transition.reset(); }
 			m_active_admission.reset();
 			m_campaign_save.reset();
+			m_energy_rate_session.reset();
 		}
 
 		m_pending_snapshot_random.reset();

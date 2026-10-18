@@ -284,12 +284,62 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC energy modal keeps live changes cancels by recalculation and fences retired requests",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");int64_t request=0;int closed=0;
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        std::string seeded;const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            auto context=base->GetSmacResourceContext();context.governor_options=0;base->SetSmacResourceContext(GSE_CALL,context);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            seeded=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(setup.empty(),"Energy modal seed: "+setup);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");restored.BasePresentationRoles(roles);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,seeded,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);restored.BasePresentationRoles(roles);
+            game->On(GSE_CALL,"smac_energy_rates_menu",NATIVE_CALL(&request,&closed) {
+                N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                if(static_cast<value::Bool*>(view->Get("closed"))->value) {++closed;}
+                else {request=static_cast<value::Int*>(view->Get("request_id"))->value;}
+                return VALUE(value::Undefined);
+            }));
+            const auto open=[&] {
+                auto* preview=static_cast<value::Object*>(game->CopySmacEnergyRatePreview(GSE_CALL,*base,{}));
+                game->Event(GSE_CALL,"open_smac_energy_rates",{{"base",base->Wrap(GSE_CALL)},{"expected_state",preview->Get("expected_state")}});
+            };
+            const auto adjust=[&](int button){game->Event(GSE_CALL,"adjust_smac_energy_rates",{{"request_id",VALUE(value::Int,,request)},{"button",VALUE(value::Int,,button)},{"locks",VALUE(value::Int,,0)}});};
+            const auto close=[&](int64_t id,bool cancel){game->Event(GSE_CALL,"close_smac_energy_rates",{{"request_id",VALUE(value::Int,,id)},{"cancel",VALUE(value::Bool,,cancel)}});};
+            const auto money=game->GetCanonicalEconomy(base->m_owner);const auto random=restored.GameplayRandom();const auto production=base->GetProductionState();
+            base->SetAccumulatedNutrients(-3);
+            open();game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+            GT_ASSERT(request>0 && game->GetTurnId()==1 && base->GetAccumulatedNutrients()==-3,"Opening posted a pass or allowed already queued turn completion");
+            adjust(34);adjust(34);restored.DrainEvents();auto live=game->GetCanonicalEconomy(base->m_owner);
+            auto expected=money;expected.rates={2,3};
+            GT_ASSERT(live==expected && base->GetAccumulatedNutrients()==0 && base->GetProductionState()==production && restored.GameplayRandom()==random,
+                "Queued live buttons were lost, failed forced food normalization or posted stores/income/RNG");
+            bool save_fenced=false;
+            try {restored.SaveCampaign("/tmp/glsmac-energy-modal-fenced.glsmac");}
+            catch(const std::runtime_error& error) {save_fenced=std::string(error.what()).find("Close the energy allocation window before saving")!=std::string::npos;}
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}) && save_fenced,"Energy modal admitted turn/save or failed outside its actual owner save checkpoint");
+            close(request+1,true);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==0,"Stale close rolled back the live request");
+            const auto old=request;close(request,true);restored.DrainEvents();
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==money && closed==1 && base->GetAccumulatedNutrients()==0,"Escape did not restore numeric rates by compensating recalculation");
+            open();restored.DrainEvents();GT_ASSERT(request>old,"Energy modal reused a retired identity");
+            adjust(30);restored.DrainEvents();expected=money;expected.rates={0,4};
+            close(old,true);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==1,"Retired modal rolled back a newer edit");
+            close(request,false);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==2 && restored.GameplayRandom()==random,"Enter failed to keep live rates without RNG");
+            GT_OK();
+        });
+    });
+
     task->AddTest("SMAC faction energy rates preview and atomically refresh two owned Bases",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& name){auto data=TanksSource(name);if(name=="alpha.txt") {
             for(const auto& row:std::array<std::pair<std::string,std::string>,2>{{{"Center,2,2,1","Center,2,2,20"},{"Forest,2,2,2","Forest,2,2,10"}}}) {
                 const auto at=data.find(row.first);if(at==std::string::npos) {throw std::runtime_error("Missing controlled energy source row");}data.replace(at,row.first.size(),row.second);
             }}return data;};
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");std::string saved;
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
         const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);auto* bm=game->GetBM();
             auto context=first->GetSmacResourceContext();context.governor_options=0;first->SetSmacResourceContext(GSE_CALL,context);
@@ -301,6 +351,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             bm->SpawnBase(GSE_CALL,second);game->GetMap()->GetTile(10,8)->terraforming=TERRAFORMING_FOREST;
             second->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{3,{{},0}},Roles());
             game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            first->RecalculateSmacWorkers(GSE_CALL,Roles());second->RecalculateSmacWorkers(GSE_CALL,Roles());
             const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();const auto money=game->GetCanonicalEconomy(first->m_owner);
             const auto old=game->GetCanonicalBaseEnergy(*first).tail.final;
             const auto candidate_first=game->PreviewCanonicalBaseEnergy(*first,{2,7}),candidate_second=game->PreviewCanonicalBaseEnergy(*second,{2,7});

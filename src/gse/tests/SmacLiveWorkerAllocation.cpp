@@ -14,6 +14,7 @@
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/FacilityDef.h"
 #include "game/backend/faction/Faction.h"
+#include "game/backend/faction/SmacRankingScore.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/resource/Resource.h"
@@ -332,6 +333,42 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             close(old,true);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==1,"Retired modal rolled back a newer edit");
             close(request,false);restored.DrainEvents();GT_ASSERT(game->GetCanonicalEconomy(base->m_owner)==expected && closed==2 && restored.GameplayRandom()==random,"Enter failed to keep live rates without RNG");
             GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC retained global64 Rover survives recipient ownership and inactive source",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(SelectionSource,true,128,64,"SPARTANS");std::string saved;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);auto* um=game->GetUM();
+            auto* source=base->m_owner;auto* recipient=&game->GetState()->m_slots->GetSlot(6);
+            // Retire fixture-only entities before publishing the integrated sight authority.
+            um->DespawnUnit(GSE_CALL,91);game->GetBM()->DespawnBase(GSE_CALL,base->m_id);
+            auto known=KnowledgeValue(true,true,128,64).CopyData();known.units.clear();
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+            unit::ConventionalUnitState state{64,1,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0};state.retained_state_word=0;
+            auto* rover=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-rover"),source,game->GetMap()->GetTile(8,6),state);
+            auto* wrapper=rover->Wrap(GSE_CALL);const auto random=fixture.GameplayRandom();const auto before=rover->QueryStats(unit::SmacMoraleMode::Mode1);
+            GT_ASSERT(before.full_allowance==6,"Fixture is not original selected global64 Rover");
+            state.owner_simulation_id=2;auto transfer=um->PrepareDefectionUnits(GSE_CALL,recipient,{{92,state}});transfer.Commit();
+            GT_ASSERT(rover->Conventional().design_id==64 && rover->m_owner==recipient && unit::Unit::Unwrap(wrapper)==rover
+                && rover->QueryStats(unit::SmacMoraleMode::Mode1).full_allowance==6 && fixture.GameplayRandom()==random,
+                "Retained global64 design followed the new controller's custom table or changed identity");
+            bool ranked=false;fixture.ResourceState([&](auto& value){
+                value.roster.front().active=false; // supplied consistent retired membership; no design reinitialization
+                const auto& global=game->GetState()->m_settings.global;const auto& owned=*value.technology.Find(2);
+                const auto counts=*value.economy.at(2).design_counts;faction::SmacDesignCounts empty{};
+                ranked=counts[64]==1 && faction::CalculateSmacOrdinaryRankingScore(owned,0,counts,*global.GetSmacTechnologyRules(),global.GetSmacPredefinedUnitRules()->catalog,value.designs)
+                    > faction::CalculateSmacOrdinaryRankingScore(owned,0,empty,*global.GetSmacTechnologyRules(),global.GetSmacPredefinedUnitRules()->catalog,value.designs);
+            });
+            GT_ASSERT(ranked && rover->QueryStats(unit::SmacMoraleMode::Mode1).full_allowance==6,
+                "Inactive source lost retained material or recipient ranking counted wrong namespace");
+            saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(SelectionSource,true,128,64,"SPARTANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});const auto* rover=restored.Game()->GetUM()->GetUnit(92);
+            GT_ASSERT(rover && rover->Conventional().owner_simulation_id==2 && rover->Conventional().design_id==64
+                && rover->QueryStats(unit::SmacMoraleMode::Mode1).full_allowance==6,"Actual Start rebound global64 to recipient or discarded retired source");GT_OK();
         });
     });
 

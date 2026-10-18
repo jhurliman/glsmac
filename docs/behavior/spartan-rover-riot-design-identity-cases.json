@@ -1,0 +1,64 @@
+{
+  "research_id": "RE-SMAC-SPARTAN-RIOT-DESIGN-ID-001",
+  "cases": [
+    {
+      "runtime_faction_slot": 1,
+      "original_global_design_id": 64,
+      "custom_block_first_id": 64,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "retain_source_design",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 2,
+      "original_global_design_id": 128,
+      "custom_block_first_id": 128,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 3,
+      "original_global_design_id": 192,
+      "custom_block_first_id": 192,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 4,
+      "original_global_design_id": 256,
+      "custom_block_first_id": 256,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 5,
+      "original_global_design_id": 320,
+      "custom_block_first_id": 320,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 6,
+      "original_global_design_id": 384,
+      "custom_block_first_id": 384,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    },
+    {
+      "runtime_faction_slot": 7,
+      "original_global_design_id": 448,
+      "custom_block_first_id": 448,
+      "custom_slot_within_block": 0,
+      "riot_conversion_branch": "request_recipient_prototype",
+      "basis": "Original initialized ID receipt composed with original caller comparison; not a new complete defection execution"
+    }
+  ],
+  "reused_startup_fixture_sha256": "c78bd99eaa690e801ed20cc652aa6ff509827610ca1dca3dfeeda5a394ce22d6",
+  "reused_conversion_report_sha256": "444929026ba16b9c1f09558a0550dd9df1d5f9de3c69931535c6b7fa92b8800e",
+  "scope": "Seven actual initialized Rover identities plus source/existing literal64/65 conversion boundary controls. No new combined startup-to-riot run and no new prototype allocation search."
+}

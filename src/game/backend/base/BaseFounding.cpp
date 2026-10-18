@@ -75,7 +75,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     }
     if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
     SmacBaseResourceContext context{simulation_id,false,0,0,*options,false};
-    context.retained_status_word=0; // measured fresh Base whole-word initialization
+    context.retained_status_word=0;context.uncaptured_former_owner=simulation_id; // measured fresh Base whole-word initialization
     ValidateSmacResourceContext(context,owner,owner->GetPlayer()->GetFaction());
     const auto* worker=GetPopDef(roles[0]);
     if (!worker || !(worker->m_flags & PopDef::PF_TILE_WORKER) || worker->m_smac_specialist_id) {THROW("Founding worker role is invalid");}

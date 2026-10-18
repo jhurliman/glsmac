@@ -119,7 +119,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const int64_t booty=numerator/(*defender_economy.population_aggregate+1);
 	if(booty>INT32_MAX || int64_t(data->actor_economy.credits)+booty>INT32_MAX) {THROW("Capture treasury arithmetic exceeds the admitted ordinary domain");}
 	data->loot=static_cast<int32_t>(booty);data->actor_economy.credits+=data->loot;
-	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};
+	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};data->context.uncaptured_former_owner.reset();data->context.former_owner_migration=false;
 	data->context.recent_defender_loss=false;data->context.SyncKnownStatusBits();
 	data->facilities=captured->m_facilities;
 	bool headquarters=false;

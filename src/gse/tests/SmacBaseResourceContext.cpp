@@ -96,7 +96,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 					for ( uint32_t governor : { 0u, 0x40u, 0x80000000u, 0xffffffffu } ) {
 						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor, flags % 3 == 0 };
 						const auto bytes = SerializeSmacBaseResourceContext( input );
-						GT_ASSERT( bytes.lenw == 112 && SmacBaseResourceContext::MAX_WIRE_BYTES == 154, "context frame extent changed" );
+						GT_ASSERT( bytes.lenw == 126 && SmacBaseResourceContext::MAX_WIRE_BYTES == 182, "context frame extent changed" );
 						const auto restored = DeserializeSmacBaseResourceContext( bytes );
 						GT_ASSERT( restored && *restored == input && SerializeSmacBaseResourceContext( restored ).ToString() == bytes.ToString(), "restore reset or normalized persistent context" );
 						GT_ASSERT( restored->GovernorActive() == ( governor >= 0x80000000u ) && restored->ManageCitizens() == ( governor == 0x40u || governor == 0xffffffffu ), "citizen and active flags became coupled" );
@@ -106,6 +106,24 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		}
 		GT_ASSERT( !DeserializeSmacBaseResourceContext( SerializeSmacBaseResourceContext( std::nullopt ) ), "legacy absence invented neutral context" ); GT_OK();
 	} );
+	task->AddTest("SMAC founded former-owner history remains distinct from capture admission",GT(){
+		auto input=Record();GT_ASSERT(!input.FormerOwner(),"Unknown legacy history became current owner");
+		input.uncaptured_former_owner=input.owner_simulation_id;
+		GT_ASSERT(input.FormerOwner()==1 && !input.conquest && DeserializeSmacBaseResourceContext(SerializeSmacBaseResourceContext(input))==input,
+			"Fresh former-owner history became captured state or was lost");
+		for(int32_t former=0;former<8;++former) {
+			const auto repaired=Record().WithFormerOwnerRepair(former);
+			GT_ASSERT(!Record().FormerOwner() && repaired.FormerOwner()==former && repaired.former_owner_migration
+				&& DeserializeSmacBaseResourceContext(SerializeSmacBaseResourceContext(repaired))==repaired,"Explicit legacy answer was inferred, lost, or normalized");
+			GT_ASSERT(Rejects([&]{repaired.WithFormerOwnerRepair(1);}),"Known history accepted a replacement migration");
+		}
+		GT_ASSERT(Rejects([&]{Record().WithFormerOwnerRepair(-1);}) && Rejects([&]{Record().WithFormerOwnerRepair(8);}),"Invalid former answer accepted");
+		auto captured=input;captured.uncaptured_former_owner.reset();captured.conquest=SmacConquestState{0,0};
+		GT_ASSERT(captured.FormerOwner()==0 && DeserializeSmacBaseResourceContext(SerializeSmacBaseResourceContext(captured))==captured,
+			"Supplied former0 was normalized or rejected");
+		input.conquest=SmacConquestState{2,50};
+		GT_ASSERT(Rejects([&]{SerializeSmacBaseResourceContext(input);}),"Conflicting history representations accepted");GT_OK();
+	});
 	task->AddTest("SMAC Base full status preserves opaque bits and migrates unknown history",GT(){
 		auto input=Record();input.recent_defender_loss=true;input.retained_status_word=0xfffffff1u;input.SyncKnownStatusBits();
 		const auto wire=SerializeSmacBaseResourceContext(input);
@@ -120,13 +138,13 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		for ( const auto former : { 1, 2, 7 } ) { for ( const auto timer : { 0, 1, 50, 255 } ) {
 			auto input = Record(); input.conquest = SmacConquestState{ former, static_cast<uint8_t>(timer) };
 			const auto bytes = SerializeSmacBaseResourceContext(input);
-			GT_ASSERT(bytes.lenw == SmacBaseResourceContext::MAX_WIRE_BYTES-14 && DeserializeSmacBaseResourceContext(bytes) == input, "conquest history did not round trip");
+			GT_ASSERT(bytes.lenw == SmacBaseResourceContext::MAX_WIRE_BYTES-28 && DeserializeSmacBaseResourceContext(bytes) == input, "conquest history did not round trip");
 		} }
 		const auto migrated = DeserializeSmacBaseResourceContext(Frame(2,1,37,-7,0x8f000041u));
 		GT_ASSERT(migrated == Record() && !migrated->conquest, "V2 migration invented capture history");
-		for ( const auto former : { 0, 1, 7, 8 } ) { for ( const auto timer : { -1, 0, 255, 256 } ) {
+		for ( const auto former : { -1, 0, 1, 7, 8 } ) { for ( const auto timer : { -1, 0, 255, 256 } ) {
 			auto bytes = Frame(3,1,0,0,0); bytes.WriteBool(true); bytes.WriteInt(former); bytes.WriteInt(timer);
-			GT_ASSERT(Rejects([&] { DeserializeSmacBaseResourceContext(bytes); }) == (former == 0 || former == 8 || timer < 0 || timer > 255), "invalid conquest history admission");
+			GT_ASSERT(Rejects([&] { DeserializeSmacBaseResourceContext(bytes); }) == (former < 0 || former == 8 || timer < 0 || timer > 255), "invalid conquest history admission");
 		} }
 		GT_OK();
 	} );

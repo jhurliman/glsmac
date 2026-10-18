@@ -16,7 +16,7 @@ struct SmacConquestState {
 // Persistent inputs belonging to one canonical Base. These are not a cached
 // yield, a social rating, a population allocation, or a governor decision.
 struct SmacBaseResourceContext {
-	static constexpr uint32_t MAX_WIRE_BYTES = 8 * 14 + 6 * 7;
+	static constexpr uint32_t MAX_WIRE_BYTES = 9 * 14 + 8 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
 	static constexpr uint32_t STARTUP_AUTOMATION = 0x40000000u;
@@ -38,6 +38,14 @@ struct SmacBaseResourceContext {
 	// Full native word, independent of named effects. Legacy records retain
 	// absence; an update to known named bits must preserve every other bit.
 	std::optional<uint32_t> retained_status_word;
+	// Fresh original creation writes former=current/assimilation0. Keep this
+	// independent of the port's first-capture capability marker above. Earlier
+	// saves do not gain invented history; conquest is authoritative once present.
+	std::optional<int32_t> uncaptured_former_owner;
+	// Explicit port migration answer, never inferred from the current owner.
+	bool former_owner_migration = false;
+	SmacBaseResourceContext WithFormerOwnerRepair(int32_t former) const;
+	std::optional<int32_t> FormerOwner() const noexcept {return conquest ? std::optional<int32_t>(conquest->former_owner):uncaptured_former_owner;}
 	void SyncKnownStatusBits() noexcept;
 
 	void Validate() const;

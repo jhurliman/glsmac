@@ -25,6 +25,10 @@ UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnits(GSE_CALLA
     const std::vector<std::pair<size_t,ConventionalUnitState>>& changes) {
     m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();m_game->RequireSmacLocalHumanOwner(recipient);
     if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()) {THROW("Unit defection requires its owning running accumulation");}
+    for(const auto& change:changes) {const auto* unit=GetUnit(change.first);
+        if(!unit || !unit->IsConventional()) {THROW("Defection requires current conventional Units");}
+        (void)ResolveConventional(unit->Conventional(),unit->m_owner);
+    }
     return PrepareDefectionUnitsCore(recipient,changes,m_unit_updates);
 }
 UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsCore(slot::Slot* recipient,
@@ -40,7 +44,9 @@ UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsCore(slot:
         m_game->RequireSmacLocalHumanOwner(unit->m_owner);
         const auto& before=unit->Conventional();const auto& next=change.second;
         if(before.owner_simulation_id<1 || before.owner_simulation_id>7 || next.owner_simulation_id!=owner) {THROW("Defection requires a positive recipient");}
-        (void)ResolveConventional(before,unit->m_owner);(void)ResolveConventional(next,recipient);
+        // The private caller validated the old home before staging Base ownership.
+        // Reauthenticate old identity here; authenticate the future home fully.
+        (void)m_game->ResolveConventionalIdentity(before,unit->m_owner,*m_game->m_simulation);(void)ResolveConventional(next,recipient);
         const auto* tile=unit->GetTile();
         if(!tile || tile->tiles!=m_game->GetMap()->GetTilesPtr() || !tile->units.count(unit->m_id) || tile->units.at(unit->m_id)!=unit) {THROW("Defection Unit has inconsistent map membership");}
         const bool owner_change=unit->m_owner!=recipient;

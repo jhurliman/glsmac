@@ -310,10 +310,10 @@ unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::Conventional
 			}
 		}
 	}
-	else if ( const auto* designs = simulation.value.designs.Find( state.owner_simulation_id ) ) {
+	else if ( const auto* designs = simulation.value.designs.Find( state.design_id / 64 ) ) {
 		for ( const auto& row : designs->designs ) { if ( row.id == state.design_id ) { return row; } }
 	}
-	throw std::runtime_error( "Conventional design not found in its owner's catalog" );
+	throw std::runtime_error( "Conventional global design not found in its retained source block" );
 }
 
 void Game::RequireConventionalStartupClaim() const {
@@ -444,10 +444,14 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 		result.presentation = unit::ConventionalUnitContext::Presentation::ColonyMarker;
 	}
 	if ( ground == Ground::Speeder ) {
-		const auto* selected = simulation.value.designs.Find( state.owner_simulation_id );
-		// This renderer has fixed Spartan source material. An arbitrary Speeder,
-		// another faction's design, or a predefined Rover is not interchangeable.
-		if ( participant->faction_id != "SPARTANS" || state.design_id < 64 || !selected || selected->starting_scout != state.design_id ) {
+		const auto source_owner=state.design_id/64;
+		const auto* selected = simulation.value.designs.Find( source_owner );
+		const auto source=std::find_if(simulation.value.roster.begin(),simulation.value.roster.end(),[&](const auto& row){return row.simulation_id==source_owner;});
+		// The selected source material belongs to the global design, independently
+		// of its current Unit controller. Source-faction retirement retains it.
+		// Arbitrary/predefined Speeders still have no authenticated renderer.
+		if ( state.design_id < 64 || source==simulation.value.roster.end() || source->faction_id!="SPARTANS"
+			|| !selected || selected->starting_scout != state.design_id ) {
 			throw std::runtime_error( "Speeder presentation requires the selected owned Spartan startup design" );
 		}
 		result.presentation = unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;

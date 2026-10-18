@@ -198,7 +198,7 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 			const auto options=m_game->m_simulation->value.remembered_governor.at(participant.simulation_id);
 			if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
 			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, *options, false };
-			result.retained_status_word=0;
+			result.retained_status_word=0;result.uncaptured_former_owner=participant.simulation_id;
 			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
 			return result;
 		}

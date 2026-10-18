@@ -118,8 +118,9 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
     const auto package=unit::SmacRestartUnitPackage::Select(static_cast<int32_t>(m_game->GetTurnId()),state.designs,
         global.GetSmacPredefinedUnitRules()->catalog,*technology,*global.GetSmacTechnologyRules());
     for(const auto id:package.creation_order) {
-        plan.units.push_back({m_game->ResolveSmacProductionPresentation(owner_slot,id),
-            {id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0}});
+        unit::ConventionalUnitState fresh{id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0};
+        fresh.retained_state_word=0; // actual newly initialized Unit, independent of preserved faction history
+        plan.units.push_back({m_game->ResolveSmacProductionPresentation(owner_slot,id),fresh});
     }
     plan.economy.rates={0,5};return plan;
 }

@@ -1,0 +1,94 @@
+{
+  "research_id": "RE-SMAC-FOUNDED-BASE-HISTORY-001",
+  "creation_cases": [
+    {
+      "global_turn": 0,
+      "founder": 1,
+      "Base_id": 1,
+      "before": {
+        "former_owner": 6,
+        "assimilation": 87
+      },
+      "after": {
+        "owner": 1,
+        "former_owner": 1,
+        "assimilation": 0
+      },
+      "peer_before": [
+        4,
+        53
+      ],
+      "peer_after": [
+        4,
+        53
+      ],
+      "passed": true
+    },
+    {
+      "global_turn": 9,
+      "founder": 1,
+      "Base_id": 1,
+      "before": {
+        "former_owner": 6,
+        "assimilation": 87
+      },
+      "after": {
+        "owner": 1,
+        "former_owner": 1,
+        "assimilation": 0
+      },
+      "peer_before": [
+        4,
+        53
+      ],
+      "peer_after": [
+        4,
+        53
+      ],
+      "passed": true
+    }
+  ],
+  "storage_cases": [
+    {
+      "before": [
+        1,
+        1,
+        0
+      ],
+      "after": [
+        1,
+        1,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "before": [
+        1,
+        6,
+        0
+      ],
+      "after": [
+        1,
+        6,
+        0
+      ],
+      "passed": true
+    },
+    {
+      "before": [
+        1,
+        2,
+        87
+      ],
+      "after": [
+        1,
+        2,
+        87
+      ],
+      "passed": true
+    }
+  ],
+  "creation_scope": "Two actual4fa490 entry prefixes through owner/former/assimilation stores, ending4fa58c before later founding work. Existing Gaia world, actual map and population bookkeeping helpers, empty interior land site. Not full returns; existing headless movement/setup services inherited. Turn0 and9 are newly created Bases in different global-turn contexts, not faction reset or capture.",
+  "storage_scope": "Three actual ordinary file-body save/load pairs with supplied FILE/heap/OS and one coherent Base,0Units. History inputs supplied deliberately; proves retention not history production or frontend. Zero RNG calls."
+}

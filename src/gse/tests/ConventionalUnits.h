@@ -27,7 +27,7 @@ public:
 	void ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
 	void ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction, int32_t width=128,int32_t height=64 );
 	void ProductionPresentations( const std::array< std::string, 4 >& roles );
-	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map = false,int32_t width=128,int32_t height=64 );
+	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map = false,int32_t width=128,int32_t height=64, const std::string& local_faction = {} );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
 	void RefreshPopulation(int32_t owner);
 	std::optional<uint16_t> BattlePalette() const;

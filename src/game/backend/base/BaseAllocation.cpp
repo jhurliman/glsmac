@@ -184,7 +184,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
 		if(finish_upkeep || captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
 			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
-		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
+		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;unchanged_context.uncaptured_former_owner=prior_context.uncaptured_former_owner;unchanged_context.former_owner_migration=prior_context.former_owner_migration;
 		if(context.recent_defender_loss) {THROW("Capture must clear defender-loss history");}
 		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;unchanged_context.SyncKnownStatusBits();
 		if(!(unchanged_context==prior_context)) {THROW("Capture publication changed unrelated Base context");}

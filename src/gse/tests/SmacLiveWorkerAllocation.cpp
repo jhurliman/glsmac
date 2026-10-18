@@ -2098,7 +2098,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC live restart matches original starvation site CRT and post-search veto consumption",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const auto& native=smac_restart_fixture::cases.front();
-        for(int scenario=0;scenario<5;++scenario) {
+        for(int scenario=0;scenario<6;++scenario) {
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(RestartSource,"GAIANS",64,32);
             fixture.ResourceState([&](auto& state){state.do_or_die=scenario==1;state.roster[0].restart_prohibited=scenario==2;});
             std::string saved;std::vector<size_t> created;
@@ -2114,6 +2114,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     auto* tile=game->GetMap()->GetTile(x,y);tile->moisture=MOISTURE_RAINY;
                     if(scenario==3) {tile->features=FEATURE_XENOFUNGUS;}
                 }}
+                if(scenario==1 || scenario==2) {
+                    const auto marked=before.SiteRatings()->FoundBase(*native.selected);fixture.SiteRatings(marked.Serialize());
+                }
+                if(scenario==5) {game->GetMap()->GetTile((*native.selected)[0],(*native.selected)[1])->features=FEATURE_MONOLITH;}
                 const auto& reference=scenario==3 ? smac_restart_fixture::cases.back() : native;
                 fixture.GameplayRandom({reference.shared,reference.crt});const auto jsf=game->GetRandom()->GetStateString();
                 const auto first=Unit::GetNextId();const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
@@ -2131,7 +2135,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(fixture.GameplayRandom()==SmacGameplayRandomState(reference.shared,reference.final_crt)
                     && game->GetRandom()->GetStateString()==jsf,"live search omitted native CRT prefix or consumed shared/map RNG");
                 GT_ASSERT(game->GetBM()->GetBases().empty() && !game->GetUM()->GetUnit(91),"future restart kept the lost Base or victim Unit");
-                if(scenario==0) {
+                if(scenario==1 || scenario==2) {
+                    const auto& sites=*game->GetMap()->GetTerritoryTopology()->SiteRatings();
+                    GT_ASSERT(sites.Excluded(*native.selected) && sites.Rating(*native.selected)==1,"later restart veto discarded an actual excluded cache-miss write");
+                }
+                if(scenario==5) {GT_ASSERT(game->GetMap()->GetTerritoryTopology()->SiteRatings()->Rating(*native.selected)==0,"monolith zero score did not remain a miss");}
+                if(scenario==0 || scenario==5) {
                     GT_ASSERT(game->GetUM()->GetUnits().size()==4 && native.selected,"original starvation package missing");
                     for(size_t i=0;i<4;++i) {
                         const auto* unit=game->GetUM()->GetUnit(first+1+i);

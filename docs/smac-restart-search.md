@@ -60,7 +60,9 @@ Validation: cached Linux Debug build;80 affected native groups pass with
 allocation tracking. The live64×32 caller matches the native starvation site's
 coordinates and exact CRT result, retains those draws through both post-search
 vetoes, and preserves the terminal1,025-pair consumption when all terrain is
-blocked. Saved-world Start retains the replacement package and advanced RNG.
+blocked. A stray excluded miss is calculated and retained even through the
+later vetoes; a zero-rated monolith still receives the replacement package.
+Saved-world Start retains the replacement package and advanced RNG.
 Missing old landmark history leaves IDs, wrappers, queues, streams and world
 authority unchanged. Existing actual Accept/founding/reload/next-upkeep tests
 pass under the joined caller. LLVM15 correctness analysis passes six affected

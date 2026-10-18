@@ -155,6 +155,23 @@ std::string TanksSource(const std::string& filename) {
     }
     return output;
 }
+std::string HabitationSource(const std::string& filename) {
+    auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,output;size_t row=0;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line.front()=='#') {section=line;row=0;}
+        else {++row;if(section=="#FACILITIES") {
+            if(row==24) {line="Hab Complex,8,2,Tech6,Disable,Population";}
+            if(row==25) {line="Habitation Dome,16,4,Tech8,Disable,Population";}
+        }}
+        output+=line+'\n';
+    }return output;
+}
+std::string HabitationGrowthSource(const std::string& filename,int32_t population) {
+    auto source=HabitationSource(filename);if(filename!="alpha.txt") {return source;}
+    const auto at=source.find("Center,2,2,1");
+    source.replace(at,std::string("Center,2,2,1").size(),"Center,"+std::to_string(2*population+4)+",2,1");return source;
+}
 std::string EnergyFacilitySource(const std::string& filename) {
     auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
     std::istringstream input(source);std::string line,section,output;size_t row=0;
@@ -1850,6 +1867,86 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 });if(!restore.empty()) {return "HQ restore: "+restore;}
             }
         }GT_OK();
+    });
+    task->AddTest("SMAC habitation picker completion queue maintenance and actual Start",[](GSE*,context::Context*)->std::string {
+        std::string saved;std::array<std::string,8> names;names[0]=Roles().worker;
+        for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(HabitationSource,"GAIANS");fixture.BasePresentationRoles(names);
+        fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();SelectionPresentations(fixture);
+            bm->DefineFacility(new FacilityDef("complex","Hab Complex","",80,{},24));
+            bm->DefineFacility(new FacilityDef("dome","Habitation Dome","",160,{},25));
+            const auto complex=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,24);
+            const auto dome=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,25);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}});
+            auto offered=[&](int32_t id){auto* menu=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_choices"));const auto& choices=static_cast<value::Array*>(menu->Get("choices"))->value;return std::any_of(choices.begin(),choices.end(),[&](auto* row){return static_cast<value::Int*>(static_cast<value::Object*>(row)->Get("source_id"))->value==-id;});};
+            GT_ASSERT(offered(24) && !offered(25),"Dome ignored its installed Complex dependency");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[6]=false;});
+            GT_ASSERT(!offered(24),"Complex ignored its actual technology prerequisite");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[6]=true;});
+            GT_ASSERT(game->IsSmacFacilityProductionEligible(*base,dome,bm->GetFacilityDef("complex")),"queue admission did not see the staged Complex");
+            auto* setup=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_production_selection"));
+            auto* picker=static_cast<value::Callable*>(setup->Run(GSE_CALL,{game->Wrap(GSE_CALL),base->Wrap(GSE_CALL)}));
+            picker->Run(GSE_CALL,{VALUE(value::Int,,-24),VALUE(value::String,,"open")});
+            picker->Run(GSE_CALL,{VALUE(value::Int,,-24),VALUE(value::String,,"ok")});fixture.DrainEvents();
+            GT_ASSERT(base->GetProductionState()->current_item==complex,"actual picker did not select Complex");
+            base->SetProductionState(GSE_CALL,ProductionState{complex,80,complex,80,std::vector<ProductionItem>{dome,stockpile}});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));base->SetAccumulatedNutrients(0);
+            base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(base->m_facilities.count("complex")==1 && base->GetProductionState()->current_item==dome
+                && !offered(24) && offered(25) && game->GetCanonicalBaseEnergy(*base).maintenance==2,
+                "Complex completion missed its fee, duplicate guard or dependent queue target");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=false;});
+            GT_ASSERT(!offered(25),"Dome ignored its actual technology prerequisite");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+            base->SetProductionState(GSE_CALL,ProductionState{dome,160,dome,160,std::vector<ProductionItem>{stockpile}});
+            base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(base->m_facilities.count("dome")==1 && base->GetProductionState()->current_item==stockpile
+                && !offered(25) && game->GetCanonicalBaseEnergy(*base).maintenance==6,"Dome grant lost Complex, maintenance or queue advancement");
+            saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(HabitationSource,"GAIANS");restored.BasePresentationRoles(names);
+        restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* base=restored.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->m_facilities.count("complex")==1 && base->m_facilities.count("dome")==1
+                && base->GetProductionState()->current_item.kind==ProductionItemKind::Stockpile
+                && restored.Game()->GetCanonicalBaseEnergy(*base).maintenance==6,"actual Start lost habitation grants or replayed production");GT_OK();
+        });
+    });
+    task->AddTest("SMAC habitation completion lifts same-pass housing with private rollback",[](GSE*,context::Context*)->std::string {
+        for(const int32_t population:{7,14}) {for(int scenario=0;scenario<3;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction([&](const std::string& name){return HabitationGrowthSource(name,population);},"GAIANS");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,population);auto* bm=game->GetBM();
+                bm->DefineFacility(new FacilityDef("complex","Hab Complex","",80,{},24));bm->DefineFacility(new FacilityDef("dome","Habitation Dome","",160,{},25));
+                if(population==14) {base->m_facilities.emplace("complex",bm->GetFacilityDef("complex"));}
+                const int32_t source=population==7 ? 24 : 25;
+                const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,source);
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetAccumulatedNutrients(10*(population+1));
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,false,128,64));
+                const auto intake=base->PrepareSmacResourceCalculation();
+                GT_ASSERT(intake.nutrients.surplus==4,"controlled center input did not prepare actual surplus4");
+                const auto cost=game->GetSmacProductionCost(base->m_owner,target);
+                const auto stored=scenario==0 ? cost-intake.minerals.surplus-1 : cost;
+                base->SetProductionState(GSE_CALL,ProductionState{target,stored,target,stored,std::vector<ProductionItem>{stockpile}});
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();fixture.Updates();
+                auto roles=Roles();if(scenario==2) {roles.specialists[6]="missing-role";}
+                if(scenario==2) {
+                    GT_ASSERT(Rejects([&]{base->ProcessSmacUpkeep(GSE_CALL,roles,{},game::backend::unit::SmacMoraleMode::Mode0);})
+                        && fixture.Snapshot()==before && fixture.GameplayRandom()==random && fixture.Updates().empty(),"late habitation failure leaked grant, growth or stores");GT_OK();
+                }
+                const auto completed=base->ProcessSmacUpkeep(GSE_CALL,roles,{},game::backend::unit::SmacMoraleMode::Mode0);
+                GT_ASSERT(base->m_pops.size()==size_t(population+(scenario==1))
+                    && base->m_facilities.count(source==24 ? "complex" : "dome")==size_t(scenario==1),"new grant was not visible to same-pass housing or incomplete grant escaped");
+                GT_ASSERT(completed.first_calculation.nutrients.surplus==4 && base->GetAccumulatedNutrients()==(scenario==1 ? 2 : 5*(population+1)+4),
+                    "housing completion recollected old nutrients or used the wrong growth resource pass");GT_OK();
+            });if(!result.empty()) {return "housing "+std::to_string(population)+" scenario "+std::to_string(scenario)+": "+result;}
+        }}GT_OK();
     });
     task->AddTest("SMAC Energy Bank and Node construction reaches live credit and research consumers",[](GSE*,context::Context*)->std::string {
         for(const int32_t source:{7,8}) {

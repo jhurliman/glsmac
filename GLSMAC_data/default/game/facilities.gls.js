@@ -39,6 +39,8 @@ const result = {
 			def(game, 'ENERGY_BANK', 'Energy Bank', 'Economy Bonus', 80, 'fac007.pcx', 7);
 			def(game, 'PERIMETER_DEFENSE', 'Perimeter Defense', 'Defense +100%', 50, 'fac004.pcx', 4);
 			def(game, 'NETWORK_NODE', 'Network Node', 'Labs Bonus', 80, 'fac008.pcx', 8);
+			def(game, 'HAB_COMPLEX', 'Hab Complex', 'Increases the population limit.', 80, 'fac024.pcx', 24);
+			def(game, 'HABITATION_DOME', 'Habitation Dome', 'Removes the habitation population limit.', 160, 'fac025.pcx', 25);
 		}
 
 	},

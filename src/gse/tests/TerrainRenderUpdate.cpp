@@ -74,16 +74,18 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
-	task->AddTest("Selected Unit badge phase is monotonic refresh-stable and skips missed frames",GT(){
+	task->AddTest("Selected Unit badge shared phase coalesces150ms deliveries and retains gates",GT(){
         using Blink=game::frontend::unit::SelectionBlink;using namespace std::chrono;
         Blink phase;const auto epoch=Blink::Clock::time_point{}+seconds(10);
-        GT_ASSERT(phase.Start(epoch) && !phase.Visible(epoch),"new selection did not start hidden");
-        GT_ASSERT(!phase.Visible(epoch+milliseconds(499)) && phase.Visible(epoch+milliseconds(500)),"half-period boundary differs");
-        GT_ASSERT(!phase.Start(epoch+milliseconds(700)) && phase.Visible(epoch+milliseconds(999)),"refresh restarted selected badge");
-        GT_ASSERT(!phase.Visible(epoch+milliseconds(1000)) && phase.Visible(epoch+milliseconds(5500)),"missed frames changed phase parity");
-        for(int i=0;i<100;++i) {GT_ASSERT(phase.Visible(epoch+milliseconds(5500)),"repeated redraw advanced clock");}
-        phase.Stop();GT_ASSERT(!phase.IsRunning(),"deselection retained animation");
-        GT_ASSERT(phase.Start(epoch+seconds(20)) && !phase.Visible(epoch+seconds(20)),"new selection failed to reset phase");
+        GT_ASSERT(phase.Visible() && !phase.Poll(epoch,true),"shared phase did not initialize visible");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(149),true) && phase.Visible(),"timer fired before150ms");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(150),true) && !phase.Visible(),"first callback did not toggle once");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(150),true),"same delivery toggled twice");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(2000),true) && phase.Visible(),"late callbacks replayed elapsed parity");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(2150),false) && phase.Visible(),"gate changed retained phase");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(2300),true) && !phase.Visible(),"next admitted callback did not toggle once");
+        phase.EnsureVisible();
+        GT_ASSERT(phase.Visible() && phase.Poll(epoch+milliseconds(2450),true) && !phase.Visible(),"ensure-visible rearmed shared timer");
         GT_OK();
     });
 	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){

@@ -2053,17 +2053,19 @@ public:
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
 				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
-            // Actual Game::RenderTile -> Tile::Render -> Hide/Show path must
-            // retain selection phase, not merely restart a pure timer helper.
-            auto& blink=unit->m_render.badge.blink;
+            // Actual Game::RenderTile -> Tile::Render -> Hide/Show path
+            // must read the retained shared phase even for the first render.
             using Blink=game::frontend::unit::SelectionBlink;
-            blink.Stop();const auto blink_epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
-            blink.Start(blink_epoch);
+            const auto blink_epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
+            badges->AdvanceSelectionBlink(blink_epoch,true);
+            badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD,true);
+            unit->StartBadgeBlink();
             frontend.RenderTile(&tile,unit.get());
-            GT_ASSERT(blink.IsRunning() && blink.Visible(blink_epoch+Blink::HALF_PERIOD),
-                "actual tile redraw restarted selected Unit blink phase");
+            GT_ASSERT(!badges->IsSelectionBlinkVisible() && !unit->IsBadgeVisible(),"actual tile redraw flashed an off-phase selected badge");
             frontend.RenderTile(&tile,unit.get());
-            GT_ASSERT(blink.Visible(blink_epoch+Blink::HALF_PERIOD),"repeat redraw changed selected phase");
+            GT_ASSERT(!unit->IsBadgeVisible(),"repeat redraw changed selected badge visibility");
+            badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD*2,true);
+            unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"next shared callback did not display selected badge");
             unit->StopBadgeBlink(true);
 			// Publish the real Unit for the production Game widget lookup. Its
 			// scoped owner remains here; remove the entry before either teardown.

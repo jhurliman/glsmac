@@ -7,11 +7,8 @@
 
 #include "game/backend/unit/Types.h"
 
-#include "SelectionBlink.h"
 #include "util/Scroller.h"
 #include "types/Vec3.h"
-
-namespace gse::tests { class BackendFixture; }
 
 namespace types {
 namespace texture {
@@ -129,7 +126,6 @@ protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
 private:
-	friend class gse::tests::BackendFixture;
 
 	UnitManager* m_um = nullptr;
 
@@ -149,7 +145,7 @@ private:
 				sprite::Sprite* def = nullptr;
 				size_t instance_id = 0;
 			} healthbar;
-			SelectionBlink blink;
+			bool blink = false;
 		} badge;
 		struct {
 			size_t instance_id = 0;

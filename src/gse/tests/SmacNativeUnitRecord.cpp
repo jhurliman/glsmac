@@ -313,6 +313,7 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                 const auto* name=design==9?"IsleOfTheDeep":"LocustsOfChiron";
                 manager->DefineUnit(new StaticDef(name,manager->GetMoraleSet("SEA_NATIVE_MORALE"),name,design==9?MT_WATER:MT_AIR,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
             }
+            fixture.ResourceState([](auto& state){if(!state.ecology_history) {state.ecology_history.emplace();} state.ecology_history->major_atrocities[1]=3;});
             for(const auto& profile:smac_sea_native_fixture::profiles) {
                 for(const auto& literal:profile.returned) {
                     const auto* name=literal.design==9?"IsleOfTheDeep":"LocustsOfChiron";
@@ -321,6 +322,15 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                     auto decoded=wire;std::unique_ptr<Unit> unit(Unit::Deserialize(GSE_CALL,decoded,manager));
                     util::FinallyGuard cleanup([&]{unit->GetTile()->units.erase(unit->m_id);});
                     const auto presentation=unit->GetPresentation();const auto expected=literal.design==9?4:8;
+                    const auto viewer=unit->GetPresentation(1);
+                    const auto neutral_level=SmacWildNativeLevel(literal,static_cast<int32_t>(fixture.Game()->GetTurnId()),0,0);
+                    const auto viewer_level=SmacWildNativeLevel(literal,static_cast<int32_t>(fixture.Game()->GetTurnId()),1,3);
+                    GT_ASSERT(presentation.morale==neutral_level && viewer.morale==viewer_level
+                        && unit->GetMoraleString()==names.at(neutral_level).m_name
+                        && viewer.movement==presentation.movement && viewer.full_movement==presentation.full_movement
+                        && viewer.health==presentation.health && unit->Native()==literal,
+                        "Viewer badge context changed native description, movement, health or retained record");
+                    GT_ASSERT(Rejects([&]{unit->GetPresentation(8);}),"Invalid native viewing faction admitted");
                     GT_ASSERT(unit->IsNative() && !unit->m_owner && unit->Native()==literal && Unit::Serialize(unit.get()).ToString()==wire.ToString()
                         && presentation.full_movement==expected && presentation.movement==expected && presentation.health==1,
                         "Native sea/air live Unit restore or presentation borrowed legacy movement");

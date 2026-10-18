@@ -118,9 +118,9 @@ ConventionalUnitStats Unit::QueryStats( const SmacMoraleMode mode ) const {
 	const auto& state = Conventional();
 	return QueryConventionalUnit( state, m_um->ResolveConventional( state, m_owner ), mode );
 }
-Unit::Presentation Unit::GetPresentation() const {
+Unit::Presentation Unit::GetPresentation( int32_t native_viewer ) const {
     if(IsNative()) {
-        const auto stats=m_um->QueryNativeUnit(Native());
+        const auto stats=m_um->QueryNativeUnit(Native(),native_viewer);
         return {float(stats.remaining_allowance)/stats.quantum,static_cast<morale_t>(stats.level),
             float(stats.hit_points)/stats.maximum_hit_points,float(stats.full_allowance)/stats.quantum};
     }

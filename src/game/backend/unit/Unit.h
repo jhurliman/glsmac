@@ -66,7 +66,8 @@ public:
 	const LegacyState& Legacy() const;
 	const ConventionalUnitState& Conventional() const;
 	ConventionalUnitStats QueryStats( SmacMoraleMode mode ) const;
-	Presentation GetPresentation() const;
+	// Native map badges use the viewing faction; descriptions retain neutral context.
+	Presentation GetPresentation( int32_t native_viewer = 0 ) const;
 
 	size_t m_animation_id = 0;
 

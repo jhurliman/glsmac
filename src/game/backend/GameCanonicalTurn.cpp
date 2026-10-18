@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "faction/SmacRankingScore.h"
 
 #include "Player.h"
 #include "faction/Faction.h"
@@ -121,6 +122,28 @@ bool Game::HandleCanonicalStartupTurnEvent(GSE_CALLABLE,const std::string& name,
 	return true;
 }
 
+std::optional<faction::SmacRankOrder> Game::PrepareCanonicalRankOrder() const {
+    const auto& simulation=m_simulation->value;
+    if(simulation.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
+        throw std::runtime_error("Ordinary ranking requires the admitted no-project campaign");
+    }
+    const auto& settings=m_state->m_settings.global;
+    std::array<int32_t,7> scores{};uint8_t active=0;
+    for(const auto& owner:simulation.roster) {
+        if(!owner.active) {continue;}
+        const auto& economy=simulation.economy.at(owner.simulation_id);
+        // Old port frames did not own these inputs. A normal owner summary
+        // establishes them; loading never manufactures a historical ranking.
+        if(!economy.population_aggregate || !economy.design_counts) {return std::nullopt;}
+        const auto* technology=simulation.technology.Find(owner.simulation_id);
+        if(!technology) {throw std::runtime_error("Ranking faction lacks owned technology state");}
+        scores[owner.simulation_id-1]=faction::CalculateSmacOrdinaryRankingScore(*technology,*economy.population_aggregate,
+            *economy.design_counts,*settings.GetSmacTechnologyRules(),settings.GetSmacPredefinedUnitRules()->catalog,simulation.designs);
+        active|=static_cast<uint8_t>(1u<<owner.simulation_id);
+    }
+    return faction::SmacRankOrder::Update(scores,active);
+}
+
 void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	RequireCanonicalTurn(turn_id);
 	// Session bindings choose the worker presentation explicitly: default
@@ -149,7 +172,9 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	m_canonical_turn_in_progress=true;
 	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
 	try {
+        const auto rank_order=PrepareCanonicalRankOrder();
 		RefreshSimulationForTurn(turn_id);
+        if(rank_order) {m_simulation->value.rank_order=rank_order;}
 		// Rules such as the post-first-turn mineral deficit branch must observe
 		// the incoming turn. UI notification remains after successful upkeep.
 		m_current_turn.AdvanceTurn(turn_id);

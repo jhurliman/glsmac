@@ -150,6 +150,7 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 	m_game->RequireWorkerKnowledgeMutation();
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_units.push_back( { unit, true } );
+        AdjustDesignCount(*unit,1);
 		return;
 	}
 	RegisterUnit( unit );
@@ -284,6 +285,7 @@ Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	static_assert( std::is_nothrow_copy_assignable_v<ConventionalUnitState> );
 	for ( const auto& home : data.homes ) { std::get<ConventionalUnitState>( home.first->m_state ) = home.second; }
 	data.published = data.candidate.release();
+    data.manager->AdjustDesignCount(*data.published,1);
 	data.manager->m_units.swap( data.units ); data.manager->m_unit_updates.swap( data.updates ); data.tile->units.swap( data.occupants );
 	data.manager->m_unit_order.swap( data.order );
 	data.published->CommitInitialPlacement( data.tile );
@@ -443,6 +445,7 @@ void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)>);
     d.manager->m_units.swap(d.units); d.manager->m_unit_order.swap(d.order); d.manager->m_unit_updates.swap(d.updates);
+    for(const auto* removed:d.removed) {d.manager->AdjustDesignCount(*removed,-1);}
     if(d.base_updates) {d.manager->m_game->GetBM()->m_base_updates.swap(*d.base_updates);}
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
     d.manager->m_game->CommitConventionalSight(d.knowledge);
@@ -462,6 +465,7 @@ void UnitManager::PreparedConventionalRemoval::Notify(GSE_CALLABLE) {
 
 struct UnitManager::PreparedFactionUnits::Data {
     UnitManager* manager;
+    int32_t owner=0;
     map::tile::Tile* destination;
     PreparedConventionalUnit* transient;
     std::optional<PreparedConventionalRemoval> removal;
@@ -508,7 +512,7 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
             || transient->m_data->id!=Unit::GetNextId()) {THROW("Faction disposition transient is not its pending factory");}
         removed.push_back(transient->m_data->id);
     }
-    auto data=std::make_unique<PreparedFactionUnits::Data>();data->manager=this;data->destination=destination;data->transient=transient;
+    auto data=std::make_unique<PreparedFactionUnits::Data>();data->manager=this;data->owner=simulation_id;data->destination=destination;data->transient=transient;
     if(supplied) {
         if(transient || !supplied->m_data || supplied->m_data->committed || supplied->m_data->manager!=this) {THROW("Capture removal is not an uncommitted same-world plan");}
         // Duplicate prepared tables, never ownership of retired objects. The
@@ -610,6 +614,14 @@ void UnitManager::PreparedFactionUnits::Commit() noexcept {
         && std::is_nothrow_swappable_v<decltype(d.updates)>);
     if(d.transient) {d.transient->Commit();}
     d.removal->Commit();
+    // Nonzero-turn faction initialization clears the old row independently
+    // of its prior byte deltas, then the restart factories add their package.
+    if(!d.candidates.empty() && d.manager->m_game->m_simulation) {
+        auto& economy=d.manager->m_game->m_simulation->value.economy;
+        auto found=economy.find(d.owner);
+        if(found!=economy.end() && found->second.design_counts) {found->second.design_counts->fill(0);}
+    }
+    for(const auto& unit:d.candidates) {d.manager->AdjustDesignCount(*unit,1);}
     d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
     for(size_t i=0;i<d.candidates.size();++i) {d.published[i]=d.candidates[i].release();d.published[i]->CommitInitialPlacement(d.destination);}
@@ -796,12 +808,24 @@ void UnitManager::TriggerSpawnHook( GSE_CALLABLE, Unit* unit ) {
 	}
 }
 
-void UnitManager::RegisterUnit( Unit* unit ) {
+void UnitManager::AdjustDesignCount(const Unit& unit,int32_t delta) const noexcept {
+    if(!unit.IsConventional() || !m_game->m_simulation) {return;}
+    const auto& record=unit.Conventional();
+    auto& economy=m_game->m_simulation->value.economy;
+    const auto owner=economy.find(record.owner_simulation_id);
+    if(owner!=economy.end() && owner->second.design_counts) {
+        auto& count=(*owner->second.design_counts)[record.design_id];
+        count=static_cast<uint8_t>(int32_t(count)+delta);
+    }
+}
+
+void UnitManager::RegisterUnit( Unit* unit, bool count_as_new ) {
 	m_unit_order.reserve( m_unit_order.size() + 1 );
 	if ( !m_units.emplace( unit->m_id, unit ).second ) {
 		THROW( "duplicate unit ID" );
 	}
 	m_unit_order.push_back( unit->m_id );
+    if(count_as_new) {AdjustDesignCount(*unit,1);}
 	QueueUnitUpdate( unit, UUO_SPAWN );
 }
 
@@ -838,6 +862,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	m_units.erase( it );
 	m_unit_order.erase( ordered );
+    AdjustDesignCount(*unit,-1);
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -886,7 +911,7 @@ void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	ASSERT( m_game->IsRunning(), "game not running" );
 	while ( !m_unprocessed_units.empty() ) {
 		const auto pending = m_unprocessed_units.front();
-		RegisterUnit( pending.unit );
+		RegisterUnit( pending.unit, false );
 		// Ownership has moved to m_units. Remove the pending owner before any
 		// gameplay callback can throw; untouched entries remain pending.
 		m_unprocessed_units.pop_front();
@@ -1419,7 +1444,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const Conventio
 		auto b = types::Buffer( buf.ReadString() );
 		auto* unit = Unit::Deserialize( GSE_CALL, b, this, resolver, defer_home );
 		highest_id = std::max( highest_id, unit->m_id );
-		if ( m_game->IsRunning() ) { RegisterUnit( unit ); }
+		if ( m_game->IsRunning() ) { RegisterUnit( unit, false ); }
 		else { m_unprocessed_units.push_back( { unit, false } ); }
 	}
 

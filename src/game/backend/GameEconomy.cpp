@@ -276,6 +276,14 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	if(population>INT32_MAX) {throw std::overflow_error("Population aggregate exceeds signed32");}
 	// Founding, removal and individual Base recalculation deliberately do not
 	// update this saved field. The native post-Base owner pass owns its refresh.
+    faction::SmacDesignCounts design_counts{};
+    for(const auto& entry:m_um->GetUnits()) {
+        const auto* unit=entry.second;
+        if(!unit || !unit->IsConventional()) {throw std::runtime_error("Faction summary requires conventional Unit records");}
+        const auto& record=unit->Conventional();
+        if(record.owner_simulation_id==owner) {++design_counts.at(record.design_id);}
+    }
+    m_simulation->value.economy.at(owner).design_counts=design_counts;
 	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
 	m_simulation->value.economy.at(owner).regional_base_counts=counts;
 }

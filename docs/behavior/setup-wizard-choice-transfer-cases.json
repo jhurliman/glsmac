@@ -1,0 +1,820 @@
+{
+  "research_id": "RE-SMAC-SETUP-TRANSFER-001",
+  "scope": "Actual local setup controller function entry through supplied UI results into actual config serialization/new-game entry/first faction initializer and early reset, or original cancel-stage boundaries. Seven accepted loaded slots cover levels0..5; four cancellations and two remembered-choice controls. Headless UI constructors/templates/render preview, text input, labels, host profile/file services supplied; synthetic already-loaded definition strings, remembered rule bits0, no map regeneration. No original dialog UI, profile loading, world generation, whole setup return/first command/network/multiplayer claim.",
+  "defaults": {
+    "initial_active_difficulty": 2,
+    "initial_focused_slot": 1,
+    "initial_human_slots": [
+      1
+    ],
+    "loaded_definition_slots": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "remembered_rule_bits": "neutral supplied values",
+    "regenerate_map": false,
+    "network": false,
+    "multiple_humans": false
+  },
+  "cases": [
+    {
+      "id": "SETUP-TRANSFER-01",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 0
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 1
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 0,
+        "remembered_difficulty": 0,
+        "remembered_faction": 1,
+        "focused_slot": 1,
+        "stored_difficulty": 0,
+        "human_slots": [
+          1
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "0",
+          "faction": "1"
+        },
+        "first_initialized_loaded_slot": 1,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-02",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 1
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 2
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 1,
+        "remembered_difficulty": 1,
+        "remembered_faction": 2,
+        "focused_slot": 2,
+        "stored_difficulty": 1,
+        "human_slots": [
+          2
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "1",
+          "faction": "2"
+        },
+        "first_initialized_loaded_slot": 2,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-03",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 2
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 3
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 2,
+        "remembered_difficulty": 2,
+        "remembered_faction": 3,
+        "focused_slot": 3,
+        "stored_difficulty": 2,
+        "human_slots": [
+          3
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "2",
+          "faction": "3"
+        },
+        "first_initialized_loaded_slot": 3,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-04",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 3
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 4
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 3,
+        "remembered_difficulty": 3,
+        "remembered_faction": 4,
+        "focused_slot": 4,
+        "stored_difficulty": 3,
+        "human_slots": [
+          4
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "3",
+          "faction": "4"
+        },
+        "first_initialized_loaded_slot": 4,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-05",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 4
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 5
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 4,
+        "remembered_difficulty": 4,
+        "remembered_faction": 5,
+        "focused_slot": 5,
+        "stored_difficulty": 4,
+        "human_slots": [
+          5
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "4",
+          "faction": "5"
+        },
+        "first_initialized_loaded_slot": 5,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-06",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 5
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 6
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 5,
+        "remembered_difficulty": 5,
+        "remembered_faction": 6,
+        "focused_slot": 6,
+        "stored_difficulty": 5,
+        "human_slots": [
+          6
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "5",
+          "faction": "6"
+        },
+        "first_initialized_loaded_slot": 6,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-TRANSFER-07",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 0
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 7
+          }
+        ],
+        "leader_answer": "keep name"
+      },
+      "expected": {
+        "active_difficulty": 0,
+        "remembered_difficulty": 0,
+        "remembered_faction": 7,
+        "focused_slot": 7,
+        "stored_difficulty": 0,
+        "human_slots": [
+          7
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "0",
+          "faction": "7"
+        },
+        "first_initialized_loaded_slot": 7,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-CANCEL-DIFFICULTY",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": "cancel"
+          }
+        ]
+      },
+      "expected": {
+        "active_difficulty": 2,
+        "remembered_difficulty": 5,
+        "remembered_faction": 7,
+        "focused_slot": 1,
+        "human_slots": [
+          1
+        ],
+        "first_faction_initializer_reached": false,
+        "serialized_choices": {},
+        "boundary": "before exit cleanup",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-CANCEL-RULES",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 4
+          },
+          {
+            "stage": "rules",
+            "answer": "cancel"
+          }
+        ]
+      },
+      "expected": {
+        "active_difficulty": 4,
+        "remembered_difficulty": 4,
+        "remembered_faction": 7,
+        "focused_slot": 1,
+        "human_slots": [
+          1
+        ],
+        "first_faction_initializer_reached": false,
+        "serialized_choices": {},
+        "boundary": "difficulty stage reentry",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-CANCEL-FACTION",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 4
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": "cancel"
+          }
+        ]
+      },
+      "expected": {
+        "active_difficulty": 4,
+        "remembered_difficulty": 4,
+        "remembered_faction": 7,
+        "focused_slot": 1,
+        "human_slots": [
+          1
+        ],
+        "first_faction_initializer_reached": false,
+        "serialized_choices": {},
+        "boundary": "rules stage reentry",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-CANCEL-LEADER",
+      "inputs": {
+        "mode": "interactive",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": [
+          {
+            "stage": "difficulty",
+            "answer": 4
+          },
+          {
+            "stage": "rules",
+            "answer": "remembered rules"
+          },
+          {
+            "stage": "faction",
+            "answer": 3
+          }
+        ],
+        "leader_answer": "cancel"
+      },
+      "expected": {
+        "active_difficulty": 4,
+        "remembered_difficulty": 4,
+        "remembered_faction": 3,
+        "focused_slot": 1,
+        "human_slots": [
+          1
+        ],
+        "first_faction_initializer_reached": false,
+        "serialized_choices": {},
+        "boundary": "faction stage reentry",
+        "dialog_initial_values": [
+          {
+            "stage": "difficulty",
+            "value": 5
+          },
+          {
+            "stage": "rules",
+            "value": 1
+          },
+          {
+            "stage": "faction",
+            "value": 7
+          }
+        ],
+        "offered_rows": {
+          "difficulty": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "faction": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "id": "SETUP-REUSE-CITIZEN",
+      "inputs": {
+        "mode": "reuse remembered choices",
+        "remembered_difficulty": 0,
+        "remembered_loaded_slot": 2,
+        "dialog_answers": []
+      },
+      "expected": {
+        "active_difficulty": 0,
+        "remembered_difficulty": 0,
+        "remembered_faction": 2,
+        "focused_slot": 2,
+        "stored_difficulty": 0,
+        "human_slots": [
+          2
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "0",
+          "faction": "2"
+        },
+        "first_initialized_loaded_slot": 2,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [],
+        "offered_rows": {}
+      }
+    },
+    {
+      "id": "SETUP-REUSE-TRANSCEND",
+      "inputs": {
+        "mode": "reuse remembered choices",
+        "remembered_difficulty": 5,
+        "remembered_loaded_slot": 7,
+        "dialog_answers": []
+      },
+      "expected": {
+        "active_difficulty": 5,
+        "remembered_difficulty": 5,
+        "remembered_faction": 7,
+        "focused_slot": 7,
+        "stored_difficulty": 5,
+        "human_slots": [
+          7
+        ],
+        "first_faction_initializer_reached": true,
+        "serialized_choices": {
+          "difficulty": "5",
+          "faction": "7"
+        },
+        "first_initialized_loaded_slot": 7,
+        "boundary": "after first early faction reset",
+        "dialog_initial_values": [],
+        "offered_rows": {}
+      }
+    }
+  ]
+}

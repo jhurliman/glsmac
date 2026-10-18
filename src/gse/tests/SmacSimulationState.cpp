@@ -2,6 +2,7 @@
 
 #include "game/backend/faction/SmacSimulationState.h"
 #include "game/backend/faction/SmacRankOrder.h"
+#include "game/backend/faction/SmacRankingScore.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacOrbitalIntake.h"
 #include "task/gsetests/GSETests.h"
@@ -34,7 +35,7 @@ bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( co
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false, bool v12 = false ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( legacy ? 11 : v12 ? 12 : 13 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( legacy ? 11 : v12 ? 12 : 14 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -79,11 +80,59 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 		}
 	}
 	if(!legacy && !v12) {buffer.WriteBool(value.human_defeat_request.has_value());if(value.human_defeat_request) {buffer.WriteInt(*value.human_defeat_request);}}
+	if(!legacy && !v12) {buffer.WriteBool(value.rank_order.has_value());if(value.rank_order) {for(auto owner:value.rank_order->faction_at_rank) {buffer.WriteInt(owner);}}}
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ordinary ranking matches original cached population technology and design score cases",GT(){
+        auto technologies=smac_rules_fixture::Technologies();
+        // Installed original Ecology/Biogenetics ratings, not fixture defaults.
+        technologies.technologies[6].priorities={0,1,2,3};
+        technologies.technologies[0].priorities={0,3,2,2};
+        auto catalog=smac_startup_fixture::Units().catalog;
+        catalog.units[0].cost=3;catalog.units[1].cost=2;catalog.units[2].cost=1;
+        faction::SmacFactionTechnologyState owner{{1,"GAIANS"}};owner.owned[6]=true;
+        unit::SmacStartupDesignState designs;
+        faction::SmacDesignCounts counts{};counts[2]=1;
+        const auto score=[&](int32_t population){return faction::CalculateSmacOrdinaryRankingScore(owner,population,counts,technologies,catalog,designs);};
+        GT_ASSERT(score(0)==7 && score(1)==11 && score(3)==19,"original retained population timing differs");
+        owner.score=999;GT_ASSERT(score(1)==11,"historical acquisition score entered ranking");
+        owner.future_count=2;GT_ASSERT(score(1)==19,"Future repeat counter missing");owner.future_count=0;
+        owner.owned[0]=true;GT_ASSERT(score(1)==18,"owned Biogenetics rating sum differs");owner.owned[0]=false;
+        counts[0]=2;counts[1]=2;GT_ASSERT(score(1)==13,"support designs rounded per unit instead of per design");
+        owner.owned[6]=false;GT_ASSERT(score(1)==6,"Former prerequisite availability ignored");owner.owned[6]=true;
+        counts={};counts[2]=5;
+        catalog.weapons.weapons[1].offense=4;
+        unit::SmacDesignOwner foreign;foreign.simulation_id=2;
+        unit::SmacCustomDesign stronger;stronger.id=128;stronger.weapon=1;
+        foreign.designs.push_back(stronger);designs.owners.push_back(foreign);
+        GT_ASSERT(score(1)==15,"unprototyped design raised global reference");
+        designs.owners[0].designs[0].prototyped=true;
+        GT_ASSERT(score(1)==10,"weapon reference did not divide before count and cost multiplication");
+        designs.owners[0].designs[0].active=false;GT_ASSERT(score(1)==15,"inactive design raised global reference");
+        counts[2]=251;GT_ASSERT(score(1)==10,"above-250 count was clamped instead of skipped");
+        GT_ASSERT(Rejects([&]{score(-1);}) && Rejects([&]{score(INT32_MAX);}),"invalid population or overflow accepted");
+        GT_OK();
+    });
+
+    task->AddTest("SMAC saved design byte counts and retained ranks restore independently of current entities",GT(){
+        auto value=State();auto& counts=*value.economy.at(7).design_counts;
+        counts[0]=255;counts[2]=251;counts[128]=201;counts[511]=17;
+        value.rank_order=faction::SmacRankOrder{};value.rank_order->faction_at_rank[7]=2;value.rank_order->faction_at_rank[4]=7;
+        value.roster[1].active=false; // retained leaders can identify an eliminated faction
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto restored=SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units);
+        GT_ASSERT(restored==value && restored.rank_order->DispositionReference(2)==0,"restore rebuilt saved counts or compacted retained rank gaps");
+        auto duplicate=value;duplicate.rank_order->faction_at_rank[6]=2;
+        GT_ASSERT(Rejects([&]{duplicate.Serialize(technologies,profiles,units);}),"duplicate retained rank identity accepted");
+        auto old=State();auto raw=Wire(old,1,13);types::Buffer suffix;suffix.WriteBool(false);raw.resize(raw.size()-suffix.lenw);
+        const auto migrated=SmacSimulationState::Deserialize(raw,technologies,profiles,units);
+        GT_ASSERT(!migrated.rank_order,"V13 migration fabricated a retained ranking");
+        GT_OK();
+    });
+
 	task->AddTest("SMAC retained ranking keeps inactive gaps ties and disposition references",GT(){
 		using faction::SmacRankOrder;
 		// Literal first-command producer: stale references are replaced only by
@@ -119,7 +168,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();
 		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
-		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();entry.second.regional_base_counts.reset();}
+		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();entry.second.regional_base_counts.reset();entry.second.design_counts.reset();}
 		GT_ASSERT(migrated==expected,"V11 migration changed existing campaign state or invented missing history");
 		for(auto& entry:value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {entry.second.directions[i]={UINT32_MAX-static_cast<uint32_t>(i),static_cast<uint32_t>(i+1),INT32_MIN+static_cast<int32_t>(i),UINT32_MAX,static_cast<uint32_t>(i)};}

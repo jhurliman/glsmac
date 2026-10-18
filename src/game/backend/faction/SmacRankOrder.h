@@ -11,6 +11,7 @@ namespace game::backend::faction {
 // provider. Only an explicit ranking update replaces these identities.
 struct SmacRankOrder {
 	std::array<int32_t,8> faction_at_rank{};
+	bool operator==(const SmacRankOrder& other) const {return faction_at_rank==other.faction_at_rank;}
 	int32_t Leader() const {return faction_at_rank[7];}
 	int32_t RunnerUp() const {return faction_at_rank[6];}
 	int32_t DispositionReference(int32_t eliminated) const {

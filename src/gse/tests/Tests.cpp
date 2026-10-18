@@ -72,6 +72,7 @@
 #include "AutomaticResearch.h"
 #include "SmacProductionSwitch.h"
 #include "SmacHurry.h"
+#include "SmacProductionDisplay.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
 #include "SmacSpecialistAllocation.h"
@@ -309,6 +310,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddBufferTests( task );
 		tests::AddSmacProductionSwitchTests( task );
 		tests::AddSmacHurryTests( task );
+		tests::AddSmacProductionDisplayTests(task);
 		tests::AddSmacWorkerAllocationTests( task );
 		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacSpecialistAllocationTests( task );

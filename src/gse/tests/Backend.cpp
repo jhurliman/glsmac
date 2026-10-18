@@ -2015,6 +2015,10 @@ public:
             unit->Iterate();GT_ASSERT(!unit->IsBadgeVisible(),"opening gate reset the retained shared phase");
             badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD*2,true);
             unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"next shared callback did not display selected badge");
+            unit->Hide();unit->Iterate();
+            GT_ASSERT(!unit->IsBadgeVisible(),"hidden selected model regained orphaned overlays");
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(unit->IsBadgeVisible(),"re-shown selected model lost retained visible phase");
             unit->StopBadgeBlink(true);
             um->m_selected_unit=nullptr;frontend.m_is_turn_active=false;
 			// Publish the real Unit for the production Game widget lookup. Its

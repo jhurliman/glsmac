@@ -1867,6 +1867,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC habitation completion lifts same-pass housing with private rollback",[](GSE*,context::Context*)->std::string {
         for(const int32_t population:{7,14}) {for(int scenario=0;scenario<3;++scenario) {
             ConventionalUnitFixture fixture;fixture.ConfigureProduction([&](const std::string& name){return HabitationGrowthSource(name,population);},"GAIANS");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,population);auto* bm=game->GetBM();
                 bm->DefineFacility(new FacilityDef("complex","Hab Complex","",80,{},24));bm->DefineFacility(new FacilityDef("dome","Habitation Dome","",160,{},25));

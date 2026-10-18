@@ -3,6 +3,7 @@
 #include "fixtures/GlsmacTerritoryTopology.h"
 #include "fixtures/SmacCoastalGeography.h"
 #include "fixtures/SmacRulesSource.h"
+#include "fixtures/SmacSharedLandmarkDetails.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -62,6 +63,79 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC shared landmark detail retains native saved bytes and independent geography lifetimes",GT(){
+		for(const auto& row:shared_landmark_fixture::storage) {
+			const std::vector<bool> sea(64,false),fertile(64,true);
+			const auto bare=Topology::Build(16,8,true,sea);
+			GT_ASSERT(!bare.LandmarkDetails(),"region allocation invented initialized shared bytes");
+			const auto value=bare.WithLandmarkDetails({row.before.begin(),row.before.end()});
+			const auto loaded=Topology::Deserialize(value.Serialize());
+			GT_ASSERT(loaded.LandmarkDetails() && *loaded.LandmarkDetails()==std::vector<uint8_t>(row.loaded.begin(),row.loaded.end()),
+				"native saved shared bytes changed: "+std::string(row.name));
+			GT_ASSERT(loaded.Rebuild(sea).WithTerrainPostpass(sea,fertile).LandmarkDetails()==value.LandmarkDetails(),
+				"region fill or terrain postpass rewrote shared bytes");
+			const auto sites=value.WithTerrainPostpass(sea,fertile).WithSiteRatings(map::smac_site::RatingCache::Fresh({16,8,true}));
+			GT_ASSERT(Topology::Deserialize(sites.Serialize())==sites,"site flags consumed opaque high shared bytes");
+			for(int version=1;version<=3;++version) {
+				auto old=bare.Serialize();old[7]=static_cast<char>('0'+version);
+				if(version==1) {old.resize(16+64);old[13]=0;}
+				const auto legacy=Topology::Deserialize(old);
+				GT_ASSERT(!legacy.LandmarkDetails() && !Topology::Deserialize(legacy.Serialize()).LandmarkDetails(),"legacy restore manufactured raw shared bytes");
+			}
+			GT_ASSERT(!(bare==bare.WithLandmarkDetails(std::vector<uint8_t>(64,0))),"unknown detail was treated as known zero");
+			for(int variant=0;variant<4;++variant) {
+				auto bad=sites.Serialize();if(variant==0) {bad.pop_back();}if(variant==1) {bad+='x';}
+				if(variant==2) {bad[15]=4;}if(variant==3) {bad[7]='3';}
+				GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"invalid shared-detail frame admitted");
+			}
+			GT_ASSERT(Rejects([&]{bare.WithLandmarkDetails(std::vector<uint8_t>(63,0));}),"wrong shared detail extent admitted");
+		}GT_OK();
+	});
+	task->AddTest("SMAC live shared landmark detail survives founding removal save and actual Start",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
+		std::vector<uint8_t> details;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* map=game->GetMap();
+			for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
+				auto* square=map->GetTile(x,y);square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+				square->bonus=map::tile::BONUS_NONE;square->features=0;square->terraforming=0;
+			}}
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));const auto& topology=*map->GetTerritoryTopology();
+			GT_ASSERT(topology.LandmarkDetails() && *topology.LandmarkDetails()==std::vector<uint8_t>(4096,0),"fresh map initializer omitted raw zero detail");
+			details.resize(4096);for(size_t i=0;i<details.size();++i) {details[i]=shared_landmark_fixture::mutation_pattern[i%5];}
+			fixture.TerritoryTopology(topology.WithLandmarkDetails(details).Serialize());
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,24,16);
+			GT_ASSERT(*map->GetTerritoryTopology()->LandmarkDetails()==details,"founding rewrote overlapping shared byte");
+			game->GetBM()->DespawnBase(GSE_CALL,800);
+			GT_ASSERT(*map->GetTerritoryTopology()->LandmarkDetails()==details,"removal rewrote overlapping shared byte");
+			saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
+			GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==details,"actual Start reconstructed shared bytes");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==details,"restored removal discarded shared history");GT_OK();
+		});
+	});
+	task->AddTest("SMAC live shared landmark detail controls actual uncached site quality suppression",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* map=game->GetMap();
+			for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
+				auto* square=map->GetTile(x,y);square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+				square->bonus=map::tile::BONUS_NONE;square->features=0;square->terraforming=0;
+			}}
+			map->GetTile(33,15)->features=map::tile::FEATURE_JUNGLE;
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));const auto topology=*map->GetTerritoryTopology();
+			const auto active=map->PrepareSiteRatingRefill(topology,{},0);
+			auto details=*topology.LandmarkDetails();details[Index(128,33,15)]=128;
+			const auto suppressed=map->PrepareSiteRatingRefill(topology.WithLandmarkDetails(details),{},0);
+			GT_ASSERT(active.SiteRatings()->Rating({{32,16}})==3 && suppressed.SiteRatings()->Rating({{32,16}})==1,
+				"live site query ignored owned landmark suppression");
+			GT_ASSERT(*suppressed.LandmarkDetails()==details,"site refill modified shared metadata");GT_OK();
+		});
+	});
 	task->AddTest("SMAC live site cache joins founding removal rollback and actual Start",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,retained;
 		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -71,6 +145,10 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 				square->bonus=map::tile::BONUS_NONE;square->features=0;square->terraforming=0;
 			}}
 			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			// A V3 world has no shared-byte history. Preserve that absence rather
+			// than treating missing metadata as an initialized fresh zero.
+			auto legacy=map->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-map->GetWidth()*map->GetHeight()/2);
+			legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
 			std::string packed(map->GetWidth()*map->GetHeight()/2,char(13));packed[Index(128,96,48)]=29;fixture.SiteRatings(packed);
 			// This distant cached tile must never enter the uncached decoder.
 			map->GetTile(80,50)->features=map::tile::FEATURE_VOLCANO;

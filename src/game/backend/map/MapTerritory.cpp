@@ -29,6 +29,6 @@ GlsmacTerritoryTopology Map::PrepareFreshTerritoryTopology() const {
 			&& !(tile->features&tile::FEATURE_XENOFUNGUS));
 	}}
 	return topology.WithTerrainPostpass(sea,fertile).WithSiteRatings(smac_site::RatingCache::Fresh({
-		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true}));
+		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true})).WithLandmarkDetails(std::vector<uint8_t>(sea.size(),0));
 }
 }

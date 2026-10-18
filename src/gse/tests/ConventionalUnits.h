@@ -39,6 +39,7 @@ public:
 	void CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value );
 	void ResourcePolicy( bool present );
 	void SiteRatings( const std::string& packed );
+	void TerritoryTopology( const std::string& serialized );
 	void BasePresentationRoles( const std::array<std::string,8>& roles );
 	void SelectStartup( int32_t simulation, int32_t design );
 	void CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation = 2 );

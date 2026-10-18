@@ -68,7 +68,7 @@ void AddSmacSiteRatingCacheTests(task::gsetests::GSETests* task) {
 		using Topology=game::backend::map::GlsmacTerritoryTopology;
 		auto topology=Topology::Build(32,16,true,std::vector<bool>(256,false)).WithSiteRatings(marked);
 		GT_ASSERT(Topology::Deserialize(topology.Serialize())==topology,"world topology did not retain nonzero excluded ratings");
-		for(int variant=0;variant<2;++variant) {auto malformed=topology.Serialize();if(variant==0) {malformed[15]=2;}else {malformed.back()=32;}
+		for(int variant=0;variant<2;++variant) {auto malformed=topology.Serialize();if(variant==0) {malformed[15]=4;}else {malformed.back()=32;}
 			bool rejected=false;try {(void)Topology::Deserialize(malformed);}catch(const std::runtime_error&) {rejected=true;}
 			GT_ASSERT(rejected,"world topology accepted malformed site-cache flags");}
 		const auto postpass=topology.WithTerrainPostpass(std::vector<bool>(256,false),std::vector<bool>(256,true));

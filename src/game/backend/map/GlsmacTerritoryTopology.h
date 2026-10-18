@@ -22,11 +22,12 @@ public:
 		std::vector<uint8_t> coastal;
 		bool operator==(const TerrainPostpass& other) const {return fertility==other.fertility && coastal==other.coastal;}
 	};
-	static constexpr size_t MAX_WIRE_BYTES = 16 + 3 * (512 * 256 / 2) + 2 * 128 * 4;
+	static constexpr size_t MAX_WIRE_BYTES = 16 + 4 * (512 * 256 / 2) + 2 * 128 * 4;
 	static GlsmacTerritoryTopology Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea, RegionValues initial_areas = {} );
 	GlsmacTerritoryTopology Rebuild(const std::vector<bool>& sea) const;
 	GlsmacTerritoryTopology WithTerrainPostpass(const std::vector<bool>& sea,const std::vector<bool>& fertile) const;
 	GlsmacTerritoryTopology WithSiteRatings(smac_site::RatingCache sites) const;
+	GlsmacTerritoryTopology WithLandmarkDetails(std::vector<uint8_t> details) const;
 	int32_t Width() const { return m_width; }
 	int32_t Height() const { return m_height; }
 	bool Wraps() const { return m_wrap; }
@@ -34,6 +35,7 @@ public:
 	const std::optional<RegionValues>& Areas() const {return m_areas;}
 	const std::optional<TerrainPostpass>& Postpass() const {return m_postpass;}
 	const std::optional<smac_site::RatingCache>& SiteRatings() const {return m_sites;}
+	const std::optional<std::vector<uint8_t>>& LandmarkDetails() const {return m_details;}
 	// Rebuild and compare against actual terrain; restore cannot substitute a
 	// different topology with individually valid region bytes.
 	void ValidateTerrain( const std::vector< bool >& sea ) const;
@@ -51,6 +53,9 @@ private:
 	std::optional<TerrainPostpass> m_postpass;
 	// V1/V2 restores cannot reconstruct stale ratings or stray exclusions.
 	std::optional<smac_site::RatingCache> m_sites;
+	// Full raw shared byte, including suppression. Absent in V1/V2/V3 saves;
+	// neither membership flags nor a registry can recover missing history.
+	std::optional<std::vector<uint8_t>> m_details;
 	static GlsmacTerritoryTopology BuildWithAreas(int32_t width,int32_t height,bool wrap,const std::vector<bool>& sea,RegionValues areas);
 };
 

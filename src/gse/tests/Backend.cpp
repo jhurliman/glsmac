@@ -306,6 +306,13 @@ public:
 				static_cast<int32_t>(map->GetWidth()),static_cast<int32_t>(map->GetHeight()),true},packed));
 		});
 	}
+	void TerritoryTopology(const std::string& serialized) {
+		m_gse->GetGCSpace()->Accumulate(m_gse,[&]() {
+			auto* map=m_game.m_map;auto value=game::backend::map::GlsmacTerritoryTopology::Deserialize(serialized);
+			if(value.Width()!=map->GetWidth() || value.Height()!=map->GetHeight() || !value.Wraps()) {throw std::runtime_error("fixture topology geometry differs");}
+			value.ValidateTerrain(map->TerritorySea());map->m_territory_topology=std::move(value);
+		});
+	}
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
@@ -5417,6 +5424,7 @@ void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::funct
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SiteRatings(const std::string& packed) {fixture->SiteRatings(packed);}
+void ConventionalUnitFixture::TerritoryTopology(const std::string& serialized) {fixture->TerritoryTopology(serialized);}
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }

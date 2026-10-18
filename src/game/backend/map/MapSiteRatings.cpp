@@ -29,19 +29,21 @@ GlsmacTerritoryTopology Map::PrepareSiteRatingRefill(const GlsmacTerritoryTopolo
 			|| square->rockiness<tile::ROCKINESS_FLAT || square->rockiness>tile::ROCKINESS_ROCKY))) {
 			throw std::runtime_error("Site-rating terrain lacks decoded moisture rockiness or elevation");
 		}
-		if(square->features&(tile::FEATURE_VOLCANO|tile::FEATURE_GARLAND_CRATER)) {
+		if(!topology.LandmarkDetails() && (square->features&(tile::FEATURE_VOLCANO|tile::FEATURE_GARLAND_CRATER))) {
 			throw std::runtime_error("Site-rating terrain lacks shared Planet/Crater landmark detail");
 		}
 		const auto feature=[&](tile::feature_t flag) {return bool(square->features&flag);};
 		// DisplayedTerrainV1 uses explicit visible bonuses/site markers and
-		// active Jungle/Uranium flags; it invents no automatic pattern or detail.
+		// active legacy Jungle/Uranium flags. When owned, consume the actual raw
+		// detail byte, including suppression; never infer it from membership.
 		resolved[at]=smac_site::Tile{static_cast<uint8_t>(m_resource_policy->Altitude(square->is_water_tile,*square->elevation.center)),
 			static_cast<uint8_t>(square->is_water_tile ? 0 : square->moisture-tile::MOISTURE_ARID),
 			static_cast<uint8_t>(square->is_water_tile ? 0 : square->rockiness-tile::ROCKINESS_FLAT),topology.Regions()[at],
 			feature(tile::FEATURE_XENOFUNGUS),feature(tile::FEATURE_MONOLITH),bool(square->terraforming&tile::TERRAFORMING_FOREST),
 			feature(tile::FEATURE_RIVER),topology.SiteRatings()->Excluded(point),markers[at],
 			m_resource_policy->Bonus(*square)!=resource::smac::ResourceBonus::None,feature(tile::FEATURE_UNITY_POD),bool(topology.Postpass()->coastal[at]),
-			false,false,feature(tile::FEATURE_URANIUM),feature(tile::FEATURE_JUNGLE),0};
+			feature(tile::FEATURE_VOLCANO),feature(tile::FEATURE_GARLAND_CRATER),feature(tile::FEATURE_URANIUM),feature(tile::FEATURE_JUNGLE),
+			topology.LandmarkDetails() ? topology.LandmarkDetails()->at(at) : uint8_t(0)};
 		return *resolved[at];
 	};
 	auto sites=topology.SiteRatings()->Refill([&](auto point) {

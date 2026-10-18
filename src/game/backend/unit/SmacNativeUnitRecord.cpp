@@ -135,12 +135,15 @@ int32_t SmacWildMindWormLevel(const SmacNativeUnitRecord& record, int32_t global
 int32_t SmacWildNativeLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
     int32_t opposing_faction, int32_t opposing_major_atrocities) {
     record.Validate();
-    if (record.owner!=0 || record.design<8 || record.design>10 || record.state!=0 || record.flags!=0 || global_turn<0
+    if (record.owner!=0 || record.design<8 || record.design>10 || global_turn<0
         || opposing_faction<0 || opposing_faction>7)
         throw std::runtime_error("Native level requires measured wild native context");
     const int32_t base=global_turn<45 ? 0 : global_turn<90 ? 1 : global_turn<170 ? 2
         : global_turn<250 ? 3 : global_turn<330 ? 4 : 6;
-    return std::min(base+int32_t(record.design==10)+int32_t(opposing_faction>0 && opposing_major_atrocities!=0),6);
+    // Original515dd3..515df6: state bit8 and flags bits3..4 are additive;
+    // unrelated carried controls (including sight flags0x440) do not select level.
+    return std::min(base+int32_t(record.design==10)+int32_t(opposing_faction>0 && opposing_major_atrocities!=0)
+        +int32_t((record.state&0x100u)!=0)+int32_t((record.flags>>3)&3u),6);
 }
 
 }

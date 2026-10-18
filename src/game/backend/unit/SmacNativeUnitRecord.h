@@ -53,7 +53,7 @@ struct SmacNativeUnitStats {
     int32_t level, quantum, full_allowance, remaining_allowance, hit_points, maximum_hit_points, basic_allowance;
 };
 
-// Owner0/design8..10 and neutral special markers only. Stored morale and ecology
+// Owner0/design8..10, with retained state/flag level modifiers. Stored morale and ecology
 // attribution do not select lifecycle level. No AI, combat or RNG side effects.
 int32_t SmacWildNativeLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
     int32_t opposing_faction, int32_t opposing_major_atrocities);

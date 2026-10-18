@@ -90,6 +90,7 @@ private:
 	friend class base::BaseManager; // staged home repair before canonical Base removal
 	struct Unplaced {};
 	Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state );
+	Unit( Unplaced, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state );
 	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state );
 	void CommitInitialPlacement( map::tile::Tile* tile ) noexcept;
 	Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, ConventionalUnitState state, bool early_startup = false, bool record_placement = true, bool pending_home = false );

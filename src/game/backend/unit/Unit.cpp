@@ -63,6 +63,8 @@ Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owne
 
 Unit::Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state )
 	: MapObject(um->GetMap(),nullptr), m_id(id), m_def(def), m_owner(owner), m_state(state), m_um(um) {}
+Unit::Unit( Unplaced, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state )
+    : MapObject(um->GetMap(),tile), m_id(id), m_def(def), m_owner(nullptr), m_state(state), m_um(um) {}
 Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state )
     : MapObject(um->GetMap(),nullptr), m_id(id), m_def(def), m_owner(nullptr), m_state(state), m_um(um) {
     Publish(GSE_CALL,tile,false);

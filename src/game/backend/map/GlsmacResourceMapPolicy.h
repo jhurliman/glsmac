@@ -32,6 +32,8 @@ public:
 	resource::smac::AltitudeBand Altitude( bool water, int64_t center_elevation ) const;
 	bool AllowsGeneratedBonus( bool water, int64_t center_elevation ) const;
 	resource::smac::ResourceBonus Bonus( const tile::Tile& tile ) const;
+	// Full original class on installed Planet; explicit display marker on legacy maps.
+	uint8_t SiteSignal( const tile::Tile& tile ) const;
 
 	types::Buffer Serialize() const;
 	static GlsmacResourceMapPolicy Deserialize( const std::string& wire );

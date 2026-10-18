@@ -5,6 +5,7 @@
 
 #include "tile/Tile.h"
 #include "SmacPlanetMap.h"
+#include "game/backend/resource/SmacSiteSignal.h"
 
 namespace game::backend::map {
 
@@ -72,6 +73,14 @@ resource::smac::AltitudeBand GlsmacResourceMapPolicy::Altitude( bool water, int6
 
 bool GlsmacResourceMapPolicy::AllowsGeneratedBonus( bool water, int64_t center_elevation ) const {
 	return Altitude( water, center_elevation ) >= resource::smac::AltitudeBand::Shelf;
+}
+
+uint8_t GlsmacResourceMapPolicy::SiteSignal(const tile::Tile& value) const {
+    if(!m_planet) {return (value.features&tile::FEATURE_UNITY_POD)?1:0;}
+    const auto altitude=Altitude(value); // authenticates imported coordinates
+    const auto flags=m_planet->At(value.coord.x,value.coord.y).Items();
+    return resource::smac::ResolveSiteSignal({static_cast<int32_t>(value.coord.x),static_cast<int32_t>(value.coord.y),
+        altitude,flags,m_automatic_land_resources,m_planet->ResourcePattern(),11,61});
 }
 
 resource::smac::ResourceBonus GlsmacResourceMapPolicy::Bonus( const tile::Tile& value ) const {

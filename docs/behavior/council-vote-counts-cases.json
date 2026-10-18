@@ -1,0 +1,293 @@
+{
+  "research_id": "RE-SMAC-COUNCIL-VOTES-001",
+  "specification": "council-vote-counts.md",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete original faction vote constructor with current base ownership/population, project host ownership and resolved faction VOTES entries. No election/candidate/winner logic, parser or full-game observation.",
+  "defaults": {
+    "faction": 1,
+    "bases": [
+      {
+        "owner": 1,
+        "population": 3
+      },
+      {
+        "owner": 2,
+        "population": 9
+      }
+    ],
+    "empath_guild": "absent",
+    "clinical_immortality": "absent",
+    "vote_modifiers": []
+  },
+  "cases": [
+    {
+      "id": "COUNCIL-VOTES-001",
+      "name": "owned population only",
+      "overrides": {},
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-002",
+      "name": "sum all owned bases",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 1,
+            "population": 3
+          },
+          {
+            "owner": 1,
+            "population": 4
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ]
+      },
+      "expected_votes": 7
+    },
+    {
+      "id": "COUNCIL-VOTES-003",
+      "name": "Empath Guild odd population truncates bonus",
+      "overrides": {
+        "empath_guild": "owned"
+      },
+      "expected_votes": 4
+    },
+    {
+      "id": "COUNCIL-VOTES-004",
+      "name": "Empath bonus rounded after population sum",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 1,
+            "population": 1
+          },
+          {
+            "owner": 1,
+            "population": 1
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ],
+        "empath_guild": "owned"
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-005",
+      "name": "single citizen receives no Empath bonus",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 1,
+            "population": 1
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ],
+        "empath_guild": "owned"
+      },
+      "expected_votes": 1
+    },
+    {
+      "id": "COUNCIL-VOTES-006",
+      "name": "Clinical doubles population",
+      "overrides": {
+        "clinical_immortality": "owned"
+      },
+      "expected_votes": 6
+    },
+    {
+      "id": "COUNCIL-VOTES-007",
+      "name": "Clinical follows Empath rounding",
+      "overrides": {
+        "empath_guild": "owned",
+        "clinical_immortality": "owned"
+      },
+      "expected_votes": 8
+    },
+    {
+      "id": "COUNCIL-VOTES-008",
+      "name": "foreign Empath Guild ignored",
+      "overrides": {
+        "empath_guild": "foreign"
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-009",
+      "name": "foreign Clinical ignored",
+      "overrides": {
+        "clinical_immortality": "foreign"
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-010",
+      "name": "own Empath and foreign Clinical",
+      "overrides": {
+        "empath_guild": "owned",
+        "clinical_immortality": "foreign"
+      },
+      "expected_votes": 4
+    },
+    {
+      "id": "COUNCIL-VOTES-011",
+      "name": "VOTES2 doubles",
+      "overrides": {
+        "vote_modifiers": [2]
+      },
+      "expected_votes": 6
+    },
+    {
+      "id": "COUNCIL-VOTES-012",
+      "name": "VOTES applies after both projects",
+      "overrides": {
+        "empath_guild": "owned",
+        "clinical_immortality": "owned",
+        "vote_modifiers": [2]
+      },
+      "expected_votes": 16
+    },
+    {
+      "id": "COUNCIL-VOTES-013",
+      "name": "multiple VOTES entries multiply",
+      "overrides": {
+        "vote_modifiers": [2,3]
+      },
+      "expected_votes": 18
+    },
+    {
+      "id": "COUNCIL-VOTES-014",
+      "name": "zero VOTES entry zeroes votes",
+      "overrides": {
+        "vote_modifiers": [0]
+      },
+      "expected_votes": 0
+    },
+    {
+      "id": "COUNCIL-VOTES-015",
+      "name": "negative VOTES entry ignored",
+      "overrides": {
+        "vote_modifiers": [-1]
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-016",
+      "name": "negative entry does not stop later multiplier",
+      "overrides": {
+        "vote_modifiers": [2,-1,3]
+      },
+      "expected_votes": 18
+    },
+    {
+      "id": "COUNCIL-VOTES-017",
+      "name": "zero remains zero under later multiplier",
+      "overrides": {
+        "vote_modifiers": [0,3]
+      },
+      "expected_votes": 0
+    },
+    {
+      "id": "COUNCIL-VOTES-018",
+      "name": "one VOTES entry retains votes",
+      "overrides": {
+        "vote_modifiers": [1]
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-019",
+      "name": "no bases no projects gives zero",
+      "overrides": {
+        "bases": []
+      },
+      "expected_votes": 0
+    },
+    {
+      "id": "COUNCIL-VOTES-020",
+      "name": "zero population with projects remains zero",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 1,
+            "population": 0
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ],
+        "empath_guild": "owned",
+        "clinical_immortality": "owned"
+      },
+      "expected_votes": 0
+    },
+    {
+      "id": "COUNCIL-VOTES-021",
+      "name": "native population excluded",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 0,
+            "population": 50
+          },
+          {
+            "owner": 1,
+            "population": 3
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ]
+      },
+      "expected_votes": 3
+    },
+    {
+      "id": "COUNCIL-VOTES-022",
+      "name": "faction7 ownership and modifier",
+      "overrides": {
+        "faction": 7,
+        "bases": [
+          {
+            "owner": 7,
+            "population": 3
+          },
+          {
+            "owner": 1,
+            "population": 9
+          }
+        ],
+        "empath_guild": "owned",
+        "vote_modifiers": [2]
+      },
+      "expected_votes": 8
+    },
+    {
+      "id": "COUNCIL-VOTES-023",
+      "name": "synthetic negative population truncates toward zero",
+      "overrides": {
+        "bases": [
+          {
+            "owner": 1,
+            "population": -1
+          },
+          {
+            "owner": 2,
+            "population": 9
+          }
+        ],
+        "empath_guild": "owned"
+      },
+      "expected_votes": -1
+    }
+  ]
+}

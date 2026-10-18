@@ -279,7 +279,7 @@ public:
 			} );
 		}
 		ConfigureConventional( true, 3, true );
-		auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.m_map->m_resource_policy = Policy::DisplayedTerrainV1(); GT_OK(); } );
+		auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.m_map->m_resource_policy = Policy::DisplayedTerrainV1(); m_game.m_simulation->value.roster.front().active=false; /* no owned Bases or Pods in this policy-only fixture */ GT_OK(); } );
 		if ( !setup.empty() ) { return setup; }
 		const auto saved = WorldSnapshot(); const auto random = m_game.m_simulation->value.gameplay_random; const auto jsf = m_game.GetRandom()->GetStateString();
 		BackendFixture destination; destination.ConfigureConventional( true, 3, true );
@@ -2945,7 +2945,7 @@ public:
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
-            const auto normalize_pop_definition_order=[&](const std::string& world) {
+            const auto normalize_definition_order=[&](const std::string& world) {
                 // Definition registry iteration is not saved gameplay order.
                 // Compare each owned definition by ID; retain exact bytes for
                 // all other fields, including Base and Unit record order.
@@ -2953,17 +2953,26 @@ public:
                 world_snapshot::ValidateHeader(input,m_state->m_settings.global);
                 world_snapshot::ReadRandomState(input);world_snapshot::ReadTurnState(input,m_state->m_slots->GetSlots());
                 ReadSimulationPrefix(input);
-                input.ReadString();input.ReadString();input.ReadString(); // map/resources/Units
-                const auto base_offset=input.lenr;types::Buffer bases(input.ReadString()),prefix;
+                input.ReadString();input.ReadString(); // map/resources
+                const auto units_offset=input.lenr;types::Buffer units(input.ReadString()),unit_prefix;
+                unit_prefix.WriteString(units.ReadString());
+                for(int registry=0;registry<2;++registry) {
+                    const auto count=units.ReadInt();unit_prefix.WriteInt(count);std::map<std::string,std::string> definitions;
+                    for(int64_t i=0;i<count;++i) {const auto id=units.ReadString();const auto value=units.ReadString();definitions.emplace(id,value);}
+                    if(definitions.size()!=static_cast<size_t>(count)) {throw std::runtime_error("duplicate restored Unit definition");}
+                    for(const auto& row:definitions) {unit_prefix.WriteString(row.first);unit_prefix.WriteString(row.second);}
+                }
+                types::Buffer units_frame;units_frame.WriteString(unit_prefix.ToString()+units.ToString().substr(units.lenr));
+                types::Buffer bases(input.ReadString()),prefix;
                 prefix.WriteString(bases.ReadString());const auto count=bases.ReadInt();prefix.WriteInt(count);
                 std::map<std::string,std::string> definitions;
                 for(int64_t i=0;i<count;++i){const auto id=bases.ReadString();const auto value=bases.ReadString();definitions.emplace(id,value);}
                 if(definitions.size()!=static_cast<size_t>(count)){throw std::runtime_error("duplicate restored population definition");}
                 for(const auto& row:definitions){prefix.WriteString(row.first);prefix.WriteString(row.second);}
                 types::Buffer frame;frame.WriteString(prefix.ToString()+bases.ToString().substr(bases.lenr));
-                return world.substr(0,base_offset)+frame.ToString()+world.substr(input.lenr);
+                return world.substr(0,units_offset)+units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
             };
-            GT_ASSERT(normalize_pop_definition_order(m_game.SerializeWorldSnapshot())==normalize_pop_definition_order(expected_world),
+            GT_ASSERT(normalize_definition_order(m_game.SerializeWorldSnapshot())==normalize_definition_order(expected_world),
                 "campaign restore changed world bytes or population definition values");
             m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
             GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");

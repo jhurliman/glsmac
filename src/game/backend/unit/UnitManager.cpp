@@ -324,6 +324,9 @@ UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemov
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
     m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
     if(gc_space!=m_game->GetGCSpace()) {THROW("Removal requires the owning accumulation");}
+    for(const auto id:ids) {const auto* unit=GetUnit(id);
+        if(unit && unit->IsConventional()) {m_game->RequireSmacProductionOwner(unit->m_owner);}
+    }
     return PrepareRemovalForQuery(ids,created,battle_survivor);
 }
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
@@ -689,6 +692,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
+	m_game->RequireSmacProductionOwner(owner);
 	if ( !m_game->IsRunning() || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
 		THROW( "Prepared unit creation requires its running owning accumulation" );
 	}
@@ -756,6 +760,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
+	m_game->RequireSmacProductionOwner(owner);
 	if ( m_game->IsRunning() ) {
 		auto prepared = PrepareConventionalUnit( GSE_CALL, id, def, owner, tile, state );
 		auto* unit = prepared.Commit(); prepared.Notify( GSE_CALL ); return unit;
@@ -839,6 +844,7 @@ void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const Conven
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
+	m_game->RequireSmacProductionOwner(unit->m_owner);
 	unit->RequireConventionalReady();
 	const auto& prior = unit->Conventional();
 	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home || state.home_base_id != prior.home_base_id

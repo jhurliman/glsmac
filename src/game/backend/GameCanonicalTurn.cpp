@@ -228,6 +228,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
         if(!m_canonical_continuation->owners.empty() && IsActiveOwner(m_simulation->value,m_canonical_continuation->owners.front().first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
 		for (const auto& entry:m_um->GetUnits()) {
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
+			if(!IsActiveOwner(m_simulation->value,entry.second->Conventional().owner_simulation_id)) {continue;}
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);
 		}
 		ContinueCanonicalTurn(GSE_CALL);
@@ -249,7 +250,9 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		const auto& owner=next.owners[next.owner_index];
         const auto participant=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& p){return p.simulation_id==owner.first;});
         if(participant==m_simulation->value.roster.end()) {throw std::runtime_error("Canonical owner is outside the admitted roster");}
-        if(!participant->active) {
+        // An owner eliminated during its admitted pass still retires the
+        // empty-owner tail before the existing human-ending break.
+        if(!participant->active && m_simulation->value.human_defeat_request!=owner.first) {
             ++next.owner_index;next.base_index=0;next.stage=Stage::Base;
             if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
             continue; // owned entities do not revive an eliminated controller

@@ -596,6 +596,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     const auto before=fixture.Snapshot();bool rejected=false;
                     try {base->SetProductionState(GSE_CALL,base->GetProductionState());}catch(const std::runtime_error&) {rejected=true;}
                     GT_ASSERT(rejected && fixture.Snapshot()==before,"Inactive production command bypassed its active-owner fence or retained private calculation permission");
+                    if(!screen) {auto* unit=um->GetUnit(92);
+                        GT_ASSERT(Rejects([&]{um->UpdateConventionalUnit(GSE_CALL,unit,unit->Conventional());})
+                            && Rejects([&]{um->PrepareConventionalRemoval(GSE_CALL,{92});})
+                            && Rejects([&]{um->ResetConventionalSpent(GSE_CALL,unit);}) && fixture.Snapshot()==before,
+                            "Inactive Unit command bypassed the active-owner boundary");}
                     if(scenario==6) {GT_ASSERT(base->GetSmacUpkeepCache()->calculation.citizens->prefix.content_allowance==3,"Inactive AI recipient used human citizen difficulty");}}
                 if(suspended) {GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_research")->type==VT_OBJECT,
                     "Old peer did not suspend at actual research after transfer");}
@@ -1519,7 +1524,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 && fixture.GameplayRandom()==random,"foreign display invented local cost authority or mutated state");GT_OK();
         });
     });
-    task->AddTest("SMAC live human membership survives Start without transport or inactive-owner inference",[](GSE*,context::Context*)->std::string {
+    task->AddTest("SMAC live human membership survives Start while empty-owner activity is repaired",[](GSE*,context::Context*)->std::string {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         for(const uint8_t membership:{2,6}) {
             std::string saved;ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);fixture.BasePresentationRoles(names);
@@ -1537,7 +1542,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=restored.Game();for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
                 restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
-                bool exact=false;restored.ResourceState([&](auto& state){exact=state.human_membership==membership && state.roster[1].active==(membership==2)
+                bool exact=false;restored.ResourceState([&](auto& state){exact=state.human_membership==membership && !state.roster[1].active
                     && state.roster[1].role==roster::Role::Player && !state.human_defeat_request;});
                 GT_ASSERT(exact,"Start inferred human membership or a loss from transport/activity");
                 const auto before=restored.Snapshot();const auto random=restored.GameplayRandom();
@@ -1567,6 +1572,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).design_counts->at(2)==0,"factory byte count did not wrap 255 to zero");
             auto removal=um->PrepareConventionalRemoval(GSE_CALL,{extra->m_id});removal.Commit();removal.Notify(GSE_CALL);
             GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).design_counts->at(2)==255,"removal byte count did not wrap zero to 255");
+            auto admitted=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();admitted.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(admitted));
+            // Keep the second controller admitted after native load repair,
+            // while its retained population cache still differs from live zero.
+            auto* pod_tile=game->GetMap()->GetTile(16,16);pod_tile->is_water_tile=false;pod_tile->rockiness=game::backend::map::tile::ROCKINESS_FLAT;
+            pod_tile->features=game::backend::map::tile::FEATURE_NONE;pod_tile->terraforming=game::backend::map::tile::TERRAFORMING_NONE;
+            um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-colony"),&game->GetState()->m_slots->GetSlot(6),
+                pod_tile,{0,2,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0});
             fixture.ResourceState([](auto& state){
                 for(auto& technology:state.technology.factions) {technology.owned.fill(false);}
                 for(auto& row:state.economy) {row.second.rates={0,0};row.second.population_aggregate=row.first==1 ? 0 : 3;}

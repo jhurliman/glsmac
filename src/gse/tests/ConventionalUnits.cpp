@@ -1658,7 +1658,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			manager->DespawnUnit( GSE_CALL, restored->m_id ); GT_OK();
 		} );
 	} );
-	task->AddTest("conventional inactive faction rejects live Unit Base and production admission atomically",GT(){
+	task->AddTest("conventional inactive faction rejects live admission but permits catalog identity",GT(){
 		ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
 		const auto unit_next=Unit::GetNextId(),base_next=base::Base::GetNextId();
 		util::FinallyGuard restore_ids([=]{Unit::SetNextId(unit_next);base::Base::SetNextId(base_next);});
@@ -1671,9 +1671,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* tile=game->GetMap()->GetTile(2,2);
 			const auto rejects=[](const auto& call){try{call();}catch(const std::exception&){return true;}return false;};
 			GT_ASSERT(rejects([&]{um->SpawnConventionalUnit(GSE_CALL,next_unit,def,owner,tile,Record());})
-				&& rejects([&]{game->MakeSmacProductionItem(owner,base::ProductionItemKind::Unit,2);})
 				&& rejects([&]{std::unique_ptr<base::Base> rejected(new base::Base(game,next_base,owner,owner->GetPlayer()->GetFaction(),tile,"Inactive",{},{},1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false}));}),
-				"eliminated owner admitted a live Unit, Base or production target");
+				"eliminated owner admitted a new live Unit or Base");
+            GT_ASSERT(game->MakeSmacProductionItem(owner,base::ProductionItemKind::Unit,2).smac_source_id==2,"inactive retained catalog identity was rejected");
 			GT_ASSERT(fixture.Snapshot()==saved && Unit::GetNextId()==next_unit && base::Base::GetNextId()==next_base
 				&& um->GetUnits().empty() && game->GetBM()->GetBases().empty() && tile->units.empty() && !tile->base
 				&& fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf && fixture.Updates().empty(),

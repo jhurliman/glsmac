@@ -287,6 +287,7 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 void UnitManager::ResetConventionalSpent( GSE_CALLABLE, Unit* unit ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { throw std::runtime_error( "Conventional upkeep requires a registered unit" ); }
+	m_game->RequireSmacProductionOwner(unit->m_owner);
 	unit->QueryStats( SmacMoraleMode::Mode1 );
 	auto next = unit->Conventional();
 	const auto reset = smac_move::ResetSpentForCheckedUnitUpkeep( { unit->m_id, next.spent, next.failed_move } );

@@ -117,3 +117,20 @@ Thirteen changed/affected production translation units pass targeted correctness
 four focused native groups pass ASan/UBSan with fourteen instrumented caller and
 transaction translation units, reusing matching normal objects elsewhere. Three
 affected real-module GSE scripts pass. No platform matrix or new artwork claim.
+
+
+CI follow-up after the inactive-recipient join preserves two distinct admissions:
+new live Base/Unit creation and public Unit mutations still require active owners,
+while snapshot identity and private consequence queries admit retained inactive
+ownership. The canonical global spent reset skips inactive records. A human owner
+that becomes eliminated during its already-admitted pass still finishes its
+established empty-owner tail and ending dispatch; it is not a previously inactive
+controller entering upkeep.
+
+The saved-membership fixture now expects empty-owner load repair. Ranking and
+campaign continuation fixtures own actual Colony Pods to retain active controller
+admission. Campaign comparison sorts only unordered definition registries and
+continues comparing complete definition values and ordered Unit/Base payload bytes.
+The six CI regressions and broader ownership checks pass (176 distinct native
+groups); four changed production files pass targeted analysis and five lifecycle
+groups pass focused ASan/UBSan with fifteen instrumented caller/transaction TUs.

@@ -95,7 +95,10 @@ Base::Base(
 	, m_resource_context( resource_context )
 	, m_allocation( allocation ) {
 	if ( m_production ) { game->ValidateSmacProductionState( owner, *m_production ); }
-	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
+	if ( m_resource_context ) {
+        if(kind==ConstructionKind::Live) {game->RequireSmacProductionOwner(owner);}
+        game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction );
+    }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );

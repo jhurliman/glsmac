@@ -501,14 +501,14 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		} );
 	} );
 	task->AddTest("Local movement input reports unsupported terrain without changing gameplay",GT() {
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",10,8);
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",32,16);
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* manager=game->GetUM();Define(manager);Land(game);
             auto* actor=Spawn(GSE_CALL,fixture,Record());auto* source=actor->GetTile();
-            map::SmacWorkerKnowledge::Data knowledge{10,8,true,true,0,{},{},{}};
-            knowledge.tiles.resize(40,{2,std::nullopt});knowledge.observers[1]=map::SmacWorkerKnowledge::Observer{};
+            map::SmacWorkerKnowledge::Data knowledge{32,16,true,true,0,{},{},{}};
+            knowledge.tiles.resize(256,{2,std::nullopt});knowledge.observers[1]=map::SmacWorkerKnowledge::Observer{};
             knowledge.observers[1]->pact_with=0;knowledge.units={{actor->m_id,0,false}};
-            knowledge.remembered[1].resize(40,map::SmacWorkerKnowledge::Improvements{0,0,false,false});
+            knowledge.remembered[1].resize(256,map::SmacWorkerKnowledge::Improvements{0,0,false,false});
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
             auto* destination=game->GetMap()->GetTile(3,3);
             destination->features=map::tile::FEATURE_MONOLITH;

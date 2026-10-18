@@ -40,7 +40,7 @@ std::string SmacPlanetMap::Encode() const {
     return result;
 }
 
-SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes) const {
+SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes, bool nonzero_turn) const {
     if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }
     auto result = *this;
     std::set<std::array<int32_t,2>> visited;
@@ -64,6 +64,19 @@ SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const std::vector<base::SmacBloomT
             || before.affiliation != after.affiliation || ((before.items ^ after.items) & ~event_items)
             || (before.items != after.items && after.items != ((before.items | 0x20u) & ~0x00288050u))) {
             throw std::invalid_argument("Planet bloom changes fields outside the terrain producer");
+        }
+        // Enumerate the class setter's possible branch results without consuming
+        // gameplay RNG. The bloom shaper can raise sea only, and lower land only.
+        if ((before.altitude_class >= 3 && after.altitude_class > before.altitude_class)
+            || (before.altitude_class < 3 && after.altitude_class < before.altitude_class)) {
+            throw std::invalid_argument("Planet bloom class transition is outside the terrain shaper");
+        }
+        const auto matches = [&](int32_t raw) {
+            const auto expected = base::ChangeSmacBloomClassOnly(before, after.altitude_class, nonzero_turn, [raw] { return raw; }).cell;
+            return expected.rockiness == after.rockiness && expected.landmarks == after.landmarks;
+        };
+        if (!matches(0) && !matches(1)) {
+            throw std::invalid_argument("Planet bloom rockiness or landmark transition is outside the class setter");
         }
         auto& tile = result.m_tiles.at(size_t(y) * (WIDTH / 2) + size_t(x) / 2);
         if ((tile.Climate() >> 5) != before.altitude_class || (tile.bytes[5] >> 6) != before.rockiness

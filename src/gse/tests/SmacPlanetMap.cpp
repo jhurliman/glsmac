@@ -51,7 +51,7 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
                 Put(wire, at + 8, cell.items & ~(3u | 0x800000u)); Put(wire, at + 12, cell.landmarks);
             } }
             const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), true);
-            const auto prepared = original.WithBloomTerrain(row.changes);
+            const auto prepared = original.WithBloomTerrain(row.changes, true);
             auto expected = wire;
             for (const auto& delta : row.changes) {
                 const auto at = offset(delta.coordinate);
@@ -81,7 +81,7 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), false);
         const Delta valid{{0,0},{0,0,0,0,0},{2,0,0x20,0,0}};
         const auto rejects = [&](const std::vector<Delta>& changes) {
-            try { (void)original.WithBloomTerrain(changes); } catch (const std::exception&) { return true; }
+            try { (void)original.WithBloomTerrain(changes, true); } catch (const std::exception&) { return true; }
             return false;
         };
         auto stale = valid; stale.coordinate = {2,0}; stale.before.altitude_class = 1;
@@ -96,8 +96,25 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         bad = valid; bad.after.altitude_class = 3; GT_ASSERT(rejects({bad}), "Unimplemented sea to land conversion accepted");
         bad = valid; bad.after.affiliation = 1; GT_ASSERT(rejects({bad}), "Affiliation changed through terrain producer");
         bad = valid; bad.after.rockiness = 3; GT_ASSERT(rejects({bad}), "Invalid rockiness accepted");
+        const auto admits = [&](const Delta& delta, bool nonzero_turn) {
+            auto source = wire; const auto at = Planet::PREFIX_BYTES + Planet::HEADER_BYTES;
+            source[at] = static_cast<char>(delta.before.altitude_class << 5);
+            source[at + 5] = static_cast<char>(delta.before.rockiness << 6);
+            Put(source, at + 12, delta.before.landmarks);
+            try { (void)Policy::InstalledPlanetV1(Planet::Decode(source), false).WithBloomTerrain({delta}, nonzero_turn); }
+            catch (const std::exception&) { return false; }
+            return true;
+        };
+        bad = {{0,0},{3,0,0,0,0},{7,2,0,4,0}};
+        GT_ASSERT(!admits(bad,true), "Bloom invented raised land, rockiness and landmarks");
+        bad = {{0,0},{7,2,0,0,0},{3,0,0,0x400000,0}};
+        GT_ASSERT(!admits(bad,true), "Bloom rockiness jumped by two");
+        bad = {{0,0},{3,0,0,0,0},{3,0,0,4,0}};
+        GT_ASSERT(!admits(bad,true), "Unchanged class invented a landmark");
+        bad = {{0,0},{6,2,0,0x01000082,0},{3,2,0,0x01000082,0}};
+        GT_ASSERT(admits(bad,false) && !admits(bad,true), "Class setter lost explicit turn-zero metadata authority");
         bool rejected = false;
-        try { (void)Policy::DisplayedTerrainV1().WithBloomTerrain({valid}); } catch (const std::exception&) { rejected = true; }
+        try { (void)Policy::DisplayedTerrainV1().WithBloomTerrain({valid}, true); } catch (const std::exception&) { rejected = true; }
         GT_ASSERT(rejected, "Generated terrain invented original class authority");
         GT_OK();
     });

@@ -17,7 +17,11 @@ is introduced. Automatic-resource policy remains independent and unchanged.
 Construction is detached. Invalid coordinates/parity, duplicate coordinates,
 out-of-range fields, affiliation changes, unrelated item changes and cross
 land/sea category conversions reject. Source class, rockiness and landmarks
-must match each delta's preimage. A failure on a late peer returns no replacement
+must match each delta's preimage. Item changes must be the exact fungus-set /
+five-improvement-clear transformation. Classes can only rise within sea or
+fall within land. Rockiness and landmark results must match the original class
+setter for the supplied zero/nonzero turn, enumerating its zero/nonzero branch
+outcomes without consuming either gameplay RNG stream. A failure on a late peer returns no replacement
 and leaves the original authority untouched. Before publishing, the future live
 caller must also validate the complete live item/presence preimage, stage the
 render batch, and atomically publish tiles, resource policy, history and CRT

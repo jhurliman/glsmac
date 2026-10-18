@@ -382,9 +382,14 @@ void UI::RemoveIterable( const dom::Object* const obj ) {
 const bool UI::RunGlobalHandlers( GSE_CALLABLE, const input::Event& event, const ui::UI::global_handler_type_t type ) {
 	const auto& handlers_it = m_global_handlers_by_type.find( type );
 	if ( handlers_it != m_global_handlers_by_type.end() ) {
-		for ( const auto& it : handlers_it->second ) {
-			ASSERT( m_global_handlers.find( it ) != m_global_handlers.end(), "global handler not found" );
-			if ( m_global_handlers.at( it ).second( GSE_CALL, event ) ) {
+		// A drag-release handler can retire itself (or another handler). Keep
+		// both iteration and the currently executing callable alive locally.
+		const auto handlers = handlers_it->second;
+		for ( const auto id : handlers ) {
+			const auto found = m_global_handlers.find( id );
+			if ( found == m_global_handlers.end() ) { continue; }
+			const auto handler = found->second.second;
+			if ( handler( GSE_CALL, event ) ) {
 				return true;
 			}
 		}

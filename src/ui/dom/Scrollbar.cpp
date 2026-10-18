@@ -145,6 +145,13 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 					return true;
 				}
 				case input::EV_MOUSE_UP: {
+					if ( event.data.mouse.button != input::MB_LEFT ) { return false; }
+					// Release can be outside the slider/window. Retire the global
+					// capture here rather than waiting for a geometric child UP.
+					if ( m_slider_drag.drag_handler_id && m_ui ) {
+						m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+					}
+					m_slider_drag.drag_handler_id = 0;
 					m_slider_drag.is_dragging = false;
 					if ( !m_slider->GetGeometry()->Contains( { event.data.mouse.x, event.data.mouse.y } ) ) {
 						m_slider->RemoveModifier( GSE_CALL, CM_ACTIVE ); // hack

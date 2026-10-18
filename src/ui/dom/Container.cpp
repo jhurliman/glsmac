@@ -151,16 +151,16 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 				}
 			}
 		}
-		if (
-			m_mouse_over_object &&
-			(
-				!m_is_mouse_over ||
-				!m_mouse_over_object->m_is_visible ||
-				!m_mouse_over_object->GetGeometry()->Contains( mouse_coords )
-			)
-		) {
-			SetMouseOverChild( GSE_CALL, nullptr, mouse_coords );
-		}
+	}
+	if (
+		m_mouse_over_object &&
+		(
+			!m_is_mouse_over ||
+			!m_mouse_over_object->m_is_visible ||
+			!m_mouse_over_object->GetGeometry()->Contains( mouse_coords )
+		)
+	) {
+		SetMouseOverChild( GSE_CALL, nullptr, mouse_coords );
 	}
 	m_processing_mouse_overs = false;
 }

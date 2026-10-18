@@ -120,6 +120,10 @@ Keep the next three actionable slices specified in enough detail to implement.
 Expand later milestones into PRs when their prerequisites and reference cases
 exist. A speculative list of hundreds of tickets is not an implementation plan.
 
+Presentation discrepancy tracking: [4:3 viewport and title-menu comparison](four-three-presentation.md).
+This is an open fidelity gate; correct aspect and successful rendering do not
+establish original UI parity.
+
 ## PR and review workflow
 
 Development uses cached incremental builds, focused affected tests and targeted

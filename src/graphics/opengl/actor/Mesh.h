@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 
 #include "Actor.h"
+#include "TextureReloadState.h"
 
 #include "types/mesh/Types.h"
 
@@ -40,8 +41,7 @@ protected:
 
 	size_t m_mesh_update_counter = 0;
 	size_t m_data_mesh_update_counter = 0;
-	const types::texture::Texture* m_last_texture = nullptr;
-	size_t m_last_texture_update_counter = 0;
+	TextureReloadState m_texture_reload_state;
 
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;

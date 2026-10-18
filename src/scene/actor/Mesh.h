@@ -38,6 +38,8 @@ CLASS2( Mesh, Actor, common::RRAware )
 
 	void SetTexture( types::texture::Texture* texture );
 	types::texture::Texture* GetTexture() const;
+	// Records every accepted replacement, including transitions between draws.
+	size_t GetTextureRevision() const;
 
 	void SetTintColor( const types::Color tint_color );
 	const types::Color& GetTintColor() const;
@@ -61,6 +63,7 @@ protected:
 	const types::mesh::Mesh* m_mesh = nullptr;
 	types::texture::Texture* m_texture = nullptr;
 	size_t m_texture_update_counter = 0;
+	size_t m_texture_revision = 0;
 
 	types::Color m_tint_color = {
 		1.0f,

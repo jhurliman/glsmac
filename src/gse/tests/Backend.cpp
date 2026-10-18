@@ -197,7 +197,8 @@ public:
             write(bytes);GT_ASSERT(map->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Supported source failed native import");
             const auto& policy=*map->GetResourcePolicy();const auto& source=*policy.OriginalPlanet();
             GT_ASSERT(source.Encode()==bytes && map->GetWidth()==80 && map->GetHeight()==80 && map->m_territory_topology,"Import lost opaque provenance geometry or topology");
-            size_t land=0;std::array<size_t,4> standard{},automatic{};
+            using Counts=std::array<size_t,4>;
+            size_t land=0;Counts standard{},automatic{};
             const auto with_automatic=map::GlsmacResourceMapPolicy::InstalledPlanetV1(source,true);
             for(size_t y=0;y<80;++y) {for(size_t x=y&1;x<80;x+=2) {
                 auto* tile=map->GetTile(x,y);const auto& raw=source.At(x,y);
@@ -208,8 +209,8 @@ public:
                 tile->Update();GT_ASSERT(tile->is_water_tile==((raw.Climate()>>5)<3),"Display update replaced source land/sea authority");
             }}
             if(!installed_asset.empty()) {
-                GT_ASSERT(land==1374 && standard==std::array<size_t,4>({3111,34,28,27})
-                    && automatic==std::array<size_t,4>({3028,87,44,41}),"Installed source differs from original full-loader resource receipt");
+                GT_ASSERT(land==1374 && standard==Counts({3111,34,28,27})
+                    && automatic==Counts({3028,87,44,41}),"Installed source differs from original full-loader resource receipt");
             }
             GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(policy.Serialize().ToString())==policy,"Saved native source policy lost original bytes or option");
             GT_ASSERT(m_game.GetRandom()->GetStateString()==random && m_game.m_simulation->value.gameplay_random==gameplay,"Import consumed a gameplay or map RNG stream");

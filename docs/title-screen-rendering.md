@@ -86,7 +86,7 @@ completes normal memorydebug shutdown without tracked memory/OpenGL leaks.
 These are WSLg/llvmpipe rendering checks, not native-platform certification.
 
 
-A later current-integration audit at b69d4133 repeated the strict whole-screen
+A later current-integration audit [at the recorded PR #283 production head](https://github.com/jhurliman/glsmac/commit/b69d4133856a653f29e18b0f2cdf6403efc88fe3) repeated the strict whole-screen
 comparison with zero changed pixels. Real SDL Down selected Quick Start and Up
 returned to the exact initial Start Game pixels. Enter opened Game Ruleset;
 Escape returned to the exact same title. Mouse hover selected Load Game, then

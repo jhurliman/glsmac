@@ -20,7 +20,7 @@ Arial Bold 18 monochrome labels and native placement are described in
 is retained as history; its former console fragments and colors have been
 replaced. This completes one settled-screen profile, not all menu presentation.
 
-A fresh actual OpenGL audit at b69d4133 also exercised Down/Up selection,
+A fresh actual OpenGL audit [at the recorded PR #283 production head](https://github.com/jhurliman/glsmac/commit/b69d4133856a653f29e18b0f2cdf6403efc88fe3) also exercised Down/Up selection,
 Enter into Game Ruleset and Escape back to the title, mouse hover on Load Game,
 Up to Scenario, and the real Exit button. Both the Up return to Start Game and
 the return from setup reproduced the initial title pixels exactly. The run

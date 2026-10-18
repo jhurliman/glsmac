@@ -33,6 +33,7 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
+// Independent V15 framing retained for migration and malformed-record cases.
 std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false, bool v12 = false ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
@@ -85,9 +86,60 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
+std::string CurrentWire(const SmacSimulationState& value) {
+    types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
+    if(value.strategy) {
+        for(const auto& [owner,state]:*value.strategy) {
+            suffix.WriteInt(owner);for(const auto priority:state.priorities) {suffix.WriteInt(priority);}
+        }
+    }
+    return Wire(value,1,16)+suffix.ToString();
+}
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC faction strategy retains signed priorities on cancel and normalizes accepted masks",GT(){
+        auto profile=smac_startup_fixture::Factions().factions[0];
+        profile.worker_priorities={-3,2,-1,4,INT32_MAX};
+        auto strategy=faction::SmacFactionStrategy::NewWorld(profile);
+        const std::array<int32_t,4> original{2,-1,4,INT32_MAX};
+        GT_ASSERT(strategy.priorities==original,"startup strategy lost semantic header order or signed values");
+        strategy.ApplyResearchPriorities({});
+        GT_ASSERT(strategy.priorities==original,"cancel normalized retained priorities");
+        for(uint8_t mask=0;mask<16;++mask) {
+            strategy.ApplyResearchPriorities(mask);
+            for(size_t axis=0;axis<4;++axis) {GT_ASSERT(strategy.priorities[axis]==((mask>>axis)&1),"accepted checkbox mask changed axis");}
+        }
+        const auto before=strategy;
+        GT_ASSERT(Rejects([&]{strategy.ApplyResearchPriorities(16);}) && strategy==before,"invalid priority answer changed state");
+        GT_ASSERT(profile.worker_priorities[1]==2,"mutable strategy changed frozen personality");
+        GT_OK();
+    });
+    task->AddTest("SMAC saved faction strategy restores full priorities without replaying startup",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.strategy.emplace();
+        value.strategy->emplace(7,faction::SmacFactionStrategy{{INT32_MIN,2,-1,INT32_MAX}});
+        value.strategy->emplace(2,faction::SmacFactionStrategy{{0,0,0,0}});
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+        GT_ASSERT(restored==value && restored.strategy->at(7).priorities[0]==INT32_MIN,"restore replayed personality or normalized signed priorities");
+        const auto legacy=SmacSimulationState::Deserialize(Wire(value),technologies,profiles,units);
+        GT_ASSERT(!legacy.strategy,"V15 migration invented lost priority authority");
+        auto missing=value;missing.strategy->erase(7);
+        GT_ASSERT(Rejects([&]{missing.Serialize(technologies,profiles,units);}),"incomplete strategy admitted");
+        auto foreign=value;foreign.strategy->erase(7);foreign.strategy->emplace(1,faction::SmacFactionStrategy{{}});
+        GT_ASSERT(Rejects([&]{foreign.Serialize(technologies,profiles,units);}),"foreign strategy replaced a roster owner");
+        for(const bool duplicate:{false,true}) {
+            auto malformed=Wire(value,1,16);types::Buffer tail;tail.WriteBool(true);
+            tail.WriteInt(2);for(int axis=0;axis<4;++axis) {tail.WriteInt(0);}
+            tail.WriteInt(duplicate?2:7);
+            tail.WriteInt(duplicate?0:int64_t(INT32_MAX)+1);for(int axis=1;axis<4;++axis) {tail.WriteInt(0);}
+            malformed+=tail.ToString();
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(malformed,technologies,profiles,units);}),"malformed strategy identity or signed width admitted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"truncated strategy restored");
+        GT_OK();
+    });
     task->AddTest("SMAC ordinary ranking matches original cached population technology and design score cases",GT(){
         auto technologies=smac_rules_fixture::Technologies();
         // Installed original Ecology/Biogenetics ratings, not fixture defaults.
@@ -181,7 +233,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();value.roster[1].active=false;value.human_defeat_request=2;
 		const auto wire=value.Serialize(technologies,profiles,units).ToString();
-		GT_ASSERT(wire==Wire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"ending request was omitted or changed on restore");
+		GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"ending request was omitted or changed on restore");
 		auto legacy=value;legacy.human_defeat_request.reset();
 		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,false,true),technologies,profiles,units);
 		GT_ASSERT(migrated==legacy && !migrated.human_defeat_request,"V12 migration invented a request from inactive roster state");
@@ -202,7 +254,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		}
 		const auto wire=value.Serialize(technologies,profiles,units).ToString();
 		auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
-		GT_ASSERT(restored==value && wire==Wire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,"restore lost nonderived relation words or any of the 512 design-loss counters");
+		GT_ASSERT(restored==value && wire==CurrentWire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,"restore lost nonderived relation words or any of the 512 design-loss counters");
 		restored.hostility.owners.at(2).losses[511]=0;
 		GT_ASSERT(!(restored==value) && value.hostility.owners.at(2).losses[511]==UINT16_MAX,"battle-history copy aliases input or equality omits loss history");GT_OK();
 	});
@@ -231,7 +283,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 			auto value=initial;value.do_or_die=scenario&1;value.roster[0].active=!(scenario&2);value.roster[1].restart_prohibited=true;
 			const auto wire=value.Serialize(technologies,profiles,units).ToString();
 			auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
-			GT_ASSERT(restored==value && wire==Wire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,
+			GT_ASSERT(restored==value && wire==CurrentWire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,
 				"lifecycle restore inferred activity/restart count, reset technologies or changed identities");
 			restored.roster[1].restart_prohibited=false;
 			GT_ASSERT(value.roster[1].restart_prohibited && !(restored==value),"lifecycle aliases input or equality omits prohibition");
@@ -256,7 +308,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		value.economy.at( 7 ) = { { 1, 7 }, INT32_MIN, INT32_MAX, 99, 0xa5 };
 		const auto wire = value.Serialize( technologies, profiles, units ).ToString();
 		const auto restored = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
-		GT_ASSERT( restored == value && wire == Wire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "economy restore reset or lost supplied owner state" );
+		GT_ASSERT( restored == value && wire == CurrentWire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "economy restore reset or lost supplied owner state" );
 		GT_ASSERT( Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( value, 1, 8 ), technologies, profiles, units ); } ), "old simulation without economy accepted" );
 		for ( int scenario = 0; scenario < 3; ++scenario ) {
 			auto bad = value; bad.economy.erase( 2 );
@@ -285,7 +337,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		value.satellites.at( 7 ) = { { 3, 7, 19 } }; value.satellites.at( 2 ) = { { INT32_MIN, -1, INT32_MAX } };
 		const auto wire = value.Serialize( technologies, profiles, units ).ToString();
 		auto restored = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
-		GT_ASSERT( restored == value && wire == Wire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "restore reset/reordered satellite assets or changed framing" );
+		GT_ASSERT( restored == value && wire == CurrentWire( value ) && restored.Serialize( technologies, profiles, units ).ToString() == wire, "restore reset/reordered satellite assets or changed framing" );
 		auto copy = restored.GetSatelliteCounts( 7 ); copy.resources[ 0 ] = 100;
 		restored.satellites.at( 7 ).resources[ 1 ] = 99;
 		GT_ASSERT( value.GetSatelliteCounts( 7 ).resources == ( std::array< int32_t, 3 >{ 3, 7, 19 } ) && !( restored == value ), "counter copy aliases owner or equality ignores assets" );
@@ -321,7 +373,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 			if ( present ) { value.movement_history = SmacMovementHistory::NewGeneratedWorld( 512, 256 ); value.movement_history->RetainNearest( 9999 ); }
 			const auto wire = value.Serialize( technologies, profiles, units ).ToString();
 			auto decoded = SmacSimulationState::Deserialize( wire, technologies, profiles, units );
-			GT_ASSERT( wire == Wire( value ) && wire.size() <= SmacSimulationState::MAX_WIRE_BYTES && decoded == value, "independent simulation framing or history restore differs" );
+			GT_ASSERT( wire == CurrentWire( value ) && wire.size() <= SmacSimulationState::MAX_WIRE_BYTES && decoded == value, "independent simulation framing or history restore differs" );
 			if ( present ) { decoded.movement_history->RetainNearest( {} ); GT_ASSERT( value.movement_history->NearestDistance() == 9999 && !( decoded == value ), "history copy aliases nearest authority" ); }
 		}
 		GT_ASSERT( Rejects( [ & ] { SmacSimulationState::Deserialize( Wire( value, 1, 6 ), technologies, profiles, units ); } ), "pre-history V6 accepted" );

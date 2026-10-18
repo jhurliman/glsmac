@@ -1,0 +1,260 @@
+{
+  "research_id": "RE-SMAC-NATIVE-SIGHT-ZOC-001",
+  "scope": "Five complete original local movement wrappers, actual native initialization/factories/sight/ZOC/refusal reveal. Gaia Scout on interior flat land, coherent single-owner stacks, empty destinations. Positive Pact canaries/raw slot0 Pact are supplied gate diagnostics, not diplomatic production or legal native-Pact claims. Inherited frozen headless movement services; no game-rule return substitutions added.",
+  "cases": [
+    {
+      "name": "source_only",
+      "source": [
+        32,
+        16
+      ],
+      "destination": [
+        30,
+        16
+      ],
+      "native_positions": [
+        [
+          33,
+          15
+        ]
+      ],
+      "supplied_Pact_slots": [],
+      "endpoint_control_values": [
+        1,
+        0
+      ],
+      "before_masks": [
+        0,
+        1,
+        2
+      ],
+      "after_masks": [
+        0,
+        0,
+        2
+      ],
+      "new_explored": [
+        [
+          28,
+          16
+        ],
+        [
+          29,
+          15
+        ],
+        [
+          29,
+          17
+        ],
+        [
+          30,
+          14
+        ],
+        [
+          30,
+          18
+        ]
+      ],
+      "return_value": 1,
+      "spent": 3,
+      "passed": true
+    },
+    {
+      "name": "both",
+      "source": [
+        32,
+        16
+      ],
+      "destination": [
+        34,
+        16
+      ],
+      "native_positions": [
+        [
+          33,
+          15
+        ]
+      ],
+      "supplied_Pact_slots": [],
+      "endpoint_control_values": [
+        1,
+        1
+      ],
+      "before_masks": [
+        0,
+        1,
+        2
+      ],
+      "after_masks": [
+        0,
+        1,
+        2
+      ],
+      "new_explored": [],
+      "return_value": 0,
+      "spent": 0,
+      "passed": true
+    },
+    {
+      "name": "split_reveal",
+      "source": [
+        32,
+        16
+      ],
+      "destination": [
+        34,
+        16
+      ],
+      "native_positions": [
+        [
+          31,
+          15
+        ],
+        [
+          35,
+          15
+        ]
+      ],
+      "supplied_Pact_slots": [],
+      "endpoint_control_values": [
+        1,
+        1
+      ],
+      "before_masks": [
+        0,
+        1,
+        2,
+        0
+      ],
+      "after_masks": [
+        0,
+        1,
+        2,
+        2
+      ],
+      "new_explored": [
+        [
+          35,
+          15
+        ]
+      ],
+      "return_value": 0,
+      "spent": 0,
+      "passed": true
+    },
+    {
+      "name": "positive_Pacts_do_not_exempt_native",
+      "source": [
+        32,
+        16
+      ],
+      "destination": [
+        34,
+        16
+      ],
+      "native_positions": [
+        [
+          31,
+          15
+        ],
+        [
+          35,
+          15
+        ]
+      ],
+      "supplied_Pact_slots": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "endpoint_control_values": [
+        1,
+        1
+      ],
+      "before_masks": [
+        0,
+        1,
+        2,
+        0
+      ],
+      "after_masks": [
+        0,
+        1,
+        2,
+        2
+      ],
+      "new_explored": [
+        [
+          35,
+          15
+        ]
+      ],
+      "return_value": 0,
+      "spent": 0,
+      "passed": true
+    },
+    {
+      "name": "raw_native_slot_Pact_diagnostic",
+      "source": [
+        32,
+        16
+      ],
+      "destination": [
+        34,
+        16
+      ],
+      "native_positions": [
+        [
+          33,
+          15
+        ]
+      ],
+      "supplied_Pact_slots": [
+        0
+      ],
+      "endpoint_control_values": [
+        0,
+        0
+      ],
+      "before_masks": [
+        0,
+        1,
+        2
+      ],
+      "after_masks": [
+        0,
+        1,
+        2
+      ],
+      "new_explored": [
+        [
+          34,
+          14
+        ],
+        [
+          34,
+          18
+        ],
+        [
+          35,
+          15
+        ],
+        [
+          35,
+          17
+        ],
+        [
+          36,
+          16
+        ]
+      ],
+      "return_value": 1,
+      "spent": 3,
+      "passed": true
+    }
+  ]
+}

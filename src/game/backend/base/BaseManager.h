@@ -26,6 +26,7 @@ class Game;
 class SmacGameplayRandomState;
 
 namespace map {
+namespace smac_climate { struct Streams; }
 class Map;
 namespace tile {
 class Tile;
@@ -77,6 +78,23 @@ public:
 		const std::string& worker, const std::array< std::string, 7 >& specialists );
 	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles, std::optional<uint32_t> governor_recovery = {} );
 	void ValidateSmacFounding( const unit::Unit& colony ) const;
+    // Native climate-owner preparation. No worker/resource pass occurs here.
+    // One plan retains candidate Domes/populations across repeated conversions.
+    // Removal decisions must join ordinary Base removal before publication.
+    class PreparedSmacFloods {
+    public:
+        ~PreparedSmacFloods();
+        PreparedSmacFloods(PreparedSmacFloods&&) noexcept;
+        enum class Outcome { Unchanged, Survived, Remove };
+        Outcome Flood(GSE_CALLABLE,Base& base,int32_t old_class,int32_t new_class,map::smac_climate::Streams& random);
+        void CommitSurvivors(GSE_CALLABLE);
+    private:
+        friend class BaseManager;
+        struct Data;
+        explicit PreparedSmacFloods(std::unique_ptr<Data> data);
+        std::unique_ptr<Data> m_data;
+    };
+    PreparedSmacFloods PrepareSmacFloods(GSE_CALLABLE);
 	class PreparedSmacCapture {
 	public:
 		~PreparedSmacCapture();

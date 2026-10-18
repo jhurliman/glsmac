@@ -228,6 +228,13 @@ FacilityDef* BaseManager::GetFacilityDef( const std::string& id ) const {
 	}
 }
 
+FacilityDef* BaseManager::GetSmacFacilityDef(int32_t source_id) const {
+	for(const auto& row:m_base_facilitydefs) {
+		if(row.second->m_smac_source_id==source_id) {ValidateSmacFacilityDef(row.second);return row.second;}
+	}
+	return nullptr;
+}
+
 void BaseManager::DefineFacility( FacilityDef* facility_def ) {
 	if ( !facility_def ) { THROW( "Missing facility definition" ); }
 	ValidateSmacFacilityDef( facility_def );

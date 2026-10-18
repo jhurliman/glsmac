@@ -45,7 +45,7 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
     return CalculateSmacResourceCalculation( phase, nullptr );
 }
 
-SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support ) const {
+SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support, const FacilityDef* granted ) const {
     const auto population = candidate_population.value_or( m_pops.size() );
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
@@ -67,7 +67,7 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     SmacBaseResourceCalculation result{};
     for ( size_t i = 0; i < orbital.size(); ++i ) { result.raw_intake[ i ] = orbital[ i ]; }
     const auto add = [ & ]( const map::tile::Tile& tile ) {
-        const auto values = m_game->GetCanonicalTileResources( tile, *this, query_phase );
+        const auto values = m_game->CalculateCanonicalTileResources( tile, *this, query_phase, false, false, granted );
         for ( size_t i = 0; i < values.size(); ++i ) { result.raw_intake[ i ] = AddIntake( result.raw_intake[ i ], values[ i ] ); }
     };
     add( *m_tile );

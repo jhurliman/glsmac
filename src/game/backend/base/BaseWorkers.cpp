@@ -39,7 +39,7 @@ void Base::PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationS
 	prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
 }
 
-SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support ) const {
+SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, const SmacBaseResourcePhase phase, std::optional< size_t > candidate_population, const unit::Unit* prepared_unit, const ProductionState* candidate_production, std::optional<int32_t> candidate_support, const FacilityDef* granted ) const {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( !candidate_production && m_production ) { candidate_production = &*m_production; }
 	Game::ResourceQueryPhase query_phase;
@@ -89,7 +89,7 @@ SmacBaseAllocationState Base::CalculateSmacWorkers( const SmacBaseAllocationStat
 		const auto coordinates = SmacWorkedSquareCollection::Resolve( radius, index );
 		if ( !coordinates ) { return std::nullopt; }
 		const auto* tile = map->GetTile( ( *coordinates )[ 0 ], ( *coordinates )[ 1 ] );
-		const auto values = m_game->GetCanonicalTileResources( *tile, *this, query_phase );
+		const auto values = m_game->CalculateCanonicalTileResources( *tile, *this, query_phase, false, false, granted );
 		SmacWorkerTileYield result{ {}, tile->is_water_tile };
 		for ( size_t i = 0; i < values.size(); ++i ) {
 			if ( values[ i ] < INT32_MIN || values[ i ] > INT32_MAX ) { THROW( "Worker tile yield exceeds signed32" ); }

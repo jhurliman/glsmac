@@ -183,7 +183,7 @@ private:
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
 	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary, std::optional< size_t > population = {},
-		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr, std::optional<int32_t> mineral_support = {} ) const;
+		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;
 	void PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles,
 		const SmacBaseResourceContext& context, SmacBaseResourcePhase phase );
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
@@ -212,7 +212,7 @@ private:
 		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {} );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
-		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {} ) const;
+		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

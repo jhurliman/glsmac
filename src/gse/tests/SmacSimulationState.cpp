@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=27,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=28,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -168,6 +168,10 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=27,bool
         suffix.WriteBool(value.perihelion.has_value());if(value.perihelion) {suffix.WriteBool(*value.perihelion);}
     }
     if(version>=27) {for(const auto options:value.remembered_governor) {suffix.WriteBool(options.has_value());if(options) {suffix.WriteInt(*options);}}}
+    if(version>=28) {
+        for(const auto word:value.faction_status.values) {suffix.WriteBool(word.has_value());if(word) {suffix.WriteInt(*word);}}
+        suffix.WriteBool(value.ecology_warming_count.has_value());if(value.ecology_warming_count) {suffix.WriteInt(*value.ecology_warming_count);}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -185,6 +189,57 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ecology event V28 preserves raw status independent warming and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();
+        for(size_t i=0;i<8;++i) {value.faction_status.values[i]=0x80004000u+static_cast<uint32_t>(i);}
+        value.faction_status.values[0]=UINT32_MAX;value.faction_status.values[3].reset();
+        const auto rng=value.gameplay_random;
+        for(const auto warming:{std::optional<int32_t>{},std::optional<int32_t>{INT32_MIN},std::optional<int32_t>{0},std::optional<int32_t>{17},std::optional<int32_t>{INT32_MAX}}) {
+            value.ecology_warming_count=warming;const auto wire=value.Serialize(technologies,profiles,units).ToString();
+            const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+            GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==rng,"Event codec lost raw status, warming sign, independent absence or RNG");
+            for(const auto version:{16,25,26,27}) {
+                const auto legacy=SmacSimulationState::Deserialize(CurrentWire(value,version),technologies,profiles,units);
+                GT_ASSERT(legacy.faction_status==faction::SmacFactionStatusWords{} && !legacy.ecology_warming_count,"Old simulation invented status or warming words");
+            }
+            const auto oldest=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
+            GT_ASSERT(oldest.faction_status==faction::SmacFactionStatusWords{} && !oldest.ecology_warming_count,"V11 migration invented event words");
+            types::Buffer suffix;
+            for(const auto word:value.faction_status.values) {suffix.WriteBool(word.has_value());if(word) {suffix.WriteInt(*word);}}
+            suffix.WriteBool(warming.has_value());if(warming) {suffix.WriteInt(*warming);}
+            // CurrentWire supplies the independent complete V28 header/body;
+            // remove only our literal suffix, preserving all previous framing.
+            const auto body=CurrentWire(value).substr(0,CurrentWire(value).size()-suffix.lenw);
+            for(size_t size=0;size<suffix.lenw;++size) {
+                GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(body+suffix.ToString().substr(0,size),technologies,profiles,units);}),"Truncated event words admitted");
+            }
+        }
+        auto absent=State();absent.ecology_warming_count=17;
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(absent),technologies,profiles,units)==absent,"Known warming required invented faction words");
+        types::Buffer bad_status;bad_status.WriteBool(true);bad_status.WriteInt(int64_t(UINT32_MAX)+1);
+        const auto empty=CurrentWire(State());types::Buffer absent_suffix;for(int i=0;i<9;++i) {absent_suffix.WriteBool(false);}
+        const auto body=empty.substr(0,empty.size()-absent_suffix.lenw);
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(body+bad_status.ToString(),technologies,profiles,units);}),"Narrowing raw faction status admitted");
+        for(const auto invalid:{int64_t(INT32_MIN)-1,int64_t(INT32_MAX)+1}) {
+            types::Buffer suffix;for(int i=0;i<8;++i) {suffix.WriteBool(false);}suffix.WriteBool(true);suffix.WriteInt(invalid);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(body+suffix.ToString(),technologies,profiles,units);}),"Narrowing warming counter admitted");
+        }GT_OK();
+    });
+    task->AddTest("SMAC faction status initialization matches native fresh and nonzero word lifetimes",GT(){
+        for(const int32_t turn:{0,1}) {for(const int32_t owner:{1,2}) {
+            auto status=faction::SmacFactionStatusWords::Cold();
+            for(auto& word:status.values) {word=777;}
+            auto expected=status;if(turn==0) {expected.values[owner]=0;}
+            status.Initialize(owner,turn);GT_ASSERT(status==expected,"Faction initializer changed peers or failed whole-word native clear");
+        }}
+        faction::SmacFactionStatusWords migrated;migrated.Initialize(2,1);
+        GT_ASSERT(migrated==faction::SmacFactionStatusWords{},"Nonzero init invented missing words");
+        migrated.Initialize(2,0);GT_ASSERT(migrated.values[2]==0 && !migrated.values[0] && !migrated.values[1],"Fresh init filled unknown peer words");
+        const auto before=migrated;
+        GT_ASSERT(Rejects([&]{migrated.Initialize(-1,0);}) && Rejects([&]{migrated.Initialize(8,0);})
+            && Rejects([&]{migrated.Initialize(1,-1);}) && migrated==before,"Invalid status initialization mutated state");GT_OK();
+    });
     task->AddTest("SMAC Governor V27 preserves raw templates and per-slot legacy absence",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();

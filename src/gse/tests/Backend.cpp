@@ -414,6 +414,8 @@ public:
             using Rows=std::array<faction::SmacRegionalStrategyRow,8>;
             using Scores=std::array<int32_t,8>;
             GT_ASSERT(m_game.m_simulation->value.ecology_history==std::optional<faction::SmacEcologyHistory>{faction::SmacEcologyHistory{}}
+                && m_game.m_simulation->value.faction_status==faction::SmacFactionStatusWords::Cold()
+                && m_game.m_simulation->value.ecology_warming_count==0
                 && m_game.m_simulation->value.regional_strategy==std::optional<Rows>{Rows{}}
                 && m_game.m_simulation->value.ranking_scores==std::optional<Scores>{Scores{}},"Cold engine storage was not zero");
             for(const bool present:{true,false}) {
@@ -428,6 +430,10 @@ public:
                     for(size_t i=0;i<8;++i) {ecology->clean_minerals[i]=101+7*i;ecology->major_atrocities[i]=202+7*i;ecology->research_aggregate[i]=303+7*i;}
                 }
                 m_game.m_simulation->value.ecology_history=ecology;
+                faction::SmacFactionStatusWords status;
+                if(present) {for(size_t i=0;i<8;++i) {status.values[i]=0x80004000u+static_cast<uint32_t>(i);}}
+                m_game.m_simulation->value.faction_status=status;
+                m_game.m_simulation->value.ecology_warming_count=17;
                 m_game.m_simulation->value.perihelion=true;
                 std::array<std::optional<uint32_t>,8> governor;
                 for(size_t i=0;i<8;++i) {governor[i]=0x80000000u+static_cast<uint32_t>(i);}
@@ -443,6 +449,9 @@ public:
                 for(const auto& participant:m_game.m_simulation->value.roster) {governor[participant.simulation_id]=base::SmacBaseResourceContext::NewGameGovernorOptions(m_game.m_simulation->value.designs.global_difficulty);}
                 GT_ASSERT(m_game.m_simulation->value.remembered_governor==governor,"New world cleared peer/slot0 Governor templates or failed fresh owner initialization");
                 GT_ASSERT(m_game.m_simulation->value.perihelion==std::optional<bool>{false},"Accepted new world retained active perihelion");
+                for(const auto& participant:m_game.m_simulation->value.roster) {status.values[participant.simulation_id]=0;}
+                GT_ASSERT(m_game.m_simulation->value.faction_status==status && m_game.m_simulation->value.ecology_warming_count==0,
+                    "Reset/new-world status initialization changed peers, invented absent history or retained warming");
                 if(ecology) {for(const auto& participant:m_game.m_simulation->value.roster) {
                     ecology->clean_minerals[participant.simulation_id]=0;ecology->major_atrocities[participant.simulation_id]=0;
                 }}

@@ -262,7 +262,9 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
     data.homes.reserve(data.manager->m_units.size());
     for ( const auto id:data.manager->m_unit_order ) {
         auto* current=data.manager->GetUnit(id);
-        if ( !current || !current->IsConventional() ) { THROW( "Abandonment requires current conventional Unit records" ); }
+        if (!current) {THROW("Abandonment requires registered Unit records");}
+        if(current->IsNative()) {(void)data.manager->QueryNativeUnit(current->Native(),0);continue;}
+        if (!current->IsConventional()) {THROW("Abandonment requires current conventional Unit records");}
         auto home=current->Conventional();
         if ( home.home_base_id!=abandoned.m_id ) { continue; }
         if ( current->m_owner!=abandoned.m_owner ) { THROW( "Foreign captured home repair is not admitted" ); }

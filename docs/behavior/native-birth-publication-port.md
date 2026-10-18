@@ -67,3 +67,14 @@ focused ASan/UBSan with UnitManager.cpp, Unit.cpp, NativeUnit.cpp,
 SmacNativeUnitRecord.cpp and BaseStarting.cpp instrumented; remaining objects use
 the current normal cached build and leak detection is disabled. Targeted
 correctness analysis passes the two changed production translation units.
+
+## Conventional Base workflows
+
+Network Node completion, Colony abandonment and starvation rehoming validate
+and omit unrelated owner0 natives before examining conventional packages or
+homes. Actual construction/turn, abandonment and starvation regressions retain
+the complete unrelated native record and factory counters while still checking
+facility income, newborn publication, repaired homes, Base order and restore.
+The three live caller groups pass; the three affected production translation
+units pass correctness analysis. This closes the remaining shared-roster
+consumers identified by the 4c90c1e0 review.

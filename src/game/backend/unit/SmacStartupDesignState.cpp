@@ -136,10 +136,12 @@ void SmacStartupDesignState::MarkAndSelect( SmacDesignOwner& owner, const SmacPr
 }
 
 SmacStartupDesignState SmacStartupDesignState::NewWorld( const faction::SmacTechnologyState& technology,
-	const settings::SmacTechnologyRules& technologies, const settings::SmacPredefinedUnitRules& units, int32_t difficulty ) {
+	const settings::SmacTechnologyRules& technologies, const settings::SmacPredefinedUnitRules& units, int32_t difficulty,
+	const std::function<void(const faction::SmacFactionTechnologyState&)>& before_generate ) {
 	units.Validate( technologies );
 	SmacStartupDesignState result; result.global_difficulty = difficulty;
 	for ( const auto& faction : technology.factions ) {
+		if(before_generate) {before_generate(faction);}
 		auto owner = GenerateEmptyOwner( faction, technologies, units.catalog, difficulty );
 		MarkAndSelect( owner, units.catalog ); result.owners.push_back( std::move( owner ) );
 	}

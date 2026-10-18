@@ -29,6 +29,83 @@ bool RankingTechnologyAvailable(const settings::SmacTechnologyReference& referen
 }
 }
 
+void SmacCapabilityState::Refresh(int32_t owner,const SmacFactionTechnologyState& technology,
+    const settings::SmacTechnologyRules& technologies,const unit::SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacCombatRules& combat,const std::array<uint32_t,8>& relations,
+    int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods) {
+    if(owner<1 || owner>7 || technology.admission.simulation_id!=owner || catalog.weapons.weapons.size()!=21 ||
+        catalog.defenses.defenses.size()!=10 || catalog.chassis.chassis.size()!=9) {
+        throw std::runtime_error("Capability refresh requires its positive owner and complete component tables");
+    }
+    const auto& previous=factions.at(owner-1).foreign;
+    const auto signed_byte=[](int32_t raw) {const auto bits=static_cast<uint32_t>(raw)&255u;return bits<128?int32_t(bits):int32_t(bits)-256;};
+    const auto available=[&](const auto& reference) {return RankingTechnologyAvailable(reference,technology,technologies);};
+    const auto evaluate=[&](int32_t raw,bool weapon) {
+        if(raw>=0) {return raw;}
+        if(!combat.psi_ratios || combat.psi_ratios->at(0)[0]<=0 || combat.psi_ratios->at(0)[1]<=0) {
+            throw std::runtime_error("PSI capability requires retained positive land combat ratios");
+        }
+        const auto offense=combat.psi_ratios->at(0)[0],defense=combat.psi_ratios->at(0)[1];
+        auto value=weapon?RankingChecked(int64_t(previous[Armor])*offense)/defense:
+            RankingChecked(int64_t(previous[Weapon])*defense)/offense;
+        value=RankingChecked(int64_t(value)*RankingChecked(int64_t(100)+psi_percent))/100;
+        if(weapon?dream_twister:neural_amplifier) {value=RankingChecked(int64_t(value)+value/2);}
+        return value;
+    };
+    const auto native=std::find_if(catalog.units.begin(),catalog.units.end(),[](const auto& row){return row.source_id==8;});
+    if(native==catalog.units.end()) {throw std::runtime_error("Capability refresh requires predefined design8");}
+    const bool native_available=native->active && !(native->faction_exclusion&(1u<<owner)) && available(native->prerequisite)
+        && !(native->plan==8 && no_colony_pods);
+    Faction next;
+    next.available={1,1,1,native_available?evaluate(signed_byte(catalog.weapons.weapons[12].offense),true):0,
+        native_available?evaluate(signed_byte(catalog.defenses.defenses[9].rating),false):0};
+    for(const auto& row:catalog.weapons.weapons) {
+        const auto raw=signed_byte(row.offense);
+        if(raw>=99 || !available(technologies.ResolveToken(row.prerequisite))) {continue;}
+        const auto value=evaluate(raw,true);
+        next.available[Weapon]=std::max(next.available[Weapon],value);
+        if(raw<0) {next.available[PsiWeapon]=std::max(next.available[PsiWeapon],value);}
+    }
+    for(const auto& row:catalog.defenses.defenses) {
+        if(!available(technologies.ResolveToken(row.prerequisite))) {continue;}
+        const auto raw=signed_byte(row.rating),value=evaluate(raw,false);
+        next.available[Armor]=std::max(next.available[Armor],value);
+        if(raw<0) {next.available[PsiArmor]=std::max(next.available[PsiArmor],value);}
+    }
+    for(const auto& row:catalog.chassis.chassis) {
+        if(row.triad==loader::txt::ChassisTriad::Land && available(technologies.ResolveToken(row.prerequisite))) {
+            next.available[LandSpeed]=std::max(next.available[LandSpeed],int32_t(static_cast<uint8_t>(row.speed)));
+        }
+    }
+    for(size_t tier=0;tier<4 && next.foreign[Weapon]==0;++tier) {
+        for(size_t peer=1;peer<=7;++peer) {
+            const auto flags=relations[peer];
+            if(peer==static_cast<size_t>(owner) || (flags&1) || (tier<3 && !(flags&8)) ||
+                (tier<2 && (flags&2)) || (tier==0 && !(flags&16))) {continue;}
+            const auto& values=factions[peer-1].available;
+            for(size_t i=0;i<values.size();++i) {next.foreign[i]=std::max(next.foreign[i],values[i]);}
+        }
+    }
+    factions[owner-1]=next; // no partial cache publication on failed eligibility/arithmetic
+}
+
+void SmacSimulationState::RefreshCapabilities(int32_t owner,const settings::SmacTechnologyRules& technologies,
+    const settings::SmacPredefinedUnitRules& units,const settings::SmacCombatRules& combat,bool no_colony_pods) {
+    if(!capabilities) {return;} // preserve the explicit missing history of old port saves
+    if(movement_capability!=MovementCapability::NoProjectsOrdinaryTerrain) {
+        throw std::runtime_error("Live capability refresh requires admitted project authority");
+    }
+    const auto* owned=technology.Find(owner);
+    if(!owned) {throw std::runtime_error("Capability refresh has no owned technology record");}
+    std::array<uint32_t,8> relations{};
+    const auto& directions=hostility.owners.at(owner).directions;
+    for(size_t i=0;i<relations.size();++i) {relations[i]=directions[i].primary;}
+    // The current validated faction-keyword domain has no PSI scalar writer;
+    // its definition constructor supplies0. Projects are explicitly excluded by
+    // the campaign capability above, rather than inferred from missing Bases.
+    capabilities->Refresh(owner,*owned,technologies,units.catalog,combat,relations,0,false,false,no_colony_pods);
+}
+
 int32_t CalculateSmacOrdinaryRankingScore(const SmacFactionTechnologyState& owner,
     int32_t population,const SmacDesignCounts& counts,const settings::SmacTechnologyRules& technologies,
     const unit::SmacPredefinedUnitCatalog& catalog,const unit::SmacStartupDesignState& designs) {
@@ -107,7 +184,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 16;
+constexpr int64_t VERSION = 17;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -140,6 +217,20 @@ StrategyRecords ReadStrategy(types::Buffer& buffer,size_t count) {
 		if(owner<1 || owner>7 || !result->emplace(owner,state).second) {throw std::runtime_error("Invalid or duplicate SMAC strategy owner");}
 	}
 	return result;
+}
+void WriteCapabilities(types::Buffer& buffer,const std::optional<SmacCapabilityState>& capabilities) {
+    buffer.WriteBool(capabilities.has_value());
+    if(capabilities) {for(const auto& owner:capabilities->factions) {
+        for(const auto& values:{owner.available,owner.foreign}) {for(const auto value:values) {buffer.WriteInt(value);}}
+    }}
+}
+std::optional<SmacCapabilityState> ReadCapabilities(types::Buffer& buffer) {
+    if(!buffer.ReadBool()) {return {};}
+    std::optional<SmacCapabilityState> result{std::in_place};
+    for(auto& owner:result->factions) {
+        for(auto* values:{&owner.available,&owner.foreign}) {for(auto& value:*values) {value=ReadInt32(buffer);}}
+    }
+    return result;
 }
 }
 
@@ -251,7 +342,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -317,6 +408,7 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
     buffer.WriteBool(rank_order.has_value());if(rank_order) {for(auto owner:rank_order->faction_at_rank) {buffer.WriteInt(owner);}}
     buffer.WriteInt(human_membership);
 	WriteStrategy(buffer,strategy);
+	WriteCapabilities(buffer,capabilities);
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -328,7 +420,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -411,6 +503,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
             for(const auto& participant:roster) {result.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
         }
 		if(version>=16) {result.strategy=ReadStrategy(buffer,static_cast<size_t>(count));}
+		if(version>=17) {result.capabilities=ReadCapabilities(buffer);}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

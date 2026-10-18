@@ -1,0 +1,1237 @@
+{
+  "research_id": "RE-SMAC-REGIONAL-RESEARCH-PRODUCER-001",
+  "profile": "positive human opening owner; no live foreign Bases; declared retained-cache and design mutations",
+  "legacy_field_meaning": {
+    "attack_cache": "own available weapon maximum",
+    "defense_cache": "selected-tier foreign available weapon maximum"
+  },
+  "reset": {
+    "regional_count_entries": 128,
+    "strategy_rebuild_region_range_inclusive": [
+      1,
+      127
+    ],
+    "strategy_region0_preserved": true,
+    "flag8_retained_except": "(turn+owner+region)%16==0",
+    "empty_special_regions": [
+      63,
+      64,
+      127
+    ],
+    "later_sea_override_range_inclusive": [
+      64,
+      127
+    ]
+  },
+  "capability": {
+    "weapon_definitions": 21,
+    "armor_definitions": 10,
+    "chassis_definitions": 9,
+    "own_floor": 1,
+    "foreign_positive_factions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "active_mask_filter": false
+  },
+  "cases": [
+    {
+      "id": "occupied_zero_strategy",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "empty_owner",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 0,
+        "live_unit_records": 0,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 0,
+        "live_unit_records": 0,
+        "owner_cached_bases": 0,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 0,
+          "land_combat_units": 0,
+          "attack_contribution": 0,
+          "strategy": 8,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "two_actual_scouts",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 2,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "two_owned_base_records",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 2,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 2,
+        "live_unit_records": 1,
+        "owner_cached_bases": 2,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 2,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "regional_reset_canaries",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 77,
+          "land_combat_units": 65535,
+          "attack_contribution": 65535,
+          "strategy": 99,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "strategy_samples_after": {
+        "0": 99,
+        "1": 7,
+        "2": 8,
+        "62": 8,
+        "63": 8,
+        "64": 8,
+        "65": 7,
+        "126": 7,
+        "127": 8
+      },
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "good4_rating2",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 8,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "good4_farmed1",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 1,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 1,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "good4_rating1",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "retained_flag8",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "available_laser_without_new_unit",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 2,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "factory_controlled_laser_prototype",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 2,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 2,
+          "attack_contribution": 1,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 0,
+        "attack": 0,
+        "forward_relation": 0
+      }
+    },
+    {
+      "id": "foreign_priority_vendetta",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 2,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "foreign_truce_skips_stronger_tier",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 8,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "foreign_treaty_contact_fallback",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 2,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "foreign_no_contact_final_fallback",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 8,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "psi_uses_previous_foreign_strength",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 9,
+        "foreign_available_armor": 8,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 12,
+        "own_available_armor": 6,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "psi_second_refresh_uses_replaced_foreign_cache",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 12,
+        "own_available_armor": 6,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "foreign_new_technology_before_peer_refresh",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 2,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "foreign_new_technology_after_peer_refresh",
+      "operation": "capability_subpass",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 8,
+        "foreign_available_armor": 1,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 0,
+          "owned_farmed_suitable": 0,
+          "site_rating": 1
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true
+    },
+    {
+      "id": "pact_regional_units_no_base",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 8,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 2,
+        "attack": 2,
+        "forward_relation": 40
+      }
+    },
+    {
+      "id": "pact_stale_base_presence",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 7,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 1,
+        "units": 2,
+        "attack": 2,
+        "forward_relation": 40
+      }
+    },
+    {
+      "id": "vendetta_foreign2_own_scout1",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 1,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 2,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 2,
+        "attack": 2,
+        "forward_relation": 24
+      }
+    },
+    {
+      "id": "vendetta_foreign1_own_scout_and_laser",
+      "operation": "complete_owner_summary",
+      "before": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 1,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 1,
+          "attack_contribution": 0,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "after": {
+        "live_base_records": 1,
+        "live_unit_records": 2,
+        "owner_cached_bases": 1,
+        "own_available_attack": 2,
+        "own_available_armor": 1,
+        "foreign_available_attack": 0,
+        "foreign_available_armor": 0,
+        "region1": {
+          "bases": 1,
+          "land_combat_units": 2,
+          "attack_contribution": 1,
+          "strategy": 0,
+          "owned_suitable": 4,
+          "owned_farmed_suitable": 0,
+          "site_rating": 2
+        }
+      },
+      "rng_calls": 0,
+      "normal_return": true,
+      "retained_peer2_region1": {
+        "bases": 0,
+        "units": 1,
+        "attack": 1,
+        "forward_relation": 24
+      }
+    }
+  ],
+  "initialization": {
+    "cold_strategy": 0,
+    "initializer_strategy_canary_before": 77,
+    "initializer_strategy_canary_after": 77,
+    "initializer_strategy_array_cleared": false,
+    "initializer_own_and_foreign_capability_after": [
+      0,
+      0
+    ],
+    "initializer_cleared_region_array_lengths": {
+      "bases": 128,
+      "land_combat_units": 128,
+      "attack_contribution": 128
+    },
+    "tested_owners": [
+      1,
+      2
+    ]
+  },
+  "ordinary_file_roundtrip": {
+    "before": [
+      {
+        "owner": 1,
+        "own_attack": 11,
+        "foreign_attack": 22,
+        "strategy": [
+          99,
+          7,
+          2,
+          8,
+          7,
+          0,
+          8
+        ]
+      },
+      {
+        "owner": 2,
+        "own_attack": 22,
+        "foreign_attack": 44,
+        "strategy": [
+          99,
+          7,
+          2,
+          8,
+          7,
+          0,
+          8
+        ]
+      }
+    ],
+    "poisoned": [
+      {
+        "owner": 1,
+        "own_attack": 999,
+        "foreign_attack": 999,
+        "strategy": [
+          77,
+          77,
+          77,
+          77,
+          77,
+          77,
+          77
+        ]
+      },
+      {
+        "owner": 2,
+        "own_attack": 999,
+        "foreign_attack": 999,
+        "strategy": [
+          77,
+          77,
+          77,
+          77,
+          77,
+          77,
+          77
+        ]
+      }
+    ],
+    "after": [
+      {
+        "owner": 1,
+        "own_attack": 11,
+        "foreign_attack": 22,
+        "strategy": [
+          99,
+          7,
+          2,
+          8,
+          7,
+          0,
+          8
+        ]
+      },
+      {
+        "owner": 2,
+        "own_attack": 22,
+        "foreign_attack": 44,
+        "strategy": [
+          99,
+          7,
+          2,
+          8,
+          7,
+          0,
+          8
+        ]
+      }
+    ],
+    "regions": [
+      0,
+      1,
+      62,
+      63,
+      64,
+      65,
+      127
+    ],
+    "save_return": 0,
+    "load_return": 0
+  },
+  "validation": {
+    "native_owner_summaries": 14,
+    "native_capability_controls": 9,
+    "regional_strategy_comparisons": 1792,
+    "pressure_threshold_comparisons": 1736,
+    "fresh_owner_prefixes": 2,
+    "native_file_roundtrips": 1,
+    "capability_or_strategy_results_supplied": false,
+    "general_live_foreign_routing_closed": false
+  }
+}

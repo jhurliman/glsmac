@@ -283,6 +283,10 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
         const auto& record=unit->Conventional();
         if(record.owner_simulation_id==owner) {++design_counts.at(record.design_id);}
     }
+	const auto& settings=m_state->m_settings.global;
+	if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {throw std::runtime_error("Owner summary lacks frozen capability inputs");}
+	m_simulation->value.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),
+		*settings.GetSmacCombatRules(),settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
     m_simulation->value.economy.at(owner).design_counts=design_counts;
 	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
 	m_simulation->value.economy.at(owner).regional_base_counts=counts;
@@ -300,6 +304,7 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
 		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
 		saved=initialized;technology->cached_threshold.reset();
+		if(m_simulation->value.capabilities) {m_simulation->value.capabilities->factions.at(owner-1)={};}
 		m_simulation->value.hostility.owners.swap(hostility.owners);
 	}
 	const auto next = saved.SettleDebit(); saved = next;

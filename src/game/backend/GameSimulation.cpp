@@ -93,6 +93,8 @@ void Game::PrepareNewSimulation() {
 	faction::SmacTechnologyState technology;
 	faction::SmacSocialState social;
 	unit::SmacStartupDesignState designs;
+	faction::SmacCapabilityState capabilities;
+	faction::SmacHostileState hostility;
 	std::vector< faction::SmacSimulationAdmission > admissions;
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
 		if ( slot.GetState() != slot::Slot::SS_PLAYER ) { continue; }
@@ -104,11 +106,27 @@ void Game::PrepareNewSimulation() {
 		if ( slot.GetIndex() > 6 ) { throw std::runtime_error( "SMAC simulation slot exceeds supported roster" ); }
 		roster.push_back( { id, static_cast< int32_t >( slot.GetIndex() ), slot.GetLinkedGSID(), record.role, *record.faction_id } );
 		admissions.push_back( { id, *record.faction_id } );
+		hostility.owners.emplace(id,faction::SmacHostileOwner::NewWorld(m_smac_secondary_relations.at(id)));
 	}
 	try {
 		technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 		social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
-		designs = unit::SmacStartupDesignState::NewWorld( technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ) );
+		if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {
+			throw std::runtime_error("New capability state requires frozen combat and campaign rules");
+		}
+		// The existing legacy generated-campaign contract explicitly admits no
+		// restriction flags without a campaign record. Other missing contexts reject.
+		const bool no_colony=settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0;
+		designs = unit::SmacStartupDesignState::NewWorld( technology, *settings.GetSmacTechnologyRules(), *settings.GetSmacPredefinedUnitRules(), OriginalGlobalDifficulty( settings ),
+			[&](const auto& owner) {
+				std::array<uint32_t,8> relations{};
+				for(size_t i=0;i<relations.size();++i) {relations[i]=hostility.owners.at(owner.admission.simulation_id).directions[i].primary;}
+				// Actual per-owner generation side effect before MarkAndSelect. The
+				// admitted definition constructor has PSI0 and this new campaign
+				// explicitly excludes projects; neither is inferred from Unit counts.
+				capabilities.Refresh(owner.admission.simulation_id,owner,*settings.GetSmacTechnologyRules(),settings.GetSmacPredefinedUnitRules()->catalog,
+					*settings.GetSmacCombatRules(),relations,0,false,false,no_colony);
+			});
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }
 	// GLSMAC policy, not an original startup seed reconstruction. Each word
@@ -125,9 +143,9 @@ void Game::PrepareNewSimulation() {
     // control authority; it must not inherit a transport-role heuristic.
     for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
+	value.capabilities=capabilities;value.hostility=std::move(hostility);
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
-		value.hostility.owners.emplace(participant.simulation_id,faction::SmacHostileOwner::NewWorld(m_smac_secondary_relations.at(participant.simulation_id)));
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );

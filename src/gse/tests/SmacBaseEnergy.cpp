@@ -2,6 +2,7 @@
 #include "fixtures/SmacBaseEnergy.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
+#include "types/Buffer.h"
 
 namespace gse::tests {
 using namespace game::backend::base;
@@ -72,6 +73,24 @@ std::string CheckSmacEnergyBoundaries() {
 }
 
 void AddSmacBaseEnergyTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC saved Base energy retains earned outputs and ordered maintenance",GT(){
+		SmacBaseEnergyCalculation value{};
+		value.raw_intake=41;value.headquarters_distance=5;value.waste=6;value.net=35;value.maintenance=7;
+		value.allocation={{11,12,12},{13,14,15}};
+		value.tail={{4,8,12},{13,28,45},{10,20,30},{12,24,36}};
+		value.maintenance_fees={{2,3},{33,4}};
+		types::Buffer encoded;WriteSmacBaseEnergy(encoded,value);types::Buffer input(encoded.ToString());
+		const auto decoded=ReadSmacBaseEnergy(input);types::Buffer again;WriteSmacBaseEnergy(again,decoded);
+		GT_ASSERT(input.lenr==input.lenw && again.ToString()==encoded.ToString() && decoded.tail.final.labs==36 && decoded.maintenance_fees==value.maintenance_fees,
+			"restore recomputed earned outputs or changed charge order");
+		GT_ASSERT(Rejects([&]{types::Buffer truncated(encoded.ToString().substr(0,encoded.lenw-1));ReadSmacBaseEnergy(truncated);}),"truncated energy accepted");
+		value.tail.final.labs=-1;
+		GT_ASSERT(Rejects([&]{types::Buffer output;WriteSmacBaseEnergy(output,value);}),"negative earned labs accepted");
+		value.tail.final.labs=36;
+		value.maintenance_fees[1].first=2;
+		GT_ASSERT(Rejects([&]{types::Buffer output;WriteSmacBaseEnergy(output,value);}),"duplicate maintenance charge accepted");
+		GT_OK();
+	});
 	task->AddTest( "SMAC Base energy waste matches original headquarters and commerce cases", GT() {
 		const auto error = CheckSmacEnergyWaste(); GT_ASSERT( error.empty(), "energy check: " + error ); GT_OK();
 	} );

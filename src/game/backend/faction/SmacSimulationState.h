@@ -5,6 +5,7 @@
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacHostileState.h"
+#include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
@@ -38,6 +39,26 @@ struct SmacFactionStrategy {
 	// Absence means cancel: retain every prior integer. Mask0 is a valid answer.
 	void ApplyResearchPriorities(std::optional<uint8_t> accepted_mask);
 	bool operator==(const SmacFactionStrategy& other) const noexcept {return priorities==other.priorities;}
+};
+
+// Native retained signed32 fields, not live Unit strengths. All seven positive
+// faction slots remain available to the foreign-tier scan, including inactive
+// or unoccupied slots. Component metadata has its own byte interpretation.
+struct SmacCapabilityState {
+	static constexpr size_t Weapon=0, Armor=1, LandSpeed=2, PsiWeapon=3, PsiArmor=4;
+	using Values=std::array<int32_t,5>;
+	struct Faction {
+		Values available{}, foreign{};
+		bool operator==(const Faction& other) const noexcept {return available==other.available && foreign==other.foreign;}
+	};
+	std::array<Faction,7> factions{};
+	bool operator==(const SmacCapabilityState& other) const noexcept {return factions==other.factions;}
+	// One actual producer call. PSI reads the previous foreign caches, then
+	// foreign tiers read peers' retained available caches. No random draw.
+	void Refresh(int32_t owner,const SmacFactionTechnologyState& technology,
+		const settings::SmacTechnologyRules& technologies,const unit::SmacPredefinedUnitCatalog& catalog,
+		const settings::SmacCombatRules& combat,const std::array<uint32_t,8>& relations,
+		int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods);
 };
 
 // Authoritative global inputs, distinct from per-base governor options and
@@ -88,6 +109,9 @@ struct SmacSimulationState {
 	// V11-V15 port saves did not retain this authority. Keep absence explicit
 	// on migration; restoring must not replay personality initialization.
 	std::optional<std::map<int32_t,SmacFactionStrategy>> strategy;
+	// V11-V16 did not record capability history. Migration retains absence;
+	// neither loading nor a read-only query reconstructs it from ownership.
+	std::optional<SmacCapabilityState> capabilities;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;
@@ -98,6 +122,8 @@ struct SmacSimulationState {
     // Single/Host/Player transport roles. Elimination/restart preserves this.
     uint8_t human_membership = 0;
     bool IsHuman(int32_t owner) const noexcept {return owner>=1 && owner<=7 && (human_membership & (1u<<owner));}
+	void RefreshCapabilities(int32_t owner,const settings::SmacTechnologyRules& technologies,
+		const settings::SmacPredefinedUnitRules& units,const settings::SmacCombatRules& combat,bool no_colony_pods);
     // Absent before the first real update and on migrated port campaigns.
     // Retained through capture/elimination; never reconstructed on restore.
     std::optional<SmacRankOrder> rank_order;

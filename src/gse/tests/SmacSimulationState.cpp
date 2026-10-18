@@ -5,6 +5,7 @@
 #include "game/backend/faction/SmacRankingScore.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacOrbitalIntake.h"
+#include "fixtures/SmacCapabilityCases.h"
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -86,18 +87,124 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=17,bool include_capabilities=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
             suffix.WriteInt(owner);for(const auto priority:state.priorities) {suffix.WriteInt(priority);}
         }
     }
-    return Wire(value,1,16)+suffix.ToString();
+    if(version>=17 && include_capabilities) {
+        suffix.WriteBool(value.capabilities.has_value());
+        if(value.capabilities) {for(const auto& owner:value.capabilities->factions) {
+            for(const auto& fields:{owner.available,owner.foreign}) {for(const auto field:fields) {suffix.WriteInt(field);}}
+        }}
+    }
+    return Wire(value,1,version)+suffix.ToString();
+}
+
+unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
+    auto catalog=smac_startup_fixture::Units().catalog;
+    for(auto& row:catalog.weapons.weapons) {row.prerequisite="Disable";}
+    for(auto& row:catalog.defenses.defenses) {row.prerequisite="Disable";}
+    for(auto& row:catalog.chassis.chassis) {row.prerequisite="Disable";}
+    catalog.weapons.weapons[12].offense=-1;catalog.defenses.defenses[9].rating=-1;
+    catalog.chassis.chassis[0].triad=loader::txt::ChassisTriad::Land;
+    auto& native=catalog.units[8];native.active=true;native.faction_exclusion=0;native.plan=1;native.chassis_id=0;
+    native.prerequisite={settings::SmacTechnologyReference::Kind::TECHNOLOGY_ID,58};
+    return catalog;
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC retained capability scans match 31 original binding and width controls",GT(){
+        for(const auto& test:smac_capability_fixture::Cases()) {
+            auto catalog=CapabilityCatalog();auto technologies=smac_rules_fixture::Technologies();
+            faction::SmacFactionTechnologyState owned{{1,"GAIANS"}};
+            faction::SmacCapabilityState state;state.factions[0].foreign={9,8,0,0,0};
+            settings::SmacCombatRules combat{25,25,25,settings::SmacCombatRules::PsiRatios{{{3,2},{1,1},{1,1}}}};
+            const auto token=[](int32_t id){return id==-1?std::string("None"):id==-2?std::string("Disable"):"Tech"+std::to_string(id);};
+            bool no_colony=false;
+            for(const auto& [key,value]:test.overrides) {
+                auto& native=catalog.units[8];
+                if(key=="weapon_0_raw") {catalog.weapons.weapons[0].offense=value;}
+                else if(key=="weapon_0_technology") {catalog.weapons.weapons[0].prerequisite=token(value);}
+                else if(key=="armor_0_raw") {catalog.defenses.defenses[0].rating=value;}
+                else if(key=="armor_0_technology") {catalog.defenses.defenses[0].prerequisite=token(value);}
+                else if(key=="chassis_0_raw") {catalog.chassis.chassis[0].speed=value;}
+                else if(key=="chassis_0_technology") {catalog.chassis.chassis[0].prerequisite=token(value);}
+                else if(key=="chassis_0_domain") {catalog.chassis.chassis[0].triad=static_cast<loader::txt::ChassisTriad>(value);}
+                else if(key=="mind_worm_active_flags") {native.active=(value&1)!=0;}
+                else if(key=="mind_worm_faction_exclusion_mask") {native.faction_exclusion=value;}
+                else if(key=="mind_worm_technology_prerequisite") {native.prerequisite=technologies.ResolveToken(token(value));}
+                else if(key=="mind_worm_chassis") {native.chassis_id=value;}
+                else if(key=="mind_worm_plan") {native.plan=value;}
+                else if(key=="technology_58_owner_mask") {owned.owned[58]=(value&2)!=0;}
+                else if(key=="technology_77_owner_mask") {owned.owned[77]=(value&2)!=0;}
+                else if(key=="technology_88_owner_mask") {owned.owned[88]=(value&2)!=0;}
+                else if(key=="technology_58_first_prerequisite") {technologies.technologies[58].prerequisites[0]=token(value);}
+                else if(key=="technology_58_second_prerequisite") {technologies.technologies[58].prerequisites[1]=token(value);}
+                else if(key=="primary_rules") {no_colony=(value&0x00400000)!=0;}
+                else if(key=="prior_foreign_weapon") {state.factions[0].foreign[0]=value;}
+                else if(key=="prior_foreign_armor") {state.factions[0].foreign[1]=value;}
+                else if(key=="peer2_five_caches") {state.factions[1].available.fill(value);}
+                else {GT_ASSERT(false,"unbound native capability input "+key);}
+            }
+            state.Refresh(1,owned,technologies,catalog,combat,{},0,false,false,no_colony);
+            GT_ASSERT((test.foreign?state.factions[0].foreign:state.factions[0].available)==test.expected,"original capability mismatch: "+std::string(test.name));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC retained PSI capabilities match 15 original separate truncation and project controls",GT(){
+        for(const auto& test:smac_capability_fixture::PsiCases()) {
+            auto catalog=CapabilityCatalog();const auto technologies=smac_rules_fixture::Technologies();
+            // Bind native semantic technologies to synthetic component tokens;
+            // the calculation uses resolved ownership, not these numeric IDs.
+            catalog.weapons.weapons[12].prerequisite="Tech59";catalog.defenses.defenses[9].prerequisite="Tech60";
+            faction::SmacFactionTechnologyState owned{{1,"GAIANS"}};
+            owned.owned[58]=(test.owned&1)!=0;owned.owned[59]=(test.owned&2)!=0;owned.owned[60]=(test.owned&4)!=0;
+            faction::SmacCapabilityState state;state.factions[0].foreign={test.foreign[0],test.foreign[1],0,0,0};
+            settings::SmacCombatRules combat{25,25,25,settings::SmacCombatRules::PsiRatios{{test.ratio,{1,1},{1,1}}}};
+            state.Refresh(1,owned,technologies,catalog,combat,{},test.percent,(test.projects&1)!=0,(test.projects&2)!=0,false);
+            GT_ASSERT(state.factions[0].available==test.expected,"original PSI mismatch: "+std::string(test.name));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC capability foreign tiers retain native relationship order and reject failed PSI atomically",GT(){
+        const auto catalog=CapabilityCatalog();const auto technologies=smac_rules_fixture::Technologies();
+        faction::SmacFactionTechnologyState owned{{1,"GAIANS"}};
+        settings::SmacCombatRules combat{25,25,25,settings::SmacCombatRules::PsiRatios{{{3,2},{1,1},{1,1}}}};
+        faction::SmacCapabilityState state;state.factions[1].available={2,1,1,0,0};state.factions[2].available={8,1,1,0,0};
+        std::array<uint32_t,8> relations{};relations[2]=24;relations[3]=8;
+        state.Refresh(1,owned,technologies,catalog,combat,relations,0,false,false,false);
+        GT_ASSERT(state.factions[0].foreign[0]==2,"early Vendetta tier was replaced by global strongest weapon");
+        relations[2]|=1;
+        state.Refresh(1,owned,technologies,catalog,combat,relations,0,false,false,false);
+        GT_ASSERT(state.factions[0].foreign[0]==8,"forward truce did not exclude the earlier peer");
+        owned.owned[58]=true;state.factions[0].foreign[1]=INT32_MAX;
+        const auto before=state;
+        GT_ASSERT(Rejects([&]{state.Refresh(1,owned,technologies,catalog,combat,relations,0,false,false,false);}) && state==before,
+            "unsupported PSI overflow partially published capabilities");
+        GT_OK();
+    });
+    task->AddTest("SMAC capability history survives V17 restore while V16 preserves absence",GT(){
+        auto value=State();value.capabilities.emplace();
+        for(size_t owner=0;owner<7;++owner) {
+            value.capabilities->factions[owner].available={int32_t(owner),127,255,70000,INT32_MIN};
+            value.capabilities->factions[owner].foreign={INT32_MAX,-7,0,int32_t(owner),60000};
+        }
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"capability restore recalculated stale or unoccupied faction caches");
+        auto old=SmacSimulationState::Deserialize(CurrentWire(value,16),technologies,profiles,units);
+        old.RefreshCapabilities(7,technologies,units,smac_rules_fixture::Combat(),false);
+        GT_ASSERT(!old.capabilities,"legacy owner refresh fabricated capability history");
+        types::Buffer invalid;invalid.WriteBool(true);invalid.WriteInt(int64_t(INT32_MAX)+1);
+        for(size_t i=1;i<70;++i) {invalid.WriteInt(0);}
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,17,false)+invalid.ToString(),technologies,profiles,units);}),"oversized signed capability field accepted");
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"truncated capability history accepted");
+        GT_OK();
+    });
     task->AddTest("SMAC faction strategy retains signed priorities on cancel and normalizes accepted masks",GT(){
         auto profile=smac_startup_fixture::Factions().factions[0];
         profile.worker_priorities={-3,2,-1,4,INT32_MAX};

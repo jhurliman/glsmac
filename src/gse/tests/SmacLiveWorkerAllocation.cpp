@@ -2197,6 +2197,62 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony")->type==VT_NULL,"loaded answer did not retire");GT_OK();
 		});
 	} );
+	task->AddTest("SMAC Colony deferred Screen survives research save and real Start without reposting",[](GSE*,context::Context*) -> std::string {
+		ConventionalUnitFixture source;source.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+		std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
+		source.BasePresentationRoles(roles);
+		source.ResourceState([](auto& state){
+			state.economy.at(1).rates={0,5};state.social.factions[0].current[1]=0;
+			state.technology.factions[0].target.reset();state.technology.factions[0].labs=0;
+		});
+		const auto setup=source.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=source.Game();auto* base=Populate(GSE_CALL,source,false);SelectionPresentations(source);
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+			auto* bm=game->GetBM();bm->DefineFacility(new FacilityDef("research-hq","HQ","",0,{},1));
+			base->m_facilities.emplace("research-hq",bm->GetFacilityDef("research-hq"));
+			auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+			const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+			base->SetProductionState(GSE_CALL,ProductionState{colony,27,colony,77,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(0);
+			source.BeginColonyChoice(GSE_CALL,base->m_id);
+			auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+			auto* question=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_pending_smac_colony"));
+			game->Event(GSE_CALL,"choose_colony",{{"request_id",question->Get("request_id")},{"choice",VALUE(value::String,,"screen")}});GT_OK();
+		});GT_ASSERT(setup.empty(),"deferred research setup: "+setup);source.DrainEvents();
+		std::string saved,base_record,random;int64_t credits=0;
+		const auto paused=source.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=source.Game();auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+			GT_ASSERT(Call(GSE_CALL,wrapper,"get_pending_smac_research")->type==VT_OBJECT &&
+				Call(GSE_CALL,wrapper,"get_pending_smac_colony_screen")->type==VT_NULL,"Screen opened before the research answer");
+			auto* base=game->GetBM()->GetBase(701);saved=source.Snapshot();base_record=Base::Serialize(base).ToString();
+			random=game->GetRandom()->GetStateString();credits=game->GetCanonicalEconomy(base->m_owner).credits;GT_OK();
+		});GT_ASSERT(paused.empty(),"save deferred Screen: "+paused);
+		ConventionalUnitFixture restored;restored.ConfigureProduction(ColonyChoiceSource,"GAIANS");restored.BasePresentationRoles(roles);
+		const auto loaded=restored.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=restored.Game();game->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			auto* base=game->GetBM()->GetBase(701);auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+			GT_ASSERT(Base::Serialize(base).ToString()==base_record && game->GetRandom()->GetStateString()==random &&
+				game->GetCanonicalEconomy(base->m_owner).credits==credits,"restoring research advanced the deferred Base");
+			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_pending_smac_research"));
+			auto* choice=static_cast<value::Object*>(static_cast<value::Array*>(pending->Get("choices"))->value.front());
+			game->Event(GSE_CALL,"choose_research",{{"request_id",pending->Get("request_id")},{"technology_id",choice->Get("id")}});GT_OK();
+		});GT_ASSERT(loaded.empty(),"load deferred Screen: "+loaded);restored.DrainEvents();
+		const auto screen=restored.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+			GT_ASSERT(Call(GSE_CALL,wrapper,"get_pending_smac_research")->type==VT_NULL &&
+				base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1 &&
+				game->GetCanonicalEconomy(base->m_owner).credits==credits+game->GetCanonicalBaseEnergy(*base).tail.final.economy,
+				"research answer reposted minerals, food or credits");
+			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_pending_smac_colony_screen"));
+			for(int i=0;i<2;++i) {game->Event(GSE_CALL,"close_colony_screen",{{"request_id",pending->Get("request_id")}});}GT_OK();
+		});GT_ASSERT(screen.empty(),"open deferred Screen: "+screen);restored.DrainEvents();
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+			GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony_screen")->type==VT_NULL &&
+				base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"closing restored Screen replayed the Base");GT_OK();
+		});
+	});
 	task->AddTest( "SMAC Colony retained calculation changes only at actual calculation publication", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
 		return fixture.Run([&](GSE_CALLABLE) -> std::string {
@@ -2731,6 +2787,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             std::map<size_t,std::string> expected_units;
             fixture.ResourceState([&](auto& state){
                 state.do_or_die=scenario==3;state.roster[0].restart_prohibited=scenario==4;
+                state.capabilities.emplace();
+                state.capabilities->factions[0].available.fill(70000);
+                state.capabilities->factions[0].foreign.fill(-73);
+                state.capabilities->factions[1].available.fill(12345);
                 auto& e=state.economy.at(1);e.credits=100;e.pending_debit=7;e.research_fraction=70;e.rates={2,3};
                 auto& t=state.technology.factions[0];t.target=5;t.cached_threshold=1000;t.labs=40;
             });
@@ -2765,13 +2825,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 bool exact=false;fixture.ResourceState([&](auto& state){const auto& e=state.economy.at(1);const auto& t=state.technology.factions[0];
                     exact=state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
+                        && state.capabilities && state.capabilities->factions[0]==faction::SmacCapabilityState::Faction{}
+                        && state.capabilities->factions[1].available[0]==12345
                         && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
                         && e.pending_debit==0 && e.research_fraction==70 && t.target==5 && t.labs==40 && !t.cached_threshold
                         && e.rates.psych==(restarted ? 0 : 2) && e.rates.labs==(restarted ? 5 : 3);});
                 GT_ASSERT(exact && fixture.GameplayRandom().Shared()==pair.Shared() && fixture.GameplayRandom().Crt()!=pair.Crt()
                     && game->GetRandom()->GetStateString()==random,"disposition reset retained research, flags, treasury or search RNG incorrectly");
+                // A second nonzero initializer clears only its owner's row;
+                // a restarted owner with surviving Units does not initialize again.
+                fixture.ResourceState([&](auto& state){state.capabilities->factions[0].available.fill(70000);});
                 fixture.SettleEconomy(1);
-                fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120);});
+                fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120)
+                    && state.capabilities->factions[0].available[0]==(restarted ? 70000 : 0)
+                    && state.capabilities->factions[1].available[0]==12345;});
                 GT_ASSERT(exact,"empty-faction tail omitted or duplicated its second initialization");
                 saved=fixture.Snapshot();knowledge_wire=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();random_wire=random;
                 fixture.ResourceState([&](auto& state){expected_state=state;});

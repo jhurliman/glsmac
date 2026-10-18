@@ -5,6 +5,8 @@
 #include <vector>
 #include <utility>
 
+namespace types { class Buffer; }
+
 namespace game::backend::base {
 
 struct SmacEnergyRates {
@@ -60,6 +62,11 @@ struct SmacBaseEnergyCalculation {
 	// Source ID order is the original individual maintenance charge order.
 	std::vector< std::pair< int32_t, int32_t > > maintenance_fees;
 };
+
+// Saved final-pass result, retained before research changes technology or
+// maintenance authority. Restore never recalculates already earned outputs.
+void WriteSmacBaseEnergy(types::Buffer&,const SmacBaseEnergyCalculation&);
+SmacBaseEnergyCalculation ReadSmacBaseEnergy(types::Buffer&);
 
 // RE-SMAC-ENERGY-TAIL-001 nonnegative category domain. Evaluated signed32
 // overflow rejects explicitly; unmeasured original overflow is not emulated.

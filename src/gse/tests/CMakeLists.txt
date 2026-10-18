@@ -4,8 +4,10 @@ SET( SRC ${SRC}
 
 	${PWD}/SmacOrdinaryLandExploration.cpp
 	${PWD}/Tests.cpp
+	${PWD}/SmacPlanetMap.cpp
 	${PWD}/UIClass.cpp
 	${PWD}/Sound.cpp
+	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp

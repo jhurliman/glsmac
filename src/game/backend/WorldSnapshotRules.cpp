@@ -105,11 +105,16 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto& combat=settings.GetSmacCombatRules();
 	buffer.WriteBool(combat.has_value());
 	if(combat) {buffer.WriteString(combat->Serialize().ToString());}
+    buffer.WriteInt(settings.map.type);
+    const auto& campaign=settings.GetSmacCampaignRules();
+    buffer.WriteBool(campaign.has_value());
+    if(campaign) {buffer.WriteString(campaign->Serialize());}
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
 	RequireFrozenProfile( settings );
-	if ( buffer.ReadInt() != rules_marker || buffer.ReadInt() != rules_version ) {
+	const auto marker=buffer.ReadInt(); const auto version=buffer.ReadInt();
+	if (marker!=rules_marker || (version!=32 && version!=rules_version)) {
 		throw std::runtime_error( "Unsupported world snapshot rules header" );
 	}
 	const auto id = buffer.ReadString( max_ruleset_bytes );
@@ -149,7 +154,8 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( sizes ) {
 		const auto incoming = settings::SmacWorldSizeRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ) );
 		const auto selection = settings::SmacWorldSizeSelection::Deserialize( types::Buffer( buffer.ReadString( max_selection_bytes ) ) );
-		incoming.ValidateSelection( selection );
+		if(settings.map.type!=settings::MapSettings::MT_INSTALLED_PLANET) {incoming.ValidateSelection( selection );}
+		else if(!(selection==settings::SmacWorldSizeSelection{4,80,80})) {throw std::runtime_error("World snapshot has invalid installed Planet geometry");}
 		if ( !( incoming == *sizes ) || !( selection == *settings.map.GetSmacWorldSize() ) ) { throw std::runtime_error( "World snapshot world-size profile or selection differs from the session" ); }
 	}
 	const auto& factions = settings.GetSmacFactionStartupRules();
@@ -195,6 +201,14 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 		if(!(incoming==*combat)) {throw std::runtime_error("World snapshot combat profile differs");}
 	}
 
+    const auto& campaign=settings.GetSmacCampaignRules();
+    if(version==32) {
+        if(campaign || settings.map.type==settings::MapSettings::MT_INSTALLED_PLANET) {throw std::runtime_error("Legacy world cannot establish original campaign authority");}
+    } else {
+        if(buffer.ReadInt()!=settings.map.type) {throw std::runtime_error("World map provenance differs from the session");}
+        if(buffer.ReadBool()!=campaign.has_value()) {throw std::runtime_error("World campaign options presence differs");}
+        if(campaign && !(settings::SmacCampaignRules::Deserialize(buffer.ReadString(settings::SmacCampaignRules::MAX_WIRE_BYTES))==*campaign)) {throw std::runtime_error("World campaign options differ");}
+    }
 }
 
 void ValidateMapDimensions( const std::string& payload, const settings::GlobalSettings& settings ) {

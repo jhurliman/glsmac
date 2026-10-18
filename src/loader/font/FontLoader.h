@@ -15,15 +15,17 @@ class Font;
 namespace loader {
 namespace font {
 
+enum class RasterMode { GRAYSCALE, MONOCHROME };
+
 CLASS( FontLoader, Loader )
 	virtual ~FontLoader();
 
 	types::Font* LoadFont( const resource::resource_t res, const unsigned char size );
-	types::Font* LoadCustomFont( const std::string& name, const unsigned char size );
+	types::Font* LoadCustomFont( const std::string& name, const unsigned char size, RasterMode mode = RasterMode::GRAYSCALE );
 	types::Font* GetBuiltinFont( const unsigned char size );
 
 protected:
-	virtual types::Font* LoadFontImpl( const std::string& name, const std::vector< unsigned char >& data, const unsigned char size ) = 0;
+	virtual types::Font* LoadFontImpl( const std::string& name, const std::vector< unsigned char >& data, const unsigned char size, RasterMode mode = RasterMode::GRAYSCALE ) = 0;
 
 private:
 	// cache all fonts for future use

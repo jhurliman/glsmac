@@ -19,7 +19,7 @@ return (i) => {
 				if (accepted) { i.popup.dismiss(); }
 				return true;
 			}},
-			{style: {text: 'Cancel', align: 'right', is_cancel: true}, onclick: () => { i.popup.dismiss(); return true; }},
+			{style: {text: 'Cancel', align: 'right', is_cancel: true}, onclick: () => { i.popup.back(); return true; }},
 		],
 	});
 };

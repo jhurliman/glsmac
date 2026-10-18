@@ -32,47 +32,14 @@ return {
 
 		this.basename = header_title.text({
 			align: 'top center', // TODO: fix vertical centering
-			top: 3,
-			font: 'arialnb.ttf:28',
+			top: 0,
+			font: 'arialnb.ttf:24',
 			color: 'rgb(137,166,166)',
 			transform: 'uppercase',
 		});
 
-		p.ui.class('base-screen-bottombar-arrow').set({
-			width: 20,
-			height: 35,
-			top: 3,
-			sound: 'ok.wav',
-		});
-		// TODO: make _hover and _active work without class
-		p.ui.class('base-screen-bottombar-arrow-left').extend('base-screen-bottombar-arrow').set({
-			align: 'top left',
-			left: 3,
-			background: 'interface.pcx:crop(290,64,309,98)',
-			_hover: {
-				background: 'interface.pcx:crop(290,100,309,134)',
-			},
-			_active: {
-				background: 'interface.pcx:crop(290,136,309,170)',
-			},
-		});
-		header.button({
-			class: 'base-screen-bottombar-arrow-left',
-		});
-		p.ui.class('base-screen-bottombar-arrow-right').extend('base-screen-bottombar-arrow').set({
-			align: 'top right',
-			right: 3,
-			background: 'interface.pcx:crop(311,64,330,98)',
-			_hover: {
-				background: 'interface.pcx:crop(311,100,330,134)',
-			},
-			_active: {
-				background: 'interface.pcx:crop(311,136,330,170)',
-			},
-		});
-		header.button({
-			class: 'base-screen-bottombar-arrow-right',
-		});
+		header_title.text({ class: 'base-screen-frame-text', font: 'arialnb.ttf:10',
+			align: 'bottom center', bottom: 0, text: 'Base navigation unavailable' });
 
 		p.ui.class('base-screen-bottombar-pop').set({
 			width: 38,
@@ -91,29 +58,14 @@ return {
 			height: 54,
 		});
 
-		p.ui.class('base-screen-bottombar-nsbtn').set({
-			align: 'center',
-			width: 48,
-			height: 48,
-			sound: 'ok.wav',
-			background: 'interface.pcx:crop(332,1,379,48)',
-			_hover: {
-				background: 'interface.pcx:crop(332,50,379,97)',
-			},
-			_active: {
-				background: 'interface.pcx:crop(332,99,379,146)',
-			},
+		const nerve = this.frame.panel({
+			class: 'default-panel', width: 54, height: 54,
+			align: 'bottom right', bottom: 2, right: 4,
 		});
-		const nerve_stapling_btn = this.frame.panel({
-			class: 'default-panel',
-			width: 54,
-			height: 54,
-			align: 'bottom right',
-			bottom: 2,
-			right: 4,
-		}).button({
-			class: 'base-screen-bottombar-nsbtn',
-		});
+		nerve.text({ class: 'base-screen-frame-text', font: 'arialnb.ttf:10',
+			align: 'top center', top: 12, text: 'Nerve staple' });
+		nerve.text({ class: 'base-screen-frame-text', font: 'arialnb.ttf:10',
+			align: 'top center', top: 25, text: 'unavailable' });
 
 	},
 

@@ -214,9 +214,8 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	production.baseline_minerals = production.minerals;
 	auto food = retained ? m_accumulated_nutrients : resources.nutrients.normalized_stored;
 	if ( population_step ) {
-		const auto map_type = m_game->GetState()->m_settings.global.map.type;
-		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
-			THROW( "Canonical upkeep admits ordinary generated maps, not scenario/mapfile objectives" );
+		if ( !m_game->GetState()->m_settings.global.IsOrdinarySmacCampaign() ) {
+			THROW( "Canonical upkeep requires an ordinary campaign, not scenario/mapfile objectives" );
 		}
 		// The current generated local campaign has no objective producer. This
 		// is explicit GLSMAC non-scenario policy, not an inferred original flag.

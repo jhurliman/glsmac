@@ -76,7 +76,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
     }
     const auto altitude=[&](const map::tile::Tile* tile) {
         if(!tile->elevation.center) {THROW("Restart terrain lacks elevation");}
-        return static_cast<uint8_t>(map->GetResourcePolicy()->Altitude(tile->is_water_tile,*tile->elevation.center));
+        return static_cast<uint8_t>(map->GetResourcePolicy()->Altitude(*tile));
     };
     const auto wet=[&](map::smac_site::Coordinate point) {
         const auto* tile=map->GetTile(point[0],point[1]);

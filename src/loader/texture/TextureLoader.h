@@ -34,6 +34,9 @@ CLASS( TextureLoader, Loader )
 	// load part of texture
 	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = types::texture::LT_NONE, const float value = 1.0, const types::texture::texture_flag_t texture_flags = types::texture::TF_NONE );
 
+	// Caller owns the viewport-specific result; decoded source assets may be cached.
+	virtual types::texture::Texture* CreateSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame, size_t rows, size_t viewport_width, size_t viewport_height );
+
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );
 

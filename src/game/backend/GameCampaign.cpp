@@ -8,6 +8,7 @@
 #include "slot/Slots.h"
 #include "Player.h"
 #include "map/Map.h"
+#include "map/SmacPlanetMap.h"
 #include "util/FinallyGuard.h"
 #include "types/Buffer.h"
 #include <algorithm>
@@ -117,7 +118,17 @@ void Game::ValidateCampaignWorld(State* state,const std::string& world) {
     if(!turn.id) {THROW("Cannot load a campaign before its first stable turn");}
     const auto simulation=validator.ReadSimulationState(buffer,turn.id);
     if(!simulation) {THROW("GLSMAC campaign requires saved SMAC simulation state");}
-    map::GlsmacResourceMapPolicy::ReadOptional(buffer,true);
+    const auto policy=map::GlsmacResourceMapPolicy::ReadOptional(buffer,true);
+    if(bool(policy && policy->OriginalPlanet()) != (state->m_settings.global.map.type==settings::MapSettings::MT_INSTALLED_PLANET)) {
+        THROW("World resource provenance differs from the accepted map origin");
+    }
+    if(policy && policy->OriginalPlanet()) {
+        const auto& options=state->m_settings.global.GetSmacCampaignRules();
+        if(!options || !state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=policy->AutomaticLandResources()
+            || state->m_settings.global.map.GetSmacOceanCoverage()!=policy->OriginalPlanet()->OceanCoverageCategory()) {
+            THROW("Installed Planet resource policy differs from active campaign options");
+        }
+    }
     const auto knowledge=world_snapshot::ReadWorkerKnowledge(buffer,true);
     const auto territory=world_snapshot::ReadTerritoryTopology(buffer,true);
     const auto map=buffer.ReadString(campaign::MAX_BYTES);

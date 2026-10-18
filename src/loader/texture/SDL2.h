@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <memory>
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL_image.h>
@@ -10,12 +11,15 @@
 namespace loader {
 namespace texture {
 
+struct SmacMenuSource;
+
 CLASS( SDL2, TextureLoader )
 	virtual ~SDL2();
 
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+	types::texture::Texture* CreateSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame, size_t rows, size_t viewport_width, size_t viewport_height ) override;
 
 protected:
 
@@ -28,6 +32,7 @@ protected:
 	texture_map_t m_subtextures = {};
 
 private:
+	std::unordered_map< std::string, std::shared_ptr< SmacMenuSource > > m_smac_menu_sources;
 	void FixTransparency( types::texture::Texture* texture ) const;
 	void FixYellowShadows( types::texture::Texture* texture ) const;
 	void FixTexture( types::texture::Texture* texture ) const;

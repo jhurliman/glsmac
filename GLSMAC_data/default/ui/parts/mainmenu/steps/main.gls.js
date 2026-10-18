@@ -1,6 +1,7 @@
 return (i) => {
 	i.glsmac.deinit();
 	i.sliding.show({
+		native_title: true,
 		entries: [
 			['Start Game', () => {
 				i.settings.local.game_mode = 'single';

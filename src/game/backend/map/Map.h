@@ -79,6 +79,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const error_code_t Generate( settings::MapSettings* map_settings, MT_CANCELABLE );
 	const error_code_t LoadFromBuffer( types::Buffer& buffer );
 	const error_code_t LoadFromFile( const std::string& path );
+	const error_code_t LoadInstalledPlanet( const std::string& path, bool automatic_land_resources, MT_CANCELABLE );
 	void SaveToBuffer( types::Buffer& buffer ) const;
 	const error_code_t SaveToFile( const std::string& path ) const;
 

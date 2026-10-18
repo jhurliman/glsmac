@@ -1,0 +1,620 @@
+{
+  "research_id": "RE-SMAC-STANDARD-CURRENT-RULES-001",
+  "scope": "27 continuous original setup-entry prefixes: 25 stop after rules; two execute settings writes and actual new-game initialization to first-faction reset prefix. UI answers/checkbox word, neutral metadata and selected canaries supplied. No whole Planet world, native UI or session teardown claim.",
+  "standard_primary_low16": 6670,
+  "standard_primary_low16_hex": "0x1a0e",
+  "ordinary_fresh_admission": {
+    "primary_upper16": 0,
+    "scenario_identity": false,
+    "no_colony": false,
+    "all_base_objectives": false,
+    "project_objectives": false,
+    "facility_objectives": false,
+    "secondary_randomization_flags": 0
+  },
+  "option_mapping": [
+    {
+      "option": "transcendence_victory",
+      "field": "primary",
+      "mask": 2048,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "conquest_victory",
+      "field": "primary",
+      "mask": 2,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "diplomatic_victory",
+      "field": "primary",
+      "mask": 8,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "economic_victory",
+      "field": "primary",
+      "mask": 4,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "cooperative_victory",
+      "field": "primary",
+      "mask": 4096,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "no_elimination_restart",
+      "field": "primary",
+      "mask": 1,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "flexible_start",
+      "field": "primary",
+      "mask": 16,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "slower_research",
+      "field": "primary",
+      "mask": 32,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "capture_technology",
+      "field": "primary",
+      "mask": 16384,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "blind_research",
+      "field": "primary",
+      "mask": 512,
+      "inverted_checkbox": false,
+      "standard_enabled": true
+    },
+    {
+      "option": "aggressive_opponents",
+      "field": "primary",
+      "mask": 64,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "no_world_survey",
+      "field": "primary",
+      "mask": 256,
+      "inverted_checkbox": true,
+      "standard_enabled": true
+    },
+    {
+      "option": "no_scattered_pods",
+      "field": "primary",
+      "mask": 8192,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "no_random_events",
+      "field": "primary",
+      "mask": 32768,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "accelerated_start",
+      "field": "primary",
+      "mask": 128,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "restricted_save",
+      "field": "primary",
+      "mask": 1024,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "random_personalities",
+      "field": "secondary",
+      "mask": 8388608,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    },
+    {
+      "option": "random_agendas",
+      "field": "secondary",
+      "mask": 16777216,
+      "inverted_checkbox": false,
+      "standard_enabled": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "STANDARD-01",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 0,
+        "active_rules": 65535,
+        "remembered_rules": 8192,
+        "remembered_secondary": 25165824
+      },
+      "expected": {
+        "active_rules": 6670,
+        "active_secondary": 0,
+        "remembered_rules": 8192,
+        "remembered_secondary": 25165824,
+        "remembered_rule_choice": 0,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "STANDARD-02",
+      "inputs": {
+        "difficulty": 0,
+        "rules_answer": 0,
+        "remembered_rules": 0
+      },
+      "expected": {
+        "active_rules": 6670,
+        "active_secondary": 0,
+        "remembered_rules": 0,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 0,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "STANDARD-03",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 0,
+        "active_rules": 1614872575,
+        "active_secondary": 92274704,
+        "remembered_rules": 9029,
+        "remembered_secondary": 0
+      },
+      "expected": {
+        "active_rules": 1614813710,
+        "active_secondary": 92274704,
+        "remembered_rules": 9029,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 0,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CURRENT-01",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 1,
+        "active_rules": 1614811700,
+        "active_secondary": 92274704,
+        "remembered_rules": 2882347008,
+        "remembered_secondary": 8388608
+      },
+      "expected": {
+        "active_rules": 1614815232,
+        "active_secondary": 75497488,
+        "remembered_rules": 2882347008,
+        "remembered_secondary": 8388608,
+        "remembered_rule_choice": 1,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CURRENT-02",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 1,
+        "active_rules": 65535,
+        "active_secondary": 25165824,
+        "remembered_rules": 0,
+        "remembered_secondary": 0
+      },
+      "expected": {
+        "active_rules": 0,
+        "active_secondary": 0,
+        "remembered_rules": 0,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 1,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CURRENT-03",
+      "inputs": {
+        "difficulty": 0,
+        "rules_answer": 1,
+        "remembered_rules": 0
+      },
+      "expected": {
+        "active_rules": 512,
+        "active_secondary": 0,
+        "remembered_rules": 0,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 1,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CURRENT-04",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 1,
+        "remembered_rules": 4096
+      },
+      "expected": {
+        "active_rules": 4096,
+        "active_secondary": 0,
+        "remembered_rules": 4096,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 1,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "STANDARD-NEWGAME-01",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 0,
+        "active_rules": 1614872575,
+        "active_secondary": 67108880,
+        "remembered_rules": 8192,
+        "remembered_secondary": 25165824
+      },
+      "expected": {
+        "active_rules": 1614813710,
+        "active_secondary": 0,
+        "remembered_rules": 8192,
+        "remembered_secondary": 25165824,
+        "remembered_rule_choice": 0,
+        "objective_facility": 0
+      },
+      "stage": "first_faction_reset_prefix"
+    },
+    {
+      "id": "CURRENT-NEWGAME-01",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 1,
+        "remembered_rules": 8192,
+        "active_secondary": 75497488,
+        "remembered_secondary": 0
+      },
+      "expected": {
+        "active_rules": 8192,
+        "active_secondary": 0,
+        "remembered_rules": 8192,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 1,
+        "objective_facility": 0
+      },
+      "stage": "first_faction_reset_prefix"
+    },
+    {
+      "id": "CUSTOM-BIT-00",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 1
+      },
+      "expected": {
+        "active_rules": 2304,
+        "active_secondary": 0,
+        "remembered_rules": 2304,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-01",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 2
+      },
+      "expected": {
+        "active_rules": 258,
+        "active_secondary": 0,
+        "remembered_rules": 258,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-02",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 4
+      },
+      "expected": {
+        "active_rules": 264,
+        "active_secondary": 0,
+        "remembered_rules": 264,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-03",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 8
+      },
+      "expected": {
+        "active_rules": 260,
+        "active_secondary": 0,
+        "remembered_rules": 260,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-04",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 16
+      },
+      "expected": {
+        "active_rules": 4352,
+        "active_secondary": 0,
+        "remembered_rules": 4352,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-05",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 32
+      },
+      "expected": {
+        "active_rules": 257,
+        "active_secondary": 0,
+        "remembered_rules": 257,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-06",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 64
+      },
+      "expected": {
+        "active_rules": 272,
+        "active_secondary": 0,
+        "remembered_rules": 272,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-07",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 128
+      },
+      "expected": {
+        "active_rules": 288,
+        "active_secondary": 0,
+        "remembered_rules": 288,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-08",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 256
+      },
+      "expected": {
+        "active_rules": 16640,
+        "active_secondary": 0,
+        "remembered_rules": 16640,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-09",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 512
+      },
+      "expected": {
+        "active_rules": 768,
+        "active_secondary": 0,
+        "remembered_rules": 768,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-10",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 1024
+      },
+      "expected": {
+        "active_rules": 320,
+        "active_secondary": 0,
+        "remembered_rules": 320,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-11",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 2048
+      },
+      "expected": {
+        "active_rules": 0,
+        "active_secondary": 0,
+        "remembered_rules": 0,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-12",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 4096
+      },
+      "expected": {
+        "active_rules": 8448,
+        "active_secondary": 0,
+        "remembered_rules": 8448,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-13",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 8192
+      },
+      "expected": {
+        "active_rules": 33024,
+        "active_secondary": 0,
+        "remembered_rules": 33024,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-14",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 16384
+      },
+      "expected": {
+        "active_rules": 384,
+        "active_secondary": 0,
+        "remembered_rules": 384,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-15",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 32768
+      },
+      "expected": {
+        "active_rules": 1280,
+        "active_secondary": 0,
+        "remembered_rules": 1280,
+        "remembered_secondary": 0,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-16",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 65536
+      },
+      "expected": {
+        "active_rules": 256,
+        "active_secondary": 8388608,
+        "remembered_rules": 256,
+        "remembered_secondary": 8388608,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    },
+    {
+      "id": "CUSTOM-BIT-17",
+      "inputs": {
+        "difficulty": 3,
+        "rules_answer": 2,
+        "checkboxes": 131072
+      },
+      "expected": {
+        "active_rules": 256,
+        "active_secondary": 16777216,
+        "remembered_rules": 256,
+        "remembered_secondary": 16777216,
+        "remembered_rule_choice": 2,
+        "objective_facility": 17
+      },
+      "stage": "after_rule_selection"
+    }
+  ]
+}

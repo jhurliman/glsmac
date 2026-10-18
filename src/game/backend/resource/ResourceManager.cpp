@@ -239,8 +239,10 @@ UNWRAPIMPL_PTR( ResourceManager )
 void ResourceManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
 	buf.WriteInt( m_resources.size() );
-	for ( const auto& it : m_resources ) {
-		const auto& res = it.second;
+	// Definition order is the live tile-glyph presentation order. Preserve it
+	// in the existing record sequence instead of replacing it with hash order.
+	for ( const auto& id : m_resources_order ) {
+		const auto* res = m_resources.at( id );
 		buf.WriteString( res->m_id );
 		buf.WriteString( resource::Resource::Serialize( res ).ToString() );
 	}

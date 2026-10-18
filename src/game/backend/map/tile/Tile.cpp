@@ -79,6 +79,12 @@ void Tile::Update() {
 	}
 
 	is_water_tile = corners_in_water > 2;
+	// Imported resource altitude is independent of the interpolated display
+	// contour. Retain its land/sea identity after every renderer/restore update.
+	if (tiles && tiles->GetMap()) {
+		const auto& policy=tiles->GetMap()->GetResourcePolicy();
+		if(policy && policy->OriginalPlanet()) {is_water_tile=policy->Altitude(*this)<resource::smac::AltitudeBand::Land3;}
+	}
 }
 
 void Tile::Clear() {

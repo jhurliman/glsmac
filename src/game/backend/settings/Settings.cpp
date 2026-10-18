@@ -11,6 +11,7 @@
 #include "gse/value/Float.h"
 #include "gse/value/Ptr.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace backend {
@@ -20,6 +21,7 @@ WRAPMAP( type, MapSettings::type_t,
 	{ MapSettings::MT_RANDOM, "random" },
 	{ MapSettings::MT_CUSTOM, "custom" },
 	{ MapSettings::MT_MAPFILE, "mapfile" },
+	{ MapSettings::MT_INSTALLED_PLANET, "planet" },
 )
 
 WRAPIMPL_DYNAMIC_GETTERS( MapSettings )
@@ -92,7 +94,7 @@ void MapSettings::Deserialize( types::Buffer buf ) {
 	MapSettings next;
 	if ( buf.ReadBool() ) { next.m_smac_world_size = SmacWorldSizeSelection::Deserialize( types::Buffer( buf.ReadString() ) ); }
 	const auto raw_type = buf.ReadInt();
-	if ( raw_type < MT_RANDOM || raw_type > MT_MAPFILE ) { THROW( "Unknown map settings type" ); }
+	if ( raw_type < MT_RANDOM || raw_type > MT_INSTALLED_PLANET ) { THROW( "Unknown map settings type" ); }
 	next.type = static_cast< type_t >( raw_type );
 	next.filename = buf.ReadString();
 	next.size_x = buf.ReadInt();
@@ -140,6 +142,8 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 		THROW( "Gameplay ruleset is locked; return to the main menu to start a new game" );
 	}
 	m_ruleset = selected;
+	m_smac_campaign_rules.reset();
+	m_campaign_rules_locked=false;
 	m_smac_resource_rules.reset();
 	m_smac_production_rules.reset();
 	m_smac_technology_rules.reset();
@@ -186,6 +190,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	// The later State admission also accounts for configured faction metadata.
 	GlobalSettings staged;
 	staged.m_ruleset = m_ruleset;
+	staged.m_smac_campaign_rules=m_smac_campaign_rules;
 	staged.map.Deserialize( map.Serialize() );
 	staged.rules.Deserialize( rules.Serialize() );
 	staged.difficulty_level = difficulty_level;
@@ -248,6 +253,33 @@ void GlobalSettings::SelectSmacCustomSize( const int64_t width, const int64_t he
 	map.SetSmacWorldSize( SmacWorldSizeRules::SelectCustom( width, height ) );
 }
 
+const std::optional< SmacCampaignRules >& GlobalSettings::GetSmacCampaignRules() const { return m_smac_campaign_rules; }
+
+bool GlobalSettings::IsOrdinarySmacCampaign() const {
+    return m_ruleset==RULESET_SMAC && map.IsOrdinaryCampaignMap()
+        && ((!m_smac_campaign_rules && map.type!=MapSettings::MT_INSTALLED_PLANET)
+            || (m_smac_campaign_rules && m_smac_campaign_rules->IsOrdinary() && m_smac_campaign_rules->menu_choice>=0));
+}
+
+void GlobalSettings::SelectSmacCampaignRules(const bool current) {
+    if(m_ruleset!=RULESET_SMAC || m_campaign_rules_locked) {THROW("SMAC campaign options are unavailable or frozen");}
+    SmacCampaignRules next=m_smac_campaign_rules.value_or(SmacCampaignRules{});
+    // Port initial preference policy: until customization exists, Current starts
+    // from Standard. This is not a claim about the original fresh preferences.
+    if(!m_smac_campaign_rules) {next.remembered_primary=SmacCampaignRules::STANDARD;}
+    next.BeginOrdinary();
+    if(current) {next.SelectCurrent(difficulty_level==-3);} else {next.SelectStandard();}
+    m_smac_campaign_rules=next;
+}
+
+void GlobalSettings::SelectInstalledPlanet() {
+	if(m_ruleset!=RULESET_SMAC || !m_smac_world_size_rules || map.m_world_size_locked) {THROW("Installed Planet selection requires unlocked SMAC settings");}
+	// Original map-loader authority, not the generated Standard preset. The
+	// installed file retains category4 with80x80 geometry (PLANET-IMPORT001).
+	map.SetSmacWorldSize({4,80,80});map.type=MapSettings::MT_INSTALLED_PLANET;map.filename.clear();
+    map.ocean_coverage=0.6f; // representation of serialized category1, RE-PLANET-OCEAN001
+}
+
 void GlobalSettings::RestoreSmacWorldSize( const int64_t category, const int64_t width, const int64_t height ) {
 	if ( category == 99 ) { SelectSmacCustomSize( width, height ); return; }
 	if ( m_ruleset != RULESET_SMAC || !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
@@ -270,10 +302,14 @@ void GlobalSettings::ValidateWorldSize( const bool require_selection ) const {
 	if ( !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
 	if ( !selection ) { if ( require_selection ) { THROW( "Select a SMAC world size before starting a game" ); } return; }
 	if ( map.type == MapSettings::MT_MAPFILE ) { THROW( "A map file does not establish a SMAC world-size category" ); }
+	if ( map.type == MapSettings::MT_INSTALLED_PLANET ) {
+		if (!(*selection==SmacWorldSizeSelection{4,80,80})) {THROW("Installed Planet requires its original category4 and80x80 dimensions");}
+		return;
+	}
 	m_smac_world_size_rules->ValidateSelection( *selection );
 }
 
-void GlobalSettings::LockWorldSize() { ValidateWorldSize(); if ( m_ruleset == RULESET_SMAC ) { map.LockWorldSize(); } }
+void GlobalSettings::LockWorldSize() { ValidateWorldSize(); m_campaign_rules_locked=true; if ( m_ruleset == RULESET_SMAC ) { map.LockWorldSize(); } }
 
 SmacProductionPrerequisite GlobalSettings::GetSmacFacilityPrerequisite( const int32_t source_id ) const {
 	if ( !m_smac_production_rules || !m_smac_technology_rules || source_id < 1 || source_id > 71 ) {
@@ -299,6 +335,8 @@ bool GlobalSettings::IsRulesetLocked() const {
 void GlobalSettings::ResetRuleset() {
 	m_ruleset = RULESET_UNSELECTED;
 	m_ruleset_locked = false;
+	m_smac_campaign_rules.reset();
+	m_campaign_rules_locked=false;
 	m_smac_resource_rules.reset();
 	m_smac_production_rules.reset();
 	m_smac_technology_rules.reset();
@@ -314,6 +352,16 @@ void GlobalSettings::ResetRuleset() {
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
+            { "select_campaign_rules", NATIVE_CALL( this ) {
+                N_EXPECT_ARGS(1); N_GETVALUE(current,0,Bool);
+                try {SelectSmacCampaignRules(current);} catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+                return VALUE(gse::value::Undefined);
+            } ) },
+			{ "select_installed_planet", NATIVE_CALL( this ) {
+				N_EXPECT_ARGS(0);
+				try {SelectInstalledPlanet();} catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+				return VALUE(gse::value::Undefined);
+			} ) },
 			{ "get_world_size", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				try {
@@ -361,7 +409,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_territory_rules.has_value() ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_terraforming_rules.has_value() ) { THROW( "Gameplay ruleset and terraforming profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 17 );
+	buf.WriteInt( 18 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -388,6 +436,11 @@ const types::Buffer GlobalSettings::Serialize() const {
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
 	buf.WriteString( game_name );
+	buf.WriteBool(m_smac_campaign_rules.has_value());
+	if(m_smac_campaign_rules) {
+		if(m_ruleset!=RULESET_SMAC) {THROW("Non-SMAC campaign options");}
+		buf.WriteString(m_smac_campaign_rules->Serialize());
+	}
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
 
 	return buf;
@@ -395,9 +448,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 17 ) {
-		THROW( "Unsupported global settings format (expected version 17)" );
-	}
+	const auto version=buf.ReadInt();
+	if(version!=17 && version!=18) {THROW("Unsupported global settings format");}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
 	if ( ( ruleset == RULESET_SMAC ) != has_smac_rules ) {
@@ -477,7 +529,9 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	const auto& next_selection = next_map.GetSmacWorldSize();
 	if ( next_selection ) {
 		if ( !world_sizes || next_map.type == MapSettings::MT_MAPFILE ) { THROW( "Unexpected SMAC world-size selection" ); }
-		world_sizes->ValidateSelection( *next_selection );
+		if(next_map.type==MapSettings::MT_INSTALLED_PLANET) {
+			if(ruleset!=RULESET_SMAC || !(*next_selection==SmacWorldSizeSelection{4,80,80})) {THROW("Unexpected installed Planet geometry");}
+		} else {world_sizes->ValidateSelection( *next_selection );}
 	}
 	const auto rules_data = buf.ReadString();
 	// Default rules currently serialize no fields; V13 must not silently drop
@@ -485,6 +539,13 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( !rules_data.empty() ) { THROW( "Unexpected default rules fields in global settings" ); }
 	const auto next_difficulty = buf.ReadInt();
 	const auto next_name = buf.ReadString();
+    std::optional<SmacCampaignRules> campaign;
+    if(version>=18 && buf.ReadBool()) {
+        if(ruleset!=RULESET_SMAC) {THROW("Non-SMAC campaign options");}
+        campaign=SmacCampaignRules::Deserialize(buf.ReadString(SmacCampaignRules::MAX_WIRE_BYTES));
+    }
+    if(next_map.type==MapSettings::MT_INSTALLED_PLANET && (!campaign || !campaign->IsOrdinary() || campaign->menu_choice<0)) {THROW("Installed Planet requires explicit accepted ordinary campaign rules");}
+    if(m_campaign_rules_locked && campaign!=m_smac_campaign_rules) {THROW("Host changed frozen campaign options");}
 	if ( buf.lenr != buf.lenw ) {
 		THROW( "Unexpected fields in global settings" );
 	}
@@ -494,6 +555,8 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	difficulty_level = next_difficulty;
 	game_name = next_name;
 	m_ruleset = ruleset;
+	m_smac_campaign_rules=campaign;
+	m_campaign_rules_locked=true;
 	m_smac_resource_rules = parsed;
 	m_smac_production_rules = std::move( production );
 	m_smac_technology_rules = std::move( technologies );

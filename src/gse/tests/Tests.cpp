@@ -1,5 +1,6 @@
 #include "Tests.h"
 #include "Sound.h"
+#include "Flic.h"
 #include "UIClass.h"
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
@@ -30,6 +31,7 @@
 #include "SmacSpecialistRules.h"
 #include "SmacTerraformingRules.h"
 #include "GlsmacResourceMapPolicy.h"
+#include "SmacPlanetMap.h"
 #include "CanonicalResourceIntake.h"
 #include "SmacFacilityIdentity.h"
 #include "CvrContainerReader.h"
@@ -138,6 +140,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		AddSoundTests( task );
+		AddFlicTests( task );
 		AddUIClassTests( task );
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
@@ -336,6 +339,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacSpecialistRulesTests( task );
 		tests::AddSmacTerraformingRulesTests( task );
 	AddGlsmacResourceMapPolicyTests( task );
+	AddSmacPlanetMapTests( task );
 	AddCanonicalResourceIntakeTests( task );
 		tests::AddSmacFacilityIdentityTests( task );
 		tests::AddSmacTechnologyRulesTests( task );

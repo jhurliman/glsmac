@@ -2,6 +2,7 @@
 
 #include "types/Font.h"
 #include "util/FS.h"
+#include <cstdlib>
 
 namespace loader {
 namespace font {
@@ -32,17 +33,33 @@ types::Font* FontLoader::LoadFont( const resource::resource_t res, const unsigne
 	return it->second;
 }
 
-types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned char size ) {
-	const auto key = name + ":" + std::to_string( size );
+types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned char size, RasterMode mode ) {
+	const auto key = name + ":" + std::to_string( size ) + ( mode == RasterMode::MONOCHROME ? ":mono" : "" );
 	auto it = m_fonts.find( key );
 	if ( it == m_fonts.end() ) {
 		std::vector< unsigned char > data = {};
-		const auto path = GetCustomFilename( name );
+		auto path = TryGetCustomFilename( name );
+		if ( path.empty() && name == "arialbd.ttf" ) {
+			std::vector< std::string > candidates;
+#ifdef _WIN32
+			if ( const auto* windows = std::getenv( "WINDIR" ) ) { candidates.emplace_back( std::string( windows ) + "/Fonts/arialbd.ttf" ); }
+#elif defined( __APPLE__ )
+			candidates = { "/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/Library/Fonts/Arial Bold.ttf" };
+#else
+			candidates = { "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf", "/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf", "/mnt/c/Windows/Fonts/arialbd.ttf" };
+#endif
+			for ( const auto& candidate : candidates ) { if ( util::FS::FileExists( candidate ) ) { path = candidate; break; } }
+			if ( path.empty() ) {
+				Log( "Arial Bold is unavailable; title font fidelity requires arialbd.ttf in the game data or system fonts" );
+				path = GetCustomFilename( "arialnb.ttf" );
+			}
+		}
+		if ( path.empty() ) { path = GetCustomFilename( name ); }
 		util::FS::ReadFile( data, path );
 		it = m_fonts.insert(
 			{
 				key,
-				LoadFontImpl( path, data, size )
+				LoadFontImpl( path, data, size, mode )
 			}
 		).first;
 	}

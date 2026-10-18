@@ -45,7 +45,7 @@ GlsmacTerritoryTopology Map::PrepareSiteRatings(const GlsmacTerritoryTopology& t
 		// DisplayedTerrainV1 uses explicit visible bonuses/site markers and
 		// active legacy Jungle/Uranium flags. When owned, consume the actual raw
 		// detail byte, including suppression; never infer it from membership.
-		resolved[at]=smac_site::Tile{static_cast<uint8_t>(m_resource_policy->Altitude(square->is_water_tile,*square->elevation.center)),
+		resolved[at]=smac_site::Tile{static_cast<uint8_t>(m_resource_policy->Altitude(*square)),
 			static_cast<uint8_t>(square->is_water_tile ? 0 : square->moisture-tile::MOISTURE_ARID),
 			static_cast<uint8_t>(square->is_water_tile ? 0 : square->rockiness-tile::ROCKINESS_FLAT),topology.Regions()[at],
 			feature(tile::FEATURE_XENOFUNGUS),feature(tile::FEATURE_MONOLITH),bool(square->terraforming&tile::TERRAFORMING_FOREST),

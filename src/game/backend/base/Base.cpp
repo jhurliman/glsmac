@@ -1,5 +1,7 @@
 #include "Base.h"
+#include "SmacProductionDisplay.h"
 #include <limits>
+#include <algorithm>
 #include <set>
 #include <utility>
 
@@ -558,7 +560,15 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_smac_production_presentation",
 		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 0 );
+			N_EXPECT_ARGS_MIN_MAX(0,1);
+            // Optional current surplus is a pure display-formatting input. It
+            // grants no gameplay authority and cannot post or alter production.
+            std::optional<int32_t> surplus;
+            if(!arguments.empty()) {
+                N_GETVALUE(value,0,Int);
+                if(value<INT32_MIN || value>INT32_MAX) {GSE_ERROR(gse::EC.INVALID_CALL,"Production display surplus requires signed32");}
+                surplus=static_cast<int32_t>(value);
+            }
 			if ( !m_resource_context || !m_production || !m_production->queue ) { return VALUE( gse::value::Undefined ); }
 			const auto available = [ & ]( const ProductionItem& item ) {
 				return item.smac_source_id && (item.kind!=ProductionItemKind::Unit || *item.smac_source_id<64
@@ -586,6 +596,32 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			gse::value::object_properties_t fields{
 				{ "name", VALUE( gse::value::String,, label( m_production->current_item ) ) },
 			};
+            // Costs use the actual local faction/world/INDUSTRY authority.
+            // Foreign display labels do not grant that private calculation.
+            const auto kind=m_production->current_item.kind;
+            if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()
+                && (kind==ProductionItemKind::Unit || kind==ProductionItemKind::Facility)) {
+                std::optional<int32_t> cost;
+                // Unsupported cost domains must not hide an otherwise valid
+                // retained target/queue. This projection does not admit building it.
+                try {cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);}
+                catch(const std::runtime_error&) {}
+                if(cost) {fields.emplace("cost",VALUE(gse::value::Int,,*cost));}
+                bool unbuilt=true;
+                if(kind==ProductionItemKind::Facility) {
+                    for(const auto& facility:m_facilities) {
+                        if(!facility.second || !facility.second->m_smac_source_id
+                            || facility.second->m_smac_source_id==m_production->current_item.smac_source_id
+                            || (m_production->current_item.smac_source_id==3 && facility.second->m_smac_source_id==26)) {unbuilt=false;break;}
+                    }
+                }
+                // Installed-facility/special panel branches are outside the
+                // measured ordinary-unbuilt-item forecast, not a zero-turn guess.
+                if(cost && surplus && unbuilt && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
+                    const auto label=FormatSmacProductionForecast(*cost,m_production->minerals,*surplus);
+                    if(label) {fields.emplace("forecast",VALUE(gse::value::String,,*label));}
+                }
+            }
 			if ( m_production->queue ) {
 				gse::value::array_elements_t queue;
 				for ( const auto& item : *m_production->queue ) { queue.push_back( VALUE( gse::value::String,, label( item ) ) ); }
@@ -828,6 +864,56 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return VALUEEXT( gse::value::Object, GSE_CALL, result );
 		} ),
 	},
+    {
+        "get_smac_facility_details",
+        NATIVE_CALL(this) {
+            N_EXPECT_ARGS(1);N_GETVALUE(id,0,String);
+            if(m_game->GetBM()->GetBase(m_id)!=this) {THROW("Facility details require a registered Base");}
+            const auto found=m_facilities.find(id);if(found==m_facilities.end()) {return VALUE(gse::value::Undefined);}
+            const auto* def=found->second;
+            if(!def || m_game->GetBM()->GetFacilityDef(id)!=def) {THROW("Facility details require a registered installed definition");}
+            gse::value::object_properties_t fields{
+                {"name",VALUE(gse::value::String,,def->m_name)},
+                {"description",VALUE(gse::value::String,,def->m_description)}
+            };
+            const auto& render=def->m_render_info;
+            if(!render.file.empty() && render.width && render.height) {
+                const auto art=render.file+":crop("+std::to_string(render.x)+","+std::to_string(render.y)+","+
+                    std::to_string(uint32_t(render.x)+render.width-1)+","+std::to_string(uint32_t(render.y)+render.height-1)+")";
+                fields.emplace("art",VALUE(gse::value::String,,art));
+            }
+            const auto& global=m_game->GetState()->m_settings.global;
+            const auto& production=global.GetSmacProductionRules();const auto& technology=global.GetSmacTechnologyRules();
+            if(m_resource_context && def->m_smac_source_id && *def->m_smac_source_id>=1 && *def->m_smac_source_id<=33 && production) {
+                m_game->GetBM()->ValidateSmacFacilityDef(def);
+                const auto source=*def->m_smac_source_id;const auto& row=production->facilities.at(source-1);
+                fields.at("name")=VALUE(gse::value::String,,row.name);
+                fields.emplace("source_id",VALUE(gse::value::Int,,source));
+                if(row.maintenance>=0) {fields.emplace("listed_maintenance",VALUE(gse::value::Int,,row.maintenance));}
+                if(technology) {
+                    const auto reference=technology->ResolveToken(row.prerequisite);
+                    using Kind=settings::SmacTechnologyReference::Kind;
+                    if(reference.kind==Kind::NONE) {fields.emplace("prerequisite",VALUE(gse::value::String,,"None"));}
+                    else if(reference.kind==Kind::DISABLED) {fields.emplace("prerequisite",VALUE(gse::value::String,,"Unavailable"));}
+                    else if(reference.kind==Kind::TECHNOLOGY_ID && reference.technology_id) {
+                        fields.emplace("prerequisite",VALUE(gse::value::String,,technology->technologies.at(*reference.technology_id).name));
+                    }
+                }
+                if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()) {
+                    const auto item=m_game->MakeSmacProductionItem(m_owner,ProductionItemKind::Facility,source);
+                    // Optional private providers do not erase registered metadata.
+                    try {const auto cost=m_game->GetSmacProductionCost(m_owner,item);fields.emplace("cost",VALUE(gse::value::Int,,cost));}
+                    catch(const std::runtime_error&) {}
+                    try {
+                        const auto energy=m_game->GetCanonicalBaseEnergy(*this);
+                        const auto fee=std::find_if(energy.maintenance_fees.begin(),energy.maintenance_fees.end(),[&](const auto& entry){return entry.first==source;});
+                        fields.emplace("current_maintenance",VALUE(gse::value::Int,,fee==energy.maintenance_fees.end() ? 0 : fee->second));
+                    } catch(const std::runtime_error&) {}
+                }
+            }
+            return VALUE(gse::value::Object,,GSE_CALL_NOGC,fields);
+        })
+    },
 	{
 		"has_facility",
 		NATIVE_CALL( this ) {

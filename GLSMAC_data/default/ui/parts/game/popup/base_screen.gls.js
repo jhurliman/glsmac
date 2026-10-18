@@ -162,10 +162,12 @@ return {
 		let intake = undefined;
 		let consumption = undefined;
 		let energy = undefined;
+        let mineral_surplus = undefined;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+            mineral_surplus = calculation.minerals.surplus;
 			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
@@ -215,13 +217,7 @@ return {
 			ecodamage: canonical ? 'N/A' : 0, // TODO
 		});
 
-		let facilities = [];
-		const ff = base.get_facilities();
-		for (f in ff) {
-			facilities :+ff[f].name;
-		}
-
-		this.sections.facilities.set(facilities);
+		this.sections.facilities.set({base: base, entries: base.get_facilities()});
 
 		const resource_data = {
 			nutrients: {
@@ -283,6 +279,7 @@ return {
 
 		this.sections.bottom_bar.set({
 			base: base,
+            mineral_surplus: mineral_surplus,
 		});
 	},
 
@@ -330,6 +327,7 @@ return {
 	},
 
 	on_hide: () => {
+		this.sections.facilities.reset();
 		this.sections.specialist_selection.hide_view();
 		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
 		this.sections.bottom_bar.frame.hide();

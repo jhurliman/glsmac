@@ -805,7 +805,7 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
-	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population ) const;
+	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population, const base::FacilityDef* granted = nullptr ) const;
 	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
 	base::SmacUnitSupportResult CalculateCanonicalUnitSupport( const base::Base& base, size_t population,
 		const unit::Unit* prepared_unit, const std::vector<size_t>& removed = {} ) const;

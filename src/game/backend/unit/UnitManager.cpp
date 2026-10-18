@@ -999,7 +999,7 @@ void UnitManager::PushUpdates() {
                 auto fr=FrontendRequest(FrontendRequest::FR_UNIT_DESPAWN);
                 fr.data.unit_despawn.unit_id=unit_id;m_game->AddFrontendRequest(fr);
             }
-			if ( uu.ops & (UUO_SPAWN | UUO_OWNER_CHANGE) ) {
+            if ( uu.ops & (UUO_SPAWN | UUO_OWNER_CHANGE) ) {
 				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;

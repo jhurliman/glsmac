@@ -11,6 +11,7 @@
 #include "gse/value/Float.h"
 #include "gse/value/Ptr.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace backend {

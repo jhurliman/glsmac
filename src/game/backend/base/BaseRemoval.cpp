@@ -1,5 +1,6 @@
 #include "BaseManager.h"
 #include "Base.h"
+#include "SmacPopulationStep.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
@@ -33,6 +34,10 @@ void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
         const auto* successor=GetBase(*std::next(position));
         if (!successor || successor->m_owner!=base.m_owner) {THROW("Foreign compacted successor continuation is not yet admitted");}
         if (!successor->GetSmacUpkeepCache()) {THROW("Compacted successor lacks its retained resource calculation");}
+        const auto population=static_cast<int32_t>(successor->m_pops.size());
+        const auto plan=SmacPopulationStep::Prepare(m_game->CalculateCanonicalPopulationRules(*successor,population),population,
+            successor->GetAccumulatedNutrients(),successor->GetSmacUpkeepCache()->calculation.nutrients.surplus,false);
+        if (!plan.stored_nutrients) {THROW("Compacted successor removal requires the disposition continuation");}
     }
     const bool other_owned=std::any_of(m_base_order.begin(),m_base_order.end(),[&](size_t id){
         const auto* candidate=GetBase(id);

@@ -326,6 +326,10 @@ types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t 
 	return result;
 }
 
+types::texture::Texture* TextureLoader::LoadSmacMenuTexture( const std::string&, const std::string&, size_t, size_t ) {
+	THROW( "SMAC menu composition is unsupported by this texture backend" );
+}
+
 types::texture::Texture* TextureLoader::GetColorTexture( const types::Color& color ) {
 	const types::Color::rgba_t c = color.GetRGBA();
 	const auto& it = m_color_textures.find( c );

@@ -1,5 +1,7 @@
 #include "SDL2.h"
 #include "SmacPalette.h"
+#include "loader/flic/MenuCompositor.h"
+#include "util/FinallyGuard.h"
 
 #include <memory>
 
@@ -34,6 +36,40 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
 	ASSERT( rw, "rw is null" );
 	return IMG_Load_RW( rw, 1 );
+}
+
+types::texture::Texture* SDL2::LoadSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame_index, size_t rows ) {
+	const auto animation_path = GetCustomFilename( animation ), background_path = GetCustomFilename( background );
+	const auto key = "smac-menu:" + animation_path + ":" + background_path + ":" + std::to_string( frame_index ) + ":" + std::to_string( rows );
+	const auto cached = m_textures.find( key );
+	if ( cached != m_textures.end() ) { return cached->second; }
+	std::vector< unsigned char > bytes;
+	util::FS::ReadFile( bytes, animation_path );
+	const auto frame = loader::flic::FlicReader::ReadFrame( bytes, frame_index );
+	using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
+	util::FS::ReadFile( bytes, background_path );
+	Surface image( load_image( bytes ), SDL_FreeSurface );
+	util::FS::ReadFile( bytes, GetCustomFilename( "palette.pcx" ) );
+	Surface palette_image( load_image( bytes ), SDL_FreeSurface );
+	ApplySmacPalette( image.get(), palette_image ? palette_image->format->palette : nullptr );
+	std::array< std::array< uint8_t, 3 >, 256 > palette;
+	for ( size_t i = 0; i < palette.size(); ++i ) {
+		const auto& color = palette_image->format->palette->colors[ i ];
+		palette[ i ] = { color.r, color.g, color.b };
+	}
+	std::vector< uint8_t > background_indices( size_t( image->w ) * image->h );
+	for ( int y = 0; y < image->h; ++y ) {
+		std::copy_n( static_cast< const uint8_t* >( image->pixels ) + y * image->pitch, image->w, background_indices.data() + size_t( y ) * image->w );
+	}
+	const auto composed = loader::flic::ComposeMenu( frame, background_indices, image->w, image->h, palette, rows );
+	NEWV( texture, types::texture::Texture, key, composed.width, composed.height );
+	util::FinallyGuard cleanup( [ & ] { if ( texture ) { DELETE( texture ); } } );
+	memcpy( texture->m_bitmap, composed.rgba.data(), composed.rgba.size() );
+	texture->FullUpdate();
+	m_textures.emplace( key, texture );
+	auto* result = texture;
+	texture = nullptr;
+	return result;
 }
 
 types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {

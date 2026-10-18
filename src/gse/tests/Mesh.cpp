@@ -730,7 +730,30 @@ static std::string CheckDisplayPalette() {
 	GT_OK();
 }
 
+static std::string CheckViewportEdges() {
+	try {
+		WidgetGraphicsFixture graphics;
+		class Probe : public ::ui::geometry::Geometry {
+		public:
+			explicit Probe( Geometry* parent = nullptr ) : Geometry( nullptr, parent, GT_RECTANGLE ) {}
+			void UpdateImpl() override {}
+		} root;
+		root.SetWidth( 64 ); root.SetHeight( 64 ); root.Show();
+		const auto& full = root.GetEffectiveArea();
+		GT_ASSERT( full.right == 64 && full.bottom == 64 && full.width == 64 && full.height == 64,
+			"full viewport cache lost the last row or column" );
+		Probe corner( &root );
+		corner.SetLeft( 63 ); corner.SetTop( 63 ); corner.SetWidth( 1 ); corner.SetHeight( 1 ); corner.Show();
+		const auto& pixel = corner.GetEffectiveArea();
+		GT_ASSERT( pixel.left == 63 && pixel.top == 63 && pixel.right == 64 && pixel.bottom == 64 && pixel.width == 1 && pixel.height == 1,
+			"bottom-right pixel was clipped to an empty cache" );
+	}
+	catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
+	GT_OK();
+}
+
 void AddMeshTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "UI viewport cache includes the bottom-right pixel", GT() { return CheckViewportEdges(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
 	task->AddTest(

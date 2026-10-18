@@ -56,6 +56,9 @@ return (m) => {
 	let current_menublock = null;
 	let current_entries = [];
 	let menublock_animation = null;
+	let native_title = false;
+	let native_art = null;
+	let title_labels = [];
 
 	let active_entry_index = null;
 
@@ -67,8 +70,25 @@ return (m) => {
 		}
 	};
 
+	const set_title_frame = (frame) => {
+		native_art.background = 'openitem.flc:smacmenu(openinga.pcx,' + #to_string(frame) + ',7):stretch()';
+	};
+
 	const slideout_and_cb = (cb) => {
 		if (menublock_animation == null) {
+			if (native_title) {
+				let frame = 6;
+				set_title_frame(frame);
+				frame++;
+				menublock_animation = current_menublock.timer(10, () => {
+					if (frame < 12) { set_title_frame(frame); frame++; return true; }
+					menublock_animation = null;
+					remove_active_menublock();
+					cb();
+					return false;
+				});
+				return;
+			}
 			menublock_animation = current_menublock.timer(10, () => {
 				current_menublock.right = current_menublock.right - 60;
 				if (current_menublock.right > -414) {
@@ -91,11 +111,27 @@ return (m) => {
 			}
 			current_menublock.remove();
 			current_menublock = null;
+			native_art = null;
+			title_labels = [];
 			active_entry_index = null;
 		}
 	};
 
 	const create_item = (text, bottom) => {
+		if (native_title) {
+			const button = current_menublock.button({
+				align: 'bottom left', left: 15, bottom: bottom,
+				width: 285, height: 75,
+			});
+			const label = button.text({
+				align: 'bottom left', left: 12, bottom: 24,
+				text: #uppercase(text), font: 'arialbd.ttf:18:mono', color: 'rgb(104, 140, 196)',
+			});
+			const dimensions = label.measure();
+			label.left = 12 + (277 - dimensions.width) / 2;
+			title_labels:+label;
+			return button;
+		}
 		const itemobj = current_menublock.panel({
 			class: 'menublock-item',
 			bottom: bottom,
@@ -122,11 +158,15 @@ return (m) => {
 		select: (index) => {
 			if (index != active_entry_index) {
 				if (active_entry_index != null) {
-					((current_entries[active_entry_index]).obj).removeclass('menublock-item-active');
+					if (native_title) {
+						(title_labels[active_entry_index]).color = 'rgb(104, 140, 196)';
+					} else { ((current_entries[active_entry_index]).obj).removeclass('menublock-item-active'); }
 				}
 				active_entry_index = index;
 				const entry = (current_entries[active_entry_index]);
-				(entry.obj).addclass('menublock-item-active');
+				if (native_title) {
+					(title_labels[active_entry_index]).color = 'rgb(176, 212, 235)';
+				} else { (entry.obj).addclass('menublock-item-active'); }
 				if (#is_defined(entry.cb_on_active)) {
 					entry.cb_on_active();
 				}
@@ -138,10 +178,20 @@ return (m) => {
 			this.manager.push('sliding', data);
 
 			remove_active_menublock();
+			native_title = #is_defined(data.native_title) && data.native_title;
 
 			current_menublock = m.root.area({
 				class: 'menublock-items',
 			});
+
+			if (native_title) {
+				current_menublock.bottom = 0;
+				current_menublock.height = 525;
+				native_art = current_menublock.surface({
+					left: 0, top: 0, width: 354, height: 525,
+					background: 'openitem.flc:smacmenu(openinga.pcx,0,7):stretch()',
+				});
+			}
 
 			current_menublock.sound({
 				sound: 'menu out.wav',
@@ -178,7 +228,8 @@ return (m) => {
 				}
 				return false;
 			});
-			let bottom = (#sizeof(data.entries) - 1) * 70;
+			const pitch = native_title ? 75 : 70;
+			let bottom = (#sizeof(data.entries) - 1) * pitch;
 			if (#is_defined(data.title)) {
 				create_item(data.title, bottom + 140).addclass('menublock-item-active');
 			}
@@ -211,7 +262,7 @@ return (m) => {
 					}
 					return false;
 				});
-				bottom -= 70;
+				bottom -= pitch;
 				current_entries:+current_entry;
 				index++;
 			}
@@ -219,6 +270,16 @@ return (m) => {
 				this.select(0);
 			}
 
+			if (native_title) {
+				current_menublock.right = 0;
+				let frame = 1;
+				menublock_animation = current_menublock.timer(10, () => {
+					if (frame < 6) { set_title_frame(frame); frame++; return true; }
+					menublock_animation = null;
+					return false;
+				});
+				return {};
+			}
 			current_menublock.right = -354;
 			menublock_animation = current_menublock.timer(10, () => {
 				current_menublock.right = current_menublock.right + 60;

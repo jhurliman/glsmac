@@ -62,7 +62,21 @@ Surface::Surface( DOM_ARGS_T )
 				ASSERT( !params.empty(), "texture params empty" );
 				const auto palette_flags = params.size() > 1 && params.at( 1 ) == "smacpalette()"
 					? types::texture::TF_SMAC_PALETTE : types::texture::TF_NONE;
-				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front(), palette_flags );
+				const bool is_smac_menu = params.size() > 1 && params.at( 1 ).find( "smacmenu(" ) == 0;
+				types::texture::Texture* texture = nullptr;
+				if ( is_smac_menu ) {
+					const auto& operation = params.at( 1 );
+					const auto arguments = util::String::Split( operation.substr( 9, operation.size() - 10 ), ',' );
+					long int frame, rows;
+					if ( operation.back() != ')' || arguments.size() != 3 ||
+						!util::String::ParseInt( arguments.at( 1 ), frame ) || !util::String::ParseInt( arguments.at( 2 ), rows ) || frame < 0 || rows <= 0 ) {
+						GSE_ERROR( gse::EC.UI_ERROR, "smacmenu expects background filename, nonnegative frame and positive row count" );
+					}
+					texture = g_engine->GetTextureLoader()->LoadSmacMenuTexture( params.front(), arguments.at( 0 ), frame, rows );
+				}
+				else {
+					texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front(), palette_flags );
+				}
 				if ( !texture ) {
 					GSE_ERROR( gse::EC.LOADER_ERROR, "Could not load texture: " + params.front() );
 				}
@@ -101,6 +115,10 @@ Surface::Surface( DOM_ARGS_T )
 						if ( it != params.begin() + 1 || palette_flags != types::texture::TF_SMAC_PALETTE ) {
 							GSE_ERROR( gse::EC.UI_ERROR, "smacpalette() must be the first texture operation" );
 						}
+					}
+					else if ( f == "smacmenu" ) {
+						f_expect_args( 3 );
+						if ( it != params.begin() + 1 || !is_smac_menu ) { GSE_ERROR( gse::EC.UI_ERROR, "smacmenu() must be the first texture operation" ); }
 					}
 					else if ( f == "stretch" ) {
 						f_expect_args( 0 );

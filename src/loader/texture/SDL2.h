@@ -16,6 +16,7 @@ CLASS( SDL2, TextureLoader )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+	types::texture::Texture* LoadSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame, size_t rows ) override;
 
 protected:
 

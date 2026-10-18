@@ -35,6 +35,7 @@ private:
 	scene::actor::Text* m_actor = nullptr;
 	std::string m_fontname = "";
 	uint16_t m_fontsize = 0;
+	bool m_monochrome = false;
 
 	transform_t m_transform = T_NONE;
 

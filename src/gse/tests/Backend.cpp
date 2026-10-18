@@ -2268,7 +2268,7 @@ public:
 		} textures;
 		class Fonts final : public loader::font::FontLoader {
 		protected:
-			types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char size) override {
+			types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char size,loader::font::RasterMode) override {
 				NEWV(font,types::Font,name+std::to_string(size));
 				util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});font->m_dimensions={2,6};
 				for(size_t i=32;i<128;++i) {auto& symbol=font->m_symbols[i];symbol={2,0,1,1,0,1,static_cast<unsigned char*>(malloc(1))};if(!symbol.data) {throw std::bad_alloc();}*symbol.data=255;}

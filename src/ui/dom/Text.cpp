@@ -8,6 +8,8 @@
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
 #include "util/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Object.h"
 
 namespace ui {
 namespace dom {
@@ -24,6 +26,14 @@ Text::Text( DOM_ARGS )
 	m_actor = new scene::actor::Text( nullptr, "" );
 	UpdateFont();
 	m_geometry->AsText()->SetActor( m_actor );
+	Method( GSE_CALL, "measure", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 0 );
+		gse::value::object_properties_t dimensions = {
+			{ "width", VALUE( gse::value::Int,, int64_t( m_actor->GetWidth() ) ) },
+			{ "height", VALUE( gse::value::Int,, int64_t( m_actor->GetHeight() ) ) },
+		};
+		return VALUE( gse::value::Object,, GSE_CALL_NOGC, dimensions );
+	} ) );
 	Actor( m_actor );
 
 	Property(
@@ -78,8 +88,8 @@ Text::Text( DOM_ARGS )
 		GSE_CALL, "font", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
-			if ( parts.size() != 2 ) {
-				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v->ToString() );
+			if ( parts.size() != 2 && ( parts.size() != 3 || parts.at( 2 ) != "mono" ) ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>[:mono]' ), got: " + v->ToString() );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
@@ -87,11 +97,13 @@ Text::Text( DOM_ARGS )
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;
+			m_monochrome = parts.size() == 3;
 			UpdateFont();
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_fontname = "";
 			m_fontsize = 0;
+			m_monochrome = false;
 			UpdateFont();
 		}
 	);
@@ -143,7 +155,7 @@ void Text::UpdateFont() {
 			font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
 		}
 		else {
-			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
+			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize, m_monochrome ? loader::font::RasterMode::MONOCHROME : loader::font::RasterMode::GRAYSCALE );
 		}
 	}
 	m_actor->SetFont( font );

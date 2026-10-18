@@ -909,7 +909,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto installed=fixture.Snapshot();
             auto* built=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
             GT_ASSERT(built->value.count("cost")==1 && built->value.count("forecast")==0 && fixture.Snapshot()==installed,
-                "already installed facility entered the ordinary-unbuilt forecast branch");GT_OK();
+                "already installed facility entered the ordinary-unbuilt forecast branch");
+            base->m_facilities.clear();bm->DefineFacility(new FacilityDef("progress-dome","Pressure Dome","",80,{},26));
+            base->m_facilities.emplace("progress-dome",bm->GetFacilityDef("progress-dome"));
+            const auto equivalent=fixture.Snapshot();
+            auto* dome_blocked=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(dome_blocked->value.count("cost")==1 && dome_blocked->value.count("forecast")==0
+                && fixture.Snapshot()==equivalent && fixture.GameplayRandom()==random,"Pressure Dome did not withhold the unbuildable Tanks forecast");GT_OK();
         });
     });
 

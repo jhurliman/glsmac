@@ -606,7 +606,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
                 if(kind==ProductionItemKind::Facility) {
                     for(const auto& facility:m_facilities) {
                         if(!facility.second || !facility.second->m_smac_source_id
-                            || facility.second->m_smac_source_id==m_production->current_item.smac_source_id) {unbuilt=false;break;}
+                            || facility.second->m_smac_source_id==m_production->current_item.smac_source_id
+                            || (m_production->current_item.smac_source_id==3 && facility.second->m_smac_source_id==26)) {unbuilt=false;break;}
                     }
                 }
                 // Installed-facility/special panel branches are outside the

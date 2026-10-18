@@ -97,7 +97,7 @@ inline std::string ProductionSource() {
 	std::string source = "#RULES\n";
 	for ( size_t row = 1 ; row <= 70 ; ++row ) {
 		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
-			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : row == 48 ? Territory().RawBorderDistance() : 0;
+			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : row == 48 ? Territory().RawBorderDistance() : (row == 22 || row == 28 || row == 30) ? 25 : 0;
 		const auto token = row == 54 ? "Tech0" : row == 55 ? "Tech1" : row == 56 ? "Tech2" : row == 58 ? "Tech3" : "";
 		source += ( *token ? std::string( token ) : std::to_string( value ) ) + ", ; synthetic annotation\n";
 	}
@@ -222,6 +222,7 @@ inline bool Matches( const game::backend::settings::GlobalSettings& settings ) {
 		&& settings.GetSmacFactionStartupRules() && *settings.GetSmacFactionStartupRules() == Factions()
 		&& settings.GetSmacPredefinedUnitRules() && *settings.GetSmacPredefinedUnitRules() == PredefinedUnits()
 		&& settings.GetSmacMovementRules() && *settings.GetSmacMovementRules() == Movement()
+		&& settings.GetSmacCombatRules() && *settings.GetSmacCombatRules() == game::backend::settings::SmacCombatRules{25,25,25}
 		&& settings.GetSmacSpecialistRules() && *settings.GetSmacSpecialistRules() == Specialists()
 		&& settings.GetSmacTerraformingRules() && *settings.GetSmacTerraformingRules() == terraforming_rules_fixture::Profile();
 }
@@ -239,7 +240,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	const std::optional< std::string >& specialists = std::nullopt,
 	const std::optional< bool > specialists_present = std::nullopt ) {
 	types::Buffer result;
-	result.WriteInt( 16 );
+	result.WriteInt( 17 );
 	result.WriteString( id );
 	result.WriteBool( present );
 	if ( present ) {
@@ -269,6 +270,7 @@ inline types::Buffer Payload( const std::string& id, const bool present,
 	if ( has_specialists ) { result.WriteString( specialists ? *specialists : Specialists().Serialize().ToString() ); }
 	result.WriteBool(present); if(present) { result.WriteString(Territory().Serialize().ToString()); }
 	result.WriteBool(present); if(present) { result.WriteString(terraforming_rules_fixture::Wire(terraforming_rules_fixture::Profile()).ToString()); }
+	result.WriteBool(present); if(present) {result.WriteString(game::backend::settings::SmacCombatRules{25,25,25}.Serialize().ToString());}
 	game::backend::settings::MapSettings map;
 	map.size_x = 86;
 	result.WriteString( map.Serialize().ToString() );

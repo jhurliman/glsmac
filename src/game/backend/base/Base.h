@@ -33,7 +33,7 @@ class Game;
 namespace slot {
 class Slot;
 }
-namespace unit { class Unit; class Def; enum class SmacMoraleMode : uint8_t; }
+namespace unit { class Unit; class UnitManager; class Def; enum class SmacMoraleMode : uint8_t; }
 namespace faction {
 class Faction;
 }
@@ -152,6 +152,7 @@ public:
 
 private:
 	friend class backend::Game;
+	friend class unit::UnitManager;
 	struct ProductionChoice { int32_t source_id; std::string name; int32_t cost; int64_t minerals; bool confirmation; };
 	void RequireSmacProductionSelection() const;
 	std::vector< ProductionChoice > GetSmacProductionChoices() const;

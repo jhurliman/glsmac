@@ -18,6 +18,7 @@
 #include "SmacFactionStartupRules.h"
 #include "SmacPredefinedUnitRules.h"
 #include "SmacMovementRules.h"
+#include "SmacCombatRules.h"
 #include "SmacTerritoryRules.h"
 
 #include "gse/Wrappable.h"
@@ -113,6 +114,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< SmacFactionStartupRules >& GetSmacFactionStartupRules() const;
 	const std::optional< SmacPredefinedUnitRules >& GetSmacPredefinedUnitRules() const;
 	const std::optional< SmacMovementRules >& GetSmacMovementRules() const;
+	const std::optional< SmacCombatRules >& GetSmacCombatRules() const;
 	const std::optional< SmacSpecialistRules >& GetSmacSpecialistRules() const;
 	const std::optional< SmacTerritoryRules >& GetSmacTerritoryRules() const;
 	const std::optional< SmacTerraformingRules >& GetSmacTerraformingRules() const;
@@ -152,6 +154,7 @@ private:
 	std::optional< SmacFactionStartupRules > m_smac_faction_startup_rules;
 	std::optional< SmacPredefinedUnitRules > m_smac_predefined_unit_rules;
 	std::optional< SmacMovementRules > m_smac_movement_rules;
+	std::optional< SmacCombatRules > m_smac_combat_rules;
 	std::optional< SmacSpecialistRules > m_smac_specialist_rules;
 	std::optional< SmacTerritoryRules > m_smac_territory_rules;
 	std::optional< SmacTerraformingRules > m_smac_terraforming_rules;

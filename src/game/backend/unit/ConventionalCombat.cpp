@@ -8,6 +8,9 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/FacilityDef.h"
 #include "gc/Space.h"
 #include <algorithm>
 #include <stdexcept>
@@ -40,16 +43,31 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 	const auto ordinary=[&](const map::tile::Tile* tile) {
 		return tile && tile->tiles==map->GetTilesPtr() && tile->coord.x<map->GetWidth() && tile->coord.y<map->GetHeight()
 			&& (tile->coord.x & 1)==(tile->coord.y & 1)
-			&& map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->is_water_tile && !tile->base && !tile->IsLocked()
+			&& map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->is_water_tile && !tile->IsLocked()
 			&& tile->rockiness==map::tile::ROCKINESS_FLAT && tile->features==map::tile::FEATURE_NONE && tile->terraforming==map::tile::TERRAFORMING_NONE;
 	};
-	if(!ordinary(source) || !ordinary(destination) || source==destination || !source->IsAdjactentTo(destination)
+	if(!ordinary(source) || !ordinary(destination) || source->base || source==destination || !source->IsAdjactentTo(destination)
 		|| source->units.size()!=1 || source->units.begin()->first!=actor->m_id || source->units.begin()->second!=actor
-		|| destination->units.size()!=1 || actor->m_animation_id) {throw std::runtime_error("Scout battle requires adjacent ordinary flat singleton squares without Bases or animation");}
+		|| destination->units.size()!=1 || actor->m_animation_id) {throw std::runtime_error("Scout battle requires adjacent ordinary flat singleton squares without source Base or animation");}
 	const auto target=destination->units.begin();auto* defender=GetUnit(target->first);
 	if(!defender || defender!=target->second || defender->m_id!=target->first || defender->GetTile()!=destination || !defender->IsConventional()
 		|| defender->m_owner==actor->m_owner || defender->m_animation_id) {throw std::runtime_error("Scout battle requires a current foreign singleton defender");}
 	defender->RequireConventionalReady();m_game->RequireSmacLocalHumanOwner(actor->m_owner);m_game->RequireSmacLocalHumanOwner(defender->m_owner);
+	auto* defending_base=destination->base;
+	if(defending_base) {
+		const auto& bases=m_game->GetBM()->GetBases();
+		const auto found=std::find_if(bases.begin(),bases.end(),[&](const auto& row){return row.second==defending_base;});
+		if(found==bases.end() || found->first!=defending_base->m_id || defending_base->GetTile()!=destination
+			|| defending_base->m_owner!=defender->m_owner) {throw std::runtime_error("Scout Base battle requires a current defender-owned Base");}
+		for(const auto& row:defending_base->m_facilities) {
+			const auto* facility=row.second;
+			if(!facility || !facility->m_smac_source_id || *facility->m_smac_source_id==4 || *facility->m_smac_source_id==5) {
+				throw std::runtime_error("Scout Base battle requires the unfortified defense rule");
+			}
+		}
+		(void)defending_base->GetSmacResourceContext();
+		if(m_game->GetBM()->m_dispatching_updates) {throw std::runtime_error("Scout Base battle cannot reenter Base update dispatch");}
+	}
 	const auto& rules=*state->m_settings.global.GetSmacPredefinedUnitRules();
 	const auto admit=[&](const Unit& unit) {
 		const auto& record=unit.Conventional();const auto context=ResolveConventional(record,unit.m_owner);
@@ -83,20 +101,24 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 		palette=identifier;
 	}
 	const auto& a=actor->Conventional();const auto& d=defender->Conventional();
+	const auto& combat=*state->m_settings.global.GetSmacCombatRules();
+	const smac_scout::StrengthBonuses bonuses{combat.fanatic_attack,defending_base ? combat.infantry_vs_base : 0,
+		defending_base ? combat.intrinsic_base_defense : 0};
 	auto result=smac_scout::ResolveFlatScoutAttack({actor->m_id,1,attack_stats.hit_points,a.stored_morale,attack_stats.effective_morale,a.spent},
-		{defender->m_id,1,defend_stats.hit_points,d.stored_morale,defend_stats.effective_morale,d.spent},attack_stats.full_allowance,random,{actor->m_id,defender->m_id},fanatic);
+		{defender->m_id,1,defend_stats.hit_points,d.stored_morale,defend_stats.effective_morale,d.spent},attack_stats.full_allowance,random,{actor->m_id,defender->m_id},fanatic,bonuses);
 	auto* survivor=result.deleted_identity==actor->m_id ? defender : actor;auto* loser=survivor==actor ? defender : actor;
 	auto candidate=survivor->Conventional();candidate.damage=static_cast<uint8_t>(10-result.survivor.health);
 	candidate.stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);candidate.spent=static_cast<uint8_t>(result.survivor.spent);
 	(void)QueryConventionalUnit(candidate,ResolveConventional(candidate,survivor->m_owner),candidate.render_morale_mode);
 	auto history=simulation.hostility;history.RecordScoutBattle(actor_owner,defender_owner,survivor->Conventional().owner_simulation_id,
 		loser->Conventional().owner_simulation_id,loser->Conventional().design_id);
-	return {survivor,loser,candidate,std::move(history),std::move(result),palette};
+	return {survivor,loser,candidate,std::move(history),std::move(result),palette,survivor==actor ? defending_base : nullptr};
 }
 
 void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttack prepared) {
 	if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Scout attack requires its owning accumulation");}
 	auto removal=PrepareConventionalRemoval(GSE_CALL,{prepared.loser->m_id},nullptr,prepared.survivor);
+	if(prepared.defeated_base) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
 	const auto message=prepared.survivor->m_def->m_name+" defeated "+prepared.loser->m_def->m_name+".";
 	static_assert(std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
 	// All queues, sight, strings, inventory/history and survivor validation are
@@ -105,6 +127,7 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	m_game->m_simulation->value.hostility.owners.swap(prepared.history.owners);
 	m_game->m_simulation->value.gameplay_random=prepared.result.random;
 	if(prepared.palette_identifier) {m_game->m_smac_hit_palette_identifier=prepared.palette_identifier;}
+	if(prepared.defeated_base) {prepared.defeated_base->m_resource_context->recent_defender_loss=true;}
 	removal.Commit();removal.Notify(GSE_CALL);m_game->Message(message);
 }
 

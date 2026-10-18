@@ -77,8 +77,11 @@ AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Partic
 // RE-SMAC-FOCUSED-SCOUT-BATTLE-001: actual mode1 effective morale can differ
 // from stored morale through a real home/retained rating; FANATIC adds25%
 // attack strength. The live caller owns complete component/terrain admission.
+struct StrengthBonuses {
+	int32_t fanatic_attack=25, infantry_vs_base=0, intrinsic_base_defense=0;
+};
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance,
-	const SmacGameplayRandomState& random, const References& references, bool fanatic );
+	const SmacGameplayRandomState& random, const References& references, bool fanatic, const StrengthBonuses& bonuses = {} );
 
 enum class EmptyMove { Moved, Exhausted };
 struct EmptyMoveResult {

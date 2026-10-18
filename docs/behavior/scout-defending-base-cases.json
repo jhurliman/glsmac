@@ -1,0 +1,738 @@
+{
+  "research_id": "RE-SMAC-SCOUT-DEFENDING-BASE-001",
+  "scope": "One original key-admitted ordinary Scout attack on a Scout defending a resolved population2 unfortified Base, complete movement wrapper return and subsequent same-turn key refusal. Native catalog/factory and real rules prefix; Base record supplied, not founded. Established headless services only. Seed4 reused from earlier native winning receipt, never supplied outcome.",
+  "inputs": {
+    "width": 128,
+    "height": 64,
+    "horizontal_wrap": true,
+    "turn": 6,
+    "difficulty": 3,
+    "human_mask": 6,
+    "active_mask": 6,
+    "focus": 1,
+    "controller": 1,
+    "active_faction": 1,
+    "base_founded_in_probe": false,
+    "base": {
+      "id": 0,
+      "position": [
+        9,
+        9
+      ],
+      "owner": 2,
+      "population": 2,
+      "facilities": [],
+      "status": 0
+    },
+    "terrain": "adjacent clear flat land, no sensor or other improvement",
+    "design": {
+      "id": 2,
+      "chassis": "Infantry",
+      "weapon": "Gun",
+      "armor": "Scout",
+      "reactor": "Fission",
+      "abilities": []
+    },
+    "technology": [
+      [
+        6
+      ],
+      [
+        6
+      ]
+    ],
+    "initial_effective_morale_modes_0_1": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "initial_allowance": [
+      3,
+      3
+    ],
+    "fanatic": false,
+    "retained_morale": [
+      0,
+      0
+    ],
+    "faction_combat_scalars": [
+      0,
+      0
+    ],
+    "before": {
+      "units": [
+        {
+          "design": 2,
+          "owner": 1,
+          "position": [
+            8,
+            8
+          ],
+          "damage": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1,
+          "links": [
+            -1,
+            -1
+          ]
+        },
+        {
+          "design": 2,
+          "owner": 2,
+          "position": [
+            9,
+            9
+          ],
+          "damage": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": 0,
+          "links": [
+            -1,
+            -1
+          ]
+        }
+      ],
+      "selected": 0,
+      "secondary": 1,
+      "continuation": 0,
+      "crt": 4,
+      "shared": 3,
+      "map_present": [
+        true,
+        true
+      ],
+      "diplomacy": [
+        16,
+        16
+      ],
+      "bases": [
+        {
+          "id": 0,
+          "position": [
+            9,
+            9
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 2,
+          "assimilation": 0,
+          "status": 0,
+          "facilities": []
+        }
+      ],
+      "active_mask": 6,
+      "human_mask": 6,
+      "focus": 1,
+      "controller": 1,
+      "active_faction": 1,
+      "turn": 6,
+      "ending_state": 0,
+      "owned_bases": [
+        0,
+        1
+      ],
+      "technologies": [
+        [
+          6
+        ],
+        [
+          6
+        ]
+      ]
+    },
+    "crt_seed": 4,
+    "shared_seed": 3,
+    "seed_reference": "SCOUT-COMBAT-0007: prior native ordinary attacker victory, natural CRT state4"
+  },
+  "expected_after_wrapper": {
+    "units": [
+      {
+        "design": 2,
+        "owner": 1,
+        "position": [
+          8,
+          8
+        ],
+        "damage": 7,
+        "morale": 2,
+        "spent": 3,
+        "home": -1,
+        "links": [
+          -1,
+          -1
+        ]
+      }
+    ],
+    "selected": 0,
+    "secondary": -1,
+    "continuation": 0,
+    "crt": 3665287870,
+    "shared": 1018897798,
+    "map_present": [
+      true,
+      false
+    ],
+    "diplomacy": [
+      3355476248,
+      3355476248
+    ],
+    "bases": [
+      {
+        "id": 0,
+        "position": [
+          9,
+          9
+        ],
+        "owner": 2,
+        "former_owner": 2,
+        "population": 2,
+        "assimilation": 0,
+        "status": 8,
+        "facilities": []
+      }
+    ],
+    "active_mask": 6,
+    "human_mask": 6,
+    "focus": 1,
+    "controller": 1,
+    "active_faction": 1,
+    "turn": 6,
+    "ending_state": 0,
+    "owned_bases": [
+      0,
+      1
+    ],
+    "technologies": [
+      [
+        6
+      ],
+      [
+        6
+      ]
+    ]
+  },
+  "wrapper_return": 0,
+  "battle_core_return": 1,
+  "round_strengths": [
+    280,
+    280
+  ],
+  "health_before": [
+    10,
+    10
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "raw": [
+        51,
+        17945
+      ],
+      "draws": [
+        51,
+        25
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        0,
+        0
+      ],
+      "damage_after": [
+        0,
+        1
+      ],
+      "hit": "defender",
+      "crt_after": 3323539102
+    },
+    {
+      "round": 2,
+      "raw": [
+        27159,
+        386
+      ],
+      "draws": [
+        279,
+        106
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        0,
+        1
+      ],
+      "damage_after": [
+        0,
+        2
+      ],
+      "hit": "defender",
+      "crt_after": 2172805640
+    },
+    {
+      "round": 3,
+      "raw": [
+        17345,
+        27504
+      ],
+      "draws": [
+        265,
+        64
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        0,
+        2
+      ],
+      "damage_after": [
+        0,
+        3
+      ],
+      "hit": "defender",
+      "crt_after": 1802518722
+    },
+    {
+      "round": 4,
+      "raw": [
+        20815,
+        20576
+      ],
+      "draws": [
+        95,
+        136
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        0,
+        3
+      ],
+      "damage_after": [
+        1,
+        3
+      ],
+      "hit": "attacker",
+      "crt_after": 1348511052
+    },
+    {
+      "round": 5,
+      "raw": [
+        10960,
+        6020
+      ],
+      "draws": [
+        40,
+        140
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        1,
+        3
+      ],
+      "damage_after": [
+        2,
+        3
+      ],
+      "hit": "attacker",
+      "crt_after": 394542630
+    },
+    {
+      "round": 6,
+      "raw": [
+        5261,
+        28277
+      ],
+      "draws": [
+        221,
+        277
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        2,
+        3
+      ],
+      "damage_after": [
+        3,
+        3
+      ],
+      "hit": "attacker",
+      "crt_after": 4000656848
+    },
+    {
+      "round": 7,
+      "raw": [
+        24162,
+        930
+      ],
+      "draws": [
+        82,
+        90
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        3,
+        3
+      ],
+      "damage_after": [
+        4,
+        3
+      ],
+      "hit": "attacker",
+      "crt_after": 2208475850
+    },
+    {
+      "round": 8,
+      "raw": [
+        11002,
+        19737
+      ],
+      "draws": [
+        82,
+        137
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        4,
+        3
+      ],
+      "damage_after": [
+        5,
+        3
+      ],
+      "hit": "attacker",
+      "crt_after": 1293524884
+    },
+    {
+      "round": 9,
+      "raw": [
+        17913,
+        1682
+      ],
+      "draws": [
+        273,
+        2
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        5,
+        3
+      ],
+      "damage_after": [
+        5,
+        4
+      ],
+      "hit": "defender",
+      "crt_after": 110250670
+    },
+    {
+      "round": 10,
+      "raw": [
+        10319,
+        10474
+      ],
+      "draws": [
+        239,
+        114
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        5,
+        4
+      ],
+      "damage_after": [
+        5,
+        5
+      ],
+      "hit": "defender",
+      "crt_after": 686481048
+    },
+    {
+      "round": 11,
+      "raw": [
+        1102,
+        28279
+      ],
+      "draws": [
+        262,
+        279
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        5,
+        5
+      ],
+      "damage_after": [
+        6,
+        5
+      ],
+      "hit": "attacker",
+      "crt_after": 1853301202
+    },
+    {
+      "round": 12,
+      "raw": [
+        16179,
+        21197
+      ],
+      "draws": [
+        219,
+        197
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        6,
+        5
+      ],
+      "damage_after": [
+        6,
+        6
+      ],
+      "hit": "defender",
+      "crt_after": 1389170396
+    },
+    {
+      "round": 13,
+      "raw": [
+        11333,
+        12790
+      ],
+      "draws": [
+        133,
+        190
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        6,
+        6
+      ],
+      "damage_after": [
+        7,
+        6
+      ],
+      "hit": "attacker",
+      "crt_after": 838235190
+    },
+    {
+      "round": 14,
+      "raw": [
+        15811,
+        2607
+      ],
+      "draws": [
+        131,
+        87
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        7,
+        6
+      ],
+      "damage_after": [
+        7,
+        7
+      ],
+      "hit": "defender",
+      "crt_after": 170890336
+    },
+    {
+      "round": 15,
+      "raw": [
+        16929,
+        15514
+      ],
+      "draws": [
+        129,
+        114
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        7,
+        7
+      ],
+      "damage_after": [
+        7,
+        8
+      ],
+      "hit": "defender",
+      "crt_after": 1016776154
+    },
+    {
+      "round": 16,
+      "raw": [
+        14450,
+        19601
+      ],
+      "draws": [
+        170,
+        1
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        7,
+        8
+      ],
+      "damage_after": [
+        7,
+        9
+      ],
+      "hit": "defender",
+      "crt_after": 3432059684
+    },
+    {
+      "round": 17,
+      "raw": [
+        23796,
+        23159
+      ],
+      "draws": [
+        276,
+        199
+      ],
+      "widths": [
+        280,
+        280
+      ],
+      "damage_before": [
+        7,
+        9
+      ],
+      "damage_after": [
+        7,
+        10
+      ],
+      "hit": "defender",
+      "crt_after": 3665287870
+    }
+  ],
+  "promotion": {
+    "weights": [
+      84,
+      280
+    ],
+    "queried_morale_mode": 1,
+    "effective_before": 1,
+    "stored_before": 1,
+    "stored_after": 2,
+    "effective_after": 2,
+    "extra_crt_draws": 0
+  },
+  "casualty": {
+    "removed_unit": 1,
+    "removed_owner": 2,
+    "removed_home": 0,
+    "survivor": 0,
+    "survivor_home": -1
+  },
+  "base_aftermath": {
+    "owner_unchanged": 2,
+    "population_unchanged": 2,
+    "status_mask_added": 8,
+    "status_mask_wider_meaning_unresolved": true,
+    "visibility_mask_before": 4,
+    "visibility_mask_after": 6,
+    "remembered_owner_for_captor_after": 2,
+    "captured": false
+  },
+  "movement": {
+    "attacker_at_source_after_victory": true,
+    "movement_spent": 3,
+    "allowance_after": 3,
+    "remaining": 0,
+    "subsequent_key": {
+      "notification_calls": 1,
+      "random_calls": 0,
+      "decoded_direction": 2,
+      "queried_unit": 0,
+      "predicate_return": 0,
+      "emitted": false,
+      "pending_action_latch_after": 0
+    },
+    "capture_requires_separate_admitted_action": true,
+    "this_scout_cannot_capture_again_this_turn": true,
+    "next_turn_not_executed": true
+  },
+  "rng": {
+    "crt_draws": 34,
+    "crt_before": 4,
+    "crt_after": 3665287870,
+    "shared_draws": 1,
+    "shared_before": 3,
+    "shared_after": 1018897798,
+    "shared_output": 9605,
+    "shared_bounds": [
+      0,
+      65535
+    ],
+    "shared_scope": "native first-use presentation palette initialization; observed in this admitted process, not a per-battle gameplay requirement",
+    "promotion_draws": 0
+  },
+  "static_strength_composition": {
+    "attack": "mode1 morale -> conventional weapon strength -> FANATIC multiply/divide100 if enabled -> later Infantry-versus-Base multiply/divide100",
+    "defense": "mode1 morale and defense floor -> conventional armor strength -> Base defense multiply/divide100 in no-facility case",
+    "neutral_base_strength": 224,
+    "intrinsic_base_defense_percent": 25,
+    "infantry_vs_base_percent": 25,
+    "fanatic_percent": 25,
+    "combine_fanatic_and_infantry": "sequential truncation, not additive",
+    "mode1_morale1_fanatic_plus_infantry_base_result": 350,
+    "fanatic_base_combination_runtime_tested": false
+  },
+  "limits": [
+    "Provided coherent Base admission, not full founding/world creation or whole faction initialization.",
+    "No new presentation service, gameplay choice, outcome or random value supplied; existing rendering/audio/event/teardown and cannot-act notification services reused.",
+    "One natural victory; initial seed3 loss diagnostic preserved separately, not accepted victory evidence.",
+    "No later turn/refill or empty-Base capture execution; no general auto-advance or Base population-loss rule inferred.",
+    "No Perimeter/project/sensor/facility/AI/network matrix; only static context gates and modifier order supplement the case."
+  ]
+}

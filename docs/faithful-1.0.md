@@ -261,11 +261,22 @@ successful restart tracking. Its current-head Codex review and relevant CI pass;
 94 affected native groups and focused leak-enabled sanitizers support the joined
 transaction. This does not establish final conquest or a full match.
 
+Headquarters capture and paid relocation merged in
+[#208](https://github.com/jhurliman/glsmac/pull/208), including population3-to2,
+future resource/support queries and atomic facility publication. Full Planet
+rendering has also been captured with seven provisional faction Bases; this
+exercises the current renderer, not original contour/shading parity or a
+complete seven-faction campaign.
+
+The [defended-Base combat integration](smac-defended-base-combat.md) connects
+garrison combat to the separate capture caller, frozen source combat percentages,
+saved defender-loss aftermath and Base upkeep cleanup. Its original17-round
+receipt and live save/Start sequence are separate from global ending semantics.
+
 The next three actionable slices are:
 
-1. Join Headquarters capture and its paid relocation to ordinary population
-   loss, future resource/support queries, atomic facility publication and actual
-   save/Start. Use the original population3-to2 caller alongside population2-to1.
+1. Extend the admitted combat/capture interaction to the remaining M2 terrain,
+   garrison, population1 and recapture cases, using original-game evidence.
 2. Connect the original global ending controller and survivor/conquest branch.
    Retain the distinction between a human-loss request, the active roster,
    retained ranking reference and local focus. Establish the necessary owned

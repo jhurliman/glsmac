@@ -110,6 +110,7 @@ public:
 		friend class UnitManager;
 		friend class base::BaseManager;
 		void Query(const std::function<void()>& query) const;
+		void DiscoverDefendedBase(base::Base* target, int32_t observer);
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;
@@ -175,6 +176,7 @@ private:
 		faction::SmacHostileState history;
 		smac_scout::AttackResult result;
 		std::optional<uint16_t> palette_identifier;
+		base::Base* defeated_base;
 	};
 	bool HasForeignOccupant(const Unit* actor,const map::tile::Tile* destination) const;
 	PreparedConventionalAttack PrepareConventionalAttack(Unit* actor,map::tile::Tile* destination,size_t caller) const;

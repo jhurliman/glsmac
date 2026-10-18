@@ -2343,8 +2343,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             base->SetAccumulatedNutrients(0);
             base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},unit::SmacMoraleMode::Mode0);
             GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,"upkeep lost live final resource damage");
+            fixture.ResourceState([](auto& state){state.ecology_warming_count=17;state.faction_status.values[1]=0x80004000u;state.faction_status.values[7]=UINT32_MAX;});
             saved=fixture.Snapshot();
-            fixture.ResourceState([](auto& state){state.ecology_world.reset();});
+            fixture.ResourceState([](auto& state){state.ecology_world.reset();state.ecology_warming_count=777;state.faction_status.values[1]=0;});
             GT_ASSERT(!base->PrepareSmacResourceCalculation().eco_damage
                 && base->GetSmacUpkeepCache()->calculation.eco_damage==20,"unknown world inputs fabricated a zero or rewrote retained damage");
             GT_OK();
@@ -2352,10 +2353,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         if(!result.empty()) {return result;}
         ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS",32,16);
         return restored.Run([&](GSE_CALLABLE)->std::string {
-            restored.Restore(GSE_CALL,saved,true);
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
             const auto* base=restored.Game()->GetBM()->GetBase(701);
             GT_ASSERT(base && base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,
                 "snapshot restore lost historical damage");
+            bool retained=false;restored.ResourceState([&](auto& state){retained=state.ecology_warming_count==17 && state.faction_status.values[1]==0x80004000u && state.faction_status.values[7]==UINT32_MAX;});
+            GT_ASSERT(retained,"Saved Start reset restored faction status or warming words");
             GT_OK();
         });
     });

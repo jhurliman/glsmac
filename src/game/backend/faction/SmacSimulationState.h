@@ -106,6 +106,15 @@ struct SmacVictoryHistory {
 	}
 };
 
+// Raw native faction status words. Legacy saves retain per-slot absence;
+// fresh owner initialization establishes only that owner's entire word.
+struct SmacFactionStatusWords {
+    std::array<std::optional<uint32_t>,8> values{};
+    static SmacFactionStatusWords Cold();
+    void Initialize(int32_t owner,int32_t turn);
+    bool operator==(const SmacFactionStatusWords& other) const noexcept {return values==other.values;}
+};
+
 // Native retained signed words, including unoccupied slots and slot0. H is
 // event history, not a count of currently installed ecological facilities.
 struct SmacEcologyHistory {
@@ -176,6 +185,10 @@ struct SmacSimulationState {
 	// V11-V26 do not own remembered Governor templates. Preserve absence per
 	// native slot, independently of each existing Base configuration.
 	std::array<std::optional<uint32_t>,8> remembered_governor{};
+	// V11-V27 did not own these independent saved authorities. Warming is a
+	// global word, not faction H; new-world reset clears it before owner setup.
+	SmacFactionStatusWords faction_status;
+	std::optional<int32_t> ecology_warming_count;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

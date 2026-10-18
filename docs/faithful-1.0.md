@@ -441,12 +441,13 @@ composition matches its measured treasury/research and production boundaries.
 These are engine/script checks, not a completed human playthrough or M2 exit.
 
 1. Continue playable production/economy slices using existing rule evidence.
-   [Recycling Tanks construction](smac-recycling-tanks-production.md) is proposed
-   in PR #184, with real picker → saved ordinary turns → completion coverage.
-   Next extend local facility grants/eligibility and their actual consumers;
-   HQ relocation, Node/Artifact state and facility-specific effects need their
-   own joined transactions. Hurry spending and maintenance-deficit disposal
-   remain separate economy producers.
+   [Recycling Tanks construction](smac-recycling-tanks-production.md) is merged
+   in PR #184 after completed Codex review and relevant CI, with real picker →
+   saved ordinary turns → completion coverage. The next extension joins HQ
+   relocation and Bank/Node production to their current energy consumers.
+   Node/Artifact link state, citizen-status facilities and conventional defense
+   effects remain separate dependencies. Hurry spending and maintenance-deficit
+   disposal remain separate economy producers.
 2. Keep the [visually reviewed first session](first-session-checkpoint.md) as an
    integration acceptance task while gameplay development continues. It covers
    normal setup, units/commands, Base/production/research screens and disk

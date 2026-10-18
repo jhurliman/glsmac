@@ -1233,7 +1233,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto tail=fixture.Run([&](GSE_CALLABLE)->std::string {
                 using namespace game::backend::unit;
                 auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* survivor=bm->GetBase(702);
-                GT_ASSERT(game->IsRunning() && !bm->GetBase(701) && survivor && bm->GetBaseRecordOrder()==std::vector<size_t>{702},"Accept did not finish with the actual compacted survivor");
+                GT_ASSERT(!fixture.Snapshot().empty() && !bm->GetBase(701) && survivor && bm->GetBaseRecordOrder()==std::vector<size_t>{702},"Accept did not finish with the actual compacted survivor");
                 GT_ASSERT(survivor->GetAccumulatedNutrients()==(stale?2:1) && survivor->m_pops.size()==1
                     && survivor->GetProductionState()->minerals==0 && survivor->GetProductionState()->baseline_minerals==0
                     && survivor->GetProductionState()->current_item.smac_source_id==1 && survivor->GetProductionState()->baseline_item.smac_source_id==1,

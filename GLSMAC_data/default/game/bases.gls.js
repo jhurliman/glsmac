@@ -251,8 +251,12 @@ return (game) => {
 		return result;
 	});
 
-	pops.define(game);
-	facilities.define(game);
+    if (game.is_campaign_restore()) {
+        pops.configure(game);
+    } else {
+        pops.define(game);
+        facilities.define(game);
+    }
 
 	game.on('start', (e) => {
 

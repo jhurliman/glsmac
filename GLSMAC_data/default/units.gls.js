@@ -5,6 +5,7 @@ const animations = #include('units/animations');
 const result = {
 
 	configure: (game) => {
+        defs.configure(game);
 		turns.configure(game);
 	},
 

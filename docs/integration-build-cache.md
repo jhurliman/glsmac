@@ -25,14 +25,19 @@ The publisher has read-only repository permissions, runs only on integration
 pushes, and never imports object artifacts from untrusted PR runs. Existing PR
 review, regression, lifecycle, and selected platform gates are unchanged.
 
-The recent 30-PR audit (260â€“289) had zero labeled/unlabeled issue events, so no
+The recent 30-PR audit (260Ã¢â‚¬â€œ289) had zero labeled/unlabeled issue events, so no
 label-trigger runner savings were demonstrated. Existing ci:full label semantics
 are preserved rather than adding a second gate/reuse mechanism for unobserved
 waste.
 
 Two successive PR292 heads with unchanged C++ source measured a Linux build of
 220 seconds followed by 11 seconds from that PR's own compiler cache. This shows
-the value of warm object reuse, but is not evidence of reuse across PRs. Hosted
+the value of warm object reuse, but is not evidence of reuse across PRs. PR291's
+refreshed Linux run also restored its existing exact portable-codec key, built
+both probe executables in 3.44 seconds and verified them in 1.85 seconds; codec
+payload restore took about 0.9 seconds. The earlier cold hosted probe build took
+26 seconds. These are same-PR samples on different runners, not a controlled
+cross-PR comparison. Hosted
 cross-PR cold/warm measurements, hit statistics and publisher overhead must be
 recorded after the first integration publication and a subsequent real PR
 consumer. The publisher is useful only if the saved downstream runner time

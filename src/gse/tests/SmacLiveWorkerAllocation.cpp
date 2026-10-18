@@ -309,6 +309,41 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC inspector opening queues fresh resources before selection and keeps the final requested Base",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* bm=game->GetBM();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,2);
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            const auto stock=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            const ProductionState production{stock,17,stock,5,std::vector<ProductionItem>{}};base->SetProductionState(GSE_CALL,production);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            Base::pops_t peer_pops;peer_pops.emplace(1,Pop(nullptr,1,bm->GetPopDef(Roles().specialists[1]),0));
+            SmacBaseAllocationState peer_allocation{1,{{},1}};peer_allocation.specialists.types[0]=1;
+            auto* peer=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(40,40),"Other Base",{},peer_pops,2,13,production,base->GetSmacResourceContext(),peer_allocation);
+            bm->SpawnBase(GSE_CALL,peer);fixture.Updates();const auto before=fixture.Snapshot();
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"open_smac_base_inspector",{{"base",base->Wrap(GSE_CALL)},{"extra",VALUE(value::Int,,1)}});})
+                && fixture.Snapshot()==before && fixture.Updates().empty(),"Malformed inspector request changed state or selection");
+            const auto turn=game->GetTurnId();const auto random=fixture.GameplayRandom();const auto credits=game->GetCanonicalEconomy(base->m_owner).credits;
+            const auto select=[&](Base* target){Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"select_base",{target->Wrap(GSE_CALL)});};
+            select(base);select(peer);
+            GT_ASSERT(fixture.Snapshot()==before && fixture.Updates().empty() && !base->GetSmacUpkeepCache() && !peer->GetSmacUpkeepCache(),
+                "Inspector opening mutated or selected a Base before its queued owner callback");
+            fixture.DrainEvents();std::set<size_t> updated;size_t selected_id=0,select_count=0;
+            for(const auto& fr:fixture.Updates()) {
+                if(fr.type==game::FrontendRequest::FR_BASE_UPDATE) {updated.insert(fr.data.base_update.base_id);}
+                if(fr.type==game::FrontendRequest::FR_BASE_SELECT) {
+                    selected_id=fr.data.base_select.base_id;++select_count;GT_ASSERT(updated.count(selected_id),"Inspector selection preceded current Base data");
+                }
+            }
+            GT_ASSERT(select_count==1 && selected_id==702,"Queued inspector opens selected by Base hash order instead of the final request");
+            GT_ASSERT(base->GetSmacUpkeepCache() && peer->GetSmacUpkeepCache() && fixture.GameplayRandom()==random && game->GetTurnId()==turn
+                && base->GetAccumulatedNutrients()==13 && peer->GetAccumulatedNutrients()==13 && base->GetProductionState()==std::optional<ProductionState>{production}
+                && peer->GetProductionState()==std::optional<ProductionState>{production} && game->GetCanonicalEconomy(base->m_owner).credits==credits,
+                "Opening inspector omitted fresh cache or posted food, production, credits, RNG or a turn");GT_OK();
+        });
+    });
+
+
     task->AddTest("SMAC energy modal keeps live changes cancels by recalculation and fences retired requests",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");int64_t request=0;int closed=0;
         std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);

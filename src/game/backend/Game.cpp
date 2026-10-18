@@ -1111,6 +1111,17 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( base, 0, base::Base );
+                // Active ordinary own-Base inspection is a fresh calculation,
+                // performed by the backend command owner before presentation.
+                // Required continuation screens and retained foreign/ending
+                // viewers keep their existing separate admission and cache.
+                if(base->HasSmacResourceContext() && base->m_owner==m_slot && m_player && m_player->GetRole()==Player::PR_SINGLE
+                    && !m_state->GetConnection() && m_simulation && m_smac_base_presentations
+                    && !m_simulation->value.human_defeat_request && !m_canonical_continuation
+                    && std::any_of(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& row){return row.active && row.slot==static_cast<int32_t>(m_slot_num) && m_simulation->value.IsHuman(row.simulation_id);})) {
+                    Event(GSE_CALL,"open_smac_base_inspector",{{"base",base->Wrap(GSE_CALL)}});
+                    return VALUE(gse::value::Undefined);
+                }
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SELECT );
 				fr.data.base_select.base_id = base->m_id;
 				AddFrontendRequest( fr );

@@ -5,6 +5,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacSimulationState.cpp
 	${PWD}/SmacEconomyState.cpp
 	${PWD}/SmacResearch.cpp
+	${PWD}/SmacDominance.cpp
 	${PWD}/SmacResearchValue.cpp
 	${PWD}/SmacAutomaticResearch.cpp
 	${PWD}/FactionManager.cpp

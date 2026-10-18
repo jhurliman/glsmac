@@ -1,0 +1,381 @@
+{
+  "research_id": "RE-SMAC-MAJORITY-001",
+  "specification": "potential-diplomatic-majority-selector.md",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete original potential-majority helper with real vote and technology routines; synthetic required/prerequisite graph. Five full dominance-chain integrations with resolved future-pressure state. Not election or actual victory winner logic.",
+  "defaults": {
+    "querying_faction": 1,
+    "excluded_faction": 0,
+    "diplomatic_victory": true,
+    "cooperative_victory": false,
+    "populations": [4,3,0,0,0,0,0],
+    "vote_modifiers": {},
+    "pacts": [],
+    "technology_rule": "normal",
+    "known_technologies": {
+      "1": [
+        "required"
+      ]
+    },
+    "native_population": 0
+  },
+  "cases": [
+    {
+      "id": "MAJORITY-001",
+      "name": "querying faction has half or more",
+      "overrides": {},
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-002",
+      "name": "odd total below half fails",
+      "overrides": {
+        "populations": [3,4,0,0,0,0,0]
+      },
+      "expected_faction": 2
+    },
+    {
+      "id": "MAJORITY-003",
+      "name": "no faction has half",
+      "overrides": {
+        "populations": [3,3,3,0,0,0,0]
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-004",
+      "name": "exact half qualifies",
+      "overrides": {
+        "populations": [4,4,0,0,0,0,0]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-005",
+      "name": "query preference over lower numbered equal half",
+      "overrides": {
+        "querying_faction": 2,
+        "known_technologies": {
+          "2": [
+            "required"
+          ]
+        },
+        "populations": [4,4,0,0,0,0,0]
+      },
+      "expected_faction": 2
+    },
+    {
+      "id": "MAJORITY-006",
+      "name": "lowest numbered qualifier if query not qualified",
+      "overrides": {
+        "querying_faction": 3,
+        "known_technologies": {
+          "3": [
+            "required"
+          ]
+        },
+        "populations": [4,4,0,0,0,0,0]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-007",
+      "name": "excluded majority still contributes denominator",
+      "overrides": {
+        "excluded_faction": 1,
+        "populations": [6,4,0,0,0,0,0]
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-008",
+      "name": "other exact-half survives exclusion",
+      "overrides": {
+        "excluded_faction": 1,
+        "populations": [4,4,0,0,0,0,0]
+      },
+      "expected_faction": 2
+    },
+    {
+      "id": "MAJORITY-009",
+      "name": "cooperative pact excludes candidate toward excluded faction",
+      "overrides": {
+        "excluded_faction": 3,
+        "cooperative_victory": true,
+        "pacts": [
+          [1,3]
+        ],
+        "populations": [6,4,0,0,0,0,0]
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-010",
+      "name": "reverse pact does not exclude candidate",
+      "overrides": {
+        "excluded_faction": 3,
+        "cooperative_victory": true,
+        "pacts": [
+          [3,1]
+        ],
+        "populations": [6,4,0,0,0,0,0]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-011",
+      "name": "pact does not exclude with cooperative victory off",
+      "overrides": {
+        "excluded_faction": 3,
+        "pacts": [
+          [1,3]
+        ],
+        "populations": [6,4,0,0,0,0,0]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-012",
+      "name": "no exclusion selector ignores pact filtering",
+      "overrides": {
+        "excluded_faction": 0,
+        "cooperative_victory": true,
+        "pacts": [
+          [1,3]
+        ]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-013",
+      "name": "diplomatic victory disabled returns none",
+      "overrides": {
+        "diplomatic_victory": false
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-014",
+      "name": "query knows prerequisite A",
+      "overrides": {
+        "known_technologies": {
+          "1": [
+            "prerequisite_a"
+          ]
+        }
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-015",
+      "name": "query knows prerequisite B",
+      "overrides": {
+        "known_technologies": {
+          "1": [
+            "prerequisite_b"
+          ]
+        }
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-016",
+      "name": "query knows nothing so no candidates",
+      "overrides": {
+        "known_technologies": {}
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-017",
+      "name": "candidate knowledge does not replace query knowledge",
+      "overrides": {
+        "querying_faction": 3,
+        "known_technologies": {
+          "1": [
+            "required"
+          ],
+          "2": [
+            "required"
+          ]
+        }
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-018",
+      "name": "query knowledge can admit ignorant candidate",
+      "overrides": {
+        "populations": [3,4,0,0,0,0,0],
+        "known_technologies": {
+          "1": [
+            "required"
+          ]
+        }
+      },
+      "expected_faction": 2
+    },
+    {
+      "id": "MAJORITY-019",
+      "name": "no required technology admits positive query",
+      "overrides": {
+        "technology_rule": "none",
+        "known_technologies": {}
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-020",
+      "name": "disabled technology rule rejects all",
+      "overrides": {
+        "technology_rule": "disabled"
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-021",
+      "name": "zero querying faction fails technology checks",
+      "overrides": {
+        "querying_faction": 0,
+        "technology_rule": "none",
+        "known_technologies": {}
+      },
+      "expected_faction": null
+    },
+    {
+      "id": "MAJORITY-022",
+      "name": "zero total prefers query without a base",
+      "overrides": {
+        "querying_faction": 4,
+        "known_technologies": {
+          "4": [
+            "required"
+          ]
+        },
+        "populations": [0,0,0,0,0,0,0]
+      },
+      "expected_faction": 4
+    },
+    {
+      "id": "MAJORITY-023",
+      "name": "zero total excluded query falls back lowest",
+      "overrides": {
+        "querying_faction": 4,
+        "excluded_faction": 4,
+        "known_technologies": {
+          "4": [
+            "required"
+          ]
+        },
+        "populations": [0,0,0,0,0,0,0]
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-024",
+      "name": "native population does not enter denominator",
+      "overrides": {
+        "native_population": 100
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-025",
+      "name": "VOTES multiplier changes majority",
+      "overrides": {
+        "populations": [3,4,0,0,0,0,0],
+        "vote_modifiers": {
+          "1": [2]
+        }
+      },
+      "expected_faction": 1
+    },
+    {
+      "id": "MAJORITY-026",
+      "name": "zero multiplier removes vote weight not base",
+      "overrides": {
+        "vote_modifiers": {
+          "1": [0]
+        }
+      },
+      "expected_faction": 2
+    }
+  ],
+  "integrations": [
+    {
+      "id": "MAJORITY-DOM-REAL-001",
+      "inputs": {
+        "future_pressure_active": true,
+        "leader_population": 6,
+        "other_population": 1,
+        "technology_rule": "normal",
+        "querying_faction": 1,
+        "leader_and_runner_scores": [100,100],
+        "current_turn": 251,
+        "leader_difficulty": 2,
+        "leader_base_count": 6
+      },
+      "expected": true
+    },
+    {
+      "id": "MAJORITY-DOM-REAL-002",
+      "inputs": {
+        "future_pressure_active": false,
+        "leader_population": 6,
+        "other_population": 1,
+        "technology_rule": "normal",
+        "querying_faction": 1,
+        "leader_and_runner_scores": [100,100],
+        "current_turn": 251,
+        "leader_difficulty": 2,
+        "leader_base_count": 6
+      },
+      "expected": false
+    },
+    {
+      "id": "MAJORITY-DOM-REAL-003",
+      "inputs": {
+        "future_pressure_active": true,
+        "leader_population": 6,
+        "other_population": 10,
+        "technology_rule": "normal",
+        "querying_faction": 1,
+        "leader_and_runner_scores": [100,100],
+        "current_turn": 251,
+        "leader_difficulty": 2,
+        "leader_base_count": 6
+      },
+      "expected": false
+    },
+    {
+      "id": "MAJORITY-DOM-REAL-004",
+      "inputs": {
+        "future_pressure_active": true,
+        "leader_population": 6,
+        "other_population": 6,
+        "technology_rule": "normal",
+        "querying_faction": 1,
+        "leader_and_runner_scores": [100,100],
+        "current_turn": 251,
+        "leader_difficulty": 2,
+        "leader_base_count": 6
+      },
+      "expected": true
+    },
+    {
+      "id": "MAJORITY-DOM-REAL-005",
+      "inputs": {
+        "future_pressure_active": true,
+        "leader_population": 6,
+        "other_population": 1,
+        "technology_rule": "disabled",
+        "querying_faction": 1,
+        "leader_and_runner_scores": [100,100],
+        "current_turn": 251,
+        "leader_difficulty": 2,
+        "leader_base_count": 6
+      },
+      "expected": false
+    }
+  ]
+}

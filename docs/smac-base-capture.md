@@ -47,3 +47,10 @@ records, actual saved-world Start, and failures during future resource queries
 and late role publication. Context tests cover V2 migration, V3 history bounds,
 truncation and round trips. Relevant consumer tests, changed-production analysis
 and focused ownership sanitizers accompany this slice.
+
+The cached Linux Debug run passed 201 affected native groups. LLVM15 correctness
+analysis passed 11 changed/related production translation units in24.69 seconds.
+Six focused groups passed ASan/UBSan/LSan with leak detection and halt-on-error,
+including future-query rollback, late publication failure, actual Start, citizen
+retirement and the subsequent hostile relation value. No per-tweak platform
+matrix was added.

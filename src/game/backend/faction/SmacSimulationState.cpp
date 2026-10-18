@@ -89,6 +89,17 @@ void SmacCapabilityState::Refresh(int32_t owner,const SmacFactionTechnologyState
     factions[owner-1]=next; // no partial cache publication on failed eligibility/arithmetic
 }
 
+void SmacRegionalMilitaryState::ResetBaseFlags(Flags& flags,uint32_t turn,int32_t owner) {
+    if(owner<1 || owner>7) {throw std::runtime_error("Regional Base flags require a positive owner");}
+    for(size_t region=0;region<flags.size();++region) {
+        flags[region]&=((turn+static_cast<uint32_t>(owner)+static_cast<uint32_t>(region))&15u) ? 8 : 0;
+    }
+}
+void SmacRegionalMilitaryState::AccumulateBaseFlag(Flags& flags,uint8_t region,bool immediate_sea) {
+    if(region>=128) {throw std::runtime_error("Invalid regional Base flag region");}
+    if(immediate_sea) {flags[region]|=128;}
+}
+
 void SmacRegionalMilitaryState::Accumulate(Owner& owner,const Contribution& unit) {
     if(unit.region>=128 || unit.domain>2 || unit.morale<0 || unit.morale>6) {
         throw std::runtime_error("Invalid regional military contribution");
@@ -200,7 +211,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 19;
+constexpr int64_t VERSION = 20;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -247,6 +258,13 @@ void WriteRegionalMilitary(types::Buffer& buffer,const std::optional<SmacRegiona
             wire.push_back(static_cast<char>(flags&255));wire.push_back(static_cast<char>(flags>>8));
         }}
     }
+    for(const auto& owner:military->factions) {
+        wire.push_back(owner.base_phase_flags ? 1 : 0);
+        if(owner.base_phase_flags) {for(const auto flags:*owner.base_phase_flags) {
+            if(flags&~SmacRegionalMilitaryState::BASE_PHASE_MASK) {throw std::runtime_error("Unknown Base-phase regional flag bits");}
+            wire.push_back(static_cast<char>(flags&255));wire.push_back(static_cast<char>(flags>>8));
+        }}
+    }
     buffer.WriteString(wire);
 }
 std::optional<SmacRegionalMilitaryState> ReadRegionalMilitary(types::Buffer& buffer,int64_t version) {
@@ -260,18 +278,20 @@ std::optional<SmacRegionalMilitaryState> ReadRegionalMilitary(types::Buffer& buf
     for(auto& owner:result.factions) {for(auto* values:{&owner.units,&owner.attack}) {for(auto& value:*values) {
         value=static_cast<uint8_t>(wire[offset]) | (uint16_t(static_cast<uint8_t>(wire[offset+1]))<<8);offset+=2;
     }}}
-    if(version>=19) {for(auto& owner:result.factions) {
-        if(offset>=wire.size()) {throw std::runtime_error("Truncated unit-phase flag presence");}
+    const auto read_flags=[&](auto member,uint16_t mask) {for(auto& owner:result.factions) {
+        if(offset>=wire.size()) {throw std::runtime_error("Truncated regional phase flag presence");}
         const auto present=static_cast<uint8_t>(wire[offset++]);
-        if(present>1 || (present && wire.size()-offset<256)) {throw std::runtime_error("Invalid unit-phase flag extent");}
+        if(present>1 || (present && wire.size()-offset<256)) {throw std::runtime_error("Invalid regional phase flag extent");}
         if(present) {
-            owner.unit_phase_flags.emplace();
-            for(auto& flags:*owner.unit_phase_flags) {
+            auto& values=owner.*member;values.emplace();
+            for(auto& flags:*values) {
                 flags=static_cast<uint8_t>(wire[offset]) | (uint16_t(static_cast<uint8_t>(wire[offset+1]))<<8);offset+=2;
-                if(flags&~SmacRegionalMilitaryState::UNIT_PHASE_MASK) {throw std::runtime_error("Unknown unit-phase regional flag bits");}
+                if(flags&~mask) {throw std::runtime_error("Unknown regional phase flag bits");}
             }
         }
-    }}
+    }};
+    if(version>=19) {read_flags(&SmacRegionalMilitaryState::Owner::unit_phase_flags,SmacRegionalMilitaryState::UNIT_PHASE_MASK);}
+    if(version>=20) {read_flags(&SmacRegionalMilitaryState::Owner::base_phase_flags,SmacRegionalMilitaryState::BASE_PHASE_MASK);}
     if(offset!=wire.size()) {throw std::runtime_error("Unexpected regional military trailing data");}
     return result;
 }
@@ -478,7 +498,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;

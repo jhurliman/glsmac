@@ -61,6 +61,9 @@ bool RegionalBasesReachable(const RegionalRouteMap& map,const std::vector<Base>&
 	int32_t owner,int32_t peer,uint8_t region,int32_t mode,uint8_t owner_bases,uint8_t peer_bases);
 RegionalRouteMap ProjectRegionalRoutes(const SmacWorkerKnowledge& knowledge,const std::vector<bool>& sea,
 	const std::vector<uint8_t>& regions,RegionalRelations relations,uint8_t human_membership);
+// First qualifying direction1..8; center and off-map neighbors are excluded.
+uint8_t ImmediateSeaNeighbor(int32_t width,int32_t height,bool horizontal_wrap,
+	const std::vector<bool>& sea,const Coordinate& center);
 
 }
 }

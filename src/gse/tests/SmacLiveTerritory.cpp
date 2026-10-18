@@ -65,6 +65,40 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC live Base-phase flags retain peers removal and actual Start history",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
+		const auto flags=[](ConventionalUnitFixture& value,int owner) {
+			std::optional<faction::SmacRegionalMilitaryState::Flags> result;
+			value.ResourceState([&](auto& state){result=state.regional_military->factions.at(owner-1).base_phase_flags;});return result;
+		};
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* square=game->GetMap()->GetTile(18,16);
+			for(auto* corner:square->elevation.corners) {*corner=-1000;}square->Update();
+			// Corner elevations are shared: publish a coherent complete map,
+			// including every neighbor changed by this controlled sea tile.
+			for(size_t y=0;y<game->GetMap()->GetHeight();++y) {for(size_t x=y&1;x<game->GetMap()->GetWidth();x+=2) {game->GetMap()->GetTile(x,y)->Update();}}
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));Found(GSE_CALL,game,901,0,1,16,16);
+			fixture.ResourceState([&](auto& state){
+				state.regional_military->factions[0].base_phase_flags.emplace();state.regional_military->factions[0].base_phase_flags->fill(8);
+				state.regional_military->factions[6].base_phase_flags.emplace();state.regional_military->factions[6].base_phase_flags->fill(128);
+			});
+			const auto random=fixture.GameplayRandom();fixture.RefreshPopulation(1);
+			GT_ASSERT(game->GetTurnId()==1 && flags(fixture,1)->at(1)==136 && flags(fixture,1)->at(14)==0 && flags(fixture,7)->at(1)==128,
+				"Actual Base summary lost sea/expiry gates or recounted a peer");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(flags(fixture,1)->at(1)==136 && fixture.GameplayRandom()==random,"Base removal eagerly refreshed flag history or drew RNG");
+			saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			GT_ASSERT(flags(restored,1)->at(1)==136 && flags(restored,7)->at(1)==128,"Actual Start reconstructed stale Base flags");
+			restored.RefreshPopulation(1);
+			GT_ASSERT(flags(restored,1)->at(1)==8 && flags(restored,7)->at(1)==128,"Next summary retained removed Base coast or refreshed peer history");
+			restored.ResourceState([&](auto& state){state.regional_military->factions[0].base_phase_flags.reset();});
+			restored.RefreshPopulation(1);GT_ASSERT(!flags(restored,1),"Owner summary invented missing legacy bit8 history");GT_OK();
+		});
+	});
     task->AddTest("SMAC regional routing preserves native peer marks across split source components",GT(){
         namespace routes=game::backend::map::smac_territory;
         routes::RegionalRouteMap graph{16,12,false,std::vector<routes::RegionalRouteTile>(96,{true,-1,1}),{},0};

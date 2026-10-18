@@ -7,6 +7,7 @@
 #include "base/SmacBaseEnergy.h"
 #include "faction/Faction.h"
 #include "map/Map.h"
+#include "map/SmacTerritoryRules.h"
 #include "slot/Slot.h"
 #include "unit/Unit.h"
 #include "unit/UnitManager.h"
@@ -260,20 +261,35 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	}
 	int64_t population=0;
 	const auto& topology=m_map->GetTerritoryTopology();
+	auto military=m_simulation->value.regional_military;
+	const bool recount_military=military.has_value() && topology.has_value();
+	if(recount_military && military->factions.at(owner-1).base_phase_flags) {
+		faction::SmacRegionalMilitaryState::ResetBaseFlags(*military->factions.at(owner-1).base_phase_flags,GetTurnId(),owner);
+	}
+	std::optional<std::vector<bool>> coastal_sea;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> counts;
 	if(topology) {counts=faction::SmacEconomyState::RegionalBaseCounts{};}
-	for(const auto& entry:m_bm->GetBases()) {
-		const auto* base=entry.second;
-		if(!base || base->m_id!=entry.first) {throw std::runtime_error("Population refresh found an invalid Base");}
+	std::set<size_t> base_records;
+	for(const auto id:m_bm->GetBaseRecordOrder()) {
+		const auto* base=m_bm->GetBase(id);
+		if(!base || base->m_id!=id || !base_records.insert(id).second) {throw std::runtime_error("Population refresh found an invalid Base record");}
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
 			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
 			population+=static_cast<int64_t>(base->m_pops.size());
 			if(counts) {
 				if(!base->GetTile()) {throw std::runtime_error("Regional summary Base has no center");}
-				++(*counts)[GetCanonicalRegion(*base->GetTile(),*topology)];
+				const auto region=GetCanonicalRegion(*base->GetTile(),*topology);++(*counts)[region];
+				if(recount_military && military->factions.at(owner-1).base_phase_flags) {
+					if(!coastal_sea) {coastal_sea=m_map->TerritorySea();}
+					const auto* square=base->GetTile();
+					const auto direction=map::smac_territory::ImmediateSeaNeighbor(topology->Width(),topology->Height(),topology->Wraps(),
+						*coastal_sea,{{static_cast<int32_t>(square->coord.x),static_cast<int32_t>(square->coord.y)}});
+					faction::SmacRegionalMilitaryState::AccumulateBaseFlag(*military->factions.at(owner-1).base_phase_flags,region,direction!=0);
+				}
 			}
 		}
 	}
+	if(base_records.size()!=m_bm->GetBases().size()) {throw std::runtime_error("Population refresh omitted a registered Base");}
 	if(population>INT32_MAX) {throw std::overflow_error("Population aggregate exceeds signed32");}
 	// Founding, removal and individual Base recalculation deliberately do not
 	// update this saved field. The native post-Base owner pass owns its refresh.
@@ -283,9 +299,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	capability_candidate.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),
 		*settings.GetSmacCombatRules(),settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
     faction::SmacDesignCounts design_counts{};
-    auto military=m_simulation->value.regional_military;
-    const bool recount_military=military.has_value() && topology.has_value();
-    if(recount_military) {auto& row=military->factions.at(owner-1);row={};row.unit_phase_flags.emplace();}
+    if(recount_military) {auto& row=military->factions.at(owner-1);row.units={};row.attack={};row.unit_phase_flags.emplace();}
     std::set<size_t> seen;
     const auto& order=m_um->GetUnitRecordOrder();
     for(size_t cursor=order.size();cursor>0;--cursor) {

@@ -125,6 +125,11 @@ The automatic chooser consumes the shared bounded-range stream, not the CRT stre
 
 ## Retained producer contracts
 
+The [live Base-stage flag snapshot](regional-base-phase-flags.md) now preserves
+staggered bit8 history and the owned Base's immediate-sea bit128 at the actual
+owner-summary boundary. It complements the unit-phase contributions without
+claiming the final peer/strategy flag word or inventing legacy history.
+
 The [regional land reachability implementation](regional-land-reachability.md)
 now matches the original fresh-workspace boolean graph and Base-pair controls,
 including directional diplomacy and the unowned/slot0 distinction. Its actual

@@ -282,6 +282,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
                 for(const auto& participant:state.roster) {knowledge.observers[participant.simulation_id]=map::SmacWorkerKnowledge::Observer{};}
                 state.regional_military.emplace();state.regional_military->factions[6].units.fill(777);state.regional_military->factions[6].attack.fill(888);
                 state.regional_military->factions[6].unit_phase_flags.emplace();state.regional_military->factions[6].unit_phase_flags->fill(4096);
+                state.regional_military->factions[0].base_phase_flags.emplace();state.regional_military->factions[0].base_phase_flags->fill(8);
+                state.regional_military->factions[6].base_phase_flags.emplace();state.regional_military->factions[6].base_phase_flags->fill(128);
                 state.social.factions.front().retained->at(4)=0;
             });
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));Define(game->GetUM());
@@ -300,11 +302,13 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             fixture.ResourceState([&](auto& state){const auto& military=*state.regional_military;
                 correct=military.factions[0].units[1]==2 && military.factions[0].attack[1]==1
                     && military.factions[6].units[127]==777 && military.factions[6].attack[0]==888
-                    && military.factions[0].unit_phase_flags->at(1)==10242 && military.factions[6].unit_phase_flags->at(127)==4096;
+                    && military.factions[0].unit_phase_flags->at(1)==10242 && military.factions[6].unit_phase_flags->at(127)==4096
+                    && game->GetTurnId()==1 && military.factions[0].base_phase_flags->at(1)==8 && military.factions[0].base_phase_flags->at(14)==0
+                    && military.factions[6].base_phase_flags->at(127)==128;
             });
             GT_ASSERT(correct,"military recount used raw morale HP damage or refreshed a peer");
             std::optional<faction::SmacSimulationState> state_before;
-            fixture.ResourceState([&](auto& state){state_before=state;});
+            fixture.ResourceState([&](auto& state){state.regional_military->factions[0].base_phase_flags->at(14)=8;state_before=state;});
             auto* square=first_unit->GetTile();for(auto* corner:square->elevation.corners) {*corner=-1000;}square->Update();
             bool rejected=false;try {fixture.RefreshPopulation(1);}catch(const std::exception&) {rejected=true;}
             GT_ASSERT(rejected,"unbased water placement silently supplied an invalid military contribution");

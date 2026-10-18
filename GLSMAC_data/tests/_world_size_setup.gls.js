@@ -1,6 +1,12 @@
 // Actual menu/handler code, real native settings; only UI factories are supplied.
 return (game, settings, smac) => {
 	const check = (ok, message) => { if (!ok) { throw TestError(message); } };
+	const randomize = #include('../default/ui/parts/mainmenu/map_randomization');
+	for (let attempt = 0; attempt < 12; attempt++) {
+		randomize(settings);
+		const ocean = settings.map.ocean_coverage;
+		check(smac ? (ocean == 0.4 || ocean == 0.6 || ocean == 0.8) : (ocean >= 0.4 && ocean <= 0.8), 'random setup lost its ruleset ocean domain');
+	}
 	const ready_handler = #include('../default/game/event/ready_or_not');
 	const ready_event = {caller: 0, game: game, data: {ready: true}};
 	const unready_event = {caller: 0, game: game, data: {ready: false}};

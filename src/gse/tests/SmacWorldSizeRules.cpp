@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <vector>
+#include <cmath>
 
 namespace gse::tests {
 namespace {
@@ -17,6 +18,26 @@ const std::string source = "#WORLDSIZE\n5\nTiny|annotation,24,48\nSmall,32,64\nS
 }
 
 void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC ocean coverage retains preset categories without quantizing continuous port settings",GT(){
+		MapSettings settings;
+		const std::array<float,3> values{0.4f,0.6f,0.8f};
+		for(size_t i=0;i<values.size();++i) {
+			settings.ocean_coverage=values[i];MapSettings restored;restored.Deserialize(settings.Serialize());
+			GT_ASSERT(settings.GetSmacOceanCoverage()==static_cast<int32_t>(i) && restored.GetSmacOceanCoverage()==settings.GetSmacOceanCoverage(),"saved selected preset lost its original category");
+		}
+		for(const float value:{0.2f,0.5f,0.55f,std::nextafter(0.4f,1.0f),NAN,INFINITY}) {
+			settings.ocean_coverage=value;GT_ASSERT(!settings.GetSmacOceanCoverage(),"continuous or invalid coverage was rounded into a category");
+		}
+		settings.ocean_coverage=0.4f;MapSettings locked;locked.Deserialize(settings.Serialize());locked.LockWorldSize();
+		const auto before=locked.Serialize().ToString();settings.ocean_coverage=0.6f;
+		GT_ASSERT(Rejects([&]{locked.Deserialize(settings.Serialize());}) && locked.Serialize().ToString()==before,"host changed locked ocean coverage or rejected update partially published");
+		settings.ocean_coverage=NAN;MapSettings raw;raw.Deserialize(settings.Serialize());raw.LockWorldSize();
+		settings.erosive_forces=0.5f;raw.Deserialize(settings.Serialize());
+		GT_ASSERT(!raw.GetSmacOceanCoverage() && raw.Serialize().ToString()==settings.Serialize().ToString(),"unchanged saved NaN coverage rejected an otherwise permitted update");
+		const auto nan_before=raw.Serialize().ToString();settings.ocean_coverage=0.4f;
+		GT_ASSERT(Rejects([&]{raw.Deserialize(settings.Serialize());}) && raw.Serialize().ToString()==nan_before,"locked NaN representation changed or rejection partially published");
+		GT_OK();
+	});
 	task->AddTest( "SMAC world-size source preserves positional identity and doubles only source X", GT() {
 		const auto rows = loader::txt::SmacRulesTXTLoader::ParseWorldSizeRules( source );
 		const std::array< int32_t, 5 > widths{ 48, 64, 80, 88, 128 }, heights{ 48, 64, 80, 90, 128 };

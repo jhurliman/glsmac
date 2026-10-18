@@ -653,9 +653,11 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 			map_settings->size_x = size.x;
 			map_settings->size_y = size.y;
 		}
-		map_settings->ocean_coverage = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
-			? c->GetQuickstartMapOceanCoverage()
-			: random->GetFloat( 0.2f, 0.8f );
+		if(c->HasLaunchFlag(config::Config::LF_QUICKSTART_MAP_OCEAN)) {
+			map_settings->ocean_coverage=c->GetQuickstartMapOceanCoverage();
+		} else if(!policy) {
+			map_settings->ocean_coverage=random->GetFloat(0.2f,0.8f);
+		} // SMAC retains its selected ocean-coverage preset through generation.
 		map_settings->erosive_forces = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
 			? c->GetQuickstartMapErosiveForces()
 			: random->GetFloat( 0.2f, 0.8f );

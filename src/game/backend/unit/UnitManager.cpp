@@ -904,9 +904,19 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
     std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_survivors;
     const auto erased=static_cast<int32_t>(std::distance(m_unit_order.begin(),ordered));
-    for(const auto id:m_unit_order) {
-        auto* survivor=m_units.at(id);
-        if(survivor->IsNative()) {native_survivors.emplace_back(survivor,survivor->Native().AfterUnlinkedIndexErasure(erased));}
+    std::vector<Unit*> dense;dense.reserve(m_unit_order.size());
+    for(const auto id:m_unit_order) {dense.push_back(m_units.at(id));}
+    ValidateNativeIndexBindings(dense);
+    for(auto* survivor:dense) {
+        if(survivor==unit || !survivor->IsNative()) {continue;}
+        auto record=survivor->Native();
+        // Stack links refer to the pre-compaction pool. Unlink the retiring
+        // native first, then apply the shared source-index/payload repair.
+        if(unit->IsNative()) {
+            if(record.stack_next==erased) {record.stack_next=unit->Native().stack_next;}
+            if(record.stack_previous==erased) {record.stack_previous=unit->Native().stack_previous;}
+        }
+        native_survivors.emplace_back(survivor,record.AfterUnlinkedIndexErasure(erased));
     }
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );

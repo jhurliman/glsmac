@@ -996,7 +996,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				"saved selected Rover was rebound to current selection or lost exact destination state" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "selected Spartan Rover rejects other owners selections and mismatched renderers before effects", GT() {
+	task->AddTest( "selected Spartan Rover rejects unsupported selections and mismatched renderers before effects", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure( true, 3, false, true );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Define( manager, true ); fixture.Updates();
@@ -1005,7 +1005,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			fixture.CopyRoverDesign( 2, 129 ); fixture.CopyRoverDesign( 3, 192 ); fixture.SelectStartup( 3, 192 );
 			const auto next = Unit::GetNextId(); const auto before = fixture.Snapshot(); size_t hooks = 0;
 			manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
-			for ( int scenario = 0; scenario < 6; ++scenario ) {
+			for ( int scenario = 0; scenario < 5; ++scenario ) {
 				ConventionalUnitState state{ 128, 2, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 				size_t owner = 2; const char* def = "EXPLICIT_ROVER";
 				if ( scenario == 0 ) { def = "EXPLICIT_SCOUT"; }
@@ -1013,12 +1013,17 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 2 ) { state.design_id = 192; state.owner_simulation_id = 3; owner = 6; }
 				if ( scenario == 3 ) { state.design_id = 2; }
 				if ( scenario == 4 ) { state.design_id = 11; }
-				if ( scenario == 5 ) { state.owner_simulation_id = 3; owner = 6; }
 				bool rejected = false; try { Spawn( GSE_CALL, fixture, state, next, owner, def ); } catch ( const std::exception& ) { rejected = true; }
 				GT_ASSERT( rejected && Unit::GetNextId() == next && manager->GetUnits().empty() && game->GetMap()->GetTile( 2, 2 )->units.empty()
 					&& hooks == 0 && fixture.Updates().empty(), "invalid selected Rover produced effects at scenario " + std::to_string( scenario ) );
 			}
-			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
+			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" );
+			// A genuine retained Spartan source is global identity. A different
+			// current controller may keep128; its own fabricated192 is still rejected.
+			const ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
+			GT_ASSERT(unit->Conventional()==retained && unit->m_owner==&game->GetState()->m_slots->GetSlot(6) && hooks==1,
+				"retained Spartan128 was rebound to the recipient's invalid local192 or rejected");GT_OK();
 		} );
 	} );
 	task->AddTest( "conventional selected Rover HQ movement matches21 original startup outcomes", []( GSE*, context::Context* ) -> std::string {

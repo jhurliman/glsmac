@@ -3,6 +3,7 @@
 #include "game/backend/base/SmacBaseEnergy.h"
 #include "types/Buffer.h"
 #include <optional>
+#include <array>
 
 namespace game::backend::faction {
 
@@ -14,7 +15,12 @@ struct SmacEconomyState {
 	// Owner-wide refresh after Base upkeep, not a live sum during capture.
 	// Absent only when migrating a port V1 record that did not own this field.
 	std::optional<int32_t> population_aggregate = 0;
-	static constexpr size_t MAX_WIRE_BYTES = 9 * 14 + 7;
+	// Original per-region byte counters: founding/removal apply deltas, the
+	// owner summary rebuilds them, and capture deliberately leaves them stale.
+	// Missing on old port saves; never reconstruct their historical counts on load.
+	using RegionalBaseCounts = std::array<uint8_t,128>;
+	std::optional<RegionalBaseCounts> regional_base_counts;
+	static constexpr size_t MAX_WIRE_BYTES = 9 * 14 + 7 + 7 + 6 + 128;
 	// All startup inputs are supplied explicitly. Restore never calls this.
 	static SmacEconomyState NewWorld( base::SmacEnergyRates rates, int32_t credits, int32_t research_fraction );
 	void Validate() const;

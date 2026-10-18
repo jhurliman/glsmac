@@ -1,0 +1,195 @@
+{
+  "research_id": "RE-SMAC-RESTART-INPUT-LIFETIMES-001",
+  "ruleset": "SMAC",
+  "cases": [
+    {
+      "id": "ocean_setting_writers",
+      "evidence": "actual mapping and negative-setting resolution fragments; no full setup UI",
+      "chosen_coverage_index": 2,
+      "chosen_range_percent": [
+        70,
+        90
+      ],
+      "chosen_K": 2,
+      "random_K_before": -1,
+      "crt_before": 3,
+      "crt_after": 3173050,
+      "raw_draw": 48,
+      "resolved_K": 0
+    },
+    {
+      "id": "world_and_owner_lifetimes",
+      "evidence": "one world: complete region fill, actual world-postpass call, full owner upkeep, native founding/removal",
+      "region_fill_preserves_stale_F": 777,
+      "stored_area_region1": 1024,
+      "postpass_F": {
+        "1": 960,
+        "63": 64
+      },
+      "postpass_clears_other_F": true,
+      "postpass_cached_site_ratings_all_zero": true,
+      "postpass_preserves_occupant_affiliation": true,
+      "ocean_K_after_all_mutations": 2,
+      "presence_region1_by_phase": {
+        "before_fill": [
+          77,
+          88
+        ],
+        "region_fill_only": [
+          77,
+          88
+        ],
+        "world_postpass_caller": [
+          77,
+          88
+        ],
+        "ordinary_owner_upkeep": [
+          1,
+          88
+        ],
+        "native_founding": [
+          2,
+          88
+        ],
+        "native_removal": [
+          1,
+          88
+        ],
+        "local_cache_clear": [
+          1,
+          88
+        ],
+        "native_territory_cache_fill": [
+          1,
+          88
+        ]
+      },
+      "peer_owner_preserved": true,
+      "founding_increments_stored_count": true,
+      "removal_decrements_stored_count": true
+    },
+    {
+      "id": "capture_preserves_previously_refreshed_counts",
+      "evidence": "native owner summaries first, then actual movement/capture caller stopped at Base-screen entry",
+      "before_counts": [
+        1,
+        2
+      ],
+      "before_live_bases": [
+        1,
+        2
+      ],
+      "after_counts": [
+        1,
+        2
+      ],
+      "after_live_bases": [
+        2,
+        1
+      ],
+      "count_writes_during_capture": 0,
+      "ending_or_restart_executed": false,
+      "screen_answer_supplied": false
+    },
+    {
+      "id": "local_cache_invalidation_and_native_refill",
+      "evidence": "native local invalidation helper then complete territory/cache producer; no supplied rating result",
+      "center": [
+        40,
+        16
+      ],
+      "cleared_coordinates": [
+        [
+          37,
+          15
+        ],
+        [
+          37,
+          17
+        ],
+        [
+          38,
+          14
+        ],
+        [
+          38,
+          16
+        ],
+        [
+          38,
+          18
+        ],
+        [
+          39,
+          13
+        ],
+        [
+          39,
+          15
+        ],
+        [
+          39,
+          17
+        ],
+        [
+          39,
+          19
+        ],
+        [
+          40,
+          14
+        ],
+        [
+          40,
+          16
+        ],
+        [
+          40,
+          18
+        ],
+        [
+          41,
+          13
+        ],
+        [
+          41,
+          15
+        ],
+        [
+          41,
+          17
+        ],
+        [
+          41,
+          19
+        ],
+        [
+          42,
+          14
+        ],
+        [
+          42,
+          16
+        ],
+        [
+          42,
+          18
+        ],
+        [
+          43,
+          15
+        ],
+        [
+          43,
+          17
+        ]
+      ],
+      "cleared_ratings_before": 1,
+      "cleared_ratings_after": 0,
+      "occupant_affiliation_preserved": true,
+      "native_uncached_queries": 21,
+      "native_computed_ratings": 1,
+      "shared_and_crt_unchanged": true
+    }
+  ]
+}

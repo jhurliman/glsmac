@@ -396,6 +396,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=200;
                     state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=3;
+                    state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=2;
                 });
                 auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
                 knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
@@ -441,7 +442,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 bool exact=false;fixture.ResourceState([&](auto& state) {
                     const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
                     exact=state.economy.at(1).credits==200 && state.economy.at(2).credits==100 && state.economy.at(1).population_aggregate==111
-                        && state.economy.at(2).population_aggregate==3 && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
+                        && state.economy.at(2).population_aggregate==3 && state.economy.at(1).regional_base_counts->at(1)==1
+                        && state.economy.at(2).regional_base_counts->at(1)==2 && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
                         && a.directions[2].paired_a==4 && a.directions[2].paired_b==4 && d.directions[1].paired_a==0 && d.losses[2]==0;
                 });GT_ASSERT(exact,"capture differs from original loot and nondeduced history");
                 size_t captured_refresh=SIZE_MAX,captured_select=SIZE_MAX,selections=0;
@@ -1003,6 +1005,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->GetMap()->GetTile(7,3)->terraforming=TERRAFORMING_FOREST;
             um->DefineUnit(new StaticDef("live-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
             game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            fixture.ResourceState([](auto& state){state.economy.at(1).regional_base_counts->at(1)=77;});
             const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
             base->SetProductionState(GSE_CALL,ProductionState{target,game->GetSmacProductionCost(base->m_owner,target)-5,target,0,std::vector<ProductionItem>{}});
             base->SetAccumulatedNutrients(0);
@@ -1027,6 +1030,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             ui->Run(GSE_CALL,{VALUE(value::String,,"check"),VALUE(value::String,,"Found Base [B]"),VALUE(value::String,,"Colony Pod — Found a Base on an available site")});
             ui->Run(GSE_CALL,{VALUE(value::String,,"click"),VALUE(value::String,,"Found Base [B]"),VALUE(value::String,,"")});fixture.DrainEvents();
             auto* founded=game->GetMap()->GetTile(6,2)->base;
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).regional_base_counts->at(1)==78,"founding recounted a stale regional value instead of incrementing it");
             GT_ASSERT(founded && game->GetBM()->GetBases().size()==2 && !um->GetUnit(pod_id)
                 && um->GetUnitRecordOrder()==std::vector<size_t>{91},"actual founding event did not consume Pod or retain survivor order");
             GT_ASSERT(Base::Serialize(base).ToString()==old_record && Unit::Serialize(um->GetUnit(91)).ToString()==scout,
@@ -1061,6 +1065,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         ConventionalUnitFixture restored; restored.ConfigureProduction(UpkeepSource,"GAIANS");
         return restored.Run([&](GSE_CALLABLE) -> std::string {
             restored.Restore(GSE_CALL,saved,true); auto* game=restored.Game(); auto* founded=game->GetBM()->GetBase(founded_id);
+            GT_ASSERT(game->GetCanonicalEconomy(founded->m_owner).regional_base_counts->at(1)==78,"restore reconstructed regional counts from live Bases");
             GT_ASSERT(founded && Base::Serialize(founded).ToString()==new_record && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==old_record
                 && !game->GetUM()->GetUnit(pod_id) && game->GetUM()->GetUnitRecordOrder()==std::vector<size_t>{91},"restore replayed founding or resurrected Pod");
             (void)game->GetSmacWorkerAvailability(*founded); GT_OK();
@@ -1769,15 +1774,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
 			base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(20);
 			fixture.ResourceState([](auto& state){state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=777;
+				state.economy.at(1).regional_base_counts->fill(77);state.economy.at(2).regional_base_counts->fill(88);
 				auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=10000;});
 			const auto resolver=[&](int32_t){return game->GetUM()->GetUnitDef("live-scout");};
 			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
 			GT_ASSERT(base->m_pops.size()==2 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==111,"Base growth prematurely refreshed owner population");
 			fixture.RefreshPopulation(1);
 			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"post-Base owner refresh omitted growth");
+			const auto& counts=game->GetCanonicalEconomy(base->m_owner).regional_base_counts;
+			GT_ASSERT(counts && counts->at(1)==1 && counts->at(63)==0 && counts->at(127)==0,"owner summary did not clear and rebuild regional counts");
 			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
 			GT_ASSERT(base->m_pops.size()==1 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"starvation changed the retained population aggregate");
-			bool untouched=false;fixture.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777;});
+			bool untouched=false;fixture.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777
+				&& state.economy.at(2).regional_base_counts->at(1)==88 && state.economy.at(1).regional_base_counts->at(1)==1;});
 			GT_ASSERT(untouched,"owner refresh touched the foreign aggregate");saved=fixture.Snapshot();GT_OK();
 		});if(!first.empty()) {return first;}
 		ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(UpkeepSource,true);restored.BasePresentationRoles(names);
@@ -1785,6 +1794,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		return restored.Run([&](GSE_CALLABLE)->std::string {
 			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
 			GT_ASSERT(base && base->m_pops.size()==1 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"Start derived aggregate from current Base populations");
+			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).regional_base_counts->at(1)==1,"Start lost the owned regional summary");
 			bool untouched=false;restored.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777;});GT_ASSERT(untouched,"Start reset foreign population history");
 			game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
 			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==static_cast<int32_t>(base->m_pops.size()),"actual turn controller omitted post-Base population refresh");GT_OK();
@@ -1972,7 +1982,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(const auto* base:bases) {if(base!=lost) {survivors.emplace_back(base->m_id,Base::Serialize(base).ToString());}}
                 const auto pair=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
                 const auto scout=Unit::Serialize(um->GetUnit(91)).ToString();const auto next=Unit::GetNextId();fixture.Updates();
+                fixture.ResourceState([&](auto& state){state.economy.at(1).regional_base_counts->at(1)=scenario==0 ? 0 : 77;});
+                auto* lost_owner=lost->m_owner;
                 const auto result=bm->AbandonSmacBase(GSE_CALL,*lost,um->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);
+                GT_ASSERT(game->GetCanonicalEconomy(lost_owner).regional_base_counts->at(1)==(scenario==0 ? 255 : 76),"abandonment recounted or failed to decrement the stored byte");
                 GT_ASSERT(result.newborn_id==next && !bm->GetBase(lost_id) && !lost_tile->base && !base_wrapper->wrapobj && !pop_wrapper->wrapobj,"abandonment failed to create/retire its actual records");
                 const auto* newborn=um->GetUnit(result.newborn_id);
                 GT_ASSERT(newborn && newborn->GetTile()==lost_tile && newborn->Conventional().home==ConventionalUnitState::Home::None

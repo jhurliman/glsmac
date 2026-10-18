@@ -100,7 +100,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();
 		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
-		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();}
+		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();entry.second.regional_base_counts.reset();}
 		GT_ASSERT(migrated==expected,"V11 migration changed existing campaign state or invented missing history");
 		for(auto& entry:value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {entry.second.directions[i]={UINT32_MAX-static_cast<uint32_t>(i),static_cast<uint32_t>(i+1),INT32_MIN+static_cast<int32_t>(i),UINT32_MAX,static_cast<uint32_t>(i)};}

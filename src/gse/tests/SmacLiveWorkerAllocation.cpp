@@ -2212,6 +2212,52 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             });if(!cleared.empty()) {return cleared;}
         }GT_OK();
     });
+    task->AddTest("SMAC owner ecology aggregate preserves unavailable narrow map history through actual turn",[](GSE*,context::Context*)->std::string {
+        for(const int32_t width:{4,6}) {
+            const auto source=[width](const std::string& filename) {
+                auto value=Source(filename);if(filename=="alpha.txt") {
+                    const auto row=std::string("Fixture tiny, 4, 8");const auto at=value.find(row);
+                    value.replace(at,row.size(),"Fixture tiny, "+std::to_string(width/2)+", 16");
+                    value+="\n#WORLDBUILDER\n";for(int i=0;i<15;++i) {value+="5\n";}
+                }return value;
+            };
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS",width,16);
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* bm=game->GetBM();
+                for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {game->GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
+                bm->DefinePop(new PopDef(Roles().worker,"Worker",{},{},PopDef::PF_TILE_WORKER));
+                for(uint8_t i=0;i<7;++i) {bm->DefinePop(new PopDef(Roles().specialists[i],"Specialist",{},{},PopDef::PF_NONE,i));}
+                for(int32_t y=0;y<16;++y) {for(int32_t x=y&1;x<width;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=0;}tile->Update();
+                    tile->moisture=MOISTURE_ARID;tile->rockiness=ROCKINESS_FLAT;tile->features=0;tile->terraforming=0;tile->bonus=BONUS_NONE;
+                }}
+                auto* owner=&game->GetState()->m_slots->GetSlot(0);
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),1));
+                auto* base=new Base(game,701,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(2,2),"Narrow ecology",{},pops,20,0,Production(),SmacBaseResourceContext{1,false,0,0,0x40});
+                bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{3,{{},0}},Roles());
+                const auto stock=game->MakeSmacProductionItem(owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{stock,0,stock,0,std::vector<ProductionItem>{}});
+                fixture.PrepareBaseCallbacks();static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_growth"))->Run(GSE_CALL,{game->Wrap(GSE_CALL)});
+                fixture.RetainedPlanet(0,0);fixture.ResourceState([](auto& state) {
+                    state.ecology_world=faction::SmacEcologyWorld{1,2,0};state.perihelion=false;state.ecology_history=faction::SmacEcologyHistory{};
+                    state.ecology_history->research_aggregate[1]=777;state.ecology_history->research_aggregate[7]=999;
+                });
+                GT_ASSERT(!base->PrepareSmacResourceCalculation().eco_damage,"Narrow map fabricated calculable ecology");
+                Knowledge::Data known{width,16,true,true,0,{},{},{}};known.observers[1]=Knowledge::Observer{false,{}};known.tiles.resize(width*16/2);
+                for(auto& tile:known.tiles) {tile.claimant=1;tile.explored_by=2;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+                game->Event(GSE_CALL,"complete_turn",{});GT_OK();
+            });if(!setup.empty()) {return setup;}fixture.DrainEvents();
+            const auto finished=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();bool retained=false;fixture.ResourceState([&](auto& state) {retained=state.ecology_history->research_aggregate[1]==777 && state.ecology_history->research_aggregate[7]==999;});
+                GT_ASSERT(game->GetTurnId()==2,"Narrow map failed to advance: turn="+std::to_string(game->GetTurnId()));
+                GT_ASSERT(retained,"Narrow map cleared unavailable ecology history");
+                GT_ASSERT(game->GetBM()->GetBase(701)->GetSmacUpkeepCache(),"Narrow Base did not commit its resource pass");
+                GT_ASSERT(!game->GetBM()->GetBase(701)->GetSmacUpkeepCache()->calculation.eco_damage,"Narrow Base invented ecology damage");GT_OK();
+            });if(!finished.empty()) {return finished;}
+        }GT_OK();
+    });
     task->AddTest("SMAC live ecology uses full radius current inputs and preserves cached history", [](GSE*,context::Context*) -> std::string {
         const auto source=[](const std::string& filename) {
             auto value=Source(filename);

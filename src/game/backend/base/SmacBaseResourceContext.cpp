@@ -4,6 +4,18 @@
 
 namespace game::backend::base {
 
+uint32_t SmacBaseResourceContext::GovernorControls(uint32_t options) noexcept {
+    uint32_t result=0;
+    for(size_t i=0;i<GOVERNOR_CONTROL_MASKS.size();++i) {if(options&GOVERNOR_CONTROL_MASKS[i]) {result|=1u<<i;}}
+    return result;
+}
+uint32_t SmacBaseResourceContext::GovernorOptions(uint32_t previous,uint32_t controls) {
+    if(controls>0x7ffffu) {throw std::invalid_argument("Governor selections exceed nineteen controls");}
+    uint32_t result=previous&0x0f000000u;
+    for(size_t i=0;i<GOVERNOR_CONTROL_MASKS.size();++i) {if(controls&(1u<<i)) {result|=GOVERNOR_CONTROL_MASKS[i];}}
+    return result;
+}
+
 uint32_t SmacBaseResourceContext::NewGameGovernorOptions( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error("Unknown startup governor difficulty"); }
 	return 0x00dfbe41u | ( difficulty == 0 ? GOVERNOR_ACTIVE | STARTUP_AUTOMATION : 0u );

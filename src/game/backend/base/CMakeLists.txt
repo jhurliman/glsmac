@@ -18,6 +18,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseSpecialistCommands.cpp
 	${PWD}/BaseRenameCommands.cpp
 	${PWD}/BaseQueueCommands.cpp
+	${PWD}/BaseGovernorCommands.cpp
 	${PWD}/BaseHurryCommands.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp

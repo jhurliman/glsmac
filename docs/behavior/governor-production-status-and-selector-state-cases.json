@@ -1,0 +1,1278 @@
+{
+  "research_id": "RE-SMAC-GOVERNOR-SELECTOR-MUTATIONS-001",
+  "Base_status_mask": 2147483648,
+  "distinct_Governor_configuration_masks": {
+    "active": 2147483648,
+    "startup_marker": 1073741824
+  },
+  "Apply_contexts": [
+    {
+      "context_index": 0,
+      "inputs": {
+        "manage_production": false,
+        "manage_citizens": true,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "selector_boundaries": [],
+      "after": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 2181038144,
+        "remembered": 2181038144,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      },
+      "rng_entries": 0,
+      "mutation_sequence": [
+        {
+          "field": "configuration",
+          "value": 33554432
+        },
+        {
+          "field": "configuration",
+          "value": 2181038080
+        },
+        {
+          "field": "configuration",
+          "value": 2181038144
+        },
+        {
+          "field": "status",
+          "value": 2147483648
+        },
+        {
+          "field": "status",
+          "value": 2147483648
+        }
+      ]
+    },
+    {
+      "context_index": 1,
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": false,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "selector_boundaries": [
+        {
+          "boundary": "selector_entry",
+          "state": {
+            "mineral_store": 0,
+            "baseline_item": 2,
+            "baseline_minerals": 0,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "boundary": "selector_return",
+          "state": {
+            "mineral_store": 0,
+            "baseline_item": 2,
+            "baseline_minerals": 0,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 2181038081,
+        "remembered": 2181038081,
+        "status": 0,
+        "queue_count": 0,
+        "target": -38,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      },
+      "rng_entries": 0,
+      "mutation_sequence": [
+        {
+          "field": "configuration",
+          "value": 33554432
+        },
+        {
+          "field": "configuration",
+          "value": 2181038080
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "queue_count",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2214592513
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2281701377
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "target",
+          "value": 4294967258
+        },
+        {
+          "field": "mineral_store",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "context_index": 2,
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": true,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "selector_boundaries": [
+        {
+          "boundary": "selector_entry",
+          "state": {
+            "mineral_store": 0,
+            "baseline_item": 2,
+            "baseline_minerals": 0,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "boundary": "selector_return",
+          "state": {
+            "mineral_store": 0,
+            "baseline_item": 2,
+            "baseline_minerals": 0,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 2181038145,
+        "remembered": 2181038145,
+        "status": 0,
+        "queue_count": 0,
+        "target": -38,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      },
+      "rng_entries": 0,
+      "mutation_sequence": [
+        {
+          "field": "configuration",
+          "value": 33554432
+        },
+        {
+          "field": "configuration",
+          "value": 2181038080
+        },
+        {
+          "field": "configuration",
+          "value": 2181038144
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "queue_count",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260929
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2214592577
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2281701441
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "target",
+          "value": 4294967258
+        },
+        {
+          "field": "mineral_store",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "context_index": 3,
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": true,
+        "bulk_configuration": true,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "selector_boundaries": [],
+      "after": {
+        "mineral_store": 0,
+        "baseline_item": 2,
+        "baseline_minerals": 0,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 2181038145,
+        "remembered": 2181038145,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "rng_entries": 0,
+      "mutation_sequence": [
+        {
+          "field": "configuration",
+          "value": 33554432
+        },
+        {
+          "field": "configuration",
+          "value": 2181038080
+        },
+        {
+          "field": "configuration",
+          "value": 2181038144
+        },
+        {
+          "field": "configuration",
+          "value": 2181038145
+        }
+      ]
+    },
+    {
+      "context_index": 4,
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": false,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "mineral_store": 23,
+        "baseline_item": 2,
+        "baseline_minerals": 31,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "selector_boundaries": [
+        {
+          "boundary": "selector_entry",
+          "state": {
+            "mineral_store": 23,
+            "baseline_item": 2,
+            "baseline_minerals": 31,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "boundary": "selector_return",
+          "state": {
+            "mineral_store": 20,
+            "baseline_item": 2,
+            "baseline_minerals": 31,
+            "gameplay_rng": 324508639,
+            "crt_rng": 610839776,
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "mineral_store": 20,
+        "baseline_item": 2,
+        "baseline_minerals": 31,
+        "gameplay_rng": 324508639,
+        "crt_rng": 610839776,
+        "config": 2181038081,
+        "remembered": 2181038081,
+        "status": 0,
+        "queue_count": 0,
+        "target": -38,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      },
+      "rng_entries": 0,
+      "mutation_sequence": [
+        {
+          "field": "configuration",
+          "value": 33554432
+        },
+        {
+          "field": "configuration",
+          "value": 2181038080
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "queue_count",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2164260865
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2214592513
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2281701377
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "configuration",
+          "value": 2181038081
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "status",
+          "value": 0
+        },
+        {
+          "field": "target",
+          "value": 4294967258
+        },
+        {
+          "field": "mineral_store",
+          "value": 20
+        }
+      ]
+    }
+  ],
+  "save_load_cases": [
+    {
+      "status_marker": false,
+      "before": {
+        "status": 4,
+        "governor_config": 3235888705,
+        "mineral_store": 23,
+        "baseline_item": 2,
+        "baseline_minerals": 31
+      },
+      "after": {
+        "status": 4,
+        "governor_config": 3235888705,
+        "mineral_store": 23,
+        "baseline_item": 2,
+        "baseline_minerals": 31
+      }
+    },
+    {
+      "status_marker": true,
+      "before": {
+        "status": 2147483652,
+        "governor_config": 3235888705,
+        "mineral_store": 23,
+        "baseline_item": 2,
+        "baseline_minerals": 31
+      },
+      "after": {
+        "status": 2147483652,
+        "governor_config": 3235888705,
+        "mineral_store": 23,
+        "baseline_item": 2,
+        "baseline_minerals": 31
+      }
+    }
+  ],
+  "validation": {
+    "Apply_compositions": 5,
+    "full_Base_file_roundtrips": 2,
+    "general_Governor_policy": false
+  }
+}

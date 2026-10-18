@@ -173,6 +173,9 @@ struct SmacSimulationState {
 	// active perihelion bit have independent authorities and lifetimes.
 	std::optional<SmacEcologyWorld> ecology_world;
 	std::optional<bool> perihelion;
+	// V11-V26 do not own remembered Governor templates. Preserve absence per
+	// native slot, independently of each existing Base configuration.
+	std::array<std::optional<uint32_t>,8> remembered_governor{};
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

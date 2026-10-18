@@ -10,6 +10,7 @@
 #include "unit/UnitManager.h"
 #include "base/Base.h"
 #include "base/BaseManager.h"
+#include "base/SmacBaseResourceContext.h"
 #include "base/FacilityDef.h"
 #include "map/Map.h"
 #include "map/SmacPlanetMap.h"
@@ -161,6 +162,7 @@ void Game::PrepareNewSimulation() {
 	value.regional_strategy=m_smac_cross_world_strategy;
 	value.ranking_scores=m_smac_cross_world_scores;
 	value.ecology_history=m_smac_cross_world_ecology;
+	value.remembered_governor=m_smac_cross_world_governor;
 	value.ecology_world=ecology_world;
 	value.perihelion=false; // accepted fresh-world reset, never replayed on restore
 	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
@@ -168,6 +170,7 @@ void Game::PrepareNewSimulation() {
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
+		value.remembered_governor.at(participant.simulation_id)=base::SmacBaseResourceContext::NewGameGovernorOptions(value.designs.global_difficulty);
 		if(value.ecology_history) {value.ecology_history->Initialize(participant.simulation_id,0);}
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();

@@ -543,6 +543,14 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		})
 	},
 	{
+		"get_smac_governor_settings",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS(0);
+			if(!m_resource_context || !m_production || !m_production->queue || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()) {return VALUE(gse::value::Undefined);}
+			return CopySmacGovernorSettings(GSE_CALL);
+		})
+	},
+	{
 		"get_smac_queue_editor",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

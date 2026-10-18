@@ -195,7 +195,9 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 		if ( &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner ) {
 			// Drone riots begin false by explicit GLSMAC new-campaign policy.
 			// Later citizen calculation owns changes; restore never replays this.
-			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, SmacBaseResourceContext::NewGameGovernorOptions(m_game->m_simulation->value.designs.global_difficulty), false };
+			const auto options=m_game->m_simulation->value.remembered_governor.at(participant.simulation_id);
+			if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
+			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, *options, false };
 			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
 			return result;
 		}

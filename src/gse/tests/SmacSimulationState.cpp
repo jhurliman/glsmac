@@ -3,6 +3,7 @@
 #include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
+#include "game/backend/base/SmacBaseResourceContext.h"
 #include "game/backend/faction/SmacRankOrder.h"
 #include "game/backend/faction/SmacRankingScore.h"
 #include "fixtures/SmacStartupSource.h"
@@ -11,6 +12,7 @@
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
+#include <algorithm>
 #include <stdexcept>
 
 namespace gse::tests {
@@ -89,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=26,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=27,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -165,6 +167,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=26,bool
         if(value.ecology_world) {suffix.WriteInt(value.ecology_world->native_life);suffix.WriteInt(value.ecology_world->cloud_cover);suffix.WriteInt(value.ecology_world->sea_level_offset);}
         suffix.WriteBool(value.perihelion.has_value());if(value.perihelion) {suffix.WriteBool(*value.perihelion);}
     }
+    if(version>=27) {for(const auto options:value.remembered_governor) {suffix.WriteBool(options.has_value());if(options) {suffix.WriteInt(*options);}}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -182,6 +185,35 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Governor V27 preserves raw templates and per-slot legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();
+        for(size_t slot=0;slot<8;++slot) {value.remembered_governor[slot]=0x80000000u+static_cast<uint32_t>(slot);}
+        value.remembered_governor[2].reset();value.remembered_governor[7]=UINT32_MAX;
+        const auto random=value.gameplay_random;const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value
+            && value.gameplay_random==random,"Remembered templates lost raw bits, absence, peer or slot0 state");
+        const auto legacy=SmacSimulationState::Deserialize(CurrentWire(value,26),technologies,profiles,units);
+        GT_ASSERT(std::all_of(legacy.remembered_governor.begin(),legacy.remembered_governor.end(),[](const auto& options){return !options;}),
+            "V26 migration invented remembered Governor authority");
+        for(const int64_t invalid:{int64_t(-1),int64_t(UINT32_MAX)+1}) {
+            types::Buffer suffix;suffix.WriteBool(true);suffix.WriteInt(invalid);for(size_t i=1;i<8;++i) {suffix.WriteBool(false);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(Wire(value,1,27)+CurrentWire(value,26).substr(Wire(value,1,26).size())+suffix.ToString(),technologies,profiles,units);}),
+                "Out-of-range remembered Governor word admitted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"Truncated Governor suffix admitted");GT_OK();
+    });
+    task->AddTest("SMAC Governor advanced conversion maps nineteen independent masks",GT(){
+        using Context=base::SmacBaseResourceContext;
+        const std::array<uint32_t,19> masks{{0x80000000u,0x00200000u,0x80u,0x40u,1u,0x400000u,0x200u,0x400u,0x800u,0x1000u,
+            0x2000u,0x80000u,0x800000u,0x100000u,0x8000u,0x20000u,0x10000u,0x40000u,0x20u}};
+        for(size_t i=0;i<19;++i) {
+            GT_ASSERT(Context::GovernorOptions(UINT32_MAX,1u<<i)==(0x0f000000u|masks[i])
+                && Context::GovernorControls(masks[i])==(1u<<i),"Governor control mask or directive preservation differs");
+        }
+        GT_ASSERT(Context::GovernorOptions(UINT32_MAX,0)==0x0f000000u && Context::GovernorControls(0x40000000u)==0
+            && Rejects([]{Context::GovernorOptions(0,0x80000u);}),"Unrepresented bits survived or invalid control accepted");GT_OK();
+    });
     task->AddTest("SMAC ecology world V26 preserves mutable globals and independent perihelion availability",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         for(const auto active:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {

@@ -103,6 +103,8 @@ public:
 	void OpenSmacRename(GSE_CALLABLE,bool apply);
 	gse::Value* CopySmacRenameChoices(GSE_CALLABLE) const;
 	gse::Value* CopySmacQueueEditor(GSE_CALLABLE) const;
+	std::string SmacGovernorSelectionState() const;
+	gse::Value* CopySmacGovernorSettings(GSE_CALLABLE) const;
 	struct HurryOffer { std::optional<SmacHurryContext> context; int32_t credits,reserved; std::string expected,reason; };
 	HurryOffer GetSmacHurryOffer() const;
 	gse::Value* CopySmacHurryPreview(GSE_CALLABLE,int32_t amount) const;

@@ -556,7 +556,7 @@ bool Game::HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,
 bool Game::QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,
 	const gse::value::object_properties_t& args) {
 	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen) {return false;}
-	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production") {return false;}
+	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production" && name!="apply_smac_governor") {return false;}
 	ValidateCanonicalColonyScreen();
 	const gse::value::object_properties_t stamped{
 		{"request_id",VALUE(gse::value::Int,,*m_canonical_continuation->screen_request_id)},
@@ -598,6 +598,7 @@ bool Game::HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object
 		if(HandleSmacWorkerEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	} else if(command=="select_smac_production" && HandleSmacProductionEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if((command=="open_smac_specialist" || command=="select_smac_specialist" || command=="cancel_smac_specialist") && HandleSmacSpecialistEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
+	if(command=="apply_smac_governor" && HandleSmacGovernorEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if(command=="hurry_smac_production" && HandleSmacHurryEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if(command=="edit_smac_queue" && HandleSmacQueueEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if((command=="open_smac_rename" || command=="commit_smac_rename" || command=="cancel_smac_rename") && HandleSmacRenameEvent(GSE_CALL,command,payload,caller,apply)) {return true;}

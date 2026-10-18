@@ -284,6 +284,40 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Governor local Apply commits independent remembered state and actual restore",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(SelectionSource,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,7,scout,11,std::vector<ProductionItem>{scout}});
+            auto context=base->GetSmacResourceContext();context.governor_options=0x42000040u;base->SetSmacResourceContext(GSE_CALL,context);
+            const auto production=base->GetProductionState();const auto allocation=base->GetSmacAllocation();const auto random=fixture.GameplayRandom();
+            fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();state.remembered_governor[0]=0xffffffffu;state.remembered_governor[7]=0x12345678u;});
+            auto expected=base->SmacGovernorSelectionState();const auto before=fixture.Snapshot();
+            const auto command=[&](int64_t controls){game->Event(GSE_CALL,"apply_smac_governor",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},{"controls",VALUE(value::Int,,controls)}});};
+            for(const int64_t controls:{int64_t(-1),int64_t(0x80000),int64_t(1|4),int64_t(1|8),int64_t(1|16)}) {
+                GT_ASSERT(Rejects([&]{command(controls);}) && fixture.Snapshot()==before,"Unavailable Governor branch or malformed selection changed state");
+            }
+            command(0);GT_ASSERT(fixture.Snapshot()==before,"Governor applied before dispatch");fixture.DrainEvents();
+            bool remembered=false;fixture.ResourceState([&](auto& state){remembered=state.remembered_governor[1]==0x02000000u && state.remembered_governor[0]==0xffffffffu && state.remembered_governor[7]==0x12345678u;});
+            GT_ASSERT(remembered && base->GetSmacResourceContext().governor_options==0x02000000u
+                && base->GetProductionState()==production && base->GetSmacAllocation()==allocation && fixture.GameplayRandom()==random,
+                "Local inactive Apply changed allocation/production/RNG or lost independent templates");
+            const auto accepted=fixture.Snapshot();command(2);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==accepted,"Stale Governor command changed state");
+            expected=base->SmacGovernorSelectionState();fixture.ResourceState([](auto& state){state.remembered_governor[1]=7u;});
+            const auto changed=fixture.Snapshot();command(2);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==changed,"Changed remembered authority did not stale the command");
+            expected=base->SmacGovernorSelectionState();command(1);fixture.DrainEvents();
+            GT_ASSERT(base->GetSmacResourceContext().governor_options==0x82000000u,"Supported active no-management Apply failed");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"Governor Apply: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(SelectionSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);auto* base=restored.Game()->GetBM()->GetBase(701);bool remembered=false;
+            restored.ResourceState([&](auto& state){remembered=state.remembered_governor[1]==0x82000000u && state.remembered_governor[0]==0xffffffffu && state.remembered_governor[7]==0x12345678u;});
+            GT_ASSERT(remembered && base->GetSmacResourceContext().governor_options==0x82000000u,"Actual Start restore lost Governor settings");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC queued Hurry discards a Base retired by actual earlier upkeep",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -300,8 +334,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
             std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
             auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));const auto offer=base->GetSmacHurryOffer();
+            const auto governor_expected=base->SmacGovernorSelectionState();
             game->Event(GSE_CALL,"complete_turn",{});
             game->Event(GSE_CALL,"hurry_smac_production",{{"base",wrapper},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});
+            game->Event(GSE_CALL,"apply_smac_governor",{{"base",wrapper},{"expected_state",VALUE(value::String,,governor_expected)},{"controls",VALUE(value::Int,,2)}});
             fixture.DrainEvents();
             GT_ASSERT(!bm->GetBase(701) && bm->GetBase(702)==survivor && !wrapper->wrapobj && wrapper->type==VT_UNDEFINED,
                 "Earlier turn did not retire queued Hurry target through actual upkeep");
@@ -2516,18 +2552,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false}); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             std::array<std::string,8> roles; roles[0]=Roles().worker; for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
             fixture.BasePresentationRoles(roles); (void)fixture.Updates();
-            for(const int failure:{0,1,2,3,5,4}) {
+            for(const int failure:{0,1,2,3,5,4,6}) {
                 if(failure==0) {site->features|=FEATURE_XENOFUNGUS;}
                 if(failure==1) {site->rockiness=ROCKINESS_ROCKY;}
                 if(failure==2) {roles[7]="absent-role";}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant=2; game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
                 if(failure==4) {auto value=pod->Conventional(); value.spent=3; um->UpdateConventionalUnit(GSE_CALL,pod,value);}
                 if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=INT32_MAX;});}
+                if(failure==6) {fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();});}
                 const auto before=fixture.Snapshot(); const auto id=Base::GetNextId();
                 GT_ASSERT(Rejects([&]{game->GetBM()->FoundSmacBase(GSE_CALL,*pod,roles);}) && fixture.Snapshot()==before && Base::GetNextId()==id,
                     "rejected founding changed Base/Unit/knowledge or ID");
                 site->features=0; site->rockiness=ROCKINESS_FLAT; roles[7]=Roles().specialists[6];
                 if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=1;});}
+                if(failure==6) {fixture.ResourceState([](auto& state){state.remembered_governor[1]=SmacBaseResourceContext::NewGameGovernorOptions(state.designs.global_difficulty);});}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant.reset(); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
             }
             GT_OK();
@@ -2546,6 +2584,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 game->GetState()->m_settings.global.difficulty_level=difficulty-3;
                 fixture.ResourceState([&](auto& state){
                     state.designs.global_difficulty=difficulty;
+                    state.remembered_governor[1]=0x02000020u; // explicit accepted owner template, independent of startup difficulty
                     state.social.factions.front().retained->at(2)=support;
                     state.social.factions.front().current[2]=support==-2 ? 3 : -4;
                     // Explicit owner1 custom ID64, identical score to actual source2.
@@ -2566,8 +2605,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(founded && founded->GetProductionState()->current_item.smac_source_id==64
                     && founded->GetProductionState()->minerals==(support==-2 ? 0 : game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption),
                     "founding hardcoded Scout or substituted current SUPPORT for retained credit");
-                GT_ASSERT(founded->GetSmacResourceContext().governor_options==(difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
-                    && base->GetSmacResourceContext().governor_options==0x40u,"later founding copied another Base override instead of the initial faction default"); GT_OK();
+                GT_ASSERT(founded->GetSmacResourceContext().governor_options==0x02000020u
+                    && base->GetSmacResourceContext().governor_options==0x40u,"later founding ignored the remembered owner template or copied another Base override"); GT_OK();
             });GT_ASSERT(error.empty(),"founding selection: "+error);
         } GT_OK();
     });
@@ -3831,6 +3870,46 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 exact=state.roster[0].active && e.credits==111 && e.research_fraction==70 && t.labs==1 && t.target==5;
                 diagnostic=" credits="+std::to_string(e.credits)+" fraction="+std::to_string(e.research_fraction)+" labs="+std::to_string(t.labs);});
             GT_ASSERT(exact,"continuous restart/founding/upkeep differs from treasury110->111 and research0->1 receipt"+diagnostic);GT_OK();
+        });
+    });
+    task->AddTest("SMAC legacy base-less Governor recovery requires explicit acceptance and atomically founds",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(RestartSource,"GAIANS");std::string saved;
+        const auto prepared=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* owner=base->m_owner;
+            game->GetBM()->DespawnBase(GSE_CALL,base->m_id);SelectionPresentations(fixture);
+            game->GetUM()->SpawnConventionalUnit(GSE_CALL,92,game->GetUM()->GetUnitDef("choice-colony"),owner,game->GetMap()->GetTile(6,2),
+                {0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.units.push_back({92,0,false});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();state.remembered_governor[0]=0x12345678u;state.remembered_governor[7]=0xffffffffu;});
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(prepared.empty(),"legacy recovery setup: "+prepared);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(RestartSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* pod=um->GetUnit(92);
+            std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t n=0;n<7;++n){roles[n+1]=Roles().specialists[n];}restored.BasePresentationRoles(roles);
+            std::string expected;int prompts=0;
+            game->On(GSE_CALL,"smac_governor_foundation",NATIVE_CALL(&expected,&prompts) {
+                N_EXPECT_ARGS(1);N_GET(view,0,Object);expected=static_cast<value::String*>(view->Get("expected_state"))->value;++prompts;return VALUE(value::Undefined);
+            }));
+            const auto before=restored.Snapshot();const auto random=restored.GameplayRandom();
+            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}});restored.DrainEvents();
+            GT_ASSERT(prompts==1 && !expected.empty() && restored.Snapshot()==before && um->GetUnit(92)==pod,"Opening recovery changed absent settings or consumed Pod");
+            // Cancel is a UI-only dismissal: the native opening leaves no state.
+            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}});restored.DrainEvents();
+            GT_ASSERT(prompts==2 && restored.Snapshot()==before,"Cancelled/reopened recovery silently initialized settings");
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected+"stale")}});restored.DrainEvents();
+            GT_ASSERT(restored.Snapshot()==before,"Stale default choice founded or initialized settings");
+            const auto defaults=SmacBaseResourceContext::NewGameGovernorOptions(2);
+            GT_ASSERT(Rejects([&]{bm->FoundSmacBase(GSE_CALL,*pod,roles,defaults);}) && restored.Snapshot()==before,"Late missing HQ facility initialized template before failed founding");
+            bm->DefineFacility(new FacilityDef("legacy-recovery-hq","Headquarters","",0,{},1));
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)}});
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)}});restored.DrainEvents();
+            bool known=false;restored.ResourceState([&](auto& state){known=state.remembered_governor[1]==SmacBaseResourceContext::NewGameGovernorOptions(state.designs.global_difficulty)
+                && state.remembered_governor[0]==0x12345678u && state.remembered_governor[7]==0xffffffffu;});
+            GT_ASSERT(known && !um->GetUnit(92) && bm->GetBases().size()==1 && bm->GetBases().begin()->second->GetSmacResourceContext().governor_options==defaults
+                && restored.GameplayRandom()==random,"Accepted recovery failed to join template/Base/Pod publication or overwrote peers/RNG");GT_OK();
         });
     });
     task->AddTest("SMAC zero Base founding uses first Base population and facility turn packages",[](GSE*,context::Context*) -> std::string {

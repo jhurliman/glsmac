@@ -45,6 +45,7 @@ public:
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 
+    void SetSelectionBlinkAdmission(bool admitted) {m_selection_blink_admitted=admitted;}
     bool AdvanceSelectionBlink(SelectionBlink::Clock::time_point now,bool admitted) {m_selection_blink_admitted=admitted;return m_selection_blink.Poll(now,admitted);}
     bool IsSelectionBlinkVisible() const {return !m_selection_blink_admitted || m_selection_blink.Visible();}
 

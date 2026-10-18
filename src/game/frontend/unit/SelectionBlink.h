@@ -10,7 +10,7 @@ public:
     bool Poll(Clock::time_point now,bool admitted) {
         if(!m_armed) {m_next=now+HALF_PERIOD;m_armed=true;return false;}
         if(now<m_next) {return false;}
-        m_next=now+HALF_PERIOD; // coalesce late deliveries; never replay ticks
+        m_next+=HALF_PERIOD*((now-m_next)/HALF_PERIOD+1); // retain cadence, coalesce to one delivery
         if(!admitted) {return false;}
         m_visible=!m_visible;return true;
     }

@@ -86,6 +86,12 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(phase.Poll(epoch+milliseconds(2300),true) && !phase.Visible(),"next admitted callback did not toggle once");
         phase.EnsureVisible();
         GT_ASSERT(phase.Visible() && phase.Poll(epoch+milliseconds(2450),true) && !phase.Visible(),"ensure-visible rearmed shared timer");
+        Blink cadence;
+        cadence.Poll(epoch,true);
+        for(int i=1;i<=8;++i) {
+            GT_ASSERT(cadence.Poll(epoch+milliseconds(i*150+16),true),"late poll missed original cadence boundary");
+            GT_ASSERT(!cadence.Poll(epoch+milliseconds(i*150+17),true),"late poll replayed a delivery");
+        }
         GT_OK();
     });
 	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){

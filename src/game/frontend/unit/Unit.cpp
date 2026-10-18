@@ -236,6 +236,7 @@ void Unit::HideFakeBadge() {
 }
 
 void Unit::StartBadgeBlink() {
+    m_badge_defs->SetSelectionBlinkAdmission(m_um->IsSelectionBlinkAdmitted(this));
 	m_render.badge.blink=true;ShowBadge();
 }
 

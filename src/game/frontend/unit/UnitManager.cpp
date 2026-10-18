@@ -43,10 +43,12 @@ UnitManager::~UnitManager() {
 	DELETE( m_badge_defs );
 }
 
+bool UnitManager::IsSelectionBlinkAdmitted(const Unit* unit) const {
+    return unit && unit==m_selected_unit && unit->IsOwned() && unit->IsActive() && !unit->IsMoving() && m_game->IsTurnActive();
+}
+
 void UnitManager::Iterate() {
-    m_badge_defs->AdvanceSelectionBlink(SelectionBlink::Clock::now(),
-        m_selected_unit && m_selected_unit->IsOwned() && m_selected_unit->IsActive()
-        && !m_selected_unit->IsMoving() && m_game->IsTurnActive());
+    m_badge_defs->AdvanceSelectionBlink(SelectionBlink::Clock::now(),IsSelectionBlinkAdmitted(m_selected_unit));
 	ReceiveAutomaticSelection();
 	if ( m_selected_unit ) {
 		m_selected_unit->Iterate();

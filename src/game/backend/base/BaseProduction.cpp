@@ -376,14 +376,15 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
             }
         }
     }
-    // Publish the original support/pacifism marker pass for the final live
-    // roster, including a surviving newborn. Wrong-owner/home Units retain
-    // their historical bits; read-only resource previews never write them.
-    auto accounting_removal=m_game->GetUM()->PrepareRemovalForQuery(result.removed_units,unit ? &*unit:nullptr);
+    // Publish markers for the roster present at the actual support pass. A
+    // production-only call calculated before its factory; full upkeep's outer
+    // pass includes a surviving newborn. Wrong-owner/home history is retained.
+    auto* accounting_created=population_step && unit ? &*unit:nullptr;
+    auto accounting_removal=m_game->GetUM()->PrepareRemovalForQuery(result.removed_units,accounting_created);
     std::optional<unit::UnitManager::PreparedDefectionUnits> accounting;
-    m_game->GetUM()->QueryDefectionUnits(unit ? &*unit:nullptr,accounting_removal,[&] {
+    m_game->GetUM()->QueryDefectionUnits(accounting_created,accounting_removal,[&] {
         const auto changes=m_game->CalculateCanonicalUnitAccounting(*this,support);
-        accounting.emplace(m_game->GetUM()->PrepareDefectionUnitsForQuery(m_owner,changes,unit ? &*unit:nullptr,&accounting_removal));
+        accounting.emplace(m_game->GetUM()->PrepareDefectionUnitsForQuery(m_owner,changes,accounting_created,&accounting_removal));
     });
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, next_context, production, food, population, std::move(facility_changes), nullptr, {}, population_step );
 	// No callback, allocation or validation between Unit and Base authority.

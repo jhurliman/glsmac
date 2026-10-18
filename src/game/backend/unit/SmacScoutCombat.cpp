@@ -57,13 +57,19 @@ AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Partic
 }
 
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, const int32_t attacker_allowance,
-	const SmacGameplayRandomState& initial_random, const References& references, bool fanatic ) {
+	const SmacGameplayRandomState& initial_random, const References& references, bool fanatic, const StrengthBonuses& bonuses ) {
 	Validate( attacker ); Validate( defender ); ValidateAllowance( attacker_allowance );
 	Require( attacker.identity != defender.identity, "SMAC Scout participants require distinct stable identities" );
 	Require( Names( references.selected, attacker.identity, defender.identity ) && Names( references.secondary, attacker.identity, defender.identity ), "SMAC Scout references must name a participant or be absent" );
 	Require( attacker.spent <= 255 - Q, "SMAC Scout attack spending would exceed the verified nonwrapping byte domain" );
-	const auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale));
-	const std::array< int32_t, 2 > strengths{ fanatic ? Checked(int64_t(attack)*5/4) : attack, Checked( INT64_C( 32 ) * ( 6 + std::max( 1, defender.effective_morale ) ) ) };
+	const auto percent=[](int32_t strength,int32_t bonus) {return Checked(int64_t(strength)*(INT64_C(100)+bonus)/100);};
+	auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale));
+	if(fanatic) {attack=percent(attack,bonuses.fanatic_attack);}
+	// Independent native stages: truncation after FANATIC precedes the
+	// Infantry-versus-Base stage, rather than adding their percentages.
+	attack=percent(attack,bonuses.infantry_vs_base);
+	const auto defense=percent(Checked(INT64_C(32)*(6+std::max(1,defender.effective_morale))),bonuses.intrinsic_base_defense);
+	const std::array< int32_t, 2 > strengths{attack,defense};
 	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
 	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
 	std::array< int32_t, 2 > health{ attacker.health, defender.health };

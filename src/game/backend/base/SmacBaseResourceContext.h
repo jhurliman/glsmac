@@ -16,7 +16,7 @@ struct SmacConquestState {
 // Persistent inputs belonging to one canonical Base. These are not a cached
 // yield, a social rating, a population allocation, or a governor decision.
 struct SmacBaseResourceContext {
-	static constexpr uint32_t MAX_WIRE_BYTES = 7 * 14 + 4 * 7;
+	static constexpr uint32_t MAX_WIRE_BYTES = 7 * 14 + 5 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
 	static constexpr uint32_t STARTUP_AUTOMATION = 0x40000000u;
@@ -34,6 +34,7 @@ struct SmacBaseResourceContext {
 	// Absent in ordinary never-captured port records and pre-capture V2 saves.
 	// Native capture owns this history independently of current owner/size.
 	std::optional<SmacConquestState> conquest;
+	bool recent_defender_loss = false; // native status mask8; cleared at Base upkeep tail
 
 	void Validate() const;
 	SmacBaseResourceContext AfterUpkeep() const;
@@ -48,7 +49,7 @@ struct SmacBaseResourceContext {
 	bool operator==( const SmacBaseResourceContext& other ) const;
 };
 
-// Port V3 inner record (adds optional conquest history), with V2 migration.
+// Port V4 inner record (adds defender-loss aftermath), with V2/V3 migration.
 // Absent outer context means legacy/unavailable, never neutral SMAC.
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value );
 std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( types::Buffer buffer );

@@ -6,6 +6,9 @@
 #include <functional>
 #include <limits>
 #include <vector>
+#include <sstream>
+#include "loader/txt/SmacRulesTXTLoader.h"
+#include "game/backend/WorldSnapshotRules.h"
 
 namespace gse::tests {
 
@@ -19,6 +22,35 @@ static bool Rejects( const std::function< void() >& operation ) {
 }
 
 void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC combat host source freezes signed percentages in settings and world",GT(){
+		const auto source=[](const std::string& filename) {
+			auto text=fixture::Source(filename);if(filename!="alpha.txt") {return text;}
+			std::istringstream input(text);std::string line,section,result;size_t row=0;
+			while(std::getline(input,line)) {
+				if(!line.empty() && line.front()=='#') {section=line;row=0;}
+				else {++row;if(section=="#RULES" && (row==22 || row==28 || row==30)) {
+					line.replace(0,line.find(','),row==22 ? "-7" : row==28 ? "2147483647" : "-2147483648");
+				}}
+				result+=line+'\n';
+			}return result;
+		};
+		GlobalSettings host;host.SelectRuleset("smac");host.InitializeHostRules(source);fixture::AcceptWorldSize(host);
+		const SmacCombatRules expected{-7,INT32_MAX,INT32_MIN};
+		GT_ASSERT(host.GetSmacCombatRules() && *host.GetSmacCombatRules()==expected,"source combat percentages were defaulted or clamped");
+		const auto wire=host.Serialize().ToString();GlobalSettings client;client.Deserialize(types::Buffer(wire));
+		GT_ASSERT(client.Serialize().ToString()==wire,"combat profile did not survive host settings");
+		types::Buffer world;game::backend::world_snapshot::WriteHeader(world,host);
+		game::backend::world_snapshot::ValidateHeader(world,client);
+		GT_ASSERT(world.lenr==world.lenw,"world combat profile was not consumed");
+		GlobalSettings ordinary;ordinary.SelectRuleset("smac");ordinary.InitializeHostRules(fixture::Source);fixture::AcceptWorldSize(ordinary);
+		GT_ASSERT(Rejects([&]{client.Deserialize(ordinary.Serialize());}) && client.Serialize().ToString()==wire,"locked host accepted changed combat rules");
+		types::Buffer wrong_world;game::backend::world_snapshot::WriteHeader(wrong_world,ordinary);
+		GT_ASSERT(Rejects([&]{game::backend::world_snapshot::ValidateHeader(wrong_world,client);}),"world accepted changed combat rules");
+		for(size_t length=0;length<expected.Serialize().lenw;++length) {
+			GT_ASSERT(Rejects([&]{SmacCombatRules::Deserialize(types::Buffer(expected.Serialize().ToString().substr(0,length)));}),"truncated combat profile accepted");
+		}
+		host.ResetRuleset();GT_ASSERT(!host.GetSmacCombatRules(),"reset retained combat profile");GT_OK();
+	});
 	task->AddTest( "SMAC host preparation loads once while SMAX and joining never read rules files", GT() {
 		for ( const auto role : { LocalSettings::NR_NONE, LocalSettings::NR_SERVER } ) {
 			for ( const auto* id : { "smac", "smax" } ) {
@@ -102,7 +134,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				invalid.push_back( fixture::Payload( "smac", true, values ) );
 			}
 			types::Buffer short_rules;
-			short_rules.WriteInt( 16 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
+			short_rules.WriteInt( 17 ); short_rules.WriteString( "smac" ); short_rules.WriteBool( true );
 			types::Buffer prefix; prefix.WriteInt( 1 );
 			for ( size_t field = 0 ; field < i ; ++field ) { prefix.WriteInt( 1 ); }
 			short_rules.WriteString( prefix.ToString() );
@@ -124,6 +156,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // specialist profile
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // territory profile
 			rebuilt.WriteBool( reader.ReadBool() ); rebuilt.WriteString( reader.ReadString() ); // terraforming profile
+			rebuilt.WriteBool(reader.ReadBool()); rebuilt.WriteString(reader.ReadString()); // combat profile
 			types::Buffer map( reader.ReadString() );
 			if ( bad_map ) { map.WriteInt( 123 ); }
 			rebuilt.WriteString( map.ToString() );

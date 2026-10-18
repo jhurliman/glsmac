@@ -86,6 +86,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		result.WriteBool(id == "smac");
 		if (id == "smac") { result.WriteString(terraforming_rules_fixture::Wire(terraforming_rules_fixture::Profile()).ToString()); }
 	}
+	if(version>=32) {
+		result.WriteBool(id=="smac");
+		if(id=="smac") {result.WriteString(game::backend::settings::SmacCombatRules{25,25,25}.Serialize().ToString());}
+	}
 	return result;
 }
 

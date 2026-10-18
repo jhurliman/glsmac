@@ -238,16 +238,16 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
 	m_game->RequireSmacGameplayActive();
-	if(ForeignBase(unit,destination,*m_game->GetBM())) {(void)m_game->GetBM()->PrepareSmacCapture(unit,destination,caller);return;}
 	if(HasForeignOccupant(unit,destination)) {(void)PrepareConventionalAttack(unit,destination,caller);return;}
+	if(ForeignBase(unit,destination,*m_game->GetBM())) {(void)m_game->GetBM()->PrepareSmacCapture(unit,destination,caller);return;}
 	(void)PrepareConventionalMove( unit, destination, caller ); // owned copied RNG only
 }
 
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
-	if(ForeignBase(unit,destination,*m_game->GetBM())) {m_game->GetBM()->ApplySmacCapture(GSE_CALL,m_game->GetBM()->PrepareSmacCapture(unit,destination,caller));return;}
 	if(HasForeignOccupant(unit,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(unit,destination,caller));return;}
+	if(ForeignBase(unit,destination,*m_game->GetBM())) {m_game->GetBM()->ApplySmacCapture(GSE_CALL,m_game->GetBM()->PrepareSmacCapture(unit,destination,caller));return;}
 	auto prepared = PrepareConventionalMove( unit, destination, caller );
 	if ( !prepared.result ) {
 		m_game->CommitConventionalSight(prepared.sight); return;

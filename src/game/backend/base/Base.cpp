@@ -254,6 +254,7 @@ void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& 
 	context.Validate();
 	if ( context.owner_simulation_id != previous.owner_simulation_id ) { THROW( "Cannot rebind a base resource context" ); }
 	if(!(context.conquest==previous.conquest)) {THROW("Conquest history requires native capture/upkeep publication");}
+	if(context.recent_defender_loss!=previous.recent_defender_loss) {THROW("Defender-loss history requires native combat/upkeep publication");}
 	if ( previous.drone_riots == context.drone_riots ) {
 		// Governor/resource-only edits do not refresh unrelated Unit stats.
 		m_resource_context = context; TriggerUpdate(); return;
@@ -500,6 +501,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				{ "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
 				{ "golden_age", VALUE( gse::value::Bool,, state.golden_age ) },
 				{ "drone_riots", VALUE( gse::value::Bool,, state.drone_riots ) },
+				{ "recent_defender_loss", VALUE( gse::value::Bool,, state.recent_defender_loss ) },
 				{ "resource_events", VALUE( gse::value::Int,, state.resource_events ) },
 				{ "resource_event_timer", VALUE( gse::value::Int,, state.resource_event_timer ) },
 				{ "governor_options", VALUE( gse::value::Int,, state.governor_options ) },

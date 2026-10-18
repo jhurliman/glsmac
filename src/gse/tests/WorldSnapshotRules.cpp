@@ -189,7 +189,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			types::Buffer snapshot;
 			WriteHeader( snapshot, settings );
 			auto wire = snapshot;
-			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 31 && wire.ReadString() == id, "writer omitted the V31 identity" );
+			GT_ASSERT( wire.ReadInt() == rules_marker && wire.ReadInt() == 32 && wire.ReadString() == id, "writer omitted the V32 identity" );
 			const bool smac = std::string( id ) == "smac";
 			GT_ASSERT( wire.ReadBool() == smac, "numeric presence changed" );
 			if ( smac ) { wire.ReadString(); }
@@ -218,6 +218,8 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			if (smac) { GT_ASSERT(wire.ReadString() == settings.GetSmacTerritoryRules()->Serialize().ToString(), "raw territory changed"); }
 			GT_ASSERT( wire.ReadBool() == smac, "terraforming presence changed" );
 			if ( smac ) { GT_ASSERT( wire.ReadString() == settings.GetSmacTerraformingRules()->Serialize().ToString(), "terraforming profile changed" ); }
+			GT_ASSERT(wire.ReadBool()==smac,"combat presence changed");
+			if(smac) {GT_ASSERT(wire.ReadString()==settings.GetSmacCombatRules()->Serialize().ToString(),"combat profile changed");}
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );

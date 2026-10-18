@@ -11,6 +11,7 @@
 #include "game/backend/settings/SmacTerritoryRules.h"
 #include "game/backend/settings/SmacTechnologyRules.h"
 #include "game/backend/settings/SmacWorldSizeRules.h"
+#include "game/backend/settings/SmacCombatRules.h"
 
 namespace loader::txt {
 
@@ -46,6 +47,7 @@ public:
 	// Canonical 70-row SMAC RULES section. Retain only signed32 row 1;
 	// strict port text ingestion, no I/O, SMAX inference or live settings binding.
 	static game::backend::settings::SmacMovementRules ParseMovementRules( const std::string& source );
+	static game::backend::settings::SmacCombatRules ParseCombatRules( const std::string& source );
 	// Same strict 70-row policy, raw signed32 RULES row48. The owned profile
 	// derives the original 0..100 clamp separately from source identity.
 	static game::backend::settings::SmacTerritoryRules ParseTerritoryRules( const std::string& source );

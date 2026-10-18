@@ -147,6 +147,7 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 	m_smac_faction_startup_rules.reset();
 	m_smac_predefined_unit_rules.reset();
 	m_smac_movement_rules.reset();
+	m_smac_combat_rules.reset();
 	m_smac_specialist_rules.reset();
 	m_smac_territory_rules.reset();
 	m_smac_terraforming_rules.reset();
@@ -163,12 +164,14 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	std::optional< SmacFactionStartupRules > factions;
 	std::optional< SmacPredefinedUnitRules > units;
 	std::optional< SmacMovementRules > movement;
+	std::optional< SmacCombatRules > combat;
 	std::optional< SmacSpecialistRules > specialists;
 	std::optional< SmacTerritoryRules > territory;
 	std::optional< SmacTerraformingRules > terraforming;
 	if ( m_ruleset == RULESET_SMAC ) {
 		const auto source = read_source( "alpha.txt" );
 		movement = loader::txt::SmacRulesTXTLoader::ParseMovementRules( source );
+		combat = loader::txt::SmacRulesTXTLoader::ParseCombatRules( source );
 		specialists = loader::txt::SmacRulesTXTLoader::ParseSpecialistRules( source );
 		territory = loader::txt::SmacRulesTXTLoader::ParseTerritoryRules( source );
 		terraforming = loader::txt::SmacRulesTXTLoader::ParseTerraformingRules( source );
@@ -194,6 +197,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	staged.m_smac_faction_startup_rules = std::move( factions );
 	staged.m_smac_predefined_unit_rules = std::move( units );
 	staged.m_smac_movement_rules = std::move( movement );
+	staged.m_smac_combat_rules = std::move( combat );
 	staged.m_smac_specialist_rules = std::move( specialists );
 	staged.m_smac_territory_rules = std::move( territory );
 	staged.m_smac_terraforming_rules = std::move( terraforming );
@@ -205,6 +209,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	m_smac_faction_startup_rules = std::move( staged.m_smac_faction_startup_rules );
 	m_smac_predefined_unit_rules = std::move( staged.m_smac_predefined_unit_rules );
 	m_smac_movement_rules = std::move( staged.m_smac_movement_rules );
+	m_smac_combat_rules = std::move( staged.m_smac_combat_rules );
 	m_smac_specialist_rules = std::move( staged.m_smac_specialist_rules );
 	m_smac_territory_rules = std::move( staged.m_smac_territory_rules );
 	m_smac_terraforming_rules = std::move( staged.m_smac_terraforming_rules );
@@ -228,6 +233,7 @@ const std::optional< SmacWorldSizeRules >& GlobalSettings::GetSmacWorldSizeRules
 const std::optional< SmacFactionStartupRules >& GlobalSettings::GetSmacFactionStartupRules() const { return m_smac_faction_startup_rules; }
 const std::optional< SmacPredefinedUnitRules >& GlobalSettings::GetSmacPredefinedUnitRules() const { return m_smac_predefined_unit_rules; }
 const std::optional< SmacMovementRules >& GlobalSettings::GetSmacMovementRules() const { return m_smac_movement_rules; }
+const std::optional< SmacCombatRules >& GlobalSettings::GetSmacCombatRules() const { return m_smac_combat_rules; }
 const std::optional< SmacSpecialistRules >& GlobalSettings::GetSmacSpecialistRules() const { return m_smac_specialist_rules; }
 const std::optional< SmacTerritoryRules >& GlobalSettings::GetSmacTerritoryRules() const { return m_smac_territory_rules; }
 const std::optional< SmacTerraformingRules >& GlobalSettings::GetSmacTerraformingRules() const { return m_smac_terraforming_rules; }
@@ -300,6 +306,7 @@ void GlobalSettings::ResetRuleset() {
 	m_smac_faction_startup_rules.reset();
 	m_smac_predefined_unit_rules.reset();
 	m_smac_movement_rules.reset();
+	m_smac_combat_rules.reset();
 	m_smac_specialist_rules.reset();
 	m_smac_territory_rules.reset();
 	m_smac_terraforming_rules.reset();
@@ -354,7 +361,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_territory_rules.has_value() ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_terraforming_rules.has_value() ) { THROW( "Gameplay ruleset and terraforming profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 16 );
+	buf.WriteInt( 17 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -374,6 +381,9 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( m_smac_territory_rules ) { buf.WriteString( m_smac_territory_rules->Serialize().ToString() ); }
 	buf.WriteBool( m_smac_terraforming_rules.has_value() );
 	if ( m_smac_terraforming_rules ) { buf.WriteString( m_smac_terraforming_rules->Serialize().ToString() ); }
+	if ((m_ruleset==RULESET_SMAC)!=m_smac_combat_rules.has_value()) {THROW("Gameplay ruleset and combat profile do not match");}
+	buf.WriteBool(m_smac_combat_rules.has_value());
+	if(m_smac_combat_rules) {buf.WriteString(m_smac_combat_rules->Serialize().ToString());}
 	buf.WriteString( map.Serialize().ToString() );
 	buf.WriteString( rules.Serialize().ToString() );
 	buf.WriteInt( difficulty_level );
@@ -385,8 +395,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
-	if ( buf.ReadInt() != 16 ) {
-		THROW( "Unsupported global settings format (expected version 16)" );
+	if ( buf.ReadInt() != 17 ) {
+		THROW( "Unsupported global settings format (expected version 17)" );
 	}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
@@ -400,6 +410,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	std::optional< SmacFactionStartupRules > factions;
 	std::optional< SmacPredefinedUnitRules > units;
 	std::optional< SmacMovementRules > movement;
+	std::optional< SmacCombatRules > combat;
 	std::optional< SmacSpecialistRules > specialists;
 	std::optional< SmacTerritoryRules > territory;
 	std::optional< SmacTerraformingRules > terraforming;
@@ -427,6 +438,10 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	const auto has_terraforming = buf.ReadBool();
 	if ( ( ruleset == RULESET_SMAC ) != has_terraforming ) { THROW( "Gameplay ruleset and terraforming profile do not match" ); }
 	if ( has_terraforming ) { terraforming = SmacTerraformingRules::Deserialize( types::Buffer( buf.ReadString( SmacTerraformingRules::MAX_WIRE_BYTES ) ) ); }
+	const bool has_combat=buf.ReadBool();
+	if ((ruleset==RULESET_SMAC)!=has_combat) {THROW("Gameplay ruleset and combat profile do not match");}
+	if(has_combat) {combat=SmacCombatRules::Deserialize(types::Buffer(buf.ReadString(SmacCombatRules::MAX_WIRE_BYTES)));}
+	if(m_ruleset_locked && (combat.has_value()!=m_smac_combat_rules.has_value() || (combat && !(*combat==*m_smac_combat_rules)))) {THROW("Host changed the frozen combat profile");}
 	if ( m_ruleset_locked && ( terraforming.has_value() != m_smac_terraforming_rules.has_value()
 		|| ( terraforming && !( *terraforming == *m_smac_terraforming_rules ) ) ) ) { THROW( "Host changed the frozen terraforming profile" ); }
 	if ( m_ruleset_locked && ( territory.has_value() != m_smac_territory_rules.has_value()
@@ -486,6 +501,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	m_smac_faction_startup_rules = std::move( factions );
 	m_smac_predefined_unit_rules = std::move( units );
 	m_smac_movement_rules = std::move( movement );
+	m_smac_combat_rules = std::move( combat );
 	m_smac_specialist_rules = std::move( specialists );
 	m_smac_territory_rules = std::move( territory );
 	m_smac_terraforming_rules = std::move( terraforming );

@@ -389,6 +389,28 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
     return PreparedConventionalRemoval(std::move(data));
 }
+void UnitManager::PreparedConventionalRemoval::DiscoverDefendedBase(base::Base* target,int32_t observer) {
+    auto& d=*m_data;
+    if(d.committed || !target || !d.knowledge || !d.base_updates || observer<1 || observer>7) {THROW("Battle discovery requires a prepared casualty and Base");}
+    auto data=d.knowledge->CopyData();
+    if(!data.observers[observer]) {THROW("Battle discovery has no observing faction");}
+    const auto owner=target->GetSmacResourceContext().owner_simulation_id;
+    const auto bit=static_cast<uint8_t>(1u<<observer);
+    auto found=std::find_if(data.bases.begin(),data.bases.end(),[&](const auto& row){return row.id==target->m_id;});
+    if(found==data.bases.end()) {data.bases.push_back({target->m_id,bit,{}});}
+    else {found->known_by|=bit;}
+    data.observers[observer]->relations[owner].territory_recognition=true;
+    const auto* tile=target->GetTile();
+    const auto index=static_cast<size_t>(tile->coord.y)*(data.width/2)+tile->coord.x/2;
+    data.tiles.at(index).explored_by|=bit;
+    auto& memory=data.remembered[observer];if(memory.empty()) {memory.resize(data.tiles.size());}
+    // The garrison was removed in the prepared occupancy; the surviving
+    // attacker remains at its source. Do not publish movement sight.
+    memory.at(index)=map::SmacWorkerKnowledge::Improvements{tile->features,tile->terraforming,true,false};
+    d.knowledge=map::SmacWorkerKnowledge::Create(data);
+    base::BaseManager::QueueBaseUpdateInto(*d.base_updates,target,base::BaseManager::BUO_REFRESH);
+}
+
 bool UnitManager::PreparedConventionalRemoval::Removes(size_t id) const {
     return std::find(m_data->removed_ids.begin(),m_data->removed_ids.end(),id)!=m_data->removed_ids.end();
 }

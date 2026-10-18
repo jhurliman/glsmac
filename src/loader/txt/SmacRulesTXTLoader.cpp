@@ -286,6 +286,17 @@ game::backend::settings::SmacMovementRules SmacRulesTXTLoader::ParseMovementRule
 	return game::backend::settings::SmacMovementRules( ParseField( field, "row 1", 1, "RULES" ) );
 }
 
+game::backend::settings::SmacCombatRules SmacRulesTXTLoader::ParseCombatRules( const std::string& source ) {
+	const auto rules=TXTLoader::ReadUniqueSection(source,"RULES");
+	if(rules.size()!=70) {throw std::invalid_argument("SMAC combat requires 70 positional RULES rows");}
+	const auto percentage=[&](size_t row) {
+		auto field=util::String::TrimCopy(rules.at(row-1).substr(0,rules.at(row-1).find(';')));
+		if(!field.empty() && field.back()==',') {field.pop_back();field=util::String::TrimCopy(field);}
+		return ParseField(field,"row "+std::to_string(row),1,"RULES");
+	};
+	return {percentage(22),percentage(28),percentage(30)};
+}
+
 game::backend::settings::SmacTerritoryRules SmacRulesTXTLoader::ParseTerritoryRules( const std::string& source ) {
 	const auto rules = TXTLoader::ReadUniqueSection( source, "RULES" );
 	if ( rules.size() != 70 ) { throw std::invalid_argument( "SMAC territory requires 70 positional RULES rows" ); }

@@ -38,6 +38,7 @@ void RequireFrozenProfile( const settings::GlobalSettings& settings ) {
 	if ( ( id == "smac" ) != settings.GetSmacSpecialistRules().has_value() ) { throw std::runtime_error( "World snapshot specialist profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacTerritoryRules().has_value() ) { throw std::runtime_error( "World snapshot territory profile does not match ruleset" ); }
 	if ( ( id == "smac" ) != settings.GetSmacTerraformingRules().has_value() ) { throw std::runtime_error( "World snapshot terraforming profile does not match ruleset" ); }
+	if ( ( id == "smac" ) != settings.GetSmacCombatRules().has_value() ) { throw std::runtime_error( "World snapshot combat profile does not match ruleset" ); }
 	settings.ValidateWorldSize();
 }
 
@@ -101,6 +102,9 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	if ( territory ) { buffer.WriteString( territory_bytes ); }
 	buffer.WriteBool( terraforming.has_value() );
 	if ( terraforming ) { buffer.WriteString( terraforming_bytes ); }
+	const auto& combat=settings.GetSmacCombatRules();
+	buffer.WriteBool(combat.has_value());
+	if(combat) {buffer.WriteString(combat->Serialize().ToString());}
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
@@ -183,6 +187,12 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( terraforming ) {
 		const auto incoming = settings::SmacTerraformingRules::Deserialize( types::Buffer( buffer.ReadString( settings::SmacTerraformingRules::MAX_WIRE_BYTES ) ) );
 		if ( !( incoming == *terraforming ) ) { throw std::runtime_error( "World snapshot terraforming profile differs" ); }
+	}
+	const auto& combat=settings.GetSmacCombatRules();
+	if(buffer.ReadBool()!=combat.has_value()) {throw std::runtime_error("World snapshot combat presence differs");}
+	if(combat) {
+		const auto incoming=settings::SmacCombatRules::Deserialize(types::Buffer(buffer.ReadString(settings::SmacCombatRules::MAX_WIRE_BYTES)));
+		if(!(incoming==*combat)) {throw std::runtime_error("World snapshot combat profile differs");}
 	}
 
 }

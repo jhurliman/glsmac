@@ -96,7 +96,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 					for ( uint32_t governor : { 0u, 0x40u, 0x80000000u, 0xffffffffu } ) {
 						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor, flags % 3 == 0 };
 						const auto bytes = SerializeSmacBaseResourceContext( input );
-						GT_ASSERT( bytes.lenw == 98 && SmacBaseResourceContext::MAX_WIRE_BYTES == 126, "context frame extent changed" );
+						GT_ASSERT( bytes.lenw == 105 && SmacBaseResourceContext::MAX_WIRE_BYTES == 133, "context frame extent changed" );
 						const auto restored = DeserializeSmacBaseResourceContext( bytes );
 						GT_ASSERT( restored && *restored == input && SerializeSmacBaseResourceContext( restored ).ToString() == bytes.ToString(), "restore reset or normalized persistent context" );
 						GT_ASSERT( restored->GovernorActive() == ( governor >= 0x80000000u ) && restored->ManageCitizens() == ( governor == 0x40u || governor == 0xffffffffu ), "citizen and active flags became coupled" );
@@ -120,6 +120,16 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		} }
 		GT_OK();
 	} );
+	task->AddTest("SMAC Base defender-loss context survives save and clears only at upkeep tail",GT(){
+		auto input=Record();input.recent_defender_loss=true;input.conquest=SmacConquestState{2,50};
+		GT_ASSERT(DeserializeSmacBaseResourceContext(SerializeSmacBaseResourceContext(input))==input,"saved defender-loss bit was lost");
+		const auto tail=input.AfterUpkeep();
+		GT_ASSERT(!tail.recent_defender_loss && input.recent_defender_loss && tail.conquest->assimilation==49
+			&& tail.governor_options==input.governor_options && tail.drone_riots==input.drone_riots,"upkeep mutated input or unrelated status");
+		auto older=Frame(3,1,37,-7,0x8f000041u);older.WriteBool(false);
+		const auto migrated=DeserializeSmacBaseResourceContext(older);
+		GT_ASSERT(migrated==Record() && !migrated->recent_defender_loss,"V3 migration invented combat aftermath");GT_OK();
+	});
 	task->AddTest( "SMAC Base resource context rejects malformed bounded frames before publication", GT() {
 		for ( const auto& frame : { Frame( 0, 1, 0, 0, 0 ), Frame( 4, 1, 0, 0, 0 ), Frame( 2, 0, 0, 0, 0 ), Frame( 2, 8, 0, 0, 0 ),
 			Frame( 2, 1, -1, 0, 0 ), Frame( 2, 1, 64, 0, 0 ), Frame( 2, 1, 0, INT64_C( -2147483649 ), 0 ), Frame( 2, 1, 0, INT64_C( 2147483648 ), 0 ),

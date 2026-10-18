@@ -45,6 +45,46 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC Scout Base garrison matches original17 rounds and sequential bonuses",GT(){
+        const model::Participant a(ATTACKER,1,10,1,1,0),d(DEFENDER,1,10,1,1,0);
+        const auto result=model::ResolveFlatScoutAttack(a,d,3,{3,4},{ATTACKER,DEFENDER},false,{25,25,25});
+        // Original execution receipt: damage before, two raw draws, their
+        // modulo280 values, then CRT state after the pair.
+        const std::array<std::array<uint32_t,7>,17> rounds{{
+			{{0,0,51,17945,51,25,3323539102}},
+			{{0,1,27159,386,279,106,2172805640}},
+			{{0,2,17345,27504,265,64,1802518722}},
+			{{0,3,20815,20576,95,136,1348511052}},
+			{{1,3,10960,6020,40,140,394542630}},
+			{{2,3,5261,28277,221,277,4000656848}},
+			{{3,3,24162,930,82,90,2208475850}},
+			{{4,3,11002,19737,82,137,1293524884}},
+			{{5,3,17913,1682,273,2,110250670}},
+			{{5,4,10319,10474,239,114,686481048}},
+			{{5,5,1102,28279,262,279,1853301202}},
+			{{6,5,16179,21197,219,197,1389170396}},
+			{{6,6,11333,12790,133,190,838235190}},
+			{{7,6,15811,2607,131,87,170890336}},
+			{{7,7,16929,15514,129,114,1016776154}},
+			{{7,8,14450,19601,170,1,3432059684}},
+			{{7,9,23796,23159,276,199,3665287870}}
+        }};
+        GT_ASSERT(result.rounds.size()==17 && result.draws.size()==34 && (result.strengths==std::array<int32_t,2>{280,280}),"Base battle strength/draw count differs");
+        for(size_t i=0;i<rounds.size();++i) {
+            const auto& r=rounds[i];const auto& got=result.rounds[i];
+            GT_ASSERT(got.health_before[0]==10-int(r[0]) && got.health_before[1]==10-int(r[1])
+                && result.draws[2*i].raw==r[2] && result.draws[2*i+1].raw==r[3]
+                && got.draws[0]==int(r[4]) && got.draws[1]==int(r[5]) && result.draws[2*i+1].state_after==r[6],"original Base round changed");
+        }
+        GT_ASSERT(result.victory==model::Victory::Attacker && result.survivor.health==3 && result.survivor.stored_morale==2
+            && result.survivor.spent==3 && result.survivor.position==model::Position::Source && !result.references.secondary
+            && result.promotion.winner_weight==84 && result.promotion.loser_weight==280 && result.random.Crt()==3665287870u
+            && result.random.Shared()==3 && result.original_returns.wrapper_return==0,"Base aftermath or promotion differs");
+        const auto fanatic=model::ResolveFlatScoutAttack(a,d,3,{3,4},{ATTACKER,DEFENDER},true,{25,25,25});
+        GT_ASSERT((fanatic.strengths==std::array<int32_t,2>{350,280}),"FANATIC and Base stages were added instead of multiplied");
+        const auto fractional=model::ResolveFlatScoutAttack(a,d,3,{3,4},{ATTACKER,DEFENDER},true,{17,19,23});
+        GT_ASSERT((fractional.strengths==std::array<int32_t,2>{311,275}),"modded stages lost independent integer truncation");GT_OK();
+    });
 	task->AddTest( "SMAC Scout combat matches every original round draw and promotion", GT() {
 		size_t round_total = 0, draw_total = 0, admission_draws = 0, parity_draws = 0;
 		for ( const auto& c : fixture::CASES ) {

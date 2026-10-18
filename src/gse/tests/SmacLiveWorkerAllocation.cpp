@@ -760,6 +760,98 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC defended Base battle preserves ownership and saved aftermath before separate capture",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(const bool attacker_wins:{true,false}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);fixture.BasePresentationRoles(names);std::string saved;
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+                auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+                own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(6);
+                const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
+                own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                auto* target_tile=game->GetMap()->GetTile(9,9);actor->SetTile(GSE_CALL,game->GetMap()->GetTile(8,8));
+                Base* target=nullptr;
+                for(size_t id:{702u,703u}) {
+                    const size_t population=id==702 ? 2 : 1;Base::pops_t pops;
+                    for(size_t p=0;p<population;++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+                    const auto item=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,2);
+                    auto* base=new Base(game,id,foreign,foreign->GetPlayer()->GetFaction(),id==702 ? target_tile : game->GetMap()->GetTile(20,16),"Garrison",{},pops,41,5,
+                        ProductionState{item,0,item,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{2,false,0,0,0,false});
+                    bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(population)}},Roles());
+                    if(id==702) {target=base;}
+                }
+                ConventionalUnitState record{2,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};record.home_base_id=702;
+                auto* defender=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),foreign,target_tile,record);
+                auto data=KnowledgeValue(true,true,128,64).CopyData();data.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                data.units={{91,6,false},{92,6,false}};for(auto& tile:data.tiles) {tile.explored_by=6;}
+                const auto index=9*64+9/2;data.tiles[index].explored_by=4;data.tiles[index].claimant=2;
+                data.bases={{702,4,{}}};data.remembered[1].resize(data.tiles.size());data.remembered[1][index]=Knowledge::Improvements{0,0,true,true};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                fixture.ResourceState([](auto& state){state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
+                    state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=3;
+                    state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=2;});
+                fixture.GameplayRandom({3,attacker_wins ? 4u : 3u});fixture.Updates();
+                const auto before=fixture.Snapshot();um->ValidateConventionalMove(actor,target_tile,0);
+                GT_ASSERT(fixture.Snapshot()==before,"Base attack validation published casualty, status or RNG");
+                size_t hooks=0;bool coherent=true;
+                um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(target,attacker_wins,&hooks,&coherent){
+                    ++hooks;coherent=coherent && target->m_owner->GetIndex()==6 && target->m_pops.size()==2
+                        && target->GetSmacResourceContext().recent_defender_loss==attacker_wins;
+                    return VALUE(value::Undefined);
+                }));
+                fixture.MoveEvent(GSE_CALL,actor,target_tile);
+                const auto knowledge=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(hooks==1 && coherent && target->m_owner==foreign && target->m_pops.size()==2
+                    && !target->GetSmacResourceContext().conquest && target->GetSmacResourceContext().recent_defender_loss==attacker_wins,
+                    "Base battle captured ownership/population or published status after casualty callbacks");
+                if(attacker_wins) {
+                    GT_ASSERT(um->GetUnit(91)==actor && !um->GetUnit(92) && actor->GetTile()==game->GetMap()->GetTile(8,8)
+                        && actor->Conventional().damage==7 && actor->Conventional().stored_morale==2 && actor->Conventional().spent==3
+                        && fixture.GameplayRandom()==SmacGameplayRandomState(1018897798u,3665287870u) && target_tile->units.empty(),"original garrison victory differs");
+                    GT_ASSERT(knowledge.bases.front().known_by==6 && knowledge.observers[1]->relations[2].territory_recognition
+                        && knowledge.tiles[index].explored_by==6 && !knowledge.remembered[1][index]->unit_present,"victory lost Base discovery or retained garrison occupancy");
+                    const auto exhausted=fixture.Snapshot();
+                    GT_ASSERT(Rejects([&]{fixture.MoveEvent(GSE_CALL,actor,target_tile);}) && fixture.Snapshot()==exhausted,"exhausted Scout captured again or changed authority");
+                    saved=exhausted;
+                } else {
+                    GT_ASSERT(!um->GetUnit(91) && um->GetUnit(92)==defender && defender->GetTile()==target_tile
+                        && knowledge.bases.front().known_by==4 && !knowledge.observers[1]->relations[2].territory_recognition,
+                        "attacker loss published victory-only Base discovery");
+                }
+                GT_OK();
+            });if(!result.empty()) {return result;}
+            if(!attacker_wins) {continue;}
+            for(const bool capture:{true,false}) {
+                ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
+                result=restored.Run([&](GSE_CALLABLE)->std::string {
+                    // A world download carries the simulation, while its already
+                    // admitted lobby supplies Player metadata. Recreate that
+                    // same roster; full campaign files store the roster too.
+                    restored.Game()->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");
+                    restored.Game()->GetState()->m_slots->GetSlot(6).GetPlayer()->SetDifficultyLevel("Librarian");
+                    restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* target=game->GetBM()->GetBase(702);
+                    GT_ASSERT(target->GetSmacResourceContext().recent_defender_loss && target->m_pops.size()==2
+                        && restored.GameplayRandom()==SmacGameplayRandomState(1018897798u,3665287870u),"Start cleared aftermath or replayed combat");
+                    if(capture) {
+                        auto* actor=game->GetUM()->GetUnit(91);game->GetUM()->ResetConventionalSpent(GSE_CALL,actor);
+                        const auto stats=actor->QueryStats(SmacMoraleMode::Mode1);
+                        GT_ASSERT(stats.full_allowance==3 && stats.remaining_allowance==3 && actor->m_owner->GetPlayer()->GetDifficultyLevel()=="Librarian"
+                            && target->m_owner->GetPlayer()->GetDifficultyLevel()=="Librarian","restored capture input: allowance="+std::to_string(stats.full_allowance)+" remaining="+std::to_string(stats.remaining_allowance)
+                            +" attacker="+actor->m_owner->GetPlayer()->GetDifficultyLevel()+" defender="+target->m_owner->GetPlayer()->GetDifficultyLevel());
+                        restored.MoveEvent(GSE_CALL,actor,target->GetTile());
+                        GT_ASSERT(target->m_owner==actor->m_owner && target->m_pops.size()==1 && !target->GetSmacResourceContext().recent_defender_loss
+                            && target->GetSmacResourceContext().conquest && actor->GetTile()==target->GetTile(),"separate admitted capture did not clear combat aftermath");
+                    } else {
+                        target->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t){return game->GetUM()->GetUnitDef("live-scout");},SmacMoraleMode::Mode0);
+                        GT_ASSERT(!target->GetSmacResourceContext().recent_defender_loss,"ordinary Base upkeep did not clear aftermath at its tail");
+                    }GT_OK();
+                });if(!result.empty()) {return result;}
+            }
+        }GT_OK();
+    });
+
     task->AddTest("SMAC live friendly stack movement retains Base occupancy and saved sight",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string saved;

@@ -359,6 +359,7 @@ return {
 				this.production_choices = this.production_selection.listview({
 					left: 20, right: 20, top: 60, bottom: 12,
 					itemsize: 40, padding: 2, has_hscroll: false, has_vscroll: true,
+					vscroll_class: 'default-scroll-v',
 				});
 				for (choice of selection.choices) {
 					const selected = choice;

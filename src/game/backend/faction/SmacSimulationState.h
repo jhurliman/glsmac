@@ -20,6 +20,10 @@ struct SmacSimulationParticipant {
 	std::string gsid;
 	roster::Role role;
 	std::string faction_id;
+	// Independent retained authorities. Successful restart preserves both;
+	// restart_prohibited is not a restart-used counter or a zero-Base inference.
+	bool active = true;
+	bool restart_prohibited = false;
 	bool operator==( const SmacSimulationParticipant& other ) const;
 };
 
@@ -68,6 +72,8 @@ struct SmacSimulationState {
 	// Required per-owner financial authority. Absence never means neutral
 	// allocation rates or a zero treasury; restoration never posts income.
 	std::map< int32_t, SmacEconomyState > economy;
+	// Standard campaign behavior; custom rule selection must retain this value.
+	bool do_or_die = false;
 	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;

@@ -8,7 +8,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 10;
+constexpr int64_t VERSION = 11;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -47,7 +47,8 @@ bool SmacGlobalResourceModifiers::operator==( const SmacGlobalResourceModifiers&
 }
 
 bool SmacSimulationParticipant::operator==( const SmacSimulationParticipant& other ) const {
-	return simulation_id == other.simulation_id && slot == other.slot && gsid == other.gsid && role == other.role && faction_id == other.faction_id;
+	return simulation_id == other.simulation_id && slot == other.slot && gsid == other.gsid && role == other.role && faction_id == other.faction_id
+		&& active == other.active && restart_prohibited == other.restart_prohibited;
 }
 
 void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const {
@@ -87,7 +88,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -133,6 +134,11 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	}
 	buffer.WriteInt( economy.size() );
 	for ( const auto& entry : economy ) { buffer.WriteInt( entry.first ); buffer.WriteString( entry.second.Serialize().ToString() ); }
+	buffer.WriteBool( do_or_die );
+	buffer.WriteInt( roster.size() );
+	for ( const auto& participant : roster ) {
+		buffer.WriteInt( participant.simulation_id ); buffer.WriteBool( participant.active ); buffer.WriteBool( participant.restart_prohibited );
+	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -181,6 +187,12 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 			const auto id = ReadInt32( buffer );
 			auto finances = SmacEconomyState::Deserialize( buffer.ReadString( SmacEconomyState::MAX_WIRE_BYTES ) );
 			if ( id < 1 || id > 7 || !result.economy.emplace( id, std::move( finances ) ).second ) { throw std::runtime_error( "Invalid or duplicate SMAC economy owner" ); }
+		}
+		result.do_or_die = buffer.ReadBool();
+		if ( buffer.ReadInt() != count ) { throw std::runtime_error( "Invalid SMAC faction lifecycle count" ); }
+		for ( auto& participant : roster ) {
+			if ( buffer.ReadInt() != participant.simulation_id ) { throw std::runtime_error( "SMAC faction lifecycle identity differs from its roster" ); }
+			participant.active = buffer.ReadBool(); participant.restart_prohibited = buffer.ReadBool();
 		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

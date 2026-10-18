@@ -87,7 +87,7 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
         throw std::runtime_error("Only an explicit Colony question is a saved turn boundary");
     }
     std::set<int32_t> roster;
-    for(const auto& participant:m_simulation->value.roster) {roster.insert(participant.simulation_id);}
+    for(const auto& participant:m_simulation->value.roster) {if(participant.active) {roster.insert(participant.simulation_id);}}
     if(roster.size()!=next.owners.size()) {throw std::runtime_error("Saved Colony owners differ from the current roster");}
     std::set<size_t> ids;auto participant=roster.begin();
     const auto& records=m_bm->GetBaseRecordOrder();

@@ -75,7 +75,7 @@ void Game::RequireCanonicalTurn(size_t turn_id) const {
 	RequireSmacLocalHumanOwner(m_slot);
 	ValidateCurrentSimulation();
 	for (const auto& participant:m_simulation->value.roster) {
-		RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant.slot));
+		if (participant.active) {RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant.slot));}
 	}
 	const bool startup=m_current_turn.GetId()==0;
 	if (startup) { RequireConventionalStartupClaim(); }
@@ -133,7 +133,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	// controller policy; saved record order remains authoritative within it.
 	std::map<int32_t,const slot::Slot*> owners;
 	for (const auto& participant:m_simulation->value.roster) {
-		owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));
+		if (participant.active) {owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));}
 	}
 	CanonicalTurnContinuation continuation{turn_id};
 	size_t count=0;

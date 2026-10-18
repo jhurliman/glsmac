@@ -31,10 +31,15 @@ disk saves or menu navigation.
 | Save/load | PR #175 is merged with local SMAC campaign files and menu controls. Serialization now runs at an exclusive owner checkpoint; focused callback/reset/error tests, fresh review and required CI pass. Rendered menu/save/reload validation remains. | A local campaign envelope restores frozen setup, roster/local owner and the complete world without replaying first-turn creation. |
 | Lifecycle | Latest retained interactive receipts predate this renderer. | New game, close and relaunch pass with the checkpoint build. |
 
-Other live limits remain explicit: ordinary movement currently restricts damaged
-or promoted units when Bases exist; conventional attacks are not integrated;
-size-one Colony production has an unresolved choice boundary. These are not
-completed features simply because a control is visible.
+Movement now uses the existing current-allowance calculation for damaged and
+promoted units beside Bases. Ten live command compositions cover Infantry and
+the selected Spartan Rover, including Elite/damage thresholds and exhaustion.
+The cached Linux Debug build passes 19 affected groups with memory tracking;
+targeted clang-tidy 15 passes in 2.15 seconds. These checks compose the recovered
+allowance, KEY-001 admission and ordinary movement consumers; they are not new
+original-game captures. Conventional attacks remain unintegrated, and the
+prepared size-one Colony choice still awaits complete last-base disposition
+before default activation.
 
 ## Reference and platform routes
 
@@ -85,9 +90,17 @@ The later Linux checkpoint contains gameplay code through `9cd97fac` (its title
 still embeds `c14d32c7`). Focused campaign-owner and startup/research tests pass.
 Its menu renders through WSLg, but the 1024 by 768 Windows desktop clips the
 scaled window. It was closed normally before further source changes; no game
-was started and no Linux interactive pass is claimed. Desktop resolution
-restoration and Honey's human result remain pending. These presentation checks
-do not trigger another platform build for routine gameplay changes.
+was started and no Linux interactive pass is claimed. The user subsequently
+restored aleph0's usual resolution. A Linux `5902aee1` menu launch loaded its
+assets and entered the main loop, but the Windows capture helper failed with
+`system cursor manager did not become ready` and then `FrameArrived timed out`.
+No game input was sent. The test process closed normally after SIGTERM, with
+no reported memory/OpenGL resource leaks; allocation tracking was not enabled
+for that launch. Its private log is
+`C:/Users/jhurliman/.codex-validation/first-session-5902aee1/interactive.log`.
+Honey's human result and Linux interactive validation remain pending. These
+presentation checks do not trigger another platform build for routine gameplay
+changes.
 
 ## Visual-defect record
 

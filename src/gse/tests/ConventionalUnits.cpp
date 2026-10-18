@@ -693,21 +693,57 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
+	task->AddTest( "conventional damaged and promoted units use current allowance beside owned Bases", []( GSE*, context::Context* ) -> std::string {
+		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
+		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
+		struct Case { bool rover; uint8_t morale, damage, spent; int32_t allowance, spent_after; bool moved; };
+		// Complete allowance/KEY-001 thresholds composed with the ordinary flat
+		// edge (cost3). These are live port compositions, not new original traces.
+		const Case cases[] = {
+			{false,1,9,0,3,3,true}, {false,2,1,0,3,3,true},
+			{false,6,0,3,6,6,true}, {false,6,4,3,6,6,true}, {false,6,5,3,3,3,false},
+			{true,1,9,0,3,3,true}, {true,2,1,3,6,6,true},
+			{true,6,0,6,9,9,true}, {true,6,4,3,6,6,true}, {true,6,9,3,3,3,false},
+		};
+		for (const auto& c : cases) {
+			ConventionalUnitFixture fixture; fixture.Configure(true,3,true,c.rover);
+			const auto error = fixture.Run([&](GSE_CALLABLE) -> std::string {
+				auto* game=fixture.Game();auto* manager=game->GetUM();Land(game);Define(manager,c.rover);
+				fixture.RetainedMorale(0,0);fixture.RetainedPlanet(0,0);
+				auto record=Record();record.design_id=c.rover ? 64 : 2;record.stored_morale=c.morale;record.damage=c.damage;record.spent=c.spent;
+				auto* unit=Spawn(GSE_CALL,fixture,record,71,0,c.rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT");
+				auto* source=unit->GetTile();auto* destination=game->GetMap()->GetTile(3,3);HQ(GSE_CALL,game,unit,source);
+				fixture.GameplayRandom({12345,77});fixture.Updates();
+				const auto bases=BaseBytes(game);const auto jsf=game->GetRandom()->GetStateString();const auto next=Unit::GetNextId();
+				GT_ASSERT(unit->QueryStats(SmacMoraleMode::Mode1).full_allowance==c.allowance,"damaged/Elite allowance differs from original stat contract");
+				bool admitted=true;try{manager->ValidateConventionalMove(unit,destination,0);}catch(const std::exception&){admitted=false;}
+				GT_ASSERT(admitted==c.moved && fixture.GameplayRandom()==SmacGameplayRandomState(12345,77),"Base presence overrode current allowance or validation drew RNG");
+				fixture.MoveEvent(GSE_CALL,unit,destination);
+				auto expected=record;expected.spent=static_cast<uint8_t>(c.spent_after);
+				GT_ASSERT(unit->Conventional()==expected && unit->GetTile()==(c.moved ? destination : source)
+					&& source->units.count(unit->m_id)==(c.moved ? 0u : 1u) && destination->units.count(unit->m_id)==(c.moved ? 1u : 0u),
+					"damaged/promoted command failed to move once or changed health/morale");
+				GT_ASSERT(BaseBytes(game)==bases && fixture.GameplayRandom()==SmacGameplayRandomState(12345,77)
+					&& game->GetRandom()->GetStateString()==jsf && Unit::GetNextId()==next,"ordinary survivor movement changed Base/RNG/ID authority");
+				const auto updates=fixture.Updates();
+				GT_ASSERT(std::count_if(updates.begin(),updates.end(),[](const auto& r){return r.type==game::FrontendRequest::FR_UNIT_UPDATE;})==(c.moved ? 1 : 0),
+					"survivor movement lost its refresh or published an exhausted command");GT_OK();
+			});if(!error.empty()){return error;}
+		}GT_OK();
+	} );
 	task->AddTest( "conventional remote ordinary ground rejects unsupported contexts atomically", []( GSE*, context::Context* ) -> std::string {
 		using namespace map::tile;
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
 		// Former terrain/equal-infrastructure/owned-proximity rejections are
 		// superseded by the complete ordinary movement receipt above.
-		for ( const int scenario : { 0, 1, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 } ) {
+		for ( const int scenario : { 0, 1, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 } ) {
 			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign();
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); const auto world = PopulateRemoteGround( GSE_CALL, fixture, remote_ground_fixture::CASES[ 0 ] );
 				auto* unit = world.local; auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 17, 17 ); size_t caller = 0;
 				if ( scenario == 0 ) { source->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 1 ) { destination->features = FEATURE_XENOFUNGUS; }
-				if ( scenario == 12 ) { auto state = unit->Conventional(); state.damage = 1; manager->UpdateConventionalUnit( GSE_CALL, unit, state ); }
-				if ( scenario == 13 ) { auto state = unit->Conventional(); state.stored_morale = 2; manager->UpdateConventionalUnit( GSE_CALL, unit, state ); }
 				if ( scenario == 14 ) { world.remote[ 0 ]->SetTile( GSE_CALL, source ); }
 				if ( scenario == 15 ) { world.remote[ 0 ]->SetTile( GSE_CALL, destination ); }
 				if ( scenario == 16 ) { world.remote[ 0 ]->SetTile( GSE_CALL, source->W ); }
@@ -1066,12 +1102,11 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "conventional selected Rover HQ rejects unmeasured or no-longer-selected contexts", []( GSE*, context::Context* ) -> std::string {
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
-		for ( int scenario = 0; scenario < 8; ++scenario ) {
+		for ( int scenario = 2; scenario < 8; ++scenario ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager, true );
 				auto record = Record(); record.design_id = 64;
-				if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
 				auto* unit = Spawn( GSE_CALL, fixture, record, 71, 0, "EXPLICIT_ROVER" );
 				auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 ); auto* hq = HQ( GSE_CALL, game, unit, source );
 				fixture.Updates();
@@ -1108,12 +1143,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
 		// Ordinary terrain and larger/non-HQ Bases are now admitted. Preserve
 		// the independent fungus-only population/facility boundary below.
-		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 18, 19, 20, 21 } ) {
+		for ( const int scenario : { 2, 3, 4, 5, 6, 7, 8, 9, 14, 18, 19, 20, 21 } ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 4 ? 6 : 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
 				fixture.RetainedPlanet( 0, 0 ); fixture.RetainedMorale( 0, 0 );
-				auto record = Record(); if ( scenario == 0 ) { record.damage = 1; } if ( scenario == 1 ) { record.stored_morale = 2; }
+				auto record = Record();
 				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 3, 3 );
 				auto* hq = HQ( GSE_CALL, game, unit, source );
 				fixture.Updates(); // retire valid spawn presentation before deliberate native corruption

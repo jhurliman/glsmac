@@ -118,9 +118,10 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		// participant and its actual selected owned design, never slot arithmetic.
 		const bool selected_rover = context.presentation == ConventionalUnitContext::Presentation::SelectedSpartanRover
 			&& design.chassis == 1 && stats.basic_allowance == 6;
-		if ( stored.stored_morale != 1 || stored.damage != 0
-			|| stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
-			throw std::runtime_error( "Movement with Bases requires a healthy measured Infantry or selected Spartan Rover with quantum3" );
+		// Damage and effective morale have already produced full_allowance.
+		// Base proximity adds no second health or stored-morale admission gate.
+		if ( stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
+			throw std::runtime_error( "Movement with Bases requires admitted Infantry or selected Spartan Rover with quantum3" );
 		}
 		if ( !( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
 			for ( const auto& entry : bases ) {

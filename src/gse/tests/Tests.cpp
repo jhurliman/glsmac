@@ -65,6 +65,7 @@
 #include "SmacEconomyState.h"
 #include "SmacLiveEconomy.h"
 #include "SmacResearch.h"
+#include "HumanResearchValue.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
@@ -162,6 +163,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacEconomyStateTests( task );
 		tests::AddSmacLiveEconomyTests( task );
 		tests::AddSmacResearchTests( task );
+		tests::AddHumanResearchValueTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );

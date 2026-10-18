@@ -558,7 +558,12 @@
           20
         ],
         "clock_value": 100,
-        "draw_work_supplied": true
+        "draw_work_supplied": true,
+        "map_width": 128,
+        "map_height": 64,
+        "map_topology_flags": 0,
+        "horizontal_wrap": true,
+        "secondary_view": true
       },
       "expected": {
         "center": [
@@ -586,7 +591,12 @@
           20
         ],
         "clock_value": 100,
-        "draw_work_supplied": true
+        "draw_work_supplied": true,
+        "map_width": 128,
+        "map_height": 64,
+        "map_topology_flags": 0,
+        "horizontal_wrap": true,
+        "secondary_view": true
       },
       "expected": {
         "center": [
@@ -609,7 +619,12 @@
           20
         ],
         "clock_value": 100000,
-        "draw_work_supplied": true
+        "draw_work_supplied": true,
+        "map_width": 128,
+        "map_height": 64,
+        "map_topology_flags": 0,
+        "horizontal_wrap": true,
+        "secondary_view": true
       },
       "expected": {
         "center": [
@@ -637,7 +652,12 @@
           20
         ],
         "clock_value": 4294967280,
-        "draw_work_supplied": true
+        "draw_work_supplied": true,
+        "map_width": 128,
+        "map_height": 64,
+        "map_topology_flags": 0,
+        "horizontal_wrap": true,
+        "secondary_view": true
       },
       "expected": {
         "center": [

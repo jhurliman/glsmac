@@ -1,7 +1,7 @@
 # Animation fidelity and live caller gaps
 
 The original has distinct clocks for selection, unit display, effects, window
-slides and movies. The [timing inventory](behavior/animation-timing-inventory.md)
+slides. Movie timing remains unverified. The [timing inventory](behavior/animation-timing-inventory.md)
 and [25-control follow-up](behavior/animation-timing-followup.md) distinguish
 requested intervals, model-frame indices and visible presentation. All original
 evidence here is stock SMAC; SMAX/PRACX remains unverified.

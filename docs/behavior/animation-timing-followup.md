@@ -62,7 +62,8 @@ or change a real window lifecycle.
 
 ## Camera and model findings
 
-Four complete recenter-helper controls use a supplied final redraw: changed,
+Four complete recenter-helper controls use a128×64 horizontally wrapped map
+(topology flags0), a secondary view and a supplied final redraw: changed,
 unchanged, stalled clock and wrapped destination. The target fields already
 contain the final requested coordinates when redraw is entered. No clock is
 read, and the unchanged request skips the redraw. This rules out adding a

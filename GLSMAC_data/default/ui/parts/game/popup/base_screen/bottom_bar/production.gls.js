@@ -56,7 +56,7 @@ return {
 		});
 	},
 
-	set_stored: (production, presentation) => {
+	set_stored: (production, presentation, surplus) => {
 		this.production_title.text = #is_defined(presentation) ? presentation.name : 'UNAVAILABLE';
 		this.production_cells.clear();
 		this.production_cells.text({
@@ -64,7 +64,21 @@ return {
 			align: 'top center',
 			text: #is_defined(production) ? 'Stored: ' + #to_string(production.minerals) : 'Stored: unavailable',
 		});
-		this.production_label.text = 'Forecast unavailable';
+        if (#is_defined(production) && #is_defined(presentation) && #is_defined(presentation.cost) && presentation.cost > 0) {
+            this.production_cells.clear();
+            this.production_cells.text({class: 'base-screen-frame-text', align: 'top center', text: 'Stored: ' + #to_string(production.minerals) + ' / ' + #to_string(presentation.cost)});
+            let remaining = 'Remaining: unavailable';
+            if (production.minerals >= (0 - 2147483648)) {
+                let missing = presentation.cost - production.minerals;
+                if (missing < 0) { missing = 0; }
+                remaining = 'Remaining: ' + #to_string(missing);
+            }
+            this.production_cells.text({class: 'base-screen-frame-text', align: 'top center', top: 18, text: remaining});
+            if (#is_defined(surplus)) {
+                this.production_cells.text({class: 'base-screen-frame-text', align: 'top center', top: 36, text: 'Net/turn: ' + (surplus >= 0 ? '+' : '') + #to_string(surplus)});
+            }
+        }
+		this.production_label.text = #is_defined(presentation) && #is_defined(presentation.forecast) ? presentation.forecast : 'Forecast unavailable';
 	},
 
 	set: (data) => {

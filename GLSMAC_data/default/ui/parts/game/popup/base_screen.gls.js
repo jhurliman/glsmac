@@ -162,10 +162,12 @@ return {
 		let intake = undefined;
 		let consumption = undefined;
 		let energy = undefined;
+        let mineral_surplus = undefined;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+            mineral_surplus = calculation.minerals.surplus;
 			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
@@ -283,6 +285,7 @@ return {
 
 		this.sections.bottom_bar.set({
 			base: base,
+            mineral_surplus: mineral_surplus,
 		});
 	},
 

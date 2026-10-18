@@ -1,4 +1,5 @@
 #include "Base.h"
+#include "SmacProductionDisplay.h"
 #include <limits>
 #include <set>
 #include <utility>
@@ -558,7 +559,15 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_smac_production_presentation",
 		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 0 );
+			N_EXPECT_ARGS_MIN_MAX(0,1);
+            // Optional current surplus is a pure display-formatting input. It
+            // grants no gameplay authority and cannot post or alter production.
+            std::optional<int32_t> surplus;
+            if(!arguments.empty()) {
+                N_GETVALUE(value,0,Int);
+                if(value<INT32_MIN || value>INT32_MAX) {GSE_ERROR(gse::EC.INVALID_CALL,"Production display surplus requires signed32");}
+                surplus=static_cast<int32_t>(value);
+            }
 			if ( !m_resource_context || !m_production || !m_production->queue ) { return VALUE( gse::value::Undefined ); }
 			const auto available = [ & ]( const ProductionItem& item ) {
 				return item.smac_source_id && (item.kind!=ProductionItemKind::Unit || *item.smac_source_id<64
@@ -586,6 +595,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			gse::value::object_properties_t fields{
 				{ "name", VALUE( gse::value::String,, label( m_production->current_item ) ) },
 			};
+            // Costs use the actual local faction/world/INDUSTRY authority.
+            // Foreign display labels do not grant that private calculation.
+            const auto kind=m_production->current_item.kind;
+            if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()
+                && (kind==ProductionItemKind::Unit || kind==ProductionItemKind::Facility)) {
+                const auto cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);
+                fields.emplace("cost",VALUE(gse::value::Int,,cost));
+                if(surplus && m_production->minerals>=INT32_MIN && m_production->minerals<=INT32_MAX) {
+                    const auto label=FormatSmacProductionForecast(cost,m_production->minerals,*surplus);
+                    if(label) {fields.emplace("forecast",VALUE(gse::value::String,,*label));}
+                }
+            }
 			if ( m_production->queue ) {
 				gse::value::array_elements_t queue;
 				for ( const auto& item : *m_production->queue ) { queue.push_back( VALUE( gse::value::String,, label( item ) ) ); }

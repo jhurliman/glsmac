@@ -880,7 +880,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto& rules=game->GetState()->m_settings.global;
             const auto& rows=static_cast<value::Array*>(view->Get("queue"))->value;
             GT_ASSERT(static_cast<value::String*>(view->Get("name"))->value==rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
-                && rows.size()==9,"Current identity or full queue missing");
+                && rows.size()==9 && static_cast<value::Int*>(view->Get("cost"))->value==game->GetSmacProductionCost(base->m_owner,scout),"Current identity, cost or full queue missing");
             for(size_t i=0;i<rows.size();++i) {
                 const auto expected=i%3==0 ? rules.GetSmacProductionRules()->facilities.at(2).name
                     : i%3==1 ? rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
@@ -888,10 +888,36 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(static_cast<value::String*>(rows[i])->value==expected,"Saved queue order or source names changed");
             }
             GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Read-only projection mutated stores, queue, world or gameplay RNG");
-            GT_OK();
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,7,scout,888,queue});
+            const auto prepared=fixture.Snapshot();
+            auto* formatted=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(static_cast<value::Int*>(formatted->Get("cost"))->value==40
+                && static_cast<value::String*>(formatted->Get("forecast"))->value=="TURNS:  9"
+                && fixture.Snapshot()==prepared && fixture.GameplayRandom()==random,"forecast used switching baseline, wrong cost or mutated authority");
+            auto* no_surplus=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation"));
+            GT_ASSERT(no_surplus->value.count("forecast")==0,"missing current surplus invented a forecast");
+            GT_ASSERT(Rejects([&]{Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,int64_t(INT32_MAX)+1)});})
+                && fixture.Snapshot()==prepared,"wide formatting surplus narrowed or changed authority");
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,INT64_MAX,scout,888,queue});
+            const auto wide=fixture.Snapshot();
+            auto* unavailable=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(unavailable->value.count("cost")==1 && unavailable->value.count("forecast")==0 && fixture.Snapshot()==wide,
+                "wide port store crashed or fabricated an original forecast");GT_OK();
         });
     });
 
+    task->AddTest("SMAC production cost display withholds foreign authority without hiding identity",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,6,2);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,7,scout,7,std::vector<ProductionItem>{}});
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(view->value.count("cost")==0 && view->value.count("forecast")==0 && view->value.count("name")==1 && fixture.Snapshot()==before
+                && fixture.GameplayRandom()==random,"foreign display invented local cost authority or mutated state");GT_OK();
+        });
+    });
     task->AddTest("SMAC live human membership survives Start without transport or inactive-owner inference",[](GSE*,context::Context*)->std::string {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         for(const uint8_t membership:{2,6}) {

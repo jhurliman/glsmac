@@ -44,7 +44,8 @@ tokens, foreign control, unavailable retained facilities, actual Base save codec
 and completion advancing the saved queue exactly once. The real GSE editor test
 passes add, move, remove, limit, cancel, submit, stale-view and screen entry
 callbacks. Complete-screen fixtures also pass the final unavailable-control
-binding.
+binding. All nine Base inspector GSE scripts also pass after adapting the
+energy-screen and stored-production test doubles to the new section/control.
 
 The new source is registered and compiled through genuine CMake. Correctness
 analysis passes all four changed production translation units. Focused

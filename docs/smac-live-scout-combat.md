@@ -9,6 +9,11 @@ movement, and no existing protected diplomacy. This is a controlled combat
 slice; other designs, terrain, partial-movement confirmation, Base capture,
 strategic AI, network play and victory remain separate work.
 
+Directional keyboard input sends conventional Units through this native move
+route even when the frontend sees an enemy. Legacy native-life combat retains
+its separate script event. The queued callback carries scalar Unit IDs and
+destination coordinates and resolves current entities before dispatch.
+
 The existing copied-RNG combat kernel feeds the live survivor, casualty,
 home-Base refreshes, remembered occupancy and ordered Unit roster. These publish
 together before despawn hooks. A second queued direction for a killed Unit is

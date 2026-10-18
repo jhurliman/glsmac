@@ -1663,15 +1663,18 @@ void Game::Initialize(
 											foreign_units.insert( it );
 										}
 									}
+									const auto selected_id=selected_unit->GetId();
+									const auto destination_coords=dst_tile->GetCoords();
+									const auto defender_id=foreign_units.empty() ? std::optional<size_t>{}
+										: std::optional<size_t>{tile::Tile::GetUnitsOrder(foreign_units).front()};
 									m_glsmac->WithGSE(
-										[ &game, &selected_unit, &tile, &foreign_units ]( GSE_CALLABLE ) {
+										[ game, selected_id, destination_coords, defender_id ]( GSE_CALLABLE ) {
 											const auto* um = game->GetUM();
-											if ( foreign_units.empty() ) {
-												// move
-												auto* unit = um->GetUnit( selected_unit->GetId() );
-												const auto& c = tile->GetCoords();
-												auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
-												ASSERT( unit, "unit not found" );
+											auto* unit=um->GetUnit(selected_id);
+											if(!unit) {return;}
+											if ( unit->IsConventional() || !defender_id ) {
+												// Native conventional movement owns hostile admission and battle.
+													auto* dst_tile = game->GetMap()->GetTile( destination_coords.x, destination_coords.y );
 												game->Event(
 													GSE_CALL, "move_unit", {
 														{ "unit", unit->Wrap( GSE_CALL ) },
@@ -1681,10 +1684,9 @@ void Game::Initialize(
 											}
 											else {
 												// attack
-												auto* attacker = um->GetUnit( selected_unit->GetId() );
-												ASSERT( attacker, "attacker unit not found" );
-												auto* defender = um->GetUnit( foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() )->GetId() );
-												ASSERT( attacker, "defender unit not found" );
+													auto* attacker = unit;
+													auto* defender = um->GetUnit(*defender_id);
+													if(!defender) {return;}
 												game->Event(
 													GSE_CALL, "attack_unit", {
 														{ "attacker", attacker->Wrap( GSE_CALL ) },

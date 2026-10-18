@@ -26,6 +26,7 @@ return (game, base, ui) => {
 		result.surface = child;
 		result.widget = child;
 		result.listview = child;
+		result.scrollview = child;
 		if (!#is_defined(result.text)) { result.text = child; }
 		return result;
 	};

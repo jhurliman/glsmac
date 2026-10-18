@@ -7,7 +7,7 @@ const node = (data) => {
     data.clear = () => { data.children = []; };
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
-    data.panel = child; data.listview = child; data.button = child;
+    data.panel = child; data.listview = child; data.button = child; data.scrollview = child;
     if (!#is_defined(data.text)) { data.text = child; }
     return data;
 };

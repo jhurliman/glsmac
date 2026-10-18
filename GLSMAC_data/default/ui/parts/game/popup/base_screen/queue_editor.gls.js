@@ -6,7 +6,7 @@ return {
         this.window.text({class: 'game-popup-text', top: 10, left: 12, text: 'Pending production queue'});
         this.window.text({class: 'game-popup-text', top: 35, left: 12, right: 12, text: 'Current production is unchanged. New choices must be eligible now.'});
         this.caption = this.window.text({class: 'game-popup-text', top: 60, left: 12, text: ''});
-        this.choices = this.window.listview({class: 'default-panel-inner', left: 12, width: 210, top: 85, bottom: 55, itemsize: 32, has_hscroll: false, has_vscroll: true, vscroll_class: 'default-scroll-v'});
+        this.choices = this.window.scrollview({left: 12, width: 210, top: 85, bottom: 55, has_hscroll: false, has_vscroll: true, vscroll_class: 'default-scroll-v'});
         this.rows = this.window.panel({left: 230, right: 12, top: 85, bottom: 55});
         this.window.button({class: 'game-popup-button', align: 'bottom left', left: 12, width: 330, bottom: 12, height: 28, text: 'Accept queue'}).on('click', () => { this.submit(); return true; });
         this.window.button({class: 'game-popup-button', align: 'bottom left', left: 354, right: 12, bottom: 12, height: 28, text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
@@ -19,12 +19,14 @@ return {
         this.base = base; this.data = data; this.entries = [];
         for (item of data.items) { this.entries :+ {existing: item.existing, name: item.name}; }
         this.choices.clear();
+        let choice_top = 0;
         for (choice of data.choices) {
             const id = choice.source_id; const name = choice.name;
-            this.choices.button({class: 'game-popup-button', left: 0, right: 0, height: 28, text: 'Add ' + name}).on('click', () => {
+            this.choices.button({class: 'game-popup-button', left: 4, right: 4, top: choice_top, height: 28, text: 'Add ' + name}).on('click', () => {
                 if (#sizeof(this.entries) < this.data.limit) { this.entries :+ {source_id: id, name: name}; this.refresh(); }
                 return true;
             });
+            choice_top += 32;
         }
         this.active = true; this.refresh(); this.window.show();
     },

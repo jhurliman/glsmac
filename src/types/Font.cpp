@@ -27,6 +27,8 @@ size_t Font::GetTextWidth( const char* text ) const {
 	size_t width = 0;
 	for ( const char* p = text ; *p ; p++ ) {
 		unsigned char sym = (unsigned char)*p;
+		// Match the renderer's ASCII fallback, including each UTF-8 byte.
+		if ( sym < 32 || sym >= 128 ) { sym = ' '; }
 		auto* bitmap = &m_symbols[ sym ];
 		width += bitmap->ax;
 	}
@@ -37,6 +39,7 @@ size_t Font::GetTextHeight( const char* text ) const {
 	size_t height = 0;
 	for ( const char* p = text ; *p ; p++ ) {
 		unsigned char sym = (unsigned char)*p;
+		if ( sym < 32 || sym >= 128 ) { sym = ' '; }
 		auto* bitmap = &m_symbols[ sym ];
 		const auto h = bitmap->height + bitmap->ay;
 		if ( h > height ) {

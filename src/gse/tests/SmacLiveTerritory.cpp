@@ -94,6 +94,12 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		const auto wire=changed.Serialize();GT_ASSERT(Topology::Deserialize(wire)==changed,"stale areas changed on restore");
 		for(int variant=0;variant<3;++variant) {auto bad=wire;if(variant==0) {bad[13]=0;}if(variant==1) {bad.back()=4;}if(variant==2) {bad.pop_back();}
 			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"invalid geography metadata accepted");}
+		for(const size_t word:{size_t(0),size_t(127),size_t(128),size_t(255)}) {for(const int32_t negative:{-1,INT32_MIN}) {
+			auto bad=wire;WriteArea(bad,16+1024+4*word,negative);
+			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"negative saved area or fertility counter accepted");
+		}}
+		auto retained=wire;WriteArea(retained,16+1024+4*127,INT32_MAX);
+		GT_ASSERT(Topology::Deserialize(retained).Serialize()==retained,"valid retained positive history was recounted or clamped");
 		auto legacy=value.Serialize().substr(0,1040);legacy.replace(0,8,"GLSTERR1");legacy[13]=0;legacy[14]=0;
 		const auto old=Topology::Deserialize(legacy);old.ValidateTerrain(std::vector<bool>(1024,false));
 		GT_ASSERT(!old.Areas() && !old.Postpass() && Topology::Deserialize(old.Serialize())==old,"V1 load invented retained geography");

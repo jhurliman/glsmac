@@ -151,6 +151,11 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string&
 		Require( y == 0 || y == height-1 ? region == 63 || region == 127 : (region >= 1 && region <= 61) || (region >= 65 && region <= 125),
 			"Invalid territory topology region" );
 	}
+	// A and F are retained producer counts, never signed adjustments. Preserve
+	// stale positive history, but reject malformed values before allocating or
+	// publishing an owned topology.
+	const auto counter_end=16+count+(areas ? 512 : 0)+(postpass ? 512 : 0);
+	for(size_t offset=16+count;offset<counter_end;offset+=4) {Require(Read32(wire,offset)>=0,"Negative retained geography counter");}
 	if(postpass) {for(size_t i=16+count+1024;i<wire.size();++i) {Require(static_cast<uint8_t>(wire[i])<=3,"Invalid coastal metadata flags");}}
 	std::vector<uint8_t> regions; regions.reserve(count);
 	for (size_t i = 0; i < count; ++i) { regions.push_back(static_cast<uint8_t>(wire[16+i])); }

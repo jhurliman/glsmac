@@ -3,6 +3,7 @@ SUBDIR( mocks )
 SET( SRC ${SRC}
 
 	${PWD}/SmacOrdinaryLandExploration.cpp
+	${PWD}/SmacNativeUnitRecord.cpp
 	${PWD}/SmacEcology.cpp
 	${PWD}/Tests.cpp
 	${PWD}/SmacPlanetMap.cpp

@@ -12,6 +12,8 @@
 #include "gse/value/String.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/Player.h"
+#include "gse/value/Bool.h"
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
 
@@ -103,7 +105,14 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
 }
 
 gse::Value* Base::CopySmacResourceCalculation( GSE_CALLABLE ) const {
-    const auto result = PrepareSmacResourceCalculation();
+    m_game->ValidateCurrentSimulation();
+    const auto owner=GetSmacResourceContext().owner_simulation_id;
+    const auto& roster=m_game->m_simulation->value.roster;
+    const auto participant=std::find_if(roster.begin(),roster.end(),[&](const auto& row){return row.simulation_id==owner;});
+    if(participant==roster.end()) {THROW("Resource display owner is outside the admitted roster");}
+    const bool retained_only=!participant->active;
+    if(retained_only && !m_smac_upkeep_cache) {THROW("Inactive Base has no retained resource calculation");}
+    const auto result = retained_only ? m_smac_upkeep_cache->calculation:PrepareSmacResourceCalculation();
     const bool owned=m_owner && m_owner->GetPlayer()==m_game->GetPlayer();
     const auto snapshot=[&](const std::optional<SmacCitizenCalculation>& value)->gse::Value* {
         if(!owned || !value) {return VALUE(gse::value::Null);}
@@ -120,12 +129,14 @@ gse::Value* Base::CopySmacResourceCalculation( GSE_CALLABLE ) const {
             {"after_police",counts(c.after_police)},{"final",counts(c.final)}}));
     };
     std::string unavailable;
-    if(owned && !result.citizens) {(void)m_game->CalculateCanonicalCitizens(*this,result,nullptr,{},nullptr,{},nullptr,&unavailable);}
+    if(owned && !retained_only && !result.citizens) {(void)m_game->CalculateCanonicalCitizens(*this,result,nullptr,{},nullptr,{},nullptr,&unavailable);}
+    if(retained_only) {unavailable="This faction is inactive; showing its last resource calculation";}
     if(!owned) {unavailable="Citizen details are available for your Bases";}
     const std::optional<SmacCitizenCalculation> retained=m_smac_upkeep_cache ? m_smac_upkeep_cache->calculation.citizens:std::nullopt;
 
     return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
-        {"citizens",snapshot(result.citizens)},
+        {"retained_only",VALUE(gse::value::Bool,,retained_only)},
+        {"citizens",snapshot(retained_only ? std::nullopt:result.citizens)},
         {"retained_citizens",snapshot(retained)},
         {"citizens_unavailable",VALUE(gse::value::String,,unavailable)},
         { "eco_damage", result.eco_damage ? static_cast<gse::Value*>(VALUE(gse::value::Int,, *result.eco_damage)) : static_cast<gse::Value*>(VALUE(gse::value::Null)) },

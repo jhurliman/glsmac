@@ -230,6 +230,7 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
 	m_game->RequireSmacGameplayActive();
+	if(m_resource_context) {m_game->RequireSmacProductionOwner(m_owner);}
 	m_game->CheckRW( GSE_CALL );
 	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	// Copy completely before swapping: even an allocation failure preserves the

@@ -32,7 +32,9 @@ return {
         return this.buttons;
     },
     set_base: (base) => { this.active = false; this.window.hide(); this.base = base; this.energy.set_base(base); },
+    set_retained_resources: () => { this.read_only_notice.text = 'Faction inactive. Showing last resource calculation; close to continue.'; },
     set_read_only: (value) => {
+        this.read_only_notice.text = 'Base changed faction. Close this screen to continue.';
         this.read_only = value;
         if (value) { this.hide_view(); this.governor_button.hide(); this.energy_button.hide(); this.read_only_notice.show(); }
         else { this.governor_button.show(); this.energy_button.show(); this.read_only_notice.hide(); }

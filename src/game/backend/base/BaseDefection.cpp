@@ -20,9 +20,14 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     auto* um=m_game->GetUM();auto* bm=m_game->GetBM();auto& simulation=m_game->m_simulation->value;
     const auto old_owner=attempt.context.owner_simulation_id,new_owner=attempt.recipient;
     const auto participant=std::find_if(simulation.roster.begin(),simulation.roster.end(),[&](const auto& row){return row.simulation_id==new_owner;});
-    if(new_owner==old_owner || new_owner<1 || new_owner>7 || participant==simulation.roster.end() || !participant->active) {
-        THROW("Riot transfer requires an active admitted recipient");
+    if(new_owner==old_owner || new_owner<1 || new_owner>7 || participant==simulation.roster.end()) {
+        THROW("Riot transfer requires an admitted positive recipient");
     }
+    // The original transfers without activating or initializing the recipient.
+    // This synchronous calculation permission changes no saved control state.
+    if(m_game->m_smac_riot_query_owner) {THROW("Riot recipient calculation cannot nest");}
+    util::FinallyGuard recipient_query([&]{m_game->m_smac_riot_query_owner.reset();});
+    m_game->m_smac_riot_query_owner=new_owner;
     auto* recipient=&m_game->GetState()->m_slots->GetSlot(participant->slot);m_game->RequireSmacLocalHumanOwner(recipient);
     if(!attempt.context.FormerOwner() || !simulation.retained_base_totals || !simulation.victory_history) {
         THROW("Riot transfer requires retained former faction, Base totals and activity history");
@@ -157,6 +162,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     const auto own=std::find_if(facility_changes.begin(),facility_changes.end(),[&](const auto& row){return row.first==this;});
     if(own==facility_changes.end()) {facility_changes.emplace_back(this,std::move(facilities));}else {own->second=std::move(facilities);}
     auto worker=PrepareSmacWorkerState(GSE_CALL,allocation,attempt.roles,context,production,attempt.food,attempt.population,std::move(facility_changes),recipient,std::move(refresh),false,nullptr,true);
+    m_game->m_smac_riot_query_owner.reset(); // no privilege survives into publication/callbacks
     attempt.committed=true;
     if(attempt.publication) {*attempt.publication=true;}
     if(attempt.created) {result.completed_unit=attempt.created->Commit()->m_id;}

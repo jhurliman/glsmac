@@ -17,7 +17,7 @@ namespace game::backend {
 
 void Game::RequireSmacLocalHumanOwner( const slot::Slot* owner ) const {
 	const auto& participant = RequireSmacProductionOwner( owner );
-	if ( !m_simulation->value.IsHuman(participant.simulation_id) || !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
+	if ( (m_smac_riot_query_owner!=participant.simulation_id && !m_simulation->value.IsHuman(participant.simulation_id)) || !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
 		|| ( participant.role != roster::Role::Single && participant.role != roster::Role::Player ) ) {
 		throw std::runtime_error( "Canonical calculation requires the explicit local human-controlled roster" );
 	}
@@ -28,7 +28,7 @@ const faction::SmacSimulationParticipant& Game::RequireSmacProductionOwner( cons
 	if ( !m_simulation || !owner ) { throw std::runtime_error( "Canonical production requires a bound owner" ); }
 	for ( const auto& participant : m_simulation->value.roster ) {
 		if ( &m_state->m_slots->GetSlot( participant.slot ) == owner ) {
-			if (!participant.active) { throw std::runtime_error("Eliminated faction cannot perform production or worker actions"); }
+			if (!participant.active && m_smac_riot_query_owner!=participant.simulation_id) { throw std::runtime_error("Eliminated faction cannot perform production or worker actions"); }
 			return participant;
 		}
 	}
@@ -36,13 +36,18 @@ const faction::SmacSimulationParticipant& Game::RequireSmacProductionOwner( cons
 }
 
 base::ProductionItem Game::MakeSmacProductionItem( const slot::Slot* owner, const base::ProductionItemKind kind, const int32_t source_id ) const {
-	const auto& participant = RequireSmacProductionOwner( owner );
+	// Catalog identity is needed during snapshot decoding before roster repair.
+    // This read-only factory does not admit a production command.
+    ValidateCurrentSimulation();
+    if(!m_simulation || !owner) {throw std::runtime_error("Production catalog requires a bound owner");}
+    const auto participant=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& row){return &m_state->m_slots->GetSlot(row.slot)==owner;});
+    if(participant==m_simulation->value.roster.end()) {throw std::runtime_error("Production catalog owner is outside the admitted roster");}
 	base::ProductionItem item{ kind, kind == base::ProductionItemKind::Stockpile ? "" : "smac:" + std::to_string( static_cast< int64_t >( kind ) ) + ":" + std::to_string( source_id ), source_id };
 	item.Validate();
 	const auto& global = m_state->m_settings.global;
 	if ( !global.GetSmacProductionRules() || !global.GetSmacPredefinedUnitRules() ) { throw std::runtime_error( "Canonical production catalogs are unavailable" ); }
 	if ( kind == base::ProductionItemKind::Unit ) {
-		(void)ResolveConventionalDesign( { source_id, participant.simulation_id, 1, 0, 0, false,
+		(void)ResolveConventionalDesign( { source_id, participant->simulation_id, 1, 0, 0, false,
 			unit::ConventionalUnitState::Home::None, unit::SmacMoraleMode::Mode0 }, *m_simulation );
 	}
 	else if ( global.GetSmacProductionRules()->facilities.at( source_id - 1 ).source_id != source_id ) {

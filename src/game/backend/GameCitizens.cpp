@@ -50,13 +50,13 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     }
     const auto difficulty=unit::SmacStartupDesignState::OriginalDifficulty(target.m_owner->GetPlayer()->GetDifficultyLevel());
     base::SmacCitizenCalculation result{};result.population=p;result.excluded=x;result.social_talent=social->current.at(3);result.police=social->current.at(5);
-    result.prefix=base::CalculateSmacCitizenPrefix(p,true,difficulty,drone,talent,context.conquest ? context.conquest->assimilation:0);
+    result.prefix=base::CalculateSmacCitizenPrefix(p,simulation.IsHuman(context.owner_simulation_id),difficulty,drone,talent,context.conquest ? context.conquest->assimilation:0);
     if(result.prefix.after_faction<0 || result.prefix.faction_talents<0) {return missing("Negative custom faction citizen conversion is not established");}
     const auto& order=m_bm->GetBaseRecordOrder();const auto position=std::find(order.begin(),order.end(),target.m_id);
     if(position==order.end() || order.size()>INT32_MAX) {throw std::runtime_error("Citizen Base has no global record position");}
     const auto total=simulation.retained_base_totals->at(context.owner_simulation_id);
     if(total<0) {return missing("Citizen bureaucracy requires a nonnegative retained faction Base total");}
-    result.bureaucracy=base::CalculateSmacCitizenBureaucracy(p,true,difficulty,social->current.at(1),static_cast<int32_t>(m_map->GetWidth()),static_cast<int32_t>(m_map->GetHeight()),total,static_cast<int32_t>(position-order.begin())).drones;
+    result.bureaucracy=base::CalculateSmacCitizenBureaucracy(p,simulation.IsHuman(context.owner_simulation_id),difficulty,social->current.at(1),static_cast<int32_t>(m_map->GetWidth()),static_cast<int32_t>(m_map->GetHeight()),total,static_cast<int32_t>(position-order.begin())).drones;
     // This energy calculation validates every registered local facility and the
     // no-project admission. Candidate slots and a staged local grant are read-only.
     const auto energy=CalculateCanonicalBaseEnergy(target,resources,nullptr,&*allocation,granted);

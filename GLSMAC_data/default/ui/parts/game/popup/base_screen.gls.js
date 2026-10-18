@@ -170,14 +170,17 @@ return {
         let citizens = undefined;
 		let ecodamage = canonical ? 'N/A' : 0;
         let mineral_surplus = undefined;
+        let retained_resources = false;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+            retained_resources = #is_defined(calculation.retained_only) && calculation.retained_only;
+            if (retained_resources && read_only) { this.sections.top_buttons.set_retained_resources(); }
 			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
-            mineral_surplus = calculation.minerals.surplus;
+            if (!retained_resources) { mineral_surplus = calculation.minerals.surplus; }
             citizens = {current: calculation.citizens, retained: calculation.retained_citizens, reason: calculation.citizens_unavailable};
-			energy = base.get_smac_energy_calculation();
+			if (!retained_resources) { energy = base.get_smac_energy_calculation(); }
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
 			if (#is_defined(energy)) {
@@ -197,7 +200,8 @@ return {
 		this.sections.hurry.on_base_update(base);
 
 		if (canonical) {
-			let nutrients = base.get_smac_nutrient_presentation();
+			let nutrients = undefined;
+            if (!retained_resources) { nutrients = base.get_smac_nutrient_presentation(); }
 			if (!#is_defined(nutrients)) { nutrients = {stored: base.get_accumulated_nutrients()}; }
 			this.sections.nutrients.set_stored(nutrients);
 		} else {

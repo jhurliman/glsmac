@@ -6,6 +6,7 @@ const queue = #include('../default/ui/parts/game/popup/base_screen/bottom_bar/qu
 const bottom = #include('../default/ui/parts/game/popup/base_screen/bottom_bar');
 const portraits = #include('../default/ui/parts/game/popup/base_screen/bottom_bar/middle_area');
 const resource = #include('../default/ui/parts/game/popup/base_screen/middle_area/resource');
+let retained_response = false;
 let commands = []; let closes = 0; let middle_data = null; let bottom_data = null;
 const node = (data) => {
     data.handlers = {}; data.children = []; data.hidden = false;
@@ -29,8 +30,10 @@ const base = {id: 701, name: 'Transferred Base', has_smac_resource_context: true
     get_smac_rename_state: () => { return 'owned-state'; },
     get_smac_specialist_selection_state: () => { return 'owned-state'; },
     get_smac_base_navigation: () => { return undefined; },
-    get_smac_resource_calculation: () => { return {nutrients: {intake: 2, demand: 2}, minerals: {intake: 2, demand: 0, surplus: 2}, raw_intake: {ENERGY: 1}}; },
-    get_smac_energy_calculation: () => { return undefined; }, get_smac_nutrient_presentation: () => { return {stored: 0}; },
+    get_smac_resource_calculation: () => { return {retained_only: retained_response, nutrients: {intake: 2, demand: 2}, minerals: {intake: 2, demand: 0, surplus: 2}, raw_intake: {ENERGY: 1}}; },
+    get_smac_energy_calculation: () => { if (retained_response) { throw 'Inactive energy calculation must not run'; } return undefined; },
+    get_accumulated_nutrients: () => { return 0; },
+    get_smac_nutrient_presentation: () => { if (retained_response) { throw 'Inactive growth forecast must not run'; } return {stored: 0}; },
     get_facilities: () => { return {}; }, get_pops: () => { return []; }, get_production_state: () => { return undefined; },
     get_smac_production_presentation: (surplus) => { return undefined; },
     get_smac_support_presentation: () => { return undefined; }};
@@ -55,7 +58,10 @@ screen.open_rename(); screen.open_queue_editor(); screen.open_hurry(); screen.op
 screen.show_production_selection(); screen.update_production_selection();
 test.assert(screen.production_selection == null && #sizeof(commands) == 0);
 test.assert(top.governor_button.handlers.click({}) && top.energy_button.handlers.click({}) && !top.active);
+retained_response = true;
 screen.set({base: base}); test.assert(screen.read_only && top.governor_button.hidden);
+test.assert(top.read_only_notice.text == 'Faction inactive. Showing last resource calculation; close to continue.', #to_string(top.read_only_notice.text) + ' / ' + #to_string(base.get_smac_resource_calculation().retained_only));
+retained_response = false;
 let queue_read_only = false; let portrait_data = null;
 bottom.parts = {queue: {set_read_only: (value) => { queue_read_only = value; }, set_stored: (value) => {}},
     production: {set_stored: (state, presentation, surplus) => {}}, support: sink, middle_area: {set: (data) => { portrait_data = data; }}};

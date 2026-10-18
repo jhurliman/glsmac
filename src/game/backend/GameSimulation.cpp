@@ -407,7 +407,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 			participant = &candidate; break;
 		}
 	}
-	if ( !participant || !participant->active || !profiles->Find( participant->faction_id ) ) { throw std::runtime_error( "Conventional owner does not match an active simulation participant" ); }
+	if ( !participant || !profiles->Find( participant->faction_id ) ) { throw std::runtime_error( "Conventional owner does not match an active simulation participant" ); }
 	const auto& catalog = units->catalog;
 	simulation.value.designs.Validate( catalog );
 	const auto design = ResolveConventionalDesign( state, simulation );

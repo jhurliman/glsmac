@@ -71,3 +71,49 @@ counter storage and ownership replay events are not represented by this patch.
 General AI/revival, projects and Nerve Staple remain outside current admission.
 Psych currently has functional text stages with provisional population artwork;
 there is no original Psych screenshot-diff claim.
+
+
+## Inactive former recipients and load repair
+
+The [frozen inactive-recipient contract](riot-inactive-former-recipient.md) closes
+an earlier admission hole. A positive bound former faction receives the Base and
+eligible Units while remaining inactive. No initializer, restart, activation,
+human-control change or extra draw is substituted. Existing economy, technology,
+custom-design namespace, pending debit, diplomacy and loss history stay owned by
+that faction; only the measured transfer deltas are published.
+
+Persistent Base/Unit identity is distinct from permission to act. A synchronous,
+exact-recipient private calculation scope admits its retained providers during
+preparation, restores on failure, and expires before publication callbacks. The
+recipient's citizen prefix/bureaucracy consume its actual saved human bit. Public
+production/work commands retain active-owner guards; movement checks activity
+explicitly. An inactive Base screen uses its tagged retained resource calculation,
+withholds fresh energy/growth forecasts and remains read-only.
+
+Canonical traversal retains all bound owner memberships so ownership normalization
+and suspended snapshots represent inactive-owned entities. Inactive owner rows
+skip the entire Base pass and owner summary/debit/ecology tail. Active recipients
+retain ordinary earlier/later traversal; inactive recipients get no extra food or
+old/new-owner posting from the ownership-change return.
+
+After actual snapshot entities and home links are registered, load repair sets
+activity from owned Bases or original design role8 (Colony Pod), clears it otherwise,
+and preserves human control, retained fields and RNG. Saved continuation membership
+is decoded before this repair; resumption consults the repaired activity. Ordinary
+Units alone do not activate an owner. A retained port human-defeat request that
+would contradict the repaired roster is rejected before any activity writes; this
+is an explicit port admission boundary, not evidence of original ending behavior.
+
+Validation: eight actual transfer compositions include inactive human/AI recipients,
+transferred Colony Screen, and old-peer research suspension/save/Start/answer.
+Seven actual Start controls cover Base/Pod/ordinary-Unit/empty-roster repair,
+human-bit/retained-state/RNG canaries and contradictory-ending rejection. Current
+support remains the admitted default/retained Rover design domain; arbitrary
+inactive custom designs and full AI play are separate unfinished milestones.
+
+Targeted verification for this review correction: 101 affected native groups plus
+29 independent actual Start/restore consumer groups pass (130 distinct groups).
+Thirteen changed/affected production translation units pass targeted correctness;
+four focused native groups pass ASan/UBSan with fourteen instrumented caller and
+transaction translation units, reusing matching normal objects elsewhere. Three
+affected real-module GSE scripts pass. No platform matrix or new artwork claim.

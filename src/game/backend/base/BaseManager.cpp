@@ -175,7 +175,6 @@ void BaseManager::ValidateSmacResourceContext( const SmacBaseResourceContext& co
 		if ( participant.simulation_id == context.owner_simulation_id
 			&& &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner
 			&& faction && participant.faction_id == faction->m_id ) {
-			if (!participant.active) { THROW("Eliminated faction cannot own a live canonical Base"); }
 			return;
 		}
 	}

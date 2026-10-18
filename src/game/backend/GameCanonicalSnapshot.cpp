@@ -150,9 +150,9 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
     for(size_t i=0;i<next.owners.size();++i) {
         const auto& owner=next.owners[i];
         const auto participant=roster.find(owner.first);
-        // A faction lost earlier in this same upkeep can remain in the visited
-        // traversal. Previously inactive factions need not be present at all.
-        if(owner.first<=previous || participant==roster.end() || (!participant->second && i>=next.owner_index)) {
+        // Inactive factions can own entities after riot transfer. Retain their
+        // membership without admitting their controller for upkeep.
+        if(owner.first<=previous || participant==roster.end()) {
             throw std::runtime_error("Saved Colony owner order or activity differs from the current roster");
         }
         previous=owner.first;required.erase(owner.first);

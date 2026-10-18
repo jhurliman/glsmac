@@ -501,8 +501,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC riot live transfer follows later and earlier owner traversal",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& name){auto text=HabitationGrowthSource(name,7);
             if(name=="gaians.txt") {const auto at=text.find("SOCIAL,-POLICE");text.replace(at,14,"SOCIAL,---POLICE");}return text;};
-        for(const int32_t scenario:{1,2,3,4}) {
-            const int32_t old_owner=scenario>=3 ? 1:scenario;const bool screen=scenario==3,suspended=scenario==4;
+        for(const int32_t scenario:{1,2,3,4,5,6,7,8}) {
+            const bool inactive=scenario>=5;const int32_t old_owner=scenario>=3 ? 1:scenario;const bool screen=scenario==3 || scenario==8,suspended=scenario==4 || scenario==7;
             const int32_t recipient=3-old_owner,former=scenario==1 ? old_owner:recipient;std::string saved;int64_t food=0,final_food=0;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source,true);
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -526,7 +526,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         ProductionState{item,0,item,0,std::vector<ProductionItem>{}},copy);
                     bm->SpawnBase(GSE_CALL,peer);peer->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());return peer;
                 };
-                auto* old_peer=make_peer(702,old_owner,16,16);make_peer(703,recipient,24,8);
+                auto* old_peer=make_peer(702,old_owner,16,16);if(!inactive) {make_peer(703,recipient,24,8);}
                 if(suspended) {bm->DefineFacility(new FacilityDef("transfer-hq","HQ","",0,{},1));old_peer->m_facilities.emplace("transfer-hq",bm->GetFacilityDef("transfer-hq"));}
                 auto known=KnowledgeValue(true,true,128,64).CopyData();known.observers[2]=Knowledge::Observer{false,{}};known.observers[2]->pact_with=0;
                 for(auto& tile:known.tiles) {tile.explored_by=6;tile.claimant=old_owner;}
@@ -539,13 +539,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 };
                 spawn(92,old_owner,2,701,screen ? 22:2,screen ? 20:2,"choice-scout");
                 spawn(93,old_owner,screen ? 2:1,701,20,20,screen ? "choice-scout":"choice-former");
-                spawn(94,recipient,2,703,5,3,"choice-scout");
+                if(!inactive) {spawn(94,recipient,2,703,5,3,"choice-scout");}
                 if(screen) {auto terrain=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
                     for(const auto x:{20u,22u}) {terrain.tiles.at(20*64+x/2).claimant=recipient;}
                     game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(terrain));}
                 base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{screen ? 5u:255u,{{},0}},Roles());
                 fixture.ResourceState([&](auto& state){std::array<int32_t,7> scores{};scores[old_owner-1]=10;scores[recipient-1]=1;
                     state.rank_order=faction::SmacRankOrder::Update(scores,6);
+                    if(inactive) {for(auto& row:state.roster) {if(row.simulation_id==recipient) {row.active=false;}}if(scenario==6) {state.human_membership&=~(1u<<recipient);}state.retained_base_totals->at(recipient)=0;state.economy.at(recipient).credits=217;state.economy.at(recipient).pending_debit=11;state.economy.at(recipient).research_fraction=37;}
                     state.battle_plan_target[0]=701;state.battle_plan_target[1]=701;state.battle_plan_target[2]=702;state.battle_plan_target[3]=701;
                     for(size_t i=0;i<2;++i) {state.technology.factions[i].target=5;state.technology.factions[i].cached_threshold=100000;}
                     if(suspended) {state.economy.at(old_owner).rates={0,10};state.technology.factions[old_owner-1].target.reset();}
@@ -563,6 +564,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(pending->type==VT_OBJECT && base->GetSmacResourceContext().owner_simulation_id==recipient
                         && static_cast<value::Bool*>(static_cast<value::Object*>(pending)->Get("read_only"))->value,
                         "Accepted Colony Screen did not retain the transferred stable Base as read-only");
+                    if(inactive) {auto* calculation=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_resource_calculation"));
+                        GT_ASSERT(static_cast<value::Bool*>(calculation->Get("retained_only"))->value,"Inactive Screen did not distinguish its retained resource display");}
                     bool research_untouched=false;fixture.ResourceState([&](auto& state){research_untouched=state.technology.factions[old_owner-1].labs==labs;});
                     GT_ASSERT(base->GetAccumulatedNutrients()==surplus && research_untouched
                         && game->GetCanonicalEconomy(&game->GetState()->m_slots->GetSlot(0)).credits==credits,
@@ -572,7 +575,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 GT_ASSERT(game->GetTurnId()==2 && base->GetSmacResourceContext().owner_simulation_id==recipient,
                     "Actual owner pass did not transfer the rioting Base");
-                food=(screen ? 0:13)+surplus*(old_owner==1 && !suspended ? 2:1);final_food=13+2*surplus;
+                food=(screen ? 0:13)+surplus*(old_owner==1 && !suspended && !inactive ? 2:1);final_food=13+2*surplus;
                 GT_ASSERT(base->GetAccumulatedNutrients()==food && base->GetSmacResourceContext().FormerOwner()==former
                     && base->GetSmacResourceContext().conquest->assimilation==(former==recipient ? 0:49),
                     "Transferred Base replayed or skipped its normal owner pass: food="+std::to_string(base->GetAccumulatedNutrients())+" expected="+std::to_string(food));
@@ -580,14 +583,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     && um->GetUnit(92)->Conventional().home_base_id==701)) && um->GetUnit(91)->Conventional().owner_simulation_id==old_owner,
                     "Riot transfer did not convert inner Units, lose remote target homes, or preserve homeless Units");
                 GT_ASSERT((screen || (*um->GetUnit(92)->Conventional().retained_state_word&0x03004200u)==0)
-                    && (*um->GetUnit(94)->Conventional().retained_state_word&0x40000u)==0,
+                    && (inactive || (*um->GetUnit(94)->Conventional().retained_state_word&0x40000u)==0),
                     "Riot Unit cleanup lost the literal state masks");
-                GT_ASSERT(base->GetProductionState()->hurry_partial_paid==(old_owner==2 || suspended)
-                    && bool(*base->GetSmacResourceContext().retained_status_word&0x40000000u)==(old_owner==2 || suspended),
+                GT_ASSERT(base->GetProductionState()->hurry_partial_paid==(old_owner==2 || suspended || inactive)
+                    && bool(*base->GetSmacResourceContext().retained_status_word&0x40000000u)==(old_owner==2 || suspended || inactive),
                     "Partial Hurry marker did not survive transfer until its recipient owner reset");
                 bool retained=false;fixture.ResourceState([&](auto& state){retained=state.battle_plan_target[0]==701 && state.battle_plan_target[1]==-1
                     && state.battle_plan_target[2]==702 && state.battle_plan_target[3]==-1;});
                 GT_ASSERT(retained,"Transfer cleared slot0/unrelated battle targets or retained a matching positive target");
+                if(inactive) {bool still_inactive=false;fixture.ResourceState([&](auto& state){for(const auto& row:state.roster) {if(row.simulation_id==recipient) {still_inactive=!row.active && state.economy.at(recipient).credits==217 && state.economy.at(recipient).pending_debit==11 && state.economy.at(recipient).research_fraction==37 && state.IsHuman(recipient)==(scenario!=6);}}});
+                    GT_ASSERT(still_inactive,"Riot transfer activated its eliminated recipient");
+                    const auto before=fixture.Snapshot();bool rejected=false;
+                    try {base->SetProductionState(GSE_CALL,base->GetProductionState());}catch(const std::runtime_error&) {rejected=true;}
+                    GT_ASSERT(rejected && fixture.Snapshot()==before,"Inactive production command bypassed its active-owner fence or retained private calculation permission");
+                    if(scenario==6) {GT_ASSERT(base->GetSmacUpkeepCache()->calculation.citizens->prefix.content_allowance==3,"Inactive AI recipient used human citizen difficulty");}}
                 if(suspended) {GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_research")->type==VT_OBJECT,
                     "Old peer did not suspend at actual research after transfer");}
                 saved=fixture.Snapshot();GT_OK();
@@ -598,6 +607,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* base=restored.Game()->GetBM()->GetBase(701);
                 GT_ASSERT(base->GetSmacResourceContext().owner_simulation_id==recipient && base->GetAccumulatedNutrients()==food,
                     "Actual Start lost completed ownership traversal");
+                if(inactive) {bool repaired=false;restored.ResourceState([&](auto& state){for(const auto& row:state.roster) {if(row.simulation_id==recipient) {repaired=row.active;}}});
+                    GT_ASSERT(repaired,"Actual Start did not repair inactive Base ownership");}
                 if(suspended) {
                     std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}restored.BasePresentationRoles(names);
                     auto* game=restored.Game();auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_research"));
@@ -607,6 +618,46 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         "Restored old-peer research replayed transfer or skipped the recipient's later pass");
                 }GT_OK();
             });if(!restore.empty()) {return restore;}
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC load roster repair uses Bases or Colony role and preserves retained state",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& name){return HabitationGrowthSource(name,7);};
+        for(int scenario=0;scenario<7;++scenario) {
+            const bool base_owned=scenario==0 || scenario==6,pod=scenario==1 || scenario==5;
+            const bool prior_active=scenario==2 || scenario==3;
+            const bool ending=scenario==6;std::string saved;SmacGameplayRandomState random{0,0};
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source,true);
+            const auto prepared=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Populate(GSE_CALL,fixture,true,false,base_owned ? 6:0,base_owned ? 2:1,7);SelectionPresentations(fixture);
+                if(!base_owned && scenario!=3) {
+                    using namespace unit;ConventionalUnitState record{pod ? 0:2,2,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                    game->GetUM()->SpawnConventionalUnit(GSE_CALL,92,game->GetUM()->GetUnitDef(pod ? "choice-colony":"choice-scout"),
+                        &game->GetState()->m_slots->GetSlot(6),game->GetMap()->GetTile(6,2),record);
+                }
+                fixture.ResourceState([&](auto& state){state.roster[1].active=prior_active;
+                    if(scenario==5) {state.human_membership&=~4u;}
+                    state.economy.at(2).credits=217;state.economy.at(2).research_fraction=37;
+                    state.technology.factions[1].labs=123;state.technology.factions[1].target=5;
+                    if(ending) {state.human_defeat_request=2;}
+                });random=fixture.GameplayRandom();saved=fixture.Snapshot();GT_OK();
+            });if(!prepared.empty()) {return prepared;}
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(source,true);
+            const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                if(ending) {
+                    bool rejected=false;try {restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});}
+                    catch(const std::runtime_error& error) {rejected=std::string(error.what()).find("ending conflicts")!=std::string::npos;}
+                    GT_ASSERT(rejected,"Contradictory saved ending silently changed retained ending/roster authority");
+                    bool unavailable=false;try {(void)restored.Snapshot();}catch(const std::exception&) {unavailable=true;}
+                    GT_ASSERT(unavailable,"Rejected ending/repair world remained saveable");GT_OK();
+                }
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool exact=false;
+                restored.ResourceState([&](auto& state){exact=state.roster[1].active==(base_owned || pod)
+                    && state.IsHuman(2)==(scenario!=5) && state.economy.at(2).credits==217 && state.economy.at(2).research_fraction==37
+                    && state.technology.factions[1].labs==123 && state.technology.factions[1].target==5;});
+                GT_ASSERT(exact && restored.GameplayRandom()==random,"Load roster repair changed retained fields/control/RNG or used an ordinary Unit as a Pod");
+                (void)restored.Snapshot();GT_OK();
+            });if(!result.empty()) {return "roster repair "+std::to_string(scenario)+": "+result;}
         }GT_OK();
     });
 

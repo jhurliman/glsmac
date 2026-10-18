@@ -66,7 +66,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	// Active participants and the local controller are distinct. This port
 	// route uses the accepted local participant, never an inferred faction slot.
 	const auto* participant = simulation.FindSlot( caller );
-	if ( !participant || participant->role != roster::Role::Single
+	if ( !participant || !participant->active || participant->role != roster::Role::Single
 		|| caller != m_game->GetSlotNum() || unit->m_owner != &state->m_slots->GetSlot( caller ) ) {
 		throw std::runtime_error( "Conventional movement requires the accepted local single-player controller" );
 	}

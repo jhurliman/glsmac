@@ -4848,6 +4848,11 @@ public:
 		const auto expected = source.m_game.m_simulation->value;
 		const auto snapshot = source.WorldSnapshot(); const auto random = source.m_game.GetRandom()->GetStateString();
 		GT_ASSERT( source.m_game.m_simulation->value == expected, "snapshot writer advanced gameplay RNG" );
+        // This transport fixture owns no Bases or Units. Native post-load repair
+        // clears activity without changing the serialized owner payloads.
+        auto repaired=expected;for(auto& owner:repaired.roster) {owner.active=false;}
+        source.m_game.m_simulation->value=repaired;
+        const auto repaired_snapshot=source.WorldSnapshot();source.m_game.m_simulation->value=expected;
 		Client* client = nullptr; Value* observations = nullptr; size_t errors = 0;
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			// Real canonical join order: roster then phase then frozen settings.
@@ -4900,7 +4905,7 @@ public:
 			GT_ASSERT( errors == ( failure == 3 ? 0u : 1u ), "late simulation mismatch did not take terminal startup failure" );
 			GT_OK();
 		}
-		GT_ASSERT( m_game.IsRunning() && !m_game.m_pending_simulation && m_game.m_simulation->value == expected && m_game.GetRandom()->GetStateString() == random,
+		GT_ASSERT( m_game.IsRunning() && !m_game.m_pending_simulation && m_game.m_simulation->value == repaired && m_game.GetRandom()->GetStateString() == random,
 			"claimed Start replayed grants, reallocated IDs, or lost exact continuation" );
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto phases = static_cast< value::Array* >( static_cast< value::Callable* >( observations )->Run( GSE_CALL, {} ) );
@@ -4927,7 +4932,7 @@ public:
 						&& !static_cast< value::Bool* >( row->Get( "active" ) )->value && !static_cast< value::Bool* >( row->Get( "prototyped" ) )->value, "restore regenerated custom state" );
 				}
 			}
-			GT_ASSERT( WorldSnapshot() == snapshot, "complete world serialization changed after restore" );
+			GT_ASSERT( WorldSnapshot() == repaired_snapshot, "complete world serialization changed after restore" );
 			// Real refresh packet preserves the accepted Player lifetime, despite
 			// copied wire records and flags. Retain/reconnect uses the real State path.
 			const auto identity = m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity();
@@ -4936,7 +4941,7 @@ public:
 			GT_ASSERT( client->ErrorReason().empty() && m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity, "same-occupant refresh replaced the Player" );
 			m_state->m_slots->GetSlot( 6 ).GetPlayer()->Connect(); // downloaded remote was initially disconnected
 			m_state->RetirePlayerSlot( 6, client, true, []() {} ); m_state->ReconnectPlayerSlot( 6, 90, "rejoined" );
-			GT_ASSERT( m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity && WorldSnapshot() == snapshot,
+			GT_ASSERT( m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity && WorldSnapshot() == repaired_snapshot,
 				"retained reconnect rederived or lost simulation state" );
 			if ( early ) {
 				auto refreshed = expected.social;
@@ -9679,6 +9684,10 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			} );
 			GT_ASSERT( source_error.empty(), "source setup: " + source_error );
+            if(scenario==3) {source.ResourceState([](auto& state) {
+                // The legacy Base is bound to slot2; the other owner has no Pod.
+                for(auto& owner:state.roster) {owner.active=owner.slot==2;}
+            });}
 			const auto snapshot = source.WorldSnapshot();
 			const auto error = destination.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = destination.GetGame();

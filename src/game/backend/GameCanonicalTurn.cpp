@@ -26,6 +26,9 @@
 
 namespace game::backend {
 namespace {
+bool IsActiveOwner(const faction::SmacSimulationState& state,int32_t owner) {
+    return std::any_of(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner && row.active;});
+}
 bool HasEcologyCalculationAuthority(const faction::SmacSimulationState& state,const settings::GlobalSettings& settings,const map::Map& world) {
     return world.GetWidth()>=8 && state.ecology_history && state.ecology_world && state.perihelion && settings.GetSmacEcologyRules();
 }
@@ -188,14 +191,16 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	for (const auto id:records) {
 		const auto* base=m_bm->GetBase(id);
 		if (!base || !base->HasSmacResourceContext()) { throw std::runtime_error("Canonical campaign contains a legacy or missing Base"); }
-		RequireSmacLocalHumanOwner(base->m_owner);
+        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        const auto row=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& p){return p.simulation_id==owner;});
+        if(row!=m_simulation->value.roster.end() && row->active) {RequireSmacLocalHumanOwner(base->m_owner);}
 	}
 	// The original upkeep traverses one faction's live records at a time.
 	// Ascending accepted simulation IDs are the explicit local human campaign
 	// controller policy; saved record order remains authoritative within it.
 	std::map<int32_t,const slot::Slot*> owners;
 	for (const auto& participant:m_simulation->value.roster) {
-		if (participant.active) {owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));}
+		owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));
 	}
 	CanonicalTurnContinuation continuation{turn_id};
 	size_t count=0;
@@ -220,7 +225,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		m_simulation->value.perihelion=perihelion;
 		m_is_turn_complete=false;
 		m_canonical_continuation=std::move(continuation);
-        if(!m_canonical_continuation->owners.empty()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
+        if(!m_canonical_continuation->owners.empty() && IsActiveOwner(m_simulation->value,m_canonical_continuation->owners.front().first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
 		for (const auto& entry:m_um->GetUnits()) {
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);
@@ -242,6 +247,13 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	if(next.stage==Stage::Screen) {ValidateCanonicalColonyScreen();return;}
 	while(next.owner_index<next.owners.size()) {
 		const auto& owner=next.owners[next.owner_index];
+        const auto participant=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& p){return p.simulation_id==owner.first;});
+        if(participant==m_simulation->value.roster.end()) {throw std::runtime_error("Canonical owner is outside the admitted roster");}
+        if(!participant->active) {
+            ++next.owner_index;next.base_index=0;next.stage=Stage::Base;
+            if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
+            continue; // owned entities do not revive an eliminated controller
+        }
 		if(next.base_index==owner.second.size()) {
 			RefreshCanonicalPopulationAggregate(owner.first);
 			// Native upkeep retires the shared route only AFTER this summary.
@@ -250,7 +262,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
-            if(next.owner_index<next.owners.size()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
+            if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
 			continue;
 		}
 		auto* base=m_bm->GetBase(owner.second[next.base_index]);
@@ -660,7 +672,7 @@ void Game::ValidateCanonicalColonyScreen() const {
 	if(!base || (!next.screen_after_transfer && base->GetSmacResourceContext().owner_simulation_id!=owner.first)) {
 		throw std::runtime_error("Colony screen Base no longer exists for its owner");
 	}
-	RequireSmacLocalHumanOwner(base->m_owner);
+	if(!next.screen_after_transfer) {RequireSmacLocalHumanOwner(base->m_owner);}
 }
 
 void Game::NotifyCanonicalColonyScreen(GSE_CALLABLE) {

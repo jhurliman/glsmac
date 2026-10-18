@@ -1766,6 +1766,22 @@ void Game::InitComplete( GSE_CALLABLE ) {
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
 	m_um->CompleteConventionalHomeRestore();
+    if(m_pending_snapshot_random && m_simulation) {
+        std::array<bool,8> owns{};
+        for(const auto& base:m_bm->GetBases()) {
+            for(const auto& owner:m_simulation->value.roster) {
+                if(base.second->m_owner==&m_state->m_slots->GetSlot(owner.slot)) {owns.at(owner.simulation_id)=true;break;}
+            }
+        }
+        for(const auto& row:m_um->GetUnits()) {if(row.second->IsConventional()) {
+            const auto& unit=row.second->Conventional();
+            if(ResolveConventionalDesign(unit,*m_simulation).plan==8) {owns.at(unit.owner_simulation_id)=true;}
+        }}
+        if(m_simulation->value.human_defeat_request && owns.at(*m_simulation->value.human_defeat_request)) {
+            throw std::runtime_error("Saved ending conflicts with post-load owned-entity roster repair");
+        }
+        for(auto& participant:m_simulation->value.roster) {participant.active=owns.at(participant.simulation_id);}
+    }
 	ValidateCurrentSimulation();
 	CompleteSmacWorkerKnowledgeRestore();
 	std::optional< size_t > restored_turn;

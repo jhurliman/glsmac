@@ -689,6 +689,8 @@ private:
 	unit::ConventionalUnitState PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const;
 	unit::ConventionalUnitContext ResolveConventionalIdentity( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
 	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
+	// Only a synchronous prepared riot calculation may inspect an inactive recipient.
+	std::optional<int32_t> m_smac_riot_query_owner;
 	const faction::SmacSimulationParticipant& RequireSmacProductionOwner( const slot::Slot* owner ) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;

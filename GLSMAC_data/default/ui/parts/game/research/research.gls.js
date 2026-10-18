@@ -57,7 +57,7 @@ return {
 		this.submitted = false;
 		this.choice_buttons = [];
 		this.window = p.root.window({
-			class: 'game-popup', width: 620, height: 420,
+			class: 'game-popup', zindex: 0.9, width: 620, height: 420,
 			blocker: 'rgba(0, 0, 0, 180)',
 		});
 		this.window.hide();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SmacWorkedSquareCollection.h"
+#include <vector>
 
 namespace game::backend::base {
 
@@ -46,5 +47,30 @@ SmacEcologyDamage CalculateSmacEcologyDamage(const SmacEcologyBurden& burden,con
 // Added after this Base's research, before the ecology CRT draw. This helper
 // neither resets/updates the retained aggregate nor performs the later event.
 int32_t SmacEcologyResearchContribution(int32_t damage,int32_t current_planet);
+
+struct SmacBloomTile {
+    int32_t altitude_class;
+    bool fungus;
+    bool real_base; // Original Base item with affiliation nibble0..7.
+    // Semantic Mine/Solar/Farm/SoilEnricher/Forest flags from SmacEcologySquare.
+    uint32_t removable_improvements;
+};
+struct SmacBloomBase { int32_t id; std::array<int32_t,2> coordinate; };
+struct SmacBloomSelection {
+    std::array<int32_t,2> coordinate;
+    int32_t ordinal,score; // Original one-based offset order, excluding center.
+};
+// Detached event admission and ordered selection. Draws use the existing CRT
+// stream (raw0..32767), never the shared gameplay stream. Callers must stage
+// RNG with terrain/history changes; these helpers do not publish live state.
+// Threshold always consumes one draw, including zero damage and suppressed events.
+bool AdmitSmacEcologyBloom(int32_t damage,bool perihelion,uint32_t primary_rules,
+    uint32_t secondary_state,const std::function<int32_t()>& draw);
+// Bases are in global record order; equal nearest distances choose the later
+// record. The query receives valid parity coordinates only. No landmark test
+// occurs here: a protected winner still increments history before mutation.
+std::optional<SmacBloomSelection> SelectSmacEcologyBloom(const SmacWorkerRadiusMap& map,
+    int32_t base_id,const std::vector<SmacBloomBase>& bases,
+    const std::function<SmacBloomTile(int32_t,int32_t)>& query,const std::function<int32_t()>& draw);
 
 }

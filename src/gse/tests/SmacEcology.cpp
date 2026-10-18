@@ -1,5 +1,7 @@
 #include "SmacEcology.h"
 #include "fixtures/SmacEcology.h"
+#include "fixtures/SmacBloom.h"
+#include "game/backend/SmacGameplayRandomState.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/settings/Settings.h"
 #include "game/backend/WorldSnapshotRules.h"
@@ -32,6 +34,118 @@ auto Values(const b::SmacEcologyDamage& v) {
 bool Overflows(const std::function<void()>& call) {try {call();}catch(const std::overflow_error&) {return true;}return false;}
 }
 void AddSmacEcologyTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC bloom selector replays5 original sparse terrain maps and exact CRT states",GT(){
+        for(const auto& row:smac_bloom_fixture::cases) {
+            game::backend::SmacGameplayRandomState rng(1234,row.seed);size_t draws=0;
+            const auto draw=[&]()->int32_t {
+                const auto raw=rng.NextCrtRaw15();
+                if(draws>=row.draws.size() || raw!=row.draws[draws].raw || rng.Crt()!=row.draws[draws].after) {
+                    throw std::runtime_error("Native bloom CRT sequence differs: "+std::string(row.id));
+                }++draws;return raw;
+            };
+            GT_ASSERT(b::AdmitSmacEcologyBloom(row.damage,row.perihelion,0,0,draw),"Native selector fixture failed entry roll");
+            const auto selected=b::SelectSmacEcologyBloom(row.map,row.base,row.bases,[&](int32_t x,int32_t y) {
+                if(x<0 || x>=row.map.width || y<0 || y>=row.map.height || ((x+y)&1)) {throw std::runtime_error("Invalid native fixture query");}
+                for(const auto& tile:row.cells) {if(tile.x==x && tile.y==y) {return tile.value;}}
+                return row.default_tile;
+            },draw);
+            GT_ASSERT(selected && selected->coordinate==row.selected.coordinate && selected->ordinal==row.selected.ordinal
+                && selected->score==row.selected.score && draws==row.draws.size() && rng.Shared()==1234,
+                "Native sparse terrain winner or RNG count differs: "+std::string(row.id));
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC bloom threshold matches18 native admission controls and always draws once",GT(){
+        struct Row {const char* id;int32_t damage;bool perihelion;uint32_t primary,secondary;int32_t raw;bool admitted;};
+        for(const auto& row:std::vector<Row>{
+            {"zero",0,false,0x0u,0x0u,100,false},
+            {"below",49,false,0x0u,0x0u,250,false},
+            {"equal",50,false,0x0u,0x0u,250,false},
+            {"above_first_bloom",51,false,0x0u,0x0u,250,true},
+            {"suppressed_rule",51,false,0x200000u,0x0u,250,false},
+            {"editor_hold",51,false,0x0u,0x1u,250,false},
+            {"editor_playtest",51,false,0x0u,0x9u,250,true},
+            {"perihelion_equal",101,true,0x0u,0x100000u,250,false},
+            {"perihelion_above",102,true,0x0u,0x100000u,250,true},
+            {"no_eligible",51,false,0x0u,0x0u,250,true},
+            {"protected_winner",51,false,0x0u,0x0u,250,true},
+            {"improvements",51,false,0x0u,0x0u,250,true},
+            {"signed_landmark",51,false,0x0u,0x0u,250,true},
+            {"native_voice_hold",51,false,0x0u,0x0u,250,true},
+            {"native_spawn",51,false,0x0u,0x0u,250,true},
+            {"native_once_hold",51,false,0x0u,0x0u,250,true},
+            {"once_equal_retained",50,false,0x0u,0x0u,250,false},
+            {"once_first_bloom",51,false,0x0u,0x0u,250,true},
+        }) {
+            int draws=0;const auto admitted=b::AdmitSmacEcologyBloom(row.damage,row.perihelion,row.primary,row.secondary,[&]{++draws;return row.raw;});
+            GT_ASSERT(admitted==row.admitted && draws==1,"Native bloom threshold or draw ordering differs: "+std::string(row.id));
+        }
+        int draws=0;
+        GT_ASSERT(Rejects([&]{b::AdmitSmacEcologyBloom(-1,false,0,0,[&]{++draws;return 0;});}) && draws==0,"Invalid damage consumed RNG");
+        GT_ASSERT(Rejects([]{b::AdmitSmacEcologyBloom(1,false,0,0,[]{return -1;});})
+            && Rejects([]{b::AdmitSmacEcologyBloom(1,false,0,0,[]{return 32768;});}),"Non-CRT draw admitted");GT_OK();
+    });
+    task->AddTest("SMAC bloom selector preserves48 native offsets strict ties clipping and nearest Base order",GT(){
+        const b::SmacWorkerRadiusMap world{{32,32},64,64,true};
+        const std::vector<b::SmacBloomBase> bases{{17,{32,32}}};
+        // Literal original scan order, independent of the production array.
+        const std::array<std::array<int32_t,2>,48> offsets{{{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},{0,-2},{2,-2},{2,2},{-2,2},{-2,-2},{1,-3},{3,-1},{3,1},{1,3},{-1,3},{-3,1},{-3,-1},{-1,-3},{4,0},{-4,0},{0,4},{0,-4},{1,-5},{2,-4},{3,-3},{4,-2},{5,-1},{5,1},{4,2},{3,3},{2,4},{1,5},{-1,5},{-2,4},{-3,3},{-4,2},{-5,1},{-5,-1},{-4,-2},{-3,-3},{-2,-4},{-1,-5},{0,6},{6,0},{0,-6},{-6,0}}};
+        for(size_t i=0;i<offsets.size();++i) {
+            const std::array<int32_t,2> target{32+offsets[i][0],32+offsets[i][1]};int draws=0;
+            const auto selected=b::SelectSmacEcologyBloom(world,17,bases,[&](int32_t x,int32_t y) {
+                return b::SmacBloomTile{3,std::array<int32_t,2>{x,y}!=target,false,0};
+            },[&]{++draws;return 999;});
+            GT_ASSERT(selected && selected->coordinate==target && selected->ordinal==int32_t(i+1) && draws==1,
+                "Bloom candidate coordinate/order differs at native offset "+std::to_string(i+1));
+        }
+        int draws=0;
+        const auto none=b::SelectSmacEcologyBloom(world,17,bases,[](int32_t,int32_t){return b::SmacBloomTile{3,true,false,0};},[&]{++draws;return 99;});
+        GT_ASSERT(!none && draws==0,"All fungus consumed candidate draws or selected a cell");
+        const auto ties=b::SelectSmacEcologyBloom(world,17,bases,[](int32_t x,int32_t y) {
+            return b::SmacBloomTile{3,!(x==33 && (y==31 || y==33)),false,0};
+        },[&]{++draws;return 10;});
+        GT_ASSERT(ties && ties->ordinal==1 && ties->score==10 && draws==2,"Equal score replaced earlier candidate");
+        draws=0;
+        const auto zero=b::SelectSmacEcologyBloom(world,17,bases,[](int32_t x,int32_t y) {
+            return b::SmacBloomTile{3,!(x==33 && y==31),false,0};
+        },[&]{++draws;return 0;});
+        GT_ASSERT(!zero && draws==1,"Eligible score zero selected a winner");
+        // An isolated outer candidate has weight1 before scaling, so its five
+        // removable improvements do not receive the weight>1 branch bonus.
+        const auto isolated=[](int32_t x,int32_t y){return b::SmacBloomTile{3,false,!(x==33 && y==27),572u};};
+        const std::vector<b::SmacBloomBase> peer_later{{17,{32,32}},{29,{34,22}}};
+        const auto blocked=b::SelectSmacEcologyBloom(world,17,peer_later,isolated,[&]{++draws;return 19;});
+        GT_ASSERT(!blocked && draws==1,"Nearest Base tie did not prefer later record");
+        const auto own_later=b::SelectSmacEcologyBloom(world,17,{{29,{34,22}},{17,{32,32}}},isolated,[&]{++draws;return 19;});
+        GT_ASSERT(own_later && own_later->ordinal==25 && own_later->score==9 && draws==2,"Outer weight1 bonus or later Base tie differs");
+        const b::SmacWorkerRadiusMap edge{{0,0},64,64,true};
+        const auto wrapped=b::SelectSmacEcologyBloom(edge,17,{{17,{0,0}}},[](int32_t x,int32_t y) {
+            if(x<0 || x>=64 || y<0 || y>=64 || ((x+y)&1)) {throw std::runtime_error("invalid bloom query coordinate");}
+            return b::SmacBloomTile{3,!(x==63 && y==1),false,0};
+        },[]{return 9;});
+        GT_ASSERT(wrapped && wrapped->ordinal==5 && wrapped->coordinate[0]==63,"X wrap or Y clip differs");
+        auto flat=edge;flat.horizontal_wrap=false;draws=0;
+        GT_ASSERT(!b::SelectSmacEcologyBloom(flat,17,{{17,{0,0}}},[](int32_t x,int32_t y){return b::SmacBloomTile{3,!(x==63 && y==1),false,0};},[&]{++draws;return 9;}) && draws==0,
+            "Flat map wrapped candidate");GT_OK();
+    });
+    task->AddTest("SMAC bloom selector counts semantic improvements sea rounding and fungus altitude",GT(){
+        const b::SmacWorkerRadiusMap world{{32,32},64,64,true};
+        for(const auto& row:std::vector<std::tuple<int32_t,uint32_t,int32_t>>{{3,0,49},{3,572,139},{2,572,69},{1,572,69}}) {
+            const auto selected=b::SelectSmacEcologyBloom(world,17,{{17,{32,32}}},[&](int32_t x,int32_t y) {
+                const bool target=x==33 && y==31;
+                return b::SmacBloomTile{target ? std::get<0>(row) : 3,true,!target,target ? std::get<1>(row) : 0u};
+            },[]{return 139;});
+            // Target fungus is eligible only below class2; clear it above that.
+            if(std::get<0>(row)>=2) {GT_ASSERT(!selected,"Existing surface fungus remained eligible");}
+            else {GT_ASSERT(selected && selected->score==std::get<2>(row),"Deep fungus or sea rounding differs");}
+            const auto cleared=b::SelectSmacEcologyBloom(world,17,{{17,{32,32}}},[&](int32_t x,int32_t y) {
+                const bool target=x==33 && y==31;
+                return b::SmacBloomTile{target ? std::get<0>(row) : 3,!target,!target,target ? std::get<1>(row) : 0u};
+            },[]{return 139;});
+            GT_ASSERT(cleared && cleared->score==std::get<2>(row),"Improvement weight/first8 bonus/sea rounding differs");
+        }GT_OK();
+    });
+
     task->AddTest("SMAC perihelion scheduling matches20 native named maintenance controls",GT(){
         using namespace game::backend::faction;
         for(const auto& row:smac_perihelion_fixture::cases) {

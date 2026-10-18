@@ -659,6 +659,7 @@ private:
 	void WriteSimulationState( types::Buffer& buffer ) const;
 	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
 	void RefreshSimulationForTurn( size_t turn );
+	std::optional<bool> PrepareSmacPerihelionForTurn( size_t turn ) const;
 	void RequireConventionalStartupClaim() const;
 	unit::ConventionalUnitState PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const;
 	unit::ConventionalUnitContext ResolveConventionalIdentity( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;

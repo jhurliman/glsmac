@@ -4,6 +4,8 @@
 #include "game/backend/settings/Settings.h"
 #include "game/backend/WorldSnapshotRules.h"
 #include "fixtures/SmacRulesSource.h"
+#include "fixtures/SmacPerihelion.h"
+#include "game/backend/faction/SmacEcologyWorld.h"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -30,6 +32,19 @@ auto Values(const b::SmacEcologyDamage& v) {
 bool Overflows(const std::function<void()>& call) {try {call();}catch(const std::overflow_error&) {return true;}return false;}
 }
 void AddSmacEcologyTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC perihelion scheduling matches20 native named maintenance controls",GT(){
+        using namespace game::backend::faction;
+        for(const auto& row:smac_perihelion_fixture::cases) {
+            auto active=row.active;
+            for(size_t i=0;i<row.states.size();++i) {
+                const auto value=AdvanceSmacPerihelion(active,row.turn,row.start+row.turn,row.maintenance);
+                GT_ASSERT(value.active==row.states[i] && static_cast<int>(value.transition)==row.transitions[i],
+                    "Native perihelion transition differs: "+std::string(row.id));active=value.active;
+            }
+        }
+        GT_ASSERT(Rejects([]{AdvanceSmacPerihelion(false,-1,2190,true);})
+            && Rejects([]{AdvanceSmacPerihelion(true,1,INT32_MIN,true);}), "Unmeasured perihelion arithmetic admitted");GT_OK();
+    });
     task->AddTest("SMAC ecology rules read positional Sea Level Rises with native loader clamp", GT() {
         for (const auto& pair : std::vector<std::pair<std::string, int32_t>>{
             {"5, ; translated label",5}, {"+19,",19}, {"-2147483648,",1}, {"0",1}, {"100,",100}, {"2147483647,",100}}) {

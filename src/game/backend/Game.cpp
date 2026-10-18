@@ -1570,8 +1570,10 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	if (m_map && m_map->m_worker_knowledge) { THROW("Canonical turn advancement requires its native event dispatcher"); }
 	// Stage the first-command social refresh before publishing the new turn or
 	// invoking any upkeep consumer. A malformed context leaves both unchanged.
+	const auto perihelion=PrepareSmacPerihelionForTurn(turn_id);
 	RefreshSimulationForTurn( turn_id );
 	m_current_turn.AdvanceTurn( turn_id );
+	if(m_simulation) {m_simulation->value.perihelion=perihelion;}
 	m_is_turn_complete = false;
 	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
 

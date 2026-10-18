@@ -177,6 +177,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
 	try {
         const auto rank_order=PrepareCanonicalRankOrder();
+        const auto perihelion=PrepareSmacPerihelionForTurn(turn_id);
 		RefreshSimulationForTurn(turn_id);
         if(rank_order) {
             m_simulation->value.ranking_scores=rank_order->scores;
@@ -185,6 +186,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		// Rules such as the post-first-turn mineral deficit branch must observe
 		// the incoming turn. UI notification remains after successful upkeep.
 		m_current_turn.AdvanceTurn(turn_id);
+		m_simulation->value.perihelion=perihelion;
 		m_is_turn_complete=false;
 		m_canonical_continuation=std::move(continuation);
 		for (const auto& entry:m_um->GetUnits()) {

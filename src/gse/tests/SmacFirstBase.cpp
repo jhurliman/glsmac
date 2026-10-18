@@ -2,6 +2,12 @@
 #include "task/gsetests/GSETests.h"
 namespace gse::tests {
 void AddSmacFirstBaseTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC perihelion transitions enter actual multi-owner canonical upkeep at2190 and2210",GT(){
+        return CheckSmacFirstBaseFixture(12,false);
+    });
+    task->AddTest("SMAC Planet ecology globals pass imported map through actual claimed Start",GT(){
+        return CheckSmacFirstBaseFixture(0,false,3,true);
+    });
     task->AddTest("SMAC Planet first Base all seven faction packages and six difficulties through claimed Start",GT(){
         for(int difficulty=0;difficulty<6;++difficulty) {
             for(const int scenario:{0,2,4,5,6,7,8}) {

@@ -3,6 +3,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTechnologyState.cpp
 	${PWD}/SmacSocialState.cpp
 	${PWD}/SmacSimulationState.cpp
+	${PWD}/SmacEcologyWorld.cpp
 	${PWD}/SmacEconomyState.cpp
 	${PWD}/SmacResearch.cpp
 	${PWD}/SmacDominance.cpp

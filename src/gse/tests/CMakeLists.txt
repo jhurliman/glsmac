@@ -67,6 +67,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacEconomyState.cpp
 	${PWD}/SmacLiveEconomy.cpp
 	${PWD}/SmacResearch.cpp
+	${PWD}/HumanResearchValue.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp

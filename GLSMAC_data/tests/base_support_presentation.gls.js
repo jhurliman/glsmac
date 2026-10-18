@@ -18,3 +18,6 @@ compact.set({current: {minerals: 0, units: []}, retained: undefined});
 test.assert(lines == ['Current preview: 0 minerals', 'No units homed here', 'Last resource pass unavailable']);
 detailed.set(undefined);
 test.assert(lines == ['Support unavailable']);
+
+compact.set(undefined);
+test.assert(lines == ['Support unavailable']);

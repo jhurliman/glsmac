@@ -662,6 +662,7 @@ private:
     int64_t m_next_energy_rate_session=1; // never reused across world retirement
     bool AllowsSmacEnergyRateEvent(const std::string& name) const;
     void NotifySmacEnergyRates(GSE_CALLABLE,int64_t id,const base::Base* anchor);
+	faction::SmacFactionStatusWords m_smac_cross_world_faction_status=faction::SmacFactionStatusWords::Cold();
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;

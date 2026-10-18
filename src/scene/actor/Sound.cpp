@@ -1,4 +1,5 @@
 #include <cstring>
+#include <algorithm>
 
 #include "Sound.h"
 #include "types/Sound.h"
@@ -30,34 +31,42 @@ void Sound::Rewind() {
 
 void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
 
-	ASSERT( len < m_sound->m_buffer_size, "buffer size is smaller than len" );
+	ASSERT( len >= 0, "negative audio buffer length" );
+	if ( len <= 0 ) {
+		return;
+	}
 
-	if ( m_is_finished || !m_is_active ) {
+	if ( m_is_finished || !m_is_active || m_sound->m_buffer_size == 0 ) {
 		memset( ptr( buffer, 0, len ), 0, len );
 		return;
 	}
 
-	size_t newlen = 0;
-	if ( len + m_pos > m_sound->m_buffer_size ) {
-		newlen = m_sound->m_buffer_size - m_pos;
-		//if ( !m_is_repeatable ) { // need to test this first (maybe not needed at all)
-		memset( ptr( buffer, newlen, len - newlen ), 0, len - newlen );
-		Stop();
-		//}
-		len = newlen;
-	}
-	if ( m_is_muted ) {
-		memset( ptr( buffer, 0, len ), 0, len );
-	}
-	else {
-		memcpy( ptr( buffer, 0, len ), ptr( m_sound->m_buffer, m_pos, len ), len );
-	}
-	m_pos += len;
-	if ( m_is_finished && m_is_repeatable ) {
-		Rewind();
-
-		// need to test this first (maybe not needed at all)
-		//GetNextBuffer( ptr( buffer, newlen, len - newlen ), newlen );
+	size_t written = 0;
+	const auto requested = static_cast<size_t>( len );
+	while ( written < requested ) {
+		const auto count = std::min( requested - written, m_sound->m_buffer_size - m_pos );
+		if ( m_is_muted ) {
+			memset( ptr( buffer, written, count ), 0, count );
+		}
+		else {
+			memcpy( ptr( buffer, written, count ), ptr( m_sound->m_buffer, m_pos, count ), count );
+		}
+		written += count;
+		m_pos += count;
+		if ( m_pos == m_sound->m_buffer_size ) {
+			if ( m_is_repeatable ) {
+				// Wrap within this callback, without Stop/Rewind changing playback
+				// state or reapplying the actor's initial start delay.
+				m_pos = 0;
+			}
+			else {
+				Stop();
+				if ( written < requested ) {
+					memset( ptr( buffer, written, requested - written ), 0, requested - written );
+				}
+				break;
+			}
+		}
 	}
 }
 

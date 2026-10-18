@@ -543,6 +543,20 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		})
 	},
 	{
+		"get_smac_energy_rate_preview",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS_MIN_MAX(0,2);
+			if(!m_resource_context || !m_production || !m_production->queue || !m_allocation || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()) {return VALUE(gse::value::Undefined);}
+			std::optional<SmacEnergyRates> rates;
+			if(!arguments.empty()) {
+				N_EXPECT_ARGS(2);N_GETVALUE(psych,0,Int);N_GETVALUE(labs,1,Int);
+				if(psych<0 || labs<0 || psych>10 || labs>10-psych) {GSE_ERROR(gse::EC.INVALID_CALL,"Energy rates require nonnegative tenths totaling at most ten");}
+				rates=SmacEnergyRates{static_cast<int32_t>(psych),static_cast<int32_t>(labs)};
+			}
+			return m_game->CopySmacEnergyRatePreview(GSE_CALL,*this,rates);
+		})
+	},
+	{
 		"get_smac_governor_settings",
 		NATIVE_CALL(this) {
 			N_EXPECT_ARGS(0);

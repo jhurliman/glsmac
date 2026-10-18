@@ -2,6 +2,7 @@
 
 #include "game/backend/base/SmacBaseEnergy.h"
 #include "types/Buffer.h"
+#include <optional>
 
 namespace game::backend::faction {
 
@@ -10,7 +11,10 @@ struct SmacEconomyState {
 	int32_t credits, pending_debit;
 	int32_t research_fraction;
 	uint8_t treaty_partners;
-	static constexpr size_t MAX_WIRE_BYTES = 8 * 14;
+	// Owner-wide refresh after Base upkeep, not a live sum during capture.
+	// Absent only when migrating a port V1 record that did not own this field.
+	std::optional<int32_t> population_aggregate = 0;
+	static constexpr size_t MAX_WIRE_BYTES = 9 * 14 + 7;
 	// All startup inputs are supplied explicitly. Restore never calls this.
 	static SmacEconomyState NewWorld( base::SmacEnergyRates rates, int32_t credits, int32_t research_fraction );
 	void Validate() const;

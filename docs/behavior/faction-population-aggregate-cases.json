@@ -1,0 +1,191 @@
+{
+  "research_id": "RE-SMAC-POPULATION-AGGREGATE-001",
+  "ruleset": "SMAC",
+  "scope": "One owner growth upkeep plus same-world founding/explicit summary/removal, two fresh faction prefixes and one ordinary file-body roundtrip; prior capture observation reused.",
+  "cases": [
+    {
+      "id": "fresh_turn0_faction_prefixes",
+      "initial_cached": [
+        777,
+        777
+      ],
+      "after_actor1": [
+        0,
+        777
+      ],
+      "after_actor2": [
+        0,
+        0
+      ],
+      "full_world_creation": false
+    },
+    {
+      "id": "ordinary_file_body_preserves_stale_cache",
+      "base_count": 0,
+      "saved": [
+        111,
+        222
+      ],
+      "live_before_load": [
+        999,
+        999
+      ],
+      "loaded": [
+        111,
+        222
+      ],
+      "save_return": 0,
+      "load_return": 0
+    },
+    {
+      "id": "one_full_owner_upkeep_with_growth",
+      "before": {
+        "population": 1,
+        "stored_nutrients": 20,
+        "cached_total": 777,
+        "other_faction_canary": 888
+      },
+      "phases": [
+        {
+          "phase": "population_step_entry",
+          "population": 1,
+          "cached_total": 777,
+          "other_faction_canary": 888
+        },
+        {
+          "phase": "population_step_return",
+          "population": 2,
+          "cached_total": 777,
+          "other_faction_canary": 888
+        },
+        {
+          "phase": "aggregate_pass_entry",
+          "population": 2,
+          "cached_total": 777,
+          "other_faction_canary": 888
+        },
+        {
+          "phase": "aggregate_pass_return",
+          "population": 2,
+          "cached_total": 2,
+          "other_faction_canary": 888
+        }
+      ],
+      "after": {
+        "population": 2,
+        "stored_nutrients": -3,
+        "cached_total": 2,
+        "other_faction_canary": 888
+      },
+      "normal_faction_return": true
+    },
+    {
+      "id": "same_world_founding_refresh_removal",
+      "states": [
+        {
+          "phase": "after_growth_upkeep",
+          "state": {
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 2
+              }
+            ],
+            "aggregate": 2,
+            "other_aggregate": 888,
+            "owner_base_count": 1
+          }
+        },
+        {
+          "phase": "after_founding",
+          "state": {
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 2
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1
+              }
+            ],
+            "aggregate": 2,
+            "other_aggregate": 888,
+            "owner_base_count": 2
+          }
+        },
+        {
+          "phase": "after_explicit_refresh",
+          "state": {
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 2
+              },
+              {
+                "id": 1,
+                "owner": 1,
+                "population": 1
+              }
+            ],
+            "aggregate": 3,
+            "other_aggregate": 888,
+            "owner_base_count": 2
+          }
+        },
+        {
+          "phase": "after_removal",
+          "state": {
+            "bases": [
+              {
+                "id": 0,
+                "owner": 1,
+                "population": 2
+              }
+            ],
+            "aggregate": 3,
+            "other_aggregate": 888,
+            "owner_base_count": 1
+          }
+        }
+      ],
+      "summary_write_values": [
+        0,
+        2,
+        3
+      ],
+      "founding_writes_cache": false,
+      "removal_writes_cache": false,
+      "explicit_summary_is_diagnostic": true
+    },
+    {
+      "id": "prior_frozen_capture_cache_preserves",
+      "live_before": [
+        1,
+        3
+      ],
+      "live_at_captured_base_screen": [
+        2,
+        1
+      ],
+      "cache_before": [
+        1,
+        3
+      ],
+      "cache_at_captured_base_screen": [
+        1,
+        3
+      ],
+      "normal_move_return_proved": false
+    }
+  ],
+  "static_only": [
+    "nonzero-turn restart bypasses fresh reset",
+    "advanced-start invokes summary producer",
+    "starvation path composes the inspected population/removal bodies with prior caller evidence"
+  ]
+}

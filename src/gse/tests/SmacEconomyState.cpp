@@ -77,6 +77,22 @@ std::string CheckSmacResearchSubmission() {
 }
 
 void AddSmacEconomyStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC economy retains independent population history and marks V1 migration unknown",GT(){
+		for(const auto aggregate:{INT32_MIN,0,2,INT32_MAX}) {
+			auto value=SmacEconomyState::NewWorld({5,0},100,0);value.population_aggregate=aggregate;
+			const auto wire=value.Serialize().ToString();auto restored=SmacEconomyState::Deserialize(wire);
+			GT_ASSERT(restored==value && restored.Serialize().ToString()==wire,"population aggregate changed on restore");
+			restored.population_aggregate.reset();GT_ASSERT(!(restored==value),"equality omits population history");
+		}
+		types::Buffer legacy;for(const auto value:{int64_t(0x534d4543),int64_t(1),int64_t(5),int64_t(0),int64_t(100),int64_t(0),int64_t(0),int64_t(0)}) {legacy.WriteInt(value);}
+		const auto migrated=SmacEconomyState::Deserialize(legacy.ToString());
+		GT_ASSERT(!migrated.population_aggregate && migrated.credits==100 && !SmacEconomyState::Deserialize(migrated.Serialize().ToString()).population_aggregate,"old port save invented a current population aggregate");
+		GT_ASSERT(SmacEconomyState::NewWorld({5,0},100,0).population_aggregate==0,"fresh initialization did not clear population aggregate");
+		for(const auto invalid:{int64_t(INT32_MIN)-1,int64_t(INT32_MAX)+1}) {
+			types::Buffer wire;for(const auto value:{int64_t(0x534d4543),int64_t(2),int64_t(5),int64_t(0),int64_t(100),int64_t(0),int64_t(0),int64_t(0)}) {wire.WriteInt(value);}wire.WriteBool(true);wire.WriteInt(invalid);
+			GT_ASSERT(Rejects([&]{SmacEconomyState::Deserialize(wire.ToString());}),"out-of-domain population aggregate accepted");
+		}GT_OK();
+	});
  task->AddTest( "SMAC research submission matches 60 original scaled increments and retained fractions", GT() {
   const auto error=CheckSmacResearchSubmission(); GT_ASSERT(error.empty(), "research: "+error); GT_OK();
  } );

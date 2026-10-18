@@ -128,6 +128,7 @@ return {
 					open_specialist_selection: parent.parent.open_specialist_selection,
 					open_rename: parent.parent.open_rename,
 					open_queue_editor: parent.parent.open_queue_editor,
+					can_edit_queue: parent.parent.can_edit_queue,
 					can_rename: parent.parent.can_rename,
 					show_production_selection: parent.parent.show_production_selection,
 					hide_production_selection: parent.parent.hide_production_selection,
@@ -282,6 +283,8 @@ return {
 	},
 
 	can_rename: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
+	can_edit_queue: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
+
 	open_queue_editor: () => {
 		if (!this.is_open) { return; }
 		const base = this.base; const data = base.get_smac_queue_editor();

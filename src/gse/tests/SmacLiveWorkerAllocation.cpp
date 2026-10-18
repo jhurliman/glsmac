@@ -256,6 +256,31 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base production presentation reads current and complete saved queue without mutation", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto tanks=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,3);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            const std::vector<ProductionItem> queue{tanks,scout,stockpile,tanks,scout,stockpile,tanks,scout,stockpile};
+            base->SetProductionState(GSE_CALL,ProductionState{scout,17,scout,11,queue});
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation"));
+            const auto& rules=game->GetState()->m_settings.global;
+            const auto& rows=static_cast<value::Array*>(view->Get("queue"))->value;
+            GT_ASSERT(static_cast<value::String*>(view->Get("name"))->value==rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
+                && rows.size()==9,"Current identity or full queue missing");
+            for(size_t i=0;i<rows.size();++i) {
+                const auto expected=i%3==0 ? rules.GetSmacProductionRules()->facilities.at(2).name
+                    : i%3==1 ? rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
+                    : rules.GetSmacProductionRules()->facilities.at(37).name;
+                GT_ASSERT(static_cast<value::String*>(rows[i])->value==expected,"Saved queue order or source names changed");
+            }
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Read-only projection mutated stores, queue, world or gameplay RNG");
+            GT_OK();
+        });
+    });
 
     task->AddTest("SMAC live ranking uses saved caches before owner summary and preserves them through actual Start",[](GSE*,context::Context*)->std::string {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};

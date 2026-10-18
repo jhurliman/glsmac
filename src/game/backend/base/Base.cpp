@@ -534,7 +534,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"set_production_state",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			if ( arguments.at( 0 )->Deref()->type == gse::VT_UNDEFINED ) {
 				SetProductionState( GSE_CALL, std::nullopt );
@@ -577,7 +577,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"set_accumulated_nutrients",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( nutrients, 0, Int );
 			SetAccumulatedNutrients( nutrients );
@@ -589,7 +589,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			RequireGenericPopulationMutation();
 
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( data, 0, Object );
@@ -626,7 +626,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"restore_pop",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( data, 0, Object );
 			N_GETPROP( id, data, "id", Int );
@@ -668,7 +668,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"destroy_pop",
 		NATIVE_CALL( this ) {
 
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( pop, 0, Pop );

@@ -119,7 +119,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 			"define",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
@@ -164,7 +164,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 			"undefine",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );
@@ -182,7 +182,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 			"define_no_resource",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( def, 0, Object );
@@ -218,7 +218,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 			"undefine_no_resource",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 0 );
 

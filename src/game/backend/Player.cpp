@@ -141,7 +141,7 @@ WRAPIMPL_BEGIN( Player )
 				NATIVE_CALL( this, game, identity, notification ) {
                     if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
-					game->CheckRW( GSE_CALL );
+					game->CheckGameplayRW( GSE_CALL );
 
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( isready, 0, Bool );
@@ -170,7 +170,7 @@ WRAPIMPL_BEGIN( Player )
 				NATIVE_CALL( this, game, identity, notification ) {
                     if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
-					game->CheckRW( GSE_CALL );
+					game->CheckGameplayRW( GSE_CALL );
 
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( faction_id, 0, String );
@@ -191,7 +191,7 @@ WRAPIMPL_BEGIN( Player )
 				NATIVE_CALL( this, game, identity, notification ) {
                     if (!identity->active || notification) { GSE_ERROR(gse::EC.GAME_ERROR, "Player notification is read-only or expired"); }
 
-					game->CheckRW( GSE_CALL );
+					game->CheckGameplayRW( GSE_CALL );
 
 					N_EXPECT_ARGS( 0 );
 					ClearFaction();

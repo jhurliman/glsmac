@@ -302,7 +302,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		"move_to_tile",
 		NATIVE_CALL( this ) {
 
-			m_um->m_game->CheckRW( GSE_CALL );
+			m_um->m_game->CheckGameplayRW( GSE_CALL );
 			if ( IsConventional() ) { GSE_ERROR( gse::EC.GAME_ERROR, "Conventional movement is not activated" ); }
 
 			N_EXPECT_ARGS( 2 );

@@ -145,6 +145,7 @@ void UnitManager::UndefineUnit( const std::string& id ) {
 }
 
 void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->RequireWorkerKnowledgeMutation();
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_units.push_back( { unit, true } );
@@ -317,6 +318,7 @@ UnitManager::PreparedConventionalRemoval::~PreparedConventionalRemoval() = defau
 UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(PreparedConventionalRemoval&&) noexcept = default;
 UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemoval::operator=(PreparedConventionalRemoval&&) noexcept = default;
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
+    m_game->RequireSmacGameplayActive();
     m_game->CheckRW(GSE_CALL);
     if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
     m_game->RequireConventionalSightWorld();
@@ -544,6 +546,7 @@ void UnitManager::PreparedFactionUnits::Notify(GSE_CALLABLE) {
 
 UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner,
 	map::tile::Tile* tile, const ConventionalUnitState& state ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( !m_game->IsRunning() || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
 		THROW( "Prepared unit creation requires its running owning accumulation" );
@@ -609,6 +612,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 }
 
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( m_game->IsRunning() ) {
 		auto prepared = PrepareConventionalUnit( GSE_CALL, id, def, owner, tile, state );
@@ -690,6 +694,7 @@ void UnitManager::SealConventionalStartup() noexcept {
 }
 
 void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
 	unit->RequireConventionalReady();
@@ -731,6 +736,7 @@ bool UnitManager::HasUnitId( const size_t id ) const {
 }
 
 void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->RequireWorkerKnowledgeMutation();
 
 	const auto& it = m_units.find( unit_id );
@@ -888,7 +894,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"define_moraleset",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
@@ -921,7 +927,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"undefine_moraleset",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );
@@ -960,7 +966,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"define_unit",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
@@ -1077,7 +1083,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"undefine_unit",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );
@@ -1117,7 +1123,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"spawn_unit",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( obj, 0, Object );
@@ -1163,7 +1169,7 @@ WRAPIMPL_BEGIN( UnitManager )
 		},
 		{
 			"spawn_conventional_unit", NATIVE_CALL( this ) {
-				m_game->CheckRW( GSE_CALL ); N_EXPECT_ARGS( 1 ); N_GETVALUE( obj, 0, Object );
+				m_game->CheckGameplayRW( GSE_CALL ); N_EXPECT_ARGS( 1 ); N_GETVALUE( obj, 0, Object );
 				N_GETPROP( id, obj, "id", Int ); N_GETPROP( def_id, obj, "def", String );
 				N_GETPROP_UNWRAP( owner, obj, "owner", Player ); N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
 				N_GETPROP( design, obj, "design_id", Int ); N_GETPROP( simulation, obj, "owner_simulation_id", Int );
@@ -1186,7 +1192,7 @@ WRAPIMPL_BEGIN( UnitManager )
 		{
 			"restore_unit",
 			NATIVE_CALL( this ) {
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( obj, 0, Object );
 				N_GETPROP( id, obj, "id", Int );
@@ -1240,7 +1246,7 @@ WRAPIMPL_BEGIN( UnitManager )
 			"despawn_unit",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				if ( arguments.at( 0 )->type == gse::VT_INT ) {

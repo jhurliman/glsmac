@@ -790,7 +790,7 @@ WRAPIMPL_BEGIN( Game )
 			"complete_turn",
 			NATIVE_CALL( this ) {
 
-				CheckRW( GSE_CALL );
+				CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( slot_id, 0, Int );
@@ -815,7 +815,7 @@ WRAPIMPL_BEGIN( Game )
 			"uncomplete_turn",
 			NATIVE_CALL( this ) {
 
-				CheckRW( GSE_CALL );
+				CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( slot_id, 0, Int );
@@ -840,7 +840,7 @@ WRAPIMPL_BEGIN( Game )
 			"advance_turn",
 			NATIVE_CALL( this ) {
 
-				CheckRW( GSE_CALL );
+				CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( turn_id, 0, Int );
@@ -2060,6 +2060,11 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 			}
 		});
 	}
+}
+
+void Game::CheckGameplayRW( GSE_CALLABLE ) const {
+	RequireSmacGameplayActive();
+	CheckRW(GSE_CALL);
 }
 
 void Game::CheckRW( GSE_CALLABLE ) const {

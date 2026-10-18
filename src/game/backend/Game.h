@@ -440,6 +440,9 @@ public:
 	gc::Space* const GetGCSpace() const;
 
 	void CheckRW( GSE_CALLABLE ) const;
+	// Script-facing writes also require a nonterminal campaign. Internal
+	// restoration and postcommit notification use CheckRW independently.
+	void CheckGameplayRW( GSE_CALLABLE ) const;
 
 	void SetSlotNum( const size_t slotnum ); // not thread-safe, make sure to call from game thread only
 

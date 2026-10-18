@@ -13,7 +13,10 @@ The native controller finishes the current owner's population summary and
 empty-faction financial tail, then delivers the ending to the existing outcome
 overlay. Later owners do not begin upkeep. Enqueued gameplay after the loss is
 discarded, and new gameplay/turn commands, including direct Unit movement and
-Base mutation APIs, are rejected. Read-only inspection and the existing menu return
+Base mutation APIs, are rejected. Script-facing manager writes use the shared
+`CheckGameplayRW` boundary; native Base/Unit creation, removal and update entry
+points also reject the request. Internal snapshot reconstruction and postcommit
+notification retain their separate `CheckRW` check. Read-only inspection and the existing menu return
 remains available. A request for a different human faction displays that faction;
 it does not falsely label the local faction eliminated or announce conquest.
 
@@ -40,5 +43,11 @@ read-only status, rejected native/script commands and actual Start. Codec tests
 check V12 migration and invalid/active owner identities. LLVM15 correctness
 analysis passed ten changed/affected production translation units in 21.77s
 after the native API guard fix (the initial eight-unit pass took 18.67s).
+The manager-boundary review fix additionally passed 65 affected native
+campaign, capture, founding, Colony, simulation and event/session groups and
+ten changed/affected production translation units in 32.63s. Its regression
+attempts script and native Base removal inside the actual ending callback,
+and direct Unit manager removal/update after the callback, without changing
+the saved world. Prior unchanged overlay and arithmetic checks are reused.
 The change adds scalar saved state and control flow; existing last-Base ownership
 sanitizer evidence is reused, without another platform/sanitizer matrix.

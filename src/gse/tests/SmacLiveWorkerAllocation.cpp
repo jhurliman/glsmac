@@ -282,13 +282,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     for(auto& tech:state.technology.factions) {tech.target=5;tech.cached_threshold=10000;}});
                 auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
                 GT_ASSERT(Call(GSE_CALL,wrapper,"get_smac_ending")->type==VT_NULL,"fresh campaign invented an ending request");
-                const auto control_before=Base::Serialize(control).ToString();size_t notifications=0;
-                game->On(GSE_CALL,"smac_ending",NATIVE_CALL(&notifications) {++notifications;return VALUE(value::Undefined);}));
+                const auto control_before=Base::Serialize(control).ToString();size_t notifications=0;bool manager_writes_blocked=false;
+                game->On(GSE_CALL,"smac_ending",NATIVE_CALL(&notifications,&manager_writes_blocked,bm) {
+                    ++notifications;auto* manager=static_cast<value::Object*>(bm->Wrap(GSE_CALL));
+                    manager_writes_blocked=Rejects([&]{Call(GSE_CALL,manager,"despawn_base",{VALUE(value::Int,,702)});})
+                        && Rejects([&]{bm->DespawnBase(GSE_CALL,702);});
+                    return VALUE(value::Undefined);
+                }));
                 game->Event(GSE_CALL,"complete_turn",{});
                 auto* moving=um->GetUnit(victim==1 ? 91 : 92);auto* destination=game->GetMap()->GetTile(victim==1 ? 8 : 11,victim==1 ? 6 : 11);
                 game->Event(GSE_CALL,"move_unit",{{"unit",moving->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}});fixture.DrainEvents();
                 auto* ending=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_smac_ending"));
-                GT_ASSERT(notifications==1 && !bm->GetBase(701) && !um->GetUnit(91) && ending->type==VT_OBJECT
+                GT_ASSERT(notifications==1 && manager_writes_blocked && bm->GetBase(702)==control && !bm->GetBase(701) && !um->GetUnit(91) && ending->type==VT_OBJECT
                     && static_cast<value::Int*>(ending->Get("owner_simulation_id"))->value==victim
                     && static_cast<value::Bool*>(ending->Get("local"))->value==(victim==1)
                     && static_cast<value::Bool*>(Call(GSE_CALL,wrapper,"get_smac_eliminated"))->value==(victim==1),"ending controller conflated local status, victim or request notification");
@@ -299,6 +304,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 saved=fixture.Snapshot();GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}) && fixture.Snapshot()==saved,"ending allowed another turn");
                 if(victim==2) {
                     auto* unit=um->GetUnit(92);auto* unit_wrapper=static_cast<value::Object*>(unit->Wrap(GSE_CALL));
+                    auto* manager=static_cast<value::Object*>(um->Wrap(GSE_CALL));
+                    GT_ASSERT(Rejects([&]{Call(GSE_CALL,manager,"despawn_unit",{VALUE(value::Int,,92)});})
+                        && Rejects([&]{um->UpdateConventionalUnit(GSE_CALL,unit,unit->Conventional());})
+                        && Rejects([&]{um->PrepareConventionalRemoval(GSE_CALL,{92});}) && fixture.Snapshot()==saved,"direct manager mutation bypassed the ending request");
                     GT_ASSERT(Rejects([&]{Call(GSE_CALL,unit_wrapper,"move_conventional",{VALUE(value::Int,,0),destination->Wrap(GSE_CALL)});})
                         && Rejects([&]{um->ValidateConventionalMove(unit,destination,0);}) && fixture.Snapshot()==saved,"direct movement wrapper bypassed the ending request");
                     GT_ASSERT(Rejects([&]{control->SetAccumulatedNutrients(999);}) && Rejects([&]{control->SetProductionState(GSE_CALL,control->GetProductionState());})

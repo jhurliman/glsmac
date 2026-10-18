@@ -13,6 +13,7 @@ namespace game::backend::base { class SmacBloomTerrainPlan; }
 
 namespace game::backend::map {
 namespace tile { class Tile; }
+namespace smac_climate { struct World; }
 class SmacPlanetMap;
 
 // GLSMAC map semantics, not an original generator or height reconstruction.
@@ -27,6 +28,7 @@ public:
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
 	bool AutomaticLandResources() const { return m_automatic_land_resources; }
     GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
+    GlsmacResourceMapPolicy WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
 	resource::smac::AltitudeBand Altitude( const tile::Tile& tile ) const;
 	std::array<bool,3> LandmarkBonuses( const tile::Tile& tile ) const;
 
@@ -45,6 +47,8 @@ public:
 
 private:
 	GlsmacResourceMapPolicy() = default;
+    static GlsmacResourceMapPolicy RetainedClimatePlanetV2(SmacPlanetMap source,bool automatic_land_resources);
+    bool m_retained_climate=false;
 	std::shared_ptr<const SmacPlanetMap> m_planet;
 	bool m_automatic_land_resources = false;
 };

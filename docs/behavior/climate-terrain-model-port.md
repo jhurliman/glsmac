@@ -23,6 +23,7 @@ Reproduce the asset-free seven original synthetic river controls:
 ```sh
 g++ -std=c++17 -O1 -g -Isrc tools/tests/smac_climate_probe.cpp \
   src/game/backend/map/SmacClimate.cpp \
+  src/game/backend/map/SmacPlanetMap.cpp \
   src/game/backend/SmacGameplayRandomState.cpp -o /tmp/smac-climate-probe
 python3 tools/verify_smac_climate.py --probe /tmp/smac-climate-probe
 ```

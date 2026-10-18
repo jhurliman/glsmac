@@ -5,6 +5,7 @@
 
 #include "tile/Tile.h"
 #include "SmacPlanetMap.h"
+#include "SmacClimate.h"
 #include "game/backend/resource/SmacSiteSignal.h"
 
 namespace game::backend::map {
@@ -29,13 +30,28 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::InstalledPlanetV1( SmacPlanetMa
 	return result;
 }
 
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::RetainedClimatePlanetV2(SmacPlanetMap source,bool automatic_land_resources) {
+    if(source.WorldSizeCategory()!=4 || source.Header()[0x1c]!=0 || source.Header()[0x1d]!=0
+        || source.Header()[0x1e]!=0 || source.Header()[0x1f]!=0) {throw std::runtime_error("Retained Planet climate requires admitted standard-world headers");}
+    if(source.OceanCoverageCategory()<0 || source.OceanCoverageCategory()>2) {throw std::runtime_error("Retained Planet climate requires normal ocean category");}
+    (void)source.ExportClimateTerrain(true);
+    GlsmacResourceMapPolicy result;result.m_planet=std::make_shared<const SmacPlanetMap>(std::move(source));
+    result.m_automatic_land_resources=automatic_land_resources;result.m_retained_climate=true;return result;
+}
+
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const {
+    if(!m_planet || !world.horizontal_wrap) {throw std::runtime_error("Climate publication requires installed wrapped Planet authority");}
+    return RetainedClimatePlanetV2(m_planet->WithClimateTerrain(world,sea_level_offset,climate_extra),m_automatic_land_resources);
+}
+
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
     if (!m_planet) { throw std::runtime_error("Bloom terrain requires original Planet resource authority"); }
-    return InstalledPlanetV1(m_planet->WithBloomTerrain(plan), m_automatic_land_resources);
+    const auto updated=m_planet->WithBloomTerrain(plan);
+    return m_retained_climate ? RetainedClimatePlanetV2(updated,m_automatic_land_resources):InstalledPlanetV1(updated,m_automatic_land_resources);
 }
 
 bool GlsmacResourceMapPolicy::operator==( const GlsmacResourceMapPolicy& other ) const {
-	return m_automatic_land_resources==other.m_automatic_land_resources && (m_planet==other.m_planet
+	return m_retained_climate==other.m_retained_climate && m_automatic_land_resources==other.m_automatic_land_resources && (m_planet==other.m_planet
 		|| (m_planet && other.m_planet && m_planet->Encode()==other.m_planet->Encode()));
 }
 
@@ -116,7 +132,7 @@ resource::smac::ResourceBonus GlsmacResourceMapPolicy::Bonus( const tile::Tile& 
 }
 
 types::Buffer GlsmacResourceMapPolicy::Serialize() const {
-	types::Buffer result; result.WriteInt( 1 ); result.WriteInt( m_planet ? 2 : 1 );
+	types::Buffer result; result.WriteInt( m_retained_climate ? 2 : 1 ); result.WriteInt( m_planet ? 2 : 1 );
 	if(m_planet) {result.WriteBool(m_automatic_land_resources);result.WriteString(m_planet->Encode());}
 	return result;
 }
@@ -124,12 +140,15 @@ types::Buffer GlsmacResourceMapPolicy::Serialize() const {
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::Deserialize( const std::string& wire ) {
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "GLSMAC resource map policy exceeds wire budget" ); }
 	types::Buffer input( wire );
-	if ( input.ReadInt() != 1 ) { throw std::runtime_error( "Unsupported GLSMAC resource map policy" ); }
+    const auto version=input.ReadInt();
+    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported GLSMAC resource map policy");}
 	const auto kind=input.ReadInt();
+    if(version==2 && kind!=2) {throw std::runtime_error("Retained climate requires installed Planet policy");}
 	auto result=DisplayedTerrainV1();
 	if(kind==2) {
 		const bool automatic=input.ReadBool();
-		result=InstalledPlanetV1(SmacPlanetMap::Decode(input.ReadString(SmacPlanetMap::FILE_BYTES)),automatic);
+        auto source=SmacPlanetMap::Decode(input.ReadString(SmacPlanetMap::FILE_BYTES));
+        result=version==2 ? RetainedClimatePlanetV2(std::move(source),automatic):InstalledPlanetV1(std::move(source),automatic);
 	} else if(kind!=1) {throw std::runtime_error("Unsupported GLSMAC resource map policy");}
 	if ( input.lenr != input.lenw ) { throw std::runtime_error( "Unexpected GLSMAC resource map policy fields" ); }
 	return result;

@@ -2387,8 +2387,8 @@ public:
 		};
 		const char* idle="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]";
 		const char* working="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]";
-		const char* none="Former â€” Order: None  |  Stored work: 0";
-		const char* farm="Former â€” Order: Farm  |  Stored work: 0";
+		const char* none="Former — Order: None  |  Stored work: 0";
+		const char* farm="Former — Order: Farm  |  Stored work: 0";
 		const auto before=WorldSnapshot();
 		auto error=script("check",idle,none);if(!error.empty()){return error;}
 		error=script("click","Farm [F]");if(!error.empty()){return error;}

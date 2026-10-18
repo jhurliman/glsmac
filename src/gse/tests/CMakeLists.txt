@@ -81,6 +81,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/SmacSiteQuality.cpp
 	${PWD}/SmacSiteRatingCache.cpp
+	${PWD}/SmacRestartSearch.cpp
 	${PWD}/SmacLiveTerritory.cpp
 	${PWD}/SmacLiveWorkerKnowledge.cpp
 	${PWD}/SmacLiveWorkerAllocation.cpp

@@ -30,8 +30,9 @@ exclusions, retains them through save/Start, and stages founding/removal/capture
 refill with their future Base list. Ordinary Road/Farm/Solar/Mine/Forest preserve
 nonzero history; water/polar/startup/late queries use the original formula.
 Old saves retain unavailable history, since a fresh recount cannot recover a
-stale score or stray exclusion. This slice still needs its own review and
-focused sanitizer acceptance. Native restart search remains the next consumer;
+stale score or stray exclusion. PR202 is accepted with18 focused sanitizer
+groups and current-head review/CI. The [original candidate loop](smac-restart-search.md)
+now matches both full native traces; its live future-world producer is next.
 original world generation and complete landmark-detail ownership remain open.
 
 1. Complete the restart search contract used by `PrepareLastSmacBaseDisposition`.

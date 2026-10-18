@@ -209,7 +209,7 @@ private:
 	};
 	PreparedSmacWorkerState PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 		const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {} );
+		const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > population = {}, std::vector<std::pair<Base*,facilities_t>> facility_changes = {} );
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
 		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;

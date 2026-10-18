@@ -106,7 +106,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	auto production = *m_production;
 	auto population = m_pops.size();
 	if ( production.current_item.kind != ProductionItemKind::Unit && production.current_item.kind != ProductionItemKind::Stockpile
-		&& !(production.current_item.kind==ProductionItemKind::Facility && production.current_item.smac_source_id==3) ) {
+		&& !(production.current_item.kind==ProductionItemKind::Facility && Game::SupportsSmacFacilityProduction(*production.current_item.smac_source_id)) ) {
 		THROW( "Production completion for this target kind is not yet connected" );
 	}
 	Checked( production.minerals ); Checked( production.baseline_minerals ); Checked( m_accumulated_nutrients );
@@ -117,7 +117,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
 	std::optional< unit::UnitManager::PreparedConventionalRemoval > removal;
 	const FacilityDef* granted=nullptr;
-	std::optional<facilities_t> replacement_facilities;
+	std::vector<std::pair<Base*,facilities_t>> facility_changes;
 	if ( !pause && !retained && resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
 		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
@@ -125,7 +125,10 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item );
 		bool complete = production.minerals >= cost;
 		if(production.current_item.kind==ProductionItemKind::Facility) {
-			for(const auto& row:m_facilities) {if(row.second->m_smac_source_id==3 || row.second->m_smac_source_id==26) {complete=false;}}
+			for(const auto& row:m_facilities) {
+				if(row.second->m_smac_source_id==production.current_item.smac_source_id
+					|| (production.current_item.smac_source_id==3 && row.second->m_smac_source_id==26)) {complete=false;}
+			}
 		}
 		bool colony = false;
 		if ( complete && production.current_item.kind==ProductionItemKind::Unit ) {
@@ -161,9 +164,29 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			// Resolve presentation before any authority writes. The factory checks
 			// the actual owner/design/home/package and stages sight and every queue.
 			if(production.current_item.kind==ProductionItemKind::Facility) {
-				granted=m_game->GetBM()->GetSmacFacilityDef(3);
-				if(!granted) {THROW("Tanks completion has no registered facility definition");}
-				replacement_facilities=m_facilities;replacement_facilities->emplace(granted->m_id,granted);
+				granted=m_game->GetBM()->GetSmacFacilityDef(*production.current_item.smac_source_id);
+				if(!granted) {THROW("Facility completion has no registered definition");}
+				if(granted->m_smac_source_id==8) {
+					// No Artifact or Artifact-link command is admitted by this world.
+					// Keep the Node reset's empty domain explicit when new packages land.
+					m_game->GetUM()->RequireConventionalUnitsReady();
+					for(const auto& row:m_game->GetUM()->GetUnits()) {
+						const auto package=m_game->ResolveConventionalUnit(row.second->Conventional(),row.second->m_owner).package;
+						if(package!=unit::ConventionalUnitContext::Package::Combat && package!=unit::ConventionalUnitContext::Package::Former
+							&& package!=unit::ConventionalUnitContext::Package::Colony) {THROW("Node completion requires Artifact-link reset support for this package");}
+					}
+				}
+				if(granted->m_smac_source_id==1) {
+					for(const auto& row:m_game->GetBM()->GetBases()) {
+						auto* other=row.second;if(other==this || other->m_owner!=m_owner) {continue;}
+						auto facilities=other->m_facilities;bool removed=false;
+						for(auto it=facilities.begin();it!=facilities.end();) {
+							if(it->second->m_smac_source_id==1) {it=facilities.erase(it);removed=true;} else {++it;}
+						}
+						if(removed) {facility_changes.emplace_back(other,std::move(facilities));}
+					}
+				}
+				auto facilities=m_facilities;facilities.emplace(granted->m_id,granted);facility_changes.emplace_back(this,std::move(facilities));
 			} else {
 				const auto design_id = *production.current_item.smac_source_id;
 				if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
@@ -261,12 +284,11 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	}
 	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{result.final_calculation.value_or(result.first_calculation),support}};
 	static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
-	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population );
+	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, food, population, std::move(facility_changes) );
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
-	static_assert(std::is_nothrow_swappable_v<facilities_t>);
-	prepared.Commit();if(replacement_facilities) {m_facilities.swap(*replacement_facilities);}m_smac_upkeep_cache.swap(cache);prepared.Finish();
+	prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
 	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
 	if ( removal ) { removal->Notify( GSE_CALL ); }
 	return result;

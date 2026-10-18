@@ -30,4 +30,51 @@ transitions. Unsupported items remain outside the currently eligible picker.
 Hurry remains explicitly unavailable while its original post-dialog blocking
 mode has no connected producer.
 
-Validation and rendered acceptance will be recorded at the feature checkpoint.
+The current admitted picker has at most eight choices (four unit packages and
+four facilities), which fit in the ordinary choice panel. A broader catalog
+will need a scrolling editor. A nested scrolling prototype clipped its button
+labels on the real renderer; it is not accepted as rendering parity.
+
+## Validation
+
+Fourteen distinct affected native groups pass: queue edits, existing production
+selection, Rename consumers, the required Colony Screen and complete Base-screen
+fixtures. These cover duplicate order, stale snapshots, invalid/oversized/reused
+tokens, foreign control, unavailable retained facilities, actual Base save codec
+and completion advancing the saved queue exactly once. The real GSE editor test
+passes add, move, remove, limit, cancel, submit, stale-view and screen entry
+callbacks. Complete-screen fixtures also pass the final unavailable-control
+binding.
+
+The new source is registered and compiled through genuine CMake. Correctness
+analysis passes all four changed production translation units. Focused
+ASan/UBSan instruments the command, Base wrapper and live regression translation
+units: seven groups pass, with remaining objects reused from the normal cached
+build and leak detection disabled. One initial sanitizer launch exited 139 before
+producing diagnostics; the initialized diagnostic retry passed. Its cause was
+not established by this task.
+
+## Installed-Planet acceptance
+
+Actual SDL input and OpenGL backbuffer captures at 1024x768 used the installed
+GOG assets, WSLg/Mesa llvmpipe and a real two-Base Gaia campaign. These are
+functional/rendering checks, not native Windows GPU performance measurements.
+
+At `db417b09`, actual clicks added Scout/Former/Scout/Headquarters, removed
+Headquarters, moved Former first and accepted Former/Scout/Scout. Reopening,
+adding Colony and cancelling preserved those three entries. Current production
+remained Scout with two stored minerals, year 2119, treasury 29, the same citizen
+and homed free Scout. Menu→Save wrote 828270 bytes.
+
+A fresh process at `bf42854e` loaded that saved file through the real Load Game
+and Start restore path. The inspector and reopened editor retained
+Former/Scout/Scout, showed `3 / 9 pending`, and preserved the current production,
+stores, year, treasury and support. A retained-entry edit was accepted after
+restoring. Both accepted runs shut down normally with no tracked memory/OpenGL
+leaks; heap allocations were not checked by those renderer runs.
+
+Local evidence files are `queue-populated-db417b09.png`,
+`queue-accepted-db417b09.png`, `queue-restored-editor-bf42854e.png`,
+`queue-restored-base-bf42854e.png`, corresponding renderer logs and
+`gaia-queue-db417b09.glsmac`. Original assets and campaign evidence stay outside
+Git. Earlier clipped-label prototype captures are excluded from acceptance.

@@ -21,7 +21,7 @@ return {
         this.choices.clear();
         for (choice of data.choices) {
             const id = choice.source_id; const name = choice.name;
-            this.choices.button({class: 'game-popup-button', height: 28, text: 'Add ' + name}).on('click', () => {
+            this.choices.button({class: 'game-popup-button', left: 0, right: 0, height: 28, text: 'Add ' + name}).on('click', () => {
                 if (#sizeof(this.entries) < this.data.limit) { this.entries :+ {source_id: id, name: name}; this.refresh(); }
                 return true;
             });

@@ -1,0 +1,838 @@
+{
+  "research_id": "RE-SMAC-POST-FLOOD-REPAIR-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "before_flood": {
+    "population": 12,
+    "mask": 87381,
+    "specialists": 4,
+    "provisional": 91,
+    "types": [
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      4,
+      5,
+      6,
+      7
+    ],
+    "intake": [
+      0,
+      0,
+      0
+    ],
+    "support": 0,
+    "surplus": [
+      0,
+      0,
+      0
+    ],
+    "stores": [
+      23,
+      45
+    ],
+    "cache_Base": 0,
+    "current_Base": 0
+  },
+  "after_flood": {
+    "population": 6,
+    "mask": 87381,
+    "specialists": 4,
+    "provisional": 91,
+    "types": [
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      4,
+      5,
+      6,
+      7
+    ],
+    "intake": [
+      0,
+      0,
+      0
+    ],
+    "support": 0,
+    "surplus": [
+      0,
+      0,
+      0
+    ],
+    "stores": [
+      23,
+      45
+    ],
+    "cache_Base": 0,
+    "current_Base": 0
+  },
+  "cases": [
+    {
+      "id": "cached_query",
+      "before": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "after": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "normal_return": true,
+      "boundary": "normal query return",
+      "calls": [
+        {
+          "sequence": 1,
+          "name": "resource_query",
+          "force": 0,
+          "cache_Base": 0
+        }
+      ],
+      "changed_allocation_writes": []
+    },
+    {
+      "id": "fresh_query",
+      "before": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": -1,
+        "current_Base": 0
+      },
+      "after": {
+        "population": 6,
+        "mask": 1,
+        "specialists": 6,
+        "provisional": 0,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          3,
+          2,
+          2
+        ],
+        "support": 0,
+        "surplus": [
+          -9,
+          2,
+          2
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "normal_return": true,
+      "boundary": "normal query return",
+      "calls": [
+        {
+          "sequence": 1,
+          "name": "resource_query",
+          "force": 0,
+          "cache_Base": -1
+        },
+        {
+          "sequence": 9,
+          "name": "support"
+        },
+        {
+          "sequence": 114,
+          "name": "intake_workers"
+        },
+        {
+          "sequence": 7803,
+          "name": "nutrients"
+        },
+        {
+          "sequence": 7887,
+          "name": "minerals"
+        },
+        {
+          "sequence": 8417,
+          "name": "energy"
+        },
+        {
+          "sequence": 10174,
+          "name": "citizens"
+        }
+      ],
+      "changed_allocation_writes": [
+        {
+          "sequence": 1565,
+          "field": "provisional_specialist_count",
+          "before": 91,
+          "after": 0
+        },
+        {
+          "sequence": 1573,
+          "field": "worked_bitmap",
+          "before": 87381,
+          "after": 1
+        },
+        {
+          "sequence": 3771,
+          "field": "first_eight_packed_types",
+          "before": 839913745,
+          "after": 839979281
+        },
+        {
+          "sequence": 4102,
+          "field": "first_eight_packed_types",
+          "before": 839979281,
+          "after": 838930705
+        },
+        {
+          "sequence": 4107,
+          "field": "first_eight_packed_types",
+          "before": 838930705,
+          "after": 839979281
+        },
+        {
+          "sequence": 4121,
+          "field": "retained_specialist_count",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "id": "open_inspector",
+      "before": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "after": {
+        "population": 6,
+        "mask": 1,
+        "specialists": 6,
+        "provisional": 0,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          3,
+          2,
+          2
+        ],
+        "support": 0,
+        "surplus": [
+          -9,
+          2,
+          2
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "normal_return": false,
+      "boundary": "after inspector calculation before presentation",
+      "calls": [
+        {
+          "sequence": 42,
+          "name": "select_Base"
+        },
+        {
+          "sequence": 52,
+          "name": "resource_query",
+          "force": 0,
+          "cache_Base": -1
+        },
+        {
+          "sequence": 60,
+          "name": "support"
+        },
+        {
+          "sequence": 165,
+          "name": "intake_workers"
+        },
+        {
+          "sequence": 7854,
+          "name": "nutrients"
+        },
+        {
+          "sequence": 7938,
+          "name": "minerals"
+        },
+        {
+          "sequence": 8468,
+          "name": "energy"
+        },
+        {
+          "sequence": 10225,
+          "name": "citizens"
+        }
+      ],
+      "changed_allocation_writes": [
+        {
+          "sequence": 1616,
+          "field": "provisional_specialist_count",
+          "before": 91,
+          "after": 0
+        },
+        {
+          "sequence": 1624,
+          "field": "worked_bitmap",
+          "before": 87381,
+          "after": 1
+        },
+        {
+          "sequence": 3822,
+          "field": "first_eight_packed_types",
+          "before": 839913745,
+          "after": 839979281
+        },
+        {
+          "sequence": 4153,
+          "field": "first_eight_packed_types",
+          "before": 839979281,
+          "after": 838930705
+        },
+        {
+          "sequence": 4158,
+          "field": "first_eight_packed_types",
+          "before": 838930705,
+          "after": 839979281
+        },
+        {
+          "sequence": 4172,
+          "field": "retained_specialist_count",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "id": "next_owner_Base_upkeep",
+      "before": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "after": {
+        "population": 6,
+        "mask": 1,
+        "specialists": 6,
+        "provisional": 0,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          3,
+          2,
+          2
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "normal_return": false,
+      "boundary": "after first intake before nutrient calculation",
+      "calls": [
+        {
+          "sequence": 2855,
+          "name": "Base_upkeep"
+        },
+        {
+          "sequence": 2878,
+          "name": "support"
+        },
+        {
+          "sequence": 2983,
+          "name": "intake_workers"
+        }
+      ],
+      "changed_allocation_writes": [
+        {
+          "sequence": 4434,
+          "field": "provisional_specialist_count",
+          "before": 91,
+          "after": 0
+        },
+        {
+          "sequence": 4442,
+          "field": "worked_bitmap",
+          "before": 87381,
+          "after": 1
+        },
+        {
+          "sequence": 6640,
+          "field": "first_eight_packed_types",
+          "before": 839913745,
+          "after": 839979281
+        },
+        {
+          "sequence": 6971,
+          "field": "first_eight_packed_types",
+          "before": 839979281,
+          "after": 838930705
+        },
+        {
+          "sequence": 6976,
+          "field": "first_eight_packed_types",
+          "before": 838930705,
+          "after": 839979281
+        },
+        {
+          "sequence": 6990,
+          "field": "retained_specialist_count",
+          "before": 4,
+          "after": 6
+        }
+      ]
+    },
+    {
+      "id": "manual_selected_worker_click",
+      "before": {
+        "population": 6,
+        "mask": 87381,
+        "specialists": 4,
+        "provisional": 91,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          0,
+          0,
+          0
+        ],
+        "support": 0,
+        "surplus": [
+          0,
+          0,
+          0
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "after": {
+        "population": 6,
+        "mask": 1,
+        "specialists": 6,
+        "provisional": 0,
+        "types": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          4,
+          5,
+          6,
+          7
+        ],
+        "intake": [
+          3,
+          2,
+          2
+        ],
+        "support": 0,
+        "surplus": [
+          -9,
+          2,
+          2
+        ],
+        "stores": [
+          23,
+          45
+        ],
+        "cache_Base": 0,
+        "current_Base": 0
+      },
+      "normal_return": false,
+      "boundary": "after forced calculation before rendering",
+      "calls": [
+        {
+          "sequence": 16,
+          "name": "select_Base"
+        },
+        {
+          "sequence": 26,
+          "name": "resource_query",
+          "force": 0,
+          "cache_Base": 0
+        },
+        {
+          "sequence": 56,
+          "name": "hit_test"
+        },
+        {
+          "sequence": 217,
+          "name": "hit_test"
+        },
+        {
+          "sequence": 385,
+          "name": "local_lock"
+        },
+        {
+          "sequence": 793,
+          "name": "select_Base"
+        },
+        {
+          "sequence": 803,
+          "name": "resource_query",
+          "force": 1,
+          "cache_Base": 0
+        },
+        {
+          "sequence": 809,
+          "name": "support"
+        },
+        {
+          "sequence": 914,
+          "name": "intake_workers"
+        },
+        {
+          "sequence": 8267,
+          "name": "nutrients"
+        },
+        {
+          "sequence": 8351,
+          "name": "minerals"
+        },
+        {
+          "sequence": 8881,
+          "name": "energy"
+        },
+        {
+          "sequence": 10638,
+          "name": "citizens"
+        }
+      ],
+      "changed_allocation_writes": [
+        {
+          "sequence": 436,
+          "field": "worked_bitmap",
+          "before": 87381,
+          "after": 87377
+        },
+        {
+          "sequence": 774,
+          "field": "first_eight_packed_types",
+          "before": 839913745,
+          "after": 839979281
+        },
+        {
+          "sequence": 777,
+          "field": "retained_specialist_count",
+          "before": 4,
+          "after": 5
+        },
+        {
+          "sequence": 2365,
+          "field": "provisional_specialist_count",
+          "before": 91,
+          "after": 0
+        },
+        {
+          "sequence": 2373,
+          "field": "worked_bitmap",
+          "before": 87377,
+          "after": 1
+        },
+        {
+          "sequence": 4566,
+          "field": "first_eight_packed_types",
+          "before": 839979281,
+          "after": 838930705
+        },
+        {
+          "sequence": 4571,
+          "field": "first_eight_packed_types",
+          "before": 838930705,
+          "after": 839979281
+        },
+        {
+          "sequence": 4585,
+          "field": "retained_specialist_count",
+          "before": 5,
+          "after": 6
+        }
+      ]
+    }
+  ],
+  "scope": "One actual population12->6 flood, then independent native snapshots for cached/fresh query, real inspector prefix through calculation, owner traversal through first intake, and visible manual click through forced calculation. Declared pre-flood owner knowledge/territory and installed specialist catalog; source allocation is not repaired before each boundary. Presentation beyond specified stops unexecuted.",
+  "passed": true
+}

@@ -17,7 +17,8 @@ namespace game::backend {
 
 bool Game::HandleSmacWorkerEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
-    if ( name != "work_base_tile" && name != "unwork_base_tile" ) { return false; }
+    const bool inspector=name=="open_smac_base_inspector";
+    if ( !inspector && name != "work_base_tile" && name != "unwork_base_tile" ) { return false; }
     const auto base_arg = args.find( "base" );
     if ( base_arg == args.end() || !base_arg->second ) { return false; }
     const auto* object = base_arg->second->Deref();
@@ -31,6 +32,25 @@ bool Game::HandleSmacWorkerEvent( GSE_CALLABLE, const std::string& name,
         || caller != m_slot_num || base->m_owner->GetIndex() != caller
         || base->m_owner->GetPlayer() != GetPlayer() || GetPlayer()->GetRole() != Player::PR_SINGLE ) {
         THROW( "SMAC worker command requires the authenticated local Base owner" );
+    }
+    if(inspector) {
+        if(args.size()!=1) {THROW("Base inspector command requires only its Base");}
+        RequireSmacLocalHumanOwner(base->m_owner);
+        const auto& names=GetSmacBasePresentations();
+        base::Base::SmacAllocationRoles roles{names[0],{}};for(size_t i=0;i<7;++i) {roles.specialists[i]=names[i+1];}
+        if(apply) {
+            // Stage selection before the owning worker producer. Its successful
+            // publication changes only this Base's refresh entry; swapping our
+            // candidate afterwards cannot allocate or put selection before data.
+            auto updates=m_bm->m_base_updates;
+            // Several queued opens can run before frontend publication. Keep
+            // the last requested selection independent of hash-map iteration.
+            for(auto& entry:updates) {entry.second.ops=static_cast<base::BaseManager::base_update_op_t>(entry.second.ops&~base::BaseManager::BUO_SELECT);}
+            base::BaseManager::QueueBaseUpdateInto(updates,base,static_cast<base::BaseManager::base_update_op_t>(base::BaseManager::BUO_REFRESH|base::BaseManager::BUO_SELECT));
+            base->RecalculateSmacWorkers(GSE_CALL,roles);
+            m_bm->m_base_updates.swap(updates);
+        }
+        return true;
     }
     const auto tile_arg = args.find( "tile" );
     if ( args.size() != 2 || tile_arg == args.end() || !tile_arg->second ) { THROW( "SMAC worker command requires only Base and tile" ); }

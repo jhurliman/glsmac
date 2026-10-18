@@ -263,6 +263,34 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+	task->AddTest("Conventional friendly stack entry returns to occupied HQ and preserves stationary Units",GT() {
+		std::string saved;
+		ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+		const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* manager=game->GetUM();Define(manager);Land(game);
+			auto* actor=Spawn(GSE_CALL,fixture,Record());auto* resident=Spawn(GSE_CALL,fixture,Record(),72);
+			auto* source=actor->GetTile();auto* destination=game->GetMap()->GetTile(3,3);resident->SetTile(GSE_CALL,destination);
+			HQ(GSE_CALL,game,actor,destination);
+			const auto resident_wire=Unit::Serialize(resident).ToString();const auto random=fixture.GameplayRandom();const auto next=Unit::GetNextId();
+			fixture.Updates();const auto before=fixture.Snapshot();manager->ValidateConventionalMove(actor,destination,0);
+			GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"friendly occupied validation changed world or RNG");
+			fixture.MoveEvent(GSE_CALL,actor,destination);
+			GT_ASSERT(actor->GetTile()==destination && source->units.empty() && destination->units.size()==2
+				&& destination->units.at(71)==actor && destination->units.at(72)==resident && actor->Conventional().spent==3
+				&& Unit::Serialize(resident).ToString()==resident_wire,"occupied HQ entry replaced or changed its stationary Unit");
+			manager->ResetConventionalSpent(GSE_CALL,actor);fixture.MoveEvent(GSE_CALL,actor,source);
+			GT_ASSERT(destination->units.size()==1 && destination->units.at(72)==resident && source->units.size()==1 && source->units.at(71)==actor
+				&& Unit::Serialize(resident).ToString()==resident_wire && fixture.GameplayRandom()==random && Unit::GetNextId()==next,
+				"friendly stack departure lost a member, consumed randomness or changed identity");
+			manager->ResetConventionalSpent(GSE_CALL,actor);fixture.MoveEvent(GSE_CALL,actor,destination);saved=fixture.Snapshot();GT_OK();
+		});if(!result.empty()) {return result;}
+		ConventionalUnitFixture restored;restored.Configure(true,3,true);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* tile=game->GetMap()->GetTile(3,3);
+			GT_ASSERT(tile->units.size()==2 && game->GetUM()->GetUnit(71)==tile->units.at(71) && game->GetUM()->GetUnit(72)==tile->units.at(72),
+				"actual Start did not retain both members of the occupied friendly HQ");GT_OK();
+		});
+	});
 	task->AddTest( "Conventional home codec preserves explicit IDs and rejects malformed shapes", GT() {
 		for ( uint64_t id : { uint64_t( 1 ), uint64_t( 701 ), uint64_t( INT64_MAX - 1 ) } ) {
 			auto record = Record(); record.home = ConventionalUnitState::Home::Base; record.home_base_id = id;
@@ -1367,7 +1395,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		using namespace map::tile;
 		const auto initial_id = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( initial_id ); } );
 		for ( const int scenario : { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 18, 19 } ) {
-			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 14 ? 100 : 3, true );
+			ConventionalUnitFixture fixture; fixture.Configure( true, scenario == 14 ? 100 : 3, scenario != 7 );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager ); fixture.RetainedPlanet( 0, 0 );
 				auto record = Record(); if ( scenario == 2 ) { record.spent = 3; }
@@ -1385,7 +1413,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					}
 					destination->terraforming = TERRAFORMING_BUNKER;
 				}
-				if ( scenario == 7 ) { auto* other = Spawn( GSE_CALL, fixture, record, 72 ); other->SetTile( GSE_CALL, destination ); }
+				if ( scenario == 7 ) { auto foreign=record;foreign.owner_simulation_id=2;auto* other = Spawn( GSE_CALL, fixture, foreign, 72,6 ); other->SetTile( GSE_CALL, destination ); }
 				if ( scenario == 8 ) { unit->m_animation_id = 99; }
 				if ( scenario == 9 ) { destination->Lock( 0 ); }
 				if ( scenario == 10 ) { destination = source; }
@@ -1405,6 +1433,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				std::string rejection;
 				try { manager->ValidateConventionalMove( unit, destination, caller ); } catch ( const std::exception& error ) { rejection = error.what(); }
 				GT_ASSERT( !rejection.empty(), "unsupported command was admitted at " + std::to_string( scenario ) );
+				if(scenario==7) {GT_ASSERT(rejection.find("same-owner")!=std::string::npos,"foreign occupied rejection did not reach the destination ownership check");}
 				if ( scenario == 2 ) { GT_ASSERT( rejection.find( "exhausted" ) != std::string::npos, "zero-cost pricing preceded actionability" ); }
 				fixture.MoveEvent( GSE_CALL, unit, destination, caller );
 				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == source_members && destination->units == destination_members

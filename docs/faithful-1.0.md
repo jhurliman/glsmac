@@ -443,8 +443,9 @@ These are engine/script checks, not a completed human playthrough or M2 exit.
 1. Continue playable production/economy slices using existing rule evidence.
    [Recycling Tanks construction](smac-recycling-tanks-production.md) is merged
    in PR #184 after completed Codex review and relevant CI, with real picker →
-   saved ordinary turns → completion coverage. The next extension joins HQ
-   relocation and Bank/Node production to their current energy consumers.
+   saved ordinary turns → completion coverage. PR #185 joins HQ relocation and
+   Bank/Node production to their current energy consumers; PR #186 joins ordered
+   maintenance insolvency. Both have completed review and relevant CI.
    Node/Artifact link state, citizen-status facilities and conventional defense
    effects remain separate dependencies. The subsequent maintenance continuation
    now joins per-facility charges, ordered insolvency sales and retained research
@@ -452,6 +453,10 @@ These are engine/script checks, not a completed human playthrough or M2 exit.
    [The original contract](behavior/facility-maintenance-insolvency.md) records
    the measured human branch and static-only exceptions. Hurry spending and
    the charged-maintenance statistics consumer remain separate dependencies.
+   [Friendly stack movement](smac-friendly-stack-movement.md) now connects normal
+   directional entry/departure at occupied friendly Bases, including saved sight
+   occupancy and actual Start restoration. Occupied fungus and hostile combat
+   still need their own caller continuations.
 2. Keep the [visually reviewed first session](first-session-checkpoint.md) as an
    integration acceptance task while gameplay development continues. It covers
    normal setup, units/commands, Base/production/research screens and disk

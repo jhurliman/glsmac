@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/Tests.cpp
 	${PWD}/UIClass.cpp
 	${PWD}/Sound.cpp
+	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp

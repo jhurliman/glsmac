@@ -1,5 +1,6 @@
 #include "Tests.h"
 #include "Sound.h"
+#include "Flic.h"
 #include "UIClass.h"
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
@@ -138,6 +139,7 @@ namespace tests {
 void AddTests( task::gsetests::GSETests* task ) {
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		AddSoundTests( task );
+		AddFlicTests( task );
 		AddUIClassTests( task );
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );

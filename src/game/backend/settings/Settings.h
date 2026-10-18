@@ -61,6 +61,9 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 		{ settings::MAP_CONFIG_OCEAN_HIGH,   0.8f }  // '70-90% of surface'
 	 */
 	float ocean_coverage = 0.4f;
+	// Exact displayed presets map to the original retained choice K=0..2.
+	// An arbitrary continuous port setting has no established SMAC category.
+	std::optional<int32_t> GetSmacOceanCoverage() const;
 
 	/*
 	 	{ settings::MAP_CONFIG_EROSIVE_STRONG,  0.5f }, // 'strong'

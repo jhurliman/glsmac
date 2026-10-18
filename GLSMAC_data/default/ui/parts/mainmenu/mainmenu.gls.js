@@ -5,6 +5,7 @@ return (m) => {
 
 	const sliding = #include('sliding')(m);
 	const popup = #include('popup')(m);
+	const randomize_map = #include('map_randomization');
 
 	// in some cases (i.e. with --host or --join command line arguments) game should exit on cancel instead of reopening same popup
 	let mainmenu_allowed = true;
@@ -24,10 +25,7 @@ return (m) => {
 			popup: popup,
 			settings: e.settings,
 			randomize_map: () => {
-				e.settings.global.map.ocean_coverage = #random_float(0.4, 0.8);
-				e.settings.global.map.erosive_forces = #random_float(0.5, 1.0);
-				e.settings.global.map.native_lifeforms = #random_float(0.25, 0.75);
-				e.settings.global.map.cloud_cover = #random_float(0.25, 0.75);
+				randomize_map(e.settings.global);
 			},
 			customize_preview_defaults: {
 				// copied from original SMAC

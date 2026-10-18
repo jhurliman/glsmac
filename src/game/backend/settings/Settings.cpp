@@ -31,8 +31,8 @@ WRAPIMPL_DYNAMIC_GETTERS( MapSettings )
 			WRAPIMPL_GET_PTR( "native_lifeforms", native_lifeforms )
 			WRAPIMPL_GET_PTR( "cloud_cover", cloud_cover )
 WRAPIMPL_DYNAMIC_SETTERS( MapSettings )
-	if ( obj->m_world_size_locked && ( key == "size_x" || key == "size_y" || key == "type" || key == "filename" ) ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "World size is locked for this session" );
+	if ( obj->m_world_size_locked && ( key == "size_x" || key == "size_y" || key == "type" || key == "filename" || key == "ocean_coverage" ) ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "World geometry and ocean coverage are locked for this session" );
 	}
 	WRAPIMPL_SET_MAPPED( type )
 	WRAPIMPL_SET_PTR( "filename", String, filename )
@@ -60,6 +60,13 @@ void MapSettings::SetSmacWorldSize( const SmacWorldSizeSelection& selection ) {
 
 void MapSettings::ClearSmacWorldSize() { m_smac_world_size.reset(); m_world_size_locked = false; }
 void MapSettings::LockWorldSize() { m_world_size_locked = true; }
+
+std::optional<int32_t> MapSettings::GetSmacOceanCoverage() const {
+	if(ocean_coverage==0.4f) {return 0;}
+	if(ocean_coverage==0.6f) {return 1;}
+	if(ocean_coverage==0.8f) {return 2;}
+	return {}; // never quantize a continuous setting or measure live terrain
+}
 
 const types::Buffer MapSettings::Serialize() const {
 	types::Buffer buf;
@@ -95,7 +102,8 @@ void MapSettings::Deserialize( types::Buffer buf ) {
 	next.cloud_cover = buf.ReadFloat();
 	if ( buf.lenr != buf.lenw ) { THROW( "Unexpected fields in map settings" ); }
 	next.GetSmacWorldSize();
-	if ( m_world_size_locked && ( !( next.m_smac_world_size == m_smac_world_size ) || next.size_x != size_x || next.size_y != size_y ) ) { THROW( "Host changed locked world size" ); }
+	if ( m_world_size_locked && ( !( next.m_smac_world_size == m_smac_world_size ) || next.size_x != size_x || next.size_y != size_y
+		|| next.ocean_coverage != ocean_coverage ) ) { THROW( "Host changed locked world geometry or ocean coverage" ); }
 	// Serializable's assignment calls Deserialize again; publish only values,
 	// preserving this object's existing script wrappers and lifecycle lock.
 	type = next.type;

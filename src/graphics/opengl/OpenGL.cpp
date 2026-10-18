@@ -339,6 +339,10 @@ void OpenGL::Iterate() {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	Lock();
+	// Retired objects can have their addresses reused by the next UI texture.
+	// Delete their old GPU entries before any replacement is loaded this frame;
+	// draining after Draw could delete a newly loaded entry at the same address.
+	ProcessPendingUnloads();
 
 	for ( auto it = m_routines.begin(); it != m_routines.end(); ++it ) {
 		( *it )->Iterate();
@@ -350,8 +354,6 @@ void OpenGL::Iterate() {
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
 		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
-
-	ProcessPendingUnloads();
 
 	SDL_GL_SwapWindow( m_window );
 
@@ -445,6 +447,10 @@ void OpenGL::OnWindowResize() {
 
 void OpenGL::LoadTexture( types::texture::Texture* texture, const bool requested_smoothen ) {
 	ASSERT( texture, "texture is null" );
+	// A callback/routine may retire a texture after the frame's initial drain.
+	// Retirement is queued before that address can be allocated again, so flush
+	// before looking up/loading a replacement at a potentially reused address.
+	ProcessPendingUnloads();
 	// Indexed display-palette artwork must retain actual palette entries when
 	// stretched: the native menu's tint lookup addresses those same indices.
 	const bool smoothen = requested_smoothen && !texture->HasFlag( types::texture::TF_SMAC_PALETTE );

@@ -44,14 +44,14 @@ return (ui) => {
 
 	// Horizontal list overflow uses the same installed scrollbar artwork.
 	ui.class('default-scroll-left').set({
-		background: 'icons.pcx:crop(107,29,124,46):rotate()',
-		_hover: {background: 'icons.pcx:crop(132,29,149,46):rotate()'},
-		_active: {background: 'icons.pcx:crop(157,29,174,46):rotate()'},
-	});
-	ui.class('default-scroll-right').set({
 		background: 'icons.pcx:crop(107,4,124,21):rotate()',
 		_hover: {background: 'icons.pcx:crop(132,4,149,21):rotate()'},
 		_active: {background: 'icons.pcx:crop(157,4,174,21):rotate()'},
+	});
+	ui.class('default-scroll-right').set({
+		background: 'icons.pcx:crop(107,29,124,46):rotate()',
+		_hover: {background: 'icons.pcx:crop(132,29,149,46):rotate()'},
+		_active: {background: 'icons.pcx:crop(157,29,174,46):rotate()'},
 	});
 	ui.class('default-scroll-h').set({
 		scroll_type: 'horizontal', fromto_size: 18, slider_size: 18,

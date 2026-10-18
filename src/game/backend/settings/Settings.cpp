@@ -6,6 +6,7 @@
 #include "loader/txt/FactionTXTLoader.h"
 
 #include <limits>
+#include <cstring>
 
 #include "gse/value/Float.h"
 #include "gse/value/Ptr.h"
@@ -103,7 +104,7 @@ void MapSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenr != buf.lenw ) { THROW( "Unexpected fields in map settings" ); }
 	next.GetSmacWorldSize();
 	if ( m_world_size_locked && ( !( next.m_smac_world_size == m_smac_world_size ) || next.size_x != size_x || next.size_y != size_y
-		|| next.ocean_coverage != ocean_coverage ) ) { THROW( "Host changed locked world geometry or ocean coverage" ); }
+		|| std::memcmp(&next.ocean_coverage,&ocean_coverage,sizeof(ocean_coverage))!=0 ) ) { THROW( "Host changed locked world geometry or ocean coverage" ); }
 	// Serializable's assignment calls Deserialize again; publish only values,
 	// preserving this object's existing script wrappers and lifecycle lock.
 	type = next.type;

@@ -31,6 +31,11 @@ void AddSmacWorldSizeRulesTests( task::gsetests::GSETests* task ) {
 		settings.ocean_coverage=0.4f;MapSettings locked;locked.Deserialize(settings.Serialize());locked.LockWorldSize();
 		const auto before=locked.Serialize().ToString();settings.ocean_coverage=0.6f;
 		GT_ASSERT(Rejects([&]{locked.Deserialize(settings.Serialize());}) && locked.Serialize().ToString()==before,"host changed locked ocean coverage or rejected update partially published");
+		settings.ocean_coverage=NAN;MapSettings raw;raw.Deserialize(settings.Serialize());raw.LockWorldSize();
+		settings.erosive_forces=0.5f;raw.Deserialize(settings.Serialize());
+		GT_ASSERT(!raw.GetSmacOceanCoverage() && raw.Serialize().ToString()==settings.Serialize().ToString(),"unchanged saved NaN coverage rejected an otherwise permitted update");
+		const auto nan_before=raw.Serialize().ToString();settings.ocean_coverage=0.4f;
+		GT_ASSERT(Rejects([&]{raw.Deserialize(settings.Serialize());}) && raw.Serialize().ToString()==nan_before,"locked NaN representation changed or rejection partially published");
 		GT_OK();
 	});
 	task->AddTest( "SMAC world-size source preserves positional identity and doubles only source X", GT() {

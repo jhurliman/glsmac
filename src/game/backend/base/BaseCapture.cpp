@@ -191,7 +191,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	}
 	auto actor_state=actor->Conventional();actor_state.spent=3;actor_state.failed_move=false;data->units.emplace_back(actor,actor_state);
 	for(const auto& entry:um->GetUnits()) {
-		auto* unit=entry.second;auto next=unit->Conventional();
+		auto* unit=entry.second;if(unit->IsNative()) {continue;}auto next=unit->Conventional();
 		if(replacement && unit->m_owner==captured->m_owner && next.home_base_id==captured->m_id) {
 			next.home_base_id=replacement->m_id;next.home=unit::ConventionalUnitState::Home::Base;
 			(void)um->ResolveConventional(next,unit->m_owner);data->units.emplace_back(unit,next);

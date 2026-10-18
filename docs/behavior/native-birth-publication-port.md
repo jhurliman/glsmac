@@ -15,3 +15,18 @@ The source proof admits ordinary initialized stock8/9/10 and negative assignment
 This is the production birth transaction, exercised through real manager publication and world persistence. The ordinary per-Base ecology callback, native frontend presentations, native AI/assignment and warming/climate are still unfinished; this does not claim that normal gameplay invokes the completed ecology event.
 
 Local checks: cached incremental build;18 focused native/allowance groups; targeted correctness analysis of4 production translation units;17 focused groups with4 production translation units instrumented by AddressSanitizer/UBSan. Other objects reused the current normal build; leak detection was disabled. No new platform matrix or interactive rendering claim.
+
+## Conquest coexistence
+
+The ordinary undefended-Base capture home-repair scan skips native records.
+Wild owner0 Units have no conventional home and must not be unpacked as a
+conventional variant while repairing the defeated positive owner's homes.
+
+The existing live capture regression now adds a real factory-created native
+Mind Worm in both a successful capture and a late publication failure. The
+failure retains the complete snapshot; successful capture preserves the native
+record and native factory counters while repairing the ordinary remote home.
+The completed world passes actual Start restore with that same native body,
+then reaches the captured Base's next assimilation tail. Six focused capture/
+dense groups and targeted BaseCapture.cpp correctness analysis pass. No codec
+or lifetime format changed in this guard.

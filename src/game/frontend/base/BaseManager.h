@@ -15,10 +15,13 @@ namespace game::backend {
 namespace unit {
 class Def;
 }
+
 namespace base {
 class PopDef;
 }
 }
+
+namespace gse::tests { class BackendFixture; }
 
 namespace game {
 namespace frontend {
@@ -72,6 +75,7 @@ CLASS( BaseManager, common::Class )
 	);
 	void DespawnBase( const size_t base_id );
 	void RefreshBase( Base* base );
+	void UpdateBaseIdentity( Base* base, size_t owner_slot, faction::Faction* faction, const std::string& name );
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
 	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
@@ -82,6 +86,7 @@ CLASS( BaseManager, common::Class )
 
 private:
 	friend class Base;
+	friend class gse::tests::BackendFixture;
 
 private:
 	friend class SlotBadges;
@@ -102,7 +107,7 @@ private:
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
 	typedef std::set< size_t > ordered_base_ids_t;
-	std::unordered_map< faction::Faction*, ordered_base_ids_t > m_faction_base_ids = {};
+	std::unordered_map< size_t, ordered_base_ids_t > m_owner_base_ids = {};
 
 };
 

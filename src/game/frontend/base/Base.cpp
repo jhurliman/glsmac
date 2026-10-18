@@ -51,7 +51,8 @@ Base::Base(
 	)
 	, m_is_owned( is_owned )
 	, m_is_guarded( !m_tile->GetUnits().empty() )
-	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
+	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) )
+	, m_owner_slot( slot->GetIndex() ) {
 	UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
 	UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
@@ -78,10 +79,27 @@ const std::string& Base::GetName() const {
 	return m_name;
 }
 
-void Base::SetName( const std::string& name ) {
-	if ( m_name != name ) {
-		m_name = name;
-	}
+void Base::SetIdentity( Slot* owner, faction::Faction* faction, std::string name,
+	bool is_owned, std::unique_ptr<text::InstancedText> label ) {
+	// Prepare new render resources while the old instances are still valid.
+	auto* badges=m_bm->GetSlotBadges(owner->GetIndex());
+	auto* badge=badges->GetBaseBadgeSprite(m_pops.size(),m_is_guarded);
+	meshtex_t next_base{},next_badge{};
+	const auto destroy_mesh=[](const types::mesh::Render* mesh) {if(mesh) {DELETE(mesh);}};
+	UpdateMeshTex(next_base,GetSpriteFor(faction)->instanced_sprite);
+	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> base_mesh(next_base.mesh,destroy_mesh);
+	UpdateMeshTex(next_badge,badge->instanced_sprite);
+	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> badge_mesh(next_badge.mesh,destroy_mesh);
+	const bool shown=m_render.is_rendered;Hide();
+	delete m_render.name_sprite;
+	if(m_render_data.base.mesh) {DELETE(m_render_data.base.mesh);}
+	if(m_render_data.badge.mesh) {DELETE(m_render_data.badge.mesh);}
+	m_owner_slot=owner->GetIndex();m_slot_badges=badges;m_faction=faction;
+	m_name=std::move(name);m_is_owned=is_owned;
+	m_render.name_sprite=label.release();m_render.instance_id=0;
+	m_render.badge.instance_id=0;m_render.badge.def=badge;m_render.badge.pops_count=m_pops.size();
+	m_render_data={next_base,next_badge};base_mesh.release();badge_mesh.release();
+	if(shown) {Show();}
 }
 
 faction::Faction* const Base::GetFaction() const {
@@ -97,6 +115,10 @@ tile::Tile* Base::GetTile() const {
 }
 
 sprite::Sprite* Base::GetSprite() const {
+	return GetSpriteFor(m_faction);
+}
+
+sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
 	uint8_t size = 0;
 	const auto population = m_pops.size();
 	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
@@ -105,7 +127,7 @@ sprite::Sprite* Base::GetSprite() const {
 		}
 		size = i;
 	}
-	return m_faction->GetBaseSprite( m_tile->IsWater(), size, 0 ); // TODO: perimeter
+	return faction->GetBaseSprite( m_tile->IsWater(), size, 0 ); // TODO: perimeter
 }
 
 void Base::Show() {

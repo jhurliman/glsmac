@@ -126,11 +126,11 @@ void BaseManager::SpawnBase(
 			base
 		}
 	);
-	auto it = m_faction_base_ids.find( faction );
-	if ( it == m_faction_base_ids.end() ) {
-		it = m_faction_base_ids.insert(
+	auto it = m_owner_base_ids.find( slot_index );
+	if ( it == m_owner_base_ids.end() ) {
+		it = m_owner_base_ids.insert(
 			{
-				faction,
+				slot_index,
 				{}
 			}
 		).first;
@@ -146,10 +146,10 @@ void BaseManager::DespawnBase( const size_t base_id ) {
 	ASSERT( it != m_bases.end(), "base id not found" );
 
 	auto* base = it->second;
-	const auto faction = m_faction_base_ids.find( base->GetFaction() );
-	ASSERT( faction != m_faction_base_ids.end() && faction->second.count( base_id ), "base not in faction ids" );
+	const auto faction = m_owner_base_ids.find( base->GetOwnerSlot() );
+	ASSERT( faction != m_owner_base_ids.end() && faction->second.count( base_id ), "base not in owner ids" );
 	faction->second.erase( base_id );
-	if ( faction->second.empty() ) { m_faction_base_ids.erase( faction ); }
+	if ( faction->second.empty() ) { m_owner_base_ids.erase( faction ); }
 
 	m_bases.erase( it );
 
@@ -165,6 +165,22 @@ void BaseManager::DespawnBase( const size_t base_id ) {
 void BaseManager::RefreshBase( Base* base ) {
 	m_game->RenderTile( base->GetTile(), m_game->GetUM()->GetSelectedUnit() );
 	m_game->UpdateRelatedWidgets( ui::WT_BASE_PREVIEW, base->GetId(), base );
+}
+
+void BaseManager::UpdateBaseIdentity( Base* base, size_t owner_slot, faction::Faction* faction, const std::string& name ) {
+	ASSERT(base && GetBaseById(base->GetId())==base && faction,"invalid Base identity update");
+	if(base->GetOwnerSlot()==owner_slot && base->GetFaction()==faction && base->GetName()==name) {return;}
+	auto* owner=m_game->GetSlot(owner_slot);
+	const auto* colors=owner->GetFaction();
+	std::unique_ptr<text::InstancedText> label(m_game->GetITM()->CreateInstancedText(name,m_name_font,colors->m_colors.text,colors->m_colors.text_shadow));
+	auto records=m_owner_base_ids;
+	auto old=records.find(base->GetOwnerSlot());
+	ASSERT(old!=records.end() && old->second.count(base->GetId())==1,"missing old Base owner");
+	old->second.erase(base->GetId());
+	if(old->second.empty()) {records.erase(old);}
+	records[owner_slot].insert(base->GetId());
+	base->SetIdentity(owner,faction,name,owner_slot==m_game->GetMySlotIndex(),std::move(label));
+	m_owner_base_ids.swap(records);
 }
 
 /* TODO void BaseManager::DespawnBase( const size_t base_id ) {
@@ -223,8 +239,8 @@ void BaseManager::SelectBase( Base* base ) {
 }
 
 Base* BaseManager::GetBaseBefore( Base* base ) const {
-	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
-	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
+	const auto& ids_it = m_owner_base_ids.find( base->GetOwnerSlot() );
+	ASSERT( ids_it != m_owner_base_ids.end(), "owner ids not found" );
 	const auto& ids = ids_it->second;
 	auto it = ids.find( base->GetId() );
 	ASSERT( it != ids.end(), "base not in faction ids" );
@@ -237,8 +253,8 @@ Base* BaseManager::GetBaseBefore( Base* base ) const {
 }
 
 Base* BaseManager::GetBaseAfter( Base* base ) const {
-	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
-	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
+	const auto& ids_it = m_owner_base_ids.find( base->GetOwnerSlot() );
+	ASSERT( ids_it != m_owner_base_ids.end(), "owner ids not found" );
 	const auto& ids = ids_it->second;
 	auto it = ids.find( base->GetId() );
 	ASSERT( it != ids.end(), "base not in faction ids" );

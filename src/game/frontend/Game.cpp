@@ -1209,11 +1209,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			const auto& d = request->data.base_update;
 			auto* base = m_bm->GetBaseById( d.base_id );
 			ASSERT( base, "base is null" );
-			base->SetName( *d.name );
-			// TODO: update slot index
-			if ( base->GetFaction()->m_id != *d.faction_id ) {
-				THROW( "TODO: UPDATE FACTION" );
-			}
+			m_bm->UpdateBaseIdentity(base,d.slot_index,m_fm->GetFactionById(*d.faction_id),*d.name);
 			base::Base::pops_t pops = {};
 			pops.reserve( d.pops->size() );
 			for ( const auto& pop : *d.pops ) {

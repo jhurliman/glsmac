@@ -13,6 +13,7 @@ struct MenuImage {
 // FLC indices are game indices: 0 applies blue lookup, 9 leaves the background.
 MenuImage ComposeMenu( const Frame& frame, const std::vector< uint8_t >& background,
     size_t background_width, size_t background_height,
-    const std::array< std::array< uint8_t, 3 >, 256 >& common_palette, size_t rows );
+    const std::array< std::array< uint8_t, 3 >, 256 >& common_palette, size_t rows,
+    size_t viewport_width = 0, size_t viewport_height = 0 );
 
 }

@@ -31,8 +31,15 @@ integer truncation, and selects the first game entry on equal RGB distance.
 Unsupported reserved indices are rejected rather than assigned invented colors.
 
 `openitem.flc:smacmenu(openinga.pcx,5,7):stretch()` requests that composed texture.
-The source operation must come first; animation path, background path, frame and
-row count identify its cached result. Native opening frames 0..5 and closing
+The source operation must come first. Decoded source assets and frames are
+cached; each surface owns only its current composed output, so resizing does
+not retain an RGBA texture for every previously visited window size. Optional
+fourth/fifth arguments specify the presentation viewport width/height; omitted
+dimensions use the current viewport. The title refreshes its current frame on
+resize. Tint sampling maps displayed pixel centers into the stretched PCX,
+and display-palette textures retain nearest-neighbor sampling so the tint
+lookup addresses actual palette entries rather than interpolated colors.
+Native opening frames 0..5 and closing
 frames 6..11 use six minimum-10ms steps; file header speed is metadata, not the
 caller's presentation cadence. The settled screenshot does not certify every
 transition frame or host presentation timing.
@@ -66,6 +73,17 @@ correctness analysis covers changed production translation units and affected
 geometry consumers. The exact comparison uses the unmodified
 `tools/reference/compare_title_screen.py`: no masking, tolerance, alignment or
 rescaling.
+
+A hidden-window OpenGL resize sequence (1024x768, 1280x960, 800x600, 1024x768)
+also checks the displayed background/tint mapping independently against the
+indexed assets. At each size all 13,958 checked blue pixels match exactly.
+Transparent pixels match nearest background samples; exact texel-boundary
+ties may select either adjacent sample through interpolated GPU coordinates.
+This resized check is separate from the strict golden comparison: both native
+1024x768 captures still have zero differing pixels across the whole screen.
+Live GL texture count stays at 28 across the sequence, and clicking Exit Game
+completes normal memorydebug shutdown without tracked memory/OpenGL leaks.
+These are WSLg/llvmpipe rendering checks, not native-platform certification.
 
 Remaining presentation gates include native-platform captures, hover/keyboard
 selection and return-to-menu states, transition frames, resizing/letterboxing,

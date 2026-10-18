@@ -101,7 +101,16 @@ std::string CheckMenu() {
 	background[ 2 * 5 + 3 ] = 2;
 	const auto tinted = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2 );
 	GT_ASSERT( tinted.rgba[ 4 ] == 100 && tinted.rgba[ 16 ] == 80, "menu tint sampled the wrong background position or reused a row" );
-	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 5 ); } ), "menu outside background accepted" );
+	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 16 * 1024 * 1024 ); } ), "menu output budget ignored" );
+	std::fill( background.begin(), background.end(), uint8_t( 0 ) );
+	background[ 3 * 5 + 4 ] = 2;
+	const auto enlarged = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 10, 8 );
+	GT_ASSERT( enlarged.rgba[ 4 ] == 100 && enlarged.rgba[ 16 ] == 100,
+		"enlarged viewport sampled the unscaled PCX corner" );
+	background[ 3 * 5 + 4 ] = 0; background[ 2 * 5 + 3 ] = 2;
+	const auto reduced = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 4, 3 );
+	GT_ASSERT( reduced.rgba[ 4 ] == 100, "reduced viewport did not sample displayed pixel centers" );
+	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 10, 0 ); } ), "partial viewport dimensions accepted" );
 	frame.pixels[ 2 ] = 246;
 	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2 ); } ), "unsupported reserved artwork index accepted" );
 	GT_OK();

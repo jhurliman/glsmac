@@ -43,6 +43,7 @@ Surface::Surface( DOM_ARGS_T )
 			const auto& str = ( (gse::value::String*)v )->value;
 			// Keep the previous owned texture alive until the actor uses its replacement.
 			std::unique_ptr< types::texture::Texture > replaced_texture;
+			std::unique_ptr< types::texture::Texture > generated_menu;
 			if ( str.empty() ) {
 				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path" );
 			}
@@ -68,11 +69,17 @@ Surface::Surface( DOM_ARGS_T )
 					const auto& operation = params.at( 1 );
 					const auto arguments = util::String::Split( operation.substr( 9, operation.size() - 10 ), ',' );
 					long int frame, rows;
-					if ( operation.back() != ')' || arguments.size() != 3 ||
+					long int viewport_width = g_engine->GetGraphics()->GetViewportWidth(), viewport_height = g_engine->GetGraphics()->GetViewportHeight();
+					if ( operation.back() != ')' || ( arguments.size() != 3 && arguments.size() != 5 ) ||
 						!util::String::ParseInt( arguments.at( 1 ), frame ) || !util::String::ParseInt( arguments.at( 2 ), rows ) || frame < 0 || rows <= 0 ) {
 						GSE_ERROR( gse::EC.UI_ERROR, "smacmenu expects background filename, nonnegative frame and positive row count" );
 					}
-					texture = g_engine->GetTextureLoader()->LoadSmacMenuTexture( params.front(), arguments.at( 0 ), frame, rows );
+					if ( arguments.size() == 5 && ( !util::String::ParseInt( arguments.at( 3 ), viewport_width ) ||
+						!util::String::ParseInt( arguments.at( 4 ), viewport_height ) || viewport_width <= 0 || viewport_height <= 0 ) ) {
+						GSE_ERROR( gse::EC.UI_ERROR, "smacmenu viewport dimensions must be positive integers" );
+					}
+					generated_menu.reset( g_engine->GetTextureLoader()->CreateSmacMenuTexture( params.front(), arguments.at( 0 ), frame, rows, viewport_width, viewport_height ) );
+					texture = generated_menu.get();
 				}
 				else {
 					texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front(), palette_flags );
@@ -117,7 +124,8 @@ Surface::Surface( DOM_ARGS_T )
 						}
 					}
 					else if ( f == "smacmenu" ) {
-						f_expect_args( 3 );
+						f_expect_args_fromto( 3, 5 );
+						if ( args.size() == 4 ) { GSE_ERROR( gse::EC.UI_ERROR, "smacmenu expects both viewport dimensions" ); }
 						if ( it != params.begin() + 1 || !is_smac_menu ) { GSE_ERROR( gse::EC.UI_ERROR, "smacmenu() must be the first texture operation" ); }
 					}
 					else if ( f == "stretch" ) {
@@ -195,11 +203,13 @@ Surface::Surface( DOM_ARGS_T )
 					}
 				}
 				const auto result = filter.GetTexture();
+				if ( !result.texture ) { GSE_ERROR( gse::EC.LOADER_ERROR, "Texture filter produced no output" ); }
 				if ( m_background.is_texture_owned ) {
 					replaced_texture.reset( m_background.texture );
 				}
 				m_background.texture = result.texture;
-				m_background.is_texture_owned = result.is_owned;
+				m_background.is_texture_owned = result.is_owned || result.texture == generated_menu.get();
+				if ( result.texture == generated_menu.get() ) { generated_menu.release(); }
 			}
 			m_background.texture->FullUpdate(); // TODO: optimize?
 			m_actor->SetTexture( m_background.texture );

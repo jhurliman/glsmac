@@ -59,6 +59,7 @@ return (m) => {
 	let native_title = false;
 	let native_art = null;
 	let title_labels = [];
+	let title_frame = 0;
 
 	let active_entry_index = null;
 
@@ -71,8 +72,13 @@ return (m) => {
 	};
 
 	const set_title_frame = (frame) => {
-		native_art.background = 'openitem.flc:smacmenu(openinga.pcx,' + #to_string(frame) + ',7):stretch()';
+		title_frame = frame;
+		native_art.background = 'openitem.flc:smacmenu(openinga.pcx,' + #to_string(frame) + ',7,' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()';
 	};
+
+	m.ui.on('resize', (wh) => {
+		if (native_title && native_art != null) { set_title_frame(title_frame); }
+	});
 
 	const slideout_and_cb = (cb) => {
 		if (menublock_animation == null) {
@@ -187,9 +193,10 @@ return (m) => {
 			if (native_title) {
 				current_menublock.bottom = 0;
 				current_menublock.height = 525;
+				title_frame = 0;
 				native_art = current_menublock.surface({
 					left: 0, top: 0, width: 354, height: 525,
-					background: 'openitem.flc:smacmenu(openinga.pcx,0,7):stretch()',
+					background: 'openitem.flc:smacmenu(openinga.pcx,0,7,' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()',
 				});
 			}
 

@@ -627,7 +627,31 @@ std::string CheckMeshCoordinateOutputs() {
 	return errors;
 }
 
+static std::string CheckTextureCopyUpdates() {
+	try {
+		types::texture::Texture source( 3, 2, types::texture::TF_CPU_ONLY );
+		types::texture::Texture target( 4, 3, types::texture::TF_CPU_ONLY );
+		for ( size_t y = 0; y < 2; ++y ) {
+			for ( size_t x = 0; x < 3; ++x ) { source.SetPixel( x, y, types::Color::RGB( 40 + x, 80 + y, 120 ) ); }
+		}
+		for ( const auto size : { std::pair< size_t, size_t >{ 1, 1 }, { 2, 1 }, { 1, 2 }, { 2, 2 } } ) {
+			target.Clear();
+			target.ClearUpdatedAreas();
+			target.AddFrom( &source, types::texture::AM_DEFAULT, 0, 0, size.first - 1, size.second - 1, 1, 1 );
+			GT_ASSERT( target.GetUpdatedAreas().size() == 1, "copy did not emit exactly one update" );
+			const auto& dirty = target.GetUpdatedAreas().back();
+			GT_ASSERT( dirty.left == 1 && dirty.top == 1 && dirty.right == 1 + size.first && dirty.bottom == 1 + size.second,
+				"copy dirty rectangle omitted its last row or column" );
+			GT_ASSERT( target.GetPixel( size.first, size.second ) == source.GetPixel( size.first - 1, size.second - 1 ) &&
+				target.GetPixel( 0, 0 ) == 0, "copy pixels escaped their destination" );
+		}
+	}
+	catch ( const std::exception& error ) { GT_FAIL( std::string( "texture copy update failed: " ) + error.what() ); }
+	GT_OK();
+}
+
 void AddMeshTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest(
 		"test surface background replacement preserves texture ownership",
 		GT() { return CheckSurfaceBackgroundOwnership(); }

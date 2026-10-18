@@ -780,8 +780,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 		{
 			dest_x,
 			dest_y,
-			dest_x + w - 1,
-			dest_y + h - 1
+			dest_x + w,
+			dest_y + h
 		}
 	);
 }

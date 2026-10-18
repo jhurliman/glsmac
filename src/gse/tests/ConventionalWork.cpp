@@ -32,7 +32,7 @@ using namespace game::backend::unit;
 using Order=ConventionalUnitState::WorkOrder;
 bool Rejects(const std::function<void()>& call){try{call();}catch(const std::exception&){return true;}return false;}
 std::string Source(const std::string& name) {
-    const auto source=smac_startup_fixture::Source(name);if(name!="alpha.txt"){return source;}
+    const auto source=smac_startup_fixture::OrdinarySource(name);if(name!="alpha.txt"){return source;}
     std::istringstream input(source);std::string line,section,result;
     while(std::getline(input,line)) {
         if(!line.empty()&&line[0]=='#'){section=line;}
@@ -227,7 +227,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         const std::array<int,5> turns{4,1,4,4,8};
         const std::array<uint16_t,5> bits{map::tile::TERRAFORMING_FARM,map::tile::TERRAFORMING_ROAD,map::tile::TERRAFORMING_FOREST,map::tile::TERRAFORMING_SOLAR,map::tile::TERRAFORMING_MINE};
         for(size_t i=0;i<actions.size();++i){
-            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::Source,"GAIANS");
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS");
             const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
                 auto* actor=Populate(GSE_CALL,fixture);auto* map=fixture.Game()->GetMap();
                 GT_ASSERT(map->GetTerritoryTopology()->SiteRatings(),"ordinary work fixture lacks initialized site history");
@@ -280,7 +280,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         });
     });
     task->AddTest("Former work captured three-worker collaboration preserves unused teammates",GT(){
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::Source,"GAIANS");
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string{
             auto* first=Populate(GSE_CALL,fixture,2);auto* game=fixture.Game();
             const std::array<Unit*,3> actors{first,game->GetUM()->GetUnit(72),game->GetUM()->GetUnit(73)};

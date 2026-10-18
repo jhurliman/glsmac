@@ -328,6 +328,8 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	m_game->CommitBaseTerritory(data.knowledge,data.topology);
 	auto& simulation=m_game->m_simulation->value;
 	simulation.hostility.owners.swap(data.history.owners);simulation.gameplay_random=data.random;
+	data.actor_economy.design_counts=simulation.economy.at(data.new_owner).design_counts;
+	data.defender_economy.design_counts=simulation.economy.at(data.old_owner).design_counts;
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;
 	if(data.disposition) {CommitSmacFactionDisposition(*data.disposition);}
 	workers.Commit();data.base->m_smac_upkeep_cache.swap(data.cache);workers.Finish();

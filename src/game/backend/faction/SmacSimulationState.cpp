@@ -1,4 +1,5 @@
 #include "SmacSimulationState.h"
+#include "SmacRankingScore.h"
 
 #include <set>
 #include <algorithm>
@@ -6,6 +7,70 @@
 #include <utility>
 
 namespace game::backend::faction {
+
+namespace {
+int32_t RankingChecked(int64_t value) {
+    if(value<INT32_MIN || value>INT32_MAX) {throw std::overflow_error("Ordinary ranking exceeds signed32 arithmetic");}
+    return static_cast<int32_t>(value);
+}
+bool RankingTechnologyAvailable(const settings::SmacTechnologyReference& reference,
+    const SmacFactionTechnologyState& owner,const settings::SmacTechnologyRules& technologies) {
+    using Kind=settings::SmacTechnologyReference::Kind;
+    if(reference.kind==Kind::NONE) {return true;}
+    if(reference.kind==Kind::DISABLED) {return false;}
+    if(reference.kind!=Kind::TECHNOLOGY_ID || !reference.technology_id) {throw std::runtime_error("Unknown ranking technology reference");}
+    const auto id=*reference.technology_id;
+    if(id<0 || id>=88 || !owner.owned[id]) {return false;}
+    const auto& row=technologies.technologies[id];
+    const auto first=technologies.ResolveToken(row.prerequisites[0]).kind;
+    const auto second=technologies.ResolveToken(row.prerequisites[1]).kind;
+    if(first==Kind::UNKNOWN || second==Kind::UNKNOWN) {throw std::runtime_error("Unknown ranking technology validity");}
+    return first!=Kind::DISABLED && (second!=Kind::DISABLED || first==Kind::NONE);
+}
+}
+
+int32_t CalculateSmacOrdinaryRankingScore(const SmacFactionTechnologyState& owner,
+    int32_t population,const SmacDesignCounts& counts,const settings::SmacTechnologyRules& technologies,
+    const unit::SmacPredefinedUnitCatalog& catalog,const unit::SmacStartupDesignState& designs) {
+    if(population<0 || owner.future_count<0) {throw std::invalid_argument("Ordinary ranking requires nonnegative population and Future counter");}
+    int32_t result=RankingChecked(int64_t(RankingChecked(int64_t(population)+owner.future_count))*4);
+    for(int32_t id=0;id<88;++id) {
+        if(!RankingTechnologyAvailable({settings::SmacTechnologyReference::Kind::TECHNOLOGY_ID,id},owner,technologies)) {continue;}
+        for(const auto rating:technologies.technologies[id].priorities) {result=RankingChecked(int64_t(result)+rating);}
+    }
+    int32_t reference=1;
+    for(const auto& faction:designs.owners) {
+        for(const auto& design:faction.designs) {
+            if(!design.active || !design.prototyped) {continue;}
+            const auto power=catalog.weapons.weapons.at(design.weapon).offense;
+            if(power>reference && power<99) {reference=power;}
+        }
+    }
+    for(size_t id=0;id<counts.size();++id) {
+        const auto count=counts[id];
+        if(!count || count>250) {continue;}
+        int32_t cost=0,power=0;
+        if(id<64) {
+            const auto row=std::find_if(catalog.units.begin(),catalog.units.end(),[&](const auto& row){return row.source_id==id;});
+            if(row==catalog.units.end()) {throw std::runtime_error("Counted predefined ranking design is absent");}
+            if(!RankingTechnologyAvailable(row->prerequisite,owner,technologies)) {continue;}
+            cost=row->cost;power=catalog.weapons.weapons.at(row->weapon_id).offense;
+        } else {
+            const unit::SmacCustomDesign* found=nullptr;
+            for(const auto& faction:designs.owners) {
+                for(const auto& design:faction.designs) {if(design.id==static_cast<int32_t>(id)) {found=&design;}}
+            }
+            if(!found) {throw std::runtime_error("Counted custom ranking design is absent");}
+            cost=found->cost;power=catalog.weapons.weapons.at(found->weapon).offense;
+        }
+        const auto weighted=RankingChecked(int64_t(count)*cost);
+        const auto term=power==0 ? weighted/4 : power<0 ? weighted/2 : power>=99 ? weighted : RankingChecked(int64_t(power/reference)*weighted);
+        result=RankingChecked(int64_t(result)+term);
+    }
+    return result;
+}
+
+
 bool SmacHostileDirection::operator==(const SmacHostileDirection& other) const {
 	return primary==other.primary && secondary==other.secondary && transition_turn==other.transition_turn && paired_a==other.paired_a && paired_b==other.paired_b;
 }
@@ -42,7 +107,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 13;
+constexpr int64_t VERSION = 14;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -98,6 +163,18 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	technology.Validate( technologies, profiles );
 	social.Validate( technologies, profiles );
 	units.Validate( technologies ); designs.Validate( units.catalog );
+    if(rank_order) {
+        std::set<int32_t> identities;
+        if(rank_order->faction_at_rank[0]) {throw std::runtime_error("Native faction cannot occupy retained rank zero");}
+        for(const auto owner:rank_order->faction_at_rank) {
+            if(!owner) {continue;}
+            if(owner<1 || owner>7 || !identities.insert(owner).second
+                || std::none_of(roster.begin(),roster.end(),[&](const auto& participant){return participant.simulation_id==owner;})) {
+                throw std::runtime_error("Invalid retained ranking identity");
+            }
+        }
+    }
+
 	if ( roster.empty() || roster.size() > 7 || roster.size() != technology.factions.size() || roster.size() != designs.owners.size() || roster.size() != social.factions.size() || roster.size() != satellites.size() || roster.size() != economy.size() ) { throw std::runtime_error( "Incomplete SMAC simulation roster" ); }
 	std::array< bool, 8 > ids{};
 	std::array< bool, 7 > slots{};
@@ -133,7 +210,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -196,6 +273,7 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 		for(size_t i=0;i<owner.losses.size();++i) {if(owner.losses[i]) {buffer.WriteInt(i);buffer.WriteInt(owner.losses[i]);}}
 	}
 	buffer.WriteBool(human_defeat_request.has_value());if(human_defeat_request) {buffer.WriteInt(*human_defeat_request);}
+    buffer.WriteBool(rank_order.has_value());if(rank_order) {for(auto owner:rank_order->faction_at_rank) {buffer.WriteInt(owner);}}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -207,7 +285,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -277,6 +355,9 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 			}
 		}
 		if(version>=13 && buffer.ReadBool()) {result.human_defeat_request=ReadInt32(buffer);}
+        if(version>=14 && buffer.ReadBool()) {
+            result.rank_order=SmacRankOrder{};for(auto& owner:result.rank_order->faction_at_rank) {owner=ReadInt32(buffer);}
+        }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

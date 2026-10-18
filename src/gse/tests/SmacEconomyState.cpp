@@ -14,6 +14,8 @@ std::string CheckSmacEconomyRestore() {
 	SmacEconomyState value{ { 1, 7 }, INT32_MIN, INT32_MAX, 99, 0xa5 };
 	value.regional_base_counts=SmacEconomyState::RegionalBaseCounts{};
 	for(size_t i=0;i<128;++i) {(*value.regional_base_counts)[i]=static_cast<uint8_t>(i*2+1);}
+    value.design_counts=game::backend::faction::SmacDesignCounts{};
+    for(size_t i=0;i<512;++i) {(*value.design_counts)[i]=static_cast<uint8_t>(i*3+1);}
 	const auto wire = value.Serialize().ToString();
 	const auto restored = SmacEconomyState::Deserialize( wire );
 	if ( wire.size() != SmacEconomyState::MAX_WIRE_BYTES || !( restored == value ) || restored.Serialize().ToString() != wire ) {

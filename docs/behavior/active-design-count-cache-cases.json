@@ -1,0 +1,133 @@
+{
+  "research_id": "RE-SMAC-ACTIVE-DESIGN-COUNT-001",
+  "scope": "Static producer/update/reset/recount/scan/availability tracing, prior immutable riot transfer receipt, one new complete ordinary memory-backed file-body roundtrip. No new overflow/transfer/world matrix.",
+  "cases": [
+    {
+      "id": "ordinary_saved_count_authority",
+      "evidence": "new original full writer and reader",
+      "unit_registry_count": 0,
+      "base_registry_count": 0,
+      "saved_counts": [
+        {
+          "faction": 0,
+          "design": 2,
+          "value": 255
+        },
+        {
+          "faction": 1,
+          "design": 2,
+          "value": 251
+        },
+        {
+          "faction": 2,
+          "design": 128,
+          "value": 201
+        },
+        {
+          "faction": 7,
+          "design": 511,
+          "value": 17
+        }
+      ],
+      "poisoned_values": [
+        99,
+        99,
+        99,
+        99
+      ],
+      "restored_counts": [
+        {
+          "faction": 0,
+          "design": 2,
+          "value": 255
+        },
+        {
+          "faction": 1,
+          "design": 2,
+          "value": 251
+        },
+        {
+          "faction": 2,
+          "design": 128,
+          "value": 201
+        },
+        {
+          "faction": 7,
+          "design": 511,
+          "value": 17
+        }
+      ],
+      "normal_save_return": 0,
+      "normal_load_return": 0,
+      "rng_calls": 0
+    },
+    {
+      "id": "wrapping_byte_arithmetic",
+      "evidence": "static x86 byte INC/DEC semantics; no large-world execution",
+      "unsigned_bits": 8,
+      "increment_255": 0,
+      "decrement_0": 255,
+      "storage_saturates": false,
+      "ranking_consumer_skips_above": 250
+    },
+    {
+      "id": "transfer_pair_updates",
+      "evidence": "static inline producers plus prior1019/1019 native riot cases",
+      "debit": "old owner / original design",
+      "credit": "new owner / actual resulting design",
+      "riot_remap_source_id_condition": "greater than64",
+      "negative_remap_result": "keep original design; credit recipient under that ID"
+    },
+    {
+      "id": "restart_and_owner_summary",
+      "evidence": "static stores/branches and existing caller receipts",
+      "restart_clears_active_counts_at_nonzero_turn": true,
+      "loss_history_has_separate_turn_zero_gate": true,
+      "owner_summary_clears_then_counts_owned_registry_units": true,
+      "recount_after_every_mutation": false
+    },
+    {
+      "id": "weapon_reference_range",
+      "evidence": "static start/stride/end arithmetic",
+      "first_design_inclusive": 64,
+      "last_design_inclusive": 511,
+      "excluded_block_zero": [
+        0,
+        63
+      ],
+      "native_extra_iteration": false,
+      "faction_blocks": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "id": "predefined_technology_gate",
+      "evidence": "same original helper target/static body as owned-tech validity",
+      "none_sentinel": -1,
+      "disable_sentinel": -2,
+      "ordinary_ids_inclusive": [
+        0,
+        87
+      ],
+      "future_id88_rejected": true,
+      "faction0_rejected_before_none": true,
+      "definition_guard": "A>=-1 and (B>=-1 or A==-1)",
+      "held_prerequisites_tested": false,
+      "custom_designs_bypass_this_gate": true,
+      "weapon_reference_scan_calls_this_gate": false
+    }
+  ],
+  "limits": [
+    "Complete frontend resume/Start scheduling",
+    "Other serialization modes",
+    "Exhaustive alias analysis/all editor admission",
+    "Malformed registry/catalog identities",
+    "New ownership-transfer/overflow gameplay cases"
+  ]
+}

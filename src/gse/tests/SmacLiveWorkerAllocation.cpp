@@ -76,7 +76,7 @@ Value* Call( GSE_CALLABLE, value::Object* object, const std::string& name, const
 	return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
 }
 std::string Source( const std::string& filename ) {
-	auto source = smac_startup_fixture::Source( filename );
+	auto source = smac_startup_fixture::OrdinarySource( filename );
 	if ( filename != "alpha.txt" ) { return source; }
 	const auto replace = [ & ]( const std::string& name, const std::string& text ) {
 		const auto begin = source.find( name ) + name.size(); const auto end = source.find( '#', begin ); source.replace( begin, end - begin, text );
@@ -257,11 +257,61 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC live ranking uses saved caches before owner summary and preserves them through actual Start",[](GSE*,context::Context*)->std::string {
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        std::string saved;
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);fixture.BasePresentationRoles(names);
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);game->AdvanceTurn(1);
+            for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
+            const auto stock=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{stock,0,stock,0,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(0);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).design_counts->at(2)==1,"actual Scout factory omitted count increment");
+            fixture.ResourceState([](auto& state){state.economy.at(1).design_counts->at(2)=255;});
+            auto* um=game->GetUM();const auto* existing=um->GetUnits().begin()->second;
+            auto* extra=um->SpawnConventionalUnit(GSE_CALL,unit::Unit::GetNextId(),existing->m_def,existing->m_owner,
+                game->GetMap()->GetTile(8,2),existing->Conventional());
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).design_counts->at(2)==0,"factory byte count did not wrap 255 to zero");
+            auto removal=um->PrepareConventionalRemoval(GSE_CALL,{extra->m_id});removal.Commit();removal.Notify(GSE_CALL);
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).design_counts->at(2)==255,"removal byte count did not wrap zero to 255");
+            fixture.ResourceState([](auto& state){
+                for(auto& technology:state.technology.factions) {technology.owned.fill(false);}
+                for(auto& row:state.economy) {row.second.rates={0,0};row.second.population_aggregate=row.first==1 ? 0 : 3;}
+                state.economy.at(1).design_counts->at(2)=251;
+            });
+            saved=fixture.Snapshot();GT_OK();
+        });if(!setup.empty()) {return "ranking setup: "+setup;}
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(TanksSource,true);restored.BasePresentationRoles(names);
+        restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=restored.Game();for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            restored.ResourceState([](auto& state){
+                if(state.rank_order || state.economy.at(1).design_counts->at(2)!=251 || *state.economy.at(2).population_aggregate!=3) {
+                    throw std::runtime_error("Start rebuilt retained ranking inputs from entities");
+                }
+            });
+            game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+            int32_t leader=0;restored.ResourceState([&](auto& state){leader=state.rank_order ? state.rank_order->Leader() : 0;});
+            GT_ASSERT(leader==2,"ranking used post-summary population or ignored the above-250 count guard");
+            const auto economy=game->GetCanonicalEconomy(&game->GetState()->m_slots->GetSlot(0));
+            GT_ASSERT(economy.design_counts->at(2)==1 && *economy.population_aggregate==1,"owner summary did not rebuild actual Unit and population caches");
+            game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+            restored.ResourceState([&](auto& state){leader=state.rank_order ? state.rank_order->Leader() : 0;});
+            GT_ASSERT(leader==1,"next global ranking did not consume the prior owner summaries");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC human defeat request finishes its owner tail blocks gameplay and survives actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         for(const int victim:{1,2}) {
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(RestartSource,true);fixture.BasePresentationRoles(names);std::string saved;
+            // Retain explicit population history before the ending; the
+            // victim's actual owner tail must still refresh it to zero.
+            fixture.ResourceState([](auto& state){for(auto& row:state.economy) {row.second.population_aggregate=10;}});
+
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();game->AdvanceTurn(3);auto* lost=Populate(GSE_CALL,fixture,true,false,victim==1 ? 0 : 6,victim);
                 SelectionPresentations(fixture);auto* bm=game->GetBM();auto* um=game->GetUM();

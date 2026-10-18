@@ -125,6 +125,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
 void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexcept {
     auto& state=m_game->m_simulation->value;const auto owner=state.roster[plan.participant].simulation_id;
     static_assert(std::is_nothrow_copy_assignable_v<faction::SmacEconomyState> && std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
+    plan.economy.design_counts=state.economy.at(owner).design_counts;
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
     state.roster[plan.participant].active=plan.site!=nullptr;

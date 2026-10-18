@@ -216,7 +216,8 @@ private:
 	};
 	std::deque< pending_unit_t > m_unprocessed_units = {};
 	// Restored units need the same frontend publication, without new-unit hooks.
-	void RegisterUnit( Unit* unit );
+	void RegisterUnit( Unit* unit, bool count_as_new = true );
+    void AdjustDesignCount(const Unit& unit,int32_t delta) const noexcept;
 	void TriggerSpawnHook( GSE_CALLABLE, Unit* unit );
 	bool HasUnitId( const size_t id ) const;
 

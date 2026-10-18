@@ -3,6 +3,7 @@
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
 #include "SmacEconomyState.h"
+#include "SmacRankOrder.h"
 #include "SmacHostileState.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -79,6 +80,9 @@ struct SmacSimulationState {
 	// Original human-loss ending request, distinct from local focus, inactive
 	// roster status and a conquest victory. Absence is not inferred from Bases.
 	std::optional<int32_t> human_defeat_request;
+    // Absent before the first real update and on migrated port campaigns.
+    // Retained through capture/elimination; never reconstructed on restore.
+    std::optional<SmacRankOrder> rank_order;
 	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
 	bool operator==( const SmacSimulationState& other ) const;

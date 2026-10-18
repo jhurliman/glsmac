@@ -801,6 +801,7 @@ private:
 	std::vector<std::string> PostCanonicalBaseMaintenance( const base::Base& base, const base::SmacBaseEnergyCalculation& energy );
 	void SettleCanonicalEconomy( int32_t simulation_id );
 	void RefreshCanonicalPopulationAggregate( int32_t simulation_id );
+    std::optional<faction::SmacRankOrder> PrepareCanonicalRankOrder() const;
 	uint8_t GetCanonicalRegion( const map::tile::Tile& tile, const map::GlsmacTerritoryTopology& topology ) const;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> PrepareCanonicalRegionalBaseDelta(
 		const base::Base& base, int delta, const std::optional<map::GlsmacTerritoryTopology>& topology ) const;

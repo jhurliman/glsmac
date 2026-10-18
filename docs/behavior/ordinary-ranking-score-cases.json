@@ -1,0 +1,666 @@
+{
+  "research_id": "RE-SMAC-ORDINARY-RANKING-SCORE-001",
+  "scope": "One existing single-active Gaians first-command path with native rating-store fragment before controller; nine focused complete score-only calls on restored snapshot, resolved cached inputs varied explicitly. No supplied score/ownership/availability result; technology integer parser supplied from installed alpha, other inherited setup services retained. No seven-faction world or AI/victory matrix.",
+  "conventions": "Only declared ordinary valid technologies0/6 and basic designs0/1/2 are counted. Other stronger custom references absent except the declared resolved owner2 design128 in the normalization pair. Cached inputs intentionally discriminate from the live roster/Base records; variations are not actual acquisitions.",
+  "startup_composition": {
+    "profile": "gaians",
+    "human_active_faction": 1,
+    "loaded_ratings": true,
+    "pre_upkeep_population_cache": 0,
+    "ecology_contribution": 6,
+    "scout_contribution": 1,
+    "computed_before_turn_increment": 7,
+    "post_upkeep_population_cache": 1,
+    "post_upkeep_score_query": 11
+  },
+  "cases": [
+    {
+      "id": "baseline",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 11
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "population_cache3",
+      "inputs": {
+        "population_cache": 3,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 12,
+        "technology": 6,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 19
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "base_count_cache9",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 9,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 11
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "historical_technology_score999",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 999,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 11
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "future_counter2",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 2,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 12,
+        "technology": 6,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 19
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "owned_biogenetics",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 0,
+            "key": "Biogen",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              3,
+              2,
+              2
+            ]
+          },
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 13,
+        "units": 1,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 18
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "two_colonies_two_formers",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 0,
+            "count": 2,
+            "cached_cost": 3,
+            "weapon_power": 0,
+            "prerequisite": -1
+          },
+          {
+            "id": 1,
+            "count": 2,
+            "cached_cost": 2,
+            "weapon_power": 0,
+            "prerequisite": 6
+          },
+          {
+            "id": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": null
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 3,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 0,
+            "count": 2,
+            "cached_cost": 3,
+            "weapon_power": 0,
+            "contribution": 1
+          },
+          {
+            "design": 1,
+            "count": 2,
+            "cached_cost": 2,
+            "weapon_power": 0,
+            "contribution": 1
+          },
+          {
+            "design": 2,
+            "count": 1,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 1
+          }
+        ],
+        "total": 13
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "unprototyped_other_custom",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 5,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": {
+            "id": 128,
+            "owner": 2,
+            "owner_active": false,
+            "unit_count": 0,
+            "active": true,
+            "prototype_completed": false,
+            "weapon_power": 4
+          }
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 5,
+        "weapon_reference": 1,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 5,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 5
+          }
+        ],
+        "total": 15
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "prototyped_other_custom",
+      "inputs": {
+        "population_cache": 1,
+        "base_count_cache": 1,
+        "live_base_populations": [
+          1
+        ],
+        "future_counter": 0,
+        "historical_technology_score": 0,
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "owned_technologies": [
+          {
+            "id": 6,
+            "key": "Ecology",
+            "valid": true,
+            "ratings_power_tech_wealth_growth": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "design_counts": [
+          {
+            "id": 2,
+            "count": 5,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "prerequisite": -1
+          }
+        ],
+        "secret_projects": [],
+        "global_custom_reference": {
+          "stronger_candidates_absent_except_declared": true,
+          "declared_other_faction_design": {
+            "id": 128,
+            "owner": 2,
+            "owner_active": false,
+            "unit_count": 0,
+            "active": true,
+            "prototype_completed": true,
+            "weapon_power": 4
+          }
+        }
+      },
+      "expected": {
+        "population_future": 4,
+        "technology": 6,
+        "units": 0,
+        "weapon_reference": 4,
+        "design_terms": [
+          {
+            "design": 2,
+            "count": 5,
+            "cached_cost": 1,
+            "weapon_power": 1,
+            "contribution": 0
+          }
+        ],
+        "total": 10
+      },
+      "normal_native_return": true,
+      "source_quantities_preserved": true,
+      "ending_references_preserved": true,
+      "rng_calls": 0
+    }
+  ],
+  "unsupported": [
+    "Secret Project runtime cases",
+    "Other scenario score modes",
+    "Psi/special-weapon runtime",
+    "Full custom design/prototype lifecycle",
+    "Overflow/count>250 runtime",
+    "Seven-active generated world and AI/victory/report UI matrix"
+  ]
+}

@@ -34,7 +34,13 @@ EnergyPreview PrepareEnergyRates(const Game& game,const base::Base& anchor,base:
 }
 }
 base::SmacBaseEnergyCalculation Game::PreviewCanonicalBaseEnergy(const base::Base& base,base::SmacEnergyRates rates) const {
-    rates.Validate();return CalculateCanonicalBaseEnergy(base,base.PrepareSmacResourceCalculation(),&rates);
+    rates.Validate();
+    if(base.m_retained_population) {
+        const auto allocation=base.CalculateSmacWorkers(*base.m_allocation,base.GetSmacResourceContext());
+        const auto resources=base.CalculateSmacResourceCalculation(base::SmacBaseResourcePhase::Ordinary,&allocation);
+        return CalculateCanonicalBaseEnergy(base,resources,&rates,&allocation);
+    }
+    return CalculateCanonicalBaseEnergy(base,base.PrepareSmacResourceCalculation(),&rates);
 }
 
 gse::Value* Game::CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& anchor,std::optional<base::SmacEnergyRates> candidate) const {

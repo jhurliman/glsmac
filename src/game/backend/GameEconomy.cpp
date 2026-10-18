@@ -37,6 +37,7 @@ faction::SmacEconomyState Game::GetCanonicalEconomy( const slot::Slot* owner ) c
 }
 
 base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& evaluating_base ) const {
+    if(evaluating_base.m_retained_population) {return PreviewCanonicalBaseEnergy(evaluating_base,GetCanonicalEconomy(evaluating_base.m_owner).rates);}
 	return CalculateCanonicalBaseEnergy( evaluating_base, evaluating_base.PrepareSmacResourceCalculation() );
 }
 

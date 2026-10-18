@@ -490,6 +490,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             }}GT_ASSERT(published,"Frontend population was inferred from retained worker projection");
             const auto random=restored.GameplayRandom();const auto turn=game->GetTurnId();const auto credits=game->GetCanonicalEconomy(base->m_owner).credits;
             const auto food=base->GetAccumulatedNutrients();const auto production=base->GetProductionState();
+            const auto preview=base->PrepareSmacResourceCalculation();
+            const auto energy=game->PreviewCanonicalBaseEnergy(*base,game->GetCanonicalEconomy(base->m_owner).rates);
+            GT_ASSERT(Base::Serialize(base).ToString()==expected && restored.GameplayRandom()==random,"Fresh flood preview mutated the retained Base or RNG");
+            const auto tail=base->m_pops.rbegin()->first;
+            GT_ASSERT(Rejects([&]{(void)base->GetSmacSpecialistMenu(tail);})
+                && Rejects([&]{base->OpenSmacSpecialistSelection(GSE_CALL,tail,true);})
+                && Base::Serialize(base).ToString()==expected && restored.Updates().empty(),"Retired-tail specialist request published repair or a menu");
+
             Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"select_base",{base->Wrap(GSE_CALL)});
             GT_ASSERT(Base::Serialize(base).ToString()==expected && restored.Updates().empty(),"Inspector selection mutated the read-only caller or opened before its owning calculation");
             restored.DrainEvents();
@@ -502,6 +510,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(selected && restored.GameplayRandom()==random && game->GetTurnId()==turn && base->GetAccumulatedNutrients()==food
                 && base->GetProductionState()==production && game->GetCanonicalEconomy(base->m_owner).credits==credits,
                 "Inspector opened before data publication or posted stores, credits, RNG or a turn");
+            GT_ASSERT(preview.raw_intake==base->GetSmacUpkeepCache()->calculation.raw_intake
+                && preview.nutrients.demand==base->GetSmacUpkeepCache()->calculation.nutrients.demand
+                && preview.minerals.demand==base->GetSmacUpkeepCache()->calculation.minerals.demand,
+                "Fresh preview used ghost worker intake or obsolete demand before actual repair");
+            const auto repaired_energy=game->PreviewCanonicalBaseEnergy(*base,game->GetCanonicalEconomy(base->m_owner).rates);
+            GT_ASSERT(energy.tail.final.economy==repaired_energy.tail.final.economy && energy.tail.final.psych==repaired_energy.tail.final.psych
+                && energy.tail.final.labs==repaired_energy.tail.final.labs,"Energy preview before flood repair differs from the owning result");
             GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.citizens && base->GetSmacUpkeepCache()->calculation.citizens->population==6,"Inspector did not store the fresh resource calculation");
             GT_ASSERT(base->GetPopulation()==6 && base->m_pops.size()==6 && base->m_pops.begin()->first==19 && base->m_pops.rbegin()->first==24,
                 "Later owning worker producer repaired to the obsolete population or changed survivor identities");

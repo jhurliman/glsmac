@@ -91,7 +91,7 @@ void Base::PublishSmacSpecialistState(GSE_CALLABLE,const SmacBaseAllocationState
 void Base::OpenSmacSpecialistSelection(GSE_CALLABLE,size_t pop_id,bool apply) {
     RequireSmacSpecialistSelection();
     if(m_next_specialist_request==INT64_MAX) {THROW("Manual specialist request identity exhausted");}
-    if(!m_pops.count(pop_id)) {THROW("Manual specialist population is no longer in this Base");}
+    (void)GetSmacSpecialistMenu(pop_id); // validate survival before the owning repair commits
     const auto context=GetSmacResourceContext();
     const auto preliminary=CalculateSmacWorkers(*m_allocation,context);
     if(!apply) {return;}

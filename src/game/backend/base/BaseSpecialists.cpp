@@ -40,6 +40,7 @@ SmacSpecialistMenu Base::GetSmacSpecialistMenu( std::optional< size_t > pop_id )
 	if ( pop_id ) {
 		const auto found = m_pops.find( *pop_id );
 		if ( found == m_pops.end() ) { THROW( "SMAC specialist query population does not belong to this Base" ); }
+		if(static_cast<size_t>(std::distance(m_pops.begin(),found))>=population) {THROW("Specialist population is outside the surviving logical projection");}
 		current = found->second.m_def->m_smac_specialist_id;
 		if ( current ) {
 			size_t specialists = 0;

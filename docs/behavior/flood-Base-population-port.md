@@ -94,3 +94,15 @@ against current public normal objects. The richer development composition has
 the broader twelve-production-TU instrumentation above; neither is a full-engine
 or cross-platform sanitizer claim. This promotion does not include unrelated
 private occupancy, native-world removal or live ecology-controller changes.
+
+Review follow-up: fresh resource and energy previews prepare a coherent detached
+worker allocation when population is pending, including specialist contributions.
+They preserve the old saved projection and cache until owning repair. A specialist
+query/open rejects tail Pop identities before any repair or menu publication.
+The pending12-to6 restore test compares pre-repair resource/energy previews with
+the actual inspector result and checks rejected tail requests leave exact Base
+bytes and frontend requests unchanged.
+
+The review follow-up passes50 focused native groups and analysis of its five
+changed production TUs. Focused ASan/UBSan instruments seven production TUs plus
+the live-allocation test against the current public build (leaks disabled).

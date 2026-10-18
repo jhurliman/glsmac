@@ -31,7 +31,7 @@ Cache::~Cache() {
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
 	if ( m_texture ) {
-		delete m_texture;
+		glDeleteTextures( 1, &m_texture );
 	}
 	delete m_mesh;
 }
@@ -119,10 +119,6 @@ const bool Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program
 			}
 		}
 
-		if ( !m_texture ) {
-			m_texture = new types::texture::Texture();
-		}
-
 		// TODO: investigate and fix properly
 		auto tl2 = m_top_left;
 		auto br2 = m_bottom_right;
@@ -135,7 +131,25 @@ const bool Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program
 			? vh2 - tmp2
 			: 0;
 
-		m_opengl->CaptureToTexture(
+		const types::Vec2<size_t> texture_size = {
+			br2.x > tl2.x ? br2.x - tl2.x : 0,
+			br2.y > tl2.y ? br2.y - tl2.y : 0
+		};
+		if ( !m_texture ) { glGenTextures( 1, &m_texture ); }
+		m_has_image = texture_size.x > 0 && texture_size.y > 0;
+		if ( m_has_image && texture_size != m_texture_size ) {
+			glActiveTexture( GL_TEXTURE0 );
+			m_opengl->WithBindTexture( m_texture, [&] {
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, texture_size.x, texture_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+			} );
+			m_texture_size = texture_size;
+		}
+
+		m_opengl->CaptureToGPUTexture(
 			m_texture, tl2, br2, [ this, &shader_program, &camera ]() {
 				auto* const scene = this->GetActor()->GetScene();
 				for ( const auto& it : m_cache_children_by_zindex ) {
@@ -150,9 +164,6 @@ const bool Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program
 				}
 			}
 		);
-		if ( !m_texture->IsEmpty() ) {
-			m_opengl->LoadTexture( m_texture, false );
-		}
 
 		return true;
 	}
@@ -163,14 +174,14 @@ const bool Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program
 void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO, "invalid shader program type" );
 
-	if ( m_texture && !m_texture->IsEmpty() ) {
+	if ( m_texture && m_has_image ) {
 		m_opengl->WithBindBuffers(
 			m_vbo, m_ibo, [ this, &shader_program ]() {
 
 				m_opengl->WithShaderProgram(
 					shader_program, [ this, &shader_program ]() {
 
-						m_opengl->WithTexture(
+						m_opengl->WithBindTexture(
 							m_texture, [ this, &shader_program ]() {
 
 								auto* sp = (shader_program::Orthographic*)shader_program;

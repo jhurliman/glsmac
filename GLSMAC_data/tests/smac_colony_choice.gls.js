@@ -4,12 +4,16 @@ const handlers = {};
 let events = [];
 let resets = 0;
 let screen = null;
+let reject_accept = false;
 const game = {
 	get_pending_smac_colony: () => { return pending; },
 	get_pending_smac_colony_screen: () => { return screen; },
 	get_bm: () => { return {get_bases: () => { return [{id: 701}, {id: 702}]; }}; },
 	on: (name, callback) => { handlers[name] = callback; },
-	event: (name, args) => { events :+{name: name, args: args}; },
+	event: (name, args) => {
+		if (name == 'choose_colony' && reject_accept && args.choice == 'accept') { throw Error('Accept is unavailable'); }
+		events :+{name: name, args: args};
+	},
 };
 const ui = initialize(game, () => { resets++; });
 test.assert(ui.state().visible && !ui.state().submitted && #sizeof(events) == 0);
@@ -51,3 +55,18 @@ handlers.colony_screen({}); old_close(false);
 test.assert(!ui.state().visible && #sizeof(events) == 4);
 ui.popup().callback(false);
 test.assert(events[4] == {name: 'close_colony_screen', args: {request_id: 14}} && #sizeof(events) == 5);
+
+screen = null; handlers.colony_screen({});
+for (alternative of [0, 1]) {
+	pending = {request_id: 15 + alternative, base_id: 701, base_name: 'Gaia\'s Landing', owner_slot: 0};
+	handlers.colony_choice({});
+	const before = #sizeof(events);
+	reject_accept = true;
+	let rejected = false;
+	try { ui.choose(2); } catch { Error: (e) => { rejected = true; } }
+	handlers.colony_choice({});
+	test.assert(rejected && !ui.state().submitted && ui.state().visible && #sizeof(events) == before);
+	ui.choose(alternative);
+	test.assert(ui.state().submitted && #sizeof(events) == before + 1);
+	test.assert(events[before] == {name: 'choose_colony', args: {request_id: pending.request_id, choice: alternative == 0 ? 'delay' : 'screen'}});
+}

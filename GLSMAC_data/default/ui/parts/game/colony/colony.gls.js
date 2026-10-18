@@ -34,9 +34,11 @@ return {
 
 	submit: (request_id, choice) => {
 		if (this.pending == null || this.pending.request_id != request_id || this.submitted) { return; }
+		// Preflight may reject Accept while leaving this question available.
+		// Only a successfully queued answer blocks further choices.
+		this.p.game.event('choose_colony', {request_id: request_id, choice: choice});
 		this.submitted = true;
 		this.status.text = 'Waiting for the production decision…';
-		this.p.game.event('choose_colony', {request_id: request_id, choice: choice});
 		// Keep the choice blocked until the owning game retires this request.
 	},
 

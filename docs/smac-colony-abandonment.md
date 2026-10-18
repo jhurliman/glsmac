@@ -25,13 +25,13 @@ newborn/old-home distinctions, stable records, frontend updates, paired RNG and
 atomic missing-history/last-Base/wrong-presentation rejection. The cases use
 actual recalculation to produce the retained cache. Their provider boundary
 assertions do not claim the complete original research/credit tail or general
-restart behavior. Linked execution is pending the combined continuation batch;
-no separate build or platform run was performed for this checkpoint.
+restart behavior. Both groups passed in the combined Linux continuation batch;
+the controller test also passed its actual successor research/credit tail.
 
 Initial and running founding now retain the existing allocator raw intake through
 the same N/M finishing arithmetic used by later resource passes. The private
 new Base also records actual current SUPPORT and ordered Ignored marks for the
 surviving roster (the consumed founding Pod is excluded). No second terrain or
 allocation query is introduced. Actual claimed-Start callback and running
-founding tests check this authority before any upkeep; linked validation of
-this follow-up is pending the same combined batch.
+founding tests check this authority before any upkeep and passed in that batch.
+See [continuation validation](smac-colony-choice-continuation.md) for scope.

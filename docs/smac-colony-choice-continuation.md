@@ -65,3 +65,8 @@ The final test changes at `5902aee1` corrected setup order, the appended empty
 continuation frame and the fixture's confirmed production-loss quote; no
 production behavior changed during those reruns. Windows/macOS suites and a
 rendered dialog session were not run for this inactive gameplay scaffold.
+
+GitHub Codex review found that a rejected Accept left the UI submission guard
+set. Submission now blocks only after successful event queuing; the real GSE
+script passes both rejected-Accept-to-Delay and rejected-Accept-to-Screen paths
+without replacing the request or resetting the game.

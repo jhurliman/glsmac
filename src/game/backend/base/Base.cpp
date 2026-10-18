@@ -315,6 +315,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteString( SerializeSmacBaseResourceContext( base->m_resource_context ).ToString() );
 	buf.WriteBool( base->m_allocation.has_value() );
 	if ( base->m_allocation ) { buf.WriteString( base->m_allocation->Serialize().ToString() ); }
+	buf.WriteString( SerializeSmacBaseUpkeepCache( base->m_smac_upkeep_cache ).ToString() );
 	return buf;
 }
 
@@ -362,8 +363,12 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	const auto resource_context = DeserializeSmacBaseResourceContext( types::Buffer( buf.ReadString( SmacBaseResourceContext::MAX_WIRE_BYTES ) ) );
 	std::optional< SmacBaseAllocationState > allocation;
 	if ( buf.ReadBool() ) { allocation = SmacBaseAllocationState::Deserialize( types::Buffer( buf.ReadString( SmacBaseAllocationState::WIRE_BYTES ) ) ); }
+	auto cache = DeserializeSmacBaseUpkeepCache( types::Buffer( buf.ReadString() ) );
+	if ( cache && ( !resource_context || !allocation || !production ) ) { THROW( "Saved upkeep cache requires a canonical Base" ); }
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
-	return new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
+	auto* base = new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
+	base->m_smac_upkeep_cache = std::move( cache );
+	return base;
 }
 
 WRAPIMPL_SERIALIZE( Base )

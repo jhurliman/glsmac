@@ -15,6 +15,8 @@
 #include "Pop.h"
 #include "ProductionState.h"
 #include "BaseResourceCalculation.h"
+#include "SmacColonyContinuation.h"
+#include "SmacBaseUpkeepCache.h"
 #include "SmacBaseResourceContext.h"
 #include "SmacSpecialists.h"
 #include "SmacBaseAllocationState.h"
@@ -117,11 +119,17 @@ public:
 		std::optional< SmacBaseResourceCalculation > final_calculation;
 		std::vector<size_t> removed_units; // shortage order; may include completed_unit
 		bool removed_base = false; // caller must not dereference the retired Base
+		std::optional<SmacColonyUpkeepPause> colony_pause;
 	};
 	SmacProductionResult ProcessSmacProduction( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
 	SmacProductionResult ProcessSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
+	// The complete native choice controller uses this entry once its UI and
+	// abandonment provider are installed. Existing upkeep remains strict.
+	SmacProductionResult BeginSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
+		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
+	const std::optional<SmacBaseUpkeepCache>& GetSmacUpkeepCache() const;
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
 	void ValidateSmacAllocation() const;
@@ -170,14 +178,23 @@ private:
 	std::optional< ProductionState > m_production;
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	std::optional< SmacBaseAllocationState > m_allocation;
+	std::optional<SmacBaseUpkeepCache> m_smac_upkeep_cache;
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation, std::optional< size_t > population = {} ) const;
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
 	SmacBaseAllocationState CalculateSmacWorkers( const SmacBaseAllocationState& allocation, const SmacBaseResourceContext& context, SmacBaseResourcePhase phase = SmacBaseResourcePhase::Ordinary, std::optional< size_t > population = {},
 		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr, std::optional<int32_t> mineral_support = {} ) const;
+	void PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles,
+		const SmacBaseResourceContext& context, SmacBaseResourcePhase phase );
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
-		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step );
+		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step,
+		bool allow_colony_pause = false, const SmacColonyUpkeepPause* pause = nullptr, const SmacBaseUpkeepCache* retained = nullptr );
+	void ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const;
+	SmacProductionResult ResumeSmacAbandonmentTail( GSE_CALLABLE, const SmacBaseUpkeepCache& retained,
+		const SmacAllocationRoles& roles, unit::SmacMoraleMode mode );
+	SmacProductionResult ResumeSmacColonyUpkeep( GSE_CALLABLE, const SmacColonyUpkeepPause& pause,
+		SmacColonyChoice choice, const SmacAllocationRoles& roles, const std::function< unit::Def*( int32_t ) >& definition );
 	class PreparedSmacWorkerState {
 	public:
 		~PreparedSmacWorkerState();

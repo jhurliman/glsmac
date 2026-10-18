@@ -32,6 +32,7 @@
 #include "unit/ConventionalUnitState.h"
 #include "base/ProductionState.h"
 #include "base/SmacBaseEnergy.h"
+#include "base/SmacColonyContinuation.h"
 #include "State.h"
 
 // TODO: remove those
@@ -452,6 +453,7 @@ private:
 	void FailCanonicalTurn(const std::string& error);
 	bool m_canonical_turn_in_progress=false;
 	bool m_canonical_turn_failed=false;
+	bool m_canonical_screen_edit_in_progress=false;
 	struct CanonicalResearchRequest {
 		int64_t id;
 		int32_t owner;
@@ -459,14 +461,37 @@ private:
 		std::vector<int32_t> choices;
 	};
 	struct CanonicalTurnContinuation {
-		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit };
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen };
 		size_t turn, owner_index=0, base_index=0;
 		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
 		Stage stage=Stage::Base;
 		std::optional<base::SmacBaseEnergyCalculation> energy;
+		std::optional<base::SmacColonyUpkeepPause> colony;
+		std::optional<size_t> screen_base;
+		std::optional<int64_t> screen_request_id;
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
+	std::optional<CanonicalTurnContinuation> m_pending_canonical_continuation;
+	types::Buffer SerializeCanonicalContinuation() const;
+	std::optional<CanonicalTurnContinuation> ReadCanonicalContinuation(types::Buffer buffer,size_t turn) const;
+	void ValidateCanonicalContinuation(const CanonicalTurnContinuation&) const;
+	void ApplySnapshotContinuation(GSE_CALLABLE);
 	std::optional<CanonicalResearchRequest> m_research_request;
+	struct CanonicalColonyRequest { int64_t id; int32_t owner; size_t base, turn; };
+	std::optional<CanonicalColonyRequest> m_colony_request;
+	int64_t m_next_colony_request=0; // never reused by ResetGame
+	bool BeginCanonicalBaseUpkeep(GSE_CALLABLE);
+	void RequestCanonicalColony(GSE_CALLABLE);
+	void ValidateCanonicalColony() const;
+	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
+	void NotifyCanonicalColony(GSE_CALLABLE);
+	void ValidateCanonicalColonyScreen() const;
+	void NotifyCanonicalColonyScreen(GSE_CALLABLE);
+	gse::Value* GetPendingSmacColonyScreen(GSE_CALLABLE) const;
+	bool HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	bool QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args);
+	bool HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	int64_t m_next_research_request=0; // never reused by ResetGame
 	void ContinueCanonicalTurn(GSE_CALLABLE);
 	bool ContinueCanonicalResearch(GSE_CALLABLE);

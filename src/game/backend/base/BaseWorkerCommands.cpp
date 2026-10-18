@@ -147,7 +147,7 @@ void Base::CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile ) {
         }
         else if ( def->m_smac_specialist_id ) { roles.specialists[ *def->m_smac_specialist_id ] = item.first; }
     }
-    PublishSmacWorkerState( GSE_CALL, next, roles, context );
+    PublishSmacCalculatedWorkers( GSE_CALL, next, roles, context, SmacBaseResourcePhase::Ordinary );
 }
 }
 }

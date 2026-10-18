@@ -156,6 +156,7 @@ void AddSmacBaseAllocationTests( task::gsetests::GSETests* task ) {
 			auto* game = fixture.Game(); auto* bm = game->GetBM(); auto* base = MakeBase( GSE_CALL, game );
 			base->PublishSmacAllocation( GSE_CALL, Allocation(), Roles() ); const auto bytes = Base::Serialize( base ).ToString();
 			types::Buffer suffix; suffix.WriteBool( true ); suffix.WriteString( Allocation().Serialize().ToString() );
+			suffix.WriteString( SerializeSmacBaseUpkeepCache( std::nullopt ).ToString() );
 			const auto prefix = bytes.substr( 0, bytes.size() - suffix.lenw );
 			bm->DespawnBase( GSE_CALL, base->m_id ); const auto next = Base::GetNextId(); const auto queues = BaseAllocationFixture::Queues( bm );
 			for ( int scenario = 0; scenario < 5; ++scenario ) {
@@ -164,7 +165,9 @@ void AddSmacBaseAllocationTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 1 ) { allocation.specialists.types[ 0 ] = 4; }
 				if ( scenario == 2 ) { allocation.selected = 0x8000000du; }
 				const auto payload = allocation.Serialize().ToString();
-				body.WriteString( payload + ( scenario == 3 ? "x" : "" ) ); if ( scenario == 4 ) { body.WriteBool( false ); }
+				body.WriteString( payload + ( scenario == 3 ? "x" : "" ) );
+				body.WriteString( SerializeSmacBaseUpkeepCache( std::nullopt ).ToString() );
+				if ( scenario == 4 ) { body.WriteBool( false ); }
 				GT_ASSERT( Rejects( [ & ] { std::unique_ptr< Base > rejected( Base::Deserialize( body, game ) ); } ) && !game->GetMap()->GetTile( 2, 2 )->base
 					&& !bm->GetBase( 901 ) && Base::GetNextId() == next && BaseAllocationFixture::Queues( bm ) == queues, "invalid allocation decode published center, identity, or queue effects" );
 				if ( scenario == 3 ) { GT_ASSERT( body.lenr == bound, "allocation cap failure consumed the payload" ); }

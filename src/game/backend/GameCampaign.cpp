@@ -127,6 +127,7 @@ void Game::ValidateCampaignWorld(State* state,const std::string& world) {
     // Complete manager envelopes are checksum/bounds checked before the menu
     // State changes. Their semantic decode remains the normal restore path.
     for(int i=0;i<4;++i) {buffer.ReadString(campaign::MAX_BYTES);}
+    validator.ReadCanonicalContinuation(types::Buffer(buffer.ReadString(campaign::MAX_BYTES)),turn.id);
     if(buffer.lenr!=buffer.lenw) {THROW("Trailing campaign world data");}
 }
 

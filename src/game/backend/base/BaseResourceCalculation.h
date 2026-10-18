@@ -21,4 +21,9 @@ struct SmacBaseResourceCalculation {
     } minerals;
 };
 
+// Finish an already calculated raw intake. Founding retains the allocator's
+// actual pass through this same N/M processing without querying terrain again.
+SmacBaseResourceCalculation FinishSmacResourceIntake( const std::array<int64_t,3>& raw_intake,
+    int64_t nutrient_demand, int64_t stored_nutrients, int32_t mineral_support, int32_t mineral_multiplier_steps );
+
 }

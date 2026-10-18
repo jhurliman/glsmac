@@ -14,6 +14,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseWorkerCommands.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp
+	${PWD}/SmacBaseUpkeepCache.cpp
 	${PWD}/SmacSpecialists.cpp
 	${PWD}/SmacSpecialistAllocation.cpp
 	${PWD}/SmacAutomaticWorkerAllocation.cpp

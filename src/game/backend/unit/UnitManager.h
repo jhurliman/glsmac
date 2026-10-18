@@ -61,6 +61,11 @@ public:
 		void Notify( GSE_CALLABLE ); // after all caller-owned authority is committed
 	private:
 		friend class UnitManager;
+		friend class base::BaseManager;
+		// Same transaction as creation: retain its sight/queues while repairing
+		// old homes and removing only the abandoned Base from territory.
+		void PrepareBaseAbandonment( const base::Base& abandoned, const base::Base& replacement,
+			const map::SmacWorkerKnowledge& territory );
 		struct Data;
 		explicit PreparedConventionalUnit( std::unique_ptr< Data > data );
 		std::unique_ptr< Data > m_data;

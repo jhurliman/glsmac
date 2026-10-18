@@ -24,6 +24,23 @@ int64_t AddIntake( const int64_t a, const int64_t b ) {
 }
 }
 
+SmacBaseResourceCalculation FinishSmacResourceIntake( const std::array<int64_t,3>& raw_intake,
+    int64_t nutrient_demand, int64_t stored_nutrients, int32_t mineral_support, int32_t mineral_multiplier_steps ) {
+    SmacBaseResourceCalculation result{}; result.raw_intake=raw_intake;
+    auto& n=result.nutrients;
+    n.intake=Checked(raw_intake[0]); n.demand=Checked(nutrient_demand);
+    n.surplus=Checked(int64_t(n.intake)-n.demand);
+    n.stored_before=n.normalized_stored=stored_nutrients;
+    if(n.surplus<0 && n.stored_before==0) {n.normalized_stored=-1;}
+    else if(n.surplus>=0 && n.stored_before<0) {n.normalized_stored=0;}
+    auto& m=result.minerals; m.multiplier_steps=mineral_multiplier_steps;
+    // Add half-bonuses, multiply once, then signed division toward zero.
+    m.intake=Checked(int64_t(Checked(raw_intake[1]))*(int64_t(2)+mineral_multiplier_steps))/2;
+    m.demand=mineral_support;
+    m.pre_orbital_surplus=m.surplus=Checked(int64_t(m.intake)-m.demand);
+    return result;
+}
+
 SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBaseResourcePhase phase ) const {
     return CalculateSmacResourceCalculation( phase, nullptr );
 }
@@ -59,15 +76,7 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     }
     else { for ( const auto& entry : m_pops ) { if ( auto* tile = entry.second.GetWorkedTile() ) { add( *tile ); } } }
 
-    auto& n = result.nutrients;
-    n.intake = Checked( result.raw_intake[ 0 ] );
-    n.demand = Checked( m_game->CalculateCanonicalNutrientDemand( *this, population ) );
-    n.surplus = Checked( int64_t( n.intake ) - n.demand );
-    n.stored_before = n.normalized_stored = stored.value_or( m_accumulated_nutrients );
-    if ( n.surplus < 0 && n.stored_before == 0 ) { n.normalized_stored = -1; }
-    else if ( n.surplus >= 0 && n.stored_before < 0 ) { n.normalized_stored = 0; }
-
-    auto& m = result.minerals;
+    int32_t multiplier_steps=0;
     for ( const auto& entry : m_facilities ) {
         // Orbital intake checked registry/catalog identity before this read.
         switch ( *entry.second->m_smac_source_id ) {
@@ -75,18 +84,14 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
             case 20: // Nanoreplicator
             case 21: // Quantum Converter
             case 22: // Genejack Factory
-                ++m.multiplier_steps; break;
+                ++multiplier_steps; break;
             default: break;
         }
     }
-    // Add half-bonuses, multiply once, then signed division toward zero.
-    // Unsupported overflow rejects rather than inventing original wrap rules.
-    m.intake = Checked( int64_t( Checked( result.raw_intake[ 1 ] ) ) * ( 2 + m.multiplier_steps ) ) / 2;
-    m.demand = support;
-    m.pre_orbital_surplus = m.surplus = Checked( int64_t( m.intake ) - m.demand );
     // No Space Elevator: every target has the same final and pre-orbital
     // surplus. No target/buildability lookup or ecology result is invented.
-    return result;
+    return FinishSmacResourceIntake(result.raw_intake,m_game->CalculateCanonicalNutrientDemand(*this,population),
+        stored.value_or(m_accumulated_nutrients),support,multiplier_steps);
 }
 
 gse::Value* Base::CopySmacResourceCalculation( GSE_CALLABLE ) const {

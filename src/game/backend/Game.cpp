@@ -595,10 +595,11 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false)) {
+	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyScreenClose(GSE_CALL,name,args,m_slot_num,false)) {
 		AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args));return;
 	}
-	if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
+	if(QueueCanonicalColonyScreenEdit(GSE_CALL,name,args)) {return;}
+	if(m_canonical_continuation) {THROW("Canonical turn awaits a choice");}
 	if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 	if (QueueCanonicalCompleteTurn(GSE_CALL,name,args)) { return; }
 	if ( HandleCanonicalStartupEvent( GSE_CALL, name, args, m_slot_num, false )
@@ -937,6 +938,14 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_pending_smac_colony_screen",
+			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacColonyScreen(GSE_CALL);})
+		},
+		{
+			"get_pending_smac_colony",
+			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacColony(GSE_CALL);})
+		},
+		{
 			"get_pending_smac_research",
 			NATIVE_CALL(this) {N_EXPECT_ARGS(0);return GetPendingSmacResearch(GSE_CALL);})
 		},
@@ -949,11 +958,12 @@ WRAPIMPL_BEGIN( Game )
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}
-				if(HandleSmacResearchEvent(GSE_CALL,name,args->value,m_slot_num,false)) {
+				if(HandleSmacResearchEvent(GSE_CALL,name,args->value,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args->value,m_slot_num,false) || HandleSmacColonyScreenClose(GSE_CALL,name,args->value,m_slot_num,false)) {
 					AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args->value));
 					return VALUE(gse::value::Undefined);
 				}
-				if(m_canonical_continuation) {THROW("Canonical turn awaits a research choice");}
+				if(QueueCanonicalColonyScreenEdit(GSE_CALL,name,args->value)) {return VALUE(gse::value::Undefined);}
+				if(m_canonical_continuation) {THROW("Canonical turn awaits a choice");}
 				if (m_canonical_turn_failed || m_canonical_turn_in_progress) { THROW("Canonical turn cannot accept commands during a failed or active transition"); }
 				if (QueueCanonicalCompleteTurn(GSE_CALL,name,args->value)) { return VALUE(gse::value::Undefined); }
 				if ( !HandleCanonicalStartupEvent( GSE_CALL, name, args->value, m_slot_num, false )
@@ -1675,6 +1685,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 		DiscardSnapshotTurn();
 		m_pending_simulation.reset();
 		if ( !completed ) { m_simulation.reset(); }
+		m_pending_canonical_continuation.reset();
 	} );
 	ValidatePendingSnapshotTurn();
 	PublishPendingSimulation();
@@ -1726,6 +1737,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 			? turn::TS_WAITING_FOR_PLAYERS
 			: m_is_turn_complete ? turn::TS_TURN_COMPLETE : turn::TS_TURN_ACTIVE );
 	}
+	ApplySnapshotContinuation(GSE_CALL);
 	if ( m_state->m_connection ) {
 		m_state->m_connection->IfServer(
 			[]( connection::Server* connection ) -> void {
@@ -1857,6 +1869,18 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 					&& HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
 					WithRW([&]{HandleSmacResearchEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
 					continue;
+				}
+				if(event->GetSource()==event::Event::ES_LOCAL
+					&& HandleSmacColonyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+					WithRW([&]{HandleSmacColonyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});
+					continue;
+				}
+				if(event->GetSource()==event::Event::ES_LOCAL
+					&& HandleSmacColonyScreenClose(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+					WithRW([&]{HandleSmacColonyScreenClose(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});continue;
+				}
+				if(event->GetSource()==event::Event::ES_LOCAL && event->GetEventName()=="_colony_screen_edit") {
+					WithRW([&]{HandleCanonicalColonyScreenEdit(GSE_CALL,args->value,event->GetCaller(),true);});continue;
 				}
 				// Inputs accepted before the pause cannot run against a later resumed
 				// state, even if a research answer in this same batch finishes upkeep.
@@ -2021,7 +2045,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 
 void Game::CheckRW( GSE_CALLABLE ) const {
 	if (m_canonical_turn_failed) { GSE_ERROR(gse::EC.GAME_ERROR,"Canonical transition failed; this world awaits cleanup"); }
-	if(m_canonical_continuation && !m_canonical_turn_in_progress) {GSE_ERROR(gse::EC.GAME_ERROR,"Canonical turn awaits a research choice");}
+	if(m_canonical_continuation && !m_canonical_turn_in_progress && !m_canonical_screen_edit_in_progress) {GSE_ERROR(gse::EC.GAME_ERROR,"Canonical turn awaits a choice");}
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
@@ -2740,7 +2764,7 @@ void Game::DiscardInitializationMap( map::Map*& candidate ) {
 }
 
 std::string Game::SerializeWorldSnapshot() const {
-	if (m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) { THROW("Canonical transition is incomplete; snapshot unavailable"); }
+	const auto continuation = SerializeCanonicalContinuation();
 	if ( m_um ) { m_um->RequireConventionalUnitsReady(); }
 	if ( !m_map ) {
 		// map not generated yet
@@ -2802,6 +2826,7 @@ std::string Game::SerializeWorldSnapshot() const {
 		m_am->Serialize( b );
 		buf.WriteString( b.ToString() );
 	}
+	buf.WriteString( continuation.ToString() );
 
 	return buf.ToString();
 }
@@ -2823,6 +2848,7 @@ void Game::ConfigureWorldDownload( connection::Client* connection ) {
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
+	m_pending_canonical_continuation.reset();
 	connection->m_on_download_progress = [ this, is_current ]( const float progress ) {
 		if ( !is_current() ) { return; }
 		SetLoaderText( "Downloading world snapshot:  " + std::to_string( (size_t)std::round( progress * 100 ) ) + "%" );
@@ -2883,6 +2909,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	m_pending_snapshot_random.reset();
 	DiscardSnapshotTurn();
 	m_pending_simulation.reset();
+	m_pending_canonical_continuation.reset();
 	auto map_buffer = types::Buffer( map_payload );
 	const auto ec = m_map->LoadFromBuffer( map_buffer );
 	if ( ec != map::Map::EC_NONE ) {
@@ -2914,6 +2941,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 		auto animations = types::Buffer( body.ReadString() );
 		m_am->Deserialize( animations );
 	}
+	auto continuation = ReadCanonicalContinuation(types::Buffer(body.ReadString()),turn_state.id);
 	StageSnapshotTurn( GSE_CALL, turn_state );
 	MTModule::Log( "Received turn ID: " + std::to_string( turn_state.id ) );
 	// Turn's setter only assigns the ID. Game::AdvanceTurn also runs gameplay
@@ -2921,6 +2949,7 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	m_current_turn.AdvanceTurn( turn_state.id );
 	m_pending_snapshot_random = random_state;
 	m_pending_simulation = std::move( simulation );
+	m_pending_canonical_continuation = std::move( continuation );
 	m_game_state = GS_INITIALIZING;
 }
 
@@ -3068,11 +3097,11 @@ void Game::ResetGame() {
 
 		m_pending_snapshot_random.reset();
 		DiscardSnapshotTurn();
-		m_pending_simulation.reset(); m_simulation.reset();
+		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
-		m_canonical_continuation.reset();m_research_request.reset();
+		m_canonical_continuation.reset();m_research_request.reset();m_colony_request.reset();m_canonical_screen_edit_in_progress=false;
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

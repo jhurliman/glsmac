@@ -268,6 +268,22 @@ public:
 		} );
 		if ( !error.empty() ) { throw std::runtime_error( error ); }
 	}
+	void BeginColonyChoice( GSE_CALLABLE, size_t base_id ) {
+		if ( m_game.m_canonical_continuation || m_game.m_colony_request || m_game.m_research_request ) { throw std::runtime_error("fixture already has a suspended turn"); }
+		auto* base=m_game.GetBM()->GetBase(base_id);
+		if(!base) {throw std::runtime_error("fixture Colony Base is absent");}
+		game::backend::Game::CanonicalTurnContinuation next{m_game.GetTurnId()};
+		next.owners.push_back({base->GetSmacResourceContext().owner_simulation_id,{}});
+		bool reached=false;
+		for(const auto id:m_game.GetBM()->GetBaseRecordOrder()) {
+			reached=reached || id==base_id;
+			if(reached && m_game.GetBM()->GetBase(id)->m_owner==base->m_owner) {next.owners.back().second.push_back(id);}
+		}
+		m_game.m_canonical_continuation=std::move(next);
+		m_game.m_canonical_turn_in_progress=true;
+		util::FinallyGuard finish([&]{m_game.m_canonical_turn_in_progress=false;});
+		if(m_game.BeginCanonicalBaseUpkeep(GSE_CALL)) {throw std::runtime_error("fixture failed to reach actual Colony question");}
+	}
 	void BasePresentationRoles( const std::array<std::string,8>& roles ) { m_game.m_smac_base_presentations=roles; }
 	void ResourcePolicy( const bool present ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
@@ -3963,11 +3979,23 @@ public:
 			for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 			const std::array<std::string,7> roles{{"TECHNICIAN","DOCTOR","LIBRARIAN","ENGINEER","EMPATH","THINKER","TRANSCEND"}};
 			const auto require=[](bool ok,const char* why) {if(!ok) {throw std::runtime_error(why);}};
-			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require) {
+			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require,scenario) {
 				N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);N_GETPROP_UNWRAP(base,args,"base",Base);
 				++callbacks;const auto state=base->GetSmacResourceContext();
 				require(m_game.GetTurnId()==0 && !m_game.m_simulation->value.social.Find(state.owner_simulation_id)->retained,"first Base refreshed social before callback");
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
+				const auto& cache=base->GetSmacUpkeepCache();
+				require(cache && cache->calculation.nutrients.intake==(scenario==1 ? 4 : 2)
+					&& cache->calculation.nutrients.demand==2 && cache->calculation.nutrients.surplus==(scenario==1 ? 2 : 0)
+					&& cache->calculation.nutrients.stored_before==0 && cache->calculation.nutrients.normalized_stored==0
+					&& cache->calculation.minerals.intake==1 && cache->calculation.minerals.demand==0,
+					"first Base callback lost its actual initial resource pass");
+				const auto& order=m_game.GetUM()->GetUnitRecordOrder();
+				require(cache->support.free_allowance==2 && cache->support.minerals_per_paid_unit==1
+					&& cache->support.eligible_count==0 && cache->support.paid_count==0 && cache->support.mineral_support==0
+					&& cache->support.units.size()==order.size(),"first Base cache invented retained SUPPORT or omitted actual homeless roster");
+				for(size_t i=0;i<order.size();++i) {require(cache->support.units[i].id==order[i]
+					&& cache->support.units[i].disposition==SmacSupportDisposition::Ignored,"first Base cache reordered or charged a homeless Unit");}
 				return VALUE(value::Undefined);
 			}));
 			const auto* raw_before=&m_game.m_simulation->value.gameplay_random;
@@ -5272,6 +5300,7 @@ void ConventionalUnitFixture::SpecialistKnowledge( int32_t simulation, const std
 void ConventionalUnitFixture::ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction ); fixture->ResourcePolicy( true );
 }
+void ConventionalUnitFixture::BeginColonyChoice( GSE_CALLABLE, size_t id ) { fixture->BeginColonyChoice(GSE_CALL,id); }
 void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
 void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }
@@ -5938,6 +5967,7 @@ types::Buffer WorkerRecord( const std::vector< SavedWorker >& pops, const int64_
 	buf.WriteString( production );
 	buf.WriteString( game::backend::base::SerializeSmacBaseResourceContext( std::nullopt ).ToString() );
 	buf.WriteBool( false );
+	buf.WriteString( game::backend::base::SerializeSmacBaseUpkeepCache( std::nullopt ).ToString() );
 	return buf;
 }
 
@@ -6121,7 +6151,7 @@ static void AddProductionStateTests( task::gsetests::GSETests* task ) {
 						if ( scenario == 9 ) { production.WriteInt( 99 ); }
 					}
 					types::Buffer snapshot;
-					snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
+					snapshot.WriteString( "GLSMAC_BASES_V11" ); snapshot.WriteInt( 2 );
 					for ( const auto* id : { "WORKER", "DOCTOR" } ) { snapshot.WriteString( id ); snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() ); }
 					snapshot.WriteInt( 0 ); snapshot.WriteInt( prior_record ? 2 : 1 );
 					if ( prior_record ) { snapshot.WriteString( Base::Serialize( source.GetGame()->GetBM()->GetBase( 601 ) ).ToString() ); }
@@ -6368,7 +6398,7 @@ static void AddWorkerTests( task::gsetests::GSETests* task ) {
 			const auto setup = source.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { AddWorkerBases( GSE_CALL, source ); GT_OK(); } );
 			GT_ASSERT( setup.empty(), "worker setup: " + setup );
 			types::Buffer snapshot;
-			snapshot.WriteString( "GLSMAC_BASES_V10" ); snapshot.WriteInt( 2 );
+			snapshot.WriteString( "GLSMAC_BASES_V11" ); snapshot.WriteInt( 2 );
 			for ( const auto* id : { "WORKER", "DOCTOR" } ) {
 				snapshot.WriteString( id );
 				snapshot.WriteString( PopDef::Serialize( source.GetGame()->GetBM()->GetPopDef( id ) ).ToString() );
@@ -8072,6 +8102,11 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			// Append the old body frames independently of the production writer.
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
+			// V31 appends one versioned, absent continuation after the managers.
+			// The preceding map/manager payload and ordering stay unchanged.
+			types::Buffer idle_continuation;
+			idle_continuation.WriteInt( 1 ); idle_continuation.WriteBool( false );
+			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();
 			const auto snapshot = fixture.WorldSnapshot();

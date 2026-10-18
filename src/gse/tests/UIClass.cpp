@@ -57,6 +57,35 @@ std::string Exercise(GSE_CALLABLE,::ui::UI& gui,bool inherited) {
     GT_ASSERT(Width(GSE_CALL,active)==24,"removed active payload could not be reapplied");
     node->RemoveModifier(GSE_CALL,::ui::CM_ACTIVE);node->RemoveModifier(GSE_CALL,::ui::CM_HOVER);
     GT_ASSERT(Width(GSE_CALL,active)==10,"removing state did not restore the base style");
+    if(!inherited) {
+        auto* early=AsObject(Call(GSE_CALL,wrap,"class",{
+            VALUE(gse::value::String,,"cascade-early"),
+            object({{"width",VALUE(gse::value::Int,,10)},{"height",VALUE(gse::value::Int,,20)},
+                {"_hover",props(16)},{"_active",props(20)}})
+        }));
+        auto* late=AsObject(Call(GSE_CALL,wrap,"class",{
+            VALUE(gse::value::String,,"cascade-late"),
+            object({{"width",VALUE(gse::value::Int,,12)},{"_hover",props(18)},{"_active",props(28)}})
+        }));
+        auto* both=AsObject(Call(GSE_CALL,root,"area",{object({{"class",VALUE(gse::value::String,,"cascade-early cascade-late")}})}));
+        auto* both_node=::ui::dom::Object::Unwrap(both);
+        GT_ASSERT(Width(GSE_CALL,both)==12,"later base class did not win");
+        both_node->AddModifier(GSE_CALL,::ui::CM_HOVER);
+        both_node->AddModifier(GSE_CALL,::ui::CM_ACTIVE);
+        GT_ASSERT(Width(GSE_CALL,both)==28,"later active class did not win");
+        Call(GSE_CALL,early,"set",{object({{"_active",props(22)}})});
+        GT_ASSERT(Width(GSE_CALL,both)==28,"earlier active refresh overrode later active class");
+        Call(GSE_CALL,late,"set",{object({{"_active",props(30)}})});
+        GT_ASSERT(Width(GSE_CALL,both)==30,"later active refresh was ignored");
+        Call(GSE_CALL,late,"unset",{VALUE(gse::value::Array,,value::array_elements_t{VALUE(gse::value::String,,"_active")})});
+        GT_ASSERT(Width(GSE_CALL,both)==22,"later base overrode earlier active fallback");
+        Call(GSE_CALL,late,"set",{object({{"_hover",props(36)}})});
+        GT_ASSERT(Width(GSE_CALL,both)==22,"later hover refresh overrode earlier active class");
+        both_node->RemoveModifier(GSE_CALL,::ui::CM_ACTIVE);
+        GT_ASSERT(Width(GSE_CALL,both)==36,"active removal did not restore later hover");
+        both_node->RemoveModifier(GSE_CALL,::ui::CM_HOVER);
+        GT_ASSERT(Width(GSE_CALL,both)==12,"hover removal did not restore later base");
+    }
     GT_OK();
 }
 }

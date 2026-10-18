@@ -177,31 +177,9 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 		const auto& cls = m_subclasses.at( modifier );
 		m_subclasses.at( modifier )->RemoveObject( GSE_CALL, object );
 		for ( const auto& p : cls->m_properties ) {
-			gse::Value* v = nullptr;
-			// check if this property exists in other subclasses ( TODO: subclass priority )
-			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
-				const auto& props = m_subclasses.at( *it )->m_properties;
-				const auto& it_p = props.find( p.first );
-				if ( it_p != props.end() && it_p->second->type != gse::VT_UNDEFINED ) {
-					v = it_p->second;
-					break;
-				}
-			}
-			if ( !v ) {
-				// check if this property was set manually
-				const auto& it_p = m_properties.find( p.first );
-				if ( it_p != m_properties.end() && it_p->second->type != gse::VT_UNDEFINED ) {
-					v = it_p->second;
-				}
-			}
-			if ( !v ) {
-				// unset
-				object->UnsetPropertyFromClass( GSE_CALL, p.first );
-			}
-			else {
-				// set to other available value
-				object->SetPropertyFromClass( GSE_CALL, p.first, v, modifier );
-			}
+			// The removed modifier is no longer the priority of the fallback.
+			// Resolve all remaining classes and modifiers on the object itself.
+			object->UnsetPropertyFromClass( GSE_CALL, p.first );
 		}
 	}
 }

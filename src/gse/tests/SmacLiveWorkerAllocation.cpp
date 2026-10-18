@@ -1285,6 +1285,23 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     survivor->RecalculateSmacWorkers(GSE_CALL,roles);fixture.Updates();const auto calculated=fixture.Snapshot();
                     GT_ASSERT(Rejects([&]{bm->AbandonSmacBase(GSE_CALL,*base,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);})
                         && fixture.Snapshot()==calculated && Unit::GetNextId()==next && fixture.GameplayRandom()==pair && fixture.Updates().empty(),"late factory rejection changed Base/home/queue authority");
+                    // A real Famine resource pass leaves the compacted successor
+                    // at N1 - demand2. Accept must reject before retiring the old
+                    // Base or creating its Pod, not fail later inside that tail.
+                    auto context=survivor->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;
+                    survivor->SetSmacResourceContext(GSE_CALL,context);survivor->SetAccumulatedNutrients(0);
+                    survivor->RecalculateSmacWorkers(GSE_CALL,roles);fixture.Updates();
+                    GT_ASSERT(survivor->m_pops.size()==1 && survivor->GetAccumulatedNutrients()==0
+                        && survivor->GetSmacUpkeepCache() && survivor->GetSmacUpkeepCache()->calculation.nutrients.surplus==-1,
+                        "starving successor did not retain its actual negative resource pass");
+                    const auto starving=fixture.Snapshot();const auto order=bm->GetBaseRecordOrder();const auto units=um->GetUnitRecordOrder();
+                    const auto knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+                    const auto scout=Unit::Serialize(um->GetUnit(91)).ToString();const auto random=game->GetRandom()->GetStateString();
+                    GT_ASSERT(Rejects([&]{bm->AbandonSmacBase(GSE_CALL,*base,um->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);})
+                        && fixture.Snapshot()==starving && bm->GetBaseRecordOrder()==order && um->GetUnitRecordOrder()==units
+                        && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge && Unit::Serialize(um->GetUnit(91)).ToString()==scout
+                        && Unit::GetNextId()==next && fixture.GameplayRandom()==pair && game->GetRandom()->GetStateString()==random && fixture.Updates().empty(),
+                        "starving successor preflight partially abandoned a Base, manufactured or changed saved authority");
                 }
                 GT_OK();
             });if(!error.empty()){return error;}

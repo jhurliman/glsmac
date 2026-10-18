@@ -1980,6 +1980,11 @@ public:
 		class BadgeLoader final : public loader::texture::TextureLoader {
 		public:
 			types::texture::Texture bitmap{ 512, 512 };
+            types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override {
+                if(level<0 || level>6 || variant!=0) {throw std::runtime_error("Wrong native badge bank");}
+                auto image=std::make_unique<types::texture::Texture>(23,30);
+                image->Fill(0,0,22,29,types::Color(1.0f,0.0f,0.0f));image->FullUpdate();return image.release();
+            }
 		protected:
 			types::texture::Texture* LoadTextureImpl( const std::string&, types::texture::texture_flag_t ) override { return &bitmap; }
 			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override { return &bitmap; }
@@ -2140,6 +2145,25 @@ public:
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
 				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
+            std::vector<std::weak_ptr<types::texture::Texture>> native_badge_owners;
+            {
+                // Body pixels are this existing Scout fixture. This control
+                // verifies native identity/badge lifetime, not native CVR art.
+                auto native=std::make_unique<game::frontend::unit::Unit>(um.get(),badges.get(),99,def.get(),nullptr,&tile,
+                    types::Vec3{},false,1,0,"Neutral native",1,false,true,1,true);
+                GT_ASSERT(native->IsNative() && !native->IsOwned() && !native->IsActive() && native->GetStatsString()=="? - ? - 1",
+                    "Frontend native borrowed human slot or legacy Def movement");
+                for(uint8_t level=0;level<7;++level) {
+                    native->SetMorale(level,"Neutral native");native->Refresh();
+                    const auto* badge=native->GetBadgeSprite();auto retained=badge->instanced_sprite->texture_owner;
+                    GT_ASSERT(retained && retained->GetWidth()==23 && retained->GetHeight()==30 && native->GetMoraleString()=="Neutral native",
+                        "Native bank lost owned pixels or replaced neutral description");
+                    native_badge_owners.push_back(retained);
+                    native->SetMovement(0);native->SetActionability(false,false,1);native->Refresh();
+                    GT_ASSERT(native->GetBadgeSprite()==badge,"Exhausted native selected alternate badge variant");
+                    native->SetMovement(1);
+                }
+            }
             // Actual Game::RenderTile -> Tile::Render -> Hide/Show path
             // must read the retained shared phase even for the first render.
             using Blink=game::frontend::unit::SelectionBlink;
@@ -2279,6 +2303,7 @@ public:
 				"inactive despawn retained selection or tile membership");
 			frontend.HideTileSelector();
 			def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
+            for(const auto& native:native_badge_owners) {GT_ASSERT(native.expired(),"Native badge texture survived its actor bank retirement");}
 			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
 				"scene/cache retirement released a still-borrowed Scout image" );
 			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,
@@ -3886,7 +3911,8 @@ public:
 		int64_t initial_minerals = -1;
 		bool partial_seal = false, raw_valid = true; std::string startup_error;
 		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
-		const SmacGameplayRandomState expected_random( 11, 29 ); size_t entropy = 0;
+		// Eight native-initializer CRT advances from supplied29; shared11 is untouched.
+		const SmacGameplayRandomState expected_random( 11, 847431173 ); size_t entropy = 0;
 		m_game.m_gameplay_entropy_word_source = [ & ]() { return ++entropy == 1 ? 11u : 29u; };
 		const auto call = [ & ]( GSE_CALLABLE, value::Object* object, const std::string& name, const value::function_arguments_t& args = {} ) {
 			return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
@@ -4176,7 +4202,7 @@ public:
 			});
 		}
 		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == (default_world?0u:1u) && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
-		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle consumed gameplay RNG" );
+		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle differs from exact native-initializer RNG continuation" );
 		std::string saved; std::vector< std::string > saved_units;
 		const auto published = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_game.GetUM()->PushUpdates(); const auto& updates = m_frontend_requests; size_t spawns = 0;
@@ -4581,13 +4607,15 @@ public:
             GT_ASSERT(setup.empty(),"Planet preparation: "+setup);
         }
 		size_t entropy_calls = 0, random_observations = 0; bool random_valid = true;
-		const SmacGameplayRandomState expected_random( 0, zero_random ? 0 : UINT32_MAX );
+		const SmacGameplayRandomState supplied_random( 0, zero_random ? 0 : UINT32_MAX );
+		// Literal eight-draw continuation; entropy input remains the independent supplied seed.
+		const SmacGameplayRandomState expected_random( 0, zero_random ? 2115878600u : 2307720487u );
 		auto original_source = m_game.m_gameplay_entropy_word_source;
 		util::FinallyGuard restore_source( [ & ]() { m_game.m_gameplay_entropy_word_source = std::move( original_source ); } );
 		m_game.m_gameplay_entropy_word_source = [ & ]() -> uint32_t {
 			++entropy_calls;
 			if ( ( failure == 6 && entropy_calls == 1 ) || ( failure == 7 && entropy_calls == 2 ) || entropy_calls > 2 ) { throw std::runtime_error( "fixture entropy failure" ); }
-			return entropy_calls == 1 ? expected_random.Shared() : expected_random.Crt();
+			return entropy_calls == 1 ? supplied_random.Shared() : supplied_random.Crt();
 		};
 		Value* observed = nullptr; size_t errors = 0, social_turns = 0, unit_turns = 0, base_turns = 0; bool social_hook_valid = true;
 		const auto old_unit_id = unit::Unit::GetNextId(), old_base_id = base::Base::GetNextId();
@@ -4749,7 +4777,7 @@ public:
 		GT_ASSERT( m_game.GetRandom()->GetStateString() == before_rng, "simulation admission consumed JSF" );
 		GT_ASSERT( entropy_calls == ( cancellation == 1 ? 0u : 2u ) && random_observations == ( cancellation == 1 ? 0u : 2u ) && random_valid,
 			"claimed Start sampled repeatedly, reordered/reseeded zero, or published before complete RNG construction" );
-		if ( m_game.m_simulation ) { GT_ASSERT( m_game.m_simulation->value.gameplay_random == expected_random, "startup/first turn consumed gameplay RNG" ); }
+		if ( m_game.m_simulation ) { GT_ASSERT( m_game.m_simulation->value.gameplay_random == expected_random, "startup/first turn differs from exact native-initializer RNG continuation" ); }
 		if ( cancellation ) {
 			if ( cancellation == 2 ) { m_game.Iterate(); }
 			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_simulation && !m_game.m_pending_simulation, "reset retained admitted or staged simulation state" );
@@ -10548,7 +10576,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );
 		} );
 	}
-	task->AddTest( "SMAC gameplay RNG claimed Start preserves explicit all-zero pair", GT() {
+	task->AddTest( "SMAC gameplay RNG claimed Start advances explicit zero seed through native initialization", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, 0, false, true );
 	} );
 	task->AddTest( "SMAC social actual first unit base and game upkeep read refreshed owner state", GT() {

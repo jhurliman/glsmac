@@ -171,6 +171,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 					// Keep the Node reset's empty domain explicit when new packages land.
 					m_game->GetUM()->RequireConventionalUnitsReady();
 					for(const auto& row:m_game->GetUM()->GetUnits()) {
+						if(row.second->IsNative()) {(void)m_game->GetUM()->QueryNativeUnit(row.second->Native(),0);continue;}
 						const auto package=m_game->ResolveConventionalUnit(row.second->Conventional(),row.second->m_owner).package;
 						if(package!=unit::ConventionalUnitContext::Package::Combat && package!=unit::ConventionalUnitContext::Package::Former
 							&& package!=unit::ConventionalUnitContext::Package::Colony) {THROW("Node completion requires Artifact-link reset support for this package");}

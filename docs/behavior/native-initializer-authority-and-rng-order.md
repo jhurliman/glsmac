@@ -1,0 +1,9 @@
+# Native initializer authority and RNG ordering
+
+The measured native definition morale0 is a **fresh executable-image input**, preserved by the runtime faction initializer. It is not an output of that initializer. The ordinary faction-definition load source starts at positive slot1 and parses slots1..7; its native slot0 is not passed through the ordinary MORALE parser. Other loaded/editor/custom definitions are outside this fresh-image statement. Keep the independently supplied scalar and raw saved value; do not infer zero on restore or treat arbitrary absence as initialization.
+
+The isolated complete native initializer consumes eight CRT draws (seed65 produces250,18237,2761,26456,23942,4890,14066,5852), no shared draws. Its complete personality/AI outputs remain unmodeled. The native birth receipt explicitly supplies seed65 again after initialization; it is not a continuous process-start seed receipt.
+
+The six-draw startup/controller receipt measures a different admitted composition whose paired streams are supplied at its own seam. It does not execute the native faction initializer. Those six are one normal-balance draw, four global-advance draws and one first-upkeep ecology draw. The whole-new-game source calls all faction initializers (including0) before its later normal balance. Therefore native initialization is upstream of the measured balance/controller/first-upkeep sequence, but other setup/human-initializer draws intervene: **do not claim a stock continuous startup total14 or insert eight at the end of the existing six-draw sequence**. Composing new lifecycle stages requires declaring the stream seam/order; old saved streams restore without initialization.
+
+Evidence reused: native-birth-producer.md, ecology-native-unit-records.md, startup-rng-controller-mode.md and their frozen receipts. This is a source clarification; no full startup rerun.

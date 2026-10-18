@@ -41,6 +41,14 @@ namespace unit {
 
 static const std::string s_snapshot_format = "GLSMAC_UNITS_V4";
 
+static faction::SmacNativeFactoryState PrepareNativeDeletionAccounting(Game& game,const Unit& unit,const faction::SmacNativeFactoryState& before) {
+    (void)game.GetUM()->QueryNativeUnit(unit.Native(),0);
+    const auto& catalog=game.GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+    const auto design=std::find_if(catalog.units.begin(),catalog.units.end(),[&](const auto& row){return row.source_id==unit.Native().design;});
+    if(design==catalog.units.end() || design->plan<0 || design->plan>255) {THROW("Native casualty lacks its catalog plan");}
+    auto result=before;result.Adjust(unit.Native().design,static_cast<uint8_t>(design->plan),-1);return result;
+}
+
 static size_t ReadSnapshotCount( types::Buffer& buf ) {
 	const auto count = buf.ReadInt();
 	// Every record contains at least one typed Buffer frame (six bytes).
@@ -254,7 +262,9 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
     data.homes.reserve(data.manager->m_units.size());
     for ( const auto id:data.manager->m_unit_order ) {
         auto* current=data.manager->GetUnit(id);
-        if ( !current || !current->IsConventional() ) { THROW( "Abandonment requires current conventional Unit records" ); }
+        if (!current) {THROW("Abandonment requires registered Unit records");}
+        if(current->IsNative()) {(void)data.manager->QueryNativeUnit(current->Native(),0);continue;}
+        if (!current->IsConventional()) {THROW("Abandonment requires current conventional Unit records");}
         auto home=current->Conventional();
         if ( home.home_base_id!=abandoned.m_id ) { continue; }
         if ( current->m_owner!=abandoned.m_owner ) { THROW( "Foreign captured home repair is not admitted" ); }
@@ -314,6 +324,7 @@ struct UnitManager::PreparedConventionalRemoval::Data {
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::optional<std::unordered_map<size_t,base::BaseManager::base_update_t>> base_updates;
     std::vector<std::unique_ptr<Unit>> retired;
+    std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_survivors;
     bool committed=false;
 };
 UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(std::unique_ptr<Data> data):m_data(std::move(data)) {}
@@ -337,6 +348,13 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     data->knowledge=creation && creation->sight ? creation->sight : m_game->GetMap()->GetSmacWorkerKnowledge();
     auto knowledge=data->knowledge ? std::optional<map::SmacWorkerKnowledge::Data>(data->knowledge->CopyData()) : std::nullopt;
     data->removed.reserve(ids.size()); data->retired.resize(ids.size()); data->removed_ids=ids;
+    for(size_t index=0;index<data->order.size();++index) {
+        auto* unit=data->units.at(data->order[index]);
+        if(unit->IsNative()) {
+            if(unit->Native().id!=index) {THROW("Native source index differs from live record order");}
+            data->native_survivors.emplace_back(unit,unit->Native());
+        }
+    }
     for(const auto id:ids) {
         const auto found=data->units.find(id);
         if(found==data->units.end() || !found->second || !found->second->IsConventional()
@@ -350,7 +368,10 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
         auto& occupants=inserted.first->second;
         if(!occupants.count(id) || occupants.at(id)!=unit) {THROW("Removal Unit membership differs");}
         occupants.erase(id); data->units.erase(found);
-        data->order.erase(std::find(data->order.begin(),data->order.end(),id));
+        const auto ordered=std::find(data->order.begin(),data->order.end(),id);
+        const auto erased=static_cast<int32_t>(std::distance(data->order.begin(),ordered));
+        for(auto& survivor:data->native_survivors) {survivor.second=survivor.second.AfterUnlinkedIndexErasure(erased);}
+        data->order.erase(ordered);
         const auto old=data->updates.find(id);
         if(old!=data->updates.end() && (old->second.ops & UUO_SPAWN)) {data->updates.erase(old);}
         else {data->updates[id]={UUO_DESPAWN,nullptr};}
@@ -435,9 +456,19 @@ void UnitManager::QueryPreparedUnits(const std::map<size_t,Unit*>& units,const s
     for(const auto& row:positions) {row.first->CommitConventionalMove(row.first->Conventional(),row.second);}
     m_game->CommitConventionalSight(view_knowledge);query();
 }
-void UnitManager::PreparedConventionalRemoval::Query(const std::function<void()>& query) const {
+void UnitManager::PreparedConventionalRemoval::QueryWithNativeRecords(const std::function<void()>& query) const {
     if(!m_data || m_data->committed) {THROW("Removal query requires an uncommitted plan");}
-    const auto& d=*m_data;d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,{},query);
+    const auto& d=*m_data;
+    auto previous=d.native_survivors;
+    for(auto& row:previous) {row.second=row.first->Native();}
+    util::FinallyGuard restore([&] {for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}});
+    for(const auto& row:d.native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    query();
+}
+void UnitManager::PreparedConventionalRemoval::Query(const std::function<void()>& query) const {
+    QueryWithNativeRecords([&] {
+        const auto& d=*m_data;d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,{},query);
+    });
 }
 void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     if(!m_data || m_data->committed) {return;}
@@ -445,6 +476,8 @@ void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)>);
     d.manager->m_units.swap(d.units); d.manager->m_unit_order.swap(d.order); d.manager->m_unit_updates.swap(d.updates);
+    static_assert(std::is_nothrow_copy_assignable_v<SmacNativeUnitRecord>);
+    for(const auto& row:d.native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
     for(const auto* removed:d.removed) {d.manager->AdjustDesignCount(*removed,-1);}
     if(d.base_updates) {d.manager->m_game->GetBM()->m_base_updates.swap(*d.base_updates);}
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
@@ -519,7 +552,7 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         // supplied plan may be installed as a read-only nested query view.
         const auto& old=*supplied->m_data;auto copy=std::make_unique<PreparedConventionalRemoval::Data>();
         copy->manager=this;copy->removed=old.removed;copy->removed_ids=old.removed_ids;copy->units=old.units;copy->order=old.order;
-        copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
+        copy->native_survivors=old.native_survivors;copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
         data->removal.emplace(PreparedConventionalRemoval(std::move(copy)));
     } else {data->removal.emplace(PrepareRemovalForQuery(removed,transient));}
     const auto& removal=*data->removal->m_data;
@@ -599,7 +632,7 @@ void UnitManager::PreparedFactionUnits::Query(const std::function<void()>& query
     if(!m_data || m_data->committed) {THROW("Faction Unit query requires an uncommitted plan");}
     const auto& d=*m_data;std::vector<std::pair<Unit*,map::tile::Tile*>> positions;positions.reserve(d.candidates.size());
     for(const auto& row:d.candidates) {positions.emplace_back(row.get(),d.destination);}
-    d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,positions,query);
+    d.removal->QueryWithNativeRecords([&] {d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,positions,query);});
 }
 void UnitManager::PreparedFactionUnits::Refresh(Unit* unit) {
     if(!m_data || m_data->committed || !unit || !m_data->units.count(unit->m_id) || m_data->units.at(unit->m_id)!=unit) {THROW("Faction refresh needs a prepared surviving Unit");}
@@ -850,9 +883,31 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	const auto ordered = std::find( m_unit_order.begin(), m_unit_order.end(), unit_id );
 	if ( ordered == m_unit_order.end() ) { THROW( "Unit is missing its record order" ); }
 
+    std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_survivors;
+    const auto erased=static_cast<int32_t>(std::distance(m_unit_order.begin(),ordered));
+    std::vector<Unit*> dense;dense.reserve(m_unit_order.size());
+    for(const auto id:m_unit_order) {dense.push_back(m_units.at(id));}
+    ValidateNativeIndexBindings(dense);
+    for(auto* survivor:dense) {
+        if(survivor==unit || !survivor->IsNative()) {continue;}
+        auto record=survivor->Native();
+        // Stack links refer to the pre-compaction pool. Unlink the retiring
+        // native first, then apply the shared source-index/payload repair.
+        if(unit->IsNative()) {
+            if(record.stack_next==erased) {record.stack_next=unit->Native().stack_next;}
+            if(record.stack_previous==erased) {record.stack_previous=unit->Native().stack_previous;}
+        }
+        native_survivors.emplace_back(survivor,record.AfterUnlinkedIndexErasure(erased));
+    }
+
+    std::optional<faction::SmacNativeFactoryState> native_factory;
+    if(unit->IsNative() && m_game->m_simulation && m_game->m_simulation->value.native_factory) {
+        native_factory=PrepareNativeDeletionAccounting(*m_game,*unit,*m_game->m_simulation->value.native_factory);
+    }
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
 
 	QueueUnitUpdate( unit, UUO_DESPAWN );
+    if(native_factory) {m_game->m_simulation->value.native_factory.swap(native_factory);}
 
 	auto* tile = unit->GetTile();
 	ASSERT( tile, "unit tile not set" );
@@ -862,6 +917,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	m_units.erase( it );
 	m_unit_order.erase( ordered );
+    for(const auto& row:native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
     AdjustDesignCount(*unit,-1);
 
 	auto* state = m_game->GetState();
@@ -928,12 +984,19 @@ void UnitManager::PushUpdates() {
 			const auto unit_id = it.first;
 			const auto& uu = it.second;
 			const auto& unit = uu.unit;
+            const auto presentation_for_viewer = [&] {
+                if(!unit->IsNative()) {return unit->GetPresentation();}
+                const auto* viewer=m_game->m_simulation ? m_game->m_simulation->value.FindSlot(m_game->GetSlotNum()) : nullptr;
+                if(!viewer) {THROW("Native map presentation requires the current viewing simulation faction");}
+                return unit->GetPresentation(viewer->simulation_id);
+            };
 			if ( uu.ops & UUO_SPAWN ) {
-				const auto presentation = unit->GetPresentation();
+				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;
 				NEW( fr.data.unit_spawn.unitdef_id, std::string, unit->m_def->m_id );
-				fr.data.unit_spawn.slot_index = unit->m_owner->GetIndex();
+				fr.data.unit_spawn.native = unit->IsNative();
+				fr.data.unit_spawn.slot_index = unit->IsNative() ? 0 : unit->m_owner->GetIndex();
 				const auto* tile = unit->GetTile();
 				fr.data.unit_spawn.tile_coords = {
 					tile->coord.x,
@@ -956,7 +1019,7 @@ void UnitManager::PushUpdates() {
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
-				const auto presentation = unit->GetPresentation();
+				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UPDATE );
 				fr.data.unit_update.unit_id = unit->m_id;
 				fr.data.unit_update.movement = presentation.movement;
@@ -1371,6 +1434,9 @@ UNWRAPIMPL_PTR( UnitManager )
 void UnitManager::Serialize( types::Buffer& buf ) const {
 	RequireConventionalUnitsReady();
 	if ( !m_unprocessed_units.empty() ) { THROW( "cannot snapshot units before startup registration" ); }
+    std::vector<Unit*> ordered;ordered.reserve(m_unit_order.size());
+    for(const auto id:m_unit_order) {ordered.push_back(m_units.at(id));}
+    ValidateNativeIndexBindings(ordered);
 	buf.WriteString( s_snapshot_format );
 
 	Log( "Serializing " + std::to_string( m_unit_moralesets.size() ) + " unit moralesets" );
@@ -1440,14 +1506,17 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf, const Conventio
 	sz = ReadSnapshotCount( buf );
 	Log( "Unserializing " + std::to_string( sz ) + " units" );
 	size_t highest_id = 0;
+    std::vector<Unit*> ordered;ordered.reserve(sz);
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
 		auto* unit = Unit::Deserialize( GSE_CALL, b, this, resolver, defer_home );
 		highest_id = std::max( highest_id, unit->m_id );
+        ordered.push_back(unit);
 		if ( m_game->IsRunning() ) { RegisterUnit( unit, false ); }
 		else { m_unprocessed_units.push_back( { unit, false } ); }
 	}
 
+    ValidateNativeIndexBindings(ordered);
 	const auto next_id = buf.ReadInt();
 	if ( next_id <= 0 || static_cast< uint64_t >( next_id ) <= highest_id ||
 		static_cast< uint64_t >( next_id ) >= std::numeric_limits< size_t >::max() || buf.lenr != buf.lenw ) {

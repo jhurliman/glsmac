@@ -68,6 +68,7 @@
 #include "SmacEconomyState.h"
 #include "SmacLiveEconomy.h"
 #include "SmacEcology.h"
+#include "SmacNativeUnitRecord.h"
 #include "SmacResearch.h"
 #include "HumanResearchValue.h"
 #include "AutomaticResearch.h"
@@ -173,6 +174,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacEconomyStateTests( task );
 		tests::AddSmacLiveEconomyTests( task );
 		tests::AddSmacEcologyTests( task );
+        tests::AddSmacNativeUnitRecordTests(task);
 		tests::AddSmacResearchTests( task );
 		tests::AddHumanResearchValueTests( task );
 		tests::AddAutomaticResearchTests( task );

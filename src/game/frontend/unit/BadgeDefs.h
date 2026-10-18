@@ -1,6 +1,7 @@
 #pragma once
 #include "SelectionBlink.h"
 
+#include <array>
 #include <unordered_map>
 #include <vector>
 
@@ -40,6 +41,7 @@ public:
 	static const badge_type_t BT_PROGENITOR{ 0 << 1 };
 
 	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale );
+	sprite::Sprite* GetNativeBadgeSprite(backend::unit::morale_t level);
 	sprite::InstancedSprite* GetFakeBadgeSprite();
 	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
 
@@ -98,6 +100,7 @@ private:
 	typedef std::unordered_map< badge_type_t, unitbadge_spritemap_t > unitbadge_spritemaps_t;
 	unitbadge_spritemaps_t m_unitbadge_sprites = {};
 
+	std::array<sprite::Sprite,7> m_native_badges{};
 	sprite::InstancedSprite* m_fake_badge = nullptr;
 
 	types::texture::Texture* m_badges_texture = nullptr;

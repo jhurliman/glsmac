@@ -314,7 +314,9 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     homes.reserve(um->m_units.size());
     for (const auto id:um->m_unit_order) {
         auto* current=um->GetUnit(id);
-        if (!current || !current->IsConventional()) {THROW("Starvation requires current conventional Unit records");}
+        if (!current) {THROW("Starvation requires registered Unit records");}
+        if(current->IsNative()) {(void)um->QueryNativeUnit(current->Native(),0);continue;}
+        if (!current->IsConventional()) {THROW("Starvation requires current conventional Unit records");}
         auto state=current->Conventional();
         if (state.home_base_id!=base.m_id) {continue;}
         // Accepted live homes already require the same owner. Capture-created

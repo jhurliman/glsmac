@@ -106,6 +106,10 @@ return {
 					const stats = object.query_conventional_stats(state.render_morale_mode);
 					f_line(stats.morale_name, 14, 'left');
 					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
+				} else if (object.is_native) {
+					const stats = object.query_native_stats(0);
+					f_line(stats.morale_name, 14, 'left');
+					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
 				} else {
 					f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
 					if (!object.is_immovable) {

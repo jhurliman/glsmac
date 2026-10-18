@@ -6,6 +6,7 @@
 
 #include "Types.h"
 #include "ConventionalUnitState.h"
+#include "SmacNativeUnitRecord.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacScoutCombat.h"
 #include "game/backend/faction/SmacHostileState.h"
@@ -33,7 +34,7 @@ namespace slot {
 class Slot;
 }
 
-namespace base { class Base; class BaseManager; }
+namespace base { class Base; class BaseManager; class SmacNativeSpawnPlan; }
 
 namespace unit {
 
@@ -52,6 +53,29 @@ public:
 	void DefineUnit( Def* def );
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
+	SmacNativeUnitStats QueryNativeUnit(const SmacNativeUnitRecord& state,int32_t opposing_faction=0) const;
+    // Owning accumulation only. The plan retains attempted factories; this
+    // batch stages successful bodies, stacks, sight and native counters together.
+    class PreparedNativeBirths {
+    public:
+        ~PreparedNativeBirths();
+        PreparedNativeBirths(PreparedNativeBirths&&) noexcept;
+        PreparedNativeBirths& operator=(PreparedNativeBirths&&) noexcept;
+        size_t Size() const;
+        const Unit& Candidate(size_t index) const;
+        void Commit() noexcept;
+        void Notify(GSE_CALLABLE);
+    private:
+        friend class UnitManager;
+        friend class game::backend::Game;
+        friend class base::Base;
+        friend class base::BaseManager;
+        void Query(const std::function<void()>& query) const;
+        struct Data;
+        explicit PreparedNativeBirths(std::unique_ptr<Data> data);
+        std::unique_ptr<Data> m_data;
+    };
+    PreparedNativeBirths PrepareEcologyNativeBirths(GSE_CALLABLE, const base::SmacNativeSpawnPlan& plan);
 	// Same owning accumulation: no callbacks, yields or world mutations between
 	// preparation and commit. Destruction before commit publishes nothing.
 	class PreparedConventionalUnit {
@@ -110,6 +134,7 @@ public:
 		friend class UnitManager;
 		friend class base::BaseManager;
 		void Query(const std::function<void()>& query) const;
+        void QueryWithNativeRecords(const std::function<void()>& query) const;
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
@@ -168,6 +193,9 @@ public:
 private:
 	friend class game::backend::Game;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
+	void SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept;
+	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
+    void ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const;
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	struct PreparedConventionalAttack {
 		Unit* survivor;

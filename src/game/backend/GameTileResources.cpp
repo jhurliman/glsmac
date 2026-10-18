@@ -107,7 +107,11 @@ base::SmacUnitSupportResult Game::CalculateCanonicalUnitSupport( const base::Bas
 	std::vector< base::SmacSupportUnit > units;
 	units.reserve( m_um->GetUnits().size() + ( prepared_unit ? 1 : 0 ) );
 	const auto append = [ & ]( const unit::Unit* unit, bool prepared ) {
-		if ( !unit || !unit->IsConventional() ) { throw std::runtime_error( "Canonical support requires conventional unit authority" ); }
+        if(unit && unit->IsNative()) {
+            (void)m_um->QueryNativeUnit(unit->Native());
+            return; // Native owner0 has no human Base home or support obligation.
+        }
+        if(!unit || !unit->IsConventional()) {throw std::runtime_error("Canonical support requires typed Unit authority");}
 		const auto& state = unit->Conventional();
 		// This validates actual owner/design/home/presentation metadata, including
 		// unsupported packages/abilities, rather than inferring them from Def names.

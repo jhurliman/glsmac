@@ -1,0 +1,247 @@
+{
+  "research_id": "RE-SMAC-NATIVE-DISPLAY-IDENTITY-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "status": "Source-backed static mapping and independent installed PCX sampling; no new native execution or live rendering.",
+  "identity": {
+    "Unit_owner": 0,
+    "ecology_attribution_independent": true,
+    "port_controller_slot_independent": true
+  },
+  "badge": {
+    "source_palette_asset": "PALETTE.PCX",
+    "owner_sample_formula": {
+      "x": "580+8*owner",
+      "primary_y": 23,
+      "secondary_y": 31
+    },
+    "owner0_samples": [
+      {
+        "sample": [
+          580,
+          23
+        ],
+        "PCX_file_index": 239,
+        "decoder_index_offset": 10,
+        "decoded_game_index": 249,
+        "RGB": [
+          255,
+          0,
+          0
+        ],
+        "decoded_badge_marker": 4
+      },
+      {
+        "sample": [
+          580,
+          31
+        ],
+        "PCX_file_index": 247,
+        "decoder_index_offset": 10,
+        "decoded_game_index": 1,
+        "RGB": [
+          128,
+          0,
+          0
+        ],
+        "decoded_badge_marker": 3
+      }
+    ],
+    "template_asset": "UNITS.PCX",
+    "templates": [
+      {
+        "level": 0,
+        "variant": 0,
+        "top_left": [
+          1,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 0,
+        "variant": 1,
+        "top_left": [
+          1,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 1,
+        "variant": 0,
+        "top_left": [
+          25,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 1,
+        "variant": 1,
+        "top_left": [
+          25,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 2,
+        "variant": 0,
+        "top_left": [
+          49,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 2,
+        "variant": 1,
+        "top_left": [
+          49,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 3,
+        "variant": 0,
+        "top_left": [
+          73,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 3,
+        "variant": 1,
+        "top_left": [
+          73,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 4,
+        "variant": 0,
+        "top_left": [
+          97,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 4,
+        "variant": 1,
+        "top_left": [
+          97,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 5,
+        "variant": 0,
+        "top_left": [
+          121,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 5,
+        "variant": 1,
+        "top_left": [
+          121,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 6,
+        "variant": 0,
+        "top_left": [
+          145,
+          700
+        ],
+        "width": 23,
+        "height": 30
+      },
+      {
+        "level": 6,
+        "variant": 1,
+        "top_left": [
+          145,
+          731
+        ],
+        "width": 23,
+        "height": 30
+      }
+    ],
+    "remap_order": [
+      {
+        "original_argument": 260,
+        "decoded_marker": 4,
+        "replacement": 249
+      },
+      {
+        "original_argument": 259,
+        "decoded_marker": 3,
+        "replacement": 1
+      }
+    ],
+    "bank_formula": "14*Unit_owner + 2*queried_level + variant",
+    "native_level_context": "current viewing faction",
+    "other_sprite_pixels": "preserved by recoloring",
+    "body_material_tint_established": false
+  },
+  "morale_text": {
+    "native_labels": [
+      "Hatchling",
+      "Larval Mass",
+      "Pre-Boil",
+      "Boil",
+      "Mature Boil",
+      "Great Boil",
+      "Demon Boil"
+    ],
+    "query_mode": 0,
+    "opposing_context": "caller supplied; traced ordinary description callers supply0",
+    "native_column_predicate": "predefined design ID<64 and signed weapon power<0",
+    "selected_column": 1,
+    "column_numbering": "zero based",
+    "Mind_Worm_design8_uses_native_column": true,
+    "level_authority": "effective query result, not stored morale byte or per-Unit age",
+    "existing_neutral_turn90_example": {
+      "stored_morale": 1,
+      "effective_level": 2,
+      "label": "Pre-Boil"
+    }
+  },
+  "assets": {
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "units.pcx": "1da9f262b4a90c6d26378e1421cc7bcc9dc561491337c1d8c111793a82b8285d",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "reused_receipts": {
+    "docs/behavior/faction-actor-color-inputs-cases.json": "c3af2e46ead2bd1b73d37b7dd066c0095c13c01f8540d56c5fce5dea953db418",
+    "docs/behavior/ecology-native-unit-records-cases.json": "d6b562bba1a1472a756cf04635740ec54bc3acd5214d93adce6bfa747a4bd765"
+  },
+  "limitations": [
+    "Static mapping; full badge extraction/raster not newly executed.",
+    "No CVR body tint, portrait/emblem or universal UI color claim.",
+    "No hardware palette, SMAX or PRACX parity claim.",
+    "Native lifecycle and blink controls reused without rerun."
+  ]
+}

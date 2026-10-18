@@ -306,7 +306,9 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     const auto& order=m_um->GetUnitRecordOrder();
     for(size_t cursor=order.size();cursor>0;--cursor) {
         const auto id=order[cursor-1];const auto* unit=m_um->GetUnit(id);
-        if(!unit || !unit->IsConventional() || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered conventional Unit records");}
+        if(!unit || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered Unit records");}
+        if(unit->IsNative()) {(void)m_um->QueryNativeUnit(unit->Native());continue;}
+        if(!unit->IsConventional()) {throw std::runtime_error("Faction summary requires typed Unit authority");}
         const auto& record=unit->Conventional();
         if(record.owner_simulation_id!=owner) {continue;}
         ++design_counts.at(record.design_id);
@@ -357,7 +359,7 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	if ( !GetGCSpace()->IsAccumulating() || !IsRunning() ) { throw std::runtime_error( "Economy settlement requires the owning native upkeep" ); }
 	auto& saved = m_simulation->value.economy.at( owner );
 	const bool has_base=std::any_of(m_bm->GetBases().begin(),m_bm->GetBases().end(),[&](const auto& row){return row.second->GetSmacResourceContext().owner_simulation_id==owner;});
-	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->Conventional().owner_simulation_id==owner;});
+	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->SimulationOwner()==owner;});
 	if (!has_base && !has_unit) {
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
 		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);

@@ -1,4 +1,5 @@
 #include "BadgeDefs.h"
+#include <memory>
 
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
@@ -19,6 +20,7 @@ BadgeDefs::BadgeDefs( sprite::InstancedSpriteManager* ism )
 }
 
 BadgeDefs::~BadgeDefs() {
+    for(const auto& badge:m_native_badges) {if(badge.instanced_sprite) {m_ism->RemoveInstancedSpriteByKey(badge.instanced_sprite->key);}}
 	for ( const auto& it : m_unitbadge_sprites ) {
 		for ( const auto& it2 : it.second ) {
 			m_ism->RemoveInstancedSpriteByKey( it2.second->key );
@@ -109,6 +111,20 @@ sprite::InstancedSprite* BadgeDefs::GetBadgeSprite( const badge_type_t badge_typ
 		).first;
 	}
 	return it2->second;
+}
+
+sprite::Sprite* BadgeDefs::GetNativeBadgeSprite(backend::unit::morale_t level) {
+    if(level>6) {THROW("Native badge level exceeds6");}
+    auto& badge=m_native_badges.at(level);
+    if(!badge.instanced_sprite) {
+        // Native owner0 is not the current human slot and keeps variant0
+        // regardless of spent movement in ordinary local rendering.
+        std::shared_ptr<types::texture::Texture> texture(g_engine->GetTextureLoader()->CreateSmacNativeBadgeTexture(level,0));
+        auto* sprite=m_ism->GetInstancedSprite("NativeBadge_"+std::to_string(level),texture.get(),{0,0},{23,30},{11,15},
+            {backend::map::s_consts.tile.scale.x*s_consts.scale.x,backend::map::s_consts.tile.scale.y*s_consts.scale.y*backend::map::s_consts.sprite.y_scale},ZL_UNITS,0.008f);
+        sprite->texture_owner=std::move(texture);badge.instanced_sprite=sprite;
+    }
+    return &badge;
 }
 
 sprite::InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {

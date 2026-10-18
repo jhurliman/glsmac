@@ -1,0 +1,2651 @@
+{
+  "research_id": "RE-SMAC-NATIVE-DELETION-ACCOUNTING-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "active_design_indices": [
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "ordinary_cases": [
+    {
+      "id": "native8_nonzero",
+      "factories": [
+        {
+          "arguments": [
+            8,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              18,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              16,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native8_underflow",
+      "factories": [
+        {
+          "arguments": [
+            8,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              18,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              0,
+              0,
+              0,
+              99
+            ],
+            "native_active_plan": 0,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              255,
+              0,
+              0,
+              99
+            ],
+            "native_active_plan": 4294967295,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native8_two_same_design_stack",
+      "factories": [
+        {
+          "arguments": [
+            8,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              18,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        },
+        {
+          "arguments": [
+            8,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              18,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              19,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1002,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 2
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              16,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        },
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              16,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 8,
+                "plan": 1,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              15,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 998,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native9_nonzero",
+      "factories": [
+        {
+          "arguments": [
+            9,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              18,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              16,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native9_underflow",
+      "factories": [
+        {
+          "arguments": [
+            9,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              18,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              0,
+              0,
+              0,
+              99
+            ],
+            "native_active_plan": 0,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              0,
+              255,
+              0,
+              99
+            ],
+            "native_active_plan": 4294967295,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native9_two_same_design_stack",
+      "factories": [
+        {
+          "arguments": [
+            9,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              18,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        },
+        {
+          "arguments": [
+            9,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              18,
+              17,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              17,
+              19,
+              17,
+              99
+            ],
+            "native_active_plan": 1002,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 2
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              16,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        },
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              16,
+              17,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 9,
+                "plan": 7,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              15,
+              17,
+              99
+            ],
+            "native_active_plan": 998,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native10_nonzero",
+      "factories": [
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              18,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              16,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native10_underflow",
+      "factories": [
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              18,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              0,
+              0,
+              0,
+              99
+            ],
+            "native_active_plan": 0,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              0,
+              0,
+              255,
+              99
+            ],
+            "native_active_plan": 4294967295,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "native10_two_same_design_stack",
+      "factories": [
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              18,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 1
+        },
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            24
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              18,
+              99
+            ],
+            "native_active_plan": 1001,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              19,
+              99
+            ],
+            "native_active_plan": 1002,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 2
+        }
+      ],
+      "deletions": [
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 3,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              17,
+              99
+            ],
+            "native_active_plan": 1000,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": 2
+              },
+              {
+                "id": 2,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": 1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              16,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        },
+        {
+          "arguments": [
+            1
+          ],
+          "before": {
+            "global_Unit_count": 2,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              16,
+              99
+            ],
+            "native_active_plan": 999,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              },
+              {
+                "id": 1,
+                "owner": 0,
+                "design": 10,
+                "plan": 4,
+                "position": [
+                  40,
+                  24
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "after": {
+            "global_Unit_count": 1,
+            "native_active_by_design": [
+              88,
+              17,
+              17,
+              15,
+              99
+            ],
+            "native_active_plan": 998,
+            "native_Base_count": 71,
+            "native_population": 777,
+            "native_losses": [
+              100,
+              200,
+              300
+            ],
+            "peer_active_by_design": [
+              191,
+              191,
+              191
+            ],
+            "peer_active_plan": 5000,
+            "units": [
+              {
+                "id": 0,
+                "owner": 1,
+                "design": 2,
+                "plan": 3,
+                "position": [
+                  16,
+                  16
+                ],
+                "next": -1,
+                "previous": -1
+              }
+            ]
+          },
+          "returned": 0
+        }
+      ]
+    },
+    {
+      "id": "negative_id_noop",
+      "before": {
+        "global_Unit_count": 1,
+        "native_active_by_design": [
+          88,
+          17,
+          17,
+          17,
+          99
+        ],
+        "native_active_plan": 1000,
+        "native_Base_count": 71,
+        "native_population": 777,
+        "native_losses": [
+          100,
+          200,
+          300
+        ],
+        "peer_active_by_design": [
+          191,
+          191,
+          191
+        ],
+        "peer_active_plan": 5000,
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "plan": 3,
+            "position": [
+              16,
+              16
+            ],
+            "next": -1,
+            "previous": -1
+          }
+        ]
+      },
+      "after": {
+        "global_Unit_count": 1,
+        "native_active_by_design": [
+          88,
+          17,
+          17,
+          17,
+          99
+        ],
+        "native_active_plan": 1000,
+        "native_Base_count": 71,
+        "native_population": 777,
+        "native_losses": [
+          100,
+          200,
+          300
+        ],
+        "peer_active_by_design": [
+          191,
+          191,
+          191
+        ],
+        "peer_active_plan": 5000,
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "plan": 3,
+            "position": [
+              16,
+              16
+            ],
+            "next": -1,
+            "previous": -1
+          }
+        ]
+      },
+      "returned": 0
+    }
+  ],
+  "climate_cases": [
+    {
+      "id": "land_to_sea_mixed_stack",
+      "before": {
+        "active_by_design": [
+          17,
+          17,
+          17
+        ],
+        "active_plan": 1000,
+        "native_Base_count": 71
+      },
+      "after": {
+        "active_by_design": [
+          16,
+          17,
+          17
+        ],
+        "active_plan": 999,
+        "native_Base_count": 71
+      },
+      "deleted_design": 8,
+      "surviving_designs": [
+        9,
+        10
+      ],
+      "global_count_before": 3,
+      "global_count_after": 2
+    },
+    {
+      "id": "sea_to_land_mixed_stack",
+      "before": {
+        "active_by_design": [
+          17,
+          17,
+          17
+        ],
+        "active_plan": 1000,
+        "native_Base_count": 71
+      },
+      "after": {
+        "active_by_design": [
+          17,
+          16,
+          17
+        ],
+        "active_plan": 999,
+        "native_Base_count": 71
+      },
+      "deleted_design": 9,
+      "surviving_designs": [
+        8,
+        10
+      ],
+      "global_count_before": 3,
+      "global_count_after": 2
+    }
+  ],
+  "passed": true
+}

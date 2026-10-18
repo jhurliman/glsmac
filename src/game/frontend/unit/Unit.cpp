@@ -32,14 +32,14 @@ Unit::Unit(
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
 	const backend::unit::health_t health,
-	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement
+	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native
 )
 	: TileObject( TOT_UNIT, tile )
 	, m_um( um )
 	, m_badge_defs( badge_defs )
 	, m_id( id )
 	, m_def( def )
-	, m_slot_badges( m_um->GetSlotBadges( slot->GetIndex() ) )
+	, m_slot_badges( slot ? m_um->GetSlotBadges( slot->GetIndex() ) : m_um->GetNativeBadges() )
 	, m_render(
 		{
 			render_coords,
@@ -54,7 +54,7 @@ Unit::Unit(
 	, m_morale( morale )
 	, m_morale_string( morale_string )
 	, m_health( health )
-	, m_conventional( conventional ), m_has_moves( has_moves ), m_full_movement( full_movement ) {
+	, m_conventional( conventional ), m_has_moves( has_moves ), m_native(native), m_full_movement( full_movement ) {
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
@@ -134,7 +134,7 @@ const std::string Unit::GetNameString() const {
 }
 
 const std::string Unit::GetStatsString() const {
-	return m_conventional ? "? - ? - " + util::String::ApproximateFloat( m_full_movement ) : m_def->GetStatsString();
+	return (m_conventional || m_native) ? "? - ? - " + util::String::ApproximateFloat( m_full_movement ) : m_def->GetStatsString();
 }
 
 const std::string& Unit::GetMoraleString() const {

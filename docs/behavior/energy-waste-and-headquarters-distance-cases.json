@@ -1,0 +1,559 @@
+{
+  "research_id": "RE-SMAC-ENERGY-WASTE-001",
+  "status": "Original-x86 complete waste helper through actual pre/post-commerce caller fragments; commerce addition supplied between fragments; no instruction patches or substituted returns",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "energy-waste-and-headquarters-distance.md",
+  "scope": "Positive faction1, current rating mode, supplied valid coordinates/HQ ownership/Cr\u00e8che/rates/convoy accounting. Commerce construction and alternate-rating score mode excluded.",
+  "defaults": {
+    "gross_energy": 20,
+    "incoming_energy": 0,
+    "outgoing_energy": 0,
+    "commerce_added": 0,
+    "efficiency": 0,
+    "creche": false,
+    "current_headquarters": false,
+    "headquarters": [],
+    "base_x": 2,
+    "base_y": 2,
+    "map_width": 128,
+    "horizontal_wrap": true,
+    "queued_creche": false,
+    "queued_headquarters": false
+  },
+  "cases": [
+    {
+      "id": "ENERGY-WASTE-001",
+      "name": "no headquarters distance sixteen",
+      "overrides": {},
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-002",
+      "name": "foreign headquarters ignored",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 2,
+            "y": 2,
+            "owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-003",
+      "name": "current headquarters zero waste",
+      "overrides": {
+        "current_headquarters": true
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": 20,
+        "waste_after_commerce": 0,
+        "net_after_commerce": 20,
+        "distances_evaluated": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-004",
+      "name": "headquarters zero overrides severe efficiency",
+      "overrides": {
+        "current_headquarters": true,
+        "efficiency": -8
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": 20,
+        "waste_after_commerce": 0,
+        "net_after_commerce": 20,
+        "distances_evaluated": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-005",
+      "name": "nearest owned headquarters",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 50,
+            "y": 2
+          },
+          {
+            "x": 18,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 7,
+        "net_before_commerce": 13,
+        "waste_after_commerce": 7,
+        "net_after_commerce": 13,
+        "distances_evaluated": [
+          12,
+          12
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-006",
+      "name": "wrap across seam",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 126,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 1,
+        "net_before_commerce": 19,
+        "waste_after_commerce": 1,
+        "net_after_commerce": 19,
+        "distances_evaluated": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-007",
+      "name": "flat map no horizontal wrap",
+      "overrides": {
+        "horizontal_wrap": false,
+        "headquarters": [
+          {
+            "x": 126,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          93,
+          93
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-008",
+      "name": "diagonal distance",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 10,
+            "y": 10
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 5,
+        "net_before_commerce": 15,
+        "waste_after_commerce": 5,
+        "net_after_commerce": 15,
+        "distances_evaluated": [
+          8,
+          8
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-009",
+      "name": "mixed distance rounding",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 9,
+            "y": 5
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 3,
+        "net_before_commerce": 17,
+        "waste_after_commerce": 3,
+        "net_after_commerce": 17,
+        "distances_evaluated": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-010",
+      "name": "Creche adds two efficiency",
+      "overrides": {
+        "creche": true
+      },
+      "expected": {
+        "waste_before_commerce": 6,
+        "net_before_commerce": 14,
+        "waste_after_commerce": 6,
+        "net_after_commerce": 14,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-011",
+      "name": "efficiency minus four loses all",
+      "overrides": {
+        "efficiency": -4
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-012",
+      "name": "Creche rescues efficiency minus four",
+      "overrides": {
+        "efficiency": -4,
+        "creche": true
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-013",
+      "name": "Creche full loss threshold minus six",
+      "overrides": {
+        "efficiency": -6,
+        "creche": true
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-014",
+      "name": "efficiency high is not clamped at four",
+      "overrides": {
+        "efficiency": 12,
+        "gross_energy": 100
+      },
+      "expected": {
+        "waste_before_commerce": 12,
+        "net_before_commerce": 88,
+        "waste_after_commerce": 12,
+        "net_after_commerce": 88,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-015",
+      "name": "fraction rounds down",
+      "overrides": {
+        "gross_energy": 1,
+        "headquarters": [
+          {
+            "x": 4,
+            "y": 2
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": 1,
+        "waste_after_commerce": 0,
+        "net_after_commerce": 1,
+        "distances_evaluated": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-016",
+      "name": "positive input all capped by distance",
+      "overrides": {
+        "headquarters": [
+          {
+            "x": 126,
+            "y": 2
+          }
+        ],
+        "horizontal_wrap": false
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          93,
+          93
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-017",
+      "name": "zero input no headquarters scan",
+      "overrides": {
+        "gross_energy": 0
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 0,
+        "net_after_commerce": 0,
+        "distances_evaluated": []
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-018",
+      "name": "negative input zero waste preserves negative net",
+      "overrides": {
+        "gross_energy": 0,
+        "outgoing_energy": 3
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": -3,
+        "waste_after_commerce": 0,
+        "net_after_commerce": -3,
+        "distances_evaluated": []
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-019",
+      "name": "incoming convoy before waste",
+      "overrides": {
+        "gross_energy": 7,
+        "incoming_energy": 13
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-020",
+      "name": "outgoing convoy deducted before waste",
+      "overrides": {
+        "gross_energy": 20,
+        "outgoing_energy": 8
+      },
+      "expected": {
+        "waste_before_commerce": 6,
+        "net_before_commerce": 6,
+        "waste_after_commerce": 6,
+        "net_after_commerce": 6,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-021",
+      "name": "commerce forces recomputation",
+      "overrides": {
+        "commerce_added": 9
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 14,
+        "net_after_commerce": 15,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-022",
+      "name": "commerce turns negative input positive",
+      "overrides": {
+        "gross_energy": 0,
+        "outgoing_energy": 3,
+        "commerce_added": 10
+      },
+      "expected": {
+        "waste_before_commerce": 0,
+        "net_before_commerce": -3,
+        "waste_after_commerce": 3,
+        "net_after_commerce": 4,
+        "distances_evaluated": [
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-023",
+      "name": "queued Cr\u00e8che does not count",
+      "overrides": {
+        "queued_creche": true
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-024",
+      "name": "queued HQ does not count",
+      "overrides": {
+        "queued_headquarters": true
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-025",
+      "name": "large map distance sentinel boundary below",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 4096,
+        "horizontal_wrap": false,
+        "headquarters": [
+          {
+            "x": 1331,
+            "y": 1
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 20,
+        "net_before_commerce": 0,
+        "waste_after_commerce": 20,
+        "net_after_commerce": 0,
+        "distances_evaluated": [
+          998,
+          998
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-026",
+      "name": "large map sentinel exact distance becomes fallback",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 4096,
+        "horizontal_wrap": false,
+        "headquarters": [
+          {
+            "x": 1332,
+            "y": 0
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "ENERGY-WASTE-027",
+      "name": "large map beyond sentinel becomes fallback",
+      "overrides": {
+        "base_x": 0,
+        "base_y": 0,
+        "map_width": 4096,
+        "horizontal_wrap": false,
+        "headquarters": [
+          {
+            "x": 2000,
+            "y": 0
+          }
+        ]
+      },
+      "expected": {
+        "waste_before_commerce": 10,
+        "net_before_commerce": 10,
+        "waste_after_commerce": 10,
+        "net_after_commerce": 10,
+        "distances_evaluated": [
+          16,
+          16
+        ]
+      }
+    }
+  ]
+}

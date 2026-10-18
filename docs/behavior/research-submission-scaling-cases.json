@@ -1,0 +1,611 @@
+{
+  "research_id": "RE-SMAC-RESEARCH-SUBMIT-001",
+  "scope": "Thirteen controlled contexts, five full original submission-wrapper returns each; actual research-add calls below supplied cached cost1000 with actual unowned target, existing progress40. Explicit resolved ratings, turn, difficulty, lab output, fraction and Punishment Sphere/no-research controls. No award/chooser or full new-game first-income replay.",
+  "cases": [
+    {
+      "name": "neutral",
+      "rating": 0,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "states": [
+        {
+          "progress": 41,
+          "fraction": 0,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 42,
+          "fraction": 0,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 43,
+          "fraction": 0,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 44,
+          "fraction": 0,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 45,
+          "fraction": 0,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "positive_fraction",
+      "rating": 2,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "states": [
+        {
+          "progress": 41,
+          "fraction": 20,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 42,
+          "fraction": 40,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 43,
+          "fraction": 60,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 44,
+          "fraction": 80,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 46,
+          "fraction": 0,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "negative_fraction",
+      "rating": -2,
+      "turn": 10,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 80,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 41,
+          "fraction": 60,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 42,
+          "fraction": 40,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 43,
+          "fraction": 20,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 44,
+          "fraction": 0,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "positive_clamp",
+      "rating": 6,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        1,
+        2,
+        1,
+        2,
+        1
+      ],
+      "states": [
+        {
+          "progress": 41,
+          "fraction": 50,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 43,
+          "fraction": 0,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 44,
+          "fraction": 50,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 46,
+          "fraction": 0,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 47,
+          "fraction": 50,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "negative_clamp_before_gate",
+      "rating": -6,
+      "turn": 29,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        }
+      ]
+    },
+    {
+      "name": "negative_clamp_after_gate",
+      "rating": -6,
+      "turn": 30,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 50,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 41,
+          "fraction": 0,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 41,
+          "fraction": 50,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 42,
+          "fraction": 0,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 42,
+          "fraction": 50,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "negative_gate_before",
+      "rating": -2,
+      "turn": 9,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        }
+      ]
+    },
+    {
+      "name": "easy_early_suppression",
+      "rating": 0,
+      "turn": 4,
+      "difficulty": 1,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 0,
+          "raw_lab_statistic": 0
+        }
+      ]
+    },
+    {
+      "name": "easy_turn_five",
+      "rating": 0,
+      "turn": 5,
+      "difficulty": 1,
+      "base_labs": 1,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "states": [
+        {
+          "progress": 41,
+          "fraction": 0,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 42,
+          "fraction": 0,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 43,
+          "fraction": 0,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 44,
+          "fraction": 0,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 45,
+          "fraction": 0,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "existing_fraction",
+      "rating": 2,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 90,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        2,
+        1,
+        1,
+        1,
+        1
+      ],
+      "states": [
+        {
+          "progress": 42,
+          "fraction": 10,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 43,
+          "fraction": 30,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 44,
+          "fraction": 50,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 45,
+          "fraction": 70,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 46,
+          "fraction": 90,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "punishment_sphere_before_scaling",
+      "rating": 2,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 3,
+      "initial_fraction": 0,
+      "punishment_sphere": true,
+      "genejack_factory": false,
+      "research_disabled": false,
+      "submitted": [
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "states": [
+        {
+          "progress": 41,
+          "fraction": 20,
+          "raw_lab_statistic": 1
+        },
+        {
+          "progress": 42,
+          "fraction": 40,
+          "raw_lab_statistic": 2
+        },
+        {
+          "progress": 43,
+          "fraction": 60,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 44,
+          "fraction": 80,
+          "raw_lab_statistic": 4
+        },
+        {
+          "progress": 46,
+          "fraction": 0,
+          "raw_lab_statistic": 5
+        }
+      ]
+    },
+    {
+      "name": "genejack_does_not_halve_submission",
+      "rating": 2,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 3,
+      "initial_fraction": 0,
+      "punishment_sphere": false,
+      "genejack_factory": true,
+      "research_disabled": false,
+      "submitted": [
+        3,
+        4,
+        3,
+        4,
+        4
+      ],
+      "states": [
+        {
+          "progress": 43,
+          "fraction": 60,
+          "raw_lab_statistic": 3
+        },
+        {
+          "progress": 47,
+          "fraction": 20,
+          "raw_lab_statistic": 6
+        },
+        {
+          "progress": 50,
+          "fraction": 80,
+          "raw_lab_statistic": 9
+        },
+        {
+          "progress": 54,
+          "fraction": 40,
+          "raw_lab_statistic": 12
+        },
+        {
+          "progress": 58,
+          "fraction": 0,
+          "raw_lab_statistic": 15
+        }
+      ]
+    },
+    {
+      "name": "research_disabled",
+      "rating": 2,
+      "turn": 3,
+      "difficulty": 3,
+      "base_labs": 1,
+      "initial_fraction": 90,
+      "punishment_sphere": false,
+      "genejack_factory": false,
+      "research_disabled": true,
+      "submitted": [],
+      "states": [
+        {
+          "progress": 40,
+          "fraction": 90,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 90,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 90,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 90,
+          "raw_lab_statistic": 0
+        },
+        {
+          "progress": 40,
+          "fraction": 90,
+          "raw_lab_statistic": 0
+        }
+      ]
+    }
+  ],
+  "facility_identity_controls": [
+    {
+      "facility_id": null,
+      "facility_name": null,
+      "net_energy": 4,
+      "psych_tenths": 5,
+      "labs_tenths": 0,
+      "final_psych": 2
+    },
+    {
+      "facility_id": 10,
+      "facility_name": "Skunkworks",
+      "net_energy": 4,
+      "psych_tenths": 5,
+      "labs_tenths": 0,
+      "final_psych": 2
+    },
+    {
+      "facility_id": 11,
+      "facility_name": "Hologram Theatre",
+      "net_energy": 4,
+      "psych_tenths": 5,
+      "labs_tenths": 0,
+      "final_psych": 3
+    }
+  ]
+}

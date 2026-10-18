@@ -1,0 +1,642 @@
+{
+  "research_id": "RE-SMAC-PACIFISM-COUNT-001",
+  "status": "Original-x86 checked complete support recomputation twice then current citizen calculation, with original territory/ability helpers and no substituted returns; supplied map ownership/units/design state",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "pacifism-unit-count.md",
+  "scope": "Positive faction1, population20 unless overridden, human difficulty0; resolved territory byte/base marker and chassis triad supplied. Ownership generation, rehoming/capture and lifecycle outside scope.",
+  "defaults": {
+    "population": 20,
+    "police": -3,
+    "units": []
+  },
+  "unit_defaults": {
+    "owner": 1,
+    "home": "current",
+    "package_mode": 3,
+    "attack": 1,
+    "triad": 0,
+    "clean": false,
+    "builtin": true,
+    "fungus": false,
+    "base_marker": false,
+    "base_owner": 1,
+    "territory_owner": 1,
+    "initial_pacifism_marker": "none"
+  },
+  "cases": [
+    {
+      "id": "PACIFISM-COUNT-001",
+      "name": "empty count resets",
+      "overrides": {},
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-002",
+      "name": "own territory ground exempt",
+      "overrides": {
+        "units": [
+          {}
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-003",
+      "name": "unclaimed territory counts",
+      "overrides": {
+        "units": [
+          {
+            "territory_owner": 0
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-004",
+      "name": "foreign territory counts",
+      "overrides": {
+        "units": [
+          {
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-005",
+      "name": "foreign owned unit skipped",
+      "overrides": {
+        "units": [
+          {
+            "owner": 2,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-006",
+      "name": "other home skipped",
+      "overrides": {
+        "units": [
+          {
+            "home": "other",
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-007",
+      "name": "unhomed skipped",
+      "overrides": {
+        "units": [
+          {
+            "home": "none",
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-008",
+      "name": "zero attack skipped",
+      "overrides": {
+        "units": [
+          {
+            "attack": 0,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-009",
+      "name": "negative psi attack counts",
+      "overrides": {
+        "units": [
+          {
+            "attack": -1,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-010",
+      "name": "Clean does not exempt",
+      "overrides": {
+        "units": [
+          {
+            "clean": true,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-011",
+      "name": "builtin native fungus support exemption does not exempt pacifism",
+      "overrides": {
+        "units": [
+          {
+            "attack": -1,
+            "fungus": true,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-012",
+      "name": "custom psi also counts",
+      "overrides": {
+        "units": [
+          {
+            "attack": -1,
+            "builtin": false,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-013",
+      "name": "valid foreign base bypasses territory",
+      "overrides": {
+        "units": [
+          {
+            "base_marker": true,
+            "base_owner": 2,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-014",
+      "name": "valid faction zero base bypasses territory",
+      "overrides": {
+        "units": [
+          {
+            "base_marker": true,
+            "base_owner": 0,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-015",
+      "name": "base owner seven valid boundary",
+      "overrides": {
+        "units": [
+          {
+            "base_marker": true,
+            "base_owner": 7,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-016",
+      "name": "invalid base owner falls back to territory",
+      "overrides": {
+        "units": [
+          {
+            "base_marker": true,
+            "base_owner": 8,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-017",
+      "name": "friendly air counts",
+      "overrides": {
+        "units": [
+          {
+            "triad": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-018",
+      "name": "friendly air mode four exempt",
+      "overrides": {
+        "units": [
+          {
+            "triad": 2,
+            "package_mode": 4
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-019",
+      "name": "foreign air mode four still counts",
+      "overrides": {
+        "units": [
+          {
+            "triad": 2,
+            "package_mode": 4,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-020",
+      "name": "air at valid foreign base counts",
+      "overrides": {
+        "units": [
+          {
+            "triad": 2,
+            "base_marker": true,
+            "base_owner": 2,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-021",
+      "name": "naval own territory exempt",
+      "overrides": {
+        "units": [
+          {
+            "triad": 1
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-022",
+      "name": "mode nine boundary counts",
+      "overrides": {
+        "units": [
+          {
+            "package_mode": 9,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 1,
+        "unit_markers": [
+          "first_exempt"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-023",
+      "name": "mode ten skipped",
+      "overrides": {
+        "units": [
+          {
+            "package_mode": 10,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-024",
+      "name": "unsigned mode 255 skipped",
+      "overrides": {
+        "units": [
+          {
+            "package_mode": 255,
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-025",
+      "name": "first qualifying unit exemption follows array order",
+      "overrides": {
+        "units": [
+          {
+            "attack": 0,
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 0
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 2,
+        "unit_markers": [
+          "none",
+          "first_exempt",
+          "penalized"
+        ],
+        "raw_drone_demand_after_pacifism": 15,
+        "final_drones": 15
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-026",
+      "name": "rating minus four marks all",
+      "overrides": {
+        "police": -4,
+        "units": [
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 3,
+        "unit_markers": [
+          "penalized",
+          "penalized",
+          "penalized"
+        ],
+        "raw_drone_demand_after_pacifism": 17,
+        "final_drones": 17
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-027",
+      "name": "rating minus five doubles citizen input",
+      "overrides": {
+        "police": -5,
+        "units": [
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 3,
+        "unit_markers": [
+          "penalized",
+          "penalized",
+          "penalized"
+        ],
+        "raw_drone_demand_after_pacifism": 20,
+        "final_drones": 20
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-028",
+      "name": "rating minus two counts but no markers or demand",
+      "overrides": {
+        "police": -2,
+        "units": [
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          },
+          {
+            "territory_owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 3,
+        "unit_markers": [
+          "none",
+          "none",
+          "none"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    },
+    {
+      "id": "PACIFISM-COUNT-029",
+      "name": "clear stale markers only for matching owned homed units",
+      "overrides": {
+        "units": [
+          {
+            "initial_pacifism_marker": "both_stale"
+          },
+          {
+            "owner": 2,
+            "initial_pacifism_marker": "both_stale"
+          },
+          {
+            "home": "none",
+            "initial_pacifism_marker": "both_stale"
+          }
+        ]
+      },
+      "expected": {
+        "pacifism_unit_count": 0,
+        "unit_markers": [
+          "none",
+          "both_stale",
+          "both_stale"
+        ],
+        "raw_drone_demand_after_pacifism": 14,
+        "final_drones": 14
+      }
+    }
+  ]
+}

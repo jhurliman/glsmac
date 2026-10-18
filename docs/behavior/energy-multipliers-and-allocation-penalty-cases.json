@@ -1,0 +1,1072 @@
+{
+  "research_id": "RE-SMAC-ENERGY-TAIL-001",
+  "status": "Original-x86 complete post-specialist energy tail through final economy/psych/labs and Stockpile, before citizen call; upstream category totals/commerce status supplied",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "energy-multipliers-and-allocation-penalty.md",
+  "scope": "Nonnegative category inputs/adjustment and legal allocation rates; facilities/project locations, world Node count and resolved commerce gate flags supplied. Commerce/waste construction and income/technology credit transitions excluded.",
+  "defaults": {
+    "economy_input": 7,
+    "psych_input": 3,
+    "labs_input": 5,
+    "flat_faction_labs_adjustment": 0,
+    "facilities": [],
+    "supercollider": "none",
+    "theory_of_everything": "none",
+    "space_elevator": "none",
+    "longevity_vaccine": "none",
+    "network_backbone": "none",
+    "virtual_world": "none",
+    "economics": "simple",
+    "psych_tenths": 0,
+    "labs_tenths": 5,
+    "efficiency": 4,
+    "other_network_nodes": 0,
+    "incoming_commerce": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "current_commerce_blocked": false,
+    "partner_commerce_blocked": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "current_stockpile": false,
+    "previous_stockpile": false,
+    "mineral_surplus": 0
+  },
+  "cases": [
+    {
+      "id": "ENERGY-TAIL-001",
+      "name": "neutral tail",
+      "overrides": {},
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-002",
+      "name": "facility energy_bank",
+      "overrides": {
+        "facilities": [
+          "energy_bank"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 6,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-003",
+      "name": "facility network_node",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-004",
+      "name": "facility biology_lab",
+      "overrides": {
+        "facilities": [
+          "biology_lab"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 7
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 7
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 7
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-005",
+      "name": "facility hologram_theatre",
+      "overrides": {
+        "facilities": [
+          "hologram_theatre"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 6,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 5,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 5,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 5,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-006",
+      "name": "facility tree_farm",
+      "overrides": {
+        "facilities": [
+          "tree_farm"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 6,
+          "psych": 6,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        },
+        "final": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-007",
+      "name": "facility hybrid_forest",
+      "overrides": {
+        "facilities": [
+          "hybrid_forest"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 6,
+          "psych": 6,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        },
+        "final": {
+          "economy": 11,
+          "psych": 5,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-008",
+      "name": "facility fusion_lab",
+      "overrides": {
+        "facilities": [
+          "fusion_lab"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 6,
+          "psych": 4,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        },
+        "final": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-009",
+      "name": "facility quantum_lab",
+      "overrides": {
+        "facilities": [
+          "quantum_lab"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 6,
+          "psych": 4,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        },
+        "final": {
+          "economy": 11,
+          "psych": 3,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-010",
+      "name": "facility research_hospital",
+      "overrides": {
+        "facilities": [
+          "research_hospital"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 5,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        },
+        "final": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-011",
+      "name": "facility nanohospital",
+      "overrides": {
+        "facilities": [
+          "nanohospital"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 5,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        },
+        "final": {
+          "economy": 7,
+          "psych": 4,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-012",
+      "name": "all facilities additive",
+      "overrides": {
+        "facilities": [
+          "energy_bank",
+          "network_node",
+          "biology_lab",
+          "hologram_theatre",
+          "tree_farm",
+          "hybrid_forest",
+          "fusion_lab",
+          "quantum_lab",
+          "research_hospital",
+          "nanohospital"
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 14,
+          "psych": 12,
+          "labs": 14
+        },
+        "before_allocation_penalty": {
+          "economy": 25,
+          "psych": 9,
+          "labs": 25
+        },
+        "after_allocation_penalty": {
+          "economy": 25,
+          "psych": 9,
+          "labs": 25
+        },
+        "final": {
+          "economy": 25,
+          "psych": 9,
+          "labs": 25
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-013",
+      "name": "both science projects multiply to four",
+      "overrides": {
+        "supercollider": "self_here",
+        "theory_of_everything": "self_here"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 20
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 20
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 20
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-014",
+      "name": "science projects elsewhere do not affect this base",
+      "overrides": {
+        "supercollider": "self_elsewhere",
+        "theory_of_everything": "other"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-015",
+      "name": "Elevator doubles economy only",
+      "overrides": {
+        "space_elevator": "self_here"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 14,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 14,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 14,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-016",
+      "name": "Longevity Free Market local bonus rounds half down",
+      "overrides": {
+        "longevity_vaccine": "self_here",
+        "economics": "free_market"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 10,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 10,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 10,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-017",
+      "name": "Longevity elsewhere gives no income bonus",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "free_market"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-018",
+      "name": "Elevator then Longevity",
+      "overrides": {
+        "space_elevator": "self_here",
+        "longevity_vaccine": "self_here",
+        "economics": "free_market"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 21,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 21,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 21,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-019",
+      "name": "Backbone world nodes and commerce",
+      "overrides": {
+        "network_backbone": "self_here",
+        "other_network_nodes": 7,
+        "facilities": [
+          "network_node"
+        ],
+        "incoming_commerce": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 6
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 37
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 37
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 37
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-020",
+      "name": "Backbone adds after science project doubling",
+      "overrides": {
+        "network_backbone": "self_here",
+        "other_network_nodes": 3,
+        "supercollider": "self_here",
+        "theory_of_everything": "self_here"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 23
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 23
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 23
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-021",
+      "name": "Backbone recipient blocked",
+      "overrides": {
+        "network_backbone": "self_here",
+        "other_network_nodes": 3,
+        "incoming_commerce": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "current_commerce_blocked": true
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 8
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-022",
+      "name": "Backbone partner gates",
+      "overrides": {
+        "network_backbone": "self_here",
+        "incoming_commerce": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "partner_commerce_blocked": [
+          false,
+          true,
+          false,
+          true,
+          false,
+          true
+        ]
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 14
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 14
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 14
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-023",
+      "name": "labs favored penalty",
+      "overrides": {
+        "efficiency": 0,
+        "labs_tenths": 10
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 1,
+          "psych": 3,
+          "labs": 3
+        },
+        "final": {
+          "economy": 1,
+          "psych": 3,
+          "labs": 3
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-024",
+      "name": "economy favored penalty",
+      "overrides": {
+        "efficiency": 0,
+        "labs_tenths": 0
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 4,
+          "psych": 3,
+          "labs": 1
+        },
+        "final": {
+          "economy": 4,
+          "psych": 3,
+          "labs": 1
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-025",
+      "name": "one tenth imbalance rounds to zero",
+      "overrides": {
+        "efficiency": -4,
+        "psych_tenths": 1,
+        "labs_tenths": 5
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-026",
+      "name": "efficiency high clamps",
+      "overrides": {
+        "efficiency": 9,
+        "labs_tenths": 10
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-027",
+      "name": "efficiency low clamps",
+      "overrides": {
+        "efficiency": -9,
+        "labs_tenths": 10
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 1,
+          "psych": 3,
+          "labs": 3
+        },
+        "final": {
+          "economy": 1,
+          "psych": 3,
+          "labs": 3
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-028",
+      "name": "Stockpile both selections",
+      "overrides": {
+        "current_stockpile": true,
+        "previous_stockpile": true,
+        "mineral_surplus": 5
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 10,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-029",
+      "name": "newly selected Stockpile not enough",
+      "overrides": {
+        "current_stockpile": true,
+        "mineral_surplus": 5
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-030",
+      "name": "previous Stockpile alone not enough",
+      "overrides": {
+        "previous_stockpile": true,
+        "mineral_surplus": 5
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-031",
+      "name": "Stockpile after allocation penalty and projects",
+      "overrides": {
+        "current_stockpile": true,
+        "previous_stockpile": true,
+        "mineral_surplus": 5,
+        "efficiency": -4,
+        "labs_tenths": 10,
+        "space_elevator": "self_here"
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 14,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 3,
+          "psych": 3,
+          "labs": 3
+        },
+        "final": {
+          "economy": 6,
+          "psych": 3,
+          "labs": 3
+        }
+      }
+    },
+    {
+      "id": "ENERGY-TAIL-032",
+      "name": "nonpositive surplus adds nothing",
+      "overrides": {
+        "current_stockpile": true,
+        "previous_stockpile": true,
+        "mineral_surplus": -1
+      },
+      "expected": {
+        "multiplier_quarters": {
+          "economy": 4,
+          "psych": 4,
+          "labs": 4
+        },
+        "before_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "after_allocation_penalty": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        },
+        "final": {
+          "economy": 7,
+          "psych": 3,
+          "labs": 5
+        }
+      }
+    }
+  ]
+}

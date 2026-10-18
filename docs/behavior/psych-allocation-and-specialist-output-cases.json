@@ -1,0 +1,900 @@
+{
+  "research_id": "RE-SMAC-PSYCH-ALLOC-001",
+  "status": "Original-x86 allocation, resolved specialist yields and psych facility multiplier checked, then real citizen consumer; specialist prerequisites made universally available/nonobsolete in supplied data to isolate output arithmetic",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "psych-allocation-and-specialist-output.md",
+  "scope": "Resolved net energy/rates and up to16 selected specialist types; availability/automatic replacement, commerce/waste construction, specialist assignment and later energy processing excluded.",
+  "defaults": {
+    "net_energy": 7,
+    "psych_tenths": 3,
+    "labs_tenths": 3,
+    "population": 20,
+    "specialists": [],
+    "facilities": [],
+    "virtual_world": "none"
+  },
+  "specialist_outputs": {
+    "technician": {
+      "economy": 3,
+      "psych": 0,
+      "labs": 0
+    },
+    "doctor": {
+      "economy": 0,
+      "psych": 2,
+      "labs": 0
+    },
+    "librarian": {
+      "economy": 0,
+      "psych": 0,
+      "labs": 3
+    },
+    "engineer": {
+      "economy": 3,
+      "psych": 0,
+      "labs": 2
+    },
+    "empath": {
+      "economy": 2,
+      "psych": 2,
+      "labs": 0
+    },
+    "thinker": {
+      "economy": 0,
+      "psych": 1,
+      "labs": 3
+    },
+    "transcend": {
+      "economy": 2,
+      "psych": 2,
+      "labs": 4
+    }
+  },
+  "cases": [
+    {
+      "id": "PSYCH-ALLOC-001",
+      "name": "neutral allocation",
+      "overrides": {},
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-002",
+      "name": "half rounds down",
+      "overrides": {
+        "net_energy": 5,
+        "psych_tenths": 1,
+        "labs_tenths": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 4,
+          "psych": 0,
+          "labs": 1
+        },
+        "after_specialists": {
+          "economy": 4,
+          "psych": 0,
+          "labs": 1
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-003",
+      "name": "above half rounds up",
+      "overrides": {
+        "net_energy": 6,
+        "psych_tenths": 1,
+        "labs_tenths": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 5,
+          "psych": 1,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 5,
+          "psych": 1,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 1,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-004",
+      "name": "economy rounding leaves labs residual",
+      "overrides": {
+        "net_energy": 1,
+        "psych_tenths": 0,
+        "labs_tenths": 5
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 1
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 1
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-005",
+      "name": "psych allocation takes priority",
+      "overrides": {
+        "net_energy": 1,
+        "psych_tenths": 6,
+        "labs_tenths": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 1,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 1,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 1,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-006",
+      "name": "negative energy clamps",
+      "overrides": {
+        "net_energy": -1
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-007",
+      "name": "energy cap boundary",
+      "overrides": {
+        "net_energy": 10000
+      },
+      "expected": {
+        "allocation": {
+          "economy": 4000,
+          "psych": 3000,
+          "labs": 2999
+        },
+        "after_specialists": {
+          "economy": 4000,
+          "psych": 3000,
+          "labs": 2999
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 3000,
+        "final_citizens": {
+          "talents": 10,
+          "drones": 9,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-008",
+      "name": "resolved technician output",
+      "overrides": {
+        "specialists": [
+          "technician"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-009",
+      "name": "resolved doctor output",
+      "overrides": {
+        "specialists": [
+          "doctor"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 18,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-010",
+      "name": "resolved librarian output",
+      "overrides": {
+        "specialists": [
+          "librarian"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 3
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-011",
+      "name": "resolved engineer output",
+      "overrides": {
+        "specialists": [
+          "engineer"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 0,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-012",
+      "name": "resolved empath output",
+      "overrides": {
+        "specialists": [
+          "empath"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 18,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-013",
+      "name": "resolved thinker output",
+      "overrides": {
+        "specialists": [
+          "thinker"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 1,
+          "labs": 3
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 1,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-014",
+      "name": "resolved transcend output",
+      "overrides": {
+        "specialists": [
+          "transcend"
+        ],
+        "net_energy": 0
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 4
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 18,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-015",
+      "name": "Doctor psych rounded after Theatre",
+      "overrides": {
+        "net_energy": 0,
+        "specialists": [
+          "doctor"
+        ],
+        "facilities": [
+          "hologram_theatre"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 16,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-016",
+      "name": "Thinker psych fractional multiplier rounds up",
+      "overrides": {
+        "net_energy": 0,
+        "specialists": [
+          "thinker"
+        ],
+        "facilities": [
+          "research_hospital"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "after_specialists": {
+          "economy": 0,
+          "psych": 1,
+          "labs": 3
+        },
+        "psych_multiplier_quarters": 5,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 17,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-017",
+      "name": "psych facility hologram_theatre",
+      "overrides": {
+        "facilities": [
+          "hologram_theatre"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 17,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-018",
+      "name": "psych facility network_node",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-019",
+      "name": "psych facility research_hospital",
+      "overrides": {
+        "facilities": [
+          "research_hospital"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 5,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 18,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-020",
+      "name": "psych facility nanohospital",
+      "overrides": {
+        "facilities": [
+          "nanohospital"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 5,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 18,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-021",
+      "name": "psych facility tree_farm",
+      "overrides": {
+        "facilities": [
+          "tree_farm"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-022",
+      "name": "psych facility hybrid_forest",
+      "overrides": {
+        "facilities": [
+          "hybrid_forest"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-023",
+      "name": "Virtual World and Node",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ],
+        "virtual_world": "self_elsewhere"
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 17,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-024",
+      "name": "Theatre and virtual Node do not double",
+      "overrides": {
+        "facilities": [
+          "network_node",
+          "hologram_theatre"
+        ],
+        "virtual_world": "self_here"
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 6,
+        "final_psych": 3,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 17,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-025",
+      "name": "rival Virtual World ignored",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ],
+        "virtual_world": "other"
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-026",
+      "name": "Virtual World without Node",
+      "overrides": {
+        "virtual_world": "self_elsewhere"
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 2,
+        "final_citizens": {
+          "talents": 1,
+          "drones": 19,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-027",
+      "name": "all psych facilities stack",
+      "overrides": {
+        "facilities": [
+          "hologram_theatre",
+          "network_node",
+          "research_hospital",
+          "nanohospital",
+          "tree_farm",
+          "hybrid_forest"
+        ],
+        "virtual_world": "self_elsewhere"
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 12,
+        "final_psych": 6,
+        "final_citizens": {
+          "talents": 2,
+          "drones": 14,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-028",
+      "name": "sixteen resolved specialists",
+      "overrides": {
+        "specialists": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 35,
+          "psych": 34,
+          "labs": 66
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 34,
+        "final_citizens": {
+          "talents": 4,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "PSYCH-ALLOC-029",
+      "name": "all population specialists",
+      "overrides": {
+        "population": 3,
+        "specialists": [
+          "doctor",
+          "doctor",
+          "doctor"
+        ]
+      },
+      "expected": {
+        "allocation": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "after_specialists": {
+          "economy": 3,
+          "psych": 8,
+          "labs": 2
+        },
+        "psych_multiplier_quarters": 4,
+        "final_psych": 8,
+        "final_citizens": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,332 @@
+{
+  "research_id": "RE-SMAC-BUREAU-WARN-001",
+  "status": "Original-x86 checked map-scale builder fragment, interval helper and warning/response caller fragments; actual dialog and drone generation unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "bureaucracy-warning.md",
+  "scope": "Nonnegative map dimensions/counts, ordinary difficulty indices 0..5, bounded integer arithmetic. Warning response is explicit synthetic UI result. This specifies warnings, not bureaucracy drone count or complete founding.",
+  "defaults": {
+    "faction": 1,
+    "human": true,
+    "faction_difficulty": 5,
+    "efficiency": 0,
+    "map_width": 80,
+    "map_height": 40,
+    "existing_bases": 4,
+    "warning_response": 0
+  },
+  "cases": [
+    {
+      "id": "BUREAU-WARN-001",
+      "name": "standard Transcend first interval",
+      "overrides": {},
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-002",
+      "name": "one before threshold",
+      "overrides": {
+        "existing_bases": 3
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "none",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-003",
+      "name": "one after threshold",
+      "overrides": {
+        "existing_bases": 5
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "none",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-004",
+      "name": "second interval",
+      "overrides": {
+        "existing_bases": 8
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "later",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-005",
+      "name": "zero bases skips warning",
+      "overrides": {
+        "existing_bases": 0
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "none",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-006",
+      "name": "negative efficiency is neutral for interval",
+      "overrides": {
+        "efficiency": -4
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-007",
+      "name": "positive efficiency expands interval",
+      "overrides": {
+        "efficiency": 4,
+        "existing_bases": 8
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 8,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-008",
+      "name": "large positive efficiency has no rating cap here",
+      "overrides": {
+        "efficiency": 20,
+        "existing_bases": 25
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 25,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-009",
+      "name": "human lowest difficulty",
+      "overrides": {
+        "faction_difficulty": 0,
+        "existing_bases": 11
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 11,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-010",
+      "name": "AI ignores supplied difficulty zero",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 0,
+        "existing_bases": 7
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 7,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-011",
+      "name": "AI ignores supplied difficulty five",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 5,
+        "existing_bases": 7
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 7,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-012",
+      "name": "Tiny first interval",
+      "overrides": {
+        "map_width": 48,
+        "map_height": 24,
+        "existing_bases": 2
+      },
+      "expected": {
+        "tile_count": 576,
+        "map_scale": 24,
+        "warning_interval": 2,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-013",
+      "name": "Small first interval",
+      "overrides": {
+        "map_width": 64,
+        "map_height": 32,
+        "existing_bases": 3
+      },
+      "expected": {
+        "tile_count": 1024,
+        "map_scale": 32,
+        "warning_interval": 3,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-014",
+      "name": "Large first interval",
+      "overrides": {
+        "map_width": 90,
+        "map_height": 44,
+        "existing_bases": 4
+      },
+      "expected": {
+        "tile_count": 1980,
+        "map_scale": 44,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-015",
+      "name": "Huge first interval",
+      "overrides": {
+        "map_width": 128,
+        "map_height": 64,
+        "existing_bases": 6
+      },
+      "expected": {
+        "tile_count": 4096,
+        "map_scale": 64,
+        "warning_interval": 6,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-016",
+      "name": "custom rectangular map uses integer root",
+      "overrides": {
+        "map_width": 82,
+        "map_height": 43,
+        "existing_bases": 4
+      },
+      "expected": {
+        "tile_count": 1763,
+        "map_scale": 41,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-017",
+      "name": "negative dialog result cancels",
+      "overrides": {
+        "warning_response": -1
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "cancel"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-018",
+      "name": "zero dialog result continues",
+      "overrides": {
+        "warning_response": 0
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-019",
+      "name": "positive dialog result continues",
+      "overrides": {
+        "warning_response": 1
+      },
+      "expected": {
+        "tile_count": 1600,
+        "map_scale": 40,
+        "warning_interval": 4,
+        "warning": "first",
+        "after_warning": "continue"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-020",
+      "name": "tiny custom scale zero interval with positive count faults",
+      "overrides": {
+        "map_width": 8,
+        "map_height": 8,
+        "existing_bases": 1
+      },
+      "expected": {
+        "tile_count": 32,
+        "map_scale": 5,
+        "warning_interval": 0,
+        "warning": "division_by_zero",
+        "after_warning": "arithmetic_fault"
+      }
+    },
+    {
+      "id": "BUREAU-WARN-021",
+      "name": "zero interval with zero count skips division",
+      "overrides": {
+        "map_width": 8,
+        "map_height": 8,
+        "existing_bases": 0
+      },
+      "expected": {
+        "tile_count": 32,
+        "map_scale": 5,
+        "warning_interval": 0,
+        "warning": "none",
+        "after_warning": "continue"
+      }
+    }
+  ]
+}

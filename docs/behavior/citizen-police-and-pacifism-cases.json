@@ -1,0 +1,1308 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-POLICE-001",
+  "status": "Original-x86 checked complete current citizen calculation with actual unit lookup/stack/ability helpers; resolved pacifism counter and consistent stack supplied. Counter production and stack lifecycle outside scope.",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "citizen-police-and-pacifism.md",
+  "scope": "Positive faction, populations1..127, fixed human difficulty5, neutral facilities/late projects/suppression/assimilation; supplied current police/social ratings and pacifism count. Garrison filter examines package_mode not weapon strength or AI plan.",
+  "defaults": {
+    "population": 7,
+    "excluded_population": 0,
+    "police": 0,
+    "pacifism_unit_count": 0,
+    "self_aware_colony": "none",
+    "garrison": [],
+    "bureaucracy_input": 0,
+    "psych_points": 0,
+    "social_talent": 0,
+    "faction_talent_parameter": 0
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-POLICE-001",
+      "name": "empty garrison",
+      "overrides": {},
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-002",
+      "name": "four ordinary units police -3",
+      "overrides": {
+        "police": -3,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-003",
+      "name": "four ordinary units police -2",
+      "overrides": {
+        "police": -2,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-004",
+      "name": "four ordinary units police -1",
+      "overrides": {
+        "police": -1,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-005",
+      "name": "four ordinary units police 0",
+      "overrides": {
+        "police": 0,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-006",
+      "name": "four ordinary units police 1",
+      "overrides": {
+        "police": 1,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-007",
+      "name": "four ordinary units police 2",
+      "overrides": {
+        "police": 2,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-008",
+      "name": "four ordinary units police 3",
+      "overrides": {
+        "police": 3,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-009",
+      "name": "four ordinary units police 4",
+      "overrides": {
+        "police": 4,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-010",
+      "name": "Non Lethal at rating zero",
+      "overrides": {
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-011",
+      "name": "Non Lethal at rating three",
+      "overrides": {
+        "police": 3,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-012",
+      "name": "Non Lethal preferred over first ordinary",
+      "overrides": {
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-013",
+      "name": "mode four excluded even with Non Lethal",
+      "overrides": {
+        "garrison": [
+          {
+            "package_mode": 4,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-014",
+      "name": "colony and former modes excluded",
+      "overrides": {
+        "police": 2,
+        "garrison": [
+          {
+            "package_mode": 8
+          },
+          {
+            "package_mode": 9
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-015",
+      "name": "off base unit excluded",
+      "overrides": {
+        "garrison": [
+          {
+            "at_base": false,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-016",
+      "name": "supplied foreign garrison no owner filter",
+      "overrides": {
+        "garrison": [
+          {
+            "owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-017",
+      "name": "home and chassis do not gate supplied garrison",
+      "overrides": {
+        "garrison": [
+          {
+            "home_base": -1,
+            "chassis": 1
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-018",
+      "name": "Self Aware faction wide consumes only slot",
+      "overrides": {
+        "self_aware_colony": "self_elsewhere",
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-019",
+      "name": "Self Aware no police at minus two",
+      "overrides": {
+        "police": -2,
+        "self_aware_colony": "self_here",
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-020",
+      "name": "Self Aware rating three",
+      "overrides": {
+        "police": 3,
+        "self_aware_colony": "self_elsewhere",
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-021",
+      "name": "rival Self Aware ignored",
+      "overrides": {
+        "self_aware_colony": "other"
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-022",
+      "name": "pacifism -3 count 1",
+      "overrides": {
+        "police": -3,
+        "pacifism_unit_count": 1
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-023",
+      "name": "pacifism -3 count 2",
+      "overrides": {
+        "police": -3,
+        "pacifism_unit_count": 2
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-024",
+      "name": "pacifism -4 count 2",
+      "overrides": {
+        "police": -4,
+        "pacifism_unit_count": 2
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 8,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-025",
+      "name": "pacifism -5 count 2",
+      "overrides": {
+        "police": -5,
+        "pacifism_unit_count": 2
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 10,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-026",
+      "name": "pacifism -6 count 2",
+      "overrides": {
+        "police": -6,
+        "pacifism_unit_count": 2
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 10,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-027",
+      "name": "pacifism -2 count 4",
+      "overrides": {
+        "police": -2,
+        "pacifism_unit_count": 4
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-028",
+      "name": "police retain extra burden until normalization",
+      "overrides": {
+        "police": 2,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          }
+        ],
+        "bureaucracy_input": 3
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 2
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 2
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 2
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 2
+        },
+        "final": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 2
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-029",
+      "name": "psych and social before police",
+      "overrides": {
+        "police": 1,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": false
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ],
+        "psych_points": 8,
+        "social_talent": 2,
+        "faction_talent_parameter": 4,
+        "bureaucracy_input": 3
+      },
+      "expected": {
+        "before_police": {
+          "talents": 3,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 3,
+          "drones": 1,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 3,
+          "drones": 1,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 3,
+          "drones": 1,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 3,
+          "drones": 1,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-POLICE-030",
+      "name": "all population excluded",
+      "overrides": {
+        "excluded_population": 7,
+        "police": 3,
+        "garrison": [
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          },
+          {
+            "package_mode": 3,
+            "non_lethal_methods": true
+          }
+        ]
+      },
+      "expected": {
+        "before_police": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_garrison": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_pacifism": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_police": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    }
+  ]
+}

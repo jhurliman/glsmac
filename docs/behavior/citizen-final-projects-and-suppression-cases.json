@@ -1,0 +1,573 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-FINAL-001",
+  "status": "Original-x86 checked late project/suppression/final conversion with supplied pre-project counts, plus complete current calculation with POLICE -2; full police and lifecycle open",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "citizen-final-projects-and-suppression.md",
+  "scope": "Late stage snapshots and stored final counts; resolved ownership/economics/excluded count supplied. Earlier police may produce different inputs. Nerve action/timer lifecycle outside scope.",
+  "defaults": {
+    "population": 7,
+    "excluded_population": 0,
+    "talents": 1,
+    "drones": 5,
+    "extra_drone_steps": 0,
+    "human_genome_project": "none",
+    "clinical_immortality": "none",
+    "longevity_vaccine": "none",
+    "economics": "simple",
+    "punishment_sphere": false,
+    "nerve_stapling_counter": 0
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-FINAL-001",
+      "name": "neutral late stage",
+      "overrides": {},
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-002",
+      "name": "Human Genome faction-wide",
+      "overrides": {
+        "human_genome_project": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-003",
+      "name": "Clinical faction-wide",
+      "overrides": {
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 3,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 3,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 2,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-004",
+      "name": "both talent projects stack",
+      "overrides": {
+        "human_genome_project": "self_here",
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 4,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 4,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 3,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-005",
+      "name": "rival projects ignored",
+      "overrides": {
+        "human_genome_project": "other",
+        "clinical_immortality": "other",
+        "longevity_vaccine": "other"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-006",
+      "name": "owned Longevity simple",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "simple"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-007",
+      "name": "owned Longevity free_market",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "free_market"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-008",
+      "name": "owned Longevity planned",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "planned"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 3,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-009",
+      "name": "owned Longevity green",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "green"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-010",
+      "name": "owned Longevity custom_negative",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "custom_negative"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-011",
+      "name": "owned Longevity custom_above",
+      "overrides": {
+        "longevity_vaccine": "self_elsewhere",
+        "economics": "custom_above"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-012",
+      "name": "Longevity can temporarily make demand negative",
+      "overrides": {
+        "drones": 0,
+        "longevity_vaccine": "self_here",
+        "economics": "planned"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": -2,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 1,
+          "drones": -2,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-013",
+      "name": "project talents cancel extra burden first",
+      "overrides": {
+        "drones": 7,
+        "extra_drone_steps": 3,
+        "talents": 0,
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 2,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "after_suppression": {
+          "talents": 2,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "final": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 1
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-014",
+      "name": "Sphere clears talents and drones",
+      "overrides": {
+        "punishment_sphere": true,
+        "human_genome_project": "self_elsewhere",
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 4,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-015",
+      "name": "active nerve suppression",
+      "overrides": {
+        "nerve_stapling_counter": 1
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-016",
+      "name": "high-bit nerve counter is active",
+      "overrides": {
+        "nerve_stapling_counter": 128
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-017",
+      "name": "maximum nerve counter is active",
+      "overrides": {
+        "nerve_stapling_counter": 255
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-018",
+      "name": "both suppression routes",
+      "overrides": {
+        "punishment_sphere": true,
+        "nerve_stapling_counter": 10
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-019",
+      "name": "suppression retains extra burden when below capacity",
+      "overrides": {
+        "punishment_sphere": true,
+        "extra_drone_steps": 3
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 3
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 3
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 3
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-020",
+      "name": "suppression clears extra burden when above capacity",
+      "overrides": {
+        "punishment_sphere": true,
+        "extra_drone_steps": 3,
+        "excluded_population": 7
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 3
+        },
+        "after_suppression": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 3
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-021",
+      "name": "all population excluded",
+      "overrides": {
+        "excluded_population": 7,
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 3,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 3,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-FINAL-022",
+      "name": "population cap on project talents",
+      "overrides": {
+        "population": 1,
+        "talents": 1,
+        "drones": 0,
+        "human_genome_project": "self_elsewhere",
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "after_projects": {
+          "talents": 4,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_suppression": {
+          "talents": 4,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "final": {
+          "talents": 1,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    }
+  ]
+}

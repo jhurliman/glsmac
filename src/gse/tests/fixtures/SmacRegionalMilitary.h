@@ -4,7 +4,8 @@
 namespace gse::tests::regional_military_fixture {
 using Military=game::backend::faction::SmacRegionalMilitaryState;
 // Native resolved-component/morale projection; excludes flags and cleanup admission.
-// Public source SHA256 501f0e76475c3fd1046805cdd42d424ecf4adfd5453996be05f38f76e9e8ad1f
+// Original receipt SHA256 501f0e76475c3fd1046805cdd42d424ecf4adfd5453996be05f38f76e9e8ad1f
+// Public normalized JSON SHA256 a5e065dacfe5c5634efd7b2177566e74f08c50b674e9ffdedec2c2f45a669f6b
 struct Case {const char* id; Military::Owner before,expected; std::vector<Military::Contribution> units;};
 inline std::vector<Case> Cases(){std::vector<Case> cases;
 {Case row{"scout_at_base",{},{},{}};

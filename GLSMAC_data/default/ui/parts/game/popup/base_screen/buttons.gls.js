@@ -10,12 +10,13 @@ return {
 	show_default: () => {
 		this.hide_buttons();
 
-		const btn_rename = this.frame.button({
-			class: 'base-screen-popup-bottom-button',
+		const btn_rename = this.frame.text({
+			class: 'base-screen-frame-text',
+			top: 5,
 			align: 'left',
 			left: 3,
 			width: 210,
-			text: 'RENAME',
+			text: 'Rename unavailable',
 		});
 		const btn_ok = this.frame.button({
 			class: 'base-screen-popup-bottom-button',
@@ -57,19 +58,21 @@ return {
 		});
 
 		this.buttons = [
-			this.frame.button({
-				class: 'base-screen-popup-bottom-button',
+			this.frame.text({
+				class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
+				top: 7,
 				align: 'left',
 				left: 3,
 				width: 104,
-				text: 'HELP',
+				text: 'Help unavailable',
 			}),
-			this.frame.button({
-				class: 'base-screen-popup-bottom-button',
+			this.frame.text({
+				class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
+				top: 7,
 				align: 'left',
 				left: 109,
 				width: 104,
-				text: 'WORKSHOP',
+				text: 'Workshop unavailable',
 			}),
 			btn_ok,
 			btn_cancel,

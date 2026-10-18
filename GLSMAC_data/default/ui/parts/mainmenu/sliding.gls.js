@@ -83,6 +83,7 @@ return (m) => {
 	const slideout_and_cb = (cb) => {
 		if (menublock_animation == null) {
 			if (native_title) {
+				for (label of title_labels) { label.hide(); }
 				let frame = 6;
 				set_title_frame(frame);
 				frame++;
@@ -135,6 +136,8 @@ return (m) => {
 			});
 			const dimensions = label.measure();
 			label.left = 12 + (277 - dimensions.width) / 2;
+			// The original draws labels only after all six opening steps.
+			label.hide();
 			title_labels:+label;
 			return button;
 		}
@@ -207,6 +210,8 @@ return (m) => {
 			});
 
 			current_menublock.on('keydown', (e) => {
+				// Native transition loops finish before accepting another action.
+				if (native_title && menublock_animation != null) { return true; }
 				if (!#is_empty(e.modifiers)) {
 					return false;
 				}
@@ -282,6 +287,7 @@ return (m) => {
 				let frame = 1;
 				menublock_animation = current_menublock.timer(10, () => {
 					if (frame < 6) { set_title_frame(frame); frame++; return true; }
+					for (label of title_labels) { label.show(); }
 					menublock_animation = null;
 					return false;
 				});

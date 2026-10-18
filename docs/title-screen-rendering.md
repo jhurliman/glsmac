@@ -102,3 +102,30 @@ Remaining presentation gates include native-platform captures, original hover/ke
 selection and return-to-menu states, transition frames, resizing/letterboxing,
 other setup menus, SMAX-specific artwork, and in-game screens. The broader
 faithful 1.0.0 roadmap remains unchanged.
+
+## Transition label ordering
+
+The native title caller draws labels after its six opening frames. The port now
+keeps those text objects hidden through frames0..5 and the final10ms timer
+delivery, then reveals the selected and inactive labels together. Closing hides
+them before frame6 and invokes the selected action only after frame11's final
+delivery. Native-title keyboard events are consumed during either transition,
+matching the original's non-message-pumping title loop and the port's existing
+mouse guard; queued input cannot change the action or history mid-transition.
+The generic sliding menus keep their existing behavior.
+
+`GLSMAC_data/tests/title_transition.gls.js` executes the real sliding module and
+history manager with explicit timer deliveries and DOM doubles. It covers every
+opening/closing frame, label visibility, input suppression, deferred action and
+cancellation/reopening. The original ordering is documented in the
+[native title receipt](behavior/smac-title-screen.md). This checks sequencing;
+real presentation intervals and original transition screenshots remain separate
+acceptance gates.
+
+A focused WSLg/llvmpipe capture also records all twelve real OpenGL
+transition backbuffers. Each matches an independent indexed-asset composition
+across all786,432 pixels, with no label pixels on the artwork frames. The
+initial settled screen and the Down/Up return still match the supplied original
+reference exactly. Readback instrumentation delays presentation, so these
+checks do not establish native frame durations or original live-loop parity.
+The real Exit button completes memorydebug shutdown without tracked leaks.

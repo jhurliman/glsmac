@@ -1,5 +1,6 @@
 #include "SDL2.h"
 #include "SmacPalette.h"
+#include "SmacNativeBadge.h"
 #include "loader/flic/MenuCompositor.h"
 #include <algorithm>
 
@@ -36,6 +37,28 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
 	ASSERT( rw, "rw is null" );
 	return IMG_Load_RW( rw, 1 );
+}
+
+struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};
+types::texture::Texture* SDL2::CreateSmacNativeBadgeTexture(int level,int variant) {
+    if(level<0 || level>6 || variant<0 || variant>1) {THROW("Native badge requires level0..6 and variant0..1");}
+    const auto units_path=GetCustomFilename("units.pcx"),palette_path=GetCustomFilename("palette.pcx");
+    const auto key=units_path+":"+palette_path;
+    auto found=m_native_badge_sources.find(key);
+    if(found==m_native_badge_sources.end()) {
+        std::vector<unsigned char> bytes;
+        using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+        util::FS::ReadFile(bytes,units_path);Surface units(load_image(bytes),SDL_FreeSurface);
+        util::FS::ReadFile(bytes,palette_path);Surface palette(load_image(bytes),SDL_FreeSurface);
+        auto source=std::make_shared<SmacNativeBadgeSource>();
+        for(int m=0;m<7;++m) {for(int v=0;v<2;++v) {
+            source->badges[2*m+v]=DecodeSmacNativeBadge(units.get(),palette && palette->format ? palette->format->palette : nullptr,m,v);
+        }}
+        found=m_native_badge_sources.emplace(key,std::move(source)).first;
+    }
+    const auto& badge=found->second->badges[2*level+variant];
+    auto texture=std::make_unique<types::texture::Texture>("NativeBadge_"+std::to_string(level)+"_"+std::to_string(variant),SmacNativeBadge::Width,SmacNativeBadge::Height);
+    std::copy(badge.rgba.begin(),badge.rgba.end(),texture->GetBitmap());texture->FullUpdate();return texture.release();
 }
 
 struct SmacMenuSource {

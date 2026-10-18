@@ -321,6 +321,8 @@ types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t 
 	return result;
 }
 
+types::texture::Texture* TextureLoader::CreateSmacNativeBadgeTexture(int,int) {THROW("Native badge decoding is not supported by this texture loader");}
+
 types::texture::Texture* TextureLoader::CreateSmacMenuTexture( const std::string&, const std::string&, size_t, size_t, size_t, size_t ) {
 	THROW( "SMAC menu composition is unsupported by this texture backend" );
 }

@@ -67,7 +67,7 @@ void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
 	const auto actual = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &*m_allocation );
 	const auto& expected = pause.first_calculation;
 	const auto same = []( const SmacBaseResourceCalculation& a, const SmacBaseResourceCalculation& b ) {
-		return a.raw_intake == b.raw_intake
+		return (!b.eco_damage || a.eco_damage == b.eco_damage) && a.raw_intake == b.raw_intake
 			&& std::tie( a.nutrients.intake, a.nutrients.demand, a.nutrients.surplus, a.nutrients.stored_before, a.nutrients.normalized_stored,
 				a.minerals.multiplier_steps, a.minerals.intake, a.minerals.demand, a.minerals.surplus, a.minerals.pre_orbital_surplus )
 			== std::tie( b.nutrients.intake, b.nutrients.demand, b.nutrients.surplus, b.nutrients.stored_before, b.nutrients.normalized_stored,

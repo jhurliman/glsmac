@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 
 namespace game::backend::base {
 
@@ -19,6 +20,8 @@ struct SmacBaseResourceCalculation {
     struct Minerals {
         int32_t multiplier_steps, intake, demand, surplus, pre_orbital_surplus;
     } minerals;
+    // Missing retained inputs remain unavailable; queries never invent history.
+    std::optional<int32_t> eco_damage;
 };
 
 // Finish an already calculated raw intake. Founding retains the allocator's

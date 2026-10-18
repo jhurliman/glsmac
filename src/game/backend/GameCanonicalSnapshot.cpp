@@ -27,7 +27,7 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
     if(m_canonical_turn_in_progress || m_canonical_turn_failed || m_pending_canonical_continuation) {
         throw std::runtime_error("Canonical transition is not at a stable snapshot boundary");
     }
-    types::Buffer buffer;buffer.WriteInt(2);buffer.WriteBool(m_canonical_continuation.has_value());
+    types::Buffer buffer;buffer.WriteInt(3);buffer.WriteBool(m_canonical_continuation.has_value());
     if(!m_canonical_continuation) {
         if(m_colony_request || m_research_request) {throw std::runtime_error("Orphaned canonical choice cannot be saved");}
         return buffer;
@@ -65,7 +65,7 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
 
 std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(types::Buffer buffer,size_t turn) const {
     const auto version=buffer.ReadInt();
-    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported canonical continuation");}
+    if(version!=1 && version!=2 && version!=3) {throw std::runtime_error("Unsupported canonical continuation");}
     std::optional<CanonicalTurnContinuation> result;
     if(buffer.ReadBool()) {
         if(!m_state || m_state->GetConnection() || m_state->m_settings.global.GetRulesetId()!="smac") {
@@ -97,7 +97,7 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
         }
         if(next.base_index>=next.owners[next.owner_index].second.size()) {throw std::runtime_error("Saved Colony Base cursor is outside its owner");}
         if(kind==0) {
-            const auto calculation=base::ReadSmacResourceCalculation(buffer);
+            const auto calculation=base::ReadSmacResourceCalculation(buffer,version>=3);
             const auto mode=buffer.ReadInt();
             if(mode<0 || mode>1) {throw std::runtime_error("Invalid saved Colony morale mode");}
             next.colony=base::SmacColonyUpkeepPause{calculation,static_cast<unit::SmacMoraleMode>(mode)};

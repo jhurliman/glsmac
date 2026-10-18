@@ -214,6 +214,8 @@ private:
 	SmacBaseResourceCalculation CalculateSmacResourceCalculation( SmacBaseResourcePhase phase,
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
 		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;
+	std::optional<int32_t> CalculateSmacEcologyDamage( const SmacBaseResourceCalculation& calculation,
+		const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

@@ -125,6 +125,11 @@ The automatic chooser consumes the shared bounded-range stream, not the CRT stre
 
 ## Retained producer contracts
 
+The [live regional military producer](regional-military-producer.md) now retains
+unit counts and attack sums at the post-Base owner boundary. Its V18 storage
+preserves stale peer/restore history; flags and final strategy are still needed.
+
+
 The [live territory summary integration](retained-territory-summary.md) now owns
 the territory/known/suitable/covered/site counters and their scheduled refresh
 and save lifetimes. Per-owner regional military/strategy and ecology integration

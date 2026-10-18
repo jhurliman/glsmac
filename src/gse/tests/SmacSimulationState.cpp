@@ -1,4 +1,5 @@
 #include "SmacSimulationState.h"
+#include "fixtures/SmacRegionalMilitary.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
 #include "game/backend/faction/SmacRankOrder.h"
@@ -87,7 +88,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=17,bool include_capabilities=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=18,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -99,6 +100,16 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=17,bool
         if(value.capabilities) {for(const auto& owner:value.capabilities->factions) {
             for(const auto& fields:{owner.available,owner.foreign}) {for(const auto field:fields) {suffix.WriteInt(field);}}
         }}
+    }
+    if(version>=18 && include_military) {
+        suffix.WriteBool(value.regional_military.has_value());
+        if(value.regional_military) {
+            std::string packed;
+            for(const auto& owner:value.regional_military->factions) {for(const auto* fields:{&owner.units,&owner.attack}) {for(const auto field:*fields) {
+                packed+=static_cast<char>(field&255);packed+=static_cast<char>(field>>8);
+            }}}
+            suffix.WriteString(packed);
+        }
     }
     return Wire(value,1,version)+suffix.ToString();
 }
@@ -185,6 +196,34 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         const auto before=state;
         GT_ASSERT(Rejects([&]{state.Refresh(1,owned,technologies,catalog,combat,relations,0,false,false,false);}) && state==before,
             "unsupported PSI overflow partially published capabilities");
+        GT_OK();
+    });
+    task->AddTest("SMAC regional military matches 130 native resolved unit-phase projections",GT(){
+        for(const auto& row:regional_military_fixture::Cases()) {
+            auto actual=row.before;
+            for(const auto& unit:row.units) {game::backend::faction::SmacRegionalMilitaryState::Accumulate(actual,unit);}
+            GT_ASSERT(actual==row.expected,"native regional unit or attack projection differs: "+std::string(row.id));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC regional military V18 preserves all word counters and legacy absence",GT(){
+        auto value=State();value.regional_military.emplace();
+        for(size_t owner=0;owner<7;++owner) {for(size_t region=0;region<128;++region) {
+            value.regional_military->factions[owner].units[region]=static_cast<uint16_t>(owner*9000+region);
+            value.regional_military->factions[owner].attack[region]=static_cast<uint16_t>(65535-owner*9000-region);
+        }}
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,
+            "military restore rebuilt counters or omitted unoccupied faction or polar regions");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,17),technologies,profiles,units);
+        GT_ASSERT(!old.regional_military,"V17 acquired invented owner-summary history");
+        for(const auto length:{size_t(0),size_t(3583),size_t(3585)}) {
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(std::string(length,'x'));
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,18,true,false)+invalid.ToString(),technologies,profiles,units);}),
+                "malformed regional military extent accepted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"truncated regional military state accepted");
         GT_OK();
     });
     task->AddTest("SMAC capability history survives V17 restore while V16 preserves absence",GT(){

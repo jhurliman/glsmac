@@ -5,6 +5,7 @@
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacHostileState.h"
+#include "SmacRegionalMilitaryState.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -112,6 +113,8 @@ struct SmacSimulationState {
 	// V11-V16 did not record capability history. Migration retains absence;
 	// neither loading nor a read-only query reconstructs it from ownership.
 	std::optional<SmacCapabilityState> capabilities;
+	// Absent before V18. Loading cannot reconstruct stale owner-summary counts.
+	std::optional<SmacRegionalMilitaryState> regional_military;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

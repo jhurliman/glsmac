@@ -174,6 +174,11 @@ return {
 							const movement = #to_float(stats.full_allowance) / #to_float(stats.quantum);
 							return '? - ? - ' + #to_string(#to_float(#round(movement * 100.0)) / 100.0);
 						}
+                        if (object.is_native) {
+                            const stats = object.query_native_stats(0);
+                            const movement = #to_float(stats.full_allowance) / #to_float(stats.quantum);
+                            return '? - ? - ' + #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+                        }
 						let stats_str = '';
 						// tmp
 						const def = object.get_def();

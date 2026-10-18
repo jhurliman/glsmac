@@ -24,3 +24,24 @@ is not represented as a fresh run of these changed sources.
 The renderer still needs explicit owner0 publication, native badge templates
 from UNITS.PCX and the correct viewer argument at its publication boundary.
 This change does not certify native rendering or screenshot parity.
+
+## Live bottom-bar consumers
+
+The native wrapper now exposes `query_native_stats(viewer)` as an owned query
+result with integer movement allowance, quantum, health and the queried native
+level/name. The viewer is range-checked before narrowing. Both production
+bottom-bar description and same-tile list query native context0 instead of
+reading the deliberately absent legacy float fields or Def movement999.
+
+The actual birth-to-UI test publishes one native Unit of each supported
+design8/9/10 through the transaction, then invokes the real production
+`unit_preview` and `unit_select` callbacks twice. It checks movement1/4/8,
+neutral level labels, same-tile row refresh and stable row identity. A copied
+query mutation cannot change the next query; an oversized viewer is rejected.
+World snapshot, both RNG streams, next Unit ID and frontend queue remain
+unchanged. Existing Infantry/Rover and legacy native preview tests also pass.
+Combat strength formatting remains the pre-existing placeholder; this pass
+connects checked movement/level description fields, not complete combat UI.
+
+Validation of the bottom-bar addition:35 focused ecology/native/preview groups
+pass, together with targeted Unit.cpp correctness analysis.

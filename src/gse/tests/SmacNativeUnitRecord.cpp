@@ -1,3 +1,7 @@
+#include "gse/value/Callable.h"
+#include "gse/value/Object.h"
+#include "gse/value/Int.h"
+#include "gse/value/String.h"
 #include "game/backend/base/SmacEcologyNativeSpawn.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
@@ -9,6 +13,7 @@
 #include "ConventionalUnits.h"
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/Game.h"
+#include "game/backend/Random.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/SmacOrdinaryLandExploration.h"
 #include <set>
@@ -259,6 +264,45 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC native Unit bottom bar consumes checked birth queries without legacy floats",GT(){
+        using namespace game::backend;
+        for(const auto design:{8,9,10}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();BirthDefinitions(game);BirthBase(GSE_CALL,game);
+                using Knowledge=map::SmacWorkerKnowledge;
+                Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+                data.tiles.resize(3200,{0,std::nullopt});Knowledge::BaseObservation base_observation{901,2,{}};base_observation.population[1]=1;data.bases.push_back(base_observation);ExploreNine(data,16,16,2);
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto plan=base::PrepareSmacNativeSpawn({{{24,24},80,80,true},1,7,9,1},{{{16,16},1}},[&](int32_t,int32_t) {
+                    return base::SmacNativeSpawnTile{design==9?2:3,false,static_cast<uint8_t>(design==9?65:1),static_cast<uint8_t>(design==10?0:1),false,15};
+                });
+                auto birth=manager->PrepareEcologyNativeBirths(GSE_CALL,plan);GT_ASSERT(birth.Size()==1,"Preview fixture requires one actual birth");
+                const auto id=birth.Candidate(0).m_id;birth.Commit();birth.Notify(GSE_CALL);auto* unit=manager->GetUnit(id);
+                auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_conventional_unit_preview"));
+                auto* check=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();const auto shared=game->GetRandom()->GetStateString();
+                const auto next=unit::Unit::GetNextId();const auto queued=fixture.QueuedFrontendRequests().size();auto* wrapper=unit->Wrap(GSE_CALL);
+                auto* object=static_cast<value::Object*>(wrapper);
+                const auto query=[&](int64_t viewer) {return static_cast<value::Callable*>(object->Get("query_native_stats"))->Run(GSE_CALL,{VALUE(value::Int,,viewer)});};
+                auto* copied=static_cast<value::Object*>(query(0));copied->Assign("remaining_allowance",VALUE(value::Int,,255));
+                GT_ASSERT(static_cast<value::Int*>(static_cast<value::Object*>(query(0))->Get("remaining_allowance"))->value!=255,"Native copied query exposed authority");
+                bool invalid=false;try {query(INT64_MAX);}catch(const std::exception&) {invalid=true;}
+                GT_ASSERT(invalid,"Native script viewer narrowed before validation");
+                for(int repeat=0;repeat<2;++repeat) {
+                    game->GetState()->TriggerObject(game->GetMap(),"unit_preview",ARGS_F(&wrapper){{"unit",wrapper}};});
+                    game->GetState()->TriggerObject(game,"unit_select",ARGS_F(&wrapper){{"unit",wrapper}};});
+                    check->Run(GSE_CALL,{wrapper,new value::Object(GSE_CALL,{
+                        {"stats",VALUE(value::String,,design==8?"? - ? - 1.0":design==9?"? - ? - 4.0":"? - ? - 8.0")},
+                        {"morale",VALUE(value::String,,design==10?"level1":"level0")},
+                        {"moves",VALUE(value::String,,design==8?"Moves: 1.0":design==9?"Moves: 4.0":"Moves: 8.0")}
+                    })});
+                }
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==shared
+                    && unit::Unit::GetNextId()==next && fixture.QueuedFrontendRequests().size()==queued,"Native preview changed world RNG IDs or frontend queue");GT_OK();
+            });GT_ASSERT(error.empty(),"Native preview "+std::to_string(design)+": "+error);
+        }GT_OK();
+    });
     task->AddTest("SMAC sea native complete factory and final records retain separate stack and caller writes",GT(){
         for(const auto& profile:smac_sea_native_fixture::profiles) {
             for(size_t i=0;i<profile.returned.size();++i) {

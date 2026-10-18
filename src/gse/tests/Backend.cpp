@@ -4244,6 +4244,8 @@ public:
 				++callbacks;const auto state=base->GetSmacResourceContext();
 				require(m_game.GetTurnId()==0 && !m_game.m_simulation->value.social.Find(state.owner_simulation_id)->retained,"first Base refreshed social before callback");
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
+				require(m_game.m_simulation->value.victory_history && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[state.owner_simulation_id]==0,
+					"starting Base callback observed stale expansion history");
 				const auto& cache=base->GetSmacUpkeepCache();
 				require(cache && cache->calculation.nutrients.intake==(scenario==1 ? 4 : 2)
 					&& cache->calculation.nutrients.demand==2 && cache->calculation.nutrients.surplus==(scenario==1 ? 2 : 0)
@@ -4267,6 +4269,7 @@ public:
 				require(rejected && Base::GetNextId()==id && bm->GetBases().empty() && !center->base && !map->GetSmacWorkerKnowledge() && m_frontend_requests.size()==before,"failed preparation published startup state");
 			}
 			const auto spawn=[&](slot::Slot* slot,map::tile::Tile* tile) {
+				m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[m_game.RequireSmacProductionOwner(slot).simulation_id]=777;
 				value::array_elements_t items;for(const auto& role:roles){items.push_back(VALUE(value::String,,role));}
 				auto* input=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{"worker",VALUE(value::String,,"WORKER")},{"specialists",VALUE(value::Array,,items)}}));
 				auto* wrapper=static_cast<value::Object*>(bm->Wrap(GSE_CALL));

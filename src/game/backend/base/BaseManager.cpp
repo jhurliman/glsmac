@@ -291,9 +291,15 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	m_game->RequireSmacGameplayActive();
 	faction::SmacEconomyState* economy=nullptr;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	std::optional<faction::SmacVictoryHistory> victory;
 	if(base->HasSmacResourceContext()) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
+		victory=m_game->m_simulation->value.victory_history;
+		if(victory) {
+			if(m_game->GetTurnId()>INT32_MAX) {THROW("Founding history turn exceeds signed32");}
+			victory->RecordBaseExpansion(base->m_resource_context->owner_simulation_id,static_cast<int32_t>(m_game->GetTurnId()));
+		}
 	}
 	std::optional<map::GlsmacTerritoryTopology> topology;
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true, &topology );
@@ -303,6 +309,7 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	RegisterBase( base );
 	m_game->CommitBaseTerritory( territory, topology );
 	if(economy) {economy->regional_base_counts=regional;}
+	if(victory) {m_game->m_simulation->value.victory_history=std::move(victory);}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {

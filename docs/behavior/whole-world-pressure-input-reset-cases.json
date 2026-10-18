@@ -1,0 +1,277 @@
+{
+  "research_id": "RE-SMAC-WHOLE-WORLD-PRESSURE-RESET-001",
+  "profile": "Pinned stock SMAC; actual parent new-world prefix through first child entry plus separately executed all-slot native initializer prefixes",
+  "parent_prefix": {
+    "inputs": {
+      "human_mask": 2,
+      "previous_turn": 17,
+      "all_eight_history_words": [
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777
+      ],
+      "all_eight_deadlines": [
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777
+      ],
+      "all_eight_paid_costs": [
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777,
+        777
+      ],
+      "project_markers": [
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222,
+        222
+      ]
+    },
+    "expected": {
+      "current_turn": 0,
+      "faction_words_before_first_initializer": {
+        "base_expansion_advice_history": [
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777
+        ],
+        "economic_deadline": [
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777
+        ],
+        "economic_paid_cost": [
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777,
+          777
+        ]
+      },
+      "project_markers": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "Voice_marker": -1,
+      "first_initializer_owner": 1
+    }
+  },
+  "slot_initializer_cases": [
+    {
+      "inputs": {
+        "owner": 0,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 1,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 2,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 3,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 4,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 5,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 6,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 7,
+        "current_turn": 0,
+        "previous_each_word": 777
+      },
+      "expected": {
+        "base_expansion_advice_history": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    }
+  ],
+  "source_backed_parent_loops": {
+    "slot_range": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "first": "human members",
+    "second": "all nonmembers",
+    "alive_or_used_slot_filter": false,
+    "order_when_only_human1": [
+      1,
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "validation": {
+    "parent_prefix_controls": 1,
+    "slot_prefix_controls": 8,
+    "continuous_complete_eight_faction_initializers": false,
+    "cold_zero_fill_used_as_reset_proof": false,
+    "pressure_or_majority_arithmetic_rerun": false
+  }
+}

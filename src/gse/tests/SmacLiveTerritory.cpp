@@ -65,6 +65,34 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC live victory history follows founding nonlast removal actual Start and legacy absence",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;faction::SmacVictoryHistory retained;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.victory_history && *state.victory_history==faction::SmacVictoryHistory{};
+				auto& history=*state.victory_history;history.last_base_expansion_or_advice_turn.fill(777);
+				for(size_t owner=0;owner<8;++owner) {history.economic_deadlines[owner]=1000+owner;history.economic_paid_costs[owner]=5000+owner;}
+			});GT_ASSERT(fresh,"New world did not own fresh economic and Base history");
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,902,0,1,24,16);
+			bool stamped=false;fixture.ResourceState([&](auto& state){const auto& history=*state.victory_history;
+				stamped=history.last_base_expansion_or_advice_turn[1]==1 && history.last_base_expansion_or_advice_turn[2]==777
+					&& history.economic_deadlines[1]==1001 && history.economic_paid_costs[1]==5001;
+				state.victory_history->last_base_expansion_or_advice_turn[1]=333;retained=*state.victory_history;
+			});GT_ASSERT(stamped,"Founding did not stamp only gaining owner or changed economic history");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			bool preserved=false;fixture.ResourceState([&](auto& state){preserved=*state.victory_history==retained;});
+			GT_ASSERT(preserved,"Nonlast Base removal rewrote history");saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool preserved=false;
+			restored.ResourceState([&](auto& state){preserved=state.victory_history && *state.victory_history==retained;state.victory_history.reset();});
+			GT_ASSERT(preserved,"Actual Start rebuilt saved expansion or economic history");
+			Found(GSE_CALL,restored.Game(),903,0,1,32,16);
+			bool absent=false;restored.ResourceState([&](auto& state){absent=!state.victory_history;});
+			GT_ASSERT(absent,"Founding manufactured missing legacy history");GT_OK();
+		});
+	});
 	task->AddTest("SMAC live regional workspace preserves Base events but retires at owner tail and Start",GT(){
 		namespace routes=map::smac_territory;
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;

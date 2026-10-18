@@ -49,6 +49,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
         THROW("Faction restart requires owned terrain geography site and landmark history");
     }
     const auto& topology=*plan.topology;
+	if(state.victory_history) {plan.initialization_history_turn=static_cast<int32_t>(m_game->GetTurnId());}
     const auto knowledge=plan.territory->CopyData();
     const map::smac_site::Geometry geometry{topology.Width(),topology.Height(),topology.Wraps()};
     const auto index=[&](map::smac_site::Coordinate point) {return size_t(point[1])*(geometry.width/2)+point[0]/2;};
@@ -128,6 +129,9 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
     plan.economy.design_counts=state.economy.at(owner).design_counts;
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     if(state.capabilities) {state.capabilities->factions[owner-1]={};}
+	if(state.victory_history && plan.initialization_history_turn) {
+		state.victory_history->last_base_expansion_or_advice_turn[owner]=*plan.initialization_history_turn;
+	}
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}

@@ -1,0 +1,511 @@
+{
+  "research_id": "RE-SMAC-ENDING-INPUT-PRODUCERS-001",
+  "scope": "Separate existing setup producer and one existing first-command path instrumented for full ranking production with ordinary scenario defaults. No continuous setup-to-seven-faction world or general score construction claim.",
+  "cases": [
+    {
+      "id": "reused_local_setup_selected_slot6",
+      "evidence": "immutable SETUP-TRANSFER-06; no new setup execution",
+      "selected_loaded_slot": 6,
+      "selected_difficulty": 5,
+      "result": {
+        "focus": 6,
+        "human_mask": 64,
+        "initializer_faction": 6
+      },
+      "limits": "Supplied UI/leader answers and loaded synthetic definition labels; actual binding/new-game/early initializer stores execute."
+    },
+    {
+      "id": "native_first_turn_ranking_one_active",
+      "evidence": "complete original nonzero ranking producer inside original controller/global advance",
+      "inputs": {
+        "turn": 0,
+        "year": 0,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "first": 2,
+        "second": 0,
+        "human_best": 0,
+        "human_worst": 0,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "computed_scores_before_sort": {
+        "turn": 0,
+        "year": 0,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "first": 2,
+        "second": 0,
+        "human_best": 0,
+        "human_worst": 0,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assigned_ranks": {
+        "turn": 0,
+        "year": 0,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "ranks": [
+          0,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "first": 2,
+        "second": 0,
+        "human_best": 0,
+        "human_worst": 0,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "rebuilt_inverse": {
+        "turn": 0,
+        "year": 0,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "ranks": [
+          0,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "first": 1,
+        "second": 0,
+        "human_best": 0,
+        "human_worst": 0,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "producer_return_before_turn_increment": {
+        "turn": 0,
+        "year": 0,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "ranks": [
+          0,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "first": 1,
+        "second": 0,
+        "human_best": 1,
+        "human_worst": 1,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "first_command_boundary": {
+        "turn": 1,
+        "year": 2101,
+        "focus": 1,
+        "human_mask": 2,
+        "active_mask": 2,
+        "scenario_score_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "scores": [
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "ranks": [
+          0,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "inverse_ranks": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "first": 1,
+        "second": 0,
+        "human_best": 1,
+        "human_worst": 1,
+        "base_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "population_caches": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "unit_counts": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "produced_from_stale_reference": true,
+      "human_membership_supplied_in_this_harness": true,
+      "full_native_score_producer_executed": true,
+      "ordinary_scenario_defaults_supplied_from_static_initializer": true
+    }
+  ],
+  "static_contract": {
+    "first_position": 7,
+    "fallback_position": 6,
+    "score_only_argument": 0,
+    "rank_update_argument": "nonzero",
+    "score_tie": "lower faction ID takes higher rank",
+    "sort_factions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "inactive_score": 0,
+    "inverse_fill": "active factions only; gaps zero; no compaction",
+    "global_update": "before turn increment and owner upkeeps",
+    "disposition": "reads retained references without recomputation",
+    "human_membership": "accepted selected loaded slot in local single-human setup; distinct from activity/focus/network roles"
+  },
+  "unsupported": [
+    "Complete seven-active ranking/score matrix",
+    "Universal rank identities before first update",
+    "Other scenario score modes",
+    "All report/UI refresh admission",
+    "Network/multihuman/editor human membership changes",
+    "Original save format/load controller behavior"
+  ]
+}

@@ -1,6 +1,7 @@
 #include "SmacSimulationState.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
+#include "game/backend/faction/SmacRankOrder.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacOrbitalIntake.h"
 #include "task/gsetests/GSETests.h"
@@ -83,6 +84,24 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC retained ranking keeps inactive gaps ties and disposition references",GT(){
+		using faction::SmacRankOrder;
+		// Literal first-command producer: stale references are replaced only by
+		// a full update; scores are supplied here, not reconstructed from focus.
+		const auto first=SmacRankOrder::Update({1,0,0,0,0,0,0},2);
+		const std::array<int32_t,8> original{0,0,0,0,0,0,0,1};
+		GT_ASSERT(first.faction_at_rank==original && first.Leader()==1 && first.RunnerUp()==0,"native first-command inverse order differs");
+		const auto ties=SmacRankOrder::Update({10,10,10,10,10,10,10},254);
+		const std::array<int32_t,8> lower_first{0,7,6,5,4,3,2,1};
+		GT_ASSERT(ties.faction_at_rank==lower_first,"equal scores did not prefer lower faction slots");
+		const auto gaps=SmacRankOrder::Update({99,99,99,99,99,99,0},128);
+		GT_ASSERT(gaps.Leader()==0 && gaps.RunnerUp()==0 && gaps.faction_at_rank[1]==7,"inactive slots were removed from sorting or inverse gaps compacted");
+		const auto retained=SmacRankOrder::Update({10,20,0,0,0,0,0},6);
+		GT_ASSERT(retained.DispositionReference(2)==1 && retained.DispositionReference(1)==2 && retained.Leader()==2,
+			"disposition rebuilt the saved references from surviving factions");
+		GT_ASSERT(Rejects([]{SmacRankOrder::Update({-1,0,0,0,0,0,0},2);})
+			&& Rejects([]{SmacRankOrder::Update({0,0,0,0,0,0,0},1);}),"unproved negative score or native faction admitted");GT_OK();
+	});
 	task->AddTest("SMAC human defeat request retains its owner independently of inactive status and migrates V12",GT(){
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();value.roster[1].active=false;value.human_defeat_request=2;

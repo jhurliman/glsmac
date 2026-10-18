@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace game::backend::base { struct SmacBloomTerrainDelta; }
+namespace game::backend::base { class SmacBloomTerrainPlan; }
 
 namespace game::backend::map {
 
@@ -33,7 +33,7 @@ public:
     std::string Encode() const;
     // Detached terrain publication: preserve contour/corners and every unrelated
     // source byte. Live item/presence preconditions remain the caller's responsibility.
-    SmacPlanetMap WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes, bool nonzero_turn) const;
+    SmacPlanetMap WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
     int32_t OceanCoverageCategory() const;

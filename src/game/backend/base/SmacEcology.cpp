@@ -218,7 +218,7 @@ SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int3
     const std::function<SmacBloomTerrainCell(int32_t,int32_t)>& query,const std::function<int32_t()>& draw) {
     SmacWorkedSquareCollection::Resolve(map,0);
     if(history<0 || difficulty<0 || difficulty>5 || !query || !draw) {throw std::invalid_argument("Bloom terrain requires history, difficulty and terrain/CRT authorities");}
-    SmacBloomTerrainPlan plan{Checked(int64_t(history)+1),1,0,std::nullopt,{}};
+    SmacBloomTerrainPlan plan(Checked(int64_t(history)+1),nonzero_turn);
     using Coordinate=std::array<int32_t,2>;
     struct Staged {SmacBloomTerrainCell before,after;};
     std::map<Coordinate,Staged> staged;std::vector<Coordinate> changed;
@@ -240,7 +240,7 @@ SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int3
         auto& cell=get(coordinate);
         if(cell.altitude_class==altitude) {return;}
         const auto change=ChangeSmacBloomClassOnly(cell,altitude,nonzero_turn,draw);
-        cell=change.cell;plan.native_dirty_mask|=change.native_dirty_mask;
+        cell=change.cell;plan.m_native_dirty_mask|=change.native_dirty_mask;
         mark(coordinate);
     };
     const auto shape=[&](const Coordinate& center) {
@@ -261,18 +261,18 @@ SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int3
             if(!altered) {break;}
         }
     };
-    if(get(map.center).altitude_class<3 && plan.history>=4) {
-        const auto denominator=10-plan.history/8-difficulty;
-        if(denominator<=1 || EcologyCrt(draw)%denominator==0) {plan.nominal_cell_budget=9;}
+    if(get(map.center).altitude_class<3 && plan.m_history>=4) {
+        const auto denominator=10-plan.m_history/8-difficulty;
+        if(denominator<=1 || EcologyCrt(draw)%denominator==0) {plan.m_nominal_cell_budget=9;}
     }
-    for(int32_t i=0;i<plan.nominal_cell_budget;++i) {
+    for(int32_t i=0;i<plan.m_nominal_cell_budget;++i) {
         const auto& offset=BLOOM_SHAPER_OFFSETS[i];
         const auto p=BloomCoordinate(map,int64_t(map.center[0])+offset[0],int64_t(map.center[1])+offset[1]);
         if(!p) {continue;}
         auto& cell=get(*p);
         if((i>0 && cell.altitude_class>=3) || ((cell.items&0x20u) && cell.altitude_class>=2)
             || ((cell.items&1u) && cell.affiliation<=7) || (cell.landmarks&0x80000002u)==2u) {continue;}
-        cell.items=(cell.items|0x20u)&~0x00288050u;mark(*p);plan.fungus_cell=*p;
+        cell.items=(cell.items|0x20u)&~0x00288050u;mark(*p);plan.m_fungus_cell=*p;
         if(cell.altitude_class<2) {shape(*p);}
         // Native nineteen-entry notice scan overwrites the bloom-loop index.
         // The next increment ends either budget, even with no improvements.
@@ -280,7 +280,7 @@ SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int3
     }
     for(const auto& coordinate:changed) {
         const auto& value=staged.at(coordinate);
-        if(!(value.before==value.after)) {plan.changes.push_back({coordinate,value.before,value.after});}
+        if(!(value.before==value.after)) {plan.m_changes.push_back({coordinate,value.before,value.after});}
     }
     return plan;
 }

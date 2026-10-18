@@ -94,11 +94,29 @@ struct SmacBloomClassChange {SmacBloomTerrainCell cell;uint32_t native_dirty_mas
 // Cross-category conversion has additional effects and is a separate producer.
 SmacBloomClassChange ChangeSmacBloomClassOnly(SmacBloomTerrainCell cell,int32_t altitude,bool nonzero_turn,
     const std::function<int32_t()>& draw);
-struct SmacBloomTerrainPlan {
-    int32_t history,nominal_cell_budget;
-    uint32_t native_dirty_mask;
-    std::optional<std::array<int32_t,2>> fungus_cell;
-    std::vector<SmacBloomTerrainDelta> changes;
+// A completed producer result. Consumers can inspect/copy it, but cannot
+// forge deltas or combine two direct blooms into one event publication.
+class SmacBloomTerrainPlan {
+public:
+    SmacBloomTerrainPlan(const SmacBloomTerrainPlan&) = default;
+    SmacBloomTerrainPlan(SmacBloomTerrainPlan&&) = default;
+    SmacBloomTerrainPlan& operator=(const SmacBloomTerrainPlan&) = default;
+    SmacBloomTerrainPlan& operator=(SmacBloomTerrainPlan&&) = default;
+    int32_t History() const noexcept { return m_history; }
+    int32_t NominalCellBudget() const noexcept { return m_nominal_cell_budget; }
+    uint32_t NativeDirtyMask() const noexcept { return m_native_dirty_mask; }
+    bool NonzeroTurn() const noexcept { return m_nonzero_turn; }
+    const std::optional<std::array<int32_t,2>>& FungusCell() const noexcept { return m_fungus_cell; }
+    const std::vector<SmacBloomTerrainDelta>& Changes() const noexcept { return m_changes; }
+private:
+    SmacBloomTerrainPlan(int32_t history,bool nonzero_turn) : m_history(history),m_nonzero_turn(nonzero_turn) {}
+    int32_t m_history, m_nominal_cell_budget = 1;
+    uint32_t m_native_dirty_mask = 0;
+    std::optional<std::array<int32_t,2>> m_fungus_cell;
+    std::vector<SmacBloomTerrainDelta> m_changes;
+    bool m_nonzero_turn;
+    friend SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap&,int32_t,int32_t,bool,
+        const std::function<SmacBloomTerrainCell(int32_t,int32_t)>&,const std::function<int32_t()>&);
 };
 // Call only after a winner is selected. map.center is the selected square.
 // Stages H increment and complete class-only terrain changes, including the

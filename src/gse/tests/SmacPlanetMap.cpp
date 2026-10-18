@@ -12,6 +12,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <type_traits>
+#include "game/backend/SmacGameplayRandomState.h"
 
 namespace gse::tests {
 namespace {
@@ -50,8 +52,37 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
                 wire[at + 7] = static_cast<char>(0xa0 | cell.affiliation);
                 Put(wire, at + 8, cell.items & ~(3u | 0x800000u)); Put(wire, at + 12, cell.landmarks);
             } }
+            namespace b = game::backend::base;
+            const auto query = [&](int32_t x,int32_t y) {
+                if (x<0 || x>=row.map.width || y<0 || y>=row.map.height || ((x+y)&1)) {
+                    throw std::runtime_error("Invalid bloom producer query");
+                }
+                const auto found=cells.find({x,y});return found==cells.end() ? row.default_tile : found->second;
+            };
+            game::backend::SmacGameplayRandomState rng(1234,row.seed);size_t draws=0;
+            const auto draw = [&]() -> int32_t {
+                const auto raw=rng.NextCrtRaw15();
+                if(draws>=row.draws.size() || raw!=row.draws[draws].raw || rng.Crt()!=row.draws[draws].after) {
+                    throw std::runtime_error("Native saved-map CRT differs: "+std::string(row.id));
+                }
+                ++draws;return raw;
+            };
+            GT_ASSERT(b::AdmitSmacEcologyBloom(row.damage,row.perihelion,row.primary,row.secondary,draw), "Native bloom entry rejected");
+            const auto winner=b::SelectSmacEcologyBloom(row.map,row.base,row.bases,[&](int32_t x,int32_t y) {
+                const auto cell=query(x,y);uint32_t improvements=0;
+                for(const auto bit:std::array<std::pair<uint32_t,uint32_t>,5>{{
+                    {0x10,b::SmacEcologySquare::Mine},{0x40,b::SmacEcologySquare::Solar},{0x8000,b::SmacEcologySquare::Farm},
+                    {0x80000,b::SmacEcologySquare::SoilEnricher},{0x200000,b::SmacEcologySquare::Forest}}}) {
+                    if(cell.items&bit.first) {improvements|=bit.second;}
+                }
+                return b::SmacBloomTile{cell.altitude_class,bool(cell.items&0x20u),bool((cell.items&1u) && cell.affiliation<=7),improvements};
+            },draw);
+            GT_ASSERT(winner && winner->coordinate==row.winner, "Native saved-map winner differs");
+            auto region=row.map;region.center=winner->coordinate;
+            const auto plan=b::PrepareSmacBloomTerrain(region,row.history,row.difficulty,true,query,draw);
+            GT_ASSERT(draws==row.draws.size() && rng.Shared()==1234, "Saved-map producer changed RNG consumption");
             const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), true);
-            const auto prepared = original.WithBloomTerrain(row.changes, true);
+            const auto prepared = original.WithBloomTerrain(plan);
             auto expected = wire;
             for (const auto& delta : row.changes) {
                 const auto at = offset(delta.coordinate);
@@ -74,47 +105,30 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         }
         GT_OK();
     });
-    task->AddTest("SMAC Planet bloom authority rejects stale late peer and invalid deltas atomically", GT() {
+    task->AddTest("SMAC Planet bloom authority accepts only producer plans and rejects stale late peers atomically", GT() {
         using Policy = game::backend::map::GlsmacResourceMapPolicy;
-        using Delta = game::backend::base::SmacBloomTerrainDelta;
+        namespace b = game::backend::base;
+        using Plan = b::SmacBloomTerrainPlan;
+        static_assert(!std::is_default_constructible_v<Plan> && !std::is_aggregate_v<Plan>, "Only the producer constructs plans");
+        static_assert(std::is_same_v<decltype(std::declval<Plan&>().Changes()),const std::vector<b::SmacBloomTerrainDelta>&>,
+            "Consumers cannot mutate or concatenate producer deltas");
+        const auto plan=b::PrepareSmacBloomTerrain({{8,6},16,12,true},3,2,true,
+            [](int32_t,int32_t){return b::SmacBloomTerrainCell{0,0,0,0,15};},[]{return 1;});
+        GT_ASSERT(plan.NonzeroTurn() && plan.Changes().size()>1, "Expected a multi-peer producer plan");
         auto wire = Synthetic(); Put(wire, 15 + 0xa30, 4);
-        const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), false);
-        const Delta valid{{0,0},{0,0,0,0,0},{2,0,0x20,0,0}};
-        const auto rejects = [&](const std::vector<Delta>& changes) {
-            try { (void)original.WithBloomTerrain(changes, true); } catch (const std::exception&) { return true; }
-            return false;
-        };
-        auto stale = valid; stale.coordinate = {2,0}; stale.before.altitude_class = 1;
-        GT_ASSERT(rejects({valid,stale}) && original.OriginalPlanet()->Encode() == wire, "Late stale peer partly published");
-        auto bad = valid; bad.coordinate = {-1,1}; GT_ASSERT(rejects({valid,bad}), "Negative coordinate accepted");
-        bad = valid; bad.coordinate = {1,0}; GT_ASSERT(rejects({bad}), "Parity mismatch accepted");
-        GT_ASSERT(rejects({valid,valid}), "Duplicate coordinate accepted");
-        bad = valid; bad.before.items = 0x20; bad.after.items = 0; GT_ASSERT(rejects({bad}), "Bloom removed existing fungus");
-        bad = valid; bad.after.items = 0x10; GT_ASSERT(rejects({bad}), "Bloom created a Mine");
-        bad = valid; bad.before.items = 0x50; bad.after.items = 0x60; GT_ASSERT(rejects({bad}), "Bloom retained a removable improvement");
-        bad = valid; bad.after.items |= 1; GT_ASSERT(rejects({bad}), "Live Base presence copied into source metadata");
-        bad = valid; bad.after.altitude_class = 3; GT_ASSERT(rejects({bad}), "Unimplemented sea to land conversion accepted");
-        bad = valid; bad.after.affiliation = 1; GT_ASSERT(rejects({bad}), "Affiliation changed through terrain producer");
-        bad = valid; bad.after.rockiness = 3; GT_ASSERT(rejects({bad}), "Invalid rockiness accepted");
-        const auto admits = [&](const Delta& delta, bool nonzero_turn) {
-            auto source = wire; const auto at = Planet::PREFIX_BYTES + Planet::HEADER_BYTES;
-            source[at] = static_cast<char>(delta.before.altitude_class << 5);
-            source[at + 5] = static_cast<char>(delta.before.rockiness << 6);
-            Put(source, at + 12, delta.before.landmarks);
-            try { (void)Policy::InstalledPlanetV1(Planet::Decode(source), false).WithBloomTerrain({delta}, nonzero_turn); }
-            catch (const std::exception&) { return false; }
-            return true;
-        };
-        bad = {{0,0},{3,0,0,0,0},{7,2,0,4,0}};
-        GT_ASSERT(!admits(bad,true), "Bloom invented raised land, rockiness and landmarks");
-        bad = {{0,0},{7,2,0,0,0},{3,0,0,0x400000,0}};
-        GT_ASSERT(!admits(bad,true), "Bloom rockiness jumped by two");
-        bad = {{0,0},{3,0,0,0,0},{3,0,0,4,0}};
-        GT_ASSERT(!admits(bad,true), "Unchanged class invented a landmark");
-        bad = {{0,0},{6,2,0,0x01000082,0},{3,2,0,0x01000082,0}};
-        GT_ASSERT(admits(bad,false) && !admits(bad,true), "Class setter lost explicit turn-zero metadata authority");
-        bool rejected = false;
-        try { (void)Policy::DisplayedTerrainV1().WithBloomTerrain({valid}, true); } catch (const std::exception&) { rejected = true; }
+        const auto original=Policy::InstalledPlanetV1(Planet::Decode(wire),false);
+        const auto prepared=original.WithBloomTerrain(plan);
+        GT_ASSERT(original.OriginalPlanet()->Encode()==wire && prepared.OriginalPlanet()->Encode()!=wire,
+            "Detached producer plan failed to prepare changed authority");
+        const auto& late=plan.Changes().back();
+        const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+(size_t(late.coordinate[1])*40+size_t(late.coordinate[0])/2)*Planet::RECORD_BYTES;
+        wire[at]=static_cast<char>((late.before.altitude_class+1)<<5);
+        const auto stale=Policy::InstalledPlanetV1(Planet::Decode(wire),false);
+        bool rejected=false;
+        try { (void)stale.WithBloomTerrain(plan); } catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected && stale.OriginalPlanet()->Encode()==wire, "Late stale peer partly published");
+        rejected=false;
+        try { (void)Policy::DisplayedTerrainV1().WithBloomTerrain(plan); } catch(const std::exception&) {rejected=true;}
         GT_ASSERT(rejected, "Generated terrain invented original class authority");
         GT_OK();
     });

@@ -12,10 +12,12 @@ namespace loader {
 namespace texture {
 
 struct SmacMenuSource;
+struct SmacNativeBadgeSource;
 
 CLASS( SDL2, TextureLoader )
 	virtual ~SDL2();
 
+	types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override;
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
@@ -33,6 +35,7 @@ protected:
 
 private:
 	std::unordered_map< std::string, std::shared_ptr< SmacMenuSource > > m_smac_menu_sources;
+	std::unordered_map<std::string,std::shared_ptr<SmacNativeBadgeSource>> m_native_badge_sources;
 	void FixTransparency( types::texture::Texture* texture ) const;
 	void FixYellowShadows( types::texture::Texture* texture ) const;
 	void FixTexture( types::texture::Texture* texture ) const;

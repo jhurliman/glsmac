@@ -20,6 +20,7 @@ for (ruleset of ['smac', 'smax']) {
 	let starts = 0;
 	let selected = null;
 	let resets = 0;
+	let rule_selection = null;
 	let manager = null;
 	const sliding = {
 		show: (data) => { shown = data; manager.push('sliding', data); },
@@ -28,7 +29,7 @@ for (ruleset of ['smac', 'smax']) {
 	manager = #include('../default/ui/parts/mainmenu/manager')('sliding', sliding);
 	const glsmac = {
 		config: {},
-		game: {get_fm: () => { return {list: () => { return factions; }}; }},
+		game: {get_ruleset: () => { return ruleset; }, get_fm: () => { return {list: () => { return factions; }}; }},
 		start_game: (id) => { starts++; selected = id; },
 		reset: () => { resets++; },
 		exit: () => { throw TestError('Faction cancellation exited'); },
@@ -49,11 +50,12 @@ for (ruleset of ['smac', 'smax']) {
 			};
 		}},
 	});
-	const i = {glsmac: glsmac, popup: popup, sliding: sliding, steps: {select_faction: select_faction}};
+	const i = {settings: {global: {select_campaign_rules: (current) => { rule_selection = current; }}}, glsmac: glsmac, popup: popup, sliding: sliding, steps: {select_faction: select_faction}};
 	for (let rules_choice = 0; rules_choice < 2; rules_choice++) {
 		select_rules(i);
 		const rules = shown;
 		((rules.entries[rules_choice])[1])();
+		test.assert(rule_selection == (ruleset == 'smac' ? rules_choice == 1 : null));
 		test.assert(title == 'Select Faction' && starts == 0);
 		test.assert(#sizeof(choices.items) == (ruleset == 'smac' ? 8 : 15));
 		if (rules_choice == 0) { clicks.Cancel(); }

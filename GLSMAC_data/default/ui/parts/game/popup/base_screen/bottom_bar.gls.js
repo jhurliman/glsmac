@@ -79,8 +79,9 @@ return {
 	set: (data) => {
 
 		if (data.base.has_smac_resource_context) {
-			this.parts.production.set_stored(data.base.get_production_state());
-			this.parts.queue.set_unavailable();
+			const presentation = data.base.get_smac_production_presentation();
+			this.parts.production.set_stored(data.base.get_production_state(), presentation);
+			this.parts.queue.set_stored(presentation);
 		} else {
 			this.parts.production.set({
 				rows: 3,

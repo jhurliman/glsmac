@@ -56,8 +56,8 @@ return {
 		});
 	},
 
-	set_stored: (production) => {
-		this.production_title.text = 'PRODUCTION';
+	set_stored: (production, presentation) => {
+		this.production_title.text = #is_defined(presentation) ? presentation.name : 'UNAVAILABLE';
 		this.production_cells.clear();
 		this.production_cells.text({
 			class: 'base-screen-frame-text',

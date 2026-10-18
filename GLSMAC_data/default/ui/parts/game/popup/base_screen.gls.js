@@ -356,11 +356,14 @@ return {
 				text: #is_defined(selection) ? 'Choose production (stored: ' + #to_string(selection.minerals) + ')' : 'Production selection unavailable for this Base',
 			});
 			if (#is_defined(selection)) {
-				let top = 60;
+				this.production_choices = this.production_selection.listview({
+					left: 20, right: 20, top: 60, bottom: 12,
+					itemsize: 40, padding: 2, has_hscroll: false, has_vscroll: true,
+				});
 				for (choice of selection.choices) {
 					const selected = choice;
-					this.production_selection.button({
-						class: 'game-popup-button', left: 20, right: 20, top: top, height: 30,
+					this.production_choices.button({
+						class: 'game-popup-button', left: 0, right: 0,
 						text: selected.name + ' — ' + #to_string(selected.cost) + ' minerals',
 					}).on('click', () => {
 						this.production_choice = selected;
@@ -369,7 +372,6 @@ return {
 							+ ', after switch ' + #to_string(selected.minerals) + '. Select OK.';
 						return true;
 					});
-					top += 40;
 				}
 			}
 		}

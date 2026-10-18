@@ -256,6 +256,47 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base support presentation preserves live home order and retained pass without mutation", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,true);
+            fixture.ResourceState([](auto& state){state.social.factions.front().current[2]=-2;});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+            auto* wrap=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+            const auto query=[&]() {return static_cast<value::Object*>(Call(GSE_CALL,wrap,"get_smac_support_presentation"));};
+            GT_ASSERT(query()->Get("retained")->type==VT_UNDEFINED,"Read invented a retained resource pass");
+            base->RecalculateSmacWorkers(GSE_CALL,Roles(),SmacBaseResourcePhase::Upkeep);
+            auto* um=game->GetUM();
+            auto state=um->GetUnit(91)->Conventional();
+            for(const size_t id:{33u,12u,9u}) {
+                if(id==9) {state.home=game::backend::unit::ConventionalUnitState::Home::None;state.home_base_id.reset();}
+                um->SpawnConventionalUnit(GSE_CALL,id,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(6,6),state);
+            }
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            for(int repeat=0;repeat<3;++repeat) {
+                auto* view=query();auto* current=static_cast<value::Object*>(view->Get("current"));
+                auto* retained=static_cast<value::Object*>(view->Get("retained"));
+                const auto integer=[](value::Object* o,const std::string& key){return static_cast<value::Int*>(o->Get(key))->value;};
+                GT_ASSERT(integer(current,"eligible")==3 && integer(current,"paid")==2 && integer(current,"minerals")==2
+                    && integer(current,"free_allowance")==1,"Preview totals do not use actual support provider");
+                GT_ASSERT(integer(retained,"eligible")==1 && integer(retained,"minerals")==0,"Current query replaced historical support");
+                const auto& rows=static_cast<value::Array*>(current->Get("units"))->value;
+                const std::array<int64_t,3> expected_ids{91,33,12};
+                GT_ASSERT(rows.size()==3,"No-home Unit leaked into this Base roster");
+                for(size_t i=0;i<rows.size();++i) {
+                    auto* row=static_cast<value::Object*>(rows[i]);
+                    GT_ASSERT(integer(row,"id")==expected_ids[i] && integer(row,"home")==701
+                        && integer(row,"x")==6 && integer(row,"y")==6,"Roster lost saved order, actual home or location");
+                    GT_ASSERT(static_cast<value::String*>(row->Get("status"))->value==(i==0?"Free":"Paid")
+                        && integer(row,"minerals")==int64_t(i==0?0:1),"Free/paid Unit association changed");
+                }
+            }
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Support drawing changed world, history or RNG");
+            GT_OK();
+        });
+    });
+
+
     task->AddTest("SMAC Base production presentation leaves unresolved legacy records unavailable", [](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

@@ -68,6 +68,7 @@ return {
 	},
 
 	set: (data) => {
+		this.pages.support.set(data.base.get_smac_support_presentation());
 		this.pages.resource.set({
 			base: data.base,
 		});

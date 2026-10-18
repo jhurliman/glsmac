@@ -1,3 +1,4 @@
+const support_lines = #include('../support_lines');
 return {
 
 	init: (p) => {
@@ -21,11 +22,18 @@ return {
 		const body = this.frame.panel({
 			class: 'base-screen-body',
 		});
-		body.text({
-			class: 'base-screen-frame-text', align: 'top center',
-			text: 'Support details unavailable',
+		this.items = body.listview({
+			left: 3, right: 3, top: 3, bottom: 3, itemsize: 18,
+			has_hscroll: true, has_vscroll: true,
+			hscroll_class: 'default-scroll-h', vscroll_class: 'default-scroll-v',
 		});
 
 	},
 
+	set: (presentation) => {
+		this.items.clear();
+		for (line of support_lines(presentation, false)) {
+			this.items.text({class: 'base-screen-frame-text', text: line});
+		}
+	},
 };

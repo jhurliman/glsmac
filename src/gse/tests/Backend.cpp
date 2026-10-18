@@ -4942,6 +4942,14 @@ public:
             try {m_game.AdvanceTurn(static_cast<size_t>(INT32_MAX-2100)+1);}catch(const std::overflow_error&) {rejected=true;}
             GT_ASSERT(rejected && m_game.GetTurnId()==static_cast<size_t>(INT32_MAX-2100)
                 && m_game.m_simulation->value==before && observed.size()==4 && m_frontend_requests.empty(),"Calendar overflow partially advanced simulation or callbacks");
+            settings.map.type=settings::MapSettings::MT_MAPFILE;
+            for(const bool active:{false,true}) {
+                m_game.m_simulation->value.perihelion=active;
+                GT_ASSERT(m_game.PrepareSmacPerihelionForTurn(90)==std::optional<bool>{active}
+                    && m_game.PrepareSmacPerihelionForTurn(110)==std::optional<bool>{active}
+                    && m_game.PrepareSmacPerihelionForTurn(INT32_MAX)==std::optional<bool>{active},
+                    "Custom calendar applied ordinary origin or changed retained phase");
+            }
             m_game.ClearHandlers();GT_OK();
         });
     }

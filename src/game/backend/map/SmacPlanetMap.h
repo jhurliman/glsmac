@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace game::backend::base { class SmacBloomTerrainPlan; }
+
 namespace game::backend::map {
 
 // Bounded reader for the installed standard Planet v5 container. Keeps every
@@ -29,6 +31,9 @@ public:
     };
     static SmacPlanetMap Decode(const std::string& bytes);
     std::string Encode() const;
+    // Detached terrain publication: preserve contour/corners and every unrelated
+    // source byte. Live item/presence preconditions remain the caller's responsibility.
+    SmacPlanetMap WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
     int32_t OceanCoverageCategory() const;

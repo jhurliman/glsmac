@@ -28,6 +28,7 @@ GlsmacTerritoryTopology Map::PrepareFreshTerritoryTopology() const {
 		fertile.push_back(tile->moisture>tile::MOISTURE_ARID && tile->rockiness<=tile::ROCKINESS_ROLLING
 			&& !(tile->features&tile::FEATURE_XENOFUNGUS));
 	}}
-	return topology.WithTerrainPostpass(sea,fertile);
+	return topology.WithTerrainPostpass(sea,fertile).WithSiteRatings(smac_site::RatingCache::Fresh({
+		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true}));
 }
 }

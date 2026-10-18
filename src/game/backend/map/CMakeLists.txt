@@ -14,6 +14,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerKnowledge.cpp
 	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/SmacSiteQuality.cpp
+	${PWD}/SmacSiteRatingCache.cpp
 	${PWD}/GlsmacTerritoryTopology.cpp
 	${PWD}/MapTerritory.cpp
 	${PWD}/MapState.cpp

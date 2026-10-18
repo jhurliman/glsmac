@@ -298,6 +298,14 @@ public:
 		} );
 	}
 	void ProductionPresentations( const std::array< std::string, 4 >& roles ) { m_game.m_smac_presentations = roles; }
+	void SiteRatings(const std::string& packed) {
+		m_gse->GetGCSpace()->Accumulate(m_gse,[&]() {
+			auto* map=m_game.m_map;
+			if(!map || !map->m_territory_topology) {throw std::runtime_error("site-cache fixture requires admitted topology");}
+			map->m_territory_topology=map->m_territory_topology->WithSiteRatings(game::backend::map::smac_site::RatingCache::Restore({
+				static_cast<int32_t>(map->GetWidth()),static_cast<int32_t>(map->GetHeight()),true},packed));
+		});
+	}
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
@@ -5408,6 +5416,7 @@ void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::funct
 	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, {}, production_map ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
+void ConventionalUnitFixture::SiteRatings(const std::string& packed) {fixture->SiteRatings(packed);}
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }
 void ConventionalUnitFixture::CopyRoverDesign( int32_t simulation, int32_t design, int32_t source_simulation ) { fixture->ConventionalCopyRoverDesign( simulation, design, source_simulation ); }
 game::backend::SmacGameplayRandomState ConventionalUnitFixture::GameplayRandom() const { return fixture->ConventionalRandom(); }

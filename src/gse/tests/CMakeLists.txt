@@ -80,6 +80,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacWorkerKnowledge.cpp
 	${PWD}/SmacTerritoryRules.cpp
 	${PWD}/SmacSiteQuality.cpp
+	${PWD}/SmacSiteRatingCache.cpp
 	${PWD}/SmacLiveTerritory.cpp
 	${PWD}/SmacLiveWorkerKnowledge.cpp
 	${PWD}/SmacLiveWorkerAllocation.cpp

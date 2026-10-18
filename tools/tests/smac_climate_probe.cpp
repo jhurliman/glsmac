@@ -33,6 +33,7 @@ int main() {
         else if(mode=="rivers") {c::Rivers(world,streams);}
         else if(mode=="rainfall") {c::Rainfall(world,r);}
         else if(mode=="altitude") {c::RecalculateAltitudes(world,streams,context);}
+        else if(mode=="assign") {c::AssignSurfaceClass(world,sx,sy,category,streams,context);}
         else if(mode=="shape") {c::ShapeHeight(world,sx,sy,category,streams,context);}
         else if(mode=="volcano") {c::EcologyVolcano(world,sx,sy,streams,context);}
         else if(mode=="complete") {c::Recalculate(world,r,streams,context);}

@@ -8,6 +8,7 @@
 namespace game::backend::map::smac_climate {
 using Coordinate=std::array<int32_t,2>;
 struct Tile {
+    // Retained altitude uses all three bits (0..7); reconstruction classifies contours to0..6.
     int32_t elevation,temperature,moisture,contour,aux;
     uint32_t items,landmarks;
     int32_t cached_occupant=15,rockiness=0;

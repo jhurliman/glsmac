@@ -1,0 +1,8266 @@
+{
+  "research_id": "RE-SMAC-CLIMATE-CLASS7-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "semantic_reference_sha256": "a836678f91c01b0a626c84d8c3c9e36e6dcdafed80387ce05d0736023abd969a",
+  "river_height_boundaries": [
+    0,
+    20,
+    40,
+    60,
+    80,
+    100,
+    120,
+    140
+  ],
+  "contour_thresholds_for_requested7": [
+    0,
+    20,
+    40,
+    60,
+    80,
+    100,
+    120,
+    140,
+    160
+  ],
+  "requested7_center_resample": {
+    "before_class": 7,
+    "before_contour": 150,
+    "classifier_result": 6,
+    "lower": 140,
+    "next": 160,
+    "span": 20,
+    "CRT_raw": 38,
+    "after_class": 7,
+    "after_contour": 158
+  },
+  "cases": [
+    {
+      "id": "temperature_retained7",
+      "arguments": [],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 2,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 1052,
+      "shared_draws": 6365,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 1047026295,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 0,
+      "CRT_draws": [],
+      "final_class_counts": {
+        "3": 970,
+        "2": 1187,
+        "1": 578,
+        "0": 59,
+        "4": 342,
+        "5": 57,
+        "6": 2,
+        "7": 5
+      },
+      "temperature_entry_class_counts": [
+        {
+          "3": 970,
+          "2": 1187,
+          "1": 578,
+          "0": 59,
+          "4": 342,
+          "5": 57,
+          "6": 2,
+          "7": 5
+        }
+      ],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "0e784f8780cd67657fe52092a482487710b10d8b86f5dc8111ed21f529ade89e",
+      "after_map_sha256": "c184eaa5bea33e7c463243cae9bc6e9ecc9ffe32932f18010125cc92c4728bfa",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            33,
+            3
+          ],
+          "before": {
+            "elevation": 2,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 47,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 2,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 47,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            67,
+            3
+          ],
+          "before": {
+            "elevation": 1,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 20,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 1,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 20,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            52,
+            4
+          ],
+          "before": {
+            "elevation": 2,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 44,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 2,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 44,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            58,
+            4
+          ],
+          "before": {
+            "elevation": 1,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 25,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 1,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 25,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            4
+          ],
+          "before": {
+            "elevation": 1,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 36,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 1,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 36,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            66,
+            4
+          ],
+          "before": {
+            "elevation": 1,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 20,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 1,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 20,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            5,
+            5
+          ],
+          "before": {
+            "elevation": 1,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 21,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 1,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 21,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            11,
+            5
+          ],
+          "before": {
+            "elevation": 0,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 19,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 0,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 19,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 2,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          },
+          "after": {
+            "elevation": 2,
+            "temperature": 1,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "rainfall_retained7",
+      "arguments": [],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 9,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 0,
+      "CRT_draws": [],
+      "final_class_counts": {
+        "3": 970,
+        "2": 1187,
+        "1": 578,
+        "0": 59,
+        "4": 342,
+        "5": 57,
+        "6": 2,
+        "7": 5
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "0e784f8780cd67657fe52092a482487710b10d8b86f5dc8111ed21f529ade89e",
+      "after_map_sha256": "596ab7db39cd4b9e0fc6dd64b1a87a95bca268d7229f5d4419bc83a4eac8648a",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            20,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 2,
+            "contour": 48,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 48,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            22,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 2,
+            "contour": 55,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 1048576,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 1,
+            "contour": 55,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 1048576,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 1,
+            "moisture": 1,
+            "contour": 71,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 128,
+            "items": 1048576,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 1,
+            "moisture": 1,
+            "contour": 71,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 1048576,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            26,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 2,
+            "contour": 76,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 128,
+            "items": 1048608,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 1,
+            "contour": 76,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 1048608,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            30,
+            40
+          ],
+          "before": {
+            "elevation": 4,
+            "temperature": 1,
+            "moisture": 1,
+            "contour": 83,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 1048576,
+            "landmark_word": 406847489,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 1,
+            "moisture": 0,
+            "contour": 83,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 16,
+            "items": 1048576,
+            "landmark_word": 406847489,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            32,
+            40
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 1,
+            "moisture": 1,
+            "contour": 79,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 1048576,
+            "landmark_word": 440401921,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 1,
+            "moisture": 0,
+            "contour": 79,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 16,
+            "items": 1048576,
+            "landmark_word": 440401921,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            34,
+            40
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 1,
+            "contour": 71,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 1048608,
+            "landmark_word": 3795845121,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 71,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 16,
+            "items": 1048608,
+            "landmark_word": 3795845121,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            36,
+            40
+          ],
+          "before": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 1,
+            "contour": 80,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 1048608,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 80,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 16,
+            "items": 1048608,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "river_initial7_uphill7",
+      "arguments": [],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 97,
+      "shared_draws": 194,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 4188853922,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 0,
+      "CRT_draws": [],
+      "final_class_counts": {
+        "7": 3200
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "750e290f0bea52b1eba32eab9113e08284e6c73e8d784af36f5e2b4daa1e4ea2",
+      "after_map_sha256": "03484e230f4e8c2ab51330a94fac4d8064383c21400151356318d8342227ca1f",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            67,
+            13
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            69,
+            13
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            66,
+            14
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            68,
+            14
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            70,
+            14
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            65,
+            15
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            71,
+            15
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            64,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            70,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            63,
+            17
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            71,
+            17
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            18
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            70,
+            18
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            59,
+            19
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            63,
+            19
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            69,
+            19
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            58,
+            20
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            60,
+            20
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            20
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 640,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            68,
+            20
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            57,
+            21
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            61,
+            21
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            69,
+            21
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            56,
+            22
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            22
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            68,
+            22
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            49,
+            23
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            51,
+            23
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            55,
+            23
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            61,
+            23
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            69,
+            23
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            48,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            50,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            52,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            56,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            70,
+            24
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            47,
+            25
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            51,
+            25
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            55,
+            25
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            61,
+            25
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            71,
+            25
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            48,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            52,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            54,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            62,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            64,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            72,
+            26
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            45,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            47,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            53,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            63,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            65,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            67,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            69,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            71,
+            27
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            28
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            46,
+            28
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            66,
+            28
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            68,
+            28
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            70,
+            28
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            29
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            42,
+            30
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            30
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            31
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            45,
+            31
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            46,
+            32
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            33
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            47,
+            33
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            40,
+            34
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            42,
+            34
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            34
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            46,
+            34
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            39,
+            35
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            41,
+            35
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            45,
+            35
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            40,
+            36
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            41,
+            37
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            37
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            38,
+            38
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            42,
+            38
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            38
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            37,
+            39
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            39,
+            39
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 140,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            45,
+            39
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            36,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            40,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 100,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 256,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 100,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 384,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            40
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            37,
+            41
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            41
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            38,
+            42
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            40,
+            42
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            44,
+            42
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            39,
+            43
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            41,
+            43
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            43,
+            43
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            42,
+            44
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 110,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 128,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "assign_incoming7_to6",
+      "arguments": [
+        24,
+        16,
+        6
+      ],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 1,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 0,
+      "CRT_draws": [],
+      "final_class_counts": {
+        "7": 3199,
+        "6": 1
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "823937f64b1f7357cb95da068c24506aed3e4ba9ea275d5afd8db397ff78ccbf",
+      "after_map_sha256": "a13cc1c7a73ef735d681043bdbf10add7cd78b0541d4fa8cc4079aa0d394e8e8",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 6,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "assign_requested7",
+      "arguments": [
+        24,
+        16,
+        7
+      ],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 1,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 2531011,
+      "CRT_draws": [
+        38
+      ],
+      "final_class_counts": {
+        "3": 3199,
+        "7": 1
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "19527c66d842a867f62f8d9d29045f52012c0786d371019b0a8b6a1061b6e5f4",
+      "after_map_sha256": "454e16f392595a0f0847cddb0a0e00371e4a59f8c439e4900497e994a689dae8",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 6,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shape6_retains_neighbor7",
+      "arguments": [
+        24,
+        16,
+        6,
+        1
+      ],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 1,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 0,
+      "CRT_draws": [],
+      "final_class_counts": {
+        "7": 3199,
+        "6": 1
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "823937f64b1f7357cb95da068c24506aed3e4ba9ea275d5afd8db397ff78ccbf",
+      "after_map_sha256": "a13cc1c7a73ef735d681043bdbf10add7cd78b0541d4fa8cc4079aa0d394e8e8",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 6,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shape_requested7",
+      "arguments": [
+        24,
+        16,
+        7,
+        1
+      ],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 49,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 2188405923,
+      "CRT_draws": [
+        38,
+        7719,
+        21238,
+        2437,
+        8855,
+        11797,
+        8365,
+        32285,
+        10450,
+        30612,
+        5853,
+        28100,
+        1142,
+        281,
+        20537,
+        15921,
+        8945,
+        26285,
+        2997,
+        14680,
+        20976,
+        31891,
+        21655,
+        25906,
+        18457,
+        1323,
+        28881,
+        2240,
+        9725,
+        32278,
+        2446,
+        590,
+        840,
+        18587,
+        16907,
+        21237,
+        23611,
+        12617,
+        12456,
+        867,
+        29533,
+        6878,
+        28223,
+        17887,
+        31597,
+        20584,
+        12212,
+        31111,
+        7578,
+        17066,
+        7629,
+        29404,
+        12279,
+        13505,
+        24388,
+        11649,
+        12329,
+        7176,
+        2331,
+        19264,
+        22114,
+        14136,
+        26928,
+        1102,
+        21652,
+        8404,
+        24337,
+        27856,
+        5598,
+        24772,
+        14097,
+        13213,
+        4683,
+        16703,
+        15260,
+        15942,
+        2747,
+        27375,
+        28871,
+        18004,
+        16673,
+        3152,
+        11819,
+        23504,
+        239,
+        4186,
+        2804,
+        28937,
+        3023,
+        10335,
+        20533,
+        21393,
+        16020,
+        11574,
+        25983,
+        13961,
+        624
+      ],
+      "final_class_counts": {
+        "3": 3151,
+        "4": 24,
+        "5": 16,
+        "6": 8,
+        "7": 1
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "454e16f392595a0f0847cddb0a0e00371e4a59f8c439e4900497e994a689dae8",
+      "after_map_sha256": "74dfd3723522ac8843b207af10f47c6ab061e480eab047979cc8bdf4779f1f92",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            24,
+            10
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 50,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 83,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            23,
+            11
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 57,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 83,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            25,
+            11
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 51,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 89,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            22,
+            12
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 56,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 84,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            12
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 50,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 5,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 118,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            26,
+            12
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 52,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 99,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            21,
+            13
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 55,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 4,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 99,
+            "cached_occupant": 15,
+            "rockiness": 1,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4194304,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            23,
+            13
+          ],
+          "before": {
+            "elevation": 3,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 57,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 5,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 113,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 150,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 7,
+            "temperature": 2,
+            "moisture": 0,
+            "contour": 158,
+            "cached_occupant": 0,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 0,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "recalculate_altitudes_incoming7",
+      "arguments": [],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 3200,
+      "shared_draws": 0,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 2000,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 3107616359,
+      "CRT_draws": [
+        38,
+        7719,
+        21238,
+        2437,
+        8855,
+        11797,
+        8365,
+        32285,
+        10450,
+        30612,
+        5853,
+        28100,
+        1142,
+        281,
+        20537,
+        15921,
+        8945,
+        26285,
+        2997,
+        14680,
+        20976,
+        31891,
+        21655,
+        25906,
+        18457,
+        1323,
+        28881,
+        2240,
+        9725,
+        32278,
+        2446,
+        590,
+        840,
+        18587,
+        16907,
+        21237,
+        23611,
+        12617,
+        12456,
+        867,
+        29533,
+        6878,
+        28223,
+        17887,
+        31597,
+        20584,
+        12212,
+        31111,
+        7578,
+        17066,
+        7629,
+        29404,
+        12279,
+        13505,
+        24388,
+        11649,
+        12329,
+        7176,
+        2331,
+        19264,
+        22114,
+        14136,
+        26928,
+        1102,
+        21652,
+        8404,
+        24337,
+        27856,
+        5598,
+        24772,
+        14097,
+        13213,
+        4683,
+        16703,
+        15260,
+        15942,
+        2747,
+        27375,
+        28871,
+        18004,
+        16673,
+        3152,
+        11819,
+        23504,
+        239,
+        4186,
+        2804,
+        28937,
+        3023,
+        10335,
+        20533,
+        21393,
+        16020,
+        11574,
+        25983,
+        13961,
+        624,
+        7065,
+        27569,
+        12830,
+        24167,
+        12236,
+        31249,
+        23636,
+        15619,
+        25727,
+        12700,
+        24323,
+        14922,
+        22774,
+        6811,
+        12062,
+        3565,
+        25191,
+        119,
+        18747,
+        26050,
+        19620,
+        16334,
+        5968,
+        17524,
+        3577,
+        15046,
+        25531,
+        14458,
+        29272,
+        26530,
+        32134,
+        32581,
+        435,
+        11667,
+        29160,
+        26814,
+        9642,
+        976,
+        32527,
+        3823,
+        21094,
+        1768,
+        9244,
+        13824,
+        14021,
+        30807,
+        29296,
+        26726,
+        14263,
+        23640,
+        1062,
+        9047,
+        15080,
+        10747,
+        15328,
+        10113,
+        1183,
+        16759,
+        12743,
+        16891,
+        11494,
+        7361,
+        29133,
+        8572,
+        28651,
+        28254,
+        28470,
+        3019,
+        23974,
+        8821,
+        20822,
+        1910,
+        11452,
+        30248,
+        32156,
+        19911,
+        13475,
+        6436,
+        719,
+        6388,
+        21255,
+        3447,
+        18840,
+        8854,
+        16493,
+        14755,
+        11841,
+        26204,
+        6167,
+        24816,
+        26556,
+        32001,
+        5927,
+        30214,
+        24551,
+        9083,
+        22279,
+        31674,
+        24846,
+        17014,
+        1799,
+        26665,
+        15537,
+        2560,
+        26952,
+        15875,
+        20360,
+        30086,
+        5850,
+        20522,
+        1733,
+        19455,
+        20257,
+        25468,
+        19097,
+        28775,
+        22141,
+        8940,
+        29177,
+        5743,
+        10281,
+        6616,
+        9122,
+        12147,
+        32612,
+        10391,
+        18523,
+        9132,
+        31695,
+        10065,
+        29306,
+        11175,
+        25879,
+        11027,
+        24233,
+        24053,
+        20947,
+        8482,
+        29162,
+        17701,
+        13744,
+        13456,
+        22745,
+        4591,
+        6859,
+        12814,
+        11313,
+        15794,
+        2654,
+        24065,
+        16018,
+        12577,
+        26783,
+        28888,
+        30594,
+        17208,
+        18405,
+        11676,
+        24497,
+        9334,
+        30477,
+        18120,
+        17025,
+        2630,
+        20252,
+        1372,
+        2245,
+        11966,
+        1061,
+        26157,
+        12489,
+        30859,
+        32110,
+        8575,
+        1940,
+        24364,
+        30926,
+        20693,
+        1897,
+        24415,
+        32089,
+        9992,
+        32660,
+        5081,
+        24896,
+        28311,
+        26979,
+        17978,
+        26354,
+        16958,
+        3698,
+        3136,
+        13703,
+        13258,
+        25643,
+        17723,
+        12383,
+        21803,
+        16526,
+        3009,
+        29190,
+        22475,
+        19502,
+        28578,
+        28251,
+        13854,
+        21884,
+        3102,
+        32754,
+        7035,
+        26952,
+        20054,
+        25782,
+        32298,
+        21637,
+        1,
+        28115,
+        8126,
+        29517,
+        27232,
+        26323,
+        26532,
+        28965,
+        9588,
+        30726,
+        19453,
+        24193,
+        26478,
+        2088,
+        15529,
+        16267,
+        26727,
+        24894,
+        17572,
+        30752,
+        11857,
+        7361,
+        21910,
+        14619,
+        21806,
+        6910,
+        29093,
+        21207,
+        10112,
+        2493,
+        10126,
+        4335,
+        6912,
+        15905,
+        5364,
+        840,
+        1426,
+        26063,
+        25336,
+        22610,
+        7801,
+        21330,
+        28937,
+        11402,
+        8135,
+        27071,
+        8701,
+        29508,
+        7192,
+        27540,
+        32609,
+        23719,
+        23680,
+        12518,
+        9998,
+        23801,
+        23234,
+        2236,
+        14077,
+        14621,
+        11203,
+        18870,
+        11101,
+        15449,
+        28222,
+        22002,
+        25314,
+        31581,
+        4536,
+        5679,
+        15711,
+        18561,
+        2487,
+        12339,
+        2199,
+        15695,
+        16687,
+        31851,
+        12113,
+        32065,
+        25149,
+        32466,
+        24234,
+        5579,
+        17943,
+        26387,
+        5551,
+        8092,
+        8516,
+        23538,
+        21291,
+        1314,
+        16392,
+        5608,
+        21950,
+        4684,
+        26403,
+        3341,
+        8751,
+        12691,
+        11451,
+        15932,
+        17411,
+        31291,
+        23958,
+        19313,
+        31823,
+        29654,
+        17036,
+        31605,
+        21194,
+        13067,
+        23100,
+        23742,
+        15654,
+        13205,
+        23295,
+        3984,
+        20641,
+        5006,
+        4378,
+        31593,
+        12759,
+        5102,
+        27960,
+        29596,
+        14042,
+        591,
+        22295,
+        3900,
+        28548,
+        28659,
+        6273,
+        14395,
+        2060,
+        23047,
+        29822,
+        13779,
+        14808,
+        10025,
+        16072,
+        13861,
+        16018,
+        7721,
+        1919,
+        6945,
+        31102,
+        14860,
+        12062,
+        3749,
+        19211,
+        32599,
+        30382,
+        8681,
+        17064,
+        13962,
+        24633,
+        31770,
+        8920,
+        12266,
+        29570,
+        23621,
+        27529,
+        29827,
+        15091,
+        29303,
+        24226,
+        2158,
+        3287,
+        21539,
+        13019,
+        8784,
+        29897,
+        4035,
+        26833,
+        31779,
+        20844,
+        9154,
+        30298,
+        8505,
+        31325,
+        23706,
+        15381,
+        23933,
+        614,
+        24122,
+        31046,
+        12797,
+        27125,
+        23722,
+        12769,
+        29349,
+        21964,
+        18417,
+        15077,
+        29005,
+        7673,
+        28471,
+        24811,
+        23031,
+        18697,
+        24359,
+        23807,
+        9297,
+        18297,
+        32663,
+        2990,
+        16002,
+        877,
+        13419,
+        6752,
+        21794,
+        6308,
+        1462,
+        7913,
+        23690,
+        18604,
+        4899,
+        19802,
+        16207,
+        32594,
+        22164,
+        16413,
+        22025,
+        31581,
+        31240,
+        1601,
+        3161,
+        28540,
+        17602,
+        27666,
+        22314,
+        12156,
+        25512,
+        12781,
+        24630,
+        15806,
+        4329,
+        9554,
+        2764,
+        19689,
+        24290,
+        20539,
+        13777,
+        2524,
+        10819,
+        12972,
+        24326,
+        16871,
+        30573,
+        14988,
+        2952,
+        14650
+      ],
+      "final_class_counts": {
+        "3": 973,
+        "2": 1189,
+        "1": 578,
+        "0": 59,
+        "4": 342,
+        "5": 57,
+        "6": 2
+      },
+      "temperature_entry_class_counts": [],
+      "comparison_boundary": "complete pass return",
+      "before_map_sha256": "cf19c9de1243e03e96682e2399b6d8072f2173686dc2c7c340c68335a1744400",
+      "after_map_sha256": "dd8ba0bac7913436077f051fd91e185677cd0d0d8610273f5c89eabec311b878",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            2,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            4,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            6,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            8,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            10,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            12,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            14,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          },
+          "after": {
+            "elevation": 2,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "full_recalculate_incoming7",
+      "arguments": [],
+      "rules": {
+        "pattern": 27067,
+        "extra": 0,
+        "temperature": 1,
+        "rainfall": 1,
+        "latitude_divisor": 14,
+        "band_divisor": 14,
+        "jitter_divisor": 8,
+        "warming_divisor": 8,
+        "mountain_shadow": 5,
+        "hill_shadow": 3,
+        "shadow_step": 1
+      },
+      "changed_tiles": 3200,
+      "shared_draws": 6654,
+      "shared_seed_before": 2000,
+      "shared_seed_after": 3584441084,
+      "CRT_seed_before": 0,
+      "CRT_seed_after": 3107616359,
+      "CRT_draws": [
+        38,
+        7719,
+        21238,
+        2437,
+        8855,
+        11797,
+        8365,
+        32285,
+        10450,
+        30612,
+        5853,
+        28100,
+        1142,
+        281,
+        20537,
+        15921,
+        8945,
+        26285,
+        2997,
+        14680,
+        20976,
+        31891,
+        21655,
+        25906,
+        18457,
+        1323,
+        28881,
+        2240,
+        9725,
+        32278,
+        2446,
+        590,
+        840,
+        18587,
+        16907,
+        21237,
+        23611,
+        12617,
+        12456,
+        867,
+        29533,
+        6878,
+        28223,
+        17887,
+        31597,
+        20584,
+        12212,
+        31111,
+        7578,
+        17066,
+        7629,
+        29404,
+        12279,
+        13505,
+        24388,
+        11649,
+        12329,
+        7176,
+        2331,
+        19264,
+        22114,
+        14136,
+        26928,
+        1102,
+        21652,
+        8404,
+        24337,
+        27856,
+        5598,
+        24772,
+        14097,
+        13213,
+        4683,
+        16703,
+        15260,
+        15942,
+        2747,
+        27375,
+        28871,
+        18004,
+        16673,
+        3152,
+        11819,
+        23504,
+        239,
+        4186,
+        2804,
+        28937,
+        3023,
+        10335,
+        20533,
+        21393,
+        16020,
+        11574,
+        25983,
+        13961,
+        624,
+        7065,
+        27569,
+        12830,
+        24167,
+        12236,
+        31249,
+        23636,
+        15619,
+        25727,
+        12700,
+        24323,
+        14922,
+        22774,
+        6811,
+        12062,
+        3565,
+        25191,
+        119,
+        18747,
+        26050,
+        19620,
+        16334,
+        5968,
+        17524,
+        3577,
+        15046,
+        25531,
+        14458,
+        29272,
+        26530,
+        32134,
+        32581,
+        435,
+        11667,
+        29160,
+        26814,
+        9642,
+        976,
+        32527,
+        3823,
+        21094,
+        1768,
+        9244,
+        13824,
+        14021,
+        30807,
+        29296,
+        26726,
+        14263,
+        23640,
+        1062,
+        9047,
+        15080,
+        10747,
+        15328,
+        10113,
+        1183,
+        16759,
+        12743,
+        16891,
+        11494,
+        7361,
+        29133,
+        8572,
+        28651,
+        28254,
+        28470,
+        3019,
+        23974,
+        8821,
+        20822,
+        1910,
+        11452,
+        30248,
+        32156,
+        19911,
+        13475,
+        6436,
+        719,
+        6388,
+        21255,
+        3447,
+        18840,
+        8854,
+        16493,
+        14755,
+        11841,
+        26204,
+        6167,
+        24816,
+        26556,
+        32001,
+        5927,
+        30214,
+        24551,
+        9083,
+        22279,
+        31674,
+        24846,
+        17014,
+        1799,
+        26665,
+        15537,
+        2560,
+        26952,
+        15875,
+        20360,
+        30086,
+        5850,
+        20522,
+        1733,
+        19455,
+        20257,
+        25468,
+        19097,
+        28775,
+        22141,
+        8940,
+        29177,
+        5743,
+        10281,
+        6616,
+        9122,
+        12147,
+        32612,
+        10391,
+        18523,
+        9132,
+        31695,
+        10065,
+        29306,
+        11175,
+        25879,
+        11027,
+        24233,
+        24053,
+        20947,
+        8482,
+        29162,
+        17701,
+        13744,
+        13456,
+        22745,
+        4591,
+        6859,
+        12814,
+        11313,
+        15794,
+        2654,
+        24065,
+        16018,
+        12577,
+        26783,
+        28888,
+        30594,
+        17208,
+        18405,
+        11676,
+        24497,
+        9334,
+        30477,
+        18120,
+        17025,
+        2630,
+        20252,
+        1372,
+        2245,
+        11966,
+        1061,
+        26157,
+        12489,
+        30859,
+        32110,
+        8575,
+        1940,
+        24364,
+        30926,
+        20693,
+        1897,
+        24415,
+        32089,
+        9992,
+        32660,
+        5081,
+        24896,
+        28311,
+        26979,
+        17978,
+        26354,
+        16958,
+        3698,
+        3136,
+        13703,
+        13258,
+        25643,
+        17723,
+        12383,
+        21803,
+        16526,
+        3009,
+        29190,
+        22475,
+        19502,
+        28578,
+        28251,
+        13854,
+        21884,
+        3102,
+        32754,
+        7035,
+        26952,
+        20054,
+        25782,
+        32298,
+        21637,
+        1,
+        28115,
+        8126,
+        29517,
+        27232,
+        26323,
+        26532,
+        28965,
+        9588,
+        30726,
+        19453,
+        24193,
+        26478,
+        2088,
+        15529,
+        16267,
+        26727,
+        24894,
+        17572,
+        30752,
+        11857,
+        7361,
+        21910,
+        14619,
+        21806,
+        6910,
+        29093,
+        21207,
+        10112,
+        2493,
+        10126,
+        4335,
+        6912,
+        15905,
+        5364,
+        840,
+        1426,
+        26063,
+        25336,
+        22610,
+        7801,
+        21330,
+        28937,
+        11402,
+        8135,
+        27071,
+        8701,
+        29508,
+        7192,
+        27540,
+        32609,
+        23719,
+        23680,
+        12518,
+        9998,
+        23801,
+        23234,
+        2236,
+        14077,
+        14621,
+        11203,
+        18870,
+        11101,
+        15449,
+        28222,
+        22002,
+        25314,
+        31581,
+        4536,
+        5679,
+        15711,
+        18561,
+        2487,
+        12339,
+        2199,
+        15695,
+        16687,
+        31851,
+        12113,
+        32065,
+        25149,
+        32466,
+        24234,
+        5579,
+        17943,
+        26387,
+        5551,
+        8092,
+        8516,
+        23538,
+        21291,
+        1314,
+        16392,
+        5608,
+        21950,
+        4684,
+        26403,
+        3341,
+        8751,
+        12691,
+        11451,
+        15932,
+        17411,
+        31291,
+        23958,
+        19313,
+        31823,
+        29654,
+        17036,
+        31605,
+        21194,
+        13067,
+        23100,
+        23742,
+        15654,
+        13205,
+        23295,
+        3984,
+        20641,
+        5006,
+        4378,
+        31593,
+        12759,
+        5102,
+        27960,
+        29596,
+        14042,
+        591,
+        22295,
+        3900,
+        28548,
+        28659,
+        6273,
+        14395,
+        2060,
+        23047,
+        29822,
+        13779,
+        14808,
+        10025,
+        16072,
+        13861,
+        16018,
+        7721,
+        1919,
+        6945,
+        31102,
+        14860,
+        12062,
+        3749,
+        19211,
+        32599,
+        30382,
+        8681,
+        17064,
+        13962,
+        24633,
+        31770,
+        8920,
+        12266,
+        29570,
+        23621,
+        27529,
+        29827,
+        15091,
+        29303,
+        24226,
+        2158,
+        3287,
+        21539,
+        13019,
+        8784,
+        29897,
+        4035,
+        26833,
+        31779,
+        20844,
+        9154,
+        30298,
+        8505,
+        31325,
+        23706,
+        15381,
+        23933,
+        614,
+        24122,
+        31046,
+        12797,
+        27125,
+        23722,
+        12769,
+        29349,
+        21964,
+        18417,
+        15077,
+        29005,
+        7673,
+        28471,
+        24811,
+        23031,
+        18697,
+        24359,
+        23807,
+        9297,
+        18297,
+        32663,
+        2990,
+        16002,
+        877,
+        13419,
+        6752,
+        21794,
+        6308,
+        1462,
+        7913,
+        23690,
+        18604,
+        4899,
+        19802,
+        16207,
+        32594,
+        22164,
+        16413,
+        22025,
+        31581,
+        31240,
+        1601,
+        3161,
+        28540,
+        17602,
+        27666,
+        22314,
+        12156,
+        25512,
+        12781,
+        24630,
+        15806,
+        4329,
+        9554,
+        2764,
+        19689,
+        24290,
+        20539,
+        13777,
+        2524,
+        10819,
+        12972,
+        24326,
+        16871,
+        30573,
+        14988,
+        2952,
+        14650
+      ],
+      "final_class_counts": {
+        "3": 973,
+        "2": 1189,
+        "1": 578,
+        "0": 59,
+        "4": 342,
+        "5": 57,
+        "6": 2
+      },
+      "temperature_entry_class_counts": [
+        {
+          "3": 973,
+          "2": 1189,
+          "1": 578,
+          "0": 59,
+          "4": 342,
+          "5": 57,
+          "6": 2
+        }
+      ],
+      "comparison_boundary": "first four terrain passes before region rebuild",
+      "before_map_sha256": "cf19c9de1243e03e96682e2399b6d8072f2173686dc2c7c340c68335a1744400",
+      "after_map_sha256": "40eabedd13202b9e5eb0a8f285482da36cf5fba6b4279c8778be35b24260a36e",
+      "literal_changed_tiles": [
+        {
+          "position": [
+            0,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            2,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            4,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            6,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            8,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            10,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            12,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            14,
+            0
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "after": {
+            "elevation": 3,
+            "temperature": 0,
+            "moisture": 0,
+            "contour": 60,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 0,
+            "items": 0,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "position": [
+            24,
+            16
+          ],
+          "before": {
+            "elevation": 7,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          },
+          "after": {
+            "elevation": 2,
+            "temperature": 0,
+            "moisture": 2,
+            "contour": 40,
+            "cached_occupant": 15,
+            "rockiness": 0,
+            "aux": 128,
+            "items": 32,
+            "landmark_word": 4282384384,
+            "remembered_items": [
+              32,
+              32,
+              32,
+              32,
+              32,
+              32,
+              32
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "scope": "Nine bounded complete native calls compared to unchanged independent reference with supplied full source tables. Synthetic retained class7 maps and mixed prepared Planet inputs; no import narrowing, original result patch, new whole campaign or general out-of-range class admission.",
+  "passed": true
+}

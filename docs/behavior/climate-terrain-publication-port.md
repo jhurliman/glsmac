@@ -42,3 +42,12 @@ assumes coherent counts, so that retained intermediate state needs an explicit
 representation and repair at the original later producer. Do not replace the
 source flood with an eager allocation/resource recalculation. Deletion likewise
 needs old-surface Unit cleanup, home/reference repair and no invented HQ move.
+
+Codex review exposed retained altitude band7, which fresh import already admits.
+The [original controls](climate-retained-class7.md) confirm that export, save and
+standalone consumers preserve all three altitude bits. Rivers uses lower bound140;
+requested band7 shaping uses contour endpoints140/160. Only ordinary altitude
+reconstruction guarantees output0..6. The production model now retains those
+separate contracts. Nine additional full-plane original controls pass through
+the model and container under ASan/UBSan, for43 total; two native test groups
+exercise retained V2 roundtrip, invalid band8 rejection and the table boundaries.

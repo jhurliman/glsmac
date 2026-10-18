@@ -34,6 +34,30 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet retained altitude band7 survives policy publication and altitude reconstruction",GT(){
+        namespace c=game::backend::map::smac_climate;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;
+            wire[at]=static_cast<char>((7u<<5)|(1u<<3)|2u);wire[at+1]=static_cast<char>(140);
+            wire[at+2]=static_cast<char>(0xaf);wire[at+5]=static_cast<char>(0x80);
+        }
+        const auto original=Policy::InstalledPlanetV1(Planet::Decode(wire),true);
+        auto world=original.OriginalPlanet()->ExportClimateTerrain(true);
+        GT_ASSERT(world.tiles.front().elevation==7 && world.tiles.back().elevation==7,"Retained altitude band7 was lost on export");
+        const auto retained=original.WithClimateTerrain(world,0,0);
+        GT_ASSERT(retained.OriginalPlanet()->Encode()==wire && Policy::Deserialize(retained.Serialize().ToString())==retained,
+            "Retained altitude band7 failed byte-exact publication or V2 save roundtrip");
+        auto invalid=world;invalid.tiles.back().elevation=8;bool rejected=false;
+        try {(void)original.WithClimateTerrain(invalid,0,0);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected && original.OriginalPlanet()->Encode()==wire,"Unencodable altitude partly changed original policy");
+        game::backend::SmacGameplayRandomState state(123,456);c::Streams streams{state};
+        c::RecalculateAltitudes(world,streams,{0,90,true,[](const auto&,int32_t,int32_t){return false;},{},{}});
+        GT_ASSERT(streams.shared_draws==0 && streams.crt_draws==0,"Uniform retained band7 reconstruction consumed unexpected randomness");
+        for(const auto& tile:world.tiles) {GT_ASSERT(tile.elevation==6 && tile.contour==140,"Altitude reconstruction did not classify retained band7 contour to6");}
+        GT_OK();
+    });
+
     task->AddTest("SMAC Planet climate publication preserves opaque bytes and retained policy history",GT(){
         namespace c=game::backend::map::smac_climate;using Policy=game::backend::map::GlsmacResourceMapPolicy;
         auto wire=Synthetic();Put(wire,15+0xa30,4);wire[15+0x30]=93;

@@ -1,0 +1,2201 @@
+{
+  "research_id": "RE-SMAC-BASE-RENAME-001",
+  "scope": "29 complete native handlers with supplied text-dialog choices/results;14 actual setter/modal-finalization controls;4 actual handler-to-codec roundtrips. Inspector/per-view rendering supplied; no full original GUI continuity.",
+  "text_profile": {
+    "max_data_bytes": 24,
+    "nul_terminated": true,
+    "narrow_bytes_preserved": true,
+    "case_fold": false,
+    "trim": false,
+    "duplicate_check": false,
+    "keyboard_clipboard_IME_admission_not_established": true
+  },
+  "handler_cases": [
+    {
+      "id": "ordinary_rename",
+      "inputs": {
+        "text_hex": "4e6577204e616d65"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "empty_accepted_text",
+      "inputs": {
+        "text_hex": ""
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "spaces_only_accepted_text",
+      "inputs": {
+        "text_hex": "202020"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "202020",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "202020",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "leading_trailing_spaces",
+      "inputs": {
+        "text_hex": "204e6577204e616d6520"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "204e6577204e616d6520",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "204e6577204e616d6520",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "same_name",
+      "inputs": {
+        "text_hex": "476169612773204c616e64696e67"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "476169612773204c616e64696e67",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "exact_duplicate",
+      "inputs": {
+        "text_hex": "5477696e",
+        "duplicate": "5477696e"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "5477696e",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "5477696e",
+      "base_count": 2,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "case_only_duplicate",
+      "inputs": {
+        "text_hex": "7477696e",
+        "duplicate": "5477696e"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "7477696e",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "7477696e",
+      "base_count": 2,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "foreign_duplicate",
+      "inputs": {
+        "text_hex": "5477696e",
+        "duplicate": "5477696e",
+        "duplicate_owner": 2
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "5477696e",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "5477696e",
+      "base_count": 2,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "ansi_high_bytes",
+      "inputs": {
+        "text_hex": "436166e92080"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "436166e92080",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "436166e92080",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "embedded_nul_accepted_buffer",
+      "inputs": {
+        "text_hex": "4e65770049676e6f726564"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "twenty_four_accepted_bytes",
+      "inputs": {
+        "text_hex": "585858585858585858585858585858585858585858585858"
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "585858585858585858585858585858585858585858585858",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "585858585858585858585858585858585858585858585858",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "cancel",
+      "inputs": {
+        "text_hex": "49676e6f726564",
+        "modal": -1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": true,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": -1
+        },
+        {
+          "event": "release_Base_Control"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "nonzero_modal_refuses",
+      "inputs": {
+        "text_hex": "49676e6f726564",
+        "modal": 1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": true,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 1
+        },
+        {
+          "event": "release_Base_Control"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "foreign_owner_refused",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "owner": 2,
+        "former": 2
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": false,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "editor_foreign_owner_allowed",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "owner": 2,
+        "former": 2,
+        "editor": true
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "network_busy_refused",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "network": 1,
+        "busy": 1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": false,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "network_pending_control_refused",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "network": 1,
+        "pending_control": 1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": false,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_from_ai",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_from_human",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "human_mask": 6
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 1
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_same_name",
+      "inputs": {
+        "text_hex": "476169612773204c616e64696e67",
+        "former": 2,
+        "relation": 34
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 1
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "476169612773204c616e64696e67",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_friction_clamp",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "friction": 19
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 19,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 20,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_active_diplomacy_mirror",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "mirror": true
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 0,
+        "active_context_counter": 10
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 0,
+        "active_context_counter": 13
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_cancel",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34,
+        "modal": -1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "476169612773204c616e64696e67",
+      "dialog_admitted": true,
+      "name_committed": false,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": -1
+        },
+        {
+          "event": "release_Base_Control"
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": null,
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_seed_1",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34,
+        "seed": 1
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 0
+        },
+        {
+          "event": "set_relationship_marker",
+          "arguments": [
+            2,
+            1,
+            1024,
+            1
+          ]
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 1058,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_seed_2",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34,
+        "seed": 2
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 1
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_seed_3",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34,
+        "seed": 3
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 0
+        },
+        {
+          "event": "set_relationship_marker",
+          "arguments": [
+            2,
+            1,
+            1024,
+            1
+          ]
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 1058,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "captured_ai_pact_seed_4",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "former": 2,
+        "relation": 34,
+        "seed": 4
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "former_owner_counter_update",
+          "arguments": [
+            2,
+            1,
+            3
+          ]
+        },
+        {
+          "event": "shared_RNG_call"
+        },
+        {
+          "event": "after_shared_RNG",
+          "native_result": 1
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        }
+      ],
+      "shared_RNG_calls": 1,
+      "diplo_before": {
+        "friction": 0,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 3,
+        "relation": 34,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    },
+    {
+      "id": "map_view_dispatch_and_header",
+      "inputs": {
+        "text_hex": "4e6577204e616d65",
+        "view_test": true
+      },
+      "name_before_hex": "476169612773204c616e64696e67",
+      "name_after_hex": "4e6577204e616d65",
+      "dialog_admitted": true,
+      "name_committed": true,
+      "events": [
+        {
+          "event": "after_native_selection_resource_preflight"
+        },
+        {
+          "event": "acquire_Base_Control"
+        },
+        {
+          "event": "after_control_acquisition"
+        },
+        {
+          "event": "supplied_modal",
+          "max_bytes": 24,
+          "default_name_hex": "476169612773204c616e64696e67",
+          "supplied_result": 0
+        },
+        {
+          "event": "before_name_commit"
+        },
+        {
+          "event": "after_name_commit"
+        },
+        {
+          "event": "release_Base_Control"
+        },
+        {
+          "event": "inspector_name_redraw",
+          "arguments": [
+            1
+          ]
+        },
+        {
+          "event": "map_redraw_request",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ]
+        },
+        {
+          "event": "map_view_redraw",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ],
+          "view_slot": 0
+        },
+        {
+          "event": "map_view_redraw",
+          "arguments": [
+            16,
+            16,
+            3,
+            2
+          ],
+          "view_slot": 2
+        }
+      ],
+      "shared_RNG_calls": 0,
+      "diplo_before": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "diplo_after": {
+        "friction": 5,
+        "relation": 0,
+        "active_context_counter": 0
+      },
+      "header_copy_hex": "4e6577204e616d65",
+      "base_count": 1,
+      "selected_base": 0,
+      "other_base_records_preserved": true,
+      "naming_counters_preserved": true
+    }
+  ],
+  "text_control_cases": [
+    {
+      "id": "empty",
+      "supplied_input_hex": "",
+      "max_bytes": 24,
+      "widget_text_hex": "",
+      "source_after_hex": "",
+      "widget_stored_length": 0,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": ""
+    },
+    {
+      "id": "space",
+      "supplied_input_hex": "20",
+      "max_bytes": 24,
+      "widget_text_hex": "20",
+      "source_after_hex": "20",
+      "widget_stored_length": 1,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "20"
+    },
+    {
+      "id": "whitespace",
+      "supplied_input_hex": "202020",
+      "max_bytes": 24,
+      "widget_text_hex": "202020",
+      "source_after_hex": "202020",
+      "widget_stored_length": 3,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "202020"
+    },
+    {
+      "id": "leading_trailing",
+      "supplied_input_hex": "204e616d6520",
+      "max_bytes": 24,
+      "widget_text_hex": "204e616d6520",
+      "source_after_hex": "204e616d6520",
+      "widget_stored_length": 6,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "204e616d6520"
+    },
+    {
+      "id": "length23",
+      "supplied_input_hex": "4141414141414141414141414141414141414141414141",
+      "max_bytes": 24,
+      "widget_text_hex": "4141414141414141414141414141414141414141414141",
+      "source_after_hex": "4141414141414141414141414141414141414141414141",
+      "widget_stored_length": 23,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "4141414141414141414141414141414141414141414141"
+    },
+    {
+      "id": "length24",
+      "supplied_input_hex": "424242424242424242424242424242424242424242424242",
+      "max_bytes": 24,
+      "widget_text_hex": "424242424242424242424242424242424242424242424242",
+      "source_after_hex": "424242424242424242424242424242424242424242424242",
+      "widget_stored_length": 24,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "424242424242424242424242424242424242424242424242"
+    },
+    {
+      "id": "length25",
+      "supplied_input_hex": "43434343434343434343434343434343434343434343434343",
+      "max_bytes": 24,
+      "widget_text_hex": "434343434343434343434343434343434343434343434343",
+      "source_after_hex": "434343434343434343434343434343434343434343434343",
+      "widget_stored_length": 24,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "434343434343434343434343434343434343434343434343"
+    },
+    {
+      "id": "length80",
+      "supplied_input_hex": "4444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444",
+      "max_bytes": 24,
+      "widget_text_hex": "444444444444444444444444444444444444444444444444",
+      "source_after_hex": "444444444444444444444444444444444444444444444444",
+      "widget_stored_length": 24,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "444444444444444444444444444444444444444444444444"
+    },
+    {
+      "id": "ansi",
+      "supplied_input_hex": "436166e92080",
+      "max_bytes": 24,
+      "widget_text_hex": "436166e92080",
+      "source_after_hex": "436166e92080",
+      "widget_stored_length": 6,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "436166e92080"
+    },
+    {
+      "id": "utf8_bytes",
+      "supplied_input_hex": "43616665c3a9",
+      "max_bytes": 24,
+      "widget_text_hex": "43616665c3a9",
+      "source_after_hex": "43616665c3a9",
+      "widget_stored_length": 6,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "43616665c3a9"
+    },
+    {
+      "id": "utf8_split",
+      "supplied_input_hex": "5858585858585858585858585858585858585858585858c3a9",
+      "max_bytes": 24,
+      "widget_text_hex": "5858585858585858585858585858585858585858585858c3",
+      "source_after_hex": "5858585858585858585858585858585858585858585858c3",
+      "widget_stored_length": 24,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "5858585858585858585858585858585858585858585858c3"
+    },
+    {
+      "id": "embedded_nul",
+      "supplied_input_hex": "416c706861004f6d656761",
+      "max_bytes": 24,
+      "widget_text_hex": "416c706861",
+      "source_after_hex": "416c706861",
+      "widget_stored_length": 5,
+      "supplied_modal_result": 0,
+      "rename_modal_return": 0,
+      "committed_dialog_buffer_hex": "416c706861"
+    },
+    {
+      "id": "cancelled_nonempty",
+      "supplied_input_hex": "49676e6f726564",
+      "max_bytes": 24,
+      "widget_text_hex": "49676e6f726564",
+      "source_after_hex": "49676e6f726564",
+      "widget_stored_length": 7,
+      "supplied_modal_result": 1,
+      "rename_modal_return": -1,
+      "committed_dialog_buffer_hex": "49676e6f726564"
+    },
+    {
+      "id": "cancelled_empty",
+      "supplied_input_hex": "",
+      "max_bytes": 24,
+      "widget_text_hex": "",
+      "source_after_hex": "",
+      "widget_stored_length": 0,
+      "supplied_modal_result": 1,
+      "rename_modal_return": -1,
+      "committed_dialog_buffer_hex": ""
+    }
+  ],
+  "ordinary_file_roundtrips": [
+    {
+      "id": "empty",
+      "names_before": [
+        ""
+      ],
+      "names_after": [
+        ""
+      ],
+      "save_return": 0,
+      "load_return": 0,
+      "save_load_rng": []
+    },
+    {
+      "id": "ansi",
+      "names_before": [
+        "436166e92080"
+      ],
+      "names_after": [
+        "436166e92080"
+      ],
+      "save_return": 0,
+      "load_return": 0,
+      "save_load_rng": []
+    },
+    {
+      "id": "length24",
+      "names_before": [
+        "585858585858585858585858585858585858585858585858"
+      ],
+      "names_after": [
+        "585858585858585858585858585858585858585858585858"
+      ],
+      "save_return": 0,
+      "load_return": 0,
+      "save_load_rng": []
+    },
+    {
+      "id": "duplicate",
+      "names_before": [
+        "5477696e",
+        "5477696e"
+      ],
+      "names_after": [
+        "5477696e",
+        "5477696e"
+      ],
+      "save_return": 0,
+      "load_return": 0,
+      "save_load_rng": []
+    }
+  ],
+  "validation": {
+    "complete_native_handlers": 29,
+    "native_text_setter_and_modal_fragments": 14,
+    "complete_save_load_roundtrips": 4,
+    "independent_archived_output_checks_passed": true
+  }
+}

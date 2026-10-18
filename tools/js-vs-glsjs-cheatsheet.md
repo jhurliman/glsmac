@@ -27,3 +27,9 @@ Other builtin-side array/collection operators exist beyond push
 against real usage — only `:+` / `[]=` push are confirmed
 (`src/gse/parser/JS.cpp:912`, `GLSMAC_data/tests/async.gls.js`). Grep
 `GLSMAC_data/tests/*.gls.js` for real usage before relying on the rest.
+
+## DOM callbacks and narrow string ranges
+
+DOM `.on` callbacks must return a Boolean, including `change` and `input`. A missing return is Undefined and fails when the real event fires; assert this contract in UI doubles. Game-object listeners have a separate return contract.
+
+Ranges use `::`, not `:`. String slicing operates on an expression (for example, concatenate an empty string before taking `[0::24]`); a bare variable range follows the array-reference path. `#sizeof` currently accepts arrays only, not strings or objects (`src/gse/builtins/Common.cpp`).

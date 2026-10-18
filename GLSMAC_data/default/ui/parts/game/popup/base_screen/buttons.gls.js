@@ -10,13 +10,11 @@ return {
 	show_default: () => {
 		this.hide_buttons();
 
-		const btn_rename = this.frame.text({
-			class: 'base-screen-frame-text',
-			top: 5,
-			align: 'left',
-			left: 3,
-			text: 'Rename unavailable',
-		});
+        let btn_rename = null;
+        if (this.p.utils.can_rename()) {
+            btn_rename = this.frame.button({class: 'base-screen-popup-bottom-button', align: 'left', left: 3, width: 210, text: 'RENAME'});
+            btn_rename.on('click', () => { this.p.utils.open_rename(); return true; });
+        } else { btn_rename = this.frame.text({class: 'base-screen-frame-text', top: 5, align: 'left', left: 3, text: 'Rename unavailable'}); }
 		const btn_ok = this.frame.button({
 			class: 'base-screen-popup-bottom-button',
 			align: 'right',

@@ -478,6 +478,14 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_rename_state",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS(0);
+			if(!CanSmacRename()) {return VALUE(gse::value::Undefined);}
+			return VALUE(gse::value::String,,SmacSpecialistSelectionState());
+		})
+	},
+	{
 		"get_smac_specialist_selection_state",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );

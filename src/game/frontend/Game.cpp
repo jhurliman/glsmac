@@ -2204,17 +2204,20 @@ void Game::UpdateMinimap() {
 
 	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	camera->SetAngle( m_camera->GetAngle() );
+	// The capture FBO has its own viewport. Fit this camera to the entire
+	// target, independently of the presentation window and its aspect ratio.
+	camera->SetCustomAspectRatio( 1.0f );
 	camera->SetScale(
 		{
-			minimap_size.x / (float)m_viewport.window_width / m_viewport.window_aspect_ratio / (float)m_map_data.width * 2.0f,
-			minimap_size.y / (float)m_viewport.window_height / (float)( m_map_data.height + 1 ) * 2.82f,
+			2.0f / (float)m_map_data.width,
+			2.82f / (float)( m_map_data.height + 1 ),
 			0.01f,
 		}
 	);
 	camera->SetPosition(
 		{
 			0.0f,
-			1.014f - ( minimap_size.y / 2.0f / (float)m_viewport.window_height ),
+			0.514f,
 			0.5f
 		}
 	);

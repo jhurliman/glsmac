@@ -183,6 +183,11 @@ INCLUDE( CTest )
 IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" ) )
 	ADD_TEST( NAME gse COMMAND ${PROJECT_NAME} --gse-tests --quiet --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data" )
 	SET_TESTS_PROPERTIES( gse PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 300 )
+	# The growing Debug suite reaches its final native groups at the five-minute
+	# limit on hosted Windows. Keep a bounded full-suite budget on that platform.
+	IF ( WIN32 )
+		SET_TESTS_PROPERTIES( gse PROPERTIES TIMEOUT 600 )
+	ENDIF ()
 	IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 		ADD_TEST( NAME gse_uuid_memorydebug
 			COMMAND ${PROJECT_NAME} --gse-tests --memorydebug --quiet

@@ -35,9 +35,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
-      - name: Cache Linux compiler outputs
+      - name: Restore Linux compiler outputs
         if: runner.os == 'Linux'
-        uses: actions/cache@v4
+        id: linux-compiler-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
           key: linux-debug-ccache-${{ github.sha }}
@@ -58,6 +59,15 @@ jobs:
           fi
       - name: Build
         run: cmake --build build --parallel 3
+      # Preserve a successful compile even when the following tests fail.
+      # A fixture-only correction can then reuse the just-built production TUs.
+      - name: Save Linux compiler outputs
+        if: runner.os == 'Linux' && steps.linux-compiler-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: ${{ steps.linux-compiler-cache.outputs.cache-primary-key }}
       - name: Test without game assets or a display
         run: ctest --test-dir build --output-on-failure
       - name: Upload test diagnostics

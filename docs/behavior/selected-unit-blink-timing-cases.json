@@ -90,7 +90,7 @@
       "expected": "retain phase; no missed-toggle accumulation"
     },
     {
-      "condition": "movement-animation inhibit",
+      "condition": "hit/effect-animation inhibit",
       "expected": "retain phase; no missed-toggle accumulation"
     },
     {

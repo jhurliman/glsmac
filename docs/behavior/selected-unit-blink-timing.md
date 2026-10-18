@@ -102,7 +102,7 @@ still toggle the blink phase.
 There are separate real holds: global lifecycle/animation inhibits, a displayed
 Base window or another checked modal window, shutdown, and absence of the
 required ordinary command-loop state can return before the toggle. The
-movement-animation caller explicitly holds a timer-callback inhibit while it
+hit/effect-animation caller explicitly holds a timer-callback inhibit while it
 runs. These holds retain phase and do not accumulate missed toggles.
 
 The main timer stop operation destroys the three 150/100/100 ms timers and

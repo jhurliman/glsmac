@@ -3830,6 +3830,46 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(exact,"continuous restart/founding/upkeep differs from treasury110->111 and research0->1 receipt"+diagnostic);GT_OK();
         });
     });
+    task->AddTest("SMAC legacy base-less Governor recovery requires explicit acceptance and atomically founds",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(RestartSource,"GAIANS");std::string saved;
+        const auto prepared=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* owner=base->m_owner;
+            game->GetBM()->DespawnBase(GSE_CALL,base->m_id);SelectionPresentations(fixture);
+            game->GetUM()->SpawnConventionalUnit(GSE_CALL,92,game->GetUM()->GetUnitDef("choice-colony"),owner,game->GetMap()->GetTile(6,2),
+                {0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.units.push_back({92,0,false});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();state.remembered_governor[0]=0x12345678u;state.remembered_governor[7]=0xffffffffu;});
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(prepared.empty(),"legacy recovery setup: "+prepared);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(RestartSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* pod=um->GetUnit(92);
+            std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t n=0;n<7;++n){roles[n+1]=Roles().specialists[n];}restored.BasePresentationRoles(roles);
+            std::string expected;int prompts=0;
+            game->On(GSE_CALL,"smac_governor_foundation",NATIVE_CALL(&expected,&prompts) {
+                N_EXPECT_ARGS(1);N_GET(view,0,Object);expected=static_cast<value::String*>(view->Get("expected_state"))->value;++prompts;return VALUE(value::Undefined);
+            }));
+            const auto before=restored.Snapshot();const auto random=restored.GameplayRandom();
+            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}});restored.DrainEvents();
+            GT_ASSERT(prompts==1 && !expected.empty() && restored.Snapshot()==before && um->GetUnit(92)==pod,"Opening recovery changed absent settings or consumed Pod");
+            // Cancel is a UI-only dismissal: the native opening leaves no state.
+            game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}});restored.DrainEvents();
+            GT_ASSERT(prompts==2 && restored.Snapshot()==before,"Cancelled/reopened recovery silently initialized settings");
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected+"stale")}});restored.DrainEvents();
+            GT_ASSERT(restored.Snapshot()==before,"Stale default choice founded or initialized settings");
+            const auto defaults=SmacBaseResourceContext::NewGameGovernorOptions(2);
+            GT_ASSERT(Rejects([&]{bm->FoundSmacBase(GSE_CALL,*pod,roles,defaults);}) && restored.Snapshot()==before,"Late missing HQ facility initialized template before failed founding");
+            bm->DefineFacility(new FacilityDef("legacy-recovery-hq","Headquarters","",0,{},1));
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)}});
+            game->Event(GSE_CALL,"found_base_with_default_governor",{{"unit",pod->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)}});restored.DrainEvents();
+            bool known=false;restored.ResourceState([&](auto& state){known=state.remembered_governor[1]==SmacBaseResourceContext::NewGameGovernorOptions(state.designs.global_difficulty)
+                && state.remembered_governor[0]==0x12345678u && state.remembered_governor[7]==0xffffffffu;});
+            GT_ASSERT(known && !um->GetUnit(92) && bm->GetBases().size()==1 && bm->GetBases().begin()->second->GetSmacResourceContext().governor_options==defaults
+                && restored.GameplayRandom()==random,"Accepted recovery failed to join template/Base/Pod publication or overwrote peers/RNG");GT_OK();
+        });
+    });
     task->AddTest("SMAC zero Base founding uses first Base population and facility turn packages",[](GSE*,context::Context*) -> std::string {
         using namespace game::backend::unit;
         struct Case {int32_t turn,population;std::vector<int32_t> facilities;};

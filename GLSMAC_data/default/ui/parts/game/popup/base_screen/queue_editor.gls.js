@@ -6,7 +6,7 @@ return {
         this.window.text({class: 'game-popup-text', top: 10, left: 12, text: 'Pending production queue'});
         this.window.text({class: 'game-popup-text', top: 35, left: 12, right: 12, text: 'Current production is unchanged. New choices must be eligible now.'});
         this.caption = this.window.text({class: 'game-popup-text', top: 60, left: 12, text: ''});
-        this.choices = this.window.scrollview({left: 12, width: 210, top: 85, bottom: 55, has_hscroll: false, has_vscroll: true, vscroll_class: 'default-scroll-v'});
+        this.choices = this.window.panel({left: 12, width: 210, top: 85, bottom: 55});
         this.rows = this.window.panel({left: 230, right: 12, top: 85, bottom: 55});
         this.window.button({class: 'game-popup-button', align: 'bottom left', left: 12, width: 330, bottom: 12, height: 28, text: 'Accept queue'}).on('click', () => { this.submit(); return true; });
         this.window.button({class: 'game-popup-button', align: 'bottom left', left: 354, right: 12, bottom: 12, height: 28, text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });

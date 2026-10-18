@@ -68,6 +68,8 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	const auto territory_bytes = territory ? territory->Serialize().ToString() : std::string{};
 	const auto& terraforming = settings.GetSmacTerraformingRules();
 	const auto terraforming_bytes = terraforming ? terraforming->Serialize().ToString() : std::string{};
+	const auto& ecology = settings.GetSmacEcologyRules();
+	const auto ecology_bytes = ecology ? ecology->Serialize().ToString() : std::string{};
 	RequireFrameSize( settings.GetRulesetId(), max_ruleset_bytes );
 	for ( const auto* bytes : { &production_bytes, &technology_bytes, &size_bytes, &faction_bytes } ) {
 		RequireFrameSize( *bytes, max_profile_bytes );
@@ -79,6 +81,7 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
 	RequireFrameSize( resource_bytes, settings::SmacResourceRules::MAX_WIRE_BYTES );
 	RequireFrameSize( territory_bytes, settings::SmacTerritoryRules::MAX_WIRE_BYTES );
 	RequireFrameSize( terraforming_bytes, settings::SmacTerraformingRules::MAX_WIRE_BYTES );
+	RequireFrameSize( ecology_bytes, settings::SmacEcologyRules::MAX_WIRE_BYTES );
 	buffer.WriteInt( rules_marker );
 	buffer.WriteInt( rules_version );
 	buffer.WriteString( settings.GetRulesetId() );
@@ -109,12 +112,14 @@ void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& setting
     const auto& campaign=settings.GetSmacCampaignRules();
     buffer.WriteBool(campaign.has_value());
     if(campaign) {buffer.WriteString(campaign->Serialize());}
+    buffer.WriteBool(ecology.has_value());
+    if(ecology) {buffer.WriteString(ecology_bytes);}
 }
 
 void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& settings ) {
 	RequireFrozenProfile( settings );
 	const auto marker=buffer.ReadInt(); const auto version=buffer.ReadInt();
-	if (marker!=rules_marker || (version!=32 && version!=rules_version)) {
+	if (marker!=rules_marker || (version!=32 && version!=33 && version!=rules_version)) {
 		throw std::runtime_error( "Unsupported world snapshot rules header" );
 	}
 	const auto id = buffer.ReadString( max_ruleset_bytes );
@@ -208,6 +213,15 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
         if(buffer.ReadInt()!=settings.map.type) {throw std::runtime_error("World map provenance differs from the session");}
         if(buffer.ReadBool()!=campaign.has_value()) {throw std::runtime_error("World campaign options presence differs");}
         if(campaign && !(settings::SmacCampaignRules::Deserialize(buffer.ReadString(settings::SmacCampaignRules::MAX_WIRE_BYTES))==*campaign)) {throw std::runtime_error("World campaign options differ");}
+    }
+    const auto& ecology=settings.GetSmacEcologyRules();
+    if(version<34) {
+        if(ecology) {throw std::runtime_error("Legacy world cannot establish ecology authority");}
+    } else {
+        if(buffer.ReadBool()!=ecology.has_value()) {throw std::runtime_error("World ecology presence differs");}
+        if(ecology && !(settings::SmacEcologyRules::Deserialize(types::Buffer(buffer.ReadString(settings::SmacEcologyRules::MAX_WIRE_BYTES)))==*ecology)) {
+            throw std::runtime_error("World ecology profile differs");
+        }
     }
 }
 

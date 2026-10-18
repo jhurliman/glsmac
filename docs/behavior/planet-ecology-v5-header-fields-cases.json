@@ -1,0 +1,33 @@
+{
+  "research_id": "RE-SMAC-PLANET-ECOLOGY-V5-HEADER-001",
+  "map_version": 5,
+  "serialized_header_file_start": 15,
+  "serialized_header_bytes": 2724,
+  "fields": [
+    {
+      "name": "cumulative_sea_offset",
+      "header_relative_byte_offset": 12,
+      "file_byte_offset": 27,
+      "width_bytes": 4,
+      "encoding": "signed32_little_endian",
+      "installed_Planet_value": 0
+    },
+    {
+      "name": "cloud_cover",
+      "header_relative_byte_offset": 2628,
+      "file_byte_offset": 2643,
+      "width_bytes": 4,
+      "encoding": "signed32_little_endian",
+      "installed_Planet_value": 1
+    },
+    {
+      "name": "native_life",
+      "header_relative_byte_offset": 2632,
+      "file_byte_offset": 2647,
+      "width_bytes": 4,
+      "encoding": "signed32_little_endian",
+      "installed_Planet_value": 1
+    }
+  ],
+  "prior_full_native_loader_receipt": "planet-ecology-global-inputs-cases.json"
+}

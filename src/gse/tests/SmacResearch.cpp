@@ -146,7 +146,7 @@ void AddSmacResearchTests(task::gsetests::GSETests* task) {
 		GT_ASSERT(!legacy.GetSmacCouncilRules(),"V17 restore invented proposal prerequisites");
 		GlobalSettings minimal;minimal.SelectRuleset("smac");minimal.InitializeHostRules(smac_rules_fixture::Source);smac_rules_fixture::AcceptWorldSize(minimal);
 		auto wire=minimal.Serialize();wire.ReadInt();types::Buffer prefix;prefix.WriteInt(18);types::Buffer marker;marker.WriteBool(false);
-		const auto v18=prefix.ToString()+wire.ToString().substr(wire.lenr,wire.lenw-wire.lenr-marker.ToString().size());
+		const auto v18=prefix.ToString()+wire.ToString().substr(wire.lenr,wire.lenw-wire.lenr-2*marker.ToString().size());
 		GlobalSettings migrated;migrated.Deserialize(types::Buffer(v18));GT_ASSERT(!migrated.GetSmacCouncilRules(),"V18 restore invented current installed requirements");
 		GT_OK();
 	});

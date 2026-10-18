@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "SmacTerritoryRules.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/settings/Settings.h"
@@ -151,6 +152,18 @@ Map::~Map() {
 	}
 }
 
+smac_territory::RegionalLandWorkspace& Map::GetRegionalPathWorkspace() {
+	if ( !m_regional_path_workspace ) {
+		ASSERT( m_tiles, "Regional path workspace requires a map" );
+		m_regional_path_workspace = std::make_unique< smac_territory::RegionalLandWorkspace >( GetWidth(), GetHeight() );
+	}
+	return *m_regional_path_workspace;
+}
+
+void Map::InvalidateRegionalPathWorkspace() noexcept {
+	if ( m_regional_path_workspace ) { m_regional_path_workspace->Invalidate(); }
+}
+
 const types::Buffer Map::Serialize() const {
 
 	types::Buffer buf;
@@ -183,6 +196,7 @@ void Map::Deserialize( types::Buffer buf ) {
 	m_game->RequireWorkerKnowledgeMutation();
 
 	ASSERT( !m_tiles, "tiles already set" );
+	m_regional_path_workspace.reset();
 	NEW( m_tiles, tile::Tiles, this );
 	m_tiles->Deserialize( buf.ReadString() );
 
@@ -639,6 +653,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 	if(map_settings->type==settings::MapSettings::MT_INSTALLED_PLANET) {throw std::runtime_error("Installed Planet must use its checked importer, not generation");}
 	m_resource_policy.reset();
 	m_territory_topology.reset();
+	m_regional_path_workspace.reset();
 	auto* random = m_game->GetRandom();
 	const auto policy = m_game->GetState()->m_settings.global.GetRulesetId() == "smac"
 		? std::optional< GlsmacResourceMapPolicy >( GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
@@ -699,6 +714,7 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	m_worker_knowledge_ready = false;
 	m_resource_policy.reset(); // raw/imported tile payloads never infer a policy
 	m_territory_topology.reset();
+	m_regional_path_workspace.reset();
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}

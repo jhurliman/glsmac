@@ -203,6 +203,8 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		const auto& owner=next.owners[next.owner_index];
 		if(next.base_index==owner.second.size()) {
 			RefreshCanonicalPopulationAggregate(owner.first);
+			// Native upkeep retires the shared route only AFTER this summary.
+			m_map->InvalidateRegionalPathWorkspace();
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller

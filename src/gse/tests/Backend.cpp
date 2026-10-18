@@ -10120,6 +10120,23 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest("font measurement matches rendered fallback for UTF-8 and control bytes",GT(){
+		types::Font font("bounded-metrics");font.m_dimensions={1,3};
+		for(size_t i=32;i<128;++i) {font.m_symbols[i]={1,0,1,2,0,0,nullptr};}
+		font.m_symbols[' ']={3,0,0,4,0,0,nullptr};font.m_symbols['A']={5,0,1,7,0,0,nullptr};
+		GT_ASSERT(font.GetTextWidth("A A")==13 && font.GetTextWidth("A\xe2\x80\xa6" "A")==19,
+			"UTF-8 measurement differs from the renderer's per-byte space fallback");
+		GT_ASSERT(font.GetTextHeight("\xe2\x80\xa6")==4 && font.GetTextHeight("A\xe2\x80\xa6")==7,
+			"fallback height read outside the glyph table or lost ASCII glyph height");
+		for(unsigned value=1;value<=255;++value) {
+			const char text[]{static_cast<char>(value),0};
+			const bool fallback=value<32 || value>=128 || value==' ';
+			GT_ASSERT(font.GetTextWidth(text)==(fallback ? 3u : value=='A' ? 5u : 1u)
+				&& font.GetTextHeight(text)==(fallback ? 4u : value=='A' ? 7u : 2u),
+				"font byte measurement differs at "+std::to_string(value));
+		}
+		GT_ASSERT(font.GetTextWidth("")==0 && font.GetTextHeight("")==0,"empty text measurement changed");GT_OK();
+	});
 	task->AddTest("frontend Base ownership refresh retains identity rendering and owner navigation",GT(){
 		return BackendFixture::WithControllerViewport([] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership();});
 	});

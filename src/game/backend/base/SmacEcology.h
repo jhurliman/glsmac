@@ -73,4 +73,38 @@ std::optional<SmacBloomSelection> SelectSmacEcologyBloom(const SmacWorkerRadiusM
     int32_t base_id,const std::vector<SmacBloomBase>& bases,
     const std::function<SmacBloomTile(int32_t,int32_t)>& query,const std::function<int32_t()>& draw);
 
+// Original semantic terrain fields, not GLSMAC's differently packed tile flags.
+// Other fields (contour, climate, region, visibility, remembered items, etc.)
+// remain with the caller and must not be reconstructed from altitude_class.
+struct SmacBloomTerrainCell {
+    int32_t altitude_class,rockiness;
+    uint32_t items,landmarks;
+    uint8_t affiliation; // Low nibble only; upper affiliation bits are preserved externally.
+    bool operator==(const SmacBloomTerrainCell& other) const noexcept {
+        return altitude_class==other.altitude_class && rockiness==other.rockiness && items==other.items
+            && landmarks==other.landmarks && affiliation==other.affiliation;
+    }
+};
+struct SmacBloomTerrainDelta {
+    std::array<int32_t,2> coordinate;
+    SmacBloomTerrainCell before,after;
+};
+struct SmacBloomClassChange {SmacBloomTerrainCell cell;uint32_t native_dirty_mask;};
+// Same land/sea-category class-only setter used by the target2 shaper.
+// Cross-category conversion has additional effects and is a separate producer.
+SmacBloomClassChange ChangeSmacBloomClassOnly(SmacBloomTerrainCell cell,int32_t altitude,bool nonzero_turn,
+    const std::function<int32_t()>& draw);
+struct SmacBloomTerrainPlan {
+    int32_t history,nominal_cell_budget;
+    uint32_t native_dirty_mask;
+    std::optional<std::array<int32_t,2>> fungus_cell;
+    std::vector<SmacBloomTerrainDelta> changes;
+};
+// Call only after a winner is selected. map.center is the selected square.
+// Stages H increment and complete class-only terrain changes, including the
+// original loop-index overwrite after the first eligible direct fungus write.
+// No live tile, contour/corner, status, warming or unit publication occurs.
+SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int32_t history,int32_t difficulty,bool nonzero_turn,
+    const std::function<SmacBloomTerrainCell(int32_t,int32_t)>& query,const std::function<int32_t()>& draw);
+
 }

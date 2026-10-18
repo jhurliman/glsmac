@@ -1,0 +1,285 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-CLASS-SETTER-GUARD-001",
+  "ruleset": "pinned stock SMAC",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "11 complete original class-only helper calls; same land/sea category controls only, zero-flag view backing and actual CRT with TLS backing. No broad ecology/climate/UI or cross-category effects.",
+  "lowering_draw_predicate": "turn!=0 && oldClass>=3 && newClass>=3 && newClass<oldClass && R>0 && R>newClass-3",
+  "landmark_invalidation": "If word0 keep0; else clear bit0x80, complement high byte only when high<128, preserving other low24 bits. Add0x400000 only if later rockiness changes.",
+  "unchanged_class": "No invalidator or rockiness draw; final class store still sets dirty4.",
+  "cases": [
+    {
+      "id": "sea_raise_no_rock_draw",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 0,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 0,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "unchanged_land_no_draw_no_metadata",
+      "inputs": {
+        "turn": 90,
+        "old_class": 3,
+        "new_class": 3,
+        "rockiness": 2,
+        "landmark_word": 16777346,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 3,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 2,
+        "terrain_aux": 21,
+        "landmark_word": 16777346,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 0,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "turn_zero_no_draw_no_metadata",
+      "inputs": {
+        "turn": 0,
+        "old_class": 6,
+        "new_class": 3,
+        "rockiness": 2,
+        "landmark_word": 16777346,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 3,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 2,
+        "terrain_aux": 21,
+        "landmark_word": 16777346,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 0,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "land_lower_draw_changes_rock",
+      "inputs": {
+        "turn": 90,
+        "old_class": 6,
+        "new_class": 3,
+        "rockiness": 2,
+        "landmark_word": 0,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 3,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 4194304,
+        "CRT_raw_values": [
+          38
+        ],
+        "CRT_seed_after": 2531011,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 5
+      }
+    },
+    {
+      "id": "land_lower_draw_zero_keeps_rock",
+      "inputs": {
+        "turn": 90,
+        "old_class": 6,
+        "new_class": 3,
+        "rockiness": 2,
+        "landmark_word": 0,
+        "CRT_seed": 2,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 3,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 2,
+        "terrain_aux": 21,
+        "landmark_word": 0,
+        "CRT_raw_values": [
+          45
+        ],
+        "CRT_seed_after": 2959037,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0x0",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 0,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 0,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0x80",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 128,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 4278190080,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0x1000082",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 16777346,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 4261412866,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0x7f000082",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 2130706562,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 2147483650,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0x80000082",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 2147483778,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 2147483650,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    },
+    {
+      "id": "sea_landmark_0xff000082",
+      "inputs": {
+        "turn": 90,
+        "old_class": 1,
+        "new_class": 2,
+        "rockiness": 1,
+        "landmark_word": 4278190210,
+        "CRT_seed": 0,
+        "contour": 37
+      },
+      "expected": {
+        "altitude_class": 2,
+        "low_climate_moisture_bits": 11,
+        "contour": 37,
+        "rockiness": 1,
+        "terrain_aux": 21,
+        "landmark_word": 4278190082,
+        "CRT_raw_values": [],
+        "CRT_seed_after": 0,
+        "landmark_invalidator_calls": 1,
+        "dirty_state": 4
+      }
+    }
+  ],
+  "validation": {
+    "complete_native_helper_calls": 11,
+    "all_literal_checks_passed": true,
+    "cross_category_effects_checked": false,
+    "raising_land_branch": "source-only, not exercised"
+  }
+}

@@ -173,6 +173,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	while(next.owner_index<next.owners.size()) {
 		const auto& owner=next.owners[next.owner_index];
 		if(next.base_index==owner.second.size()) {
+			RefreshCanonicalPopulationAggregate(owner.first);
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			continue;

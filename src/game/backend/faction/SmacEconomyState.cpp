@@ -6,7 +6,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d4543; // SMEC
-constexpr int64_t VERSION = 1;
+constexpr int64_t VERSION = 2;
 int32_t ReadInteger( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC economy integer outside signed32" ); }
@@ -29,7 +29,8 @@ void SmacEconomyState::Validate() const {
 
 bool SmacEconomyState::operator==( const SmacEconomyState& other ) const {
 	return rates.psych == other.rates.psych && rates.labs == other.rates.labs && credits == other.credits
-		&& pending_debit == other.pending_debit && research_fraction == other.research_fraction && treaty_partners == other.treaty_partners;
+		&& pending_debit == other.pending_debit && research_fraction == other.research_fraction && treaty_partners == other.treaty_partners
+		&& population_aggregate == other.population_aggregate;
 }
 
 types::Buffer SmacEconomyState::Serialize() const {
@@ -37,18 +38,22 @@ types::Buffer SmacEconomyState::Serialize() const {
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( VERSION ); buffer.WriteInt( rates.psych ); buffer.WriteInt( rates.labs );
 	buffer.WriteInt( credits ); buffer.WriteInt( pending_debit );
 	buffer.WriteInt( research_fraction ); buffer.WriteInt( treaty_partners );
+	buffer.WriteBool(population_aggregate.has_value());if(population_aggregate) {buffer.WriteInt(*population_aggregate);}
 	return buffer;
 }
 
 SmacEconomyState SmacEconomyState::Deserialize( const std::string& wire ) {
-	if ( wire.size() != MAX_WIRE_BYTES ) { throw std::runtime_error( "Invalid SMAC economy frame size" ); }
+	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "Invalid SMAC economy frame size" ); }
 	try {
 		types::Buffer buffer( wire );
-		if ( buffer.ReadInt() != MAGIC || buffer.ReadInt() != VERSION ) { throw std::runtime_error( "Unsupported SMAC economy format" ); }
+		if ( buffer.ReadInt() != MAGIC ) { throw std::runtime_error( "Unsupported SMAC economy format" ); }
+		const auto version=buffer.ReadInt();if(version!=VERSION && version!=1) {throw std::runtime_error("Unsupported SMAC economy format");}
 		const auto psych = ReadInteger( buffer ), labs = ReadInteger( buffer ), credits = ReadInteger( buffer ), debit = ReadInteger( buffer );
 		const auto fraction = ReadInteger( buffer ), treaties = ReadInteger( buffer );
 		if ( treaties < 0 || treaties > UINT8_MAX ) { throw std::runtime_error( "SMAC treaty bits outside unsigned byte" ); }
 		SmacEconomyState result{ { psych, labs }, credits, debit, fraction, static_cast< uint8_t >( treaties ) };
+		result.population_aggregate.reset();
+		if(version==VERSION && buffer.ReadBool()) {result.population_aggregate=ReadInteger(buffer);}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC economy fields" ); }
 		result.Validate(); return result;
 	} catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }

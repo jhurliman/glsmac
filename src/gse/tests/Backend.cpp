@@ -301,6 +301,7 @@ public:
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
+	void RefreshPopulation(int32_t owner) {m_game.RefreshCanonicalPopulationAggregate(owner);}
 	std::optional<uint16_t> BattlePalette() const {return m_game.m_smac_hit_palette_identifier;}
 	void BattlePalette(std::optional<uint16_t> value) {m_game.m_smac_hit_palette_identifier=value;}
 	void PostEconomy( const game::backend::base::Base& base ) {
@@ -5380,6 +5381,7 @@ void ConventionalUnitFixture::ConfigureResources( const std::function< std::stri
 void ConventionalUnitFixture::BeginColonyChoice( GSE_CALLABLE, size_t id ) { fixture->BeginColonyChoice(GSE_CALL,id); }
 void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+void ConventionalUnitFixture::RefreshPopulation(int32_t owner) {fixture->RefreshPopulation(owner);}
 std::optional<uint16_t> ConventionalUnitFixture::BattlePalette() const {return fixture->BattlePalette();}
 void ConventionalUnitFixture::BattlePalette(std::optional<uint16_t> value) {fixture->BattlePalette(value);}
 void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }

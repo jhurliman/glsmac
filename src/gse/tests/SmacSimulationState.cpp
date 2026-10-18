@@ -54,7 +54,14 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	buffer.WriteInt( value.satellites.size() );
 	for ( const auto& entry : value.satellites ) { buffer.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); } }
 	buffer.WriteInt( value.economy.size() );
-	for ( const auto& entry : value.economy ) { buffer.WriteInt( entry.first ); buffer.WriteString( entry.second.Serialize().ToString() ); }
+	for ( const auto& entry : value.economy ) {
+		buffer.WriteInt(entry.first);
+		if(legacy) {
+			types::Buffer economy;const auto& e=entry.second;
+			for(const auto field:{int64_t(0x534d4543),int64_t(1),int64_t(e.rates.psych),int64_t(e.rates.labs),int64_t(e.credits),int64_t(e.pending_debit),int64_t(e.research_fraction),int64_t(e.treaty_partners)}) {economy.WriteInt(field);}
+			buffer.WriteString(economy.ToString());
+		} else {buffer.WriteString(entry.second.Serialize().ToString());}
+	}
 	if ( lifecycle ) { return buffer.ToString() + *lifecycle; }
 	buffer.WriteBool( value.do_or_die ); buffer.WriteInt( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
@@ -79,7 +86,8 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();
 		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
-		GT_ASSERT(migrated==value,"V11 migration changed existing campaign state or invented battle history");
+		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();}
+		GT_ASSERT(migrated==expected,"V11 migration changed existing campaign state or invented missing history");
 		for(auto& entry:value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {entry.second.directions[i]={UINT32_MAX-static_cast<uint32_t>(i),static_cast<uint32_t>(i+1),INT32_MIN+static_cast<int32_t>(i),UINT32_MAX,static_cast<uint32_t>(i)};}
 			entry.second.losses.fill(UINT16_MAX);entry.second.integrity=UINT32_MAX;entry.second.bookkeeping=0x80000000u;

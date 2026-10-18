@@ -227,6 +227,26 @@ faction::SmacEconomyState Game::PrepareSmacNonzeroInitialization( int32_t owner 
 	candidate.credits=static_cast<int32_t>(credits);candidate.pending_debit=0;candidate.Validate();return candidate;
 }
 
+void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
+	ValidateCurrentSimulation();
+	if(!GetGCSpace()->IsAccumulating() || !IsRunning() || !m_simulation->value.economy.count(owner)) {
+		throw std::runtime_error("Population refresh requires its current owning faction upkeep");
+	}
+	int64_t population=0;
+	for(const auto& entry:m_bm->GetBases()) {
+		const auto* base=entry.second;
+		if(!base || base->m_id!=entry.first) {throw std::runtime_error("Population refresh found an invalid Base");}
+		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
+			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
+			population+=static_cast<int64_t>(base->m_pops.size());
+		}
+	}
+	if(population>INT32_MAX) {throw std::overflow_error("Population aggregate exceeds signed32");}
+	// Founding, removal and individual Base recalculation deliberately do not
+	// update this saved field. The native post-Base owner pass owns its refresh.
+	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
+}
+
 void Game::SettleCanonicalEconomy( int32_t owner ) {
 	ValidateCurrentSimulation();
 	if ( !GetGCSpace()->IsAccumulating() || !IsRunning() ) { throw std::runtime_error( "Economy settlement requires the owning native upkeep" ); }

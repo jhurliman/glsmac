@@ -260,12 +260,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             fixture.ResourceState([](auto& state){auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
                 a.directions[2]={UINT32_MAX,77,-9,17,23};d.directions[1]={0x80008118u,99,42,31,41};d.directions[3].primary=UINT32_MAX;
-                a.losses[2]=9;a.losses[511]=UINT16_MAX;a.integrity=4;a.bookkeeping=7;});
+                a.losses[2]=9;a.losses[511]=UINT16_MAX;a.integrity=4;a.bookkeeping=7;
+                state.economy.at(1).population_aggregate=137;state.economy.at(2).population_aggregate=222;});
             fixture.SettleEconomy(1);bool exact=false;
             fixture.ResourceState([&](auto& state){const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
                 exact=a.directions[2]==faction::SmacHostileDirection{0x6fff00b7u,77,-9,17,23}
                     && d.directions[1]==faction::SmacHostileDirection{0x10u,99,42,31,41} && d.directions[3].primary==UINT32_MAX
-                    && a.losses[2]==9 && a.losses[511]==UINT16_MAX && a.integrity==4 && a.bookkeeping==7;});
+                    && a.losses[2]==9 && a.losses[511]==UINT16_MAX && a.integrity==4 && a.bookkeeping==7
+                    && state.economy.at(1).population_aggregate==137 && state.economy.at(2).population_aggregate==222;});
             GT_ASSERT(exact,"actual faction-tail initialization reset loss/diplomatic history or touched an unrelated pair");GT_OK();
         });
     });
@@ -1540,6 +1542,37 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			} GT_OK();
 		} );
 	} );
+	task->AddTest("SMAC population aggregate waits for owner refresh and survives actual Start independently",[](GSE*,context::Context*)->std::string {
+		using namespace game::backend::unit;
+		const auto roles=Roles();const std::array<std::string,8> names{roles.worker,roles.specialists[0],roles.specialists[1],roles.specialists[2],roles.specialists[3],roles.specialists[4],roles.specialists[5],roles.specialists[6]};
+		ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(UpkeepSource,true);fixture.BasePresentationRoles(names);std::string saved;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+			const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+			base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(20);
+			fixture.ResourceState([](auto& state){state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=777;
+				auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=10000;});
+			const auto resolver=[&](int32_t){return game->GetUM()->GetUnitDef("live-scout");};
+			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
+			GT_ASSERT(base->m_pops.size()==2 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==111,"Base growth prematurely refreshed owner population");
+			fixture.RefreshPopulation(1);
+			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"post-Base owner refresh omitted growth");
+			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
+			GT_ASSERT(base->m_pops.size()==1 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"starvation changed the retained population aggregate");
+			bool untouched=false;fixture.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777;});
+			GT_ASSERT(untouched,"owner refresh touched the foreign aggregate");saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(UpkeepSource,true);restored.BasePresentationRoles(names);
+		restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+			GT_ASSERT(base && base->m_pops.size()==1 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"Start derived aggregate from current Base populations");
+			bool untouched=false;restored.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777;});GT_ASSERT(untouched,"Start reset foreign population history");
+			game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==static_cast<int32_t>(base->m_pops.size()),"actual turn controller omitted post-Base population refresh");GT_OK();
+		});
+	});
 	task->AddTest( "SMAC live upkeep stages growth starvation and stable Pop lifetime", []( GSE*, context::Context* ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( UpkeepSource, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {

@@ -792,6 +792,7 @@ private:
 	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );
 	std::vector<std::string> PostCanonicalBaseMaintenance( const base::Base& base, const base::SmacBaseEnergyCalculation& energy );
 	void SettleCanonicalEconomy( int32_t simulation_id );
+	void RefreshCanonicalPopulationAggregate( int32_t simulation_id );
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );
 

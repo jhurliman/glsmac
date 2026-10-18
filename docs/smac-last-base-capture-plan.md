@@ -52,8 +52,22 @@ knowledge, package and RNG instead of replaying tracking.
 ## Remaining match and presentation work
 
 The human-loss branch records an ending request while preserving the captor's
-controller. It does not establish the separate conquest/survivor-count result.
-Defended capture, other population/facility rules, technology choice, AI/network
+controller. Closing the captured Base screen now refreshes that saved request
+through the existing outcome overlay. It no longer waits for another turn,
+which the terminal request already forbids. The deferred list/popup callback
+and actual outcome module are covered together by `capture_screen_ending.gls.js`;
+the existing outcome script test also passes without a C++ rebuild.
+
+The [original survivor/conquest distinction](behavior/capture-survivor-ending.md)
+and [ending-controller contract](behavior/conquest-controller.md) now establish
+the separate native reason4 path. The port has not yet joined that path or the
+native pending/processed presentation state. Human membership, local focus and
+retained ranking references are distinct inputs; neither zero Bases nor the
+captor alone supplies the winner. The ranking-reference producer is a separate
+integration dependency, not a reason to seed references from local focus.
+
+The [ordinary garrison interaction](smac-defended-base-combat.md) joins battle
+to later undefended capture. Other population/facility rules, technology choice, AI/network
 capture, and complete ending/controller behavior remain separate work. Full
 capture-screen closure and visual/dialog fidelity still need original-executable
 interaction and screenshot comparison. The native reference stops at screen

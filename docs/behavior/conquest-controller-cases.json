@@ -1,0 +1,394 @@
+{
+  "research_id": "RE-SMAC-CONQUEST-CONTROLLER-001",
+  "scope": "One native single-human failed-restart capture through unused conquest/death notification returns to unanswered Base screen; separately admitted original zero-argument ending poll to unanswered conquest interlude. No terminal presentation or full controller return.",
+  "cases": [
+    {
+      "id": "ordinary_local_single_conquest",
+      "input": {
+        "active_mask": 6,
+        "human_mask": 2,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "exit_requested": 0,
+        "network": 0,
+        "program_flags": 0,
+        "options": 0,
+        "ranking_first": 1,
+        "ranking_second": 0,
+        "faction_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "owned_bases": [
+          1,
+          1
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              19,
+              15
+            ],
+            "home": 0,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "crt": 3,
+        "shared": 3
+      },
+      "single_conquest_notification_input": {
+        "active_mask": 2,
+        "human_mask": 2,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "exit_requested": 0,
+        "network": 0,
+        "program_flags": 0,
+        "options": 0,
+        "ranking_first": 1,
+        "ranking_second": 0,
+        "faction_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "owned_bases": [
+          2,
+          0
+        ],
+        "credits": [
+          233,
+          77
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "crt": 3640575528,
+        "shared": 3
+      },
+      "capture_screen_state": {
+        "active_mask": 2,
+        "human_mask": 2,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 4,
+        "game_flags": 24833,
+        "exit_requested": 0,
+        "network": 0,
+        "program_flags": 0,
+        "options": 0,
+        "ranking_first": 1,
+        "ranking_second": 0,
+        "faction_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "owned_bases": [
+          2,
+          0
+        ],
+        "credits": [
+          233,
+          77
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "crt": 3640575528,
+        "shared": 3
+      },
+      "ending_poll_input": {
+        "active_mask": 2,
+        "human_mask": 2,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 4,
+        "game_flags": 24833,
+        "exit_requested": 0,
+        "network": 0,
+        "program_flags": 0,
+        "options": 0,
+        "ranking_first": 1,
+        "ranking_second": 0,
+        "faction_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "owned_bases": [
+          2,
+          0
+        ],
+        "credits": [
+          233,
+          77
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "crt": 3640575528,
+        "shared": 3
+      },
+      "ending_poll_argument": 0,
+      "ending_poll_boundary": {
+        "active_mask": 2,
+        "human_mask": 2,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 4,
+        "game_flags": 24833,
+        "exit_requested": 0,
+        "network": 0,
+        "program_flags": 0,
+        "options": 0,
+        "ranking_first": 1,
+        "ranking_second": 0,
+        "faction_status": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "owned_bases": [
+          2,
+          0
+        ],
+        "credits": [
+          233,
+          77
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "crt": 3640575528,
+        "shared": 3
+      },
+      "observed_winner_history_arguments": {
+        "winner": 1,
+        "other": -1
+      },
+      "observed_role_candidates_marked": [],
+      "reference": 1,
+      "survivors": 1,
+      "partners": 0,
+      "published_gameplay_outcome": {
+        "kind": "single_conquest",
+        "reason": 4,
+        "winner": 1,
+        "focus": 1,
+        "active_mask": 2,
+        "human_mask": 2,
+        "pending_mask": 1,
+        "conquest_mask": 8192,
+        "processed": false
+      },
+      "capture_crt_draws": 2087,
+      "controller_crt_draws": 0,
+      "shared_draws": 0,
+      "base_screen_answered": false,
+      "conquest_interlude_answered": false,
+      "controller_returned": false,
+      "continuity_limit": "Native capture reaches unanswered Base screen after unused CONQSING display return. Original zero-argument global ending poll separately admitted on unchanged gameplay state. No Base-screen answer or interlude/presentation/controller return supplied."
+    }
+  ],
+  "human_loss_contrast": {
+    "evidence": "prior frozen two-human capture/controller receipt",
+    "active_mask": 2,
+    "human_mask": 6,
+    "focus": 1,
+    "reason": 7,
+    "winner_history_call": false,
+    "survivor_counting_bypassed": true
+  },
+  "static_tail": {
+    "processed_mask": 8,
+    "local_conquest_continue_prompt": true,
+    "nonzero_continue_answer": {
+      "controller_return": 0,
+      "session_exit_request": 0
+    },
+    "zero_continue_answer": {
+      "controller_return": 1,
+      "session_exit_request": 1
+    },
+    "local_human_loss_skips_continue_prompt": true
+  },
+  "unsupported": [
+    "Full native ending presentation/return",
+    "Continuous Base screen closure to unit poll",
+    "Native failed-starvation disposition through completed upkeep",
+    "Cooperative/network/other-reference and preexisting-reason cases",
+    "Other victory discovery/role producers/scoring matrix",
+    "Original save-format and load-time dispatch"
+  ]
+}

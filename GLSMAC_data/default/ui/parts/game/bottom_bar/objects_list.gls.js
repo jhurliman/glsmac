@@ -241,6 +241,9 @@ return {
 					} else {
 						this.p.game.select_tile(this.selected_tile);
 					}
+					// Capture returns through Base Control before the unit controller
+					// polls its already saved ending request.
+					if (#is_defined(this.p.modules.outcome)) { this.p.modules.outcome.refresh(); }
 				});
 			});
 		});

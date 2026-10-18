@@ -6,6 +6,7 @@
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
 #include <utility>
+#include <cstdlib>
 
 namespace gse::tests {
 namespace {
@@ -25,6 +26,15 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC standard Planet native loader stages terrain topology cancellation and failure atomically", GT() {
+        return CheckInstalledPlanetBackend();
+    });
+    if(const char* asset=std::getenv("GLSMAC_TEST_PLANET_ASSET")) {
+        const std::string path=asset;
+        task->AddTest("SMAC installed Planet asset matches original all-tile classification and resource counts", GT(path) {
+            return CheckInstalledPlanetBackend(path);
+        });
+    }
     task->AddTest("SMAC campaign option producers preserve distinct active remembered and objective words", GT() {
         using game::backend::settings::SmacCampaignRules;
         SmacCampaignRules rules;

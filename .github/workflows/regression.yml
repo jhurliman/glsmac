@@ -53,25 +53,16 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             ccache --set-config=max_size=2G
+            ccache --zero-stats
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
           fi
       - name: Build
         run: cmake --build build --parallel 3
-      - name: Verify portable movie codecs and I/O cancellation
-        if: runner.os == 'Linux'
-        run: |
-          cmake -S tools/tests/portable_movie -B build/movie-io -G Ninja -DCMAKE_BUILD_TYPE=Debug
-          cmake --build build/movie-io --parallel 3
-          python3 tools/tests/test_movie_io_cancel.py build/movie-io/GLSMAC_movie_probe
-          cmake -S tools/tests/portable_movie -B build/movie-portable -G Ninja -DCMAKE_BUILD_TYPE=Portable64
-          cmake --build build/movie-portable --parallel 3
-          ctest --test-dir build/movie-portable --output-on-failure
-          if readelf -d build/movie-portable/GLSMAC_movie_probe | grep -E 'NEEDED.*lib(avformat|avcodec|avutil|swscale)'; then
-            echo "Portable movie codecs unexpectedly require system FFmpeg" >&2
-            exit 1
-          fi
+      - name: Report Linux compiler cache reuse
+        if: always() && runner.os == 'Linux'
+        run: ccache --show-stats
       # Preserve a successful compile even when the following tests fail.
       # A fixture-only correction can then reuse the just-built production TUs.
       - name: Save Linux compiler outputs
@@ -81,6 +72,46 @@ jobs:
         with:
           path: ~/.cache/ccache
           key: ${{ steps.linux-compiler-cache.outputs.cache-primary-key }}
+      - name: Identify portable codec toolchain
+        if: runner.os == 'Linux' && needs.scope.outputs.movies == 'true'
+        id: movie-toolchain
+        run: echo "version=$(cc -dumpmachine)-$(cc -dumpfullversion)" >> "$GITHUB_OUTPUT"
+      - name: Restore pinned portable movie codecs
+        if: runner.os == 'Linux' && needs.scope.outputs.movies == 'true'
+        id: movie-codec-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            build/movie-portable/movie-ffmpeg/install
+            build/movie-portable/movie-ffmpeg/source/COPYING.LGPLv2.1
+            build/movie-portable/movie-ffmpeg/download/ffmpeg-*.tar.xz
+          key: movie-ffmpeg-${{ runner.os }}-${{ runner.arch }}-${{ steps.movie-toolchain.outputs.version }}-${{ hashFiles('cmake/PortableMovieFFmpeg.cmake') }}
+      - name: Build movie probes
+        if: runner.os == 'Linux' && needs.scope.outputs.movies == 'true'
+        run: |
+          cmake -S tools/tests/portable_movie -B build/movie-io -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build/movie-io --parallel 3
+          cmake -S tools/tests/portable_movie -B build/movie-portable -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DGLSMAC_REUSE_PORTABLE_MOVIE_FFMPEG=${{ steps.movie-codec-cache.outputs.cache-hit == 'true' && 'ON' || 'OFF' }}
+          cmake --build build/movie-portable --parallel 3
+      - name: Save pinned portable movie codecs
+        if: runner.os == 'Linux' && needs.scope.outputs.movies == 'true' && steps.movie-codec-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/movie-portable/movie-ffmpeg/install
+            build/movie-portable/movie-ffmpeg/source/COPYING.LGPLv2.1
+            build/movie-portable/movie-ffmpeg/download/ffmpeg-*.tar.xz
+          key: ${{ steps.movie-codec-cache.outputs.cache-primary-key }}
+      - name: Verify portable movie codecs and I/O cancellation
+        if: runner.os == 'Linux' && needs.scope.outputs.movies == 'true'
+        run: |
+          python3 tools/tests/test_movie_io_cancel.py build/movie-io/GLSMAC_movie_probe
+          ctest --test-dir build/movie-portable --output-on-failure
+          if readelf -d build/movie-portable/GLSMAC_movie_probe | grep -E 'NEEDED.*lib(avformat|avcodec|avutil|swscale)'; then
+            echo "Portable movie codecs unexpectedly require system FFmpeg" >&2
+            exit 1
+          fi
       - name: Test without game assets or a display
         run: ctest --test-dir build --output-on-failure --parallel 2
       - name: Summarize GSE group timings

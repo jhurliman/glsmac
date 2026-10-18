@@ -19,6 +19,25 @@ SET( MOVIE_FFMPEG_FLAGS
 IF ( CMAKE_BUILD_TYPE STREQUAL "Portable32" )
 	LIST( APPEND MOVIE_FFMPEG_FLAGS --arch=x86 --extra-cflags=-m32 --extra-ldflags=-m32 )
 ENDIF ()
+# CI may restore the pinned codec tree into a fresh probe build. ExternalProject
+# stamps alone are not reusable there: regenerated mkdir prerequisites rebuild
+# the download/configure steps. Reuse is explicit and requires a complete tree.
+OPTION( GLSMAC_REUSE_PORTABLE_MOVIE_FFMPEG "Reuse a restored pinned FFmpeg tree" OFF )
+IF ( GLSMAC_REUSE_PORTABLE_MOVIE_FFMPEG )
+    FOREACH ( REQUIRED_FILE
+        "install/include/libavformat/avformat.h"
+        "install/lib/libavformat.a" "install/lib/libavcodec.a"
+        "install/lib/libavutil.a" "install/lib/libswscale.a"
+        "source/COPYING.LGPLv2.1" "download/ffmpeg-${MOVIE_FFMPEG_VERSION}.tar.xz" )
+        IF ( NOT EXISTS "${MOVIE_FFMPEG_BASE}/${REQUIRED_FILE}" )
+            MESSAGE( FATAL_ERROR "Incomplete restored movie codec tree: ${REQUIRED_FILE}" )
+        ENDIF ()
+    ENDFOREACH ()
+    FILE( SHA256 "${MOVIE_FFMPEG_BASE}/download/ffmpeg-${MOVIE_FFMPEG_VERSION}.tar.xz" RESTORED_SHA256 )
+    IF ( NOT RESTORED_SHA256 STREQUAL MOVIE_FFMPEG_SHA256 )
+        MESSAGE( FATAL_ERROR "Restored FFmpeg source archive hash mismatch" )
+    ENDIF ()
+ELSE ()
 EXTERNALPROJECT_ADD( glsmac_movie_ffmpeg
 	URL "${MOVIE_FFMPEG_URL}" URL_HASH "SHA256=${MOVIE_FFMPEG_SHA256}"
 	DOWNLOAD_DIR "${MOVIE_FFMPEG_BASE}/download"
@@ -32,8 +51,9 @@ EXTERNALPROJECT_ADD( glsmac_movie_ffmpeg
 	BUILD_BYPRODUCTS "${MOVIE_FFMPEG_PREFIX}/lib/libavformat.a"
 		"${MOVIE_FFMPEG_PREFIX}/lib/libavcodec.a" "${MOVIE_FFMPEG_PREFIX}/lib/libavutil.a"
 		"${MOVIE_FFMPEG_PREFIX}/lib/libswscale.a" )
+    ADD_DEPENDENCIES( ${PROJECT_NAME} glsmac_movie_ffmpeg )
+ENDIF ()
 FILE( MAKE_DIRECTORY "${MOVIE_FFMPEG_PREFIX}/include" )
-ADD_DEPENDENCIES( ${PROJECT_NAME} glsmac_movie_ffmpeg )
 TARGET_INCLUDE_DIRECTORIES( ${PROJECT_NAME} SYSTEM PRIVATE "${MOVIE_FFMPEG_PREFIX}/include" )
 FOREACH ( LIB avformat avcodec swscale avutil )
 	ADD_LIBRARY( glsmac_movie_${LIB} STATIC IMPORTED )

@@ -37,9 +37,10 @@ save/Start cycle. The live high-history guard remains until those consumers join
 
 The [flood retained-state receipt](flood-Base-retained-state.md) establishes the
 next required Base change: population/Dome update without worker, specialist,
-stores or resource-cache normalization. The current Pop/allocation projection
-assumes coherent counts, so that retained intermediate state needs an explicit
-representation and repair at the original later producer. Do not replace the
+stores or resource-cache normalization. The [retained population checkpoint](flood-Base-population-port.md) now separates
+that count from the old Pop/allocation projection and preserves it through actual
+save/Start until the owning worker producer repairs it. The full flood transaction
+and fresh-query/inspector repair boundary remain to connect. Do not replace the
 source flood with an eager allocation/resource recalculation. Deletion likewise
 needs old-surface Unit cleanup, home/reference repair and no invented HQ move.
 

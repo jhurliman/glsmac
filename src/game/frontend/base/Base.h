@@ -95,6 +95,8 @@ public:
 	typedef std::vector< Pop > pops_t;
 	const pops_t& GetPops() const;
 	void SetPops( const pops_t& pops );
+	void SetPops( const pops_t& pops, size_t population );
+	size_t GetPopulation() const { return m_population; }
 
 protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
@@ -131,6 +133,7 @@ private:
 	render_data_t m_render_data = {};
 
 	pops_t m_pops = {};
+	size_t m_population = 0;
 
 	void ShowBadge();
 	void HideBadge();

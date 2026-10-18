@@ -88,7 +88,7 @@ void Game::ApplySmacEnergyRates(GSE_CALLABLE,base::Base& anchor,base::SmacEnergy
                 base::SmacBaseResourcePhase::Ordinary,{},nullptr,nullptr,{},nullptr,availability.unavailable);
             frame.bases.at(row.frame_index).selected_radius=row.allocation.selected&map::SmacWorkerMapFrame::RADIUS_MASK;
             const auto resources=row.base->CalculateSmacResourceCalculation(base::SmacBaseResourcePhase::Ordinary,&row.allocation,{},row.food);
-            const auto support=CalculateCanonicalUnitSupport(*row.base,row.base->m_pops.size(),nullptr);
+            const auto support=CalculateCanonicalUnitSupport(*row.base,row.base->GetPopulation(),nullptr);
             CalculateCanonicalBaseEnergy(*row.base,resources,&rates,&row.allocation);
             row.food=resources.nutrients.normalized_stored;
             row.cache=base::SmacBaseUpkeepCache{resources,support};

@@ -83,7 +83,7 @@ void Base::SetIdentity( Slot* owner, faction::Faction* faction, std::string name
 	bool is_owned, std::unique_ptr<text::InstancedText> label ) {
 	// Prepare new render resources while the old instances are still valid.
 	auto* badges=m_bm->GetSlotBadges(owner->GetIndex());
-	auto* badge=badges->GetBaseBadgeSprite(m_pops.size(),m_is_guarded);
+	auto* badge=badges->GetBaseBadgeSprite(GetPopulation(),m_is_guarded);
 	meshtex_t next_base{},next_badge{};
 	const auto destroy_mesh=[](const types::mesh::Render* mesh) {if(mesh) {DELETE(mesh);}};
 	UpdateMeshTex(next_base,GetSpriteFor(faction)->instanced_sprite);
@@ -97,7 +97,7 @@ void Base::SetIdentity( Slot* owner, faction::Faction* faction, std::string name
 	m_owner_slot=owner->GetIndex();m_slot_badges=badges;m_faction=faction;
 	m_name=std::move(name);m_is_owned=is_owned;
 	m_render.name_sprite=label.release();m_render.instance_id=0;
-	m_render.badge.instance_id=0;m_render.badge.def=badge;m_render.badge.pops_count=m_pops.size();
+	m_render.badge.instance_id=0;m_render.badge.def=badge;m_render.badge.pops_count=GetPopulation();
 	m_render_data={next_base,next_badge};base_mesh.release();badge_mesh.release();
 	if(shown) {Show();}
 }
@@ -120,7 +120,7 @@ sprite::Sprite* Base::GetSprite() const {
 
 sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
 	uint8_t size = 0;
-	const auto population = m_pops.size();
+	const auto population = GetPopulation();
 	for ( uint8_t i = 0 ; i < s_base_render_population_thresholds.size() ; i++ ) {
 		if ( s_base_render_population_thresholds.at( i ) > population ) {
 			break;
@@ -133,8 +133,8 @@ sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
 void Base::Show() {
 	if ( !m_render.is_rendered ) {
 
-		if ( m_render.badge.pops_count != m_pops.size() ) {
-			m_render.badge.pops_count = m_pops.size();
+		if ( m_render.badge.pops_count != GetPopulation() ) {
+			m_render.badge.pops_count = GetPopulation();
 			UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 			m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
 			UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
@@ -186,7 +186,7 @@ void Base::Update() {
 			m_render.badge.instance_id = 0;
 		}
 		m_is_guarded = is_guarded;
-		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_pops.size(), m_is_guarded );
+		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( GetPopulation(), m_is_guarded );
 		UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
@@ -202,8 +202,10 @@ const Base::pops_t& Base::GetPops() const {
 	return m_pops;
 }
 
-void Base::SetPops( const pops_t& pops ) {
-	m_pops = pops; // can be optimized if needed
+void Base::SetPops( const pops_t& pops ) { SetPops(pops,pops.size()); }
+void Base::SetPops( const pops_t& pops, size_t population ) {
+	m_pops = pops; // retained worker/specialist projection may precede population
+	m_population = population;
 }
 
 void Base::SetRenderCoords( const types::Vec3& coords ) {

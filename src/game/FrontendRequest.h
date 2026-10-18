@@ -228,6 +228,8 @@ public:
 			const std::string* faction_id;
 			const std::string* name;
 			base_pops_t* pops;
+			bool has_population;
+			size_t population;
 		} base_update;
 		struct {
 			const std::string* serialized_resourcedef; // can be optimized

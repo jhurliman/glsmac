@@ -11,7 +11,7 @@
 namespace game::backend {
 
 base::SmacPopulationRules Game::GetCanonicalPopulationRules( const base::Base& evaluating_base ) const {
-	return CalculateCanonicalPopulationRules( evaluating_base, evaluating_base.m_pops.size() );
+	return CalculateCanonicalPopulationRules( evaluating_base, evaluating_base.GetPopulation() );
 }
 base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::Base& evaluating_base, size_t population, const base::FacilityDef* granted ) const {
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base ) {

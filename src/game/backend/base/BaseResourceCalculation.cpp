@@ -53,7 +53,7 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
 }
 
 SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support, const FacilityDef* granted, const std::vector<size_t>& removed ) const {
-    const auto population = candidate_population.value_or( m_pops.size() );
+    const auto population = candidate_population.value_or( GetPopulation() );
     GetSmacResourceContext(); // registered Base, bound owner and saved Pop projection
     Game::ResourceQueryPhase query_phase;
     switch ( phase ) {

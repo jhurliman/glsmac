@@ -25,13 +25,13 @@ std::array< bool, 89 > BaseManager::GetSmacSpecialistKnowledge( const Base& base
 
 uint32_t Base::ValidateSmacSpecialistPopulation() const {
 	GetSmacResourceContext();
-	if ( m_pops.size() > 127 ) { THROW( "SMAC specialist query population exceeds admitted 0..127 domain" ); }
+	if ( GetPopulation() > 127 ) { THROW( "SMAC specialist query population exceeds admitted 0..127 domain" ); }
 	for ( const auto& item : m_pops ) {
 		const auto& pop = item.second;
 		if ( pop.m_id != item.first || pop.m_base != this ) { THROW( "SMAC specialist query population identity is invalid" ); }
 		ValidatePopulationRole( pop.m_def, pop.GetWorkedTileCoords() );
 	}
-	return static_cast< uint32_t >( m_pops.size() );
+	return static_cast< uint32_t >( GetPopulation() );
 }
 
 SmacSpecialistMenu Base::GetSmacSpecialistMenu( std::optional< size_t > pop_id ) const {

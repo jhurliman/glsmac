@@ -286,8 +286,8 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 		const auto* base=m_bm->GetBase(id);
 		if(!base || base->m_id!=id || !base_records.insert(id).second) {throw std::runtime_error("Population refresh found an invalid Base record");}
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
-			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
-			population+=static_cast<int64_t>(base->m_pops.size());
+			if(base->GetPopulation()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
+			population+=static_cast<int64_t>(base->GetPopulation());
 			if(++base_total>INT32_MAX) {throw std::overflow_error("Base total exceeds signed32");}
 			if(counts) {
 				if(!base->GetTile()) {throw std::runtime_error("Regional summary Base has no center");}

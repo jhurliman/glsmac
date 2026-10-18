@@ -134,6 +134,7 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	while ( !data.additions.empty() ) { data.base->m_pops.insert( data.additions.extract( data.additions.begin() ) ); }
 	for ( const auto id : data.removals ) { data.retired.push_back( data.base->m_pops.extract( id ) ); }
 	data.base->m_next_pop_id = data.next_pop_id;
+	data.base->m_retained_population.reset(); // the owning worker producer repaired its projection
 	if(data.captured_owner) {data.base->m_owner=data.captured_owner;data.base->m_faction=data.captured_owner->GetPlayer()->GetFaction();}
 	data.base->m_allocation.swap( data.allocation );
 	data.base->m_resource_context.swap( data.context );
@@ -162,7 +163,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
 	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep, PreparedSmacWorkerState* previous, bool riot_defection ) {
-	const auto population = candidate_population.value_or( m_pops.size() );
+	const auto population = candidate_population.value_or( GetPopulation() );
 	m_game->RequireSmacGameplayActive();
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
@@ -200,7 +201,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
         m_game->RequireSmacLocalHumanOwner(captured_owner);
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
 		if(finish_upkeep || captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
-			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
+			|| context.conquest->assimilation!=50 || population+1!=GetPopulation()) {THROW("Capture publication requires its first ordinary population-loss transition");}
 		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;unchanged_context.uncaptured_former_owner=prior_context.uncaptured_former_owner;unchanged_context.former_owner_migration=prior_context.former_owner_migration;
 		if(context.recent_defender_loss) {THROW("Capture must clear defender-loss history");}
 		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;unchanged_context.SyncKnownStatusBits();

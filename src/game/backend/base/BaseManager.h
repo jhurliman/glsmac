@@ -152,6 +152,7 @@ private:
 	std::map< size_t, Base* > m_bases = {};
 	std::vector< size_t > m_base_order;
 	std::vector< types::Buffer > m_unprocessed_bases = {};
+	bool m_unprocessed_retained_population = false;
 
 	std::unordered_set< std::string > m_registered_base_names = {};
 

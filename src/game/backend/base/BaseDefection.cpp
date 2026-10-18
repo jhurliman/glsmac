@@ -47,7 +47,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     for(const auto id:bm->GetBaseRecordOrder()) {auto* base=bm->GetBase(id);if(!base || base->m_owner!=m_owner) {continue;}++old_bases;
         if(base==this) {continue;}bool headquarters=false;
         for(const auto& facility:facilities_for(base)) {headquarters|=facility.second->m_smac_source_id==1;}
-        const auto score=int64_t(base->m_pops.size())*(headquarters ? 2:1);
+        const auto score=int64_t(base->GetPopulation())*(headquarters ? 2:1);
         if(score>best) {best=score;context.governor_options=base->GetSmacResourceContext().governor_options;}
     }
     if(old_bases<2) {THROW("Riot transfer needs a surviving old-owner Base; retained totals differ from live membership");}

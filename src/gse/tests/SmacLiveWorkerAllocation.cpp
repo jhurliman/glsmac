@@ -998,10 +998,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});})
 				&& Rejects([&]{game->Event(GSE_CALL,"unwork_base_tile",{{"base",second->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(8,2)->Wrap(GSE_CALL)}});}),"Screen admitted another Base or unrelated turn mutation");
 			game->Event(GSE_CALL,"unwork_base_tile",{{"base",first->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(4,2)->Wrap(GSE_CALL)}});
-			const auto switched=first->PrepareSmacProductionSelection(1,true);
+			std::optional<int64_t> shown;
+			auto* choices=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(first->Wrap(GSE_CALL)),"get_smac_production_choices"));
+			for(auto* entry:static_cast<value::Array*>(choices->Get("choices"))->value) {
+				auto* choice=static_cast<value::Object*>(entry);
+				if(static_cast<value::Int*>(choice->Get("source_id"))->value==1) {shown=static_cast<value::Int*>(choice->Get("minerals"))->value;}
+			}
+			GT_ASSERT(shown==30,"Screen production selector omitted the admitted Former quote");
 			game->Event(GSE_CALL,"select_smac_production",{{"base",first->Wrap(GSE_CALL)},{"source_id",VALUE(value::Int,,1)},
 				{"expected_state",VALUE(value::String,,SerializeProductionState(first->GetProductionState()).ToString())},
-				{"expected_minerals",VALUE(value::Int,,switched.state.minerals)},{"confirm",VALUE(value::Bool,,true)}});GT_OK();
+				{"expected_minerals",VALUE(value::Int,,*shown)},{"confirm",VALUE(value::Bool,,true)}});GT_OK();
 		});GT_ASSERT(opened.empty(),"Screen entry: "+opened);fixture.DrainEvents();fixture.DrainEvents();
 		const auto edited=fixture.Run([&](GSE_CALLABLE)->std::string {
 			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);

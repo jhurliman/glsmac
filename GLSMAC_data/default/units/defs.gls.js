@@ -56,7 +56,13 @@ const conventional = (id, name, composition) => {
 	}};
 };
 
+const configure = (game) => {
+    if (game.get_ruleset() == 'smac' && game.get_player().is_single_player) {
+        game.configure_smac_unit_presentations({scout: 'ConventionalScout', selected_spartan_rover: 'ConventionalSpartanRover', former: 'ConventionalFormer', colony: 'ConventionalColony'});
+    }
+};
 const result = {
+    configure: configure,
 	define: (game) => {
 
 		for (moraleset of moralesets) {
@@ -84,7 +90,7 @@ const result = {
 				name: 'Colony Pod', morale: 'CONVENTIONAL', type: 'static', movement_type: 'land',
 				movement_per_turn: 0, render: {type: 'port_colony_marker'},
 			}});
-			game.configure_smac_unit_presentations({scout: 'ConventionalScout', selected_spartan_rover: 'ConventionalSpartanRover', former: 'ConventionalFormer', colony: 'ConventionalColony'});
+			configure(game);
 		}
 
 	},

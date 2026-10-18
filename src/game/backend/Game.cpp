@@ -627,6 +627,12 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+        {"is_campaign_restore", NATIVE_CALL(this) {
+            N_EXPECT_ARGS(0);
+            bool restoring=false;
+            {std::lock_guard lock(m_admission_mutex);restoring=m_active_admission && m_active_admission->campaign_world.has_value();}
+            return VALUE(gse::value::Bool,,restoring);
+        })},
         {"save_campaign", NATIVE_CALL(this, session = m_state ? m_state->CaptureGameSession() : State::game_session_t{}) {
             N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
             try {return VALUE(gse::value::Int,,QueueCampaignSave(session,path));}

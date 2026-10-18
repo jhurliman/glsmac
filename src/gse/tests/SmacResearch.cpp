@@ -1,6 +1,7 @@
 #include "SmacResearch.h"
 #include "game/backend/faction/SmacRankOrder.h"
 #include "game/backend/faction/SmacResearch.h"
+#include "game/backend/settings/SmacCouncilRules.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacResearch.h"
 #include "fixtures/SmacDominance.h"
@@ -8,10 +9,17 @@
 #include "task/gsetests/GSETests.h"
 #include <sstream>
 #include <limits>
+#include <fstream>
+#include <cstdlib>
 
 namespace gse::tests {
 namespace {
 std::string ResearchCosts() {return research_fixture::Costs();}
+std::string ProposalSource(const std::string& required="Tech41") {
+	std::string text="#PROPOSALS\n";
+	for(size_t i=0;i<11;++i) {text+="Repeated translated label, "+(i==1 ? required : "None")+", effect, unused suffix\n";}
+	return text+"#END\n";
+}
 std::string ResearchPools() {return research_fixture::Pools();}
 std::string ResearchRates() {
 	const auto catalog=smac_rules_fixture::Technologies();
@@ -32,6 +40,58 @@ std::string ResearchRates() {
 }
 }
 void AddSmacResearchTests(task::gsetests::GSETests* task) {
+	if(const auto* asset=std::getenv("GLSMAC_TEST_ALPHA_ASSET")) {
+		const std::string path=asset;
+		task->AddTest("SMAC installed proposals match all11 native requirement records",[path](GSE*,context::Context*)->std::string {
+			std::ifstream file(path,std::ios::binary);GT_ASSERT(file.good(),"Installed alpha.txt could not be opened");
+			const std::string source((std::istreambuf_iterator<char>(file)),std::istreambuf_iterator<char>());
+			const auto catalog=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+			const auto rules=game::backend::settings::SmacCouncilRules::Read(source,catalog);GT_ASSERT(rules.has_value(),"Installed proposals unavailable");
+			const std::array<int32_t,11> expected{{-1,41,77,61,61,66,66,62,17,17,-2}};
+			using Kind=game::backend::settings::SmacTechnologyReference::Kind;
+			for(size_t i=0;i<11;++i) {const auto value=catalog.ResolveToken(rules->prerequisites[i]);
+				const auto id=value.kind==Kind::NONE ? -1 : value.kind==Kind::DISABLED ? -2 : value.technology_id.value_or(-3);
+				GT_ASSERT(id==expected[i],"Installed proposal requirement differs at row "+std::to_string(i+1));
+			}
+			GT_ASSERT(rules->SupremeLeader(catalog).technology_id==std::optional<int32_t>(41),"Installed Supreme Leader binding differs");GT_OK();
+		});
+	}
+	task->AddTest("SMAC proposal prerequisites retain positional Supreme Leader authority and strict ingestion",GT(){
+		using Council=game::backend::settings::SmacCouncilRules;using Kind=game::backend::settings::SmacTechnologyReference::Kind;
+		const auto catalog=smac_rules_fixture::Technologies();const auto parsed=Council::Read(ProposalSource(),catalog);
+		GT_ASSERT(parsed && parsed->SupremeLeader(catalog).technology_id==std::optional<int32_t>(41),"Proposal2 did not supply the loaded requirement");
+		for(const auto& token:{"None","none","Disable","disable","tEcH41","  Tech41  "}) {
+			const auto value=Council::Read(ProposalSource(token),catalog);const auto resolved=catalog.ResolveToken(value->prerequisites[1]);
+			GT_ASSERT(value->SupremeLeader(catalog).kind==resolved.kind && value->SupremeLeader(catalog).technology_id==resolved.technology_id,"Proposal reader changed reference semantics");
+		}
+		GT_ASSERT(Council::Read(ProposalSource("None"),catalog)->SupremeLeader(catalog).kind==Kind::NONE
+			&& Council::Read(ProposalSource("Disable"),catalog)->SupremeLeader(catalog).kind==Kind::DISABLED
+			&& !Council::Read("#OTHER\n",catalog),"Missing proposal authority became a default requirement");
+		const auto rejects=[&](const std::string& source){try{Council::Read(source,catalog);}catch(const std::exception&){return true;}return false;};
+		GT_ASSERT(rejects(ProposalSource("Tech41X")) && rejects(ProposalSource("")) && rejects(ProposalSource(std::string(257,'x')))
+			&& rejects(ProposalSource()+ProposalSource()) && rejects("#PROPOSALS\nRow,Tech41,effect\n#END\n"),"Malformed/unknown proposal profile was admitted");
+		const auto wire=parsed->Serialize(catalog).ToString();
+		GT_ASSERT(Council::Deserialize(types::Buffer(wire),catalog)==*parsed,"Proposal codec changed the frozen source");
+		bool rejected=false;try{Council::Deserialize(types::Buffer(wire+"x"),catalog);}catch(const std::exception&){rejected=true;}
+		GT_ASSERT(rejected,"Proposal codec dropped trailing data");GT_OK();
+	});
+	task->AddTest("SMAC proposal host binding restores freezes and preserves legacy unavailability",GT(){
+		using game::backend::settings::GlobalSettings;
+		const auto source=[](const std::string& filename){return smac_rules_fixture::Source(filename)+(filename=="alpha.txt" ? ProposalSource() : "");};
+		GlobalSettings host;host.SelectRuleset("smac");host.InitializeHostRules(source);smac_rules_fixture::AcceptWorldSize(host);
+		const auto before=host.Serialize().ToString();GlobalSettings restored;restored.Deserialize(types::Buffer(before));
+		GT_ASSERT(restored.GetSmacCouncilRules() && *restored.GetSmacCouncilRules()==*host.GetSmacCouncilRules(),"Host/restored proposal authority differs");
+		GlobalSettings changed;changed.SelectRuleset("smac");changed.InitializeHostRules([](const std::string& filename){return smac_rules_fixture::Source(filename)+(filename=="alpha.txt" ? ProposalSource("Tech39") : "");});smac_rules_fixture::AcceptWorldSize(changed);
+		bool rejected=false;try{host.Deserialize(changed.Serialize());}catch(const std::exception&){rejected=true;}
+		GT_ASSERT(rejected && host.Serialize().ToString()==before,"Frozen proposal mutation partially changed host settings");
+		GlobalSettings legacy;legacy.Deserialize(smac_rules_fixture::Payload("smac",true));
+		GT_ASSERT(!legacy.GetSmacCouncilRules(),"V17 restore invented proposal prerequisites");
+		GlobalSettings minimal;minimal.SelectRuleset("smac");minimal.InitializeHostRules(smac_rules_fixture::Source);smac_rules_fixture::AcceptWorldSize(minimal);
+		auto wire=minimal.Serialize();wire.ReadInt();types::Buffer prefix;prefix.WriteInt(18);types::Buffer marker;marker.WriteBool(false);
+		const auto v18=prefix.ToString()+wire.ToString().substr(wire.lenr,wire.lenw-wire.lenr-marker.ToString().size());
+		GlobalSettings migrated;migrated.Deserialize(types::Buffer(v18));GT_ASSERT(!migrated.GetSmacCouncilRules(),"V18 restore invented current installed requirements");
+		GT_OK();
+	});
     task->AddTest("SMAC dominance treats an empty retained leader rank as a non-match",GT(){
         namespace f=game::backend::faction;using Ref=game::backend::settings::SmacTechnologyReference;
         const auto rank=f::SmacRankOrder::Update({},128);

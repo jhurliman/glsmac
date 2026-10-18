@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Settings.cpp
 	${PWD}/SmacCampaignRules.cpp
+	${PWD}/SmacCouncilRules.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacMovementRules.cpp
 	${PWD}/SmacTerritoryRules.cpp

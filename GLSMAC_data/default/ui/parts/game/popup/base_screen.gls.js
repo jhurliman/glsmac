@@ -157,6 +157,7 @@ return {
 
 		this.base_id = base.id;
 		this.base = base;
+		this.sections.top_buttons.set_base(base);
 
 		const canonical = base.has_smac_resource_context;
 		let intake = undefined;
@@ -330,6 +331,7 @@ return {
 
 	on_hide: () => {
 		this.sections.facilities.reset();
+		this.sections.top_buttons.hide_view();
 		this.sections.specialist_selection.hide_view();
 		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
 		this.sections.bottom_bar.frame.hide();

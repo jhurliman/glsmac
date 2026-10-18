@@ -1,0 +1,1261 @@
+{
+  "research_id": "RE-SMAC-GOVERNOR-COMMAND-HANDOFF-001",
+  "option_mapping": [
+    {
+      "control_index": 0,
+      "name": "active",
+      "saved_mask": 2147483648
+    },
+    {
+      "control_index": 1,
+      "name": "multiple_priorities",
+      "saved_mask": 2097152
+    },
+    {
+      "control_index": 2,
+      "name": "automate_new_units",
+      "saved_mask": 128
+    },
+    {
+      "control_index": 3,
+      "name": "manage_citizens_specialists",
+      "saved_mask": 64
+    },
+    {
+      "control_index": 4,
+      "name": "manage_production",
+      "saved_mask": 1
+    },
+    {
+      "control_index": 5,
+      "name": "produce_scouts",
+      "saved_mask": 4194304
+    },
+    {
+      "control_index": 6,
+      "name": "produce_land_combat",
+      "saved_mask": 512
+    },
+    {
+      "control_index": 7,
+      "name": "produce_naval_combat",
+      "saved_mask": 1024
+    },
+    {
+      "control_index": 8,
+      "name": "produce_air_combat",
+      "saved_mask": 2048
+    },
+    {
+      "control_index": 9,
+      "name": "produce_land_defense",
+      "saved_mask": 4096
+    },
+    {
+      "control_index": 10,
+      "name": "produce_air_defense",
+      "saved_mask": 8192
+    },
+    {
+      "control_index": 11,
+      "name": "produce_prototypes",
+      "saved_mask": 524288
+    },
+    {
+      "control_index": 12,
+      "name": "produce_transports",
+      "saved_mask": 8388608
+    },
+    {
+      "control_index": 13,
+      "name": "produce_probe_teams",
+      "saved_mask": 1048576
+    },
+    {
+      "control_index": 14,
+      "name": "produce_terraformers",
+      "saved_mask": 32768
+    },
+    {
+      "control_index": 15,
+      "name": "produce_colony_pods",
+      "saved_mask": 131072
+    },
+    {
+      "control_index": 16,
+      "name": "produce_facilities",
+      "saved_mask": 65536
+    },
+    {
+      "control_index": 17,
+      "name": "produce_secret_projects",
+      "saved_mask": 262144
+    },
+    {
+      "control_index": 18,
+      "name": "hurry_production",
+      "saved_mask": 32
+    }
+  ],
+  "directive_mask": 251658240,
+  "initialization_cases": [
+    {
+      "fresh": true,
+      "before": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ],
+      "before_first_child": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ],
+      "after_owner1_prefix": [
+        305397760,
+        14663233,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ]
+    },
+    {
+      "fresh": true,
+      "before": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ],
+      "before_first_child": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ],
+      "after_owner1_prefix": [
+        305397760,
+        14663233,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ]
+    },
+    {
+      "fresh": false,
+      "before": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ],
+      "before_first_child": null,
+      "after_owner1_prefix": [
+        305397760,
+        305397777,
+        305397794,
+        305397811,
+        305397828,
+        305397845,
+        305397862,
+        305397879
+      ]
+    }
+  ],
+  "save_load_templates": [
+    {
+      "saved": [
+        2148532224,
+        2148532325,
+        2148532426,
+        2148532527,
+        2148532628,
+        2148532729,
+        2148532830,
+        2148532931
+      ],
+      "restored": [
+        2148532224,
+        2148532325,
+        2148532426,
+        2148532527,
+        2148532628,
+        2148532729,
+        2148532830,
+        2148532931
+      ]
+    },
+    {
+      "saved": [
+        2148532224,
+        2148532325,
+        2148532426,
+        2148532527,
+        2148532628,
+        2148532729,
+        2148532830,
+        2148532931
+      ],
+      "restored": [
+        2148532224,
+        2148532325,
+        2148532426,
+        2148532527,
+        2148532628,
+        2148532729,
+        2148532830,
+        2148532931
+      ]
+    }
+  ],
+  "Apply_cases": [
+    {
+      "id": "production0_citizens1_bulk0",
+      "inputs": {
+        "manage_production": false,
+        "manage_citizens": true,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "callback_entries": [
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038144,
+            "remembered": 2181038144,
+            "status": 2147483648,
+            "queue_count": 1,
+            "target": 2,
+            "workers": 0,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "role": "citizen_followup",
+          "state": {
+            "config": 2181038144,
+            "remembered": 2181038144,
+            "status": 2147483648,
+            "queue_count": 1,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "map_refresh",
+          "state": {
+            "config": 2181038144,
+            "remembered": 2181038144,
+            "status": 2147483648,
+            "queue_count": 1,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "config": 2181038144,
+        "remembered": 2181038144,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      }
+    },
+    {
+      "id": "production1_citizens0_bulk0",
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": false,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "callback_entries": [
+        {
+          "role": "production_selection",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260865,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2214592513,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2281701377,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "map_refresh",
+          "state": {
+            "config": 2181038081,
+            "remembered": 2181038081,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "config": 2181038081,
+        "remembered": 2181038081,
+        "status": 0,
+        "queue_count": 0,
+        "target": -38,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      }
+    },
+    {
+      "id": "production1_citizens1_bulk0",
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": true,
+        "bulk_configuration": false,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "callback_entries": [
+        {
+          "role": "production_selection",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2164260929,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2214592577,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2281701441,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": 2,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "map_refresh",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "Base_recalculation",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 0,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        },
+        {
+          "role": "citizen_followup",
+          "state": {
+            "config": 2181038145,
+            "remembered": 2181038145,
+            "status": 0,
+            "queue_count": 0,
+            "target": -38,
+            "workers": 3,
+            "retained_specialists": 0,
+            "provisional_specialists": 0,
+            "intake": [
+              3,
+              5,
+              2
+            ]
+          }
+        }
+      ],
+      "after": {
+        "config": 2181038145,
+        "remembered": 2181038145,
+        "status": 0,
+        "queue_count": 0,
+        "target": -38,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          3,
+          5,
+          2
+        ]
+      }
+    },
+    {
+      "id": "production1_citizens1_bulk1",
+      "inputs": {
+        "manage_production": true,
+        "manage_citizens": true,
+        "bulk_configuration": true,
+        "production_permissions_all_disabled": true,
+        "directive": "Discover"
+      },
+      "before": {
+        "config": 33554432,
+        "remembered": 0,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      },
+      "callback_entries": [],
+      "after": {
+        "config": 2181038145,
+        "remembered": 2181038145,
+        "status": 2147483648,
+        "queue_count": 1,
+        "target": 2,
+        "workers": 3,
+        "retained_specialists": 0,
+        "provisional_specialists": 0,
+        "intake": [
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "validation": {
+    "reused_settings_cases": 830,
+    "reused_reset_intake_cases": 22,
+    "reused_startup_founding_cases": 6,
+    "new_native_Apply_compositions": 4,
+    "full_dialog_or_network": false
+  }
+}

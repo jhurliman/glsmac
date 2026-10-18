@@ -429,6 +429,9 @@ public:
                 }
                 m_game.m_simulation->value.ecology_history=ecology;
                 m_game.m_simulation->value.perihelion=true;
+                std::array<std::optional<uint32_t>,8> governor;
+                for(size_t i=0;i<8;++i) {governor[i]=0x80000000u+static_cast<uint32_t>(i);}
+                m_game.m_simulation->value.remembered_governor=governor;
                 m_game.m_simulation->value.regional_strategy=rows;m_game.m_simulation->value.ranking_scores=scores;
                 ResetWorld();
                 GT_ASSERT(!m_game.m_simulation && !m_game.m_map && !m_state->GetGame(),"Real reset retained its preceding world");
@@ -437,6 +440,8 @@ public:
                 for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
                 m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
                 m_game.PrepareNewSimulation();
+                for(const auto& participant:m_game.m_simulation->value.roster) {governor[participant.simulation_id]=base::SmacBaseResourceContext::NewGameGovernorOptions(m_game.m_simulation->value.designs.global_difficulty);}
+                GT_ASSERT(m_game.m_simulation->value.remembered_governor==governor,"New world cleared peer/slot0 Governor templates or failed fresh owner initialization");
                 GT_ASSERT(m_game.m_simulation->value.perihelion==std::optional<bool>{false},"Accepted new world retained active perihelion");
                 if(ecology) {for(const auto& participant:m_game.m_simulation->value.roster) {
                     ecology->clean_minerals[participant.simulation_id]=0;ecology->major_atrocities[participant.simulation_id]=0;

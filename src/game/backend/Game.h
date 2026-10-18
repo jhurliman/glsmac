@@ -647,6 +647,7 @@ private:
 	// Explicit cold-engine zero storage; later world preparation retains these
 	// words until actual per-owner initialization. An absent old save stays absent.
 	std::optional<faction::SmacEcologyHistory> m_smac_cross_world_ecology{std::in_place};
+	std::array<std::optional<uint32_t>,8> m_smac_cross_world_governor{};
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
@@ -782,6 +783,7 @@ private:
 	bool HandleSmacSpecialistEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacHurryEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	void ResetCanonicalHurryMarkers(int32_t owner);
+	bool HandleSmacGovernorEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	bool HandleSmacQueueEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacRenameEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	class EventBatchRoots;

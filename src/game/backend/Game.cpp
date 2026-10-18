@@ -613,6 +613,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 		|| HandleSmacProductionEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacSpecialistEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacHurryEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacGovernorEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacQueueEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacRenameEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
@@ -1016,6 +1017,7 @@ WRAPIMPL_BEGIN( Game )
 					&& !HandleSmacProductionEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacSpecialistEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacHurryEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacGovernorEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacQueueEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacRenameEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
@@ -1974,6 +1976,10 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 					WithRW( [ & ] { HandleSmacHurryEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
+                if(event->GetSource()==event::Event::ES_LOCAL
+                    && HandleSmacGovernorEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+                    WithRW([&]{HandleSmacGovernorEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});continue;
+                }
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacQueueEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacQueueEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
@@ -3202,6 +3208,7 @@ void Game::ResetGame() {
 			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
 			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
 			m_smac_cross_world_ecology=m_simulation->value.ecology_history;
+			m_smac_cross_world_governor=m_simulation->value.remembered_governor;
 		}
 		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();

@@ -39,9 +39,17 @@ struct SmacBaseResourceContext {
 	void Validate() const;
 	SmacBaseResourceContext AfterUpkeep() const;
 	// Global startup difficulty precedes stored owner difficulty in the original.
-	// The current port has no governor-preference editor: new Bases copy this
-	// unchanged default; saved Base options are never reset from it.
+	// Only actual fresh owner initialization produces this default. New Bases
+	// copy the owner remembered template; saved Base options remain independent.
 	static uint32_t NewGameGovernorOptions( int32_t global_difficulty );
+	static constexpr std::array<uint32_t,19> GOVERNOR_CONTROL_MASKS{{
+		0x80000000u,0x00200000u,0x00000080u,0x00000040u,0x00000001u,
+		0x00400000u,0x00000200u,0x00000400u,0x00000800u,0x00001000u,
+		0x00002000u,0x00080000u,0x00800000u,0x00100000u,0x00008000u,
+		0x00020000u,0x00010000u,0x00040000u,0x00000020u
+	}};
+	static uint32_t GovernorControls(uint32_t options) noexcept;
+	static uint32_t GovernorOptions(uint32_t previous,uint32_t controls);
 	SmacWorkerPriorityContext WorkerPriorities( const std::array<int32_t,5>& faction ) const;
 	bool GovernorActive() const { return ( governor_options & GOVERNOR_ACTIVE ) != 0; }
 	bool ManageCitizens() const { return ( governor_options & MANAGE_CITIZENS ) != 0; }

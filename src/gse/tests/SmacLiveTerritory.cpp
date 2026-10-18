@@ -1,6 +1,7 @@
 #include "SmacLiveTerritory.h"
 #include "ConventionalUnits.h"
 #include "fixtures/GlsmacTerritoryTopology.h"
+#include "fixtures/SmacCoastalGeography.h"
 #include "fixtures/SmacRulesSource.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
@@ -27,6 +28,9 @@ using Topology = map::GlsmacTerritoryTopology;
 using Knowledge = map::SmacWorkerKnowledge;
 bool Rejects(const std::function<void()>& call) { try {call();} catch(const std::exception&) {return true;} return false; }
 size_t Index(int32_t width,int32_t x,int32_t y) {return static_cast<size_t>(y)*(width/2)+x/2;}
+void WriteArea(std::string& wire,size_t offset,int32_t value) {
+	for(size_t i=0;i<4;++i) {wire[offset+i]=static_cast<char>((static_cast<uint32_t>(value)>>(8*i))&255);}
+}
 std::string Rules(int32_t border) {
 	std::string text="#RULES\n";
 	for(int row=1;row<=70;++row) {text+=std::to_string(row==48?border:0)+", ; explicit fixture\n";}
@@ -58,6 +62,68 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC geography matches 11 original coastal and retained region area compositions",GT(){
+		for(const auto& item:coastal_geography_fixture::cases) {
+			const auto count=size_t(item.width)*item.height/2;std::vector<bool> sea(count);
+			for(size_t i=0;i<count;++i) {sea[i]=item.land[i]=='0';}
+			Topology::RegionValues before{},after{};for(const auto& row:item.before) {before.at(row.first)=row.second;}
+			for(const auto& row:item.after) {after.at(row.first)=row.second;}
+			auto actual=Topology::Build(item.width,item.height,item.wrap,sea,before);
+			GT_ASSERT(actual.Areas() && *actual.Areas()==after,"stored areas differ: "+std::string(item.id));
+			const auto hex=[](char digit){return digit<='9' ? digit-'0' : digit-'a'+10;};
+			for(size_t i=0;i<count;++i) {GT_ASSERT(actual.Regions()[i]==16*hex(item.regions[2*i])+hex(item.regions[2*i+1]),"region labels differ: "+std::string(item.id));}
+			if(item.postpass) {
+				actual=actual.WithTerrainPostpass(sea,std::vector<bool>(count,false));
+				for(size_t i=0;i<count;++i) {GT_ASSERT(actual.Postpass()->coastal[i]==item.coastal[i]-'0',"coastal flags differ: "+std::string(item.id)+" tile "+std::to_string(i));}
+			}
+			GT_ASSERT(Topology::Deserialize(actual.Serialize())==actual,"geography codec changed native history");
+		}GT_OK();
+	});
+	task->AddTest("SMAC geography separates area fertility and restore lifetimes without inventing V1 history",GT(){
+		std::vector<bool> sea(1024,false),fertile(1024,true);
+		auto value=Topology::Build(64,32,true,sea);GT_ASSERT(value.Areas()->at(1)==1024 && value.Areas()->at(63)==64 && !value.Postpass(),"fresh region fill invented fertility or omitted enqueued polar area");
+		value=value.WithTerrainPostpass(sea,fertile);
+		GT_ASSERT(value.Postpass()->fertility.at(1)==960 && value.Postpass()->fertility.at(63)==64,"postpass did not count final polar labels separately");
+		sea[Index(64,4,4)]=true;fertile[Index(64,4,4)]=false;
+		auto changed=value.Rebuild(sea);changed.ValidateTerrain(sea);
+		GT_ASSERT(changed.Areas()->at(1)==1023 && changed.Areas()->at(63)==128 && changed.Areas()->at(65)==1 && changed.Postpass()==value.Postpass(),"fill refreshed postpass data or repaired polar accumulation");
+		changed=changed.WithTerrainPostpass(sea,fertile);
+		GT_ASSERT(changed.Postpass()->fertility.at(1)==959 && changed.Postpass()->fertility.at(63)==64,"postpass did not replace old F");
+		const auto wire=changed.Serialize();GT_ASSERT(Topology::Deserialize(wire)==changed,"stale areas changed on restore");
+		for(int variant=0;variant<3;++variant) {auto bad=wire;if(variant==0) {bad[13]=0;}if(variant==1) {bad.back()=4;}if(variant==2) {bad.pop_back();}
+			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"invalid geography metadata accepted");}
+		for(const size_t word:{size_t(0),size_t(127),size_t(128),size_t(255)}) {for(const int32_t negative:{-1,INT32_MIN}) {
+			auto bad=wire;WriteArea(bad,16+1024+4*word,negative);
+			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"negative saved area or fertility counter accepted");
+		}}
+		for(const auto region:{1,63,65}) {auto bad=wire;WriteArea(bad,16+1024+4*region,0);
+			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"zero area accepted for a referenced land water or polar region");}
+		auto retained=wire;WriteArea(retained,16+1024+4*127,INT32_MAX);
+		GT_ASSERT(Topology::Deserialize(retained).Serialize()==retained,"valid retained positive history was recounted or clamped");
+		auto legacy=value.Serialize().substr(0,1040);legacy.replace(0,8,"GLSTERR1");legacy[13]=0;legacy[14]=0;
+		const auto old=Topology::Deserialize(legacy);old.ValidateTerrain(std::vector<bool>(1024,false));
+		GT_ASSERT(!old.Areas() && !old.Postpass() && Topology::Deserialize(old.Serialize())==old,"V1 load invented retained geography");
+		GT_ASSERT(Rejects([&]{old.Rebuild(sea);}) && Rejects([&]{old.WithTerrainPostpass(sea,fertile);}),"missing polar history was fabricated");GT_OK();
+	});
+	task->AddTest("SMAC live geography admission and actual Start retain stale postpass data",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,geography;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* map=game->GetMap();
+			GT_ASSERT(map->GetWidth()==128 && map->GetHeight()==64,"geography fixture dimensions changed");
+			for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {auto* tile=map->GetTile(x,y);tile->moisture=map::tile::MOISTURE_RAINY;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->features=0;}}
+			map->GetTile(8,8)->moisture=map::tile::MOISTURE_ARID;map->GetTile(10,8)->rockiness=map::tile::ROCKINESS_ROCKY;map->GetTile(12,8)->features=map::tile::FEATURE_XENOFUNGUS;
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));const auto& topology=*map->GetTerritoryTopology();
+			GT_ASSERT(topology.Areas()->at(1)==4096 && topology.Postpass() && topology.Postpass()->fertility.at(1)==3965 && topology.Postpass()->fertility.at(63)==128,"live terrain adapter confused port ordinals or ignored fertility exclusions");
+			geography=topology.Serialize();map->GetTile(14,8)->moisture=map::tile::MOISTURE_ARID;
+			game->PublishSmacWorkerKnowledge(GSE_CALL,*map->GetSmacWorkerKnowledge());
+			GT_ASSERT(map->GetTerritoryTopology()->Serialize()==geography,"knowledge publication silently refreshed retained geography");saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			GT_ASSERT(restored.Game()->GetMap()->GetTerritoryTopology()->Serialize()==geography,"actual Start replayed a terrain postpass or derived area history");GT_OK();
+		});
+	});
 	task->AddTest("SMAC territory topology matches 16 original seed and polar projections",GT(){
 		for(const auto& item:territory_topology_fixture::cases) {
 			std::vector<bool> sea(item.width*item.height/2,item.all_sea);
@@ -72,7 +138,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		std::vector<bool> sea(32,false);const auto value=Topology::Build(8,8,true,sea);const auto wire=value.Serialize();
 		sea[10]=true;GT_ASSERT(Rejects([&]{value.ValidateTerrain(sea);}),"changed terrain retained region authority");
 		for(int i=0;i<7;++i) {
-			auto bad=wire;if(i==0){bad.pop_back();}if(i==1){bad+='x';}if(i==2){bad[12]=2;}if(i==3){bad[13]=1;}
+			auto bad=wire;if(i==0){bad.pop_back();}if(i==1){bad+='x';}if(i==2){bad[12]=2;}if(i==3){bad[13]=2;}
 			if(i==4){bad[16]=1;}if(i==5){bad[20]=64;}if(i==6){bad[8]=3;}
 			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"invalid topology frame admitted");
 		}

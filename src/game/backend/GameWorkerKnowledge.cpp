@@ -106,7 +106,7 @@ void Game::PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowle
 	ValidateSmacWorkerKnowledge( knowledge );
 	auto topology = m_map->m_territory_topology;
 	if ( topology ) { topology->ValidateTerrain( m_map->TerritorySea() ); }
-	else { topology = map::GlsmacTerritoryTopology::Build( m_map->GetWidth(), m_map->GetHeight(), true, m_map->TerritorySea() ); }
+	else { topology = m_map->PrepareFreshTerritoryTopology(); }
 	std::optional< map::SmacWorkerKnowledge > replacement = knowledge;
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
 	static_assert( std::is_nothrow_swappable_v< decltype( topology ) > );

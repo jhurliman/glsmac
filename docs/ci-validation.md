@@ -53,6 +53,23 @@ source/test registrations alone no longer select every production unit. See
 [the selector and its failure policy](cpp-analysis.md#scope-and-diagnostics).
 The narrowly path-filtered reference inventory workflow is unchanged.
 
+## Visual milestone evidence
+
+Include real game screenshots in progress updates when a visible milestone is
+reached: menu/setup, map and unit interaction, Base screens, and completed
+gameplay slices. Label each capture with platform, build revision and scene;
+do not present rules-only changes as visual improvements. Reuse the active
+development build rather than starting a platform matrix for a screenshot.
+
+For original-executable comparisons, capture the same scene at matching client
+resolution, UI scale, faction, turn and relevant map/Base state. Record which
+original executable and patches were used. Preserve raw captures; make crops,
+overlays and difference images separately. Mask only documented nondeterministic
+elements such as cursor, animation and clock. Treat remaining pixel differences
+as investigation leads, not automatic gameplay or fidelity verdicts. Until a
+matched original scene is captured, label port screenshots as progress evidence
+rather than a verified fidelity comparison.
+
 ## Check results and branch protection
 
 `Regression gate` and `Lifecycle gate` run even when a dependency fails. They

@@ -81,7 +81,9 @@ void UnitManager::QueueAutomaticSelectionAt( types::Vec2<size_t> focus ) {
 	visit->turn_id = turn; visit->current = m_controller_selection; visit->focus = focus;
 	m_selection_visit = visit;
 	const std::weak_ptr<SelectionVisit> weak = visit;
-	auto* state = m_game->m_state;
+	// The frontend relinquishes its startup State after initialization. The
+	// backend owns the live State; queued work remains bound to its session.
+	auto* state = m_game->GetGame()->GetState();
 	state->WithGameSession( state->CaptureGameSession(), state, [ weak ]( backend::Game* const game, GSE_CALLABLE ) {
 		if ( const auto request = weak.lock() ) {
 			request->selected = game->SelectLocalConventionalUnit( request->turn_id, request->current, request->current, request->focus, true );
@@ -146,7 +148,7 @@ void UnitManager::PumpSelectedWork( std::optional< size_t > selected ) {
 	if ( m_work_visit && m_work_visit->unit_id == *selected && m_work_visit->turn_id == turn ) { return; }
 	m_work_visit = std::make_shared< const WorkVisit >( WorkVisit{ *selected, turn } );
 	const std::weak_ptr< const WorkVisit > visit = m_work_visit;
-	auto* state = m_game->m_state;
+	auto* state = m_game->GetGame()->GetState();
 	state->WithGameSession( state->CaptureGameSession(), state, [ visit ]( backend::Game* const game, GSE_CALLABLE ) {
 		// Selection/update/teardown retires this visit before a delayed callback.
 		// Only copied IDs cross threads; session retirement cancels old-world work.

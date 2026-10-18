@@ -1667,7 +1667,8 @@ void Game::Initialize(
 									const auto destination_coords=dst_tile->GetCoords();
 									const auto defender_id=foreign_units.empty() ? std::optional<size_t>{}
 										: std::optional<size_t>{tile::Tile::GetUnitsOrder(foreign_units).front()};
-									m_state->WithGameSession( m_state->CaptureGameSession(), m_state,
+									auto* state = m_game->GetState();
+									state->WithGameSession( state->CaptureGameSession(), state,
 										[ selected_id, destination_coords, defender_id ]( backend::Game* const game, GSE_CALLABLE ) {
 											const auto* um = game->GetUM();
 											auto* unit=um->GetUnit(selected_id);

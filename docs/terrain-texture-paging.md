@@ -32,9 +32,14 @@ drawing.
   Linux debug build with memory debugging enabled.
 - LLVM 15 correctness analysis passes eight affected production translation
   units, including the watcher, shader programs and drawing consumers.
-- Actual full-Planet rendering passes shader initialization and atlas upload and
-  produces a terrain framebuffer. A subsequent minimap-stage crash is under
-  investigation; this is not yet a completed seven-faction visual smoke test.
+- Actual full-Planet rendering passes shader initialization and atlas upload.
+  The initial capture then exposed a separate selected-work crash: the frontend
+  startup State pointer had already been cleared at the ownership handoff.
+  Selection and keyboard movement now resolve the backend-owned State while
+  retaining session cancellation. With that fix, a stable actual framebuffer
+  includes all seven provisional faction Bases and the minimap. Focused native
+  controller fixtures reproduce the cleared startup pointer; three controller
+  groups also pass leak-enabled ASan/UBSan.
 
 Paging fixes GPU storage limits. It does not establish original-game terrain
 geometry, contour shading or map-import fidelity. Those require matched

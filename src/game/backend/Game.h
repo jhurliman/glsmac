@@ -410,6 +410,8 @@ public:
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
 	base::SmacPopulationRules GetCanonicalPopulationRules( const base::Base& base ) const;
 	base::SmacBaseEnergyCalculation GetCanonicalBaseEnergy( const base::Base& base ) const;
+	base::SmacBaseEnergyCalculation PreviewCanonicalBaseEnergy(const base::Base& base,base::SmacEnergyRates rates) const;
+	gse::Value* CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& base,std::optional<base::SmacEnergyRates> candidate) const;
 	faction::SmacEconomyState GetCanonicalEconomy( const slot::Slot* owner ) const;
 	// Positional source identity is explicit; opaque IDs are never parsed.
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
@@ -783,6 +785,7 @@ private:
 	bool HandleSmacSpecialistEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacHurryEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	void ResetCanonicalHurryMarkers(int32_t owner);
+	bool HandleSmacEnergyRatesEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	bool HandleSmacGovernorEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	bool HandleSmacQueueEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacRenameEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
@@ -813,7 +816,7 @@ private:
 		const unit::Unit* prepared_unit, const std::vector<size_t>& removed = {} ) const;
 	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
 	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;
-	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources ) const;
+	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates = nullptr ) const;
 	// Native controller stages these calls in its once-only Base/faction order.
 	// They are deliberately not script callbacks or independently queued events.
 	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );

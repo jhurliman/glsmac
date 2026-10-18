@@ -41,12 +41,13 @@ base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& 
 }
 
 base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::Base& evaluating_base,
-	const base::SmacBaseResourceCalculation& resources ) const {
+	const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates ) const {
 	using namespace base;
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_map ) {
 		throw std::runtime_error( "Energy calculation requires a registered Base in this world" );
 	}
 	const auto economy = GetCanonicalEconomy( evaluating_base.m_owner );
+	const auto rates=candidate_rates ? *candidate_rates : economy.rates;rates.Validate();
 	const auto context = evaluating_base.GetSmacResourceContext();
 	if ( m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
 		throw std::runtime_error( "Energy calculation requires the explicit no-project campaign" );
@@ -129,11 +130,11 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 		{ Checked( tile->coord.x ), Checked( tile->coord.y ) }, headquarters );
 	const auto waste = CalculateSmacEnergyWaste( raw, distance, social->current[ 1 ], local[ 2 ] );
 	const auto net = Checked( int64_t( raw ) - waste );
-	const auto categories = AllocateSmacEnergy( net, economy.rates, outputs );
+	const auto categories = AllocateSmacEnergy( net, rates, outputs );
 	// The definition constructor clears flat labs. The fully validated admitted
 	// keyword set has no direct RESEARCH writer; current social RESEARCH is a
 	// separate later submission multiplier and must not be substituted here.
-	SmacEnergyTailInputs inputs{ categories.after_specialists, economy.rates, social->current[ 1 ], 0 };
+	SmacEnergyTailInputs inputs{ categories.after_specialists, rates, social->current[ 1 ], 0 };
 	inputs.facilities = local;
 	inputs.current_stockpile = production->current_item.kind == ProductionItemKind::Stockpile;
 	inputs.baseline_stockpile = production->baseline_item.kind == ProductionItemKind::Stockpile;

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <utility>
 
 namespace game::backend::base {
 
@@ -55,6 +56,9 @@ struct SmacBaseEnergyCalculation {
 	int32_t raw_intake, headquarters_distance, waste, net, maintenance;
 	SmacEnergyAllocation allocation;
 	SmacEnergyTail tail;
+	// Frozen at the final resource pass, before research can change authority.
+	// Source ID order is the original individual maintenance charge order.
+	std::vector< std::pair< int32_t, int32_t > > maintenance_fees;
 };
 
 // RE-SMAC-ENERGY-TAIL-001 nonnegative category domain. Evaluated signed32

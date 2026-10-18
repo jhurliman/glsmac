@@ -13,6 +13,7 @@
 #include "gc/Space.h"
 #include <algorithm>
 #include <stdexcept>
+#include <type_traits>
 
 namespace game::backend {
 namespace {
@@ -79,6 +80,7 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	}
 	std::vector< SmacEnergyCoordinate > headquarters;
 	int32_t maintenance = 0;
+	std::vector< std::pair< int32_t, int32_t > > maintenance_fees;
 	for ( const auto& item : m_bm->GetBases() ) {
 		const auto* candidate = item.second;
 		if ( !candidate || candidate->m_id != item.first || candidate->GetGame() != this ) { throw std::runtime_error( "Invalid energy Base registry" ); }
@@ -105,6 +107,7 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 			const auto fee = facilities->facilities.at( id - 1 ).maintenance;
 			if ( fee < 0 ) { throw std::runtime_error( "Negative facility maintenance is outside ordinary posting" ); }
 			maintenance = Checked( int64_t( maintenance ) + fee );
+			maintenance_fees.emplace_back( id, fee );
 		}
 	}
 	const auto allocation = evaluating_base.GetSmacAllocation();
@@ -133,7 +136,48 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	inputs.current_stockpile = production->current_item.kind == ProductionItemKind::Stockpile;
 	inputs.baseline_stockpile = production->baseline_item.kind == ProductionItemKind::Stockpile;
 	inputs.mineral_surplus = resources.minerals.surplus;
-	return { raw, distance, waste, net, maintenance, categories, FinishSmacEnergy( inputs ) };
+	std::sort( maintenance_fees.begin(), maintenance_fees.end() );
+	return { raw, distance, waste, net, maintenance, categories, FinishSmacEnergy( inputs ), std::move(maintenance_fees) };
+}
+
+std::vector<std::string> Game::PostCanonicalBaseMaintenance( const base::Base& evaluating_base, const base::SmacBaseEnergyCalculation& energy ) {
+	if (!GetGCSpace()->IsAccumulating() || !IsRunning()) {throw std::runtime_error("Maintenance requires the owning native upkeep");}
+	auto* current=m_bm->GetBase(evaluating_base.m_id);
+	if(current!=&evaluating_base || m_bm->m_dispatching_updates) {throw std::runtime_error("Maintenance Base is not current or update dispatch is active");}
+	const auto owner=current->GetSmacResourceContext().owner_simulation_id;
+	auto& saved=m_simulation->value.economy.at(owner);
+	auto candidate=saved.CreditBase(energy.tail.final.economy,0);
+	auto facilities=current->m_facilities;
+	std::vector<std::string> notifications;
+	int32_t previous=0,total=0;
+	for(const auto& charge:energy.maintenance_fees) {
+		const auto id=charge.first,fee=charge.second;
+		if(id<=previous || id>33 || fee<0) {throw std::runtime_error("Invalid ordered maintenance charge");}
+		previous=id;total=Checked(int64_t(total)+fee);
+		const auto* definition=m_bm->GetSmacFacilityDef(id);
+		if(!definition || !facilities.count(definition->m_id)) {throw std::runtime_error("Charged maintenance facility is no longer present");}
+		candidate.credits=Checked(int64_t(candidate.credits)-fee);
+		if(candidate.credits>=0) {continue;}
+		const auto& target=current->GetProductionState()->current_item;
+		const auto difficulty=unit::SmacStartupDesignState::OriginalDifficulty(current->m_owner->GetPlayer()->GetDifficultyLevel());
+		// Static original branches: easy difficulties and rebuilding this very
+		// facility keep it and floor the balance. Runtime receipt covers the
+		// ordinary Librarian, nonmatching-target sale path.
+		if(difficulty<=1 || (target.kind==base::ProductionItemKind::Facility && target.smac_source_id==id)) {
+			candidate.credits=0;continue;
+		}
+		candidate.credits=GetSmacProductionCost(current->m_owner,MakeSmacProductionItem(current->m_owner,base::ProductionItemKind::Facility,id));
+		facilities.erase(definition->m_id);
+		notifications.push_back(current->m_name+": "+definition->m_name+" sold to pay maintenance.");
+	}
+	if(total!=energy.maintenance) {throw std::runtime_error("Maintenance total differs from ordered charges");}
+	// Stage the frontend queue before publishing treasury and inventory. Do not
+	// trigger resource/citizen recalculation: this upkeep's outputs remain earned.
+	auto updates=m_bm->m_base_updates;
+	if(!notifications.empty()) {base::BaseManager::QueueBaseUpdateInto(updates,current,base::BaseManager::BUO_REFRESH);}
+	static_assert(std::is_nothrow_swappable_v<base::Base::facilities_t>);
+	current->m_facilities.swap(facilities);m_bm->m_base_updates.swap(updates);saved=candidate;
+	return notifications; // caller notifies only after its remaining authority writes
 }
 
 void Game::PostCanonicalBaseEconomy( const base::Base& evaluating_base, const base::SmacBaseResourceCalculation& resources ) {
@@ -160,9 +204,12 @@ void Game::PostCanonicalBaseEconomy( const base::Base& evaluating_base, const ba
 		if ( progress >= *technology->cached_threshold ) { throw std::runtime_error( "Research completion and Secrets processing are not connected" ); }
 	}
 	next.research_fraction = submission.fraction;
-	next = next.CreditBase( result.tail.final.economy, result.maintenance );
+	// The compatibility entry shares the live controller's individual charges.
+	const auto notifications=PostCanonicalBaseMaintenance(evaluating_base,result);
+	next.credits = saved.credits;
 	// No callback or throwing operation between the research and balance writes.
 	technology->labs = progress; saved = next;
+	for(const auto& notification:notifications) {Message(notification);}
 }
 
 faction::SmacEconomyState Game::PrepareSmacNonzeroInitialization( int32_t owner ) const {

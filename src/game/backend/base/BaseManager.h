@@ -109,6 +109,7 @@ public:
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+	friend class backend::Game;
 	friend class Base;
 	friend class gse::tests::BaseAllocationFixture;
 	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;

@@ -56,7 +56,35 @@ Node grants reach the existing energy multipliers and research/credit callers
 after the joined commit. With controlled raw energy4 and balanced rates, Bank
 posts economy3/labs2 and Node economy2/labs3, each with its actual maintenance1.
 Tests use the real GSE picker and native end turn, not supplied credit outputs.
-Insolvent maintenance disposal remains unimplemented and is a separate producer.
+Insolvent maintenance now uses the individual-charge continuation described in
+[the maintenance contract](behavior/facility-maintenance-insolvency.md).
+
+### Maintenance continuation
+
+The live controller and private compatibility posting entry share one prepared
+inventory/treasury publication. Each Base posts its earned income and charges
+its frozen applicable fees in ascending source ID order. At the covered human
+Librarian branch, the fee crossing below zero sells that facility and assigns
+its full faction mineral-factor cost as credits. Exactly zero is payable.
+The scan continues, preserving already submitted research and resource history;
+pending hurry debit remains a separate faction-tail settlement. Sale messages
+use the existing game message channel after authority publication.
+
+Five composed native scenarios cover funded controls, poor-first versus
+poor-last order, a foreign Base, and Node research earned before its sale.
+Actual Start retains the sold inventory and treasury. Presentation definition
+keys deliberately reverse Bank/Node order. The original receipt covers four
+complete faction upkeeps; lower-difficulty and matching-production-target
+exceptions are implemented from the separately identified static branches.
+This does not establish AI, projects, governor automation or SMAX behavior.
+The original charged-maintenance statistic has no retained/UI consumer in the
+port yet; it must retain sold fees when that statistics pipeline is added.
+
+Validation: 74 affected native groups pass with allocation tracking, including
+live research, production rollback, Colony continuation and economy posting.
+Scoped correctness analysis passes five production translation units in
+12.01 seconds. Existing facility ownership sanitizer results remain applicable;
+this change swaps nonowning facility maps without destroying definitions.
 
 Node Artifact resets are outside the admitted Combat/Former/Colony world,
 which has no Artifact-link producer. An explicit package guard prevents new

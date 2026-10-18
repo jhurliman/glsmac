@@ -167,6 +167,10 @@ ProductionState Production( ProductionItemKind kind = ProductionItemKind::Unit )
 	const ProductionItem item{ kind, kind == ProductionItemKind::Stockpile ? "" : "opaque-target" };
 	return { item, 17, { ProductionItemKind::Stockpile, "" }, 5 };
 }
+std::string MaintenanceSource(const std::string& filename) {
+    auto source=EnergyFacilitySource(filename);if(filename!="alpha.txt") {return source;}
+    const auto at=source.find("Forest,2,2,2");source.replace(at,std::string("Forest,2,2,2").size(),"Forest,2,2,1");return source;
+}
 Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
@@ -240,6 +244,85 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC maintenance insolvency follows live Base order and retains already earned research",[](GSE*,context::Context*)->std::string {
+        for(int scenario=0;scenario<5;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(scenario==4 ? EnergyFacilitySource : MaintenanceSource,true);
+            fixture.ResourceState([&](auto& state){for(auto& e:state.economy) {e.second.rates={0,5};e.second.credits=e.first==1 ? (scenario==0 ? 100 : 0) : 321;}
+                for(auto& t:state.technology.factions) {t.target=5;t.cached_threshold=1000;t.labs=0;}});
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            std::string saved;int32_t final_credits=0;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();SelectionPresentations(fixture);
+                first->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+                bm->DefineFacility(new FacilityDef("hq","HQ","",50,{},1));
+                // Presentation keys deliberately reverse the source ordering.
+                bm->DefineFacility(new FacilityDef("z-bank","Bank","",80,{},7));bm->DefineFacility(new FacilityDef("a-node","Node","",80,{},8));
+                const auto scout=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,2);
+                first->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});first->SetAccumulatedNutrients(0);
+                std::vector<Base*> bases{first};
+                for(int i=1;i<=(scenario==3 ? 2 : scenario==4 ? 0 : 1);++i) {
+                    const bool foreign=scenario==3 && i==1;auto* owner=foreign ? &game->GetState()->m_slots->GetSlot(6) : first->m_owner;
+                    owner->GetPlayer()->SetDifficultyLevel("Librarian");auto* worked=game->GetMap()->GetTile(4+4*i,2);worked->terraforming=TERRAFORMING_FOREST;
+                    Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().worker),0,worked));
+                    const auto target=game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,2);
+                    auto* base=new Base(game,701+i,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(2+4*i,2),"Maintenance control "+std::to_string(i),{},pops,20,0,
+                        ProductionState{target,0,target,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{foreign ? 2 : 1,false,0,0,0,false});
+                    bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{5,{{},0}},Roles());bases.push_back(base);
+                }
+                auto* poor=scenario==2 ? bases.back() : first;auto* rich=scenario==2 ? first : bases.back();
+                auto poor_allocation=*poor->GetSmacAllocation();poor_allocation.selected=5;poor->PublishSmacAllocation(GSE_CALL,poor_allocation,Roles());
+                poor->m_facilities.emplace("z-bank",bm->GetFacilityDef("z-bank"));poor->m_facilities.emplace("a-node",bm->GetFacilityDef("a-node"));
+                // Cloud Cover on both squares makes actual poor-Base economy0.
+                auto context=poor->GetSmacResourceContext();context.governor_options=0;context.resource_events=SmacBaseResourceContext::CloudCover;context.resource_event_timer=5;
+                poor->SetSmacResourceContext(GSE_CALL,context);
+                if(scenario!=4) {
+                    rich->m_facilities.emplace("hq",bm->GetFacilityDef("hq"));
+                    auto rich_context=rich->GetSmacResourceContext();rich_context.governor_options=0;rich->SetSmacResourceContext(GSE_CALL,rich_context);
+                    // An explicit Doctor makes the rich Base work no noncenter
+                    // tiles. Its actual HQ center supplies E2 -> economy1/labs1.
+                    auto allocation=*rich->GetSmacAllocation();allocation.selected=1;allocation.specialists.total_count=1;allocation.specialists.types[0]=1;
+                    rich->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+                } else {
+                    context.resource_events=0;poor->SetSmacResourceContext(GSE_CALL,context);poor->m_facilities.emplace("hq",bm->GetFacilityDef("hq"));
+                    poor->m_facilities.erase("z-bank");
+                    fixture.ResourceState([](auto& state){state.economy.at(1).rates={5,5};});
+                }
+                auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                const auto foreign=scenario==3 ? Base::Serialize(bases[1]).ToString() : std::string{};
+                const auto pair=fixture.GameplayRandom();const auto next_id=game::backend::unit::Unit::GetNextId();
+                if(scenario==3) {
+                    // Current-faction return, matching the original foreign
+                    // control. A full local turn also processes owner2 later.
+                    for(auto* base:{poor,rich}) {base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);fixture.PostEconomy(*base);}
+                    fixture.SettleEconomy(1);
+                } else {game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();}
+                const bool bank_kept=poor->m_facilities.count("z-bank"),node_kept=poor->m_facilities.count("a-node");
+                final_credits=game->GetCanonicalEconomy(poor->m_owner).credits;
+                const auto expected=scenario==0 ? 99 : 80;
+                GT_ASSERT(final_credits==expected && bank_kept==(scenario==0 || scenario==2) && node_kept==(scenario!=2 && scenario!=4),
+                    "maintenance order, exact-zero payment or assignment of sale proceeds differs: scenario="+std::to_string(scenario)+" credits="+std::to_string(final_credits));
+                GT_ASSERT(fixture.GameplayRandom()==pair && game::backend::unit::Unit::GetNextId()==next_id,"maintenance changed gameplay RNG or Unit identity");
+                if(scenario==3) {GT_ASSERT(Base::Serialize(bases[1]).ToString()==foreign && game->GetCanonicalEconomy(bases[1]->m_owner).credits==321,"current-faction maintenance touched the foreign control");}
+                if(scenario==4) {
+                    int32_t earned=0;fixture.ResourceState([&](auto& state){earned=state.technology.factions[0].labs;});
+                    const auto after=game->GetCanonicalBaseEnergy(*poor);
+                    GT_ASSERT(earned==3 && after.tail.final.labs==2,"maintenance reposted research or lost the pre-sale Node output: earned="+std::to_string(earned)+" after="+std::to_string(after.tail.final.labs)+" raw="+std::to_string(after.raw_intake));
+                }
+                saved=fixture.Snapshot();GT_OK();
+            });if(!result.empty()) {return result;}
+            if(scenario==1 || scenario==2) {
+                ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(MaintenanceSource,true);
+                const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                    restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* base=restored.Game()->GetBM()->GetBase(scenario==2 ? 702 : 701);
+                    GT_ASSERT(restored.Game()->GetCanonicalEconomy(base->m_owner).credits==final_credits && base->m_facilities.count("z-bank")==size_t(scenario==2)
+                        && base->m_facilities.count("a-node")==size_t(scenario!=2),"actual Start replayed a sale or restored the removed facility");GT_OK();
+                });if(!result.empty()) {return result;}
+            }
+        }GT_OK();
+    });
 
     task->AddTest("SMAC HQ construction joins relocation resource history and all affected Base refreshes",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;

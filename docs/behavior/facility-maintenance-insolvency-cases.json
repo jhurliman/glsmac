@@ -1,0 +1,291 @@
+{
+  "research_id": "RE-SMAC-MAINTENANCE-INSOLVENCY-001",
+  "scope": "Four complete ordinary human Librarian faction upkeeps with two actually founded own Bases, supplied installed Bank/Node numeric rows, facility/event inputs and one supplied foreign record. No full prior acquisition history.",
+  "facility_legend": {
+    "1": "Headquarters",
+    "7": "Energy Bank",
+    "8": "Network Node"
+  },
+  "resolved_inputs": {
+    "bank_cost": 8,
+    "node_cost": 8,
+    "bank_maintenance": 1,
+    "node_maintenance": 1,
+    "sale_cost_factor": 10,
+    "poor_base_energy": 0,
+    "rich_base_energy": 1,
+    "poor_base_cloud_cover": true,
+    "unmanaged": true
+  },
+  "cases": [
+    {
+      "id": "funded",
+      "initial_credits": 100,
+      "owned_base_order": [
+        0,
+        1
+      ],
+      "base_income": [
+        0,
+        1
+      ],
+      "expected_credit_write_sequence": [
+        100,
+        99,
+        98,
+        99,
+        99,
+        99
+      ],
+      "expected_removed_facilities": [],
+      "expected_final_facilities": [
+        [
+          7,
+          8
+        ],
+        [
+          1
+        ]
+      ],
+      "expected_charged_maintenance": 2,
+      "expected_final_credits": 99,
+      "expected_base_returns": [
+        {
+          "base": 0,
+          "credits": 98,
+          "facilities": [
+            [
+              7,
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "base": 1,
+          "credits": 99,
+          "facilities": [
+            [
+              7,
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "expected_maintenance_rng_draws": 0,
+      "expected_resource_passes_per_owned_base": 2,
+      "expected_post_maintenance_resource_recalculations": 0,
+      "foreign_unchanged": null
+    },
+    {
+      "id": "poor_early",
+      "initial_credits": 0,
+      "owned_base_order": [
+        0,
+        1
+      ],
+      "base_income": [
+        0,
+        1
+      ],
+      "expected_credit_write_sequence": [
+        0,
+        -1,
+        80,
+        79,
+        80,
+        80,
+        80
+      ],
+      "expected_removed_facilities": [
+        7
+      ],
+      "expected_final_facilities": [
+        [
+          8
+        ],
+        [
+          1
+        ]
+      ],
+      "expected_charged_maintenance": 2,
+      "expected_final_credits": 80,
+      "expected_base_returns": [
+        {
+          "base": 0,
+          "credits": 79,
+          "facilities": [
+            [
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "base": 1,
+          "credits": 80,
+          "facilities": [
+            [
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "expected_maintenance_rng_draws": 0,
+      "expected_resource_passes_per_owned_base": 2,
+      "expected_post_maintenance_resource_recalculations": 0,
+      "foreign_unchanged": null
+    },
+    {
+      "id": "poor_late",
+      "initial_credits": 0,
+      "owned_base_order": [
+        0,
+        1
+      ],
+      "base_income": [
+        1,
+        0
+      ],
+      "expected_credit_write_sequence": [
+        1,
+        1,
+        1,
+        0,
+        -1,
+        80,
+        80
+      ],
+      "expected_removed_facilities": [
+        8
+      ],
+      "expected_final_facilities": [
+        [
+          1
+        ],
+        [
+          7
+        ]
+      ],
+      "expected_charged_maintenance": 2,
+      "expected_final_credits": 80,
+      "expected_base_returns": [
+        {
+          "base": 0,
+          "credits": 1,
+          "facilities": [
+            [
+              1
+            ],
+            [
+              7,
+              8
+            ]
+          ]
+        },
+        {
+          "base": 1,
+          "credits": 80,
+          "facilities": [
+            [
+              1
+            ],
+            [
+              7
+            ]
+          ]
+        }
+      ],
+      "expected_maintenance_rng_draws": 0,
+      "expected_resource_passes_per_owned_base": 2,
+      "expected_post_maintenance_resource_recalculations": 0,
+      "foreign_unchanged": null
+    },
+    {
+      "id": "foreign_between",
+      "initial_credits": 0,
+      "owned_base_order": [
+        0,
+        2
+      ],
+      "base_income": [
+        0,
+        1
+      ],
+      "expected_credit_write_sequence": [
+        0,
+        -1,
+        80,
+        79,
+        80,
+        80,
+        80
+      ],
+      "expected_removed_facilities": [
+        7
+      ],
+      "expected_final_facilities": [
+        [
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          1
+        ]
+      ],
+      "expected_charged_maintenance": 2,
+      "expected_final_credits": 80,
+      "expected_base_returns": [
+        {
+          "base": 0,
+          "credits": 79,
+          "facilities": [
+            [
+              8
+            ],
+            [
+              7,
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "base": 2,
+          "credits": 80,
+          "facilities": [
+            [
+              8
+            ],
+            [
+              7,
+              8
+            ],
+            [
+              1
+            ]
+          ]
+        }
+      ],
+      "expected_maintenance_rng_draws": 0,
+      "expected_resource_passes_per_owned_base": 2,
+      "expected_post_maintenance_resource_recalculations": 0,
+      "foreign_unchanged": true
+    }
+  ]
+}

@@ -4485,6 +4485,7 @@ public:
 			value.resource_modifiers = { -7, true, false, 7 };
 			for ( size_t i = 0; i < 7; ++i ) { value.gameplay_random.NextSharedLow16(); value.gameplay_random.NextCrtRaw15(); }
 			const int32_t ids[] = { 7, 2, 5 };
+            const auto original_humans=value.human_membership;value.human_membership=0;
 			value.satellites.clear();
 			const auto original_economy = value.economy; value.economy.clear();
 			const auto original_hostility=value.hostility;value.hostility.owners.clear();
@@ -4493,6 +4494,7 @@ public:
 				value.satellites.emplace( ids[ i ], faction::SmacSatelliteCounts{ { count + 3, count + 5, count + 7 } } );
 				value.economy.emplace( ids[ i ], original_economy.at( value.roster[ i ].simulation_id ) );
 				value.hostility.owners.emplace(ids[i],original_hostility.owners.at(value.roster[i].simulation_id));
+                if(original_humans & (1u<<value.roster[i].simulation_id)) {value.human_membership|=static_cast<uint8_t>(1u<<ids[i]);}
 				value.roster[ i ].simulation_id = ids[ i ];
 				auto& social = value.social.factions[ i ]; social.admission.simulation_id = ids[ i ];
 				social.current.fill( INT32_MIN + static_cast< int32_t >( i ) ); social.intrinsic->fill( INT32_MAX ); social.retained->fill( -4 );

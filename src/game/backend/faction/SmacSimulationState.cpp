@@ -107,7 +107,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 14;
+constexpr int64_t VERSION = 15;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -203,14 +203,16 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		if ( !state || state->admission.faction_id != participant.faction_id || !designs.Find( participant.simulation_id )
 			|| !social_state || social_state->admission.faction_id != participant.faction_id ) { throw std::runtime_error( "SMAC simulation roster and technology identities differ" ); }
 	}
+    uint8_t admitted=0;for(const auto& participant:roster) {admitted|=static_cast<uint8_t>(1u<<participant.simulation_id);}
+    if(human_membership & static_cast<uint8_t>(~admitted)) {throw std::runtime_error("Human membership names an unadmitted faction");}
 	if(hostility.owners.size()!=roster.size()) {throw std::runtime_error("Unexpected SMAC hostile-history owner");}
 	if(human_defeat_request) {
 		const auto owner=std::find_if(roster.begin(),roster.end(),[&](const auto& row){return row.simulation_id==*human_defeat_request;});
-		if(owner==roster.end() || owner->active) {throw std::runtime_error("Human defeat request requires an inactive saved participant");}
+		if(owner==roster.end() || owner->active || !IsHuman(owner->simulation_id)) {throw std::runtime_error("Human defeat request requires an inactive saved participant");}
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -274,6 +276,7 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	}
 	buffer.WriteBool(human_defeat_request.has_value());if(human_defeat_request) {buffer.WriteInt(*human_defeat_request);}
     buffer.WriteBool(rank_order.has_value());if(rank_order) {for(auto owner:rank_order->faction_at_rank) {buffer.WriteInt(owner);}}
+    buffer.WriteInt(human_membership);
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -285,7 +288,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -357,6 +360,15 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		if(version>=13 && buffer.ReadBool()) {result.human_defeat_request=ReadInt32(buffer);}
         if(version>=14 && buffer.ReadBool()) {
             result.rank_order=SmacRankOrder{};for(auto& owner:result.rank_order->faction_at_rank) {owner=ReadInt32(buffer);}
+        }
+        if(version>=15) {
+            const auto membership=ReadInt32(buffer);
+            if(membership<0 || membership>UINT8_MAX) {throw std::runtime_error("Human membership exceeds an unsigned byte");}
+            result.human_membership=static_cast<uint8_t>(membership);
+        } else {
+            // V11-V14 admitted only human Players. This is the old port-format
+            // contract, not inference from current focus or transport roles.
+            for(const auto& participant:roster) {result.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
         }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

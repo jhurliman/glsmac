@@ -85,6 +85,7 @@ private:
 	std::vector< gse::Value* > m_main_callables = {};
 
 	ui::UI* m_ui = nullptr;
+	bool m_intro_played = false;
 
 	typedef std::function< void() > f_t;
 	std::atomic< std::thread* > m_load_thread = nullptr;

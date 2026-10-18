@@ -584,6 +584,14 @@ static std::string CheckSurfaceBackgroundOwnership() {
 					GT_OK();
 				};
 				result = [ & ]() -> std::string {
+					std::vector<uint8_t> movie_pixels(16,255);
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					const auto first_revision=actor->GetTextureRevision();
+					const auto* first_texture=actor->GetTexture();
+					movie_pixels[0]=17;
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					GT_ASSERT(actor->GetTexture()==first_texture && actor->GetTextureRevision()>first_revision &&
+						actor->GetTexture()->GetBitmap()[0]==17,"movie frame failed to refresh the cached actor or reused texture");
 					for ( const auto* background : { "#123456", "fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)",
 						"fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)", "fixture.bmp", "#456789", "#abcdef" } ) {
 						const auto error = change( background );

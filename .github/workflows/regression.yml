@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev libavformat-dev libavcodec-dev libavutil-dev libswscale-dev
       - name: Restore Linux compiler outputs
         if: runner.os == 'Linux'
         id: linux-compiler-cache
@@ -46,7 +46,7 @@ jobs:
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install ninja pkg-config sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype
+          brew install ninja pkg-config sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype ffmpeg
           echo "PKG_CONFIG_PATH=$(brew --prefix ossp-uuid)/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LDFLAGS=-L$(brew --prefix)/lib" >> "$GITHUB_ENV"
       - name: Configure
@@ -87,6 +87,8 @@ jobs:
           # PR checkout is GitHub's merge commit; its first parent is the base.
           fetch-depth: 2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install movie decoder
+        run: ./tools/install_ffmpeg_windows.ps1
       - name: Test compile-priority selection
         run: python tools/test_prioritize_changed_cpp.py
       - name: Configure

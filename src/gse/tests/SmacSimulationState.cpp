@@ -89,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=24,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=25,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -152,6 +152,14 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=24,bool
         suffix.WriteBool(value.ranking_scores.has_value());
         if(value.ranking_scores) {for(const auto score:*value.ranking_scores) {suffix.WriteInt(score);}}
     }
+    if(version>=25) {
+        suffix.WriteBool(value.ecology_history.has_value());
+        if(value.ecology_history) {
+            for(const auto* words:{&value.ecology_history->clean_minerals,&value.ecology_history->major_atrocities,&value.ecology_history->research_aggregate}) {
+                for(const auto word:*words) {suffix.WriteInt(word);}
+            }
+        }
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -169,6 +177,54 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ecology history V25 preserves all24 signed words and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.ecology_history.emplace();
+        for(size_t i=0;i<8;++i) {
+            value.ecology_history->clean_minerals[i]=101+7*i;
+            value.ecology_history->major_atrocities[i]=202+7*i;
+            value.ecology_history->research_aggregate[i]=303+7*i;
+        }
+        value.ecology_history->clean_minerals[0]=INT32_MIN;value.ecology_history->research_aggregate[7]=INT32_MAX;
+        const auto random=value.gameplay_random;
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+        GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random, "Ecology codec changed signed history, slot0 or RNG");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,24),technologies,profiles,units);
+        GT_ASSERT(!old.ecology_history && !SmacSimulationState::Deserialize(CurrentWire(value,23),technologies,profiles,units).ecology_history,
+            "Legacy restore reconstructed ecology authority");
+        auto absent=value;absent.ecology_history.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(absent.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==absent,
+            "Absent V25 ecology history became zero");
+        types::Buffer marker;marker.WriteBool(false);const auto absent_wire=CurrentWire(absent);
+        const auto prefix=absent_wire.substr(0,absent_wire.size()-marker.lenw);
+        for(size_t count=0;count<24;++count) {
+            types::Buffer truncated;truncated.WriteBool(true);for(size_t i=0;i<count;++i) {truncated.WriteInt(i);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+truncated.ToString(),technologies,profiles,units);}), "Partial ecology history admitted");
+        }
+        for(const size_t corrupt:{0u,23u}) {
+            types::Buffer overflow;overflow.WriteBool(true);
+            for(size_t i=0;i<24;++i) {overflow.WriteInt(i==corrupt ? INT64_MAX : 0);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+overflow.ToString(),technologies,profiles,units);}), "Ecology word outside signed32 admitted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}), "Trailing ecology history admitted");GT_OK();
+    });
+    task->AddTest("SMAC ecology owner initialization matches four native fresh and nonzero prefixes",GT(){
+        for(const int32_t owner:{1,2}) {for(const int32_t turn:{0,1}) {
+            faction::SmacEcologyHistory history;
+            history.clean_minerals.fill(777);history.major_atrocities.fill(777);history.research_aggregate.fill(777);
+            const auto before=history;history.Initialize(owner,turn);
+            for(int32_t i=0;i<8;++i) {
+                const auto expected=i==owner && turn==0 ? 0 : 777;
+                GT_ASSERT(history.clean_minerals[i]==expected && history.major_atrocities[i]==expected
+                    && history.research_aggregate[i]==777, "Owner initialization changed peers, retained aggregate or nonzero history");
+            }
+            if(turn!=0) {GT_ASSERT(history==before,"Nonzero initializer changed ecology history");}
+        }}
+        faction::SmacEcologyHistory history;
+        for(const int32_t owner:{-1,8}) {GT_ASSERT(Rejects([&]{history.Initialize(owner,0);}), "Invalid ecology owner admitted");}
+        GT_ASSERT(Rejects([&]{history.Initialize(1,-1);}), "Negative ecology initialization turn admitted");GT_OK();
+    });
     task->AddTest("SMAC regional strategy V24 preserves all8 rows and region0 without recomputation",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();value.regional_strategy.emplace();value.ranking_scores=std::array<int32_t,8>{{17,INT32_MIN,-1,0,24,16,INT32_MAX,127}};
@@ -180,7 +236,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(!migrated.regional_strategy && !migrated.ranking_scores,"V23 migration invented strategy or score history");
         auto absent=value;absent.regional_strategy.reset();absent.ranking_scores.reset();
         types::Buffer marker;marker.WriteBool(false);
-        const auto absent_wire=CurrentWire(absent);
+        const auto absent_wire=CurrentWire(absent,24);
         const auto prefix=absent_wire.substr(0,absent_wire.size()-2*marker.ToString().size());
         for(const size_t length:{0u,1023u,1025u}) {
             types::Buffer tail;tail.WriteBool(true);tail.WriteString(std::string(length,'x'));tail.WriteBool(false);

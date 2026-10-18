@@ -643,6 +643,9 @@ private:
 	// not clear these retained rows; ordinary restore supplies its saved words.
 	std::optional<std::array<faction::SmacRegionalStrategyRow,8>> m_smac_cross_world_strategy{std::in_place};
 	std::optional<std::array<int32_t,8>> m_smac_cross_world_scores{std::in_place};
+	// Explicit cold-engine zero storage; later world preparation retains these
+	// words until actual per-owner initialization. An absent old save stays absent.
+	std::optional<faction::SmacEcologyHistory> m_smac_cross_world_ecology{std::in_place};
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;

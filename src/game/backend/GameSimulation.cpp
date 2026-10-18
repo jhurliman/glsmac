@@ -154,6 +154,7 @@ void Game::PrepareNewSimulation() {
     for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	value.capabilities=capabilities;value.hostility=std::move(hostility);
+	value.native_factory=faction::SmacNativeFactoryState::Initialize(0,value.gameplay_random);
 	value.regional_military.emplace(); // explicit fresh-world ushort counters, all positive slots
 	// Whole-new-world reset follows setup terrain generation in the native
 	// lifecycle. Do not derive the retained status from the generated map here.

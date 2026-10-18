@@ -8,6 +8,7 @@
 #include "SmacRegionalMilitaryState.h"
 #include "SmacRegionalStrategy.h"
 #include "SmacEcologyWorld.h"
+#include "SmacNativeFactoryState.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -189,6 +190,8 @@ struct SmacSimulationState {
 	// global word, not faction H; new-world reset clears it before owner setup.
 	SmacFactionStatusWords faction_status;
 	std::optional<int32_t> ecology_warming_count;
+	// Absent before V29; restore never initializes or recounts native state.
+	std::optional<SmacNativeFactoryState> native_factory;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

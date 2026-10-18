@@ -87,3 +87,23 @@ thirty groups pass ASan/UBSan with Unit.cpp, NativeUnit.cpp,
 GameWorkerKnowledge.cpp, GameTileResources.cpp and GameEconomy.cpp instrumented;
 remaining normal objects are reused and leak detection is disabled. No local
 platform matrix was repeated.
+
+The next retained-state checkpoint adds optional V29 native factory authority:
+supplied definition morale, signed assignment-reference pair, raw32 active-plan
+tally and all512 active-design bytes. These counters are retained independently
+of current entities and wrap at their original widths; restore never recounts
+or reruns initialization. V28 migration preserves absence. Fresh initialization
+consumes eight CRT draws, no shared draws, and sets references to -1/-1. The
+record is deliberately not the complete native AI/personality state. The
+original measured ecology seed was supplied after initialization; this does not
+establish a continuous original process-startup seed or all startup ordering.
+The live factory, dense-index repairs and atomic ecology publication remain
+unfinished; this checkpoint does not resolve the draft PR289 lifecycle finding.
+
+Validation for this checkpoint: cached incremental build, focused initialization,
+malformed factory frames, V29/V28 migration, actual immediate/queued Start,
+cancellation, default Scout/Rover startup and research restore checks pass.
+Targeted correctness analysis passes the factory, Simulation and GameSimulation
+translation units. The same focused startup/codec groups pass ASan/UBSan with
+those three production TUs instrumented; other normal objects are reused and
+leak detection is disabled. No local platform matrix was repeated.

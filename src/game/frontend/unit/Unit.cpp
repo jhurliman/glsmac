@@ -207,7 +207,7 @@ const bool Unit::IsBadgeVisible() const {
 }
 
 void Unit::ShowBadge() {
-	if(m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible()) {HideBadge();return;}
+	if(!m_render.is_rendered || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
 }

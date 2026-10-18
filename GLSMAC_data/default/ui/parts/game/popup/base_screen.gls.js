@@ -158,10 +158,8 @@ return {
 
 		this.base_id = base.id;
 		if (#is_defined(data.read_only)) { this.read_only = data.read_only; }
-		const read_only = this.read_only;
 		this.base = base;
 		this.sections.top_buttons.set_base(base);
-		this.sections.top_buttons.set_read_only(this.read_only);
 
 		const canonical = base.has_smac_resource_context;
 		let intake = undefined;
@@ -176,7 +174,6 @@ return {
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
             retained_resources = #is_defined(calculation.retained_only) && calculation.retained_only;
-            if (retained_resources && read_only) { this.sections.top_buttons.set_retained_resources(); }
 			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
             if (!retained_resources) { mineral_surplus = calculation.minerals.surplus; }
             citizens = {current: calculation.citizens, retained: calculation.retained_citizens, reason: calculation.citizens_unavailable};
@@ -191,6 +188,11 @@ return {
 			intake = base.get_intake();
 			consumption = base.get_consumption();
 		}
+
+        this.read_only = this.read_only || retained_resources;
+        const read_only = this.read_only;
+        this.sections.top_buttons.set_read_only(read_only);
+        if (retained_resources) { this.sections.top_buttons.set_retained_resources(); }
 
 		this.hide_production_selection();
 		this.sections.buttons.show_default(); // Recompute availability after the viewed Base is bound.

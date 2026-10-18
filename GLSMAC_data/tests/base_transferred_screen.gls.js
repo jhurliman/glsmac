@@ -81,6 +81,19 @@ base.get_tile = () => { return tile(2, 2); }; base.get_worked_tiles = () => { re
 resource.init({area: node({}), ui: ui, game: game}); resource.set({base: base, read_only: true});
 test.assert(resource.el.handlers.mousedown({button: 'left'}) && #sizeof(commands) == 0);
 test.assert(buttons.buttons[1].handlers.click({}) == false && closes == 1 && !screen.is_open && !screen.read_only);
+// Ordinary bottom-bar opens omit a read_only argument. Retained backend
+// resources must independently fence every control before sections bind.
+retained_response = true;
+screen.set({base: base}); screen.on_show();
+test.assert(screen.read_only && middle_data.read_only && bottom_data.read_only);
+test.assert(top.governor_button.hidden && top.energy_button.hidden && !top.read_only_notice.hidden);
+test.assert(!screen.can_rename() && !screen.can_edit_queue());
+screen.open_rename(); screen.open_queue_editor(); screen.open_hurry(); screen.open_specialist_selection(base, 19);
+screen.show_production_selection(); screen.update_production_selection();
+test.assert(screen.production_selection == null && #sizeof(commands) == 0);
+test.assert(top.governor_button.handlers.click({}) && top.energy_button.handlers.click({}) && !top.active);
+test.assert(buttons.buttons[1].handlers.click({}) == false && closes == 2 && !screen.read_only);
+retained_response = false;
 screen.set({base: base});
 test.assert(!top.governor_button.hidden && !top.energy_button.hidden && top.read_only_notice.hidden && screen.can_rename());
 queue.set_read_only(false); test.assert(!queue.change_button.hidden && !queue.edit_button.hidden && !queue.hurry_button.hidden);

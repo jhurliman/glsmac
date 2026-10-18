@@ -44,6 +44,9 @@ UnitManager::~UnitManager() {
 }
 
 void UnitManager::Iterate() {
+    m_badge_defs->AdvanceSelectionBlink(SelectionBlink::Clock::now(),
+        m_selected_unit && m_selected_unit->IsOwned() && m_selected_unit->IsActive()
+        && !m_selected_unit->IsMoving() && m_game->IsTurnActive());
 	ReceiveAutomaticSelection();
 	if ( m_selected_unit ) {
 		m_selected_unit->Iterate();
@@ -391,6 +394,7 @@ void UnitManager::DeselectUnit() {
 			m_selected_unit->StopBadgeBlink( true );
 		}
 		else if ( most_important_unit ) {
+			m_selected_unit->StopBadgeBlink( false );
 			m_selected_unit->Hide();
 			most_important_unit->Show();
 		}

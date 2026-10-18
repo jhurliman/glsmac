@@ -1,4 +1,5 @@
 #pragma once
+#include "SelectionBlink.h"
 
 #include <unordered_map>
 #include <vector>
@@ -44,7 +45,11 @@ public:
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 
+    bool AdvanceSelectionBlink(SelectionBlink::Clock::time_point now,bool admitted) {return m_selection_blink.Poll(now,admitted);}
+    bool IsSelectionBlinkVisible() const {return m_selection_blink.Visible();}
+
 private:
+	SelectionBlink m_selection_blink;
 
 	static const struct consts_t {
 		const types::Vec2< float > scale = {

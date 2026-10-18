@@ -81,9 +81,9 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 		const auto custom=TexturePaging::Make(28728,57344,16384,2048);
 		GT_ASSERT(huge.Layers()==2 && custom.Layers()==8 && custom.page_width==14364 && custom.page_height==14336,
 			"large map atlas paging lost full dimensions");
-		const auto small=TexturePaging::Make(7,9,4,8);
+		const auto paged=TexturePaging::Make(7,9,4,8);
 		std::array<unsigned,63> visits{};size_t count=0;
-		for(const auto& patch:small.Updates(1,2,6,8)) {
+		for(const auto& patch:paged.Updates(1,2,6,8)) {
 			++count;GT_ASSERT(patch.x+patch.right-patch.left<=4 && patch.y+patch.bottom-patch.top<=3 && patch.layer<6,
 				"update escaped a GPU page");
 			for(size_t y=patch.top;y<patch.bottom;++y) {for(size_t x=patch.left;x<patch.right;++x) {++visits[y*7+x];}}
@@ -93,7 +93,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(visits[y*7+x]==unsigned(x>=1 && x<6 && y>=2 && y<8),"update repeated or omitted a logical pixel");
 		}}
 		const auto rejects=[](auto call) {try{call();return false;}catch(const std::exception&){return true;}};
-		GT_ASSERT(rejects([]{TexturePaging::Make(9,9,4,8);}) && rejects([&]{small.Updates(0,0,8,9);})
+		GT_ASSERT(rejects([]{TexturePaging::Make(9,9,4,8);}) && rejects([&]{paged.Updates(0,0,8,9);})
 			&& !TexturePaging::Make(7,9,16,8).Paged() && TexturePaging::Make(0,0,16,8).Updates(0,0,0,0).empty(),
 			"texture paging accepted invalid bounds or changed ordinary/empty textures");GT_OK();
 	});

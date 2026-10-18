@@ -281,6 +281,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             fixture.ResourceState([&](auto& state){
                 for(const auto& participant:state.roster) {knowledge.observers[participant.simulation_id]=map::SmacWorkerKnowledge::Observer{};}
                 state.regional_military.emplace();state.regional_military->factions[6].units.fill(777);state.regional_military->factions[6].attack.fill(888);
+                state.regional_military->factions[6].unit_phase_flags.emplace();state.regional_military->factions[6].unit_phase_flags->fill(4096);
                 state.social.factions.front().retained->at(4)=0;
             });
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));Define(game->GetUM());
@@ -291,13 +292,15 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             auto* colony=new StaticDef("military-colony",manager->GetMoraleSet("CONVENTIONAL_MORALE"),"Colony",MT_LAND,1,new ColonyMarkerRender());manager->DefineUnit(colony);
             auto special=low;special.design_id=1;manager->SpawnConventionalUnit(GSE_CALL,799,former,first_unit->m_owner,first_unit->GetTile(),special);
             special.design_id=0;manager->SpawnConventionalUnit(GSE_CALL,798,colony,first_unit->m_owner,first_unit->GetTile(),special);
+            manager->SpawnConventionalUnit(GSE_CALL,797,colony,first_unit->m_owner,first_unit->GetTile(),special);
 
             GT_ASSERT(first_unit->QueryStats(SmacMoraleMode::Mode0).effective_morale==0 && second_unit->QueryStats(SmacMoraleMode::Mode0).effective_morale==6,"military fixture lost resolved morale controls");
             const auto rng=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();fixture.RefreshPopulation(1);
             bool correct=false;
             fixture.ResourceState([&](auto& state){const auto& military=*state.regional_military;
                 correct=military.factions[0].units[1]==2 && military.factions[0].attack[1]==1
-                    && military.factions[6].units[127]==777 && military.factions[6].attack[0]==888;
+                    && military.factions[6].units[127]==777 && military.factions[6].attack[0]==888
+                    && military.factions[0].unit_phase_flags->at(1)==10242 && military.factions[6].unit_phase_flags->at(127)==4096;
             });
             GT_ASSERT(correct,"military recount used raw morale HP damage or refreshed a peer");
             std::optional<faction::SmacSimulationState> state_before;
@@ -309,7 +312,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(correct,"failed military preparation partially published capability or owner counters");
             for(auto* corner:square->elevation.corners) {*corner=100;}square->Update();
 
-            auto removal=game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{901});removal.Commit();removal.Notify(GSE_CALL);
+            auto removal=game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{901,798});removal.Commit();removal.Notify(GSE_CALL);
             fixture.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==2;});
             GT_ASSERT(correct && fixture.GameplayRandom()==rng && game->GetRandom()->GetStateString()==jsf,"removal eagerly recounted military or producer consumed RNG");
             saved=fixture.Snapshot();GT_OK();
@@ -317,10 +320,10 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
         ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
         return restored.Run([&](GSE_CALLABLE)->std::string {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool correct=false;
-            restored.ResourceState([&](auto& state){correct=state.regional_military && state.regional_military->factions[0].units[1]==2;});
+            restored.ResourceState([&](auto& state){correct=state.regional_military && state.regional_military->factions[0].units[1]==2 && state.regional_military->factions[0].unit_phase_flags->at(1)==10242;});
             GT_ASSERT(correct,"actual Start reconstructed stale military history");
             restored.RefreshPopulation(1);
-            restored.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==1 && state.regional_military->factions[0].attack[1]==1;});
+            restored.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==1 && state.regional_military->factions[0].attack[1]==1 && state.regional_military->factions[0].unit_phase_flags->at(1)==8194;});
             GT_ASSERT(correct,"restored next owner summary did not consume current Unit records");GT_OK();
         });
     });

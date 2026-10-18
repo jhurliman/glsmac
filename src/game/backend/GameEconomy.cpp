@@ -285,7 +285,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     faction::SmacDesignCounts design_counts{};
     auto military=m_simulation->value.regional_military;
     const bool recount_military=military.has_value() && topology.has_value();
-    if(recount_military) {military->factions.at(owner-1)={};}
+    if(recount_military) {auto& row=military->factions.at(owner-1);row={};row.unit_phase_flags.emplace();}
     std::set<size_t> seen;
     const auto& order=m_um->GetUnitRecordOrder();
     for(size_t cursor=order.size();cursor>0;--cursor) {
@@ -301,7 +301,8 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
             || ((square->coord.x^square->coord.y)&1) || m_map->GetTile(square->coord.x,square->coord.y)!=square) {
             throw std::runtime_error("Military summary Unit has no current map coordinate");
         }
-        if(square->is_water_tile && (!square->base || m_bm->GetBase(square->base->m_id)!=square->base)) {
+        const bool valid_base=square->base && m_bm->GetBase(square->base->m_id)==square->base && square->base->GetTile()==square;
+        if(square->is_water_tile && !valid_base) {
             throw std::runtime_error("Unbased ground units on water require the native transport/invalid-placement cleanup producer");
         }
         // The current resolver admits land Scout/Rover and Former/Colony
@@ -315,7 +316,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
         // No Sentry/order2 or special plan5 is admitted by these packages.
         // Civilian A0 yields zero naturally; attack is not filtered by plan.
         faction::SmacRegionalMilitaryState::Accumulate(military->factions.at(owner-1),{
-            region,design.plan,0,!square->is_water_tile,power,armor,morale,0,false});
+            region,design.plan,0,!square->is_water_tile,power,armor,morale,0,false,valid_base});
     }
     if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Faction summary omitted a registered Unit");}
     m_simulation->value.capabilities=std::move(capability_candidate.capabilities);

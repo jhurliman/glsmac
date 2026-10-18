@@ -145,6 +145,7 @@ void Game::PrepareNewSimulation() {
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	value.capabilities=capabilities;value.hostility=std::move(hostility);
 	value.regional_military.emplace(); // explicit fresh-world ushort counters, all positive slots
+	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );

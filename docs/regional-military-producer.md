@@ -1,5 +1,9 @@
 # Regional military counters in live owner upkeep
 
+This records the V18 counter slice. The subsequent
+[V19 unit-phase flag integration](regional-unit-phase-flags.md) adds the separate
+scoped contribution rows; it does not yet implement the final regional flags.
+
 The owner-summary stage now retains regional unit counts and attack contributions
 for every positive faction slot and all128 regions. These are outputs of the
 post-Base summary, alongside the existing regional Base counts and component

@@ -88,7 +88,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=18,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=19,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -108,6 +108,12 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=18,bool
             for(const auto& owner:value.regional_military->factions) {for(const auto* fields:{&owner.units,&owner.attack}) {for(const auto field:*fields) {
                 packed+=static_cast<char>(field&255);packed+=static_cast<char>(field>>8);
             }}}
+            if(version>=19) {for(const auto& owner:value.regional_military->factions) {
+                packed+=owner.unit_phase_flags ? char(1) : char(0);
+                if(owner.unit_phase_flags) {for(const auto flags:*owner.unit_phase_flags) {
+                    packed+=static_cast<char>(flags&255);packed+=static_cast<char>(flags>>8);
+                }}
+            }}
             suffix.WriteString(packed);
         }
     }
@@ -205,6 +211,34 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(actual==row.expected,"native regional unit or attack projection differs: "+std::string(row.id));
         }
         GT_OK();
+    });
+    task->AddTest("SMAC unit-phase flags V19 retain exact scoped bits and V18 absence",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        auto value=State();value.regional_military.emplace();
+        const std::array<uint16_t,7> patterns{0,2,2050,4096,8192,10242,14338};
+        for(size_t owner=0;owner<7;++owner) {
+            auto& flags=value.regional_military->factions[owner].unit_phase_flags;flags.emplace();
+            for(size_t region=0;region<128;++region) {flags->at(region)=patterns[(owner+region)%patterns.size()];}
+        }
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V19 lost scoped flag history or unoccupied/polar slots");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,18),technologies,profiles,units);
+        for(const auto& owner:old.regional_military->factions) {GT_ASSERT(!owner.unit_phase_flags,"V18 acquired invented flag history");}
+        auto stale=old.regional_military->factions.front();
+        Military::Accumulate(stale,{1,8,0,true,0,1,0,0,false,false});
+        GT_ASSERT(!stale.unit_phase_flags,"arithmetic query manufactured missing flag authority");
+        for(int variant=0;variant<4;++variant) {
+            std::string packed(Military::V18_WIRE_BYTES,0);
+            if(variant==0) {packed+=char(2);packed.append(6,0);}
+            if(variant==1) {packed+=char(1);packed.append(6,0);}
+            if(variant==2) {packed+=char(1);packed+=char(1);packed.append(255+6,0);}
+            if(variant==3) {packed.append(8,0);}
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(packed);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,19,true,false)+invalid.ToString(),technologies,profiles,units);}),"malformed scoped flags accepted");
+        }
+        value.regional_military->factions.front().unit_phase_flags->at(0)=1;
+        GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);}),"Base/peer/final flags leaked into unit-phase history");GT_OK();
     });
     task->AddTest("SMAC regional military V18 preserves all word counters and legacy absence",GT(){
         auto value=State();value.regional_military.emplace();

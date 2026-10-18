@@ -316,6 +316,30 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC queued Hurry discards a Base retired by actual earlier upkeep",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);auto* bm=game->GetBM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            auto context=base->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;context.governor_options=0;base->SetSmacResourceContext(GSE_CALL,context);base->SetAccumulatedNutrients(-1);
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto survivor_context=context;survivor_context.resource_events=0;
+            auto* survivor=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(8,8),"Survivor",{},pops,41,0,
+                ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}},survivor_context);
+            bm->SpawnBase(GSE_CALL,survivor);survivor->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));const auto offer=base->GetSmacHurryOffer();
+            game->Event(GSE_CALL,"complete_turn",{});
+            game->Event(GSE_CALL,"hurry_smac_production",{{"base",wrapper},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});
+            fixture.DrainEvents();
+            GT_ASSERT(!bm->GetBase(701) && bm->GetBase(702)==survivor && !wrapper->wrapobj && wrapper->type==VT_UNDEFINED,
+                "Earlier turn did not retire queued Hurry target through actual upkeep");
+            GT_ASSERT(!survivor->GetProductionState()->hurry_partial_paid,"Stale Hurry mutated replacement Base");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Hurry full purchase stages actual credits minerals baselines and stale guards",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         fixture.ResourceState([](auto& state){state.economy.at(1).credits=1000;state.economy.at(1).pending_debit=11;});

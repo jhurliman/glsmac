@@ -13,7 +13,7 @@ return {
 		});
 
 		this.frame.text({
-			class: 'game-popup-button',
+			class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
 			text: 'QUEUE (READ ONLY)',
 			align: 'top',
 			top: 2,
@@ -42,7 +42,7 @@ return {
 			right: 2,
 		}).on('click', () => { this.p.utils.show_production_selection(); return true; });
 		this.frame.text({
-			class: 'game-popup-button',
+			class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
 			text: 'Hurry unavailable',
 			align: 'bottom',
 			bottom: 2,

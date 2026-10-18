@@ -2005,6 +2005,10 @@ public:
             GT_ASSERT(!badges->IsSelectionBlinkVisible() && !unit->IsBadgeVisible(),"actual tile redraw flashed an off-phase selected badge");
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(!unit->IsBadgeVisible(),"repeat redraw changed selected badge visibility");
+            badges->AdvanceSelectionBlink(blink_epoch+std::chrono::milliseconds(200),false);
+            unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"closed turn gate retained hidden selected overlays");
+            badges->AdvanceSelectionBlink(blink_epoch+std::chrono::milliseconds(201),true);
+            unit->Iterate();GT_ASSERT(!unit->IsBadgeVisible(),"opening gate reset the retained shared phase");
             badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD*2,true);
             unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"next shared callback did not display selected badge");
             unit->StopBadgeBlink(true);

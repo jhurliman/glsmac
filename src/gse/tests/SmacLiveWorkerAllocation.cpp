@@ -265,6 +265,75 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC queue editor authenticates atomic ordered duplicates stale commands and actual saved upkeep",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(SelectionSource,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,0,1,2);SelectionPresentations(fixture);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto former=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,1);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,game->GetSmacProductionCost(base->m_owner,scout)-1,scout,7,std::vector<ProductionItem>{}});
+            const auto original=*base->GetProductionState();const auto random=fixture.GameplayRandom();const auto before=fixture.Snapshot();
+            auto* view=static_cast<value::Object*>(base->CopySmacQueueEditor(GSE_CALL));
+            GT_ASSERT(fixture.Snapshot()==before && static_cast<value::Int*>(view->Get("limit"))->value==9,"queue query mutated or changed port budget");
+            const auto entry=[&](const char* key,int64_t number)->Value* {return VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{key,VALUE(value::Int,,number)}}));};
+            auto expected=base->SmacSpecialistSelectionState();
+            const auto command=[&](value::array_elements_t entries) {game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},{"entries",VALUE(value::Array,,entries)}});};
+            command({entry("source_id",2),entry("source_id",1),entry("source_id",2)});
+            GT_ASSERT(*base->GetProductionState()==original,"queue edit applied before dispatch");fixture.DrainEvents();
+            GT_ASSERT(base->GetProductionState()->queue==std::optional<std::vector<ProductionItem>>({scout,former,scout})
+                && base->GetProductionState()->current_item==scout && base->GetProductionState()->minerals==original.minerals
+                && base->GetProductionState()->baseline_minerals==7 && fixture.GameplayRandom()==random,"queue edit lost duplicates or changed production/RNG");
+            auto unchanged=fixture.Snapshot();command({});fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==unchanged,"stale queue command changed saved state");
+            expected=base->SmacSpecialistSelectionState();
+            for(const auto entries:std::vector<value::array_elements_t>{{entry("existing",0),entry("existing",0)},{entry("existing",3)},{entry("source_id",511)},{entry("bad",0)}}) {
+                GT_ASSERT(Rejects([&]{command(entries);}) && fixture.Snapshot()==unchanged,"invalid queue token published state");
+            }
+            value::array_elements_t too_many;for(size_t i=0;i<10;++i) {too_many.push_back(entry("source_id",2));}
+            GT_ASSERT(Rejects([&]{command(too_many);}) && fixture.Snapshot()==unchanged,"oversized queue was admitted");
+            command({entry("existing",2),entry("existing",0),entry("existing",1)});fixture.DrainEvents();
+            GT_ASSERT(*base->GetProductionState()->queue==std::vector<ProductionItem>({scout,scout,former}),"queue reorder changed retained identities");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"queue edit: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(SelectionSource,"GAIANS");restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetProductionState()->queue->size()==3,"actual save lost pending queue");
+            const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t id){return game->ResolveSmacProductionPresentation(base->m_owner,id);},unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(result.completed_unit && base->GetProductionState()->current_item.smac_source_id==2
+                && base->GetProductionState()->queue->size()==2 && base->GetProductionState()->queue->back().smac_source_id==1,"saved queue did not advance once through real completion");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC queue editor preserves unavailable retained items without copying them",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            auto* bm=game->GetBM();bm->DefineFacility(new FacilityDef("tanks","Tanks","",40,{},3));base->m_facilities.emplace("tanks",bm->GetFacilityDef("tanks"));
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto tanks=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,3);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,7,std::vector<ProductionItem>{tanks,scout}});
+            auto* view=static_cast<value::Object*>(base->CopySmacQueueEditor(GSE_CALL));
+            GT_ASSERT(static_cast<value::Array*>(view->Get("items"))->value.size()==2,"unavailable retained facility disappeared from editor");
+            const auto entry=[&](const char* key,int64_t id)->Value* {return VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{key,VALUE(value::Int,,id)}}));};
+            const auto command=[&](value::array_elements_t entries) {game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});};
+            const auto before=fixture.Snapshot();GT_ASSERT(Rejects([&]{command({entry("source_id",-3)});}) && fixture.Snapshot()==before,"existing facility was admitted as a new pending choice");
+            command({entry("existing",1),entry("existing",0)});fixture.DrainEvents();
+            GT_ASSERT(*base->GetProductionState()->queue==std::vector<ProductionItem>({scout,tanks}),"unavailable retained entry could not move");
+            command({});fixture.DrainEvents();GT_ASSERT(base->GetProductionState()->queue->empty() && base->GetProductionState()->minerals==2 && base->GetProductionState()->baseline_minerals==7,"queue clear changed mineral authority");GT_OK();
+        });
+    });
+    task->AddTest("SMAC queue editor rejects foreign Base control",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_queue_editor")->type==VT_UNDEFINED
+                && Rejects([&]{game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,value::array_elements_t{})}});})
+                && fixture.Snapshot()==before,"foreign queue admitted authority or mutation");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC Base Rename accepts empty duplicate spaced and byte bounded names through live requests",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
@@ -2567,6 +2636,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			request=static_cast<value::Int*>(pending->Get("request_id"))->value;
 			game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"screen")}});GT_OK();
 		});GT_ASSERT(setup.empty(),"Screen setup: "+setup);fixture.DrainEvents();
+        const auto queue_edit=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            const value::array_elements_t entries{VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{"source_id",VALUE(value::Int,,2)}}))};
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"edit_smac_queue",{{"base",second->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,second->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});}),"Screen queue admitted another Base");
+            game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});GT_OK();
+        });GT_ASSERT(queue_edit.empty(),"Screen queue edit: "+queue_edit);fixture.DrainEvents();
+        const auto queue_check=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetProductionState()->queue->size()==1 && base->GetProductionState()->queue->front().smac_source_id==2
+                && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"Screen queue edit failed or reposted upkeep");GT_OK();
+        });GT_ASSERT(queue_check.empty(),"Screen queue check: "+queue_check);
         const auto rename_open=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
             game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
         });GT_ASSERT(rename_open.empty(),"Screen Rename open: "+rename_open);fixture.DrainEvents();

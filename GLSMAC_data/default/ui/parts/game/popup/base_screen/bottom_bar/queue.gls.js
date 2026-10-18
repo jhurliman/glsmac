@@ -14,7 +14,7 @@ return {
 
 		this.frame.text({
 			class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
-			text: 'QUEUE (READ ONLY)',
+			text: 'PENDING QUEUE',
 			align: 'top',
 			top: 2,
 			left: 2,
@@ -24,7 +24,7 @@ return {
 		this.items = this.frame.listview({
 			class: 'default-panel-inner',
 			top: 24,
-			bottom: 45,
+			bottom: 67,
 			left: 3,
 			right: 3,
 			itemsize: 14,
@@ -38,18 +38,19 @@ return {
 			class: 'game-popup-button',
 			text: 'CHANGE',
 			align: 'bottom',
-			bottom: 23,
+			bottom: 45,
 			left: 2,
 			right: 2,
 		}).on('click', () => { this.p.utils.show_production_selection(); return true; });
-		this.frame.text({
-			class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
-			text: 'Hurry unavailable',
+		this.frame.button({
+			class: 'game-popup-button',
+			text: 'EDIT QUEUE',
 			align: 'bottom',
-			bottom: 2,
+			bottom: 23,
 			left: 2,
 			right: 2,
-		});
+		}).on('click', () => { this.p.utils.open_queue_editor(); return true; });
+		this.frame.text({class: 'base-screen-frame-text', font: 'arialnb.ttf:11', text: 'Hurry unavailable', align: 'bottom', bottom: 2, left: 2, right: 2});
 
 	},
 

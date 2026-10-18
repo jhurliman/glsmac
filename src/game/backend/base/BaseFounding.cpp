@@ -65,7 +65,9 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     const auto* technology=m_game->m_simulation->value.technology.Find(simulation_id);
     const auto* social=m_game->m_simulation->value.social.Find(simulation_id);
     if (!profile || !technology || !social || !social->retained) {THROW("Founding requires actual retained owner inputs");}
-    SmacBaseResourceContext context{simulation_id,false,0,0,SmacBaseResourceContext::NewGameGovernorOptions(m_game->m_simulation->value.designs.global_difficulty),false};
+    const auto options=m_game->m_simulation->value.remembered_governor.at(simulation_id);
+    if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
+    SmacBaseResourceContext context{simulation_id,false,0,0,*options,false};
     ValidateSmacResourceContext(context,owner,owner->GetPlayer()->GetFaction());
     const auto* worker=GetPopDef(roles[0]);
     if (!worker || !(worker->m_flags & PopDef::PF_TILE_WORKER) || worker->m_smac_specialist_id) {THROW("Founding worker role is invalid");}

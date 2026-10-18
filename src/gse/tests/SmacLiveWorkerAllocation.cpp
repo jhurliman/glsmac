@@ -282,6 +282,40 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Governor local Apply commits independent remembered state and actual restore",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(SelectionSource,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,7,scout,11,std::vector<ProductionItem>{scout}});
+            auto context=base->GetSmacResourceContext();context.governor_options=0x42000040u;base->SetSmacResourceContext(GSE_CALL,context);
+            const auto production=base->GetProductionState();const auto allocation=base->GetSmacAllocation();const auto random=fixture.GameplayRandom();
+            fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();state.remembered_governor[0]=0xffffffffu;state.remembered_governor[7]=0x12345678u;});
+            auto expected=base->SmacGovernorSelectionState();const auto before=fixture.Snapshot();
+            const auto command=[&](int64_t controls){game->Event(GSE_CALL,"apply_smac_governor",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},{"controls",VALUE(value::Int,,controls)}});};
+            for(const int64_t controls:{int64_t(-1),int64_t(0x80000),int64_t(1|4),int64_t(1|8),int64_t(1|16)}) {
+                GT_ASSERT(Rejects([&]{command(controls);}) && fixture.Snapshot()==before,"Unavailable Governor branch or malformed selection changed state");
+            }
+            command(0);GT_ASSERT(fixture.Snapshot()==before,"Governor applied before dispatch");fixture.DrainEvents();
+            bool remembered=false;fixture.ResourceState([&](auto& state){remembered=state.remembered_governor[1]==0x02000000u && state.remembered_governor[0]==0xffffffffu && state.remembered_governor[7]==0x12345678u;});
+            GT_ASSERT(remembered && base->GetSmacResourceContext().governor_options==0x02000000u
+                && base->GetProductionState()==production && base->GetSmacAllocation()==allocation && fixture.GameplayRandom()==random,
+                "Local inactive Apply changed allocation/production/RNG or lost independent templates");
+            const auto accepted=fixture.Snapshot();command(2);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==accepted,"Stale Governor command changed state");
+            expected=base->SmacGovernorSelectionState();fixture.ResourceState([](auto& state){state.remembered_governor[1]=7u;});
+            const auto changed=fixture.Snapshot();command(2);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==changed,"Changed remembered authority did not stale the command");
+            expected=base->SmacGovernorSelectionState();command(1);fixture.DrainEvents();
+            GT_ASSERT(base->GetSmacResourceContext().governor_options==0x82000000u,"Supported active no-management Apply failed");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"Governor Apply: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(SelectionSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);auto* base=restored.Game()->GetBM()->GetBase(701);bool remembered=false;
+            restored.ResourceState([&](auto& state){remembered=state.remembered_governor[1]==0x82000000u && state.remembered_governor[0]==0xffffffffu && state.remembered_governor[7]==0x12345678u;});
+            GT_ASSERT(remembered && base->GetSmacResourceContext().governor_options==0x82000000u,"Actual Start restore lost Governor settings");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live Hurry full purchase stages actual credits minerals baselines and stale guards",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         fixture.ResourceState([](auto& state){state.economy.at(1).credits=1000;state.economy.at(1).pending_debit=11;});
@@ -2328,6 +2362,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 game->GetState()->m_settings.global.difficulty_level=difficulty-3;
                 fixture.ResourceState([&](auto& state){
                     state.designs.global_difficulty=difficulty;
+                    state.remembered_governor[1]=SmacBaseResourceContext::NewGameGovernorOptions(difficulty);
                     state.social.factions.front().retained->at(2)=support;
                     state.social.factions.front().current[2]=support==-2 ? 3 : -4;
                     // Explicit owner1 custom ID64, identical score to actual source2.

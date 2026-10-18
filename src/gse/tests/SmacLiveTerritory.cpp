@@ -4,6 +4,7 @@
 #include "fixtures/SmacCoastalGeography.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacSharedLandmarkDetails.h"
+#include "fixtures/SmacTerritorySummary.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -63,6 +64,71 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC territory summary matches 12 complete original aggregate passes",GT(){
+        namespace native=map::smac_territory;
+        for(const auto& row:territory_summary_fixture::Cases()) {
+            const auto actual=native::Summarize(row.tiles,row.reveal,row.search);
+            GT_ASSERT(actual==row.expected,"native territory summary differs: "+std::string(row.id));
+            GT_ASSERT(native::TerritorySummary::Deserialize(actual.Serialize())==actual,"summary codec changed native retained output");
+        }
+        for(size_t turn=0;turn<8;++turn) {
+            GT_ASSERT(native::RefreshTerritoryAtGlobalTail(turn)==(turn==1 || turn==5),"native global-upkeep gate differs");
+        }
+        // Native byte/word storage wraps; a region can reach the map bound.
+        std::vector<native::SummaryTile> wrap(65536,{1,1,2,2,0,false,false,false,13,2});
+        const auto actual=native::Summarize(wrap,0,0);
+        GT_ASSERT(actual.owners[1].tiles[1]==0 && actual.owners[1].site_signals[1]==0
+            && actual.site_signals[1]==65536 && actual.maximum_rating[1]==13,"byte word and global counter widths differ");
+        GT_OK();
+    });
+    task->AddTest("SMAC retained territory summary framing preserves stale and absent history",GT(){
+        namespace native=map::smac_territory;
+        const auto bare=Topology::Build(16,8,true,std::vector<bool>(64,false));
+        auto summary=territory_summary_fixture::Cases().back().expected;summary.search_objectives=128;
+        const auto value=bare.WithTerritorySummary(summary);const auto wire=value.Serialize();
+        GT_ASSERT(Topology::Deserialize(wire)==value && value.Rebuild(std::vector<bool>(64,false)).Summary()==value.Summary(),"restore or region rebuild recounted retained summary");
+        auto old=bare.Serialize();old.replace(0,8,"GLSTERR4");
+        GT_ASSERT(!Topology::Deserialize(old).Summary(),"old save acquired invented territory or Search authority");
+        for(int variant=0;variant<4;++variant) {
+            auto bad=wire;if(variant==0) {bad.pop_back();}if(variant==1) {bad.back()=1;}
+            if(variant==2) {bad[7]='4';}if(variant==3) {bad[16+64+512+1024+4]=16;}
+            GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"malformed retained summary accepted");
+        }
+        GT_ASSERT(Rejects([&]{native::Summarize({{128,0,0,0,0,false,false,false,0,0}},0,0);}),"invalid summary tile admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC live territory summaries follow founding removal and actual Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,retained;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);auto* world=game->GetMap();
+            for(size_t y=0;y<world->GetHeight();++y) {for(size_t x=y&1;x<world->GetWidth();x+=2) {
+                auto* square=world->GetTile(x,y);square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+                square->features=0;square->terraforming=map::tile::TERRAFORMING_FARM;square->bonus=map::tile::BONUS_NONE;
+            }}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            const auto rng=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+            Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,48,16);
+            const auto& summary=*world->GetTerritoryTopology()->Summary();
+            GT_ASSERT(summary.owners[1].covered_suitable[1]==21 && summary.owners[2].covered_suitable[1]==21,"covered suitable counts used Farm or missed Base radius");
+            GT_ASSERT(summary.owners[1].known[1]==3968 && summary.owners[2].known[63]==128 && summary.owners[0].known[1]==0,"known counters filtered exploration by ownership");
+            GT_ASSERT(summary.owners[0].tiles[1]>0 && summary.owners[0].maximum_rating[1]==0 && summary.maximum_rating[1]>0,"neutral claims acquired an owned maximum");
+            // Mutation/query/save alone must leave the retained producer untouched.
+            const auto before=world->GetTerritoryTopology()->Summary();world->GetTile(0,0)->moisture=map::tile::MOISTURE_ARID;
+            const auto snapshot=fixture.Snapshot();(void)snapshot;
+            GT_ASSERT(world->GetTerritoryTopology()->Summary()==before,"snapshot refreshed territory counters");
+            game->GetBM()->DespawnBase(GSE_CALL,800);
+            const auto& removed=*world->GetTerritoryTopology()->Summary();
+            GT_ASSERT(removed.owners[2].tiles[1]==0 && removed.owners[2].covered_suitable[1]==0 && removed.owners[1].covered_suitable[1]==21,"removal retained stale claims or dropped survivor exclusion");
+            GT_ASSERT(fixture.GameplayRandom()==rng && game->GetRandom()->GetStateString()==jsf,"territory pass consumed gameplay RNG");
+            retained=world->GetTerritoryTopology()->Serialize();saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            GT_ASSERT(restored.Game()->GetMap()->GetTerritoryTopology()->Serialize()==retained,"actual Start rebuilt retained territory summary");GT_OK();
+        });
+    });
+
 	task->AddTest("SMAC shared landmark detail retains native saved bytes and independent geography lifetimes",GT(){
 		for(const auto& row:shared_landmark_fixture::storage) {
 			const std::vector<bool> sea(64,false),fertile(64,true);
@@ -147,7 +213,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
 			// A V3 world has no shared-byte history. Preserve that absence rather
 			// than treating missing metadata as an initialized fresh zero.
-			auto legacy=map->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-map->GetWidth()*map->GetHeight()/2);
+			auto legacy=map->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-map->GetWidth()*map->GetHeight()/2-map::smac_territory::TerritorySummary::WIRE_BYTES);
 			legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
 			std::string packed(map->GetWidth()*map->GetHeight()/2,char(13));packed[Index(128,96,48)]=29;fixture.SiteRatings(packed);
 			// This distant cached tile must never enter the uncached decoder.

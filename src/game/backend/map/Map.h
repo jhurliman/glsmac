@@ -161,6 +161,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	GlsmacTerritoryTopology PrepareFreshTerritoryTopology() const;
 	GlsmacTerritoryTopology PrepareSiteRatingRefill(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn) const;
+	GlsmacTerritoryTopology PrepareTerritorySummary(const GlsmacTerritoryTopology& topology,const SmacWorkerKnowledge& knowledge) const;
 	GlsmacTerritoryTopology PrepareSiteRatingQuery(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn,smac_site::Coordinate point) const;
 

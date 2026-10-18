@@ -227,6 +227,13 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		}
 		next.energy.reset();++next.base_index;next.stage=Stage::Base;
 	}
+	// The global territory producer follows all owner tails; read-only research
+	// and suspended Base screens never refresh these retained counters.
+	if(map::smac_territory::RefreshTerritoryAtGlobalTail(next.turn)) {
+		std::optional<map::GlsmacTerritoryTopology> topology;
+		auto knowledge=PrepareBaseTerritory(nullptr,nullptr,false,&topology);
+		CommitBaseTerritory(knowledge,topology);
+	}
 	const auto turn_id=next.turn;
 	m_canonical_continuation.reset();
 	for(const auto& slot:m_state->m_slots->GetSlots()) {

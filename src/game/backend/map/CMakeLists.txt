@@ -20,6 +20,8 @@ SET( SRC ${SRC}
 	${PWD}/SmacRestartSearch.cpp
 	${PWD}/SmacRestartPreprocessing.cpp
 	${PWD}/GlsmacTerritoryTopology.cpp
+	${PWD}/SmacTerritorySummary.cpp
+	${PWD}/MapTerritorySummary.cpp
 	${PWD}/MapTerritory.cpp
 	${PWD}/MapSiteRatings.cpp
 	${PWD}/MapState.cpp

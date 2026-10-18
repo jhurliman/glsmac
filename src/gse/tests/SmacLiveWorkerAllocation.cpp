@@ -1434,7 +1434,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             picker->Run(GSE_CALL,{VALUE(value::Int,,-3),VALUE(value::String,,"open")});
             picker->Run(GSE_CALL,{VALUE(value::Int,,-3),VALUE(value::String,,"ok")});fixture.DrainEvents();
             GT_ASSERT(base->GetProductionState()->current_item.kind==ProductionItemKind::Facility && base->GetProductionState()->current_item.smac_source_id==3,"actual picker event did not install the Tanks target");
-            for(int turn=0;turn<5;++turn) {game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();}
+            // A retained canary in an unused sea region distinguishes the
+            // global turn5 refresh from owner upkeep/read-only queries.
+            auto territory=*game->GetMap()->GetTerritoryTopology()->Summary();territory.site_signals[127]=12345;
+            fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithTerritorySummary(territory).Serialize());
+            for(int turn=0;turn<5;++turn) {
+                game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+                GT_ASSERT(game->GetMap()->GetTerritoryTopology()->Summary()->site_signals[127]==(game->GetTurnId()<5 ? 12345 : 0),
+                    "actual global territory refresh ran outside turn modulo4 equals1 or failed to run at turn5");
+            }
             GT_ASSERT(game->GetTurnId()==6 && base->GetProductionState()->minerals==20 && !base->m_facilities.count("tanks"),"live turns did not accumulate Tanks minerals exactly once");
             saved=fixture.Snapshot();GT_OK();
         });if(!first.empty()) {return "Tanks picker/first turns: "+first;}
@@ -2739,7 +2747,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 const auto first=Unit::GetNextId();const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
                 base->SetProductionState(GSE_CALL,ProductionState{colony,999,colony,0,std::vector<ProductionItem>{}});
                 if(scenario==4) {
-                    auto legacy=game->GetMap()->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-1024);
+                    auto legacy=game->GetMap()->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-1024-map::smac_territory::TerritorySummary::WIRE_BYTES);
                     legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
                     fixture.Updates();const auto original=fixture.Snapshot();const auto queues=fixture.QueuedFrontendRequests().size();
                     auto* retained=static_cast<value::Object*>(base->Wrap(GSE_CALL));

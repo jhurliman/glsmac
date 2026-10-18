@@ -133,6 +133,7 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
         for(const auto& existing:territory.bases) {centers.push_back(existing.coordinate);}
         topology=m_map->PrepareSiteRatingRefill(topology->WithSiteRatings(topology->SiteRatings()->FoundBase(radius.center)),centers,GetTurnId());
     }
+    topology=m_map->PrepareTerritorySummary(*topology,knowledge);
     auto frame = ProjectSmacWorkerKnowledge(knowledge,owner,nullptr,true).CopyData();
     frame.bases.push_back({owner,radius.center,0});
     const auto unavailable = map::SmacWorkerMapFrame::Create(frame).Evaluate(frame.bases.size()-1).unavailable;

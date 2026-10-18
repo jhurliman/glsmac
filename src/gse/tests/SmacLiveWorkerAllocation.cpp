@@ -157,6 +157,23 @@ std::string TanksSource(const std::string& filename) {
     }
     return output;
 }
+std::string HabitationSource(const std::string& filename) {
+    auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,output;size_t row=0;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line.front()=='#') {section=line;row=0;}
+        else {++row;if(section=="#FACILITIES") {
+            if(row==24) {line="Hab Complex,8,2,Tech6,Disable,Population";}
+            if(row==25) {line="Habitation Dome,16,4,Tech8,Disable,Population";}
+        }}
+        output+=line+'\n';
+    }return output;
+}
+std::string HabitationGrowthSource(const std::string& filename,int32_t population) {
+    auto source=HabitationSource(filename);if(filename!="alpha.txt") {return source;}
+    const auto at=source.find("Center,2,2,1");
+    source.replace(at,std::string("Center,2,2,1").size(),"Center,"+std::to_string(2*population+4)+",2,1");return source;
+}
 std::string EnergyFacilitySource(const std::string& filename) {
     auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
     std::istringstream input(source);std::string line,section,output;size_t row=0;
@@ -267,6 +284,125 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC queued Hurry discards a Base retired by actual earlier upkeep",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);auto* bm=game->GetBM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            auto context=base->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;context.governor_options=0;base->SetSmacResourceContext(GSE_CALL,context);base->SetAccumulatedNutrients(-1);
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto survivor_context=context;survivor_context.resource_events=0;
+            auto* survivor=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(8,8),"Survivor",{},pops,41,0,
+                ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}},survivor_context);
+            bm->SpawnBase(GSE_CALL,survivor);survivor->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));const auto offer=base->GetSmacHurryOffer();
+            game->Event(GSE_CALL,"complete_turn",{});
+            game->Event(GSE_CALL,"hurry_smac_production",{{"base",wrapper},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});
+            fixture.DrainEvents();
+            GT_ASSERT(!bm->GetBase(701) && bm->GetBase(702)==survivor && !wrapper->wrapobj && wrapper->type==VT_UNDEFINED,
+                "Earlier turn did not retire queued Hurry target through actual upkeep");
+            GT_ASSERT(!survivor->GetProductionState()->hurry_partial_paid,"Stale Hurry mutated replacement Base");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live Hurry full purchase stages actual credits minerals baselines and stale guards",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        fixture.ResourceState([](auto& state){state.economy.at(1).credits=1000;state.economy.at(1).pending_debit=11;});
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto former=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,1);
+            const auto cost=game->GetSmacProductionCost(base->m_owner,scout);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,cost/2,former,7,std::vector<ProductionItem>{former}});
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();const auto food=base->GetAccumulatedNutrients();
+            auto* preview=static_cast<value::Object*>(base->CopySmacHurryPreview(GSE_CALL,0));
+            const auto quote=static_cast<value::Int*>(preview->Get("quote"))->value;
+            GT_ASSERT(static_cast<value::Bool*>(preview->Get("available"))->value && static_cast<value::Bool*>(preview->Get("can_full"))->value && fixture.Snapshot()==before,"Hurry preview mutated or lost actual budget");
+            value::object_properties_t command{{"base",base->Wrap(GSE_CALL)},{"expected_state",preview->Get("expected_state")},{"full",VALUE(value::Bool,,true)},{"amount",VALUE(value::Int,,0)}};
+            for(const auto amount:{int64_t(-1),int64_t(1),int64_t(INT32_MAX)+1}) {auto bad=command;bad["amount"]=VALUE(value::Int,,amount);GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",bad);}) && fixture.Snapshot()==before,"invalid full credit amount was admitted");}
+            game->Event(GSE_CALL,"hurry_smac_production",command);game->Event(GSE_CALL,"hurry_smac_production",command);
+            GT_ASSERT(fixture.Snapshot()==before,"Hurry applied before dispatch");fixture.DrainEvents();
+            const auto& paid=*base->GetProductionState();const auto money=game->GetCanonicalEconomy(base->m_owner);
+            GT_ASSERT(paid.current_item==scout && paid.minerals==cost && paid.baseline_item==scout && paid.baseline_minerals==cost && !paid.hurry_partial_paid
+                && paid.queue==std::optional<std::vector<ProductionItem>>({former}) && money.credits==1000-quote && money.pending_debit==11
+                && base->GetAccumulatedNutrients()==food && fixture.GameplayRandom()==random,"full Hurry changed queue/food/RNG, set partial marker or debited twice");
+            const auto unchanged=fixture.Snapshot();auto current=base->GetSmacHurryOffer();command["expected_state"]=VALUE(value::String,,current.expected);
+            GT_ASSERT(!current.reason.empty() && Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",command);}) && fixture.Snapshot()==unchanged,"funded production was offered another ordinary purchase");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live Hurry partial zero tiny clamped and manual-switch marker survive real Start and owner reset",[](GSE*,context::Context*)->std::string {
+        for(const int entered:{0,1,5,100}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+            const auto roles=Roles();std::array<std::string,8> names;names[0]=roles.worker;for(size_t i=0;i<7;++i) {names[i+1]=roles.specialists[i];}fixture.BasePresentationRoles(names);
+            fixture.ResourceState([&](auto& state){state.economy.at(1).credits=entered==100 ? 12 : 1000;state.economy.at(1).pending_debit=10;auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=100000;tech.labs=0;});
+            std::string saved;int32_t expected_credits=0;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+                const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);const auto cost=game->GetSmacProductionCost(base->m_owner,scout);
+                base->SetProductionState(GSE_CALL,ProductionState{scout,cost/2,scout,7,std::vector<ProductionItem>{}});
+                const auto offer=base->GetSmacHurryOffer();const auto quote=CalculateSmacHurryQuote(*base->GetProductionState(),*offer.context);
+                const auto amount=std::min(entered,quote);const auto paid=std::min(amount,offer.credits-offer.reserved);const auto expected=cost/2+(cost-cost/2)*paid/quote;
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                auto* preview=static_cast<value::Object*>(base->CopySmacHurryPreview(GSE_CALL,amount));
+                GT_ASSERT(static_cast<value::Int*>(preview->Get("paid"))->value==paid && static_cast<value::Int*>(preview->Get("minerals_after"))->value==expected && fixture.Snapshot()==before,"partial private preview posted stores or used a different cost fraction");
+                value::object_properties_t command{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,amount)}};
+                auto bad=command;bad["amount"]=VALUE(value::Int,,int64_t(quote)+1);GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",bad);}) && fixture.Snapshot()==before,"over-quote port input admission mutated state");
+                game->Event(GSE_CALL,"hurry_smac_production",command);game->Event(GSE_CALL,"hurry_smac_production",command);fixture.DrainEvents();
+                expected_credits=offer.credits-paid;
+                GT_ASSERT(base->GetProductionState()->hurry_partial_paid && base->GetProductionState()->minerals==expected && base->GetProductionState()->baseline_minerals==expected
+                    && game->GetCanonicalEconomy(base->m_owner).credits==expected_credits && game->GetCanonicalEconomy(base->m_owner).pending_debit==10 && fixture.GameplayRandom()==random,"partial Hurry lost zero/tiny marker, baseline or payment mode");
+                auto* choices=static_cast<value::Object*>(base->CopySmacProductionChoices(GSE_CALL));value::Object* selected=nullptr;
+                for(auto* row:static_cast<value::Array*>(choices->Get("choices"))->value) {auto* choice=static_cast<value::Object*>(row);if(static_cast<value::Int*>(choice->Get("source_id"))->value==1) {selected=choice;}}
+                GT_ASSERT(selected,"Former is not eligible in partial marker switch fixture");
+                game->Event(GSE_CALL,"select_smac_production",{{"base",base->Wrap(GSE_CALL)},{"source_id",VALUE(value::Int,,1)},{"expected_state",choices->Get("expected_state")},{"expected_minerals",selected->Get("minerals")},{"confirm",VALUE(value::Bool,,true)}});fixture.DrainEvents();
+                auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+                Call(GSE_CALL,wrapper,"set_production_state",{Call(GSE_CALL,wrapper,"get_production_state")});
+                GT_ASSERT(base->GetProductionState()->hurry_partial_paid,"legacy state DTO roundtrip cleared the independent paid marker");
+                const auto blocked=base->GetSmacHurryOffer();command["expected_state"]=VALUE(value::String,,blocked.expected);command["amount"]=VALUE(value::Int,,0);command["full"]=VALUE(value::Bool,,true);
+                const auto unchanged=fixture.Snapshot();GT_ASSERT(base->GetProductionState()->hurry_partial_paid && base->GetProductionState()->current_item.smac_source_id==1
+                    && !blocked.reason.empty() && Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",command);}) && fixture.Snapshot()==unchanged,"manual target change cleared partial lock or admitted repeat payment");
+                saved=fixture.Snapshot();GT_OK();
+            });GT_ASSERT(result.empty(),"partial live Hurry: "+result);
+            ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");restored.BasePresentationRoles(names);restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+            const auto loaded=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Game()->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+                auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+                GT_ASSERT(base->GetProductionState()->hurry_partial_paid && game->GetCanonicalEconomy(base->m_owner).credits==expected_credits
+                    && !base->GetSmacHurryOffer().reason.empty(),"real Start replayed payment or lost paid marker");
+                game->Event(GSE_CALL,"complete_turn",{});GT_OK();
+            });GT_ASSERT(loaded.empty(),"partial saved Start: "+loaded);restored.DrainEvents();
+            const auto tail=restored.Run([&](GSE_CALLABLE)->std::string {auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+                GT_ASSERT(game->GetTurnId()==2 && !base->GetProductionState()->hurry_partial_paid && game->GetCanonicalEconomy(base->m_owner).pending_debit==0,"owner tail omitted marker reset or reservation settlement");GT_OK();
+            });GT_ASSERT(tail.empty(),"partial owner reset: "+tail);
+        }GT_OK();
+    });
+    task->AddTest("SMAC live Hurry fences changed treasury without touching Base",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        fixture.ResourceState([](auto& state){state.economy.at(1).credits=1000;});
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);base->SetProductionState(GSE_CALL,ProductionState{scout,1,scout,1,std::vector<ProductionItem>{}});
+            const auto offer=base->GetSmacHurryOffer();fixture.ResourceState([](auto& state){--state.economy.at(1).credits;});const auto before=fixture.Snapshot();
+            game->Event(GSE_CALL,"hurry_smac_production",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,true)},{"amount",VALUE(value::Int,,0)}});fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==before,"old quote overwrote changed treasury");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC live Hurry withholds foreign authority",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_hurry_preview")->type==VT_UNDEFINED
+                && Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,"")},{"full",VALUE(value::Bool,,true)},{"amount",VALUE(value::Int,,0)}});})
+                && fixture.Snapshot()==before,"foreign Hurry exposed a command or changed state");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC queue editor authenticates atomic ordered duplicates stale commands and actual saved upkeep",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(SelectionSource,"GAIANS");std::string saved;
         const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -787,7 +923,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto& rules=game->GetState()->m_settings.global;
             const auto& rows=static_cast<value::Array*>(view->Get("queue"))->value;
             GT_ASSERT(static_cast<value::String*>(view->Get("name"))->value==rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
-                && rows.size()==9,"Current identity or full queue missing");
+                && rows.size()==9 && static_cast<value::Int*>(view->Get("cost"))->value==game->GetSmacProductionCost(base->m_owner,scout),"Current identity, cost or full queue missing");
             for(size_t i=0;i<rows.size();++i) {
                 const auto expected=i%3==0 ? rules.GetSmacProductionRules()->facilities.at(2).name
                     : i%3==1 ? rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name
@@ -795,10 +931,62 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(static_cast<value::String*>(rows[i])->value==expected,"Saved queue order or source names changed");
             }
             GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Read-only projection mutated stores, queue, world or gameplay RNG");
-            GT_OK();
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,7,scout,888,queue});
+            const auto prepared=fixture.Snapshot();
+            auto* formatted=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(static_cast<value::Int*>(formatted->Get("cost"))->value==40
+                && static_cast<value::String*>(formatted->Get("forecast"))->value=="TURNS:  9"
+                && fixture.Snapshot()==prepared && fixture.GameplayRandom()==random,"forecast used switching baseline, wrong cost or mutated authority");
+            auto* no_surplus=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation"));
+            GT_ASSERT(no_surplus->value.count("forecast")==0,"missing current surplus invented a forecast");
+            GT_ASSERT(Rejects([&]{Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,int64_t(INT32_MAX)+1)});})
+                && fixture.Snapshot()==prepared,"wide formatting surplus narrowed or changed authority");
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,INT64_MAX,scout,888,queue});
+            const auto wide=fixture.Snapshot();
+            auto* unavailable=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(unavailable->value.count("cost")==1 && unavailable->value.count("forecast")==0 && fixture.Snapshot()==wide,
+                "wide port store crashed or fabricated an original forecast");
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,7,scout,888,queue});
+            auto* bm=game->GetBM();bm->DefineFacility(new FacilityDef("progress-tanks","Tanks","",40,{},3));
+            base->m_facilities.emplace("progress-tanks",bm->GetFacilityDef("progress-tanks"));
+            const auto installed=fixture.Snapshot();
+            auto* built=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(built->value.count("cost")==1 && built->value.count("forecast")==0 && fixture.Snapshot()==installed,
+                "already installed facility entered the ordinary-unbuilt forecast branch");
+            base->m_facilities.clear();bm->DefineFacility(new FacilityDef("progress-dome","Pressure Dome","",80,{},26));
+            base->m_facilities.emplace("progress-dome",bm->GetFacilityDef("progress-dome"));
+            const auto equivalent=fixture.Snapshot();
+            auto* dome_blocked=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(dome_blocked->value.count("cost")==1 && dome_blocked->value.count("forecast")==0
+                && fixture.Snapshot()==equivalent && fixture.GameplayRandom()==random,"Pressure Dome did not withhold the unbuildable Tanks forecast");
+            const auto& designs=rules.GetSmacPredefinedUnitRules()->catalog.units;
+            const auto native=std::find_if(designs.begin(),designs.end(),[](const auto& row){return row.source_id==2;});
+            GT_ASSERT(native!=designs.end(),"missing actual Scout design");
+            fixture.ResourceState([&](auto& state){state.designs.owners.front().designs.push_back({64,native->chassis_id,native->weapon_id,native->defense_id,native->reactor,
+                native->cost,native->plan,native->carry,native->abilities,native->faction_exclusion,true,false});});
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
+            base->SetProductionState(GSE_CALL,ProductionState{custom,7,custom,7,std::vector<ProductionItem>{custom,scout}});
+            const auto unprototyped=fixture.Snapshot();
+            auto* unsupported=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(unsupported->value.count("cost")==0 && unsupported->value.count("forecast")==0
+                && static_cast<value::Array*>(unsupported->Get("queue"))->value.size()==2
+                && !static_cast<value::String*>(unsupported->Get("name"))->value.empty()
+                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"unavailable custom cost hid a retained target/queue or changed authority");GT_OK();
         });
     });
 
+    task->AddTest("SMAC production cost display withholds foreign authority without hiding identity",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,6,2);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,7,scout,7,std::vector<ProductionItem>{}});
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
+            GT_ASSERT(view->value.count("cost")==0 && view->value.count("forecast")==0 && view->value.count("name")==1 && fixture.Snapshot()==before
+                && fixture.GameplayRandom()==random,"foreign display invented local cost authority or mutated state");GT_OK();
+        });
+    });
     task->AddTest("SMAC live human membership survives Start without transport or inactive-owner inference",[](GSE*,context::Context*)->std::string {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         for(const uint8_t membership:{2,6}) {
@@ -1178,6 +1366,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
                     bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(pops.size())}},Roles());bases.push_back(base);
                 }
+                for(size_t i=0;i<bases.size();++i) {auto production=*bases[i]->GetProductionState();production.hurry_partial_paid=i>0 || scenario%2==1;bases[i]->SetProductionState(GSE_CALL,production);}
                 auto* target=bases[0];target->m_facilities.emplace("tanks",bm->GetFacilityDef("tanks"));
                 if(scenario>=3) {target->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
                 actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
@@ -1270,6 +1459,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 GT_ASSERT(selections==1 && captured_refresh<captured_select,"captured Base screen opened before owner/population refresh or more than once");
                 for(const auto& request:fixture.Updates()) {GT_ASSERT(request.type!=game::FrontendRequest::FR_BASE_SELECT,"capture screen selection replayed during later update flush");}
+                GT_ASSERT(target->GetProductionState()->hurry_partial_paid==(scenario%2==1)
+                    && game->GetBM()->GetBase(703)->GetProductionState()->hurry_partial_paid,
+                    "capture cleared the independent partial marker or foreign control");
                 saved=fixture.Snapshot();GT_OK();
             });if(!result.empty()) {return "capture: "+result;}
             if(scenario==0 || scenario==3 || scenario==5 || scenario==7) {
@@ -1281,6 +1473,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && base->m_pops.size()==population-1 && !base->m_facilities.count("capture-hq") && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
                         && restored.GameplayRandom()==SmacGameplayRandomState(3,1951609278u) && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record
                         && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,"actual Start replayed capture or lost saved ownership/history/home/control Bases");
+                    GT_ASSERT(base->GetProductionState()->hurry_partial_paid==(scenario%2==1)
+                        && game->GetBM()->GetBase(703)->GetProductionState()->hurry_partial_paid,"captured paid marker lost through actual Start");
                     GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.nutrients.demand==(population==3 ? 4 : 2),"actual Start lost the captured population's resource cache");
                     if(paid) {GT_ASSERT(game->GetBM()->GetBase(scenario==7 ? 704 : 703)->m_facilities.count("capture-hq"),"actual Start lost relocated Headquarters");}
                     base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
@@ -1675,6 +1869,133 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 });if(!restore.empty()) {return "HQ restore: "+restore;}
             }
         }GT_OK();
+    });
+    task->AddTest("SMAC installed facility details use frozen rules current free fee and real view callbacks",[](GSE*,context::Context*)->std::string {
+        for(const bool free:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction([&](const std::string& name){
+                auto source=HabitationSource(name);
+                if(free && name=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FACILITY,24");}
+                return source;
+            },"GAIANS");
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
+                bm->DefineFacility(new FacilityDef("detail","Presentation name","A registered description with enough words to wrap across several lines safely.",9999,{"facs/fac024.pcx",2,3,20,30},24));
+                base->m_facilities.emplace("detail",bm->GetFacilityDef("detail"));
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));fixture.Updates();
+                const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+                auto* wrapped=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+                auto* detail=static_cast<value::Object*>(Call(GSE_CALL,wrapped,"get_smac_facility_details",{VALUE(value::String,,"detail")}));
+                GT_ASSERT(static_cast<value::String*>(detail->Get("name"))->value=="Hab Complex"
+                    && static_cast<value::Int*>(detail->Get("cost"))->value==80
+                    && static_cast<value::Int*>(detail->Get("listed_maintenance"))->value==2
+                    && static_cast<value::Int*>(detail->Get("current_maintenance"))->value==(free ? 0 : 2)
+                    && static_cast<value::String*>(detail->Get("prerequisite"))->value==game->GetState()->m_settings.global.GetSmacTechnologyRules()->technologies[6].name
+                    && static_cast<value::String*>(detail->Get("art"))->value=="facs/fac024.pcx:crop(2,3,21,32)","details used presentation cost/name, forgot free maintenance or lost frozen prerequisite/art bounds");
+                auto* setup=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_facility_details"));
+                auto* control=static_cast<value::Callable*>(setup->Run(GSE_CALL,{game->Wrap(GSE_CALL),base->Wrap(GSE_CALL)}));
+                for(const auto* action:{"row","close","open","escape","open","turn","open","refresh"}) {
+                    control->Run(GSE_CALL,{VALUE(value::String,,"detail"),VALUE(value::String,,action)});
+                }
+                control->Run(GSE_CALL,{VALUE(value::String,,"missing"),VALUE(value::String,,"missing")});
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==rng && fixture.Updates().empty(),"view/cancel/reopen or optional private providers mutated saved authority or requests");
+                bm->DefineFacility(new FacilityDef("unresolved","Unresolved facility","",10,{}));base->m_facilities.emplace("unresolved",bm->GetFacilityDef("unresolved"));
+                auto* missing=static_cast<value::Object*>(Call(GSE_CALL,wrapped,"get_smac_facility_details",{VALUE(value::String,,"unresolved")}));
+                GT_ASSERT(missing->value.count("cost")==0 && missing->value.count("current_maintenance")==0 && missing->value.count("prerequisite")==0
+                    && missing->value.count("art")==0 && static_cast<value::String*>(missing->Get("name"))->value=="Unresolved facility","absent metadata invented rules or artwork");GT_OK();
+            });if(!result.empty()) {return result;}
+        }GT_OK();
+    });
+    task->AddTest("SMAC installed facility details withhold foreign private cost and fee",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(HabitationSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,6,2);auto* bm=game->GetBM();
+            bm->DefineFacility(new FacilityDef("detail","Displayed","",80,{},24));base->m_facilities.emplace("detail",bm->GetFacilityDef("detail"));
+            const auto before=fixture.Snapshot();auto* detail=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_facility_details",{VALUE(value::String,,"detail")}));
+            GT_ASSERT(detail->value.count("cost")==0 && detail->value.count("current_maintenance")==0
+                && static_cast<value::String*>(detail->Get("name"))->value=="Hab Complex" && fixture.Snapshot()==before,"foreign information granted private pricing or hid public identity");GT_OK();
+        });
+    });
+    task->AddTest("SMAC habitation picker completion queue maintenance and actual Start",[](GSE*,context::Context*)->std::string {
+        std::string saved;std::array<std::string,8> names;names[0]=Roles().worker;
+        for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(HabitationSource,"GAIANS");fixture.BasePresentationRoles(names);
+        fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();SelectionPresentations(fixture);
+            bm->DefineFacility(new FacilityDef("complex","Hab Complex","",80,{},24));
+            bm->DefineFacility(new FacilityDef("dome","Habitation Dome","",160,{},25));
+            const auto complex=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,24);
+            const auto dome=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,25);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}});
+            auto offered=[&](int32_t id){auto* menu=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_choices"));const auto& choices=static_cast<value::Array*>(menu->Get("choices"))->value;return std::any_of(choices.begin(),choices.end(),[&](auto* row){return static_cast<value::Int*>(static_cast<value::Object*>(row)->Get("source_id"))->value==-id;});};
+            GT_ASSERT(offered(24) && !offered(25),"Dome ignored its installed Complex dependency");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[6]=false;});
+            GT_ASSERT(!offered(24),"Complex ignored its actual technology prerequisite");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[6]=true;});
+            GT_ASSERT(game->IsSmacFacilityProductionEligible(*base,dome,bm->GetFacilityDef("complex")),"queue admission did not see the staged Complex");
+            auto* setup=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_production_selection"));
+            auto* picker=static_cast<value::Callable*>(setup->Run(GSE_CALL,{game->Wrap(GSE_CALL),base->Wrap(GSE_CALL)}));
+            picker->Run(GSE_CALL,{VALUE(value::Int,,-24),VALUE(value::String,,"open")});
+            picker->Run(GSE_CALL,{VALUE(value::Int,,-24),VALUE(value::String,,"ok")});fixture.DrainEvents();
+            GT_ASSERT(base->GetProductionState()->current_item==complex,"actual picker did not select Complex");
+            base->SetProductionState(GSE_CALL,ProductionState{complex,80,complex,80,std::vector<ProductionItem>{dome,stockpile}});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));base->SetAccumulatedNutrients(0);
+            base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(base->m_facilities.count("complex")==1 && base->GetProductionState()->current_item==dome
+                && !offered(24) && offered(25) && game->GetCanonicalBaseEnergy(*base).maintenance==2,
+                "Complex completion missed its fee, duplicate guard or dependent queue target");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=false;});
+            GT_ASSERT(!offered(25),"Dome ignored its actual technology prerequisite");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+            base->SetProductionState(GSE_CALL,ProductionState{dome,160,dome,160,std::vector<ProductionItem>{stockpile}});
+            base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(base->m_facilities.count("dome")==1 && base->GetProductionState()->current_item==stockpile
+                && !offered(25) && game->GetCanonicalBaseEnergy(*base).maintenance==6,"Dome grant lost Complex, maintenance or queue advancement");
+            saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(HabitationSource,"GAIANS");restored.BasePresentationRoles(names);
+        restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* base=restored.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->m_facilities.count("complex")==1 && base->m_facilities.count("dome")==1
+                && base->GetProductionState()->current_item.kind==ProductionItemKind::Stockpile
+                && restored.Game()->GetCanonicalBaseEnergy(*base).maintenance==6,"actual Start lost habitation grants or replayed production");GT_OK();
+        });
+    });
+    task->AddTest("SMAC habitation completion lifts same-pass housing with private rollback",[](GSE*,context::Context*)->std::string {
+        for(const int32_t population:{7,14}) {for(int scenario=0;scenario<3;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction([&](const std::string& name){return HabitationGrowthSource(name,population);},"GAIANS");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[8]=true;});
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,population);auto* bm=game->GetBM();
+                bm->DefineFacility(new FacilityDef("complex","Hab Complex","",80,{},24));bm->DefineFacility(new FacilityDef("dome","Habitation Dome","",160,{},25));
+                if(population==14) {base->m_facilities.emplace("complex",bm->GetFacilityDef("complex"));}
+                const int32_t source=population==7 ? 24 : 25;
+                const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,source);
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetAccumulatedNutrients(10*(population+1));
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,false,128,64));
+                const auto intake=base->PrepareSmacResourceCalculation();
+                GT_ASSERT(intake.nutrients.surplus==4,"controlled center input did not prepare actual surplus4");
+                const auto cost=game->GetSmacProductionCost(base->m_owner,target);
+                const auto stored=scenario==0 ? cost-intake.minerals.surplus-1 : cost;
+                base->SetProductionState(GSE_CALL,ProductionState{target,stored,target,stored,std::vector<ProductionItem>{stockpile}});
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();fixture.Updates();
+                auto roles=Roles();if(scenario==2) {roles.specialists[6]="missing-role";}
+                if(scenario==2) {
+                    GT_ASSERT(Rejects([&]{base->ProcessSmacUpkeep(GSE_CALL,roles,{},game::backend::unit::SmacMoraleMode::Mode0);})
+                        && fixture.Snapshot()==before && fixture.GameplayRandom()==random && fixture.Updates().empty(),"late habitation failure leaked grant, growth or stores");GT_OK();
+                }
+                const auto completed=base->ProcessSmacUpkeep(GSE_CALL,roles,{},game::backend::unit::SmacMoraleMode::Mode0);
+                GT_ASSERT(base->m_pops.size()==size_t(population+(scenario==1))
+                    && base->m_facilities.count(source==24 ? "complex" : "dome")==size_t(scenario==1),"new grant was not visible to same-pass housing or incomplete grant escaped");
+                GT_ASSERT(completed.first_calculation.nutrients.surplus==4 && base->GetAccumulatedNutrients()==(scenario==1 ? 2 : 5*(population+1)+4),
+                    "housing completion recollected old nutrients or used the wrong growth resource pass");GT_OK();
+            });if(!result.empty()) {return "housing "+std::to_string(population)+" scenario "+std::to_string(scenario)+": "+result;}
+        }}GT_OK();
     });
     task->AddTest("SMAC Energy Bank and Node construction reaches live credit and research consumers",[](GSE*,context::Context*)->std::string {
         for(const int32_t source:{7,8}) {
@@ -2730,6 +3051,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				else {++row;
 					if(section=="#RULES" && (row==43 || row==44)) {line.replace(0,line.find(','),row==43?"50":"2");}
 					if(section=="#FACILITIES" && row==1) {const auto a=line.find(','),b=line.find(',',a+1),c=line.find(',',b+1);line.replace(b+1,c-b-1,"0");}
+                    if(section=="#FACILITIES" && row==3) {line="Tanks,4,0,Tech6,Disable,Resources";}
 				}result+=line+'\n';
 			}return result;
 		};
@@ -2744,7 +3066,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
 			first->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");SelectionPresentations(fixture);
 			std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
-			bm->DefineFacility(new FacilityDef("screen-hq","HQ","",0,{},1));first->m_facilities.emplace("screen-hq",bm->GetFacilityDef("screen-hq"));
+			bm->DefineFacility(new FacilityDef("screen-tanks","Tanks","",40,{},3));bm->DefineFacility(new FacilityDef("screen-hq","HQ","",0,{},1));first->m_facilities.emplace("screen-hq",bm->GetFacilityDef("screen-hq"));
 			auto allocation=*first->GetSmacAllocation();allocation.selected=5;first->PublishSmacAllocation(GSE_CALL,allocation,Roles());
 			const auto former=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,1);
 			game->GetMap()->GetTile(8,2)->terraforming=TERRAFORMING_FOREST;
@@ -2833,15 +3155,35 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				&& game->GetCanonicalEconomy(first->m_owner).credits==101 && research && second->GetProductionState()->minerals==0,
 				"Screen edits failed or retroactively reposted the current Base");
 			GT_ASSERT((game->GetCanonicalBaseEnergy(*first).tail.final==SmacEnergyCategories{1,2,1}),"Screen worker click did not refresh actual E/P/L outputs");
+            // The Former is fully funded. Use the actual stamped production
+            // selector to choose the more expensive Tanks before zero Hurry.
+            game->Event(GSE_CALL,"select_smac_production",{{"base",first->Wrap(GSE_CALL)},{"source_id",VALUE(value::Int,,-3)},
+                {"expected_state",VALUE(value::String,,SerializeProductionState(first->GetProductionState()).ToString())},
+                {"expected_minerals",VALUE(value::Int,,20)},{"confirm",VALUE(value::Bool,,true)}});GT_OK();
+        });GT_ASSERT(edited.empty(),"Screen edits: "+edited);fixture.DrainEvents();
+        const auto buy=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            const auto offer=first->GetSmacHurryOffer();
+            GT_ASSERT(offer.reason.empty(),"Screen Hurry lost actual local authority: "+offer.reason);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"hurry_smac_production",{{"base",second->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,second->GetSmacHurryOffer().expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});}),"Screen Hurry admitted another Base");
+            game->Event(GSE_CALL,"hurry_smac_production",{{"base",first->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});
+            GT_OK();
+        });GT_ASSERT(buy.empty(),"Screen Hurry dispatch: "+buy);fixture.DrainEvents();
+        const auto hurry=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);
+            GT_ASSERT(first->GetProductionState()->hurry_partial_paid && first->GetProductionState()->minerals==20
+                && first->GetProductionState()->baseline_minerals==20 && game->GetCanonicalEconomy(first->m_owner).credits==101,
+                "Screen zero Hurry lost its marker/baseline or reposted current income");
 			for(int i=0;i<2;++i) {game->Event(GSE_CALL,"close_colony_screen",{{"request_id",VALUE(value::Int,,request)}});}
 			// Accepted while open, but ordered after close: its retired stamp must
 			// prevent it from changing the Base after the suspended turn finishes.
 			game->Event(GSE_CALL,"work_base_tile",{{"base",first->Wrap(GSE_CALL)},{"tile",game->GetMap()->GetTile(4,2)->Wrap(GSE_CALL)}});GT_OK();
-		});GT_ASSERT(edited.empty(),"Screen edits: "+edited);fixture.DrainEvents();
+		});GT_ASSERT(hurry.empty(),"Screen Hurry and close: "+hurry);fixture.DrainEvents();
 		return fixture.Run([&](GSE_CALLABLE)->std::string {
 			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
 			bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==3;});
-			GT_ASSERT(first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==20 && first->GetProductionState()->baseline_minerals==30
+			GT_ASSERT(first->GetAccumulatedNutrients()==1 && first->GetProductionState()->minerals==20 && first->GetProductionState()->baseline_minerals==20
+                && !first->GetProductionState()->hurry_partial_paid
 				&& first->GetSmacAllocation()->specialists.total_count==1
 				&& second->GetAccumulatedNutrients()==1 && second->GetProductionState()->minerals==3
 				&& game->GetCanonicalEconomy(first->m_owner).credits==102 && research,"Screen close replayed current posting, stale edit or next Base upkeep");

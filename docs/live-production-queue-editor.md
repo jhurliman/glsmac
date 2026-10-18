@@ -30,8 +30,8 @@ transitions. Unsupported items remain outside the currently eligible picker.
 Hurry remains explicitly unavailable while its original post-dialog blocking
 mode has no connected producer.
 
-The current admitted picker has at most eight choices (four unit packages and
-four facilities), which fit in the ordinary choice panel. A broader catalog
+The current admitted picker has at most nine choices (four unit packages and
+five simultaneously eligible facilities, including habitation), which fit in the ordinary choice panel. A broader catalog
 will need a scrolling editor. A nested scrolling prototype clipped its button
 labels on the real renderer; it is not accepted as rendering parity.
 

@@ -1,0 +1,213 @@
+{
+  "research_id": "RE-SMAC-PRODUCTION-FORECAST-001",
+  "cases": [
+    {
+      "id": "ordinary",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 7,
+        "current_surplus": 4,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  9",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "exact_division",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 8,
+        "current_surplus": 4,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  8",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "one_missing",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 39,
+        "current_surplus": 4,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  1",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "funded",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 40,
+        "current_surplus": 4,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  0",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "overfunded",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 47,
+        "current_surplus": 4,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  0",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "zero",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 7,
+        "current_surplus": 0,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "No Minerals",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "negative",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 7,
+        "current_surplus": -2,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "No Minerals",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "funded_zero",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 40,
+        "current_surplus": 0,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "No Minerals",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "funded_negative",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 40,
+        "current_surplus": -2,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "No Minerals",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "riot",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 7,
+        "current_surplus": 4,
+        "riot": true,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  9",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "riot_funded",
+      "inputs": {
+        "actual_cost": 40,
+        "stored_minerals": 40,
+        "current_surplus": 4,
+        "riot": true,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  0",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "surplus_clamp",
+      "inputs": {
+        "actual_cost": 200000,
+        "stored_minerals": 0,
+        "current_surplus": 100000,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  3",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "display_clamp",
+      "inputs": {
+        "actual_cost": 1000001,
+        "stored_minerals": 0,
+        "current_surplus": 1,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  999999",
+      "base_unchanged": true,
+      "rng_calls": 0
+    },
+    {
+      "id": "wrapped_numerator",
+      "inputs": {
+        "actual_cost": 2147483647,
+        "stored_minerals": 0,
+        "current_surplus": 2,
+        "riot": false,
+        "ordinary_pre_orbital_surplus": 777,
+        "switching_baseline_minerals": 888
+      },
+      "text": "TURNS:  0",
+      "base_unchanged": true,
+      "rng_calls": 0
+    }
+  ],
+  "cost_control": {
+    "facility_rules_cost": 4,
+    "cost_factor": 10,
+    "actual_cost": 40,
+    "stored_snapshot": 7
+  },
+  "validation": {
+    "native_label_fragments": 14,
+    "native_cost_fragments": 1,
+    "full_window": false,
+    "pixel_comparison": false
+  }
+}

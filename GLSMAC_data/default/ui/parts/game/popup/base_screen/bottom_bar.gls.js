@@ -79,8 +79,8 @@ return {
 	set: (data) => {
 
 		if (data.base.has_smac_resource_context) {
-			const presentation = data.base.get_smac_production_presentation();
-			this.parts.production.set_stored(data.base.get_production_state(), presentation);
+			const presentation = #is_defined(data.mineral_surplus) ? data.base.get_smac_production_presentation(data.mineral_surplus) : data.base.get_smac_production_presentation();
+			this.parts.production.set_stored(data.base.get_production_state(), presentation, data.mineral_surplus);
 			this.parts.queue.set_stored(presentation);
 		} else {
 			this.parts.production.set({

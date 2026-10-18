@@ -14,6 +14,7 @@
 
 #include "Pop.h"
 #include "ProductionState.h"
+#include "SmacHurry.h"
 #include "BaseResourceCalculation.h"
 #include "SmacColonyContinuation.h"
 #include "SmacBaseUpkeepCache.h"
@@ -102,6 +103,9 @@ public:
 	void OpenSmacRename(GSE_CALLABLE,bool apply);
 	gse::Value* CopySmacRenameChoices(GSE_CALLABLE) const;
 	gse::Value* CopySmacQueueEditor(GSE_CALLABLE) const;
+	struct HurryOffer { std::optional<SmacHurryContext> context; int32_t credits,reserved; std::string expected,reason; };
+	HurryOffer GetSmacHurryOffer() const;
+	gse::Value* CopySmacHurryPreview(GSE_CALLABLE,int32_t amount) const;
 	// Explicit native publication only, in the owning writable GSE scope. No
 	// allocation calculation or founding/adoption policy is implied. Existing
 	// Pop nodes/IDs/variants survive; ascending IDs receive ascending worker

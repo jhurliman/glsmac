@@ -219,7 +219,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		}
 		// The current generated local campaign has no objective producer. This
 		// is explicit GLSMAC non-scenario policy, not an inferred original flag.
-		const auto plan = SmacPopulationStep::Prepare( m_game->CalculateCanonicalPopulationRules( *this, population ),
+		const auto plan = SmacPopulationStep::Prepare( m_game->CalculateCanonicalPopulationRules( *this, population, granted ),
 			static_cast< int32_t >( population ), food, resources.nutrients.surplus, false );
 		if ( !plan.stored_nutrients ) {
 			// Negative normalized food skipped completion above. Keep this explicit

@@ -48,7 +48,7 @@ void ProductionState::Validate() const {
 
 bool ProductionState::operator==( const ProductionState& other ) const {
 	return current_item == other.current_item && minerals == other.minerals &&
-		baseline_item == other.baseline_item && baseline_minerals == other.baseline_minerals && queue == other.queue;
+		baseline_item == other.baseline_item && baseline_minerals == other.baseline_minerals && queue == other.queue && hurry_partial_paid == other.hurry_partial_paid;
 }
 
 types::Buffer SerializeProductionState( const std::optional< ProductionState >& state ) {
@@ -69,6 +69,8 @@ types::Buffer SerializeProductionState( const std::optional< ProductionState >& 
 			buffer.WriteInt( state->queue->size() );
 			for ( const auto& item : *state->queue ) { write_item( item ); }
 		}
+		buffer.WriteInt(1); // versioned Hurry extension, absent in pre-command port frames
+		buffer.WriteBool(state->hurry_partial_paid);
 	}
 	return buffer;
 }
@@ -100,6 +102,10 @@ std::optional< ProductionState > DeserializeProductionState( types::Buffer& buff
 			for ( int64_t i=0; i<count; ++i ) { queue->push_back(read_item()); }
 		}
 		result = ProductionState{ std::move(current), minerals, std::move(baseline), baseline_minerals, std::move(queue) };
+		if(buffer.lenr!=buffer.lenw) {
+			if(buffer.ReadInt()!=1) {throw std::runtime_error("Unknown production Hurry extension version");}
+			result->hurry_partial_paid=buffer.ReadBool();
+		}
 		result->Validate();
 	}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Trailing production state data" ); }

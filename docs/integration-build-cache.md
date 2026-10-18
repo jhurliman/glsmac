@@ -1,8 +1,8 @@
 # Sharing reviewed integration build caches
 
 Pull-request merge-ref caches can be reused by that PR, but not by sibling PRs.
-The cache inventory on2026-10-18 showed the new caches under refs/pull/*/merge;
-the only branch-scoped compiler cache was main at a8f02f56, created Oct17 21:06,
+The cache inventory on 2026-10-18 showed the new caches under refs/pull/*/merge;
+the only branch-scoped compiler cache was main at a8f02f56, created October 17 at 21:06 UTC,
 and codex/faithful-1.0 had none. Successful newly implemented gameplay builds
 therefore did not warm the next focused PR. This follows GitHub's documented
 [cache scope restrictions](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache).
@@ -25,8 +25,15 @@ The publisher has read-only repository permissions, runs only on integration
 pushes, and never imports object artifacts from untrusted PR runs. Existing PR
 review, regression, lifecycle, and selected platform gates are unchanged.
 
-The recent30-PR audit (260–289) had zero labeled/unlabeled issue events, so no
+The recent 30-PR audit (260â€“289) had zero labeled/unlabeled issue events, so no
 label-trigger runner savings were demonstrated. Existing ci:full label semantics
 are preserved rather than adding a second gate/reuse mechanism for unobserved
-waste. Cross-PR hosted cold/warm measurements will be added after the first
-integration publication and a subsequent real PR consumer.
+waste.
+
+Two successive PR292 heads with unchanged C++ source measured a Linux build of
+220 seconds followed by 11 seconds from that PR's own compiler cache. This shows
+the value of warm object reuse, but is not evidence of reuse across PRs. Hosted
+cross-PR cold/warm measurements, hit statistics and publisher overhead must be
+recorded after the first integration publication and a subsequent real PR
+consumer. The publisher is useful only if the saved downstream runner time
+outweighs its additional incremental build.

@@ -102,8 +102,8 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
         const auto special=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[](int32_t,int32_t){return b::SmacNativeSpawnTile{3,true,1,0,false,15};});
         GT_ASSERT(special.SweepAttempts()==2 && special.SpecialCounter()==9 && special.Requests().size()==3 && !special.Requests().back().ecology_owner,"Skipped non-Mind-Worm candidates lost special-counter increments or fallback");
         input.retained_base_count=1;
-        const auto small=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[](int32_t,int32_t){return b::SmacNativeSpawnTile{2,true,65,1,false,15};});
-        GT_ASSERT(small.SweepAttempts()==0 && small.SpecialCounter()==9 && small.Requests().size()==3 && small.Requests()[0].design==9,"Strict Base-count limit was applied to fallback or skipped special counters");
+        const auto small_plan=b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[](int32_t,int32_t){return b::SmacNativeSpawnTile{2,true,65,1,false,15};});
+        GT_ASSERT(small_plan.SweepAttempts()==0 && small_plan.SpecialCounter()==9 && small_plan.Requests().size()==3 && small_plan.Requests()[0].design==9,"Strict Base-count limit was applied to fallback or skipped special counters");
         input.history=6;int queries=0;
         GT_ASSERT(Rejects([&]{b::PrepareSmacNativeSpawn(input,{{{20,20},1}},[&](int32_t,int32_t){++queries;return b::SmacNativeSpawnTile{};});}) && queries==0,"Pre-hold history reached spawn query");
         GT_OK();

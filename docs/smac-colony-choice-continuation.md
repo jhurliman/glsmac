@@ -70,3 +70,33 @@ GitHub Codex review found that a rejected Accept left the UI submission guard
 set. Submission now blocks only after successful event queuing; the real GSE
 script passes both rejected-Accept-to-Delay and rejected-Accept-to-Screen paths
 without replacing the request or resetting the game.
+
+## Last-base integration in progress
+
+The working branch now stores faction activity and restart prohibition
+independently, plus Do or Die, in simulation V11. Restoring these fields does
+not reinitialize treasury, research or controller identity. Inactive factions
+cannot acquire live canonical Bases/Units or issue production/worker commands;
+upkeep skips them. A suspended traversal can retain an already visited faction
+that was eliminated during that upkeep. The installed SMAC manual (PDF page
+199) describes restart as normal behavior and Do or Die as its disabling option.
+Custom rule selection and the special Mind Worm/interlude prohibition producer
+remain separate consumers; prohibition must never become a restart-used latch.
+
+Sixty affected native groups pass with memory tracking, including the actual
+inactive-world restore and rejected-asset checks. Six changed production units
+pass scoped clang-tidy 15 in 13.04 seconds. This work is held unpublished until
+the last-base caller is connected. Remaining steps are:
+
+1. Stage removal of every old owned Unit together with the actual replacement
+   factories, record order, tile membership, sight/claims and placement history.
+   Reserve IDs only on commit; callbacks run after the complete publication.
+2. Connect starvation and accepted Colony abandonment to that transaction.
+   Preserve technologies, target, labs and research fraction; invalidate the
+   threshold and apply the evidenced nonzero-turn treasury/debit initialization.
+   Refusal reaches a second initialization at the faction tail; do not replace
+   that with a once-only guard or a hardcoded doubled bonus.
+3. Provide the loss outcome, verify restart → actual founding → next upkeep and
+   save/reload, then activate the prepared upkeep entry and Colony UI module.
+   Restart placement remains an explicit GLSMAC world-generation policy rather
+   than hardcoded coordinates from a reference fixture.

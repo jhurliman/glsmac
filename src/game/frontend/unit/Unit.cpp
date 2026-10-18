@@ -149,14 +149,12 @@ const std::string Unit::GetMovesString() const {
 }
 
 void Unit::Iterate() {
-	while ( m_render.badge.blink.timer.HasTicked() ) {
-		if ( IsBadgeVisible() ) {
-			HideBadge();
-		}
-		else {
-			ShowBadge();
-		}
-	}
+    if(m_render.badge.blink.IsRunning()) {
+        const auto visible=m_render.badge.blink.Visible(SelectionBlink::Clock::now());
+        if(visible!=IsBadgeVisible()) {
+            if(visible) {ShowBadge();} else {HideBadge();}
+        }
+    }
 	while ( m_mover.HasTicked() ) {
 		SetRenderCoords( m_mover.GetPosition() );
 	}
@@ -237,12 +235,11 @@ void Unit::HideFakeBadge() {
 }
 
 void Unit::StartBadgeBlink() {
-	HideBadge();
-	m_render.badge.blink.timer.SetInterval( m_badge_defs->GetBadgeBlinkInterval() );
+	if(m_render.badge.blink.Start(SelectionBlink::Clock::now())) {HideBadge();}
 }
 
 void Unit::StopBadgeBlink( const bool is_badge_shown ) {
-	m_render.badge.blink.timer.Stop();
+	m_render.badge.blink.Stop();
 	if ( is_badge_shown ) {
 		ShowBadge();
 	}

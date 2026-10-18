@@ -338,8 +338,8 @@ Unit* UnitManager::GetSelectedUnit() const {
 void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 	Log( "Selecting unit " + std::to_string( unit->GetId() ) );
 	//m_tile_at_query_purpose = backend::TQP_UNIT_SELECT; // ???
-	m_game->DeselectTileOrUnit();
 	if ( m_selected_unit != unit ) {
+		m_game->DeselectTileOrUnit();
 
 		unit->SetActiveOnTile();
 

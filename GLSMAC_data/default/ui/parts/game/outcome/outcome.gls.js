@@ -13,7 +13,7 @@ return {
 		this.p = p;
 		this.window = p.root.window({class: 'game-popup', width: 480, height: 160, blocker: 'rgba(0, 0, 0, 180)'});
 		this.prompt = this.window.text({class: 'game-popup-text', top: 16, left: 16, right: 16});
-		const menu = this.window.button({class: 'game-popup-button', bottom: 16, left: 16, right: 16, height: 32, text: 'Return to Main Menu'});
+		const menu = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 16, left: 16, right: 16, height: 32, text: 'Return to Main Menu'});
 		menu.on('click', () => { this.p.glsmac.reset(); return true; });
 		this.window.on('keydown', (e) => {
 			if (e.modifiers == {} && e.code == 'ENTER') { this.p.glsmac.reset(); }

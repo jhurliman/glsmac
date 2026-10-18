@@ -164,6 +164,8 @@ void FBO::WriteBegin() {
 	ASSERT( m_height > 0, "fbo height is zero" );
 
 	m_opengl->WithBindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_fbo );
+	// Captures may have their own dimensions; bars belong only on the window.
+	glViewport( 0, 0, m_width, m_height );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 
 	// start with clean state

@@ -105,6 +105,17 @@ void OpenGL::Start() {
 		THROW( (std::string)"Could not create SDL2 window: " + SDL_GetError() );
 	}
 
+	SDL_SetWindowMinimumSize( m_window, 320, 240 );
+	int window_width = 0, window_height = 0;
+	SDL_GetWindowSize( m_window, &window_width, &window_height );
+	if ( window_width < 320 || window_height < 240 ) {
+		SDL_SetWindowSize( m_window, (std::max)(320, window_width), (std::max)(240, window_height) );
+		SDL_GetWindowSize( m_window, &window_width, &window_height );
+	}
+	m_window_size = m_last_window_size = {
+		static_cast<unsigned short>(window_width), static_cast<unsigned short>(window_height)
+	};
+
 	Log( "Initializing OpenGL" );
 
 
@@ -191,9 +202,9 @@ void OpenGL::Start() {
 		( *it )->Start();
 	}
 
-	UpdateViewportSize( m_options.viewport_width, m_options.viewport_height );
+	UpdateViewportSize( m_window_size.x, m_window_size.y );
 
-	glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
+	ApplyDefaultViewport();
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClearDepth( 1.0f );
 
@@ -323,6 +334,8 @@ void OpenGL::Iterate() {
 
 	Graphics::Iterate();
 
+	// Clear the whole drawable, including bars; viewport does not limit clear.
+	ApplyDefaultViewport();
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	Lock();
@@ -806,16 +819,20 @@ void OpenGL::WithBindTexture( GLuint texture, const f_t& f ) const {
 
 void OpenGL::WithBindFramebufferBegin( GLenum target, GLuint buffer ) const {
 	glBindFramebuffer( target, buffer );
+	if ( target != GL_READ_FRAMEBUFFER ) {
+		if ( buffer ) { glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y ); }
+		else { ApplyDefaultViewport(); }
+	}
 }
 
 void OpenGL::WithBindFramebuffer( GLenum target, GLuint buffer, const graphics::Graphics::f_t& f ) const {
-	glBindFramebuffer( target, buffer );
+	WithBindFramebufferBegin( target, buffer );
+	util::FinallyGuard restore( [this, target] { WithBindFramebufferEnd( target ); } );
 	f();
-	glBindFramebuffer( target, 0 );
 }
 
 void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
-	glBindFramebuffer( target, 0 );
+	WithBindFramebufferBegin( target, 0 );
 }
 
 void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const {
@@ -844,23 +861,17 @@ void OpenGL::NoRender( const std::function< void() >& f ) {
 }
 
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
-	if (
-		m_viewport_size.x != ( width + 1 ) / 2 * 2
-			||
-				m_viewport_size.y != ( height + 1 ) / 2 * 2
-		) {
-		UpdateViewportSize( width, height );
-
+	if ( width < 8 || height < 6 ) { return; } // minimized/temporarily empty window
+	const auto old_size = m_viewport_size;
+	UpdateViewportSize( width, height );
+	ApplyDefaultViewport(); // bar offsets can change even when content size does not
+	if ( old_size.x != m_viewport_size.x || old_size.y != m_viewport_size.y ) {
 		Log( "Resizing viewport to " + std::to_string( m_viewport_size.x ) + "x" + std::to_string( m_viewport_size.y ) );
-		glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
 		OnWindowResize();
-		for ( auto routine = m_routines.begin() ; routine < m_routines.end() ; ++routine ) {
-			for ( auto scene = ( *routine )->m_scenes.begin() ; scene < ( *routine )->m_scenes.end() ; ++scene ) {
-				auto camera = ( *scene )->GetCamera();
-				if ( camera ) {
-					camera->UpdateProjection();
-					camera->UpdateMatrix();
-				}
+		for ( const auto* routine : m_routines ) {
+			for ( auto* scene : routine->m_scenes ) {
+				auto* camera = scene->GetCamera();
+				if ( camera ) { camera->UpdateProjection(); camera->UpdateMatrix(); }
 			}
 		}
 	}
@@ -919,10 +930,21 @@ void OpenGL::SetWindowed() {
 }
 
 void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
-	// I'm having weird texture tiling bugs at non-even window heights
-	// also don't let them go below 2 or something will assert/crash
-	m_viewport_size.x = ( width + 1 ) / 2 * 2;
-	m_viewport_size.y = ( height + 1 ) / 2 * 2;
+	m_presentation_viewport = PresentationViewport::Fit( static_cast<int>(width), static_cast<int>(height) );
+	m_viewport_size.x = static_cast<unsigned short>(m_presentation_viewport.width);
+	m_viewport_size.y = static_cast<unsigned short>(m_presentation_viewport.height);
+}
+
+bool OpenGL::MapWindowPoint( int& x, int& y ) const {
+	return m_presentation_viewport.MapPoint( x, y );
+}
+
+void OpenGL::ApplyDefaultViewport() const {
+	int width = 0, height = 0;
+	SDL_GL_GetDrawableSize( m_window, &width, &height );
+	const auto area = PresentationViewport::Fit( width, height );
+	// Drawable pixels may differ from SDL window coordinates on Retina displays.
+	glViewport( area.x, height - area.y - area.height, area.width, area.height );
 }
 
 void OpenGL::ProcessPendingUnloads() {

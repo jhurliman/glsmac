@@ -17,6 +17,7 @@
 #include "types/mesh/Types.h"
 #include "util/Clamper.h"
 #include "TexturePaging.h"
+#include "graphics/PresentationViewport.h"
 
 namespace graphics {
 namespace opengl {
@@ -54,6 +55,7 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetWindowHeight() const override;
 	const unsigned short GetViewportWidth() const override;
 	const unsigned short GetViewportHeight() const override;
+	bool MapWindowPoint( int& x, int& y ) const override;
 
 	void LoadTexture( types::texture::Texture* texture, const bool smoothen ) override;
 	void UnloadTexture( const types::texture::Texture* texture ) override;
@@ -94,7 +96,8 @@ protected:
 	} m_options;
 	types::Vec2< unsigned short > m_window_size;
 	types::Vec2< unsigned short > m_last_window_size;
-	types::Vec2< unsigned short > m_viewport_size;
+	types::Vec2< unsigned short > m_viewport_size = {};
+	PresentationViewport m_presentation_viewport;
 	SDL_Window* m_window;
 	SDL_GLContext m_gl_context;
 #ifdef __APPLE__
@@ -137,6 +140,7 @@ private:
 	} m_px_to_gl_clamp = {};
 
 	void UpdateViewportSize( const size_t width, const size_t height );
+	void ApplyDefaultViewport() const;
 
 	// unload requests can be done from multiple threads but actual unloading done from main one
 	common::Mutex m_texture_objs_to_unload_mutex;

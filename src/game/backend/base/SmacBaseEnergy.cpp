@@ -3,13 +3,66 @@
 #include <algorithm>
 #include <cstdlib>
 #include <stdexcept>
+#include "types/Buffer.h"
 
 namespace game::backend::base {
 namespace {
+void ValidateSavedEnergy(const SmacBaseEnergyCalculation& value) {
+    if(value.raw_intake<0 || value.headquarters_distance<0 || value.waste<0 || value.net<0 ||
+        int64_t(value.raw_intake)-value.waste!=value.net || value.maintenance<0 || value.maintenance_fees.size()>33) {
+        throw std::runtime_error("Invalid saved Base energy calculation");
+    }
+    int32_t previous=0;int64_t total=0;
+    for(const auto& [id,fee]:value.maintenance_fees) {
+        if(id<=previous || id>33 || fee<0) {throw std::runtime_error("Invalid saved Base maintenance order");}
+        previous=id;total+=fee;
+    }
+    if(total!=value.maintenance) {throw std::runtime_error("Saved Base maintenance total differs");}
+    for(const auto categories:{value.allocation.allocation,value.allocation.after_specialists,value.tail.multiplier_quarters,
+        value.tail.before_penalty,value.tail.after_penalty,value.tail.final}) {
+        if(categories.economy<0 || categories.psych<0 || categories.labs<0) {
+            throw std::runtime_error("Negative saved Base energy category");
+        }
+    }
+}
 int32_t Checked( int64_t value ) {
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::overflow_error( "SMAC energy arithmetic exceeds signed32" ); }
 	return static_cast< int32_t >( value );
 }
+}
+
+void WriteSmacBaseEnergy(types::Buffer& buffer,const SmacBaseEnergyCalculation& value) {
+    ValidateSavedEnergy(value);
+    for(const auto field:{value.raw_intake,value.headquarters_distance,value.waste,value.net,value.maintenance}) {buffer.WriteInt(field);}
+    for(const auto categories:{value.allocation.allocation,value.allocation.after_specialists,value.tail.multiplier_quarters,
+        value.tail.before_penalty,value.tail.after_penalty,value.tail.final}) {
+        buffer.WriteInt(categories.economy);buffer.WriteInt(categories.psych);buffer.WriteInt(categories.labs);
+    }
+    buffer.WriteInt(value.maintenance_fees.size());
+    for(const auto& [id,fee]:value.maintenance_fees) {buffer.WriteInt(id);buffer.WriteInt(fee);}
+}
+
+SmacBaseEnergyCalculation ReadSmacBaseEnergy(types::Buffer& buffer) {
+    const auto integer=[&]() {
+        const auto value=buffer.ReadInt();
+        if(value<INT32_MIN || value>INT32_MAX) {throw std::runtime_error("Saved Base energy exceeds signed32");}
+        return static_cast<int32_t>(value);
+    };
+    SmacBaseEnergyCalculation value{};
+    value.raw_intake=integer();value.headquarters_distance=integer();value.waste=integer();value.net=integer();value.maintenance=integer();
+    for(auto* categories:{&value.allocation.allocation,&value.allocation.after_specialists,&value.tail.multiplier_quarters,
+        &value.tail.before_penalty,&value.tail.after_penalty,&value.tail.final}) {
+        categories->economy=integer();categories->psych=integer();categories->labs=integer();
+    }
+    const auto count=buffer.ReadInt();
+    if(count<0 || count>33 || buffer.lenr>buffer.lenw || uint64_t(count)>(buffer.lenw-buffer.lenr)/28u) {
+        throw std::runtime_error("Invalid saved Base maintenance count");
+    }
+    for(int64_t i=0;i<count;++i) {const auto id=integer(),fee=integer();value.maintenance_fees.emplace_back(id,fee);}
+    ValidateSavedEnergy(value);
+    return value;
+}
+namespace {
 void Nonnegative( SmacEnergyCategories value ) {
 	if ( value.economy < 0 || value.psych < 0 || value.labs < 0 ) { throw std::invalid_argument( "Negative SMAC energy category is outside the measured tail" ); }
 }

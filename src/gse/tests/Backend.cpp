@@ -349,6 +349,21 @@ public:
 		m_game.m_canonical_turn_in_progress=true;
 		util::FinallyGuard finish([&]{m_game.m_canonical_turn_in_progress=false;});
 		if(m_game.BeginCanonicalBaseUpkeep(GSE_CALL)) {throw std::runtime_error("fixture failed to reach actual Colony question");}
+		// Keep the original V1 Colony payload readable after introducing V2
+		// research continuations. Use the actual suspended pass, not a fake cache.
+		const auto& paused=*m_game.m_canonical_continuation;
+		types::Buffer legacy;legacy.WriteInt(1);legacy.WriteBool(true);
+		legacy.WriteInt(paused.turn);legacy.WriteInt(paused.owner_index);legacy.WriteInt(paused.base_index);
+		legacy.WriteInt(paused.owners.size());
+		for(const auto& owner:paused.owners) {
+			legacy.WriteInt(owner.first);legacy.WriteInt(owner.second.size());
+			for(const auto id:owner.second) {legacy.WriteInt(id);}
+		}
+		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation);
+		legacy.WriteInt(static_cast<int64_t>(paused.colony->morale_mode));
+		const auto decoded=m_game.ReadCanonicalContinuation(types::Buffer(legacy.ToString()),paused.turn);
+		if(!decoded) {throw std::runtime_error("V1 Colony continuation was lost");}
+		m_game.ValidateCanonicalContinuation(*decoded);
 	}
 	void BasePresentationRoles( const std::array<std::string,8>& roles ) { m_game.m_smac_base_presentations=roles; }
 	void ResourcePolicy( const bool present ) {
@@ -3984,7 +3999,9 @@ public:
 					&& !m_game.m_simulation && m_game.m_next_research_request==request,"paused research reset retained authority or reused request identity");
 				GT_OK();
 			}
-			std::string saved;
+			std::string saved;std::vector<std::string> research_saves;std::vector<int64_t> retired_requests;
+			std::optional<faction::SmacSimulationState> first_completed;
+			std::array<int64_t,2> first_resources{};
 			const auto completed = WithScriptValues([&](GSE_CALLABLE)->std::string {
 				auto* base=m_game.GetBM()->GetBases().begin()->second;
 				const auto first_minerals=base->GetProductionState()->minerals;
@@ -3992,10 +4009,10 @@ public:
 				const auto first_credits=m_game.GetCanonicalEconomy(base->m_owner).credits;
 				const auto first_energy=m_game.m_canonical_continuation->energy->tail.final.economy;
 				const auto rng=m_game.m_simulation->value.gameplay_random;
-				bool save=false,mutation=false;
-				try {m_game.SerializeWorldSnapshot();}catch(const std::exception&){save=true;}
+				bool mutation=false;
+				research_saves.push_back(m_game.SerializeWorldSnapshot());retired_requests.push_back(m_game.m_research_request->id);
 				try {m_game.Event(GSE_CALL,"complete_turn",{});}catch(const std::exception&){mutation=true;}
-				GT_ASSERT(save && mutation,"suspended research admitted ordinary mutation or snapshot");
+				GT_ASSERT(mutation,"suspended research admitted ordinary mutation");
 				auto* wrapper=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
 				const auto request=static_cast<value::Object*>(static_cast<value::Callable*>(wrapper->Get("get_pending_smac_research"))->Run(GSE_CALL,{}));
 				GT_ASSERT(request->Get("request_id")->type==VT_INT && !static_cast<value::Bool*>(request->Get("bonus"))->value,"startup pending getter did not expose the ordinary request");
@@ -4011,6 +4028,7 @@ public:
 					&& m_game.m_simulation->value.technology.Find(1)->target==64
 					&& base->GetProductionState()->minerals==first_minerals && base->GetAccumulatedNutrients()==first_food
 					&& m_game.GetCanonicalEconomy(base->m_owner).credits==first_credits+first_energy,"answer replayed upkeep or failed to post exactly one credit");
+				first_completed=m_game.m_simulation->value;first_resources={first_food,first_minerals};
 				// Force only the saved threshold boundary; the next full native turn
 				// still calculates/submits its actual Base labs and acquires the flag9 tech.
 				auto& tech=m_game.m_simulation->value.technology.factions.front();tech.cached_threshold=1;tech.labs=0;
@@ -4018,9 +4036,11 @@ public:
 				GT_ASSERT(m_game.m_research_request && m_game.m_research_request->bonus && turns==1
 					&& m_game.m_simulation->value.technology.Find(1)->owned[64] && m_game.HasSmacTechnologyReveal(1),"ordinary completion did not stage Secrets and map revelation before pause");
 				const auto second_minerals=base->GetProductionState()->minerals;
+				research_saves.push_back(m_game.SerializeWorldSnapshot());retired_requests.push_back(m_game.m_research_request->id);
 				answer(0,true);
 				GT_ASSERT(m_game.m_research_request && !m_game.m_research_request->bonus
 					&& m_game.m_simulation->value.technology.Find(1)->owned[0],"Secrets answer did not request the following target");
+				research_saves.push_back(m_game.SerializeWorldSnapshot());retired_requests.push_back(m_game.m_research_request->id);
 				const auto selected=m_game.m_research_request->choices.front();answer(selected,true);
 				const auto& after=*m_game.m_simulation->value.technology.Find(1);
 				GT_ASSERT(!m_game.m_canonical_continuation && turns==2 && after.score==4 && after.labs==0 && !after.pending_secrets
@@ -4030,10 +4050,39 @@ public:
 				GT_OK();
 			});
 			GT_ASSERT(completed.empty(), "research completion: "+completed);
+			const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
+			for(size_t checkpoint=0;checkpoint<research_saves.size();++checkpoint) {
+				BackendFixture resumed;resumed.ConfigureConventional(true,3,true,false,false,nullptr,source);
+				resumed.m_game.m_next_research_request=1000;
+				const auto error=resumed.WithScriptValues([&](GSE_CALLABLE)->std::string {
+					resumed.RestoreKnowledgeThroughStart(GSE_CALL,research_saves[checkpoint],[&](GSE_CALLABLE) {
+						if(resumed.m_game.m_research_request) {throw std::runtime_error("Research question published before manager reconstruction");}
+					});
+					GT_ASSERT(resumed.m_game.m_research_request && resumed.m_game.m_research_request->id==1001 &&
+						resumed.m_game.m_research_request->bonus==(checkpoint==1),"restore did not republish the saved research question with a fresh identity");
+					const auto& expected=checkpoint==0?*first_completed:m_game.m_simulation->value;
+					const auto selected=checkpoint==0?64:*expected.technology.Find(1)->target;
+					const auto answer=[&](int32_t technology,int64_t request) {
+						const value::object_properties_t args{{"request_id",VALUE(value::Int,,request)},{"technology_id",VALUE(value::Int,,technology)}};
+						resumed.m_game.Event(GSE_CALL,"choose_research",args);resumed.m_game.Event(GSE_CALL,"choose_research",args);resumed.m_game.ProcessEvents();
+					};
+					answer(checkpoint==1?0:selected,retired_requests[checkpoint]);
+					GT_ASSERT(resumed.m_game.m_research_request && resumed.m_game.m_research_request->id==1001,"retired research answer resumed the restored turn");
+					if(checkpoint==1) {answer(0,resumed.m_game.m_research_request->id);}
+					answer(selected,resumed.m_game.m_research_request->id);
+					auto* restored_base=resumed.m_game.GetBM()->GetBases().begin()->second;
+					const auto* expected_base=m_game.GetBM()->GetBases().begin()->second;
+					GT_ASSERT(resumed.m_game.m_simulation->value==expected && !resumed.m_game.m_research_request && !resumed.m_game.m_canonical_continuation &&
+						restored_base->GetAccumulatedNutrients()==(checkpoint==0?first_resources[0]:expected_base->GetAccumulatedNutrients()) &&
+						restored_base->GetProductionState()->minerals==(checkpoint==0?first_resources[1]:expected_base->GetProductionState()->minerals),
+						"research save/resume replayed resource posting or changed ownership, finances or RNG");
+					GT_OK();
+				});
+				GT_ASSERT(error.empty(),"research save checkpoint "+std::to_string(checkpoint)+": "+error);
+			}
 			// Register/retire a destination GC space only outside the source
 			// accumulation: the collector locks the space registry before collecting.
 			BackendFixture destination;
-			const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
 			destination.ConfigureConventional(true,3,true,false,false,nullptr,source);
 			return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
 				destination.RestoreConventional(GSE_CALL,saved,true);
@@ -8340,9 +8389,10 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			// V31 appends one versioned, absent continuation after the managers.
+			// Continuation V2 adds research choices alongside V1 Colony choices.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 1 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 2 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();

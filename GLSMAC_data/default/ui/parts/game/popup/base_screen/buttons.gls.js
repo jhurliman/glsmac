@@ -15,7 +15,6 @@ return {
 			top: 5,
 			align: 'left',
 			left: 3,
-			width: 210,
 			text: 'Rename unavailable',
 		});
 		const btn_ok = this.frame.button({
@@ -63,7 +62,6 @@ return {
 				top: 7,
 				align: 'left',
 				left: 3,
-				width: 104,
 				text: 'Help unavailable',
 			}),
 			this.frame.text({
@@ -71,7 +69,6 @@ return {
 				top: 7,
 				align: 'left',
 				left: 109,
-				width: 104,
 				text: 'Workshop unavailable',
 			}),
 			btn_ok,

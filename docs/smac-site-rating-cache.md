@@ -14,7 +14,7 @@ Bases participate. Stray exclusions outside those footprints survive. Terrain
 postpass clears all ratings and preserves exclusions; region fill preserves
 both. Query failure leaves the input value unchanged.
 
-Topology V3 stores optional packed rating/exclusion bytes with bounded framing
+Topology V4 stores optional packed rating/exclusion bytes with bounded framing
 and flag validation. V1/V2 migration preserves missing history as unavailable.
 Fresh map initialization establishes empty history only after complete terrain
 postpass data is available. Actual Start retains stale nonzero ratings and
@@ -37,10 +37,12 @@ IDs or attaching the candidate center.
 
 The map adapter queries only cache misses. It uses DisplayedTerrainV1 terrain
 ordinals, explicit bonus/site markers, active Jungle/Uranium flags and owned
-coastal/area metadata. Existing nonzero ratings bypass decoding. Shared detail
-for Mount Planet/Crater is not stored by the port Tile; an actually queried
-unsupported tile is refused instead of inventing that input. Original world
-generation and its complete landmark/site metadata remain separate work.
+coastal/area metadata. Existing nonzero ratings bypass decoding. The
+[owned shared landmark byte](smac-shared-landmark-history.md) supplies
+Planet/Crater detail and suppression when available. Legacy saves retain its
+absence and refuse queried Planet/Crater tiles instead of inventing that input.
+Original world generation and its complete landmark/site metadata remain
+separate work.
 Terrain publication/restore retain known history; initial fresh admission
 marks existing Bases once, without making every postpass unconditionally refill.
 Ordinary Former completions preserve existing nonzero ratings. Startup and

@@ -371,7 +371,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         for(const int scenario:{2,1,0}) {
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);fixture.BasePresentationRoles(names);
-            std::string saved,own_record,foreign_record;
+            std::string saved,own_record,foreign_record;std::vector<uint8_t> shared_details;
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
                 auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
@@ -408,6 +408,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     }}
                 }
                 game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));fixture.GameplayRandom({3,3});
+                shared_details.resize(4096);const std::array<uint8_t,5> detail_pattern{{0,1,127,128,255}};
+                for(size_t i=0;i<shared_details.size();++i) {shared_details[i]=detail_pattern[i%detail_pattern.size()];}
+                fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithLandmarkDetails(shared_details).Serialize());
                 fixture.Updates();const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
                 auto* survivor=&target->m_pops.at(19);auto* retained=survivor->Wrap(GSE_CALL);auto* retired=target->m_pops.at(20).Wrap(GSE_CALL);
                 if(scenario==2) {
@@ -418,6 +421,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         "future resource query failure did not restore capture preview authority");GT_OK();
                 }
                 um->ValidateConventionalMove(actor,target->GetTile(),0);
+                GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture preview rewrote raw shared detail");
                 GT_ASSERT(fixture.Snapshot()==before && fixture.Updates().empty(),"capture validation published authoritative state or refreshes");
                 if(scenario==1) {
                     auto roles=names;roles[7]="missing-role";fixture.BasePresentationRoles(roles);
@@ -428,6 +432,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 own_record=Base::Serialize(own).ToString();foreign_record=Base::Serialize(bases[1]).ToString();
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
+                GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture commit rewrote raw shared detail");
                 const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
                 GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==1 && &target->m_pops.at(19)==survivor && Pop::Unwrap(retained)==survivor
                     && retired->type==VT_UNDEFINED && context.conquest==std::optional<SmacConquestState>({2,50}) && context.owner_simulation_id==1
@@ -462,6 +467,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
+                    GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"actual captured world Start lost shared bytes");
                     GT_ASSERT(base && base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50}) && base->m_owner->GetIndex()==0
                         && base->m_pops.size()==1 && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
                         && restored.GameplayRandom()==SmacGameplayRandomState(3,1951609278u) && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record

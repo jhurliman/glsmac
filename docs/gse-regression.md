@@ -1,7 +1,7 @@
 # GSE regression and pre-push checks
 
 
-CTest registers four stable native shards and each non-include GSE script as an
+CTest registers eight stable native shards and each non-include GSE script as an
 individual case. Two cases run concurrently in CI on the same runner. Every
 native test name belongs to exactly one FNV-1a shard; registration order and
 compiler hash implementations cannot change that partition. Each case has a
@@ -54,7 +54,7 @@ time comparison rather than a claim about total workflow duration.
 An exact multiset comparison preserved all 1,429 native registrations and all
 39 standalone script registrations, each once. The remaining old registration
 was the directory precondition now enforced at configure. Native shards passed
-twice: shards0–3 took53.39/32.04/38.06/63.48 seconds, then
+twice: shards0â€“3 took53.39/32.04/38.06/63.48 seconds, then
 53.12/31.05/35.03/61.57 seconds under CTest's saved scheduling order. The first split run exposed an absolute
 versus relative script path mismatch in the exact stacktrace fixture; preserving
 the original relative invocation fixed it without changing that fixture. The
@@ -69,3 +69,13 @@ PR291 hit its300-second limit before the final native groups; splitting preserve
 coverage while giving native shards and scripts independent bounded deadlines.
 Hosted timing, Windows/macOS stability, and workflow-level runner savings must
 still be assessed on the reviewed head.
+
+The first hosted four-shard Windows run exposed cumulative shard cost: two
+shards reached 180 seconds while completing groups, with 616.37 seconds of
+native process time and about 597 seconds of completed native body/teardown
+measurements. The longest completed individual group took 74.31 seconds; the
+next took 42.03. Windows was not idle for a large unexplained interval. Eight
+shards retain the same 180-second deadline and two-process concurrency while
+reducing each shard's accumulated workload. The four-shard Linux and macOS
+samples passed all 51 cases in 127.94 and 221.63 seconds; these are historical
+measurements, not results for the final eight-shard layout.

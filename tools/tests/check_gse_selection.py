@@ -43,8 +43,8 @@ def main():
         result = run({"GLSMAC_GSE_TEST_SOURCE_FILTER": "nonexistent-source-file"})
         assert result.returncode == (0 if unknown else 1), result.stdout
         accepted = []
-        for index in range(4):
-            result = run({"GLSMAC_GSE_TEST_SHARD": str(index) + "/4"})
+        for index in range(8):
+            result = run({"GLSMAC_GSE_TEST_SHARD": str(index) + "/8"})
             if result.returncode == 0:
                 assert "  test if tests work..." in result.stdout, result.stdout
                 accepted.append(index)

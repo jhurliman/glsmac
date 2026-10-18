@@ -1,0 +1,140 @@
+{
+  "research_id": "RE-SMAC-HURRY-AUTHORITY-001",
+  "profile": "Stock SMAC, installed alpha.txt RULES; admitted turn and positive-choice fragments, external file services supplied",
+  "ordinary_local": {
+    "positive_choice_blocking": false,
+    "retool_exemption": 10,
+    "hurry_percentage": 100,
+    "voice_project_present": false
+  },
+  "cases": [
+    {
+      "id": "actual_installed_RULES_load",
+      "inputs": {
+        "previous_active_exemption": 777,
+        "source": "installed alpha.txt RULES"
+      },
+      "expected": {
+        "active_exemption": 10
+      }
+    },
+    {
+      "id": "ordinary_newgame_clear_0",
+      "inputs": {
+        "previous_secondary": 0
+      },
+      "expected": {
+        "secondary": 0,
+        "blocking": false
+      }
+    },
+    {
+      "id": "ordinary_newgame_clear_25167872",
+      "inputs": {
+        "previous_secondary": 25167872
+      },
+      "expected": {
+        "secondary": 25165824,
+        "blocking": false
+      }
+    },
+    {
+      "id": "server_next_turn_latch_0",
+      "inputs": {
+        "previous_secondary": 0,
+        "entry": "admitted non-simultaneous server NEXT TURN fragment"
+      },
+      "expected": {
+        "secondary": 2048,
+        "blocking": true,
+        "next_turn_latch": 1
+      }
+    },
+    {
+      "id": "turn_driver_clear_0",
+      "inputs": {
+        "previous_secondary": 2048,
+        "entry": "native next-turn driver post-upkeep clear"
+      },
+      "expected": {
+        "secondary": 0,
+        "blocking": false
+      }
+    },
+    {
+      "id": "server_next_turn_latch_25165824",
+      "inputs": {
+        "previous_secondary": 25165824,
+        "entry": "admitted non-simultaneous server NEXT TURN fragment"
+      },
+      "expected": {
+        "secondary": 25167872,
+        "blocking": true,
+        "next_turn_latch": 1
+      }
+    },
+    {
+      "id": "turn_driver_clear_25165824",
+      "inputs": {
+        "previous_secondary": 25167872,
+        "entry": "native next-turn driver post-upkeep clear"
+      },
+      "expected": {
+        "secondary": 25165824,
+        "blocking": false
+      }
+    },
+    {
+      "id": "positive_choice_1_blocking_0",
+      "inputs": {
+        "choice": 1,
+        "secondary": 0,
+        "partial_marker": false
+      },
+      "expected": {
+        "route": "continues"
+      }
+    },
+    {
+      "id": "positive_choice_2_blocking_0",
+      "inputs": {
+        "choice": 2,
+        "secondary": 0,
+        "partial_marker": false
+      },
+      "expected": {
+        "route": "continues"
+      }
+    },
+    {
+      "id": "positive_choice_1_blocking_1",
+      "inputs": {
+        "choice": 1,
+        "secondary": 2048,
+        "partial_marker": false
+      },
+      "expected": {
+        "route": "blocked"
+      }
+    },
+    {
+      "id": "positive_choice_2_blocking_1",
+      "inputs": {
+        "choice": 2,
+        "secondary": 2048,
+        "partial_marker": false
+      },
+      "expected": {
+        "route": "blocked"
+      }
+    }
+  ],
+  "validation": {
+    "new_native_controls": 11,
+    "original_installed_RULES_parser_executed": true,
+    "full_Hurry_dialog_executed": false,
+    "network_packet_handler_executed": false,
+    "gameplay_or_CRT_rng_calls": 0,
+    "earlier_quote_payment_cases_not_rerun": 1781
+  }
+}

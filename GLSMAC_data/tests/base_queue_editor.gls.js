@@ -39,6 +39,6 @@ const screen = #include('../default/ui/parts/game/popup/base_screen');
 let opened = false;
 base.get_smac_queue_editor = () => { return data; };
 screen.base = base; screen.is_open = true; screen.production_selection = null;
-screen.sections = {specialist_selection: {hide_view: () => {}}, rename: {hide_view: () => {}}, queue_editor: {
+screen.sections = {hurry: {hide_view: () => {}}, specialist_selection: {hide_view: () => {}}, rename: {hide_view: () => {}}, queue_editor: {
     open: (target, selection) => { test.assert(target == base && selection == data); opened = true; }}};
 screen.open_queue_editor(); test.assert(opened);

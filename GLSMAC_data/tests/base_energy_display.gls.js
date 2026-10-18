@@ -29,7 +29,7 @@ const base = {
 	get_facilities: () => { return {}; },
 };
 const sink = {set: (data) => {}, set_stored: (value) => {}, set_commerce: (value) => {}};
-screen.sections = {queue_editor: {on_base_update: (base) => {}}, buttons: {show_default: () => {}}, rename: {on_base_update: (base) => {}}, specialist_selection: {on_base_update: (base) => {}}, nutrients: {set_stored: (data) => { displayed_nutrients = data; }}, economy: sink, game_state: account, facilities: sink,
+screen.sections = {hurry: {on_base_update: (base) => {}}, queue_editor: {on_base_update: (base) => {}}, buttons: {show_default: () => {}}, rename: {on_base_update: (base) => {}}, specialist_selection: {on_base_update: (base) => {}}, nutrients: {set_stored: (data) => { displayed_nutrients = data; }}, economy: sink, game_state: account, facilities: sink,
 	resources: {set: (data) => {balance = data;}}, energy: allocation, middle_area: sink, bottom_bar: sink};
 screen.p = {game: {get_year: () => {return 2101;}}};
 screen.production_selection = null;

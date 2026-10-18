@@ -531,6 +531,16 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_hurry_preview",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS_MIN_MAX(0,1);
+			if(!m_resource_context || !m_production || !m_production->queue || !m_owner || !m_game->GetPlayer() || m_owner->GetPlayer()!=m_game->GetPlayer()) {return VALUE(gse::value::Undefined);}
+			int64_t amount=0;if(!arguments.empty()) {N_GETVALUE(value,0,Int);amount=value;}
+			if(amount<0 || amount>INT32_MAX) {GSE_ERROR(gse::EC.INVALID_CALL,"Hurry amount requires nonnegative signed32 credits");}
+			return CopySmacHurryPreview(GSE_CALL,static_cast<int32_t>(amount));
+		})
+	},
+	{
 		"get_smac_queue_editor",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
@@ -634,7 +644,11 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 						queue->push_back( ReadProductionItem( GSE_CALL, static_cast< const gse::value::Object* >( entry )->value ) );
 					}
 				}
-				SetProductionState( GSE_CALL, ProductionState{ current, minerals, baseline, baseline_minerals, std::move( queue ) } );
+				// This legacy scripting DTO does not own the Hurry allowance.
+                // Ordinary target/state replacement must preserve that marker.
+                auto replacement=ProductionState{current,minerals,baseline,baseline_minerals,std::move(queue)};
+                replacement.hurry_partial_paid=m_production && m_production->hurry_partial_paid;
+                SetProductionState(GSE_CALL,replacement);
 			}
 			return VALUE( gse::value::Undefined );
 		} )

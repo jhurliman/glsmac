@@ -13,6 +13,7 @@ queue.items = items;
 let editable = true;
 queue.p = {utils: {can_edit_queue: () => { return editable; }}};
 queue.edit_button = {};
+queue.hurry_button = {};
 const presentation = {name: 'Recon Rover', queue: ['Former', 'Colony Pod', 'HQ', 'Tanks', 'Bank', 'Node', 'Scout', 'Scout', 'Scout']};
 production.set_stored({minerals: 17}, presentation);
 test.assert(production.production_title.text == 'Recon Rover');

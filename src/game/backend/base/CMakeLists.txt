@@ -16,6 +16,7 @@ SET( SRC ${SRC}
 	${PWD}/BaseSpecialistCommands.cpp
 	${PWD}/BaseRenameCommands.cpp
 	${PWD}/BaseQueueCommands.cpp
+	${PWD}/BaseHurryCommands.cpp
 	${PWD}/ProductionState.cpp
 	${PWD}/SmacBaseResourceContext.cpp
 	${PWD}/SmacBaseUpkeepCache.cpp
@@ -27,6 +28,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacBaseEnergy.cpp
 	${PWD}/BaseSpecialists.cpp
 	${PWD}/SmacProductionSwitch.cpp
+	${PWD}/SmacHurry.cpp
 	${PWD}/SmacWorkerAllocationRules.cpp
 	${PWD}/SmacUnitSupport.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp

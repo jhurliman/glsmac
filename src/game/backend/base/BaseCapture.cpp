@@ -193,6 +193,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	if(actor_state.home_base_id) {data->refresh.push_back(GetBase(*actor_state.home_base_id));}
 	const auto target=m_game->SelectSmacFoundingProduction(actor->m_owner,destination);
 	data->production=ProductionState{target,0,m_game->MakeSmacProductionItem(actor->m_owner,ProductionItemKind::Stockpile,38),0,std::vector<ProductionItem>{}};
+	// Successful ordinary survivor capture preserves the independent paid marker.
+	data->production->hurry_partial_paid=captured->m_production->hurry_partial_paid;
 	for(const auto& pair:{std::pair<int32_t,int32_t>{old_owner,new_owner},{new_owner,old_owner}}) {data->history.owners.at(pair.first).directions.at(pair.second).primary|=0x8000a118u;}
 	auto& counters=data->history.owners.at(new_owner).directions.at(old_owner);const auto encounters=static_cast<uint32_t>(captured->m_pops.size())*2u;counters.paired_a+=encounters;counters.paired_b+=encounters;
 	data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();

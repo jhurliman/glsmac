@@ -89,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=25,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=26,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -160,6 +160,11 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=25,bool
             }
         }
     }
+    if(version>=26) {
+        suffix.WriteBool(value.ecology_world.has_value());
+        if(value.ecology_world) {suffix.WriteInt(value.ecology_world->native_life);suffix.WriteInt(value.ecology_world->cloud_cover);suffix.WriteInt(value.ecology_world->sea_level_offset);}
+        suffix.WriteBool(value.perihelion.has_value());if(value.perihelion) {suffix.WriteBool(*value.perihelion);}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -177,6 +182,32 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ecology world V26 preserves mutable globals and independent perihelion availability",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        for(const auto active:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {
+            for(const int32_t sea:{INT32_MIN,-12,0,12,INT32_MAX}) {
+                auto value=State();value.ecology_world=faction::SmacEcologyWorld{1,2,sea};value.perihelion=active;
+                const auto random=value.gameplay_random;const auto wire=value.Serialize(technologies,profiles,units).ToString();
+                const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+                GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random, "World ecology restore changed categories, sea sign, active bit or RNG");
+                const auto legacy=SmacSimulationState::Deserialize(CurrentWire(value,25),technologies,profiles,units);
+                GT_ASSERT(!legacy.ecology_world && !legacy.perihelion,"V25 restore invented world ecology inputs");
+                GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+                    && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}), "Malformed ecology world suffix admitted");
+                value.ecology_world.reset();
+                GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,
+                    "Perihelion required invented world categories");
+            }
+        }
+        for(const int32_t category:{-1,3,INT32_MIN,INT32_MAX}) {
+            for(const bool life:{false,true}) {
+                auto value=State();value.ecology_world=faction::SmacEcologyWorld{life?category:1,life?2:category,12};
+                GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);})
+                    && Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value),technologies,profiles,units);}), "Unsupported ecology category admitted");
+            }
+        }
+        GT_OK();
+    });
     task->AddTest("SMAC ecology history V25 preserves all24 signed words and legacy absence",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();value.ecology_history.emplace();
@@ -196,7 +227,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         auto absent=value;absent.ecology_history.reset();
         GT_ASSERT(SmacSimulationState::Deserialize(absent.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==absent,
             "Absent V25 ecology history became zero");
-        types::Buffer marker;marker.WriteBool(false);const auto absent_wire=CurrentWire(absent);
+        types::Buffer marker;marker.WriteBool(false);const auto absent_wire=CurrentWire(absent,25);
         const auto prefix=absent_wire.substr(0,absent_wire.size()-marker.lenw);
         for(size_t count=0;count<24;++count) {
             types::Buffer truncated;truncated.WriteBool(true);for(size_t i=0;i<count;++i) {truncated.WriteInt(i);}

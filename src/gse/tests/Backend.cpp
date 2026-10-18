@@ -423,6 +423,7 @@ public:
                     for(size_t i=0;i<8;++i) {ecology->clean_minerals[i]=101+7*i;ecology->major_atrocities[i]=202+7*i;ecology->research_aggregate[i]=303+7*i;}
                 }
                 m_game.m_simulation->value.ecology_history=ecology;
+                m_game.m_simulation->value.perihelion=true;
                 m_game.m_simulation->value.regional_strategy=rows;m_game.m_simulation->value.ranking_scores=scores;
                 ResetWorld();
                 GT_ASSERT(!m_game.m_simulation && !m_game.m_map && !m_state->GetGame(),"Real reset retained its preceding world");
@@ -431,6 +432,7 @@ public:
                 for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
                 m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
                 m_game.PrepareNewSimulation();
+                GT_ASSERT(m_game.m_simulation->value.perihelion==std::optional<bool>{false},"Accepted new world retained active perihelion");
                 if(ecology) {for(const auto& participant:m_game.m_simulation->value.roster) {
                     ecology->clean_minerals[participant.simulation_id]=0;ecology->major_atrocities[participant.simulation_id]=0;
                 }}
@@ -4361,6 +4363,11 @@ public:
 			// retire those callbacks before this independent next-turn exercise.
 			m_game.ClearHandlers();
 			const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize();
+			GT_ASSERT(m_game.m_simulation->value.perihelion==std::optional<bool>{false},"Fresh claimed Start did not clear perihelion");
+			if(installed_planet) {
+				GT_ASSERT((m_game.m_simulation->value.ecology_world==std::optional<faction::SmacEcologyWorld>{faction::SmacEcologyWorld{1,2,12}}),
+					"Imported Planet simulation did not own independent header globals");
+			} else {GT_ASSERT(!m_game.m_simulation->value.ecology_world,"Generated continuous settings invented native ecology categories");}
 			bool repeated=false;try{m_game.AdvanceTurn(1);}catch(const std::exception&){repeated=true;}
 			GT_ASSERT(repeated && m_game.GetTurnId()==1 && m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeated first transition changed turn/knowledge");
 			for(const auto id:created) {
@@ -4374,6 +4381,17 @@ public:
 				GT_ASSERT(base->GetAccumulatedNutrients()==(scenario==1?2:0),"first upkeep nutrient posting differs from actual configured tile intake: "+std::to_string(base->GetAccumulatedNutrients()));
 			}
 			const auto pair=m_game.m_simulation->value.gameplay_random;
+			if(scenario==12) {
+				SetSnapshotTurn(89);
+				m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
+				GT_ASSERT(m_game.GetTurnId()==90 && m_game.m_simulation->value.perihelion==std::optional<bool>{true}
+					&& !m_game.m_canonical_turn_failed && !m_game.m_canonical_continuation,"Actual MY2190 upkeep did not finish with active perihelion");
+				for(const auto id:created) {GT_ASSERT(m_game.GetBM()->GetBase(id)->GetSmacUpkeepCache(),"MY2190 omitted actual Base upkeep");}
+				SetSnapshotTurn(109);
+				m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
+				GT_ASSERT(m_game.GetTurnId()==110 && m_game.m_simulation->value.perihelion==std::optional<bool>{false}
+					&& !m_game.m_canonical_turn_failed && !m_game.m_canonical_continuation,"Actual MY2210 upkeep did not end perihelion");GT_OK();
+			}
 			const auto jsf=m_game.GetRandom()->GetStateString();
 			if (scenario==10 || scenario==11) {
 				// The first Base can commit before a later supported transition is
@@ -4531,6 +4549,7 @@ public:
                 std::string bytes(Planet::FILE_BYTES,'\0');bytes.replace(0,11,"TERRANMAP\0\x1a",11);
                 const auto put=[&](size_t at,uint32_t word) {for(size_t i=0;i<4;++i) {bytes.at(at+i)=static_cast<char>(word>>(8*i));}};
                 put(11,5);put(15,80);put(19,80);put(23,27067);put(15+0xa30,4);
+                put(15+0xa44,2);put(15+0xa48,1);put(15+0x00c,12);
                 for(size_t i=0;i<Planet::TILE_COUNT;++i) {const auto at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;bytes[at]=3<<5;bytes[at+1]=65;}
                 const auto path=std::filesystem::temp_directory_path()/("glsmac-start-planet-"+util::UUID::Generate()+".MP");
                 util::FinallyGuard remove([&]{std::filesystem::remove(path);});
@@ -4894,6 +4913,33 @@ public:
 		GT_OK();
 	}
 
+    std::string CheckPerihelionAdvance() {
+        using namespace game::backend;
+        EnableWorldSnapshot();auto& settings=m_state->m_settings.global;
+        settings.SelectRuleset("smac");settings.InitializeHostRules(smac_startup_fixture::Source);smac_rules_fixture::AcceptWorldSize(settings);
+        EnableSimulationParticipants();
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            m_game.PrepareNewSimulation();const auto random=m_game.m_simulation->value.gameplay_random;
+            std::vector<std::pair<size_t,std::optional<bool>>> observed;
+            m_game.On(GSE_CALL,"turn",NATIVE_CALL(this,&observed) {
+                observed.emplace_back(m_game.GetTurnId(),m_game.m_simulation->value.perihelion);return VALUE(value::Undefined);
+            }));
+            m_game.AdvanceTurn(1);SetSnapshotTurn(89);m_game.AdvanceTurn(90);
+            SetSnapshotTurn(109);m_game.AdvanceTurn(110);
+            m_game.m_simulation->value.perihelion.reset();SetSnapshotTurn(169);m_game.AdvanceTurn(170);
+            GT_ASSERT(observed.size()==4 && observed[0].first==1 && observed[0].second==std::optional<bool>{false}
+                && observed[1].first==90 && observed[1].second==std::optional<bool>{true}
+                && observed[2].first==110 && observed[2].second==std::optional<bool>{false}
+                && observed[3].first==170 && !observed[3].second,"Actual turn hooks saw stale perihelion or invented legacy state");
+            GT_ASSERT(m_game.m_simulation->value.gameplay_random==random,"Perihelion state maintenance sampled gameplay RNG");
+            m_game.m_simulation->value.perihelion=false;SetSnapshotTurn(INT32_MAX-2100);
+            const auto before=m_game.m_simulation->value;ClearFrontendRequests();bool rejected=false;
+            try {m_game.AdvanceTurn(static_cast<size_t>(INT32_MAX-2100)+1);}catch(const std::overflow_error&) {rejected=true;}
+            GT_ASSERT(rejected && m_game.GetTurnId()==static_cast<size_t>(INT32_MAX-2100)
+                && m_game.m_simulation->value==before && observed.size()==4 && m_frontend_requests.empty(),"Calendar overflow partially advanced simulation or callbacks");
+            m_game.ClearHandlers();GT_OK();
+        });
+    }
 	std::string CheckSocialAdvanceAtomic( const int failure ) {
 		using namespace game::backend;
 		EnableWorldSnapshot();
@@ -10394,6 +10440,9 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC perihelion actual turn hooks preserve calendar ordering legacy absence and failure atomicity",GT(){
+        BackendFixture fixture;return fixture.CheckPerihelionAdvance();
+    });
     task->AddTest("SMAC actual Reset and new simulation retain ecology strategy and score history",GT(){
         BackendFixture fixture;return fixture.CheckCrossWorldStrategyStorage();
     });

@@ -36,6 +36,10 @@ public:
 	bool Wraps() const { return m_wrap; }
 	const std::vector< uint8_t >& Regions() const { return m_regions; }
 	const std::optional<RegionValues>& Areas() const {return m_areas;}
+	// Region-builder result over retained stored areas1..62 (including stale
+	// unused entries). This read does not update simulation status or rebuild.
+	bool LandRegionConcentrated() const;
+	static bool LandRegionConcentrated(const RegionValues& stored_areas);
 	const std::optional<TerrainPostpass>& Postpass() const {return m_postpass;}
 	const std::optional<smac_site::RatingCache>& SiteRatings() const {return m_sites;}
 	const std::optional<std::vector<uint8_t>>& LandmarkDetails() const {return m_details;}

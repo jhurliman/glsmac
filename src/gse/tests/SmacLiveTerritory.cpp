@@ -2,6 +2,7 @@
 #include "ConventionalUnits.h"
 #include "fixtures/GlsmacTerritoryTopology.h"
 #include "fixtures/SmacCoastalGeography.h"
+#include "fixtures/SmacLandConcentration.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacSharedLandmarkDetails.h"
 #include "fixtures/SmacTerritorySummary.h"
@@ -65,6 +66,49 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC land concentration matches8 native builders and6 retained area reductions",GT(){
+        for(const auto& row:land_concentration_fixture::cases) {
+            if(row.width) {
+                std::vector<bool> sea(row.width*row.height/2,true);
+                for(const auto& point:row.land) {sea.at(Index(row.width,point[0],point[1]))=false;}
+                const auto topology=Topology::Build(row.width,row.height,row.wrap,sea,row.before);
+                GT_ASSERT(topology.Areas() && *topology.Areas()==row.after,"Complete builder areas differ: "+std::string(row.id));
+                GT_ASSERT(topology.LandRegionConcentrated()==row.expected,"Complete builder concentration differs: "+std::string(row.id));
+            } else {
+                GT_ASSERT(Topology::LandRegionConcentrated(row.before)==row.expected,"Area fragment differs: "+std::string(row.id));
+            }
+        }
+        auto invalid=Topology::RegionValues{};invalid[42]=-1;
+        GT_ASSERT(Rejects([&]{Topology::LandRegionConcentrated(invalid);}),"Negative normal region area was silently admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC live land concentration clears at new world and survives Base events and actual Start",GT(){
+        for(const bool retained:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+            const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+                bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.retained_land_region_concentration==std::optional<bool>{false};});
+                GT_ASSERT(fresh && game->GetMap()->GetTerritoryTopology()->LandRegionConcentrated(),"Whole-world reset followed terrain classification instead of clearing status");
+                fixture.ResourceState([&](auto& state){state.retained_land_region_concentration=retained;});
+                Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,902,0,1,24,16);
+                game->GetBM()->DespawnBase(GSE_CALL,901);fixture.RefreshPopulation(1);
+                bool preserved=false;fixture.ResourceState([&](auto& state){preserved=state.retained_land_region_concentration==std::optional<bool>{retained};});
+                GT_ASSERT(preserved,"Base or owner-summary update rebuilt terrain status");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!first.empty()) {return first;}
+            ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+            const auto second=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.ResourceState([&](auto& state){state.retained_land_region_concentration=!retained;});
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool preserved=false;
+                restored.ResourceState([&](auto& state){preserved=state.retained_land_region_concentration==std::optional<bool>{retained};state.retained_land_region_concentration.reset();});
+                GT_ASSERT(preserved,"Actual Start discarded the saved status");
+                Found(GSE_CALL,restored.Game(),903,0,1,32,16);bool absent=false;
+                restored.ResourceState([&](auto& state){absent=!state.retained_land_region_concentration;});
+                GT_ASSERT(absent,"Legacy absent status was reconstructed at a Base event");GT_OK();
+            });if(!second.empty()) {return second;}
+        }
+        GT_OK();
+    });
 	task->AddTest("SMAC live victory history follows founding nonlast removal actual Start and legacy absence",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;faction::SmacVictoryHistory retained;
 		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -442,7 +486,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		const auto previous=Topology::Deserialize(v2);
 		GT_ASSERT(previous.Areas()==value.Areas() && previous.Postpass()==value.Postpass() && !previous.SiteRatings()
 			&& Topology::Deserialize(previous.Serialize())==previous,"V2 load invented rating or exclusion history");
-		GT_ASSERT(Rejects([&]{old.Rebuild(sea);}) && Rejects([&]{old.WithTerrainPostpass(sea,fertile);}),"missing polar history was fabricated");GT_OK();
+		GT_ASSERT(Rejects([&]{old.Rebuild(sea);}) && Rejects([&]{old.LandRegionConcentrated();}) && Rejects([&]{old.WithTerrainPostpass(sea,fertile);}),"missing polar history was fabricated");GT_OK();
 	});
 	task->AddTest("SMAC live geography admission and actual Start retain stale postpass data",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,geography;

@@ -41,6 +41,22 @@ constexpr std::array<std::array<int32_t,2>,20> footprint{{
 GlsmacTerritoryTopology::GlsmacTerritoryTopology( int32_t width, int32_t height, bool wrap, std::vector< uint8_t > regions )
 	: m_width(width), m_height(height), m_wrap(wrap), m_regions(std::move(regions)) {}
 
+bool GlsmacTerritoryTopology::LandRegionConcentrated() const {
+	if(!m_areas) {throw std::runtime_error("Land concentration requires retained region areas");}
+	return LandRegionConcentrated(*m_areas);
+}
+bool GlsmacTerritoryTopology::LandRegionConcentrated(const RegionValues& stored_areas) {
+	int64_t total=0,largest=0;
+	for(size_t region=1;region<=62;++region) {
+		const auto area=stored_areas[region];
+		if(area<0) {throw std::runtime_error("Negative normal-region area is outside the concentration profile");}
+		total+=area;if(area>largest) {largest=area;}
+	}
+	// Wide arithmetic rejects no valid bounded map and avoids signed overflow
+	// for saved diagnostic areas; overflow behavior in the original is unmeasured.
+	return largest>=4*total/5;
+}
+
 GlsmacTerritoryTopology GlsmacTerritoryTopology::Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea, RegionValues initial_areas ) {
 	return BuildWithAreas(width,height,wrap,sea,initial_areas);
 }

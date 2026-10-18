@@ -786,6 +786,18 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 	}
 }
 
+std::pair< gse::Value*, class_modifier_t > Object::GetClassProperty( const std::string& key ) const {
+	std::pair< gse::Value*, class_modifier_t > winner = { nullptr, CM_NONE };
+	for ( const auto& c : m_classes ) {
+		const auto property = c->GetProperty( key, m_modifiers );
+		// Modifier priority wins first; the later class wins equal priorities.
+		if ( property.first && ( !winner.first || property.second >= winner.second ) ) {
+			winner = property;
+		}
+	}
+	return winner;
+}
+
 void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
 	ASSERT( !m_is_destroyed, "SetPropertyFromClass: object is destroyed" );
 	const auto& def_it = m_property_defs.find( key );
@@ -793,14 +805,9 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Va
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
 	}
 	if ( m_manual_properties.find( key ) == m_manual_properties.end() ) {
-		// check if property was set by any of previous classes with higher modifier
-		for ( const auto& c : m_classes ) {
-			const auto kv = c->GetProperty( key, m_modifiers );
-			if ( kv.first && kv.second > modifier ) {
-				return;
-			}
-		}
-		SetProperty( GSE_CALL, &m_properties, key, value );
+		const auto winner = GetClassProperty( key );
+		SetProperty( GSE_CALL, &m_properties, key,
+			winner.first && winner.second >= modifier ? winner.first : value );
 	}
 }
 
@@ -818,14 +825,7 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	}
 
 	if ( !v ) {
-		// search in other classes
-		for ( auto it2 = m_classes.rbegin() ; it2 != m_classes.rend() ; it2++ ) {
-			const auto kv = ( *it2 )->GetProperty( key, m_modifiers );
-			if ( kv.first ) {
-				v = kv.first;
-				break;
-			}
-		}
+		v = GetClassProperty( key ).first;
 	}
 
 	if ( !v ) {

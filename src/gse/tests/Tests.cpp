@@ -1,6 +1,7 @@
 #include "Tests.h"
 #include "Sound.h"
 #include "Flic.h"
+#include "UIClass.h"
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
 #include "Async.h"
@@ -65,6 +66,8 @@
 #include "SmacEconomyState.h"
 #include "SmacLiveEconomy.h"
 #include "SmacResearch.h"
+#include "HumanResearchValue.h"
+#include "AutomaticResearch.h"
 #include "SmacProductionSwitch.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
@@ -137,6 +140,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		AddSoundTests( task );
 		AddFlicTests( task );
+		AddUIClassTests( task );
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddRosterRecordTests( task );
@@ -162,6 +166,8 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacEconomyStateTests( task );
 		tests::AddSmacLiveEconomyTests( task );
 		tests::AddSmacResearchTests( task );
+		tests::AddHumanResearchValueTests( task );
+		tests::AddAutomaticResearchTests( task );
 		tests::AddCvrBasisConverterTests( task );
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );

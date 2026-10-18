@@ -1994,6 +1994,35 @@ public:
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
 				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
+            // Actual Game::RenderTile -> Tile::Render -> Hide/Show path
+            // must read the retained shared phase even for the first render.
+            using Blink=game::frontend::unit::SelectionBlink;
+            const auto blink_epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
+            badges->AdvanceSelectionBlink(blink_epoch,true);
+            badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD,true);
+            badges->SetSelectionBlinkAdmission(false); // previous frame had no selection
+            um->m_selected_unit=unit.get();frontend.m_is_turn_active=true;
+            util::FinallyGuard clear_selection([&]{if(um){um->m_selected_unit=nullptr;}frontend.m_is_turn_active=false;});
+            unit->StartBadgeBlink();
+            GT_ASSERT(!unit->IsBadgeVisible(),"live selection start flashed before next manager frame");
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(!badges->IsSelectionBlinkVisible() && !unit->IsBadgeVisible(),"actual tile redraw flashed an off-phase selected badge");
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(!unit->IsBadgeVisible(),"repeat redraw changed selected badge visibility");
+            badges->AdvanceSelectionBlink(blink_epoch+std::chrono::milliseconds(200),false);
+            unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"closed turn gate retained hidden selected overlays");
+            badges->AdvanceSelectionBlink(blink_epoch+std::chrono::milliseconds(201),true);
+            unit->Iterate();GT_ASSERT(!unit->IsBadgeVisible(),"opening gate reset the retained shared phase");
+            badges->AdvanceSelectionBlink(blink_epoch+Blink::HALF_PERIOD*2,true);
+            unit->Iterate();GT_ASSERT(unit->IsBadgeVisible(),"next shared callback did not display selected badge");
+            unit->Hide();unit->Iterate();
+            GT_ASSERT(!unit->IsBadgeVisible(),"hidden selected model regained orphaned overlays");
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(unit->IsBadgeVisible(),"re-shown selected model lost retained visible phase");
+            unit->StopBadgeBlink(true);
+            unit->Hide();unit->Show();
+            GT_ASSERT(unit->IsBadgeVisible(),"direct restoration of a hidden model lost its ordinary overlays");
+            um->m_selected_unit=nullptr;frontend.m_is_turn_active=false;
 			// Publish the real Unit for the production Game widget lookup. Its
 			// scoped owner remains here; remove the entry before either teardown.
 			um->m_units.emplace( 1, unit.get() );

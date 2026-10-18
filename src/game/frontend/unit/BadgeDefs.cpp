@@ -206,9 +206,6 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 	return &it->second;
 }
 
-const size_t BadgeDefs::GetBadgeBlinkInterval() const {
-	return s_consts.blink.interval_ms;
-}
 
 const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const {
 	return {

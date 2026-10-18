@@ -1,4 +1,5 @@
 #include "TerrainRenderUpdate.h"
+#include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
 #include "game/backend/map/Consts.h"
@@ -73,6 +74,26 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("Selected Unit badge shared phase coalesces150ms deliveries and retains gates",GT(){
+        using Blink=game::frontend::unit::SelectionBlink;using namespace std::chrono;
+        Blink phase;const auto epoch=Blink::Clock::time_point{}+seconds(10);
+        GT_ASSERT(phase.Visible() && !phase.Poll(epoch,true),"shared phase did not initialize visible");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(149),true) && phase.Visible(),"timer fired before150ms");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(150),true) && !phase.Visible(),"first callback did not toggle once");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(150),true),"same delivery toggled twice");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(2000),true) && phase.Visible(),"late callbacks replayed elapsed parity");
+        GT_ASSERT(!phase.Poll(epoch+milliseconds(2150),false) && phase.Visible(),"gate changed retained phase");
+        GT_ASSERT(phase.Poll(epoch+milliseconds(2300),true) && !phase.Visible(),"next admitted callback did not toggle once");
+        phase.EnsureVisible();
+        GT_ASSERT(phase.Visible() && phase.Poll(epoch+milliseconds(2450),true) && !phase.Visible(),"ensure-visible rearmed shared timer");
+        Blink cadence;
+        cadence.Poll(epoch,true);
+        for(int i=1;i<=8;++i) {
+            GT_ASSERT(cadence.Poll(epoch+milliseconds(i*150+16),true),"late poll missed original cadence boundary");
+            GT_ASSERT(!cadence.Poll(epoch+milliseconds(i*150+17),true),"late poll replayed a delivery");
+        }
+        GT_OK();
+    });
 	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){
 		using graphics::PresentationViewport;
 		const auto wide=PresentationViewport::Fit(1920,1080);

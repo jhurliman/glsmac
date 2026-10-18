@@ -48,6 +48,7 @@ CLASS( UnitManager, common::Class )
 	~UnitManager();
 
 	void Iterate();
+    bool IsSelectionBlinkAdmitted(const Unit* unit) const;
 
 	Unit* GetUnitById( const size_t id ) const;
 

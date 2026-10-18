@@ -1,0 +1,321 @@
+{
+  "research_id": "RE-SMAC-RESEARCH-REVIEW-DISCRIMINATORS-001",
+  "weighted_core_vendetta_mask": 16,
+  "hunter_recursive_budget": "1+bool(Discover!=0)",
+  "full_native_human_mode_zero_queries": 12,
+  "cases": [
+    {
+      "id": "vendetta_mask_0",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": null,
+      "edges_from_hunter_root_to_candidate": null,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "vendetta_mask_8",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 8,
+      "hunter_root": null,
+      "edges_from_hunter_root_to_candidate": null,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "vendetta_mask_16",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 16,
+      "hunter_root": null,
+      "edges_from_hunter_root_to_candidate": null,
+      "expected_weighted": 8,
+      "expected_probe": 8,
+      "actual_final": 8,
+      "original_probe_ancestry_calls": [],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "vendetta_mask_24",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 24,
+      "hunter_root": null,
+      "edges_from_hunter_root_to_candidate": null,
+      "expected_weighted": 8,
+      "expected_probe": 8,
+      "actual_final": 8,
+      "original_probe_ancestry_calls": [],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges3_D0",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 3,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 1
+        },
+        {
+          "candidate": 10,
+          "target": -1,
+          "budget": 1
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges3_D1",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 3,
+      "expected_weighted": 4,
+      "expected_probe": 16,
+      "actual_final": 16,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges3_D2",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 3,
+      "expected_weighted": 4,
+      "expected_probe": 16,
+      "actual_final": 16,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges3_D-1",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        -1,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 3,
+      "expected_weighted": 4,
+      "expected_probe": 16,
+      "actual_final": 16,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges4_D0",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 4,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 1
+        },
+        {
+          "candidate": 10,
+          "target": -1,
+          "budget": 1
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges4_D1",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 4,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        },
+        {
+          "candidate": 10,
+          "target": -1,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges4_D2",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 4,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        },
+        {
+          "candidate": 10,
+          "target": -1,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    },
+    {
+      "id": "hunter_edges4_D-1",
+      "power_rating": 8,
+      "other_ratings": 0,
+      "priorities": [
+        0,
+        -1,
+        0,
+        0
+      ],
+      "cached_base_count": 0,
+      "forward_relation_to_other_positive_faction": 0,
+      "hunter_root": 70,
+      "edges_from_hunter_root_to_candidate": 4,
+      "expected_weighted": 4,
+      "expected_probe": 4,
+      "actual_final": 4,
+      "original_probe_ancestry_calls": [
+        {
+          "candidate": 10,
+          "target": 71,
+          "budget": 2
+        },
+        {
+          "candidate": 10,
+          "target": -1,
+          "budget": 2
+        }
+      ],
+      "no_rng_or_query_mutation": true
+    }
+  ]
+}

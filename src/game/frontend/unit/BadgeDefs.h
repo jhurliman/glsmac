@@ -1,4 +1,5 @@
 #pragma once
+#include "SelectionBlink.h"
 
 #include <unordered_map>
 #include <vector>
@@ -41,11 +42,16 @@ public:
 	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale );
 	sprite::InstancedSprite* GetFakeBadgeSprite();
 	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
-	const size_t GetBadgeBlinkInterval() const;
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 
+    void SetSelectionBlinkAdmission(bool admitted) {m_selection_blink_admitted=admitted;}
+    bool AdvanceSelectionBlink(SelectionBlink::Clock::time_point now,bool admitted) {m_selection_blink_admitted=admitted;return m_selection_blink.Poll(now,admitted);}
+    bool IsSelectionBlinkVisible() const {return !m_selection_blink_admitted || m_selection_blink.Visible();}
+
 private:
+	SelectionBlink m_selection_blink;
+    bool m_selection_blink_admitted=false;
 
 	static const struct consts_t {
 		const types::Vec2< float > scale = {
@@ -84,9 +90,6 @@ private:
 			};
 			const float step_x = 0.032f;
 		} fake_badges;
-		struct {
-			const size_t interval_ms = 128;
-		} blink;
 	} s_consts;
 
 	sprite::InstancedSpriteManager* const m_ism = nullptr;

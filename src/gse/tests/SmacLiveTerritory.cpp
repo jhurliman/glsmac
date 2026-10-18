@@ -66,11 +66,9 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		for(const auto& item:coastal_geography_fixture::cases) {
 			const auto count=size_t(item.width)*item.height/2;std::vector<bool> sea(count);
 			for(size_t i=0;i<count;++i) {sea[i]=item.land[i]=='0';}
-			auto wire=Topology::Build(item.width,item.height,item.wrap,sea).Serialize();
 			Topology::RegionValues before{},after{};for(const auto& row:item.before) {before.at(row.first)=row.second;}
 			for(const auto& row:item.after) {after.at(row.first)=row.second;}
-			for(size_t i=0;i<128;++i) {WriteArea(wire,16+count+4*i,before[i]);}
-			auto actual=Topology::Deserialize(wire).Rebuild(sea);
+			auto actual=Topology::Build(item.width,item.height,item.wrap,sea,before);
 			GT_ASSERT(actual.Areas() && *actual.Areas()==after,"stored areas differ: "+std::string(item.id));
 			const auto hex=[](char digit){return digit<='9' ? digit-'0' : digit-'a'+10;};
 			for(size_t i=0;i<count;++i) {GT_ASSERT(actual.Regions()[i]==16*hex(item.regions[2*i])+hex(item.regions[2*i+1]),"region labels differ: "+std::string(item.id));}
@@ -98,6 +96,8 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 			auto bad=wire;WriteArea(bad,16+1024+4*word,negative);
 			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"negative saved area or fertility counter accepted");
 		}}
+		for(const auto region:{1,63,65}) {auto bad=wire;WriteArea(bad,16+1024+4*region,0);
+			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"zero area accepted for a referenced land water or polar region");}
 		auto retained=wire;WriteArea(retained,16+1024+4*127,INT32_MAX);
 		GT_ASSERT(Topology::Deserialize(retained).Serialize()==retained,"valid retained positive history was recounted or clamped");
 		auto legacy=value.Serialize().substr(0,1040);legacy.replace(0,8,"GLSTERR1");legacy[13]=0;legacy[14]=0;

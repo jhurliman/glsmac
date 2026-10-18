@@ -40,12 +40,13 @@ constexpr std::array<std::array<int32_t,2>,20> footprint{{
 GlsmacTerritoryTopology::GlsmacTerritoryTopology( int32_t width, int32_t height, bool wrap, std::vector< uint8_t > regions )
 	: m_width(width), m_height(height), m_wrap(wrap), m_regions(std::move(regions)) {}
 
-GlsmacTerritoryTopology GlsmacTerritoryTopology::Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea ) {
-	return BuildWithAreas(width,height,wrap,sea,{});
+GlsmacTerritoryTopology GlsmacTerritoryTopology::Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea, RegionValues initial_areas ) {
+	return BuildWithAreas(width,height,wrap,sea,initial_areas);
 }
 GlsmacTerritoryTopology GlsmacTerritoryTopology::BuildWithAreas(int32_t width,int32_t height,bool wrap,const std::vector<bool>& sea,RegionValues areas) {
 	const auto count = Count(width,height);
 	Require( sea.size() == count, "Territory topology sea extent differs from geometry" );
+	for(const auto area:areas) {Require(area>=0,"Negative initial region area history");}
 	std::vector<uint8_t> regions(count,0);
 	std::vector<size_t> queue; queue.reserve(count);
 	uint8_t last_land = 0, last_sea = 64;
@@ -150,6 +151,7 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string&
 		const auto region = static_cast<uint8_t>(wire[16+i]); const auto y = i/(width/2);
 		Require( y == 0 || y == height-1 ? region == 63 || region == 127 : (region >= 1 && region <= 61) || (region >= 65 && region <= 125),
 			"Invalid territory topology region" );
+		if(areas) {Require(Read32(wire,16+count+4*size_t(region))>0,"Referenced region has no positive retained area");}
 	}
 	// A and F are retained producer counts, never signed adjustments. Preserve
 	// stale positive history, but reject malformed values before allocating or

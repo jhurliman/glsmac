@@ -22,7 +22,7 @@ public:
 		bool operator==(const TerrainPostpass& other) const {return fertility==other.fertility && coastal==other.coastal;}
 	};
 	static constexpr size_t MAX_WIRE_BYTES = 16 + 2 * (512 * 256 / 2) + 2 * 128 * 4;
-	static GlsmacTerritoryTopology Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea );
+	static GlsmacTerritoryTopology Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea, RegionValues initial_areas = {} );
 	GlsmacTerritoryTopology Rebuild(const std::vector<bool>& sea) const;
 	GlsmacTerritoryTopology WithTerrainPostpass(const std::vector<bool>& sea,const std::vector<bool>& fertile) const;
 	int32_t Width() const { return m_width; }

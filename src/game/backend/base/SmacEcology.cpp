@@ -1,4 +1,5 @@
 #include "SmacEcology.h"
+#include "SmacEcologyNativeSpawn.h"
 #include <algorithm>
 #include <stdexcept>
 #include <set>
@@ -284,4 +285,55 @@ SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int3
     }
     return plan;
 }
+SmacNativeSpawnPlan PrepareSmacNativeSpawn(const SmacNativeSpawnInput& input,
+    const std::vector<SmacNativeSpawnBase>& bases,const std::function<SmacNativeSpawnTile(int32_t,int32_t)>& query) {
+    const auto& map=input.map;SmacWorkedSquareCollection::Resolve(map,0);
+    if(!query || input.actor<1 || input.actor>7 || input.history<7 || input.population < -128 || input.population>127) {
+        throw std::invalid_argument("Native spawn requires post-hold history, actor and signed population authority");
+    }
+    for(const auto& base:bases) {
+        const auto& p=base.coordinate;
+        if(base.owner<0 || base.owner>7 || p[0]<0 || p[0]>=map.width || p[1]<0 || p[1]>=map.height || ((int64_t(p[0])+p[1])&1)) {
+            throw std::invalid_argument("Native spawn requires ordered canonical Base coordinates and owners");
+        }
+    }
+    const auto cell=[&](const std::array<int32_t,2>& p) {
+        const auto value=query(p[0],p[1]);
+        if(value.altitude_class<0 || value.altitude_class>7 || value.cached_owner>15) {throw std::invalid_argument("Native spawn tile exceeds original field bounds");}
+        return value;
+    };
+    const auto blocked=[](const SmacNativeSpawnTile& tile) {return tile.unit_or_base && tile.cached_owner>=1 && tile.cached_owner<=7;};
+    SmacNativeSpawnPlan plan(input);plan.m_requests.reserve(127);
+    constexpr std::array<std::array<int32_t,2>,9> offsets{{{0,0},{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},{0,-2}}};
+    for(int32_t ordinal=0;ordinal<std::min(input.history,9);++ordinal) {
+        const auto p=BloomCoordinate(map,int64_t(map.center[0])+offsets[ordinal][0],int64_t(map.center[1])+offsets[ordinal][1]);
+        if(!p) {continue;}
+        const auto tile=cell(*p);
+        if(!tile.fungus || tile.altitude_class<2) {continue;}
+        int32_t nearest=-1;int64_t distance=INT64_MAX;
+        for(const auto& base:bases) {
+            const auto candidate=BloomDistance(map,*p,base.coordinate);
+            if(candidate<=distance) {nearest=base.owner;distance=candidate;}
+        }
+        if(nearest!=input.actor || blocked(tile)) {continue;}
+        const auto design=tile.region<64 ? (tile.actor_regional_base_count ? 8 : 10)
+            : (plan.m_special_counter%3==0 ? 10 : 9);
+        if(design!=8) {
+            ++plan.m_special_counter;
+            const auto base_limit=Checked(int64_t(2)*input.retained_base_count)/3;
+            if(plan.m_special_counter>=base_limit || plan.m_special_counter>=input.history/3) {continue;}
+        }
+        ++plan.m_sweep_attempts;
+        plan.m_requests.push_back({*p,design,plan.m_sweep_attempts,plan.m_special_counter,static_cast<uint8_t>(input.actor)});
+    }
+    const auto selected=cell(map.center);
+    if(!blocked(selected)) {
+        const auto design=selected.actor_regional_base_count ? (selected.region<64 ? 8 : 9) : 10;
+        for(auto index=plan.m_sweep_attempts;index<input.history/3 && index<input.population;++index) {
+            plan.m_requests.push_back({map.center,design,plan.m_sweep_attempts,plan.m_special_counter,std::nullopt});
+        }
+    }
+    return plan;
+}
+
 }

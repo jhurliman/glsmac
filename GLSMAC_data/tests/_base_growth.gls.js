@@ -4,6 +4,7 @@ const initialize_bases = #include('../default/game/bases');
 return (game) => {
 	initialize_bases({
 		get_ruleset: game.get_ruleset,
+        is_campaign_restore: game.is_campaign_restore,
 		// This adapter suppresses definitions; native fixtures supply their roles.
 		configure_smac_base_presentations: (roles) => {},
 		get_bm: game.get_bm,

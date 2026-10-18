@@ -5,6 +5,7 @@ return (bm, tm, get_resources) => {
 	const helpers = {};
 	const game = {
 		get_ruleset: () => { return 'smac'; },
+        is_campaign_restore: () => { return false; },
 		configure_smac_base_presentations: (roles) => {}, // definitions are substituted
 		get_bm: () => { return bm; },
 		get_tm: () => { return tm; },

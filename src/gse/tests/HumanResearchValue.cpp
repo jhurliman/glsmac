@@ -458,11 +458,40 @@ std::string CheckHumanResearchValues() {
         const auto actual = CalculateSmacHumanResearchValue( input, c.technology );
         if ( actual != c.expected ) { return std::string(c.id) + ": " + std::to_string(actual) + " != " + std::to_string(c.expected); }
     }
+    // Twelve additional full native queries isolate the two review questions.
+    // See docs/behavior/human-research-review-discriminators-cases.json.
+    SmacHumanResearchInputs controlled{};
+    controlled.faction_id = 1;
+    controlled.blind = true;
+    controlled.cloud_cover = 1;
+    controlled.facility_prerequisites.fill( -2 );
+    controlled.reactor_prerequisites.fill( -2 );
+    controlled.former_prerequisite = controlled.foil_prerequisite = -2;
+    for ( auto& row : controlled.technologies ) { row.prerequisites = {-2,-2}; }
+    controlled.technologies[0].prerequisites = {-1,-1};
+    controlled.technologies[0].ratings = {8,0,0,0};
+    for ( const uint32_t relation : {0u,8u,16u,24u} ) {
+        controlled.relations[2] = relation;
+        const auto expected = relation & 16u ? 8 : 4;
+        const auto actual = CalculateSmacHumanResearchValue( controlled, 0 );
+        if ( actual != expected ) { return "native weighted Vendetta discriminator: " + std::to_string(relation); }
+    }
+    controlled.relations[2] = 0;
+    for ( int32_t id = 1; id <= 4; ++id ) { controlled.technologies[id].prerequisites = {id-1,-1}; }
+    for ( const int32_t edges : {3,4} ) {
+        controlled.facility_prerequisites[54] = edges;
+        for ( const int32_t discover : {0,1,2,-1} ) {
+            controlled.priorities[1] = discover;
+            const auto expected = edges == 3 && discover != 0 ? 16 : 4;
+            const auto actual = CalculateSmacHumanResearchValue( controlled, 0 );
+            if ( actual != expected ) { return "native Hunter-Seeker depth discriminator: edges=" + std::to_string(edges) + " Discover=" + std::to_string(discover); }
+        }
+    }
     return {};
 }
 }
 void AddHumanResearchValueTests( task::gsetests::GSETests* task ) {
-    task->AddTest( "SMAC human research value matches 107 complete original queries", GT() {
+    task->AddTest( "SMAC human research value matches 119 complete original queries", GT() {
         try { return CheckHumanResearchValues(); } catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
     } );
 }

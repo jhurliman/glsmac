@@ -33,6 +33,13 @@ ASan/UBSan invocation of production code.
 This completes the value dependency; it does not yet change live research
 selection. A matching kernel is not evidence that the gameplay option works.
 
+Twelve additional [native review discriminators](behavior/human-research-review-discriminators-cases.json)
+confirm that weighted Power matching uses forward Vendetta bit16, distinct from
+the later regional comm-link bit8. Hunter-Seeker ancestry uses
+`1+bool(Discover!=0)`: Discover 2 and -1 both use budget2. Three-edge and
+four-edge controlled chains distinguish that behavior from `1+Discover`.
+The public test now checks all 119 original results.
+
 ## Next three executable slices
 
 1. Connect automatic selection to the value context: ascending IDs0..88,

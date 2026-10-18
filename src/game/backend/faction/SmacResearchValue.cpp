@@ -61,7 +61,7 @@ int32_t CalculateSmacHumanResearchValue( const SmacHumanResearchInputs& in, int3
         value = Add( value, Mul( Add( Mul( multiplier, axis.first ), 1 ), axis.second ) );
     }
     bool vendetta = false;
-    for ( size_t other = 1; other <= 7; ++other ) { if ( other != size_t( in.faction_id ) && ( in.relations[ other ] & 8 ) ) { vendetta = true; } }
+    for ( size_t other = 1; other <= 7; ++other ) { if ( other != size_t( in.faction_id ) && ( in.relations[ other ] & 0x10 ) ) { vendetta = true; } }
     if ( !( ( P && ( K || vendetta ) ) || ( T && D ) || ( W && B ) || ( G && ( X || in.base_count < 4 ) ) ) ) { value = Div( Add( value, 1 ), 2 ); }
     if ( in.base_count ) {
         const auto denominator = Mul( 2, in.base_count );

@@ -140,7 +140,7 @@ bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::t
 		RequireSmacLocalHumanOwner( owner );
 		// The current ordinary generated campaign has no scenario/no-colony rule
 		// producer. Scenario admission must supply that authority before this path.
-		if ( !m_state->m_settings.global.map.IsOrdinaryCampaignMap() ) {
+		if ( !m_state->m_settings.global.IsOrdinarySmacCampaign() ) {
 			throw std::runtime_error( "Colony queue admission requires the ordinary generated non-scenario campaign" );
 		}
 	}

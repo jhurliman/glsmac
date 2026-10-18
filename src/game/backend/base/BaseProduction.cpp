@@ -214,7 +214,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	production.baseline_minerals = production.minerals;
 	auto food = retained ? m_accumulated_nutrients : resources.nutrients.normalized_stored;
 	if ( population_step ) {
-		if ( !m_game->GetState()->m_settings.global.map.IsOrdinaryCampaignMap() ) {
+		if ( !m_game->GetState()->m_settings.global.IsOrdinarySmacCampaign() ) {
 			THROW( "Canonical upkeep requires an ordinary campaign, not scenario/mapfile objectives" );
 		}
 		// The current generated local campaign has no objective producer. This

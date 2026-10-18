@@ -24,7 +24,9 @@ inline constexpr int64_t rules_marker = 0x474c53574f524c44; // GLSWORLD
 // Satellite assets and movement caller history remain unchanged.
 // The World18 optional map-resource policy remains before the map body.
 // V1..V31 downloads are unsupported.
-inline constexpr int64_t rules_version = 32;
+// V33 binds explicit campaign options and ordinary map provenance. V32 may
+// migrate only into an absent-options legacy port campaign.
+inline constexpr int64_t rules_version = 33;
 
 void WriteHeader( types::Buffer& buffer, const settings::GlobalSettings& settings );
 // Compare only: never changes settings, reads local files, or consumes the body.

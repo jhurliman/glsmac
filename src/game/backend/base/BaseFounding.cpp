@@ -31,7 +31,7 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
         THROW("Founding requires an available ordinary land Colony Pod");
     }
     const auto& global=m_game->GetState()->m_settings.global;
-    if (!global.map.IsOrdinaryCampaignMap()
+    if (!global.IsOrdinarySmacCampaign()
         || m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
         THROW("Running founding currently admits the ordinary generated no-project campaign");
     }

@@ -10,6 +10,7 @@
 #include "game/backend/rules/default/Default.h" // only default rules for now
 #include "game/backend/Account.h"
 #include "SmacResourceRules.h"
+#include "SmacCampaignRules.h"
 #include "SmacSpecialistRules.h"
 #include "SmacTerraformingRules.h"
 #include "SmacProductionRules.h"
@@ -123,6 +124,9 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void SelectSmacWorldSize( int64_t category );
 	void SelectSmacCustomSize( int64_t width, int64_t height );
 	void SelectInstalledPlanet();
+	void SelectSmacCampaignRules( bool current );
+	const std::optional< SmacCampaignRules >& GetSmacCampaignRules() const;
+	bool IsOrdinarySmacCampaign() const;
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
 	void ValidateWorldSize( bool require_selection = true ) const;
 	void LockWorldSize();
@@ -148,6 +152,8 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void Deserialize( types::Buffer buf ) override;
 
 private:
+	std::optional< SmacCampaignRules > m_smac_campaign_rules;
+	bool m_campaign_rules_locked = false;
 	ruleset_t m_ruleset = RULESET_UNSELECTED;
 	bool m_ruleset_locked = false; // lifecycle guard, not saved state
 	std::optional< SmacResourceRules > m_smac_resource_rules;

@@ -1,5 +1,8 @@
 #include "SmacPlanetMap.h"
 #include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/settings/Settings.h"
+#include "fixtures/SmacRulesSource.h"
+#include "game/backend/WorldSnapshotRules.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
 #include <utility>
@@ -22,6 +25,41 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC campaign option producers preserve distinct active remembered and objective words", GT() {
+        using game::backend::settings::SmacCampaignRules;
+        SmacCampaignRules rules;
+        rules.primary=0x6040ffff;rules.secondary=0x05800010;rules.remembered_primary=0xabcd0020;
+        rules.remembered_secondary=0x01000000;rules.objective_facility=31;
+        rules.SelectStandard();
+        GT_ASSERT(rules.primary==0x60401a0e && rules.secondary==0x05800010 && rules.remembered_primary==0xabcd0020
+            && rules.objective_facility==31 && !rules.IsOrdinary(),"Standard reset unrelated original words or established ordinary authority");
+        GT_ASSERT(rules.BlindResearch() && rules.CooperativeVictory() && !rules.AutomaticLandResources() && !rules.Stagnation(),"Standard bit meanings changed");
+        rules.SelectCurrent(false);
+        GT_ASSERT(rules.primary==0x60400020 && rules.secondary==0x05000010 && !rules.BlindResearch() && rules.Stagnation(),"Current did not restore remembered low rules and independent randomization bits");
+        rules.SelectCurrent(true);GT_ASSERT(rules.primary==0x60400220,"Citizen did not force Blind Research");
+        rules.BeginOrdinary();rules.SelectStandard();
+        GT_ASSERT(rules.IsOrdinary() && rules.primary==0x1a0e && rules.secondary==0x01000000 && rules.objective_facility==0
+            && rules.remembered_primary==0xabcd0020,"Explicit fresh ordinary setup did not retain preferences independently");
+        GT_ASSERT(SmacCampaignRules::Deserialize(rules.Serialize())==rules,"Saved campaign options changed");
+        bool rejected=false;try {SmacCampaignRules::Deserialize(rules.Serialize()+"x");} catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Trailing campaign option fields accepted");
+        GT_OK();
+    });
+    task->AddTest("SMAC installed Planet settings retain explicit options across frozen settings and world headers", GT() {
+        using namespace game::backend::settings;
+        GlobalSettings host;host.Initialize();host.SelectRuleset("smac");host.InitializeHostRules(smac_rules_fixture::Source);
+        host.SelectInstalledPlanet();host.SelectSmacCampaignRules(false);host.LockWorldSize();
+        GT_ASSERT(host.GetSmacCampaignRules() && host.GetSmacCampaignRules()->primary==0x1a0e
+            && host.IsOrdinarySmacCampaign() && !host.GetSmacCampaignRules()->AutomaticLandResources(),"Ordinary Standard Planet authority missing");
+        GlobalSettings restored;restored.Deserialize(host.Serialize());
+        GT_ASSERT(restored.GetSmacCampaignRules()==host.GetSmacCampaignRules() && restored.map.type==MapSettings::MT_INSTALLED_PLANET
+            && *restored.map.GetSmacWorldSize()==SmacWorldSizeSelection({4,80,80}),"Settings restore lost source category or options");
+        types::Buffer world;game::backend::world_snapshot::WriteHeader(world,host);
+        game::backend::world_snapshot::ValidateHeader(world,restored);
+        bool rejected=false;try {host.SelectSmacCampaignRules(true);} catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Campaign options changed after world freeze");
+        GT_OK();
+    });
     task->AddTest("SMAC standard Planet container preserves record ordering and opaque fields", GT() {
         auto wire = Synthetic();
         const auto begin = Planet::PREFIX_BYTES + Planet::HEADER_BYTES;

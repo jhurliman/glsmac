@@ -23,6 +23,7 @@ public:
 	static GlsmacResourceMapPolicy InstalledPlanetV1( SmacPlanetMap source, bool automatic_land_resources );
 	bool operator==( const GlsmacResourceMapPolicy& other ) const;
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
+	bool AutomaticLandResources() const { return m_automatic_land_resources; }
 	resource::smac::AltitudeBand Altitude( const tile::Tile& tile ) const;
 	std::array<bool,3> LandmarkBonuses( const tile::Tile& tile ) const;
 

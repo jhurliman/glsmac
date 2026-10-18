@@ -74,6 +74,11 @@ struct AttackResult {
 // Even exhausted attacks are diagnostic combat inputs; keyboard legality is a
 // separate caller contract. No input or external state is mutated.
 AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance, const SmacGameplayRandomState& random, const References& references );
+// RE-SMAC-FOCUSED-SCOUT-BATTLE-001: actual mode1 effective morale can differ
+// from stored morale through a real home/retained rating; FANATIC adds25%
+// attack strength. The live caller owns complete component/terrain admission.
+AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance,
+	const SmacGameplayRandomState& random, const References& references, bool fanatic );
 
 enum class EmptyMove { Moved, Exhausted };
 struct EmptyMoveResult {

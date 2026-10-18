@@ -18,6 +18,7 @@ SmacSimulationState State() {
 	value.roster = { { 7, 0, "controller-one", roster::Role::Host, "GAIANS" }, { 2, 6, "controller-two", roster::Role::Player, "UNIVERSITY" } };
 	for ( const auto& owner : value.roster ) { value.satellites.emplace( owner.simulation_id, faction::SmacSatelliteCounts::NewWorld() ); }
 	for ( const auto& owner : value.roster ) { value.economy.emplace( owner.simulation_id, faction::SmacEconomyState::NewWorld( { 5, 0 }, 100, 0 ) ); }
+	for(const auto& owner:value.roster) {value.hostility.owners.emplace(owner.simulation_id,faction::SmacHostileOwner::NewWorld({}));}
 	value.technology = faction::SmacTechnologyState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
 	value.designs = unit::SmacStartupDesignState::NewWorld( value.technology, smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
 	value.social = faction::SmacSocialState::NewWorld( { { 7, "GAIANS" }, { 2, "UNIVERSITY" } }, smac_rules_fixture::Technologies(), smac_startup_fixture::Factions() );
@@ -29,10 +30,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 11 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( legacy ? 11 : 12 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -59,11 +60,53 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	for ( const auto& participant : value.roster ) {
 		buffer.WriteInt( participant.simulation_id ); buffer.WriteBool( participant.active ); buffer.WriteBool( participant.restart_prohibited );
 	}
+	if(!legacy) {
+		buffer.WriteInt(value.hostility.owners.size());
+		for(const auto& item:value.hostility.owners) {
+			buffer.WriteInt(item.first);
+			for(const auto& d:item.second.directions) {buffer.WriteInt(d.primary);buffer.WriteInt(d.secondary);buffer.WriteInt(d.transition_turn);buffer.WriteInt(d.paired_a);buffer.WriteInt(d.paired_b);}
+			buffer.WriteInt(item.second.integrity);buffer.WriteInt(item.second.bookkeeping);
+			size_t count=0;for(auto loss:item.second.losses) {if(loss) {++count;}}buffer.WriteInt(count);
+			for(size_t design=0;design<512;++design) {if(item.second.losses[design]) {buffer.WriteInt(design);buffer.WriteInt(item.second.losses[design]);}}
+		}
+	}
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC simulation battle history survives restore and migrates pristine V11 campaigns",GT(){
+		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+		auto value=State();
+		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
+		GT_ASSERT(migrated==value,"V11 migration changed existing campaign state or invented battle history");
+		for(auto& entry:value.hostility.owners) {
+			for(size_t i=0;i<8;++i) {entry.second.directions[i]={UINT32_MAX-static_cast<uint32_t>(i),static_cast<uint32_t>(i+1),INT32_MIN+static_cast<int32_t>(i),UINT32_MAX,static_cast<uint32_t>(i)};}
+			entry.second.losses.fill(UINT16_MAX);entry.second.integrity=UINT32_MAX;entry.second.bookkeeping=0x80000000u;
+		}
+		const auto wire=value.Serialize(technologies,profiles,units).ToString();
+		auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+		GT_ASSERT(restored==value && wire==Wire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,"restore lost nonderived relation words or any of the 512 design-loss counters");
+		restored.hostility.owners.at(2).losses[511]=0;
+		GT_ASSERT(!(restored==value) && value.hostility.owners.at(2).losses[511]==UINT16_MAX,"battle-history copy aliases input or equality omits loss history");GT_OK();
+	});
+	task->AddTest("SMAC simulation rejects malformed battle history before restoring a campaign",GT(){
+		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();const auto value=State();
+		const auto prefix=Wire(value,1,12,nullptr,nullptr,nullptr,nullptr,nullptr,true);
+		for(int scenario=0;scenario<14;++scenario) {
+			types::Buffer suffix;suffix.WriteInt(scenario==0 ? 1 : 2);
+			for(int owner=0;owner<2;++owner) {
+				suffix.WriteInt(scenario==1 && owner==1 ? 2 : scenario==2 && owner==1 ? 3 : owner==0 ? 2 : 7);
+				for(int i=0;i<8;++i) {suffix.WriteInt(scenario==3 && i==0 ? -1 : scenario==4 && i==0 ? int64_t(UINT32_MAX)+1 : 0);suffix.WriteInt(0);suffix.WriteInt(-1);suffix.WriteInt(0);suffix.WriteInt(0);}
+				suffix.WriteInt(0);suffix.WriteInt(0);suffix.WriteInt(scenario==5 ? -1 : scenario==6 ? 513 : 2);
+				suffix.WriteInt(scenario==7 ? -1 : scenario==8 ? 512 : 2);suffix.WriteInt(scenario==9 ? 0 : scenario==10 ? 65536 : 1);
+				suffix.WriteInt(scenario==11 ? 2 : 511);suffix.WriteInt(65535);
+			}
+			auto raw=prefix+suffix.ToString();if(scenario==12) {raw.pop_back();}if(scenario==13) {raw+='x';}
+			GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(raw,technologies,profiles,units);}),"malformed hostile history accepted, case "+std::to_string(scenario));
+		}
+		GT_OK();
+	});
 	task->AddTest("SMAC simulation retains independent activity restart prohibition and Do or Die",GT(){
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		const auto initial=State();

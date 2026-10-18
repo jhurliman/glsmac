@@ -294,6 +294,8 @@ public:
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
+	std::optional<uint16_t> BattlePalette() const {return m_game.m_smac_hit_palette_identifier;}
+	void BattlePalette(std::optional<uint16_t> value) {m_game.m_smac_hit_palette_identifier=value;}
 	void PostEconomy( const game::backend::base::Base& base ) {
 		m_game.PostCanonicalBaseEconomy( base, base.PrepareSmacResourceCalculation( game::backend::base::SmacBaseResourcePhase::Upkeep ) );
 	}
@@ -4385,10 +4387,12 @@ public:
 			const int32_t ids[] = { 7, 2, 5 };
 			value.satellites.clear();
 			const auto original_economy = value.economy; value.economy.clear();
+			const auto original_hostility=value.hostility;value.hostility.owners.clear();
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
 				const auto count = static_cast< int32_t >( i );
 				value.satellites.emplace( ids[ i ], faction::SmacSatelliteCounts{ { count + 3, count + 5, count + 7 } } );
 				value.economy.emplace( ids[ i ], original_economy.at( value.roster[ i ].simulation_id ) );
+				value.hostility.owners.emplace(ids[i],original_hostility.owners.at(value.roster[i].simulation_id));
 				value.roster[ i ].simulation_id = ids[ i ];
 				auto& social = value.social.factions[ i ]; social.admission.simulation_id = ids[ i ];
 				social.current.fill( INT32_MIN + static_cast< int32_t >( i ) ); social.intrinsic->fill( INT32_MAX ); social.retained->fill( -4 );
@@ -5307,6 +5311,8 @@ void ConventionalUnitFixture::ConfigureResources( const std::function< std::stri
 void ConventionalUnitFixture::BeginColonyChoice( GSE_CALLABLE, size_t id ) { fixture->BeginColonyChoice(GSE_CALL,id); }
 void ConventionalUnitFixture::BasePresentationRoles( const std::array<std::string,8>& roles ) { fixture->BasePresentationRoles(roles); }
 void ConventionalUnitFixture::ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit ) { fixture->ResourceState( edit ); }
+std::optional<uint16_t> ConventionalUnitFixture::BattlePalette() const {return fixture->BattlePalette();}
+void ConventionalUnitFixture::BattlePalette(std::optional<uint16_t> value) {fixture->BattlePalette(value);}
 void ConventionalUnitFixture::PostEconomy( const game::backend::base::Base& base ) { fixture->PostEconomy( base ); }
 void ConventionalUnitFixture::SettleEconomy( int32_t owner ) { fixture->SettleEconomy( owner ); }
 bool ConventionalUnitFixture::HasTechnologyReveal( int32_t owner ) const { return fixture->HasTechnologyReveal(owner); }

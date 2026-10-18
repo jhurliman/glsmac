@@ -1,0 +1,130 @@
+{
+  "research_id": "RE-SMAC-HOSTILE-STATE-LIFETIME-001",
+  "compositions": 2,
+  "initialization": {
+    "actors": [
+      1,
+      2
+    ],
+    "higher_newgame_prefix_for_actor1": true,
+    "same_initializer_entry_for_actor2": true,
+    "initial_poison": 777,
+    "expected_primary": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "expected_secondary": [
+      777,
+      777,
+      777,
+      777,
+      777,
+      777,
+      777,
+      777
+    ],
+    "expected_dates": [
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "expected_paired_A": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "expected_paired_B": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "expected_all_512_loss_counters_zero": true,
+    "expected_all_512_active_design_counts_zero": true,
+    "expected_active_plan_count": 0,
+    "expected_blemishes": 0,
+    "expected_bookkeeping": 0,
+    "secondary_loaded_process_default": 0,
+    "secondary_source": "PE loader zero-fill; no write in checked newgame/initializer prefix"
+  },
+  "load": {
+    "before_save": {
+      "guard": 4,
+      "palette_id": 9605,
+      "shared": 1018897798,
+      "crt": 123,
+      "primary": 2147516696,
+      "secondary": 32,
+      "date": -1,
+      "paired_A": 17,
+      "paired_B": 23,
+      "loss_design2": 9
+    },
+    "before_load": {
+      "guard": 132,
+      "palette_id": 12345,
+      "shared": 1018897798,
+      "crt": 123,
+      "primary": 777,
+      "secondary": 777,
+      "date": 777,
+      "paired_A": 777,
+      "paired_B": 777,
+      "loss_design2": 777
+    },
+    "expected_after_load": {
+      "guard": 132,
+      "palette_id": 12345,
+      "shared": 1018897798,
+      "crt": 123,
+      "primary": 2147516696,
+      "secondary": 32,
+      "date": -1,
+      "paired_A": 17,
+      "paired_B": 23,
+      "loss_design2": 9
+    },
+    "expected_after_registered_exit_callback": {
+      "guard": 132,
+      "palette_id": 12345,
+      "shared": 1018897798,
+      "crt": 123,
+      "primary": 2147516696,
+      "secondary": 32,
+      "date": -1,
+      "paired_A": 17,
+      "paired_B": 23,
+      "loss_design2": 9
+    },
+    "palette_object_excluded_from_file_io": true,
+    "palette_guard_excluded_from_file_io": true,
+    "save_load_rng_draws": 0,
+    "registered_exit_callback_returns": true
+  },
+  "limits": [
+    "Initialization stops before placement/full game startup.",
+    "No full second-newworld frontend replay.",
+    "Full ordinary save/read bodies execute; earlier load UI frontend excluded.",
+    "Exit callback invoked directly, not full OS process termination."
+  ]
+}

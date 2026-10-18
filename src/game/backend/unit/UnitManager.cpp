@@ -304,6 +304,7 @@ struct UnitManager::PreparedConventionalRemoval::Data {
     std::unordered_map<size_t,unit_update_t> updates;
     std::map<map::tile::Tile*,std::map<size_t,Unit*>> occupants;
     std::optional<map::SmacWorkerKnowledge> knowledge;
+    std::optional<std::unordered_map<size_t,base::BaseManager::base_update_t>> base_updates;
     std::vector<std::unique_ptr<Unit>> retired;
     bool committed=false;
 };
@@ -311,7 +312,7 @@ UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(std::uniqu
 UnitManager::PreparedConventionalRemoval::~PreparedConventionalRemoval() = default;
 UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(PreparedConventionalRemoval&&) noexcept = default;
 UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemoval::operator=(PreparedConventionalRemoval&&) noexcept = default;
-UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created) {
+UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
     m_game->CheckRW(GSE_CALL);
     if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
     m_game->RequireConventionalSightWorld();
@@ -343,9 +344,36 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval
         if(knowledge) {
             const auto row=std::find_if(knowledge->units.begin(),knowledge->units.end(),[&](const auto& item){return item.id==id;});
             if(row==knowledge->units.end()) {THROW("Removal Unit observation is absent");}
+            if(battle_survivor) {
+                const auto visible=static_cast<uint8_t>(row->visible_to | (1u<<unit->Conventional().owner_simulation_id));
+                const auto index=static_cast<size_t>(tile->coord.y)*(knowledge->width/2)+tile->coord.x/2;
+                for(size_t observer=1;observer<8;++observer) {
+                    auto& memory=knowledge->remembered[observer];
+                    if((visible & (1u<<observer)) && !memory.empty() && memory.at(index)) {memory.at(index)->unit_present=!occupants.empty();}
+                }
+            }
             knowledge->units.erase(row);
         }
         data->removed.push_back(unit);
+    }
+    if(battle_survivor) {
+        if(created || GetUnit(battle_survivor->m_id)!=battle_survivor || !data->units.count(battle_survivor->m_id)) {THROW("Battle removal requires its current surviving Unit");}
+        auto& update=data->updates.try_emplace(battle_survivor->m_id,unit_update_t{UUO_NONE,battle_survivor}).first->second;
+        if(update.unit!=battle_survivor || (update.ops & UUO_DESPAWN)) {THROW("Battle survivor has an incompatible pending update");}
+        update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+        data->base_updates=m_game->GetBM()->m_base_updates;
+        for(const auto* unit:data->removed) {
+            if(unit->Conventional().home_base_id) {
+                auto* home=m_game->GetBM()->GetBase(*unit->Conventional().home_base_id);
+                if(!home) {THROW("Battle victim has no current home Base");}
+                base::BaseManager::QueueBaseUpdateInto(*data->base_updates,home,base::BaseManager::BUO_REFRESH);
+            }
+        }
+        if(battle_survivor->Conventional().home_base_id) {
+            auto* home=m_game->GetBM()->GetBase(*battle_survivor->Conventional().home_base_id);
+            if(!home) {THROW("Battle survivor has no current home Base");}
+            base::BaseManager::QueueBaseUpdateInto(*data->base_updates,home,base::BaseManager::BUO_REFRESH);
+        }
     }
     if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
     return PreparedConventionalRemoval(std::move(data));
@@ -359,6 +387,7 @@ void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)>);
     d.manager->m_units.swap(d.units); d.manager->m_unit_order.swap(d.order); d.manager->m_unit_updates.swap(d.updates);
+    if(d.base_updates) {d.manager->m_game->GetBM()->m_base_updates.swap(*d.base_updates);}
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
     d.manager->m_game->CommitConventionalSight(d.knowledge);
     for(size_t i=0;i<d.removed.size();++i) {d.retired[i].reset(d.removed[i]);}

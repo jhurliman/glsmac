@@ -122,6 +122,7 @@ void Game::PrepareNewSimulation() {
 		faction::SmacGlobalResourceModifiers::NewWorld() );
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	for ( const auto& participant : value.roster ) {
+		value.hostility.owners.emplace(participant.simulation_id,faction::SmacHostileOwner::NewWorld(m_smac_secondary_relations.at(participant.simulation_id)));
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );

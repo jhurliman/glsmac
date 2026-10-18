@@ -235,9 +235,11 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->Conventional().owner_simulation_id==owner;});
 	if (!has_base && !has_unit) {
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
+		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);
 		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
 		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
 		saved=initialized;technology->cached_threshold.reset();
+		m_simulation->value.hostility.owners.swap(hostility.owners);
 	}
 	const auto next = saved.SettleDebit(); saved = next;
 }

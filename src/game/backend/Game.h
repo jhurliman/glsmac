@@ -627,6 +627,12 @@ private:
 	// Accessed only under the existing owner/native exclusion. Identity tokens
 	// own no Player and require no GC roots; retirement makes them invalid.
 	std::optional< BoundSimulation > m_simulation, m_pending_simulation;
+	// Engine/process presentation lifetime: neither campaign serialization nor
+	// ordinary world reset owns the lazy original hit-palette initialization.
+	std::optional<uint16_t> m_smac_hit_palette_identifier;
+	// The checked initializer resets primary/history rows but preserves secondary
+	// rows. Fresh engine storage is zero; retiring a world retains its latest rows.
+	std::array<std::array<uint32_t,8>,8> m_smac_secondary_relations{};
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;

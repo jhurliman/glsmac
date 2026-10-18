@@ -78,6 +78,7 @@
 #include "SmacTerritoryRules.h"
 #include "SmacSiteQuality.h"
 #include "SmacSiteRatingCache.h"
+#include "SmacRestartSearch.h"
 #include "SmacLiveTerritory.h"
 #include "SmacLiveWorkerKnowledge.h"
 #include "SmacLiveWorkerAllocation.h"
@@ -307,6 +308,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTerritoryRulesTests( task );
 		tests::AddSmacSiteQualityTests( task );
 		tests::AddSmacSiteRatingCacheTests( task );
+		tests::AddSmacRestartSearchTests( task );
 		tests::AddSmacLiveTerritoryTests( task );
 		tests::AddSmacLiveWorkerKnowledgeTests( task );
 		tests::AddSmacLiveWorkerAllocationTests( task );

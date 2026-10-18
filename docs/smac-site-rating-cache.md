@@ -55,5 +55,6 @@ all five ordinary Former completions. The new live case preserves poisoned
 ratings through real founding/removal, rejects an unresolvable query without
 changing IDs/tiles/queues/history, and reloads the saved result through actual
 Start. LLVM15 analysis passes13 live production/consumer units in33.02s; prior
-core codec/score analysis is reused for unchanged source. Focused sanitizer
-validation is pending for this joined producer.
+core codec/score analysis is reused for unchanged source. Eighteen focused
+ASan/UBSan groups pass with leak detection and clean exit. PR202 is accepted
+after clean current-head Codex review and the relevant CI gates.

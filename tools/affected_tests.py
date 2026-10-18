@@ -88,6 +88,12 @@ def select(paths, root=ROOT, changed_lines=""):
         if path.endswith(".cpp") and (root / (path[:-4] + ".h")).is_file():
             targets.add(path[:-4] + ".h")
     selected_native = {source for source in native if closure(dependencies, source) & targets}
+    if closure(dependencies, "src/gse/tests/Scripts.cpp") & targets:
+        full_scripts = True
+        reasons.append("Shared script runner/fixture changes affect every standalone script")
+    if paths & {"src/gse/tests/Tests.cpp", "src/gse/tests/Tests.h"}:
+        full_native = full_scripts = True
+        reasons.append("Central test dispatcher changes can alter every registration")
     if any(path.startswith(("src/gse/", "src/gc/", "src/task/gsetests/", "src/common/", "src/engine/"))
            and not path.startswith("src/gse/tests/") for path in paths):
         full_native = full_scripts = True

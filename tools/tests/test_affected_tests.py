@@ -56,6 +56,27 @@ class AffectedTests(unittest.TestCase):
         self.assertIn("GLSMAC_data/tests/async.gls.js", plan["scripts"])
         self.assertIn("GLSMAC_data/tests/base_queue_editor.gls.js", plan["scripts"])
 
+    def test_shared_script_runner_selects_all_standalone_scripts(self):
+        expected = sorted(path.relative_to(policy.ROOT).as_posix() for path in
+                          (policy.ROOT / "GLSMAC_data/tests").glob("*.gls.js")
+                          if not path.name.startswith("_"))
+        for path in ("src/gse/tests/Scripts.cpp", "src/gse/tests/mocks/Mocks.cpp"):
+            plan = policy.select([path])
+            self.assertEqual(plan["scripts"], expected, path)
+            self.assertIn("GLSMAC_data/tests/exceptions.gls.js", plan["scripts"])
+            self.assertNotIn("src/gse/tests/Scripts.cpp", plan["native_sources"])
+
+    def test_central_dispatcher_selects_all_native_and_script_consumers(self):
+        expected = sorted(path.relative_to(policy.ROOT).as_posix() for path in
+                          (policy.ROOT / "src/gse/tests").glob("*.cpp")
+                          if path.name != "Scripts.cpp")
+        for path in ("src/gse/tests/Tests.cpp", "src/gse/tests/Tests.h"):
+            plan = policy.select([path])
+            self.assertTrue(plan["native_all"], path)
+            self.assertEqual(plan["native_sources"], expected, path)
+            self.assertIn("GLSMAC_data/tests/async.gls.js", plan["scripts"])
+            self.assertIn("GLSMAC_data/tests/base_queue_editor.gls.js", plan["scripts"])
+
     def test_include_only_fixture_is_never_run_as_standalone(self):
         plan = policy.select(["GLSMAC_data/tests/_base_population_mocks.gls.js"])
         self.assertIn("GLSMAC_data/tests/base_population.gls.js", plan["scripts"])

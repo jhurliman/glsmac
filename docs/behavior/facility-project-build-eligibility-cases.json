@@ -1,0 +1,1297 @@
+{
+  "research_id": "RE-SMAC-FACILITY-ELIGIBLE-001",
+  "status": "original-x86 checked",
+  "scope": "Complete original facility/project eligibility predicate and actual facility-bit, prior-queue presence, project-owner and coastal helpers, no supplied returns. All SMAC item IDs1..71 plus no-item0; explicit runtime prerequisites/technology definitions/project/rules/context inputs. No full picker/UI/workshop/grant/victory lifecycle, token decoding or live observations.",
+  "conventions": "facility is positive SMAC rules ID; queue lists current and subsequent items using negative facility IDs. depth counts only preceding positions starting with current index0. installed is actual local presence. projects maps positive project IDs to resolved host states: absent, own, foreign, other_negative (synthetic non-absent negative). Runtime prerequisite is controlled and need not equal installed technology requirements. Base0 owner matches positive requesting faction; base1 foreign. All unlisted projects absent; map land except one adjacent sea when coastal=true.",
+  "cases": [
+    {
+      "id": "FACILITY-ELIGIBLE-001",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-002",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          6
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-003",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0,
+          -6
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-004",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0,
+          -6
+        ],
+        "depth": 2,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-005",
+      "inputs": {
+        "facility": 3,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          26
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recycling Tanks"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-006",
+      "inputs": {
+        "facility": 26,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          3
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Pressure Dome"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-007",
+      "inputs": {
+        "facility": 5,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Tachyon Field"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-008",
+      "inputs": {
+        "facility": 5,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -4
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Tachyon Field"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-009",
+      "inputs": {
+        "facility": 5,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "44": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Tachyon Field"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-010",
+      "inputs": {
+        "facility": 4,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "44": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Perimeter Defense"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-011",
+      "inputs": {
+        "facility": 4,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "44": "foreign"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Perimeter Defense"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-012",
+      "inputs": {
+        "facility": 11,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          6
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "45": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Hologram Theatre"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-013",
+      "inputs": {
+        "facility": 11,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          6
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "45": "foreign"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Hologram Theatre"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-014",
+      "inputs": {
+        "facility": 14,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -13
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Hybrid Forest"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-015",
+      "inputs": {
+        "facility": 16,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          15
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Quantum Lab"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-016",
+      "inputs": {
+        "facility": 18,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          17
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Nanohospital"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-017",
+      "inputs": {
+        "facility": 20,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          22
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Nanoreplicator"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-018",
+      "inputs": {
+        "facility": 21,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          22
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Quantum Converter"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-019",
+      "inputs": {
+        "facility": 21,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          19
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Quantum Converter"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-020",
+      "inputs": {
+        "facility": 21,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          19
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "67": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Quantum Converter"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-021",
+      "inputs": {
+        "facility": 23,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -12
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Punishment Sphere"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-022",
+      "inputs": {
+        "facility": 25,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          24
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Habitation Dome"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-023",
+      "inputs": {
+        "facility": 32,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          31
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Temple of Planet"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-024",
+      "inputs": {
+        "facility": 28,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": true,
+        "facility_name": "Naval Yard"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-025",
+      "inputs": {
+        "facility": 28,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": true,
+        "base_at_sea": false,
+        "facility_name": "Naval Yard"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-026",
+      "inputs": {
+        "facility": 28,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "49": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": true,
+        "base_at_sea": false,
+        "facility_name": "Naval Yard"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-027",
+      "inputs": {
+        "facility": 34,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "66": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Sky Hydroponics Lab"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-028",
+      "inputs": {
+        "facility": 34,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "66": "foreign"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Sky Hydroponics Lab"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-029",
+      "inputs": {
+        "facility": 34,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -29
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Sky Hydroponics Lab"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-030",
+      "inputs": {
+        "facility": 34,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -34,
+          -29
+        ],
+        "depth": 2,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Sky Hydroponics Lab"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-031",
+      "inputs": {
+        "facility": 10,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 1,
+        "faction_difficulty": 5,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Skunkworks"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-032",
+      "inputs": {
+        "facility": 10,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 5,
+        "faction_difficulty": 0,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Skunkworks"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-033",
+      "inputs": {
+        "facility": 10,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": true,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Skunkworks"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-034",
+      "inputs": {
+        "facility": 10,
+        "faction": 1,
+        "base_context": false,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": true,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Skunkworks"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-035",
+      "inputs": {
+        "facility": 39,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          -39
+        ],
+        "depth": 1,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Human Genome Project"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-036",
+      "inputs": {
+        "facility": 39,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "39": "foreign"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Human Genome Project"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-037",
+      "inputs": {
+        "facility": 39,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "39": "other_negative"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Human Genome Project"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-038",
+      "inputs": {
+        "facility": 39,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": true,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Human Genome Project"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-039",
+      "inputs": {
+        "facility": 71,
+        "faction": 0,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "disabled",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "70": "foreign"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Ascent to Transcendence"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-040",
+      "inputs": {
+        "facility": 71,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "70": "other_negative"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Ascent to Transcendence"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-041",
+      "inputs": {
+        "facility": 71,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "70": "own",
+          "71": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Ascent to Transcendence"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-042",
+      "inputs": {
+        "facility": 71,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "70": "own"
+        },
+        "projects_disabled": false,
+        "higher_goal": false,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Ascent to Transcendence"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-043",
+      "inputs": {
+        "facility": 71,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {
+          "70": "own"
+        },
+        "projects_disabled": true,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Ascent to Transcendence"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-044",
+      "inputs": {
+        "facility": 0,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "none"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-045",
+      "inputs": {
+        "facility": 14,
+        "faction": 1,
+        "base_context": false,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Hybrid Forest"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-046",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none_disabled",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-047",
+      "inputs": {
+        "facility": 6,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "mixed_disabled",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Recreation Commons"
+      },
+      "expected": false,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-048",
+      "inputs": {
+        "facility": 70,
+        "faction": 1,
+        "base_context": true,
+        "installed": [],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": false,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "The Voice of Planet"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    },
+    {
+      "id": "FACILITY-ELIGIBLE-049",
+      "inputs": {
+        "facility": 12,
+        "faction": 1,
+        "base_context": true,
+        "installed": [
+          23
+        ],
+        "queue": [
+          0
+        ],
+        "depth": 0,
+        "prerequisite": "none",
+        "global_difficulty": 3,
+        "faction_difficulty": 2,
+        "free_prototypes": false,
+        "projects": {},
+        "projects_disabled": false,
+        "higher_goal": true,
+        "coastal": false,
+        "base_at_sea": false,
+        "facility_name": "Paradise Garden"
+      },
+      "expected": true,
+      "expected_state_preserved": true
+    }
+  ]
+}

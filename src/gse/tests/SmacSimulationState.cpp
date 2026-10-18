@@ -29,10 +29,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( 10 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( 11 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -54,11 +54,43 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 	for ( const auto& entry : value.satellites ) { buffer.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { buffer.WriteInt( count ); } }
 	buffer.WriteInt( value.economy.size() );
 	for ( const auto& entry : value.economy ) { buffer.WriteInt( entry.first ); buffer.WriteString( entry.second.Serialize().ToString() ); }
+	if ( lifecycle ) { return buffer.ToString() + *lifecycle; }
+	buffer.WriteBool( value.do_or_die ); buffer.WriteInt( value.roster.size() );
+	for ( const auto& participant : value.roster ) {
+		buffer.WriteInt( participant.simulation_id ); buffer.WriteBool( participant.active ); buffer.WriteBool( participant.restart_prohibited );
+	}
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC simulation retains independent activity restart prohibition and Do or Die",GT(){
+		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+		const auto initial=State();
+		GT_ASSERT(!initial.do_or_die && initial.roster[0].active && !initial.roster[0].restart_prohibited,"standard new-campaign lifecycle differs");
+		for(int scenario=0;scenario<4;++scenario) {
+			auto value=initial;value.do_or_die=scenario&1;value.roster[0].active=!(scenario&2);value.roster[1].restart_prohibited=true;
+			const auto wire=value.Serialize(technologies,profiles,units).ToString();
+			auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+			GT_ASSERT(restored==value && wire==Wire(value) && restored.Serialize(technologies,profiles,units).ToString()==wire,
+				"lifecycle restore inferred activity/restart count, reset technologies or changed identities");
+			restored.roster[1].restart_prohibited=false;
+			GT_ASSERT(value.roster[1].restart_prohibited && !(restored==value),"lifecycle aliases input or equality omits prohibition");
+		}
+		for(int scenario=0;scenario<7;++scenario) {
+			types::Buffer tail;
+			if(scenario==0){tail.WriteInt(0);}else{tail.WriteBool(false);}
+			tail.WriteInt(scenario==1 ? 1 : 2);
+			tail.WriteInt(scenario==2 ? 2 : 7);
+			if(scenario==3){tail.WriteInt(1);}else{tail.WriteBool(true);}
+			tail.WriteBool(false);tail.WriteInt(2);tail.WriteBool(false);
+			if(scenario==4){tail.WriteInt(0);}else{tail.WriteBool(true);}
+			auto raw=tail.ToString();if(scenario==5){raw.pop_back();}if(scenario==6){raw+='x';}
+			GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(Wire(initial,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,&raw),technologies,profiles,units);}),
+				"malformed lifecycle count/identity/bool or framing accepted");
+		}
+		GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(Wire(initial,1,10),technologies,profiles,units);}),"pre-lifecycle simulation accepted");GT_OK();
+	});
 	task->AddTest( "SMAC simulation economy preserves owner rates and balances on restore", GT() {
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions(); const auto units = smac_startup_fixture::Units();
 		auto value = State();

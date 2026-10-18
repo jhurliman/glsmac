@@ -8,7 +8,10 @@
 #include "faction/Faction.h"
 #include "map/Map.h"
 #include "slot/Slot.h"
+#include "unit/Unit.h"
+#include "unit/UnitManager.h"
 #include "gc/Space.h"
+#include <algorithm>
 #include <stdexcept>
 
 namespace game::backend {
@@ -162,10 +165,33 @@ void Game::PostCanonicalBaseEconomy( const base::Base& evaluating_base, const ba
 	technology->labs = progress; saved = next;
 }
 
+faction::SmacEconomyState Game::PrepareSmacNonzeroInitialization( int32_t owner ) const {
+	if (!m_simulation || GetTurnId()==0) {throw std::runtime_error("Faction reinitialization requires a running nonzero turn");}
+	const auto& state=m_simulation->value;
+	const auto participant=std::find_if(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner;});
+	const auto& global=m_state->m_settings.global;
+	const auto* profile=participant==state.roster.end() ? nullptr : global.GetSmacFactionStartupRules()->Find(participant->faction_id);
+	if (!profile || !global.GetSmacResourceRules()) {throw std::runtime_error("Faction reinitialization has no frozen inputs");}
+	int32_t bonus=0;
+	for (const auto& row:profile->bonuses) {if(row.kind==settings::SmacFactionStartupBonus::Kind::ENERGY) {bonus=row.parameter;}}
+	auto candidate=state.economy.at(owner);
+	const int64_t credits=int64_t(candidate.credits)+std::clamp(global.GetSmacResourceRules()->initial_energy,0,1000)+bonus;
+	if (credits<INT32_MIN || credits>INT32_MAX) {throw std::overflow_error("Reinitialized treasury exceeds signed32");}
+	candidate.credits=static_cast<int32_t>(credits);candidate.pending_debit=0;candidate.Validate();return candidate;
+}
+
 void Game::SettleCanonicalEconomy( int32_t owner ) {
 	ValidateCurrentSimulation();
 	if ( !GetGCSpace()->IsAccumulating() || !IsRunning() ) { throw std::runtime_error( "Economy settlement requires the owning native upkeep" ); }
 	auto& saved = m_simulation->value.economy.at( owner );
+	const bool has_base=std::any_of(m_bm->GetBases().begin(),m_bm->GetBases().end(),[&](const auto& row){return row.second->GetSmacResourceContext().owner_simulation_id==owner;});
+	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->Conventional().owner_simulation_id==owner;});
+	if (!has_base && !has_unit) {
+		const auto initialized=PrepareSmacNonzeroInitialization(owner);
+		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
+		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
+		saved=initialized;technology->cached_threshold.reset();
+	}
 	const auto next = saved.SettleDebit(); saved = next;
 }
 

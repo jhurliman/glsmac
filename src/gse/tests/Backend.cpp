@@ -4591,7 +4591,7 @@ public:
 			if ( scenario == 3 ) { value.roster[ 0 ].role = roster::Role::Single; }
 			if ( scenario == 4 ) { value.roster[ 2 ].faction_id = "HIVE"; value.technology.factions[ 2 ].admission.faction_id = "HIVE"; }
 			if ( scenario == 5 ) { value.roster.pop_back(); value.technology.factions.pop_back(); }
-			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 9 : 10 ); raw.WriteInt( value.roster.size() );
+			types::Buffer raw; raw.WriteInt( 0x534d5353 ); raw.WriteInt( scenario == 6 ? 10 : 11 ); raw.WriteInt( value.roster.size() );
 			for ( const auto& participant : value.roster ) {
 				raw.WriteInt( participant.simulation_id ); raw.WriteInt( participant.slot ); raw.WriteString( participant.gsid );
 				raw.WriteInt( static_cast< int64_t >( participant.role ) ); raw.WriteString( participant.faction_id );
@@ -4660,6 +4660,10 @@ public:
 			for ( const auto& entry : value.satellites ) { raw.WriteInt( entry.first ); for ( const auto count : entry.second.resources ) { raw.WriteInt( count ); } }
 			raw.WriteInt( value.economy.size() );
 			for ( const auto& entry : value.economy ) { raw.WriteInt( entry.first ); raw.WriteString( entry.second.Serialize().ToString() ); }
+			raw.WriteBool( value.do_or_die ); raw.WriteInt( value.roster.size() );
+			for ( const auto& participant : value.roster ) {
+				raw.WriteInt( participant.simulation_id ); raw.WriteBool( participant.active ); raw.WriteBool( participant.restart_prohibited );
+			}
 			types::Buffer bytes;
 			if ( scenario == 10 ) { bytes = world_rules_fixture::Header( "smac", true, { 17, INT32_MIN, INT32_MAX, -2, 300, 0, -7, 8, 9 }, world_snapshot::rules_marker, 9 ); }
 			else { world_snapshot::WriteHeader( bytes, settings ); }
@@ -5312,8 +5316,8 @@ void ConventionalUnitFixture::ConfigureProduction( const std::function< std::str
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ProductionPresentations( const std::array< std::string, 4 >& roles ) { fixture->ProductionPresentations( roles ); }
-void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source ) {
-	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source ); fixture->ResourcePolicy( true );
+void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map ) {
+	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, {}, production_map ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }

@@ -1501,6 +1501,34 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			manager->DespawnUnit( GSE_CALL, restored->m_id ); GT_OK();
 		} );
 	} );
+	task->AddTest("conventional inactive faction rejects live Unit Base and production admission atomically",GT(){
+		ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+		const auto unit_next=Unit::GetNextId(),base_next=base::Base::GetNextId();
+		util::FinallyGuard restore_ids([=]{Unit::SetNextId(unit_next);base::Base::SetNextId(base_next);});
+		std::string saved;
+		const auto check=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* um=game->GetUM();Land(game);auto* def=Define(um);fixture.Updates();
+			fixture.ResourceState([](auto& state){state.roster.front().active=false;state.roster.front().restart_prohibited=true;state.do_or_die=true;});
+			saved=fixture.Snapshot();const auto random=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+			const auto next_unit=Unit::GetNextId(),next_base=base::Base::GetNextId();
+			auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* tile=game->GetMap()->GetTile(2,2);
+			const auto rejects=[](const auto& call){try{call();}catch(const std::exception&){return true;}return false;};
+			GT_ASSERT(rejects([&]{um->SpawnConventionalUnit(GSE_CALL,next_unit,def,owner,tile,Record());})
+				&& rejects([&]{game->MakeSmacProductionItem(owner,base::ProductionItemKind::Unit,2);})
+				&& rejects([&]{std::unique_ptr<base::Base> rejected(new base::Base(game,next_base,owner,owner->GetPlayer()->GetFaction(),tile,"Inactive",{},{},1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false}));}),
+				"eliminated owner admitted a live Unit, Base or production target");
+			GT_ASSERT(fixture.Snapshot()==saved && Unit::GetNextId()==next_unit && base::Base::GetNextId()==next_base
+				&& um->GetUnits().empty() && game->GetBM()->GetBases().empty() && tile->units.empty() && !tile->base
+				&& fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf && fixture.Updates().empty(),
+				"rejected eliminated-owner command published identity, membership, RNG or presentation");GT_OK();
+		});if(!check.empty()){return check;}
+		ConventionalUnitFixture restored;restored.Configure(true,3,true);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.Restore(GSE_CALL,saved);bool retained=false;
+			restored.ResourceState([&](auto& state){retained=!state.roster.front().active && state.roster.front().restart_prohibited && state.do_or_die;});
+			GT_ASSERT(retained && restored.Snapshot()==saved,"world restore reset eliminated faction state or changed controller identity");GT_OK();
+		});
+	});
 	task->AddTest( "conventional unit actual spawn owns bytes and publishes fresh integer-derived stats", []( GSE* unused_gse, context::Context* unused_ctx ) -> std::string {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next ); } );

@@ -5,6 +5,8 @@ return (m) => {
 		'popup',
 		'bottom_bar',
 		'research',
+		'colony',
+		'outcome',
 	];
 
 	m.ui.class('default-panel').set({

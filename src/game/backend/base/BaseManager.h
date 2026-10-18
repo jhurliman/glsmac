@@ -116,6 +116,9 @@ private:
 		bool startup, std::optional<size_t> consumed_unit = {} ) const;
 	// Called only by the actual population-removal branch; owns retirement.
 	void RemoveStarvedSmacBase( GSE_CALLABLE, Base& base );
+	struct SmacDispositionPlan;
+	SmacDispositionPlan PrepareLastSmacBaseDisposition( const Base& base ) const;
+	SmacAbandonmentResult DisposeLastSmacBase( GSE_CALLABLE, Base& base, unit::Def* transient_definition, unit::SmacMoraleMode mode );
 	using tile_key_t = std::pair< size_t, size_t >;
 	using pop_key_t = std::pair< size_t, size_t >;
 	// Derived lookup only. IDs/coordinates remain safe after the map is destroyed.

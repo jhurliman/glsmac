@@ -41,16 +41,14 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
         THROW("Colony founding site is unavailable");
     }
     for (const auto* adjacent:tile->neighbours) {if (adjacent->base) {THROW("Founding cannot adjoin an existing Base");}}
-    bool existing=false;
-    for (const auto& entry:m_bases) {if(entry.second->m_owner==colony.m_owner) {existing=true;}}
-    if (!existing) {THROW("Running founding currently requires an existing owner Base");}
     const auto& knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
     if (!knowledge) {THROW("Founding requires saved exploration and territory");}
     // Full current entity and directed-observer authentication, before reading
     // the raw claimant. Foreign diplomatic choices remain a separate UI path.
     const auto frame=m_game->ProjectSmacWorkerKnowledge(*knowledge,colony.Conventional().owner_simulation_id).CopyData();
     const auto& square=frame.tiles.at(size_t(tile->coord.y)*(frame.width/2)+tile->coord.x/2);
-    if (square.claimant && *square.claimant!=colony.Conventional().owner_simulation_id) {
+    const bool existing=std::any_of(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second->m_owner==colony.m_owner;});
+    if (existing && square.claimant && *square.claimant!=colony.Conventional().owner_simulation_id) {
         THROW("Foreign-territory founding requires an explicit diplomatic choice");
     }
 }
@@ -78,21 +76,33 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
         ValidateSmacPopDef(specialists[i]);
     }
     Base::facilities_t facilities;
-    for (const auto& bonus:profile->Records()) {
-        if (bonus.kind!=settings::SmacFactionStartupBonus::Kind::FACILITY) {continue;}
-        const auto source=std::clamp(bonus.parameter,1,38);
+    const auto grant=[&](int32_t source) {
         const FacilityDef* selected=nullptr;
         for (const auto& entry:m_base_facilitydefs) {if(entry.second->m_smac_source_id==source) {selected=entry.second;break;}}
         if (!selected) {THROW("Founding facility source is not registered");}
         ValidateSmacFacilityDef(selected); facilities.emplace(selected->m_id,selected);
+    };
+    const bool first=std::none_of(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second->m_owner==owner;});
+    const auto turn=static_cast<int32_t>(m_game->GetTurnId());
+    const int32_t population=first ? std::clamp(static_cast<int32_t>((int64_t(turn)+49)/50),1,5) : 1;
+    if(first) {
+        grant(1);
+        if(turn>=75) {grant(3);}
+        if(turn>=100) {grant(6);}
+        if(turn>=150) {grant(7);}
+    }
+    for (const auto& bonus:profile->Records()) {
+        if (bonus.kind==settings::SmacFactionStartupBonus::Kind::FACILITY) {grant(std::clamp(bonus.parameter,1,38));}
     }
     const auto target=m_game->SelectSmacFoundingProduction(owner,tile);
     const int64_t credit=social->retained->at(2)>=-1 ? global.GetSmacProductionRules()->retool_exemption : 0;
     const ProductionState production{target,credit,target,credit,std::vector<ProductionItem>{}};
     m_game->ValidateSmacProductionState(owner,production);
+    Base::pops_t pops;
+    for(int32_t i=1;i<=population;++i) {pops.emplace(i,Pop(nullptr,i,specialists[0],0));}
     std::unique_ptr<Base> candidate(new Base(Base::ConstructionKind::PreparedStartup,m_game,Base::GetNextId(),owner,
-        owner->GetPlayer()->GetFaction(),tile,"",facilities,{{1,Pop(nullptr,1,specialists[0],0)}},2,0,production,context,std::nullopt));
-    candidate->m_allocation=SmacBaseAllocationState{0,{{},1}};
+        owner->GetPlayer()->GetFaction(),tile,"",facilities,pops,population+1,0,production,context,std::nullopt));
+    candidate->m_allocation=SmacBaseAllocationState{0,{{},population}};
     auto knowledge=m_game->PrepareBaseTerritory(candidate.get(),nullptr,false);
     if (!knowledge) {THROW("Founding requires prepared saved territory");}
     // The normal projector authenticates actual entities before a private
@@ -109,7 +119,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     knowledge=map::SmacWorkerKnowledge::Create(data); // exploration/memory unchanged
     const auto catalog=ResolveSmacSpecialistAllocationCatalog(*global.GetSmacSpecialistRules(),*global.GetSmacTechnologyRules(),technology->owned);
     bool aerospace=false; for (const auto& item:facilities) {aerospace |= item.second->m_smac_source_id==29;}
-    const auto prefix=m_game->m_simulation->value.GetSatelliteCounts(simulation_id).Intake(1,aerospace,false);
+    const auto prefix=m_game->m_simulation->value.GetSatelliteCounts(simulation_id).Intake(population,aerospace,false);
     const SmacWorkerRadiusMap radius{center,frame.width,frame.height,true};
     const SmacWorkerYieldQuery query=[&](int32_t index,const SmacWorkerStepState&) -> std::optional<SmacWorkerTileYield> {
         const auto coordinate=SmacWorkedSquareCollection::Resolve(radius,index);
@@ -123,13 +133,15 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     // No Unit can already be homed to this unregistered fresh Base ID: the full
     // current projection above validated every home. The consumed Pod retains
     // its old home until this one transaction removes it.
-    const auto result=SmacAutomaticWorkerAllocation::Allocate({1,static_cast<int32_t>(m_game->GetTurnId()),
+    const auto result=SmacAutomaticWorkerAllocation::Allocate({population,turn,
         global.GetSmacResourceRules()->nutrients_per_citizen,0,SmacWorkerProduction::Unit,
         context.WorkerPriorities(profile->worker_priorities),context.ManageCitizens(),false,0,unavailable,prefix,{{},0},catalog,std::nullopt},query);
     candidate->m_allocation=SmacBaseAllocationState{result.workers.visited,result.specialists};
     const auto coordinates=candidate->AllocationCoordinates(*candidate->m_allocation);
-    candidate->m_pops.at(1)=coordinates.empty() ? Pop(nullptr,1,specialists.at(result.specialists.types[0]),0)
-        : Pop(nullptr,1,worker,0,m_game->GetMap()->GetTile(coordinates[0].x,coordinates[0].y));
+    for(size_t i=0;i<size_t(population);++i) {
+        candidate->m_pops.at(i+1)=i<coordinates.size() ? Pop(nullptr,i+1,worker,0,m_game->GetMap()->GetTile(coordinates[i].x,coordinates[i].y))
+            : Pop(nullptr,i+1,specialists.at(result.specialists.types[i-coordinates.size()]),0);
+    }
     candidate->ValidateAllocationProjection(false);
     candidate->m_smac_upkeep_cache=PrepareNewBaseResourceCache(*candidate,result.workers.intake,false,colony.m_id);
     candidate->m_accumulated_nutrients=candidate->m_smac_upkeep_cache->calculation.nutrients.normalized_stored;

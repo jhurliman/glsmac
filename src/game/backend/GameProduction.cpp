@@ -25,7 +25,10 @@ const faction::SmacSimulationParticipant& Game::RequireSmacProductionOwner( cons
 	ValidateCurrentSimulation();
 	if ( !m_simulation || !owner ) { throw std::runtime_error( "Canonical production requires a bound owner" ); }
 	for ( const auto& participant : m_simulation->value.roster ) {
-		if ( &m_state->m_slots->GetSlot( participant.slot ) == owner ) { return participant; }
+		if ( &m_state->m_slots->GetSlot( participant.slot ) == owner ) {
+			if (!participant.active) { throw std::runtime_error("Eliminated faction cannot perform production or worker actions"); }
+			return participant;
+		}
 	}
 	throw std::runtime_error( "Canonical production owner is not an admitted participant" );
 }

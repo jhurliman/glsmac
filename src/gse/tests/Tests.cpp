@@ -71,6 +71,7 @@
 #include "HumanResearchValue.h"
 #include "AutomaticResearch.h"
 #include "SmacProductionSwitch.h"
+#include "SmacHurry.h"
 #include "SmacWorkerAllocation.h"
 #include "SmacWorkedSquareCollection.h"
 #include "SmacSpecialistAllocation.h"
@@ -307,6 +308,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddBackendTests( task );
 		tests::AddBufferTests( task );
 		tests::AddSmacProductionSwitchTests( task );
+		tests::AddSmacHurryTests( task );
 		tests::AddSmacWorkerAllocationTests( task );
 		tests::AddSmacWorkedSquareCollectionTests( task );
 		tests::AddSmacSpecialistAllocationTests( task );

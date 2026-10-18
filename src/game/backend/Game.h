@@ -414,6 +414,7 @@ public:
 	// Positional source identity is explicit; opaque IDs are never parsed.
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
 	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;
+	int32_t GetSmacProductionMineralFactor(const slot::Slot* owner) const;
 	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const;
 	// Only the ordinary prerequisite query, not active/role/coastal buildability.
 	bool HasSmacProductionPrerequisite( const slot::Slot* owner, const base::ProductionItem& item ) const;
@@ -779,6 +780,8 @@ private:
 	bool HandleSmacWorkerEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacSpecialistEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	bool HandleSmacHurryEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+	void ResetCanonicalHurryMarkers(int32_t owner);
 	bool HandleSmacQueueEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacRenameEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	class EventBatchRoots;

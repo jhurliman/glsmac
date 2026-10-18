@@ -159,11 +159,8 @@ bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::t
 	return true;
 }
 
-int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {
-	item.Validate();
-	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
-	const auto& participant = RequireSmacProductionOwner( owner );
-	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
+int32_t Game::GetSmacProductionMineralFactor(const slot::Slot* owner) const {
+	const auto& participant=RequireSmacProductionOwner(owner);
 	RequireSmacLocalHumanOwner( owner );
 	const auto* social = m_simulation->value.social.Find( participant.simulation_id );
 	if ( !social ) { throw std::runtime_error( "Production social context is unavailable" ); }
@@ -175,8 +172,18 @@ int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::Produc
 	using namespace resource::smac;
 	const auto size = selection->category == 0 ? MineralCostWorldSize::Tiny : selection->category == 1 ? MineralCostWorldSize::Small : MineralCostWorldSize::StandardOrLarger;
 	// The checked human branch does not consume leader/dominance/network values.
-	const int32_t factor = CalculateMineralCostFactor( { true, m_simulation->value.designs.global_difficulty,
+	return CalculateMineralCostFactor( { true, m_simulation->value.designs.global_difficulty,
 		false, false, false, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
+}
+
+int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {
+	item.Validate();
+	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
+	const auto& participant = RequireSmacProductionOwner( owner );
+	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
+	using namespace resource::smac;
+	const auto factor=GetSmacProductionMineralFactor(owner);
+	const auto& global=m_state->m_settings.global;
 	int32_t cached_cost;
 	if ( item.kind == base::ProductionItemKind::Unit ) {
 		const auto design = ResolveConventionalDesign( { *item.smac_source_id, participant.simulation_id, 1, 0, 0, false,

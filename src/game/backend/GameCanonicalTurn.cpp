@@ -214,6 +214,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			RefreshCanonicalPopulationAggregate(owner.first);
 			// Native upkeep retires the shared route only AFTER this summary.
 			m_map->InvalidateRegionalPathWorkspace();
+			ResetCanonicalHurryMarkers(owner.first);
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
@@ -522,7 +523,7 @@ bool Game::HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,
 bool Game::QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,
 	const gse::value::object_properties_t& args) {
 	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen) {return false;}
-	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue") {return false;}
+	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production") {return false;}
 	ValidateCanonicalColonyScreen();
 	const gse::value::object_properties_t stamped{
 		{"request_id",VALUE(gse::value::Int,,*m_canonical_continuation->screen_request_id)},
@@ -564,6 +565,7 @@ bool Game::HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object
 		if(HandleSmacWorkerEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	} else if(command=="select_smac_production" && HandleSmacProductionEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if((command=="open_smac_specialist" || command=="select_smac_specialist" || command=="cancel_smac_specialist") && HandleSmacSpecialistEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
+	if(command=="hurry_smac_production" && HandleSmacHurryEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if(command=="edit_smac_queue" && HandleSmacQueueEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if((command=="open_smac_rename" || command=="commit_smac_rename" || command=="cancel_smac_rename") && HandleSmacRenameEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	throw std::runtime_error("Colony screen permits only native Base management edits");

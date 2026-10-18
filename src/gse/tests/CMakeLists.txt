@@ -74,6 +74,7 @@ SET( SRC ${SRC}
 	${PWD}/HumanResearchValue.cpp
 	${PWD}/AutomaticResearch.cpp
 	${PWD}/SmacProductionSwitch.cpp
+	${PWD}/SmacHurry.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp
 	${PWD}/SmacSpecialistAllocation.cpp

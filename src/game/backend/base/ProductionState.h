@@ -31,6 +31,8 @@ struct ProductionState {
 	// A missing queue is unconfigured, not an empty human production queue.
 	// Only active logical entries are owned; no unused original storage implied.
 	std::optional< std::vector< ProductionItem > > queue;
+	// Old port frames predate Hurry commands and therefore have a clear marker.
+	bool hurry_partial_paid = false;
 	static constexpr size_t MAX_QUEUE_ITEMS = 9; // port budget: maximum length in retained queue cases
 	static constexpr size_t MAX_ID_BYTES = 256; // canonical port identity budget
 

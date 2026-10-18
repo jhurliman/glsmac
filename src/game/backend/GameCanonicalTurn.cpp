@@ -5,6 +5,7 @@
 #include "faction/Faction.h"
 #include "slot/Slots.h"
 #include "base/Base.h"
+#include "base/SmacEcology.h"
 #include "base/BaseManager.h"
 #include "base/PopDef.h"
 #include "event/Event.h"
@@ -23,6 +24,35 @@
 #include <thread>
 
 namespace game::backend {
+namespace {
+bool HasEcologyCalculationAuthority(const faction::SmacSimulationState& state,const settings::GlobalSettings& settings) {
+    return state.ecology_history && state.ecology_world && state.perihelion && settings.GetSmacEcologyRules();
+}
+void BeginOwnerEcologyAggregate(faction::SmacSimulationState& state,const settings::GlobalSettings& settings,int32_t owner) {
+    // Legacy worlds without the calculation inputs retain historical words;
+    // they cannot manufacture a newly calculated zero at an owner boundary.
+    if(HasEcologyCalculationAuthority(state,settings)) {state.ecology_history->research_aggregate.at(owner)=0;}
+}
+void PostBaseEcologyAggregate(faction::SmacSimulationState& state,const settings::GlobalSettings& settings,const base::Base& base) {
+    if(!HasEcologyCalculationAuthority(state,settings)) {return;}
+    const auto owner=base.GetSmacResourceContext().owner_simulation_id;
+    const auto& cache=base.GetSmacUpkeepCache();
+    const auto* social=state.social.Find(owner);
+    if(!cache || !cache->calculation.eco_damage || !social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {
+        throw std::runtime_error("Ecology aggregate requires the committed resource pass and current PLANET");
+    }
+    // Research may have awarded technology. This consumer uses the retained
+    // final resource pass, rather than silently forcing a new calculation.
+    const auto contribution=base::SmacEcologyResearchContribution(*cache->calculation.eco_damage,social->current.at(7));
+    auto& aggregate=state.ecology_history->research_aggregate.at(owner);
+    const auto next=int64_t(aggregate)+contribution;
+    if(next<INT32_MIN || next>INT32_MAX) {throw std::overflow_error("Ecology aggregate exceeds measured signed32");}
+    aggregate=static_cast<int32_t>(next);
+    // The mandatory CRT draw and downstream event producer remain a separate
+    // pending integration. Posting alone is not a complete ecology handler.
+}
+}
+
 
 void Game::ConfigureSmacBasePresentations(GSE_CALLABLE,const std::array<std::string,8>& roles) {
 	bool configure=false;
@@ -189,6 +219,7 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		m_simulation->value.perihelion=perihelion;
 		m_is_turn_complete=false;
 		m_canonical_continuation=std::move(continuation);
+        if(!m_canonical_continuation->owners.empty()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,m_canonical_continuation->owners.front().first);}
 		for (const auto& entry:m_um->GetUnits()) {
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);
@@ -218,6 +249,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
+            if(next.owner_index<next.owners.size()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,next.owners[next.owner_index].first);}
 			continue;
 		}
 		auto* base=m_bm->GetBase(owner.second[next.base_index]);
@@ -228,6 +260,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		}
 		if(!ContinueCanonicalResearch(GSE_CALL)) {return;}
 		if(next.stage!=Stage::Credit || !next.energy) {throw std::runtime_error("Canonical research omitted its credit stage");}
+        PostBaseEcologyAggregate(m_simulation->value,m_state->m_settings.global,*base);
 		const auto notifications=PostCanonicalBaseMaintenance(*base,*next.energy);
 		m_bm->RefreshBase(base);
 		for(const auto& notification:notifications) {Message(notification);}

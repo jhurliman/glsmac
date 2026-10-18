@@ -125,6 +125,12 @@ The automatic chooser consumes the shared bounded-range stream, not the CRT stre
 
 ## Retained producer contracts
 
+The [live territory summary integration](retained-territory-summary.md) now owns
+the territory/known/suitable/covered/site counters and their scheduled refresh
+and save lifetimes. Per-owner regional military/strategy and ecology integration
+remain required before the automatic research dispatcher can use complete inputs.
+
+
 The [regional producer receipt](behavior/regional-research-summary-producer.md)
 establishes the capability and strategy update boundaries. Its native controls
 cover 14 owner summaries, nine capability refreshes, two initializer prefixes

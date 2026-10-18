@@ -36,6 +36,6 @@ GlsmacTerritoryTopology Map::PrepareFreshTerritoryTopology() const {
 		}}
 	}
 	return topology.WithTerrainPostpass(sea,fertile).WithSiteRatings(smac_site::RatingCache::Fresh({
-		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true})).WithLandmarkDetails(std::move(details));
+		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true})).WithLandmarkDetails(std::move(details)).WithTerritorySummary({});
 }
 }

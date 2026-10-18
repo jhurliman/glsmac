@@ -2672,6 +2672,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             std::map<size_t,std::string> expected_units;
             fixture.ResourceState([&](auto& state){
                 state.do_or_die=scenario==3;state.roster[0].restart_prohibited=scenario==4;
+                state.capabilities.emplace();
+                state.capabilities->factions[0].available.fill(70000);
+                state.capabilities->factions[0].foreign.fill(-73);
+                state.capabilities->factions[1].available.fill(12345);
                 auto& e=state.economy.at(1);e.credits=100;e.pending_debit=7;e.research_fraction=70;e.rates={2,3};
                 auto& t=state.technology.factions[0];t.target=5;t.cached_threshold=1000;t.labs=40;
             });
@@ -2706,13 +2710,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 bool exact=false;fixture.ResourceState([&](auto& state){const auto& e=state.economy.at(1);const auto& t=state.technology.factions[0];
                     exact=state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
+                        && state.capabilities && state.capabilities->factions[0]==faction::SmacCapabilityState::Faction{}
+                        && state.capabilities->factions[1].available[0]==12345
                         && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
                         && e.pending_debit==0 && e.research_fraction==70 && t.target==5 && t.labs==40 && !t.cached_threshold
                         && e.rates.psych==(restarted ? 0 : 2) && e.rates.labs==(restarted ? 5 : 3);});
                 GT_ASSERT(exact && fixture.GameplayRandom().Shared()==pair.Shared() && fixture.GameplayRandom().Crt()!=pair.Crt()
                     && game->GetRandom()->GetStateString()==random,"disposition reset retained research, flags, treasury or search RNG incorrectly");
+                // A second nonzero initializer clears only its owner's row;
+                // a restarted owner with surviving Units does not initialize again.
+                fixture.ResourceState([&](auto& state){state.capabilities->factions[0].available.fill(70000);});
                 fixture.SettleEconomy(1);
-                fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120);});
+                fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120)
+                    && state.capabilities->factions[0].available[0]==(restarted ? 70000 : 0)
+                    && state.capabilities->factions[1].available[0]==12345;});
                 GT_ASSERT(exact,"empty-faction tail omitted or duplicated its second initialization");
                 saved=fixture.Snapshot();knowledge_wire=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();random_wire=random;
                 fixture.ResourceState([&](auto& state){expected_state=state;});

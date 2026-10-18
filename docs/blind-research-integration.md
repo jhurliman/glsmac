@@ -73,11 +73,38 @@ axes, an empty mask and retained non-Boolean priorities after cancellation.
 These verify the actual valuation rather than supplying its results. The live
 turn request still needs the retained producers and priority UI described below.
 
+## Live capability producer
+
+The [component binding receipt](behavior/capability-scan-bindings.md) and
+[startup caller receipt](behavior/startup-capability-and-ecology-rng.md) now
+back a live retained producer. Startup refreshes each admitted owner's caches
+inside design generation, before marking/selecting designs. The later owner
+summary refreshes them again; acquiring technology or opening an inspector
+never refreshes them early. Nonzero faction initialization clears only that
+owner's row.
+
+The scan preserves the original signed-byte weapon/armor and unsigned-byte
+land-speed inputs, fixed native-design seed components, separate PSI maxima,
+and relationship-tier foreign maxima. All seven positive faction slots retain
+signed32 results, including stale peer values. The current campaign admission
+excludes projects, and its validated faction definitions supply the original
+zero PSI scalar; broader project/faction authority remains future work.
+
+Simulation V17 saves these caches without recomputing them. V11-V16 saves retain
+explicit absence. Original ordinary saves do not serialize both gameplay RNG
+words; deterministic paired-stream restoration remains a port policy.
+
+Validation covers 31 native component/width controls, 15 native PSI controls,
+actual research-choice save/Start continuation with delayed cache refresh, and
+actual last-Base loss/restart/empty-owner initialization. Regional strategy,
+ecology and the priority question still need live integration before Blind
+research can use the automatic selector.
+
 ## Next three executable slices
 
 1. Persist and connect the retained input producers described below. Priorities
-   already have saved authority; regional strategy, capability and ecology
-   lifetimes still need their live writers. Bind actual catalog identities,
+   already have saved authority; regional strategy and ecology
+   lifetimes still need their live writers; capability refresh is connected. Bind actual catalog identities,
    regional Base/known-tile summaries and endgame pressure. Missing producers
    must not silently become zero or a later snapshot.
 2. Connect the pending priority UI and turn continuation. Preserve non-Boolean

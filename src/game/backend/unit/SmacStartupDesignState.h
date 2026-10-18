@@ -2,6 +2,7 @@
 
 #include "game/backend/faction/SmacTechnologyState.h"
 #include "game/backend/settings/SmacPredefinedUnitRules.h"
+#include <functional>
 
 namespace game::backend::unit {
 
@@ -33,7 +34,8 @@ struct SmacStartupDesignState {
 	// Separate original startup pass: mark active records, keep last active Recon.
 	static void MarkAndSelect( SmacDesignOwner& owner, const SmacPredefinedUnitCatalog& catalog );
 	static SmacStartupDesignState NewWorld( const faction::SmacTechnologyState& technology,
-		const settings::SmacTechnologyRules& technologies, const settings::SmacPredefinedUnitRules& units, int32_t global_difficulty );
+		const settings::SmacTechnologyRules& technologies, const settings::SmacPredefinedUnitRules& units, int32_t global_difficulty,
+		const std::function<void(const faction::SmacFactionTechnologyState&)>& before_generate = {});
 	void Validate( const SmacPredefinedUnitCatalog& catalog ) const;
 	const SmacDesignOwner* Find( int32_t simulation_id ) const;
 	bool operator==( const SmacStartupDesignState& other ) const;

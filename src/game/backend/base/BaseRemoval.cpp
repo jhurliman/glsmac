@@ -127,6 +127,7 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
     static_assert(std::is_nothrow_copy_assignable_v<faction::SmacEconomyState> && std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
     plan.economy.design_counts=state.economy.at(owner).design_counts;
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
+    if(state.capabilities) {state.capabilities->factions[owner-1]={};}
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}

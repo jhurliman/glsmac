@@ -3636,7 +3636,7 @@ public:
 	}
 	static std::string CanonicalStartupSource(const std::string& filename,bool multiple,bool research=false) {
 			if(filename!="alpha.txt") {return smac_startup_fixture::Source(filename);}
-			std::istringstream input(smac_startup_fixture::Source(filename));std::string line,section,result;size_t row=0;
+			std::istringstream input(smac_startup_fixture::OrdinarySource(filename));std::string line,section,result;size_t row=0;
 			const std::array<std::array<int,3>,9> yields{{{1,0,0},{2,1,1},{2,2,2},{1,2,1},{1,1,1},{1,0,0},{2,1,3},{2,2,2},{0,6,6}}};
 			const std::array<std::array<int,3>,7> specialists{{{2,0,0},{0,2,0},{0,0,3},{3,0,2},{2,2,0},{0,1,3},{2,2,4}}};
 			while(std::getline(input,line)) {

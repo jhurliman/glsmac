@@ -59,6 +59,7 @@ test.assert(save_status.text == '' && save_input.value == '/campaigns/chosen.gls
 let load_calls = [];
 let fail_load = true;
 let dismissed = 0;
+let returned = 0;
 let deinitialized = 0;
 let load_input = null;
 let load_status = null;
@@ -81,6 +82,7 @@ const context = {
 	popup: {
 		show: (data) => {load_dialog = data;data.generator(load_body);},
 		dismiss: () => {dismissed++;},
+        back: () => {returned++;},
 	},
 };
 main(context);
@@ -91,8 +93,8 @@ load_dialog.buttons[0].onclick();
 test.assert(#sizeof(load_calls) == 1 && load_calls[0] == 'folder/chosen.glsmac' && dismissed == 0 && deinitialized == 1);
 test.assert(load_status.text == 'Invalid GLSMAC campaign file' && load_input.value == 'folder/chosen.glsmac');
 load_dialog.buttons[1].onclick();
-test.assert(dismissed == 1 && #sizeof(load_calls) == 1);
+test.assert(returned == 1 && dismissed == 0 && #sizeof(load_calls) == 1);
 load(context);
 fail_load = false;
 load_dialog.buttons[0].onclick();
-test.assert(dismissed == 2 && #sizeof(load_calls) == 2 && deinitialized == 1);
+test.assert(returned == 1 && dismissed == 1 && #sizeof(load_calls) == 2 && deinitialized == 1);

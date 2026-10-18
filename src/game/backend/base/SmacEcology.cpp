@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <set>
+#include <map>
 #include <cstdlib>
 
 namespace game::backend::base {
@@ -165,5 +166,122 @@ std::optional<SmacBloomSelection> SelectSmacEcologyBloom(const SmacWorkerRadiusM
         if(score>(best ? best->score : 0)) {best=SmacBloomSelection{*p,static_cast<int32_t>(i+1),score};}
     }
     return best;
+}
+
+
+namespace {
+constexpr std::array<std::array<int32_t,2>,121> BLOOM_SHAPER_OFFSETS{{
+    {0,0},{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},
+    {0,-2},{2,-2},{2,2},{-2,2},{-2,-2},{1,-3},{3,-1},{3,1},
+    {1,3},{-1,3},{-3,1},{-3,-1},{-1,-3},{4,0},{-4,0},{0,4},
+    {0,-4},{1,-5},{2,-4},{3,-3},{4,-2},{5,-1},{5,1},{4,2},
+    {3,3},{2,4},{1,5},{-1,5},{-2,4},{-3,3},{-4,2},{-5,1},
+    {-5,-1},{-4,-2},{-3,-3},{-2,-4},{-1,-5},{0,6},{6,0},{0,-6},
+    {-6,0},{0,-8},{1,-7},{2,-6},{3,-5},{4,-4},{5,-3},{6,-2},
+    {7,-1},{8,0},{7,1},{6,2},{5,3},{4,4},{3,5},{2,6},
+    {1,7},{0,8},{-1,7},{-2,6},{-3,5},{-4,4},{-5,3},{-6,2},
+    {-7,1},{-8,0},{-7,-1},{-6,-2},{-5,-3},{-4,-4},{-3,-5},{-2,-6},
+    {-1,-7},{0,-10},{1,-9},{2,-8},{3,-7},{4,-6},{5,-5},{6,-4},
+    {7,-3},{8,-2},{9,-1},{10,0},{9,1},{8,2},{7,3},{6,4},
+    {5,5},{4,6},{3,7},{2,8},{1,9},{0,10},{-1,9},{-2,8},
+    {-3,7},{-4,6},{-5,5},{-6,4},{-7,3},{-8,2},{-9,1},{-10,0},
+    {-9,-1},{-8,-2},{-7,-3},{-6,-4},{-5,-5},{-4,-6},{-3,-7},{-2,-8},
+    {-1,-9},
+}};
+constexpr std::array<size_t,6> BLOOM_RING_BOUNDARIES{{1,9,25,49,81,121}};
+}
+SmacBloomClassChange ChangeSmacBloomClassOnly(SmacBloomTerrainCell cell,int32_t altitude,bool nonzero_turn,
+    const std::function<int32_t()>& draw) {
+    if(cell.altitude_class<0 || cell.altitude_class>7 || altitude<0 || altitude>7 || cell.rockiness<0 || cell.rockiness>2
+        || cell.affiliation>15 || (cell.altitude_class>=3)!=(altitude>=3) || !draw) {
+        throw std::invalid_argument("Class-only ecology setter requires valid same-category terrain and CRT authority");
+    }
+    uint32_t dirty=4;
+    if(nonzero_turn && cell.altitude_class!=altitude) {
+        if(cell.landmarks) {
+            auto high=cell.landmarks>>24;if(high<128) {high^=255;}
+            cell.landmarks=(cell.landmarks&0x00ffff7fu)|(high<<24);
+        }
+        bool changed=false;
+        if(altitude>=3) {
+            if(altitude<cell.altitude_class && cell.rockiness>0 && cell.rockiness>altitude-3) {
+                if(EcologyCrt(draw)%(cell.rockiness+1)!=0) {--cell.rockiness;changed=true;}
+            } else if(altitude>cell.altitude_class && cell.rockiness<2 && cell.rockiness+1<=altitude-3) {
+                if(EcologyCrt(draw)%(cell.rockiness+4)==0) {++cell.rockiness;changed=true;}
+            }
+        }
+        if(changed) {cell.landmarks|=0x00400000u;dirty|=1;}
+    }
+    cell.altitude_class=altitude;return {cell,dirty};
+}
+SmacBloomTerrainPlan PrepareSmacBloomTerrain(const SmacWorkerRadiusMap& map,int32_t history,int32_t difficulty,bool nonzero_turn,
+    const std::function<SmacBloomTerrainCell(int32_t,int32_t)>& query,const std::function<int32_t()>& draw) {
+    SmacWorkedSquareCollection::Resolve(map,0);
+    if(history<0 || difficulty<0 || difficulty>5 || !query || !draw) {throw std::invalid_argument("Bloom terrain requires history, difficulty and terrain/CRT authorities");}
+    SmacBloomTerrainPlan plan{Checked(int64_t(history)+1),1,0,std::nullopt,{}};
+    using Coordinate=std::array<int32_t,2>;
+    struct Staged {SmacBloomTerrainCell before,after;};
+    std::map<Coordinate,Staged> staged;std::vector<Coordinate> changed;
+    const auto get=[&](const Coordinate& coordinate)->SmacBloomTerrainCell& {
+        auto found=staged.find(coordinate);
+        if(found==staged.end()) {
+            const auto value=query(coordinate[0],coordinate[1]);
+            if(value.altitude_class<0 || value.altitude_class>7 || value.rockiness<0 || value.rockiness>2 || value.affiliation>15) {
+                throw std::invalid_argument("Bloom terrain cell exceeds measured semantic bounds");
+            }
+            found=staged.emplace(coordinate,Staged{value,value}).first;
+        }
+        return found->second.after;
+    };
+    const auto mark=[&](const Coordinate& coordinate) {
+        if(std::find(changed.begin(),changed.end(),coordinate)==changed.end()) {changed.push_back(coordinate);}
+    };
+    const auto set_class=[&](const Coordinate& coordinate,int32_t altitude) {
+        auto& cell=get(coordinate);
+        if(cell.altitude_class==altitude) {return;}
+        const auto change=ChangeSmacBloomClassOnly(cell,altitude,nonzero_turn,draw);
+        cell=change.cell;plan.native_dirty_mask|=change.native_dirty_mask;
+        mark(coordinate);
+    };
+    const auto shape=[&](const Coordinate& center) {
+        set_class(center,2);
+        for(size_t i=1;i<9;++i) {
+            const auto& offset=BLOOM_SHAPER_OFFSETS[i];
+            const auto p=BloomCoordinate(map,int64_t(center[0])+offset[0],int64_t(center[1])+offset[1]);
+            if(p && get(*p).altitude_class<1) {set_class(*p,1);}
+        }
+        for(size_t ring=1;ring<=5;++ring) {
+            bool altered=false;
+            for(size_t i=BLOOM_RING_BOUNDARIES[ring-1];i<BLOOM_RING_BOUNDARIES[ring];++i) {
+                const auto& offset=BLOOM_SHAPER_OFFSETS[i];
+                const auto p=BloomCoordinate(map,int64_t(center[0])+offset[0],int64_t(center[1])+offset[1]);
+                const auto ceiling=static_cast<int32_t>(2+ring);
+                if(p && get(*p).altitude_class>ceiling) {set_class(*p,ceiling);altered=true;}
+            }
+            if(!altered) {break;}
+        }
+    };
+    if(get(map.center).altitude_class<3 && plan.history>=4) {
+        const auto denominator=10-plan.history/8-difficulty;
+        if(denominator<=1 || EcologyCrt(draw)%denominator==0) {plan.nominal_cell_budget=9;}
+    }
+    for(int32_t i=0;i<plan.nominal_cell_budget;++i) {
+        const auto& offset=BLOOM_SHAPER_OFFSETS[i];
+        const auto p=BloomCoordinate(map,int64_t(map.center[0])+offset[0],int64_t(map.center[1])+offset[1]);
+        if(!p) {continue;}
+        auto& cell=get(*p);
+        if((i>0 && cell.altitude_class>=3) || ((cell.items&0x20u) && cell.altitude_class>=2)
+            || ((cell.items&1u) && cell.affiliation<=7) || (cell.landmarks&0x80000002u)==2u) {continue;}
+        cell.items=(cell.items|0x20u)&~0x00288050u;mark(*p);plan.fungus_cell=*p;
+        if(cell.altitude_class<2) {shape(*p);}
+        // Native nineteen-entry notice scan overwrites the bloom-loop index.
+        // The next increment ends either budget, even with no improvements.
+        break;
+    }
+    for(const auto& coordinate:changed) {
+        const auto& value=staged.at(coordinate);
+        if(!(value.before==value.after)) {plan.changes.push_back({coordinate,value.before,value.after});}
+    }
+    return plan;
 }
 }

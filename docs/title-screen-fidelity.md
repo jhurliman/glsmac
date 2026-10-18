@@ -42,6 +42,10 @@ regions still count toward the whole-screen gate. No tolerance, mask, scaling
 or automatic alignment is allowed. Also exercise keyboard selection, mouse
 selection and a menu transition; a static passing picture cannot prove input.
 
+The comparator's synthetic acceptance tests run in one small Ubuntu Python
+CI job. They require no game installation, graphics driver or platform builds;
+the real original-versus-GLSMAC capture remains a separate visual gate.
+
 ## Initial diagnosis, 2026-10-18
 
 The supplied reference and retained actual PR #220 GLSMAC backbuffer are both

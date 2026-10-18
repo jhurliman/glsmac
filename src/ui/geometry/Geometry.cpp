@@ -341,8 +341,8 @@ void Geometry::UpdateArea() {
 				const auto& g = g_engine->GetGraphics();
 				area.left = 0;
 				area.top = 0;
-				area.right = area.width = g->GetViewportWidth() - 1;
-				area.bottom = area.height = g->GetViewportHeight() - 1;
+				area.right = area.width = g->GetViewportWidth();
+				area.bottom = area.height = g->GetViewportHeight();
 				break;
 			}
 			default:
@@ -502,8 +502,8 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			if ( m_overflow_mode != OM_SCROLLABLE ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 				const auto& g = g_engine->GetGraphics();
-				const auto maxx = g->GetViewportWidth() - 1;
-				const auto maxy = g->GetViewportHeight() - 1;
+				const auto maxx = g->GetViewportWidth();
+				const auto maxy = g->GetViewportHeight();
 #endif
 				ASSERT( effective_area.left >= 0 && effective_area.left <= maxx, "effective area left overflow" );
 				ASSERT( effective_area.top >= 0 && effective_area.top <= maxy, "effective area top overflow" );
@@ -532,8 +532,9 @@ void Geometry::FixArea( area_t& area ) {
 	const auto& g = g_engine->GetGraphics();
 	double minx = 0;
 	double miny = 0;
-	double maxx = g->GetViewportWidth() - 1;
-	double maxy = g->GetViewportHeight() - 1;
+	// Geometry and cache rectangles use exclusive right/bottom edges.
+	double maxx = g->GetViewportWidth();
+	double maxy = g->GetViewportHeight();
 
 	if ( area.left < minx ) {
 		area.left = minx;

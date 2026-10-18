@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "loader/flic/FlicReader.h"
+#include "loader/flic/MenuCompositor.h"
 #include "task/gsetests/GSETests.h"
 
 namespace gse::tests {
@@ -86,9 +87,41 @@ std::string CheckMalformed() {
 	GT_OK();
 }
 
+
+std::string CheckMenu() {
+	loader::flic::Frame frame;
+	frame.width = 3; frame.height = 1; frame.pixels = { 9, 0, 12 };
+	std::array< std::array< uint8_t, 3 >, 256 > palette = {};
+	palette[ 1 ] = { 80, 80, 80 }; palette[ 2 ] = { 250, 245, 240 }; palette[ 169 ] = { 100, 100, 100 };
+	Bytes background( 5 * 4, 0 );
+	const auto result = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2 );
+	GT_ASSERT( result.width == 3 && result.height == 2, "menu rows did not expand vertically" );
+	const Bytes expected{ 0,0,0,0, 80,80,80,255, 235,235,235,255, 0,0,0,0, 80,80,80,255, 235,235,235,255 };
+	GT_ASSERT( result.rgba == expected, "menu transparency, native blue lookup or game-index palette mapping changed" );
+	background[ 2 * 5 + 3 ] = 2;
+	const auto tinted = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2 );
+	GT_ASSERT( tinted.rgba[ 4 ] == 100 && tinted.rgba[ 16 ] == 80, "menu tint sampled the wrong background position or reused a row" );
+	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 16 * 1024 * 1024 ); } ), "menu output budget ignored" );
+	std::fill( background.begin(), background.end(), uint8_t( 0 ) );
+	background[ 3 * 5 + 4 ] = 2;
+	const auto enlarged = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 10, 8 );
+	GT_ASSERT( enlarged.rgba[ 4 ] == 100 && enlarged.rgba[ 16 ] == 100,
+		"enlarged viewport sampled the unscaled PCX corner" );
+	background[ 3 * 5 + 4 ] = 0; background[ 2 * 5 + 3 ] = 2;
+	const auto reduced = loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 4, 3 );
+	GT_ASSERT( reduced.rgba[ 4 ] == 100, "reduced viewport did not sample displayed pixel centers" );
+	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2, 10, 0 ); } ), "partial viewport dimensions accepted" );
+	frame.pixels[ 2 ] = 246;
+	GT_ASSERT( Rejects( [&] { loader::flic::ComposeMenu( frame, background, 5, 4, palette, 2 ); } ), "unsupported reserved artwork index accepted" );
+	GT_OK();
+}
+
 }
 
 void AddFlicTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "FLC menu composition preserves native indexed drawing codes", GT() {
+		try { return CheckMenu(); } catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
+	} );
 	task->AddTest( "FLC indexed frames preserve palette and BRUN/SS2 state", GT() {
 		try { return CheckFrames(); } catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
 	} );

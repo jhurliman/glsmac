@@ -1,0 +1,290 @@
+{
+  "research_id": "RE-SMAC-BLINK-001",
+  "profile": "original SMAC ordinary local human selected conventional Scout",
+  "timing": {
+    "requested_half_period_ms": 150,
+    "nominal_full_cycle_ms": 300,
+    "clock": "shared Win32 timer message delivery",
+    "phase_scope": "shared map/command cursor",
+    "initial_unit_phase": "visible",
+    "per_unit_timestamp": false,
+    "elapsed_catch_up": false,
+    "refresh_restarts_timer": false,
+    "focus_check_precedes_blink": false
+  },
+  "services": {
+    "blink_ms": 150,
+    "other_ui_ms": [
+      100,
+      100
+    ],
+    "network_ms": 500,
+    "multimedia_below_ms": 50
+  },
+  "delivery_cases": [
+    {
+      "name": "four timer notifications, one dispatch",
+      "notifications": 4,
+      "dispatches": 1,
+      "toggles": 1
+    },
+    {
+      "name": "two admitted deliveries",
+      "notifications": 2,
+      "dispatches": 2,
+      "toggles": 2
+    },
+    {
+      "name": "arbitrary or wrapped notification timestamp",
+      "expected": "one toggle per admitted delivery"
+    },
+    {
+      "name": "dispatcher inhibited",
+      "expected": "pending latch cleared; no toggle or replay"
+    },
+    {
+      "name": "different exclusive timer",
+      "expected": "no application message posted"
+    }
+  ],
+  "phase_cases": [
+    {
+      "name": "ordinary redraw repeated four times",
+      "before": "off",
+      "after": "off"
+    },
+    {
+      "name": "shared timer registration",
+      "before": "off",
+      "after": "off"
+    },
+    {
+      "name": "stop and restart shared timers",
+      "before": "off",
+      "after": "off"
+    },
+    {
+      "name": "unit ensure-visible point inside accepted rectangle",
+      "before": "off",
+      "after": "off"
+    },
+    {
+      "name": "unit ensure-visible point outside accepted rectangle",
+      "before": "off",
+      "after": "visible",
+      "timer_rearmed": false
+    },
+    {
+      "name": "ensure-visible special view mode",
+      "before": "off",
+      "after": "off"
+    },
+    {
+      "name": "command cursor ensure-visible outside",
+      "expected": "opposite phase to unit-visible reset"
+    }
+  ],
+  "hold_cases": [
+    {
+      "condition": "lifecycle inhibit",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "movement-animation inhibit",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "Base window displayed",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "second checked modal window displayed",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "shutdown",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "not awaiting ordinary command",
+      "expected": "retain phase; no missed-toggle accumulation"
+    },
+    {
+      "condition": "no pending ordinary command",
+      "expected": "retain phase; no missed-toggle accumulation"
+    }
+  ],
+  "focus_cases": [
+    {
+      "condition": "window inactive",
+      "expected": "registration and phase retained; next admitted delivery toggles"
+    },
+    {
+      "condition": "window active",
+      "expected": "registration and phase retained; next admitted delivery toggles"
+    },
+    {
+      "condition": "window click activated",
+      "expected": "registration and phase retained; next admitted delivery toggles"
+    },
+    {
+      "condition": "window minimized activation flag",
+      "expected": "registration and phase retained; next admitted delivery toggles"
+    }
+  ],
+  "focus_callback_case": {
+    "condition": "focused window instance mismatch",
+    "expected": "blink toggles and redraws before focus mismatch returns; scrolling suppressed"
+  },
+  "drawing_cases": [
+    {
+      "phase": "visible",
+      "expected": "idle model and overlay"
+    },
+    {
+      "phase": "off",
+      "whole_unit_preference": false,
+      "mouse_distance": 4,
+      "expected": "idle model; flag health and order overlay omitted"
+    },
+    {
+      "phase": "off",
+      "whole_unit_preference": true,
+      "expected": "entire unit draw omitted"
+    },
+    {
+      "phase": "off",
+      "whole_unit_preference": false,
+      "mouse_distance": 0,
+      "expected": "entire unit draw omitted"
+    },
+    {
+      "phase": "off",
+      "whole_unit_preference": false,
+      "mouse_distance": 2,
+      "expected": "entire unit draw omitted"
+    },
+    {
+      "phase": "off",
+      "whole_unit_preference": false,
+      "controlled_odd_projection_distance": 3,
+      "expected": "round down to2; entire draw omitted",
+      "normal_tile_claim": false
+    },
+    {
+      "phase": "off",
+      "unit": [
+        126,
+        10
+      ],
+      "mouse": [
+        0,
+        10
+      ],
+      "map_width": 128,
+      "wrap": true,
+      "expected": "distance2; entire draw omitted"
+    },
+    {
+      "phase": "off",
+      "unit": [
+        126,
+        10
+      ],
+      "mouse": [
+        0,
+        10
+      ],
+      "map_width": 128,
+      "wrap": false,
+      "expected": "idle model without overlay"
+    },
+    {
+      "phase": "off",
+      "condition": "assigned order",
+      "expected": "ordinary model and overlay"
+    },
+    {
+      "phase": "off",
+      "condition": "not unit control",
+      "expected": "ordinary model and overlay"
+    },
+    {
+      "phase": "off",
+      "condition": "no pending command",
+      "expected": "ordinary model and overlay"
+    },
+    {
+      "phase": "off",
+      "condition": "draw suppression",
+      "expected": "ordinary model and overlay"
+    }
+  ],
+  "title": {
+    "asset": {
+      "name": "openitem.flc",
+      "sha256": "e9776571d359292da42d1fdfaa8f67d15bda1f213e65dc78772704f2dd262a3f",
+      "size": 55651,
+      "frames": 12,
+      "width": 354,
+      "height": 75,
+      "header_speed_ms": 40
+    },
+    "clock": "unsigned32 millisecond timeGetTime",
+    "caller_minimum_step_ms": 10,
+    "opening_frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "closing_frames": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "settled_frame": 5,
+    "header_speed_controls_this_caller": false,
+    "step_cases": [
+      {
+        "elapsed_after_work_ms": 9,
+        "expected": "read clock again until elapsed reaches10"
+      },
+      {
+        "elapsed_after_work_ms": 10,
+        "expected": "advance without further wait"
+      },
+      {
+        "elapsed_after_work_ms": 40,
+        "expected": "advance without further wait; do not skip frames"
+      }
+    ],
+    "native_loop_checks": {
+      "open_and_close": true,
+      "frames_per_loop": 6,
+      "clock_reads_for_elapsed_9_10_40": [
+        18,
+        12,
+        12
+      ],
+      "last_step_timestamp_refreshed": true
+    }
+  },
+  "validation": {
+    "native_assertions": 66,
+    "all_passed": true,
+    "entire_blink_callback_executed": true,
+    "native_timer_dispatcher_executed": true,
+    "selected_tile_scope": "admitted branch including original validity helper; view and mouse projection supplied",
+    "model_scope": "admitted conventional-model dispatcher and overlay gate; raster supplied",
+    "title_scope": "actual six-step loops; rowcount zero; decoder and display supplied",
+    "new_full_original_window_loop": false,
+    "live_wallclock_or_minimize_scheduling_measured": false,
+    "original_assets_or_layouts_embedded": false
+  }
+}

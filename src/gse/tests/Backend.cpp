@@ -10248,6 +10248,38 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Resource snapshots preserve authored tile glyph order across repeated restore", GT() {
+        BackendFixture fixture;fixture.ConfigureConventional(true,3,true);
+        return fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* manager=fixture.GetGame()->GetRM();
+            const std::vector<std::vector<std::string>> orders{
+                {"Nutrients","Minerals","Energy"},
+                {"Energy","Nutrients","Minerals"},
+                {"custom-z","custom-a","custom-middle"},
+            };
+            for(const auto& order:orders) {
+                manager->Clear();
+                for(size_t i=0;i<order.size();++i) {
+                    manager->DefineResource(new game::backend::resource::Resource(order[i],"Saved "+order[i],
+                        {"saved-icons.pcx",{{{int(i+1),7},{int(i+4),11}}}}));
+                }
+                types::Buffer original;manager->Serialize(original);
+                const auto wire=original.ToString();
+                for(int pass=0;pass<3;++pass) {
+                    auto input=types::Buffer(wire);manager->Deserialize(input);
+                    GT_ASSERT(manager->GetDefinedResourcesOrder()==order,"save/restore changed the public tile glyph order");
+                    for(size_t i=0;i<order.size();++i) {
+                        const auto* resource=manager->GetDefinedResources().at(order[i]);
+                        GT_ASSERT(resource->m_name=="Saved "+order[i] && resource->m_render_info.coords.at(0).first.x==int(i+1),
+                            "restored display order detached identity from artwork");
+                    }
+                    types::Buffer again;manager->Serialize(again);
+                    GT_ASSERT(input.lenr==input.lenw && again.ToString()==wire,"repeated resource restore changed the saved catalog");
+                }
+            }
+            GT_OK();
+        });
+    });
     task->AddTest("Resource snapshots restore present and absent no-resource artwork without double definition", GT() {
         BackendFixture fixture;fixture.ConfigureConventional(true,3,true);
         return fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {

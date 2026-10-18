@@ -1868,6 +1868,53 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             }
         }GT_OK();
     });
+    task->AddTest("SMAC installed facility details use frozen rules current free fee and real view callbacks",[](GSE*,context::Context*)->std::string {
+        for(const bool free:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction([&](const std::string& name){
+                auto source=HabitationSource(name);
+                if(free && name=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FACILITY,24");}
+                return source;
+            },"GAIANS");
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
+                bm->DefineFacility(new FacilityDef("detail","Presentation name","A registered description with enough words to wrap across several lines safely.",9999,{"facs/fac024.pcx",2,3,20,30},24));
+                base->m_facilities.emplace("detail",bm->GetFacilityDef("detail"));
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{stockpile,0,stockpile,0,std::vector<ProductionItem>{}});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));fixture.Updates();
+                const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+                auto* wrapped=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+                auto* detail=static_cast<value::Object*>(Call(GSE_CALL,wrapped,"get_smac_facility_details",{VALUE(value::String,,"detail")}));
+                GT_ASSERT(static_cast<value::String*>(detail->Get("name"))->value=="Hab Complex"
+                    && static_cast<value::Int*>(detail->Get("cost"))->value==80
+                    && static_cast<value::Int*>(detail->Get("listed_maintenance"))->value==2
+                    && static_cast<value::Int*>(detail->Get("current_maintenance"))->value==(free ? 0 : 2)
+                    && static_cast<value::String*>(detail->Get("prerequisite"))->value==game->GetState()->m_settings.global.GetSmacTechnologyRules()->technologies[6].name
+                    && static_cast<value::String*>(detail->Get("art"))->value=="facs/fac024.pcx:crop(2,3,21,32)","details used presentation cost/name, forgot free maintenance or lost frozen prerequisite/art bounds");
+                auto* setup=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_facility_details"));
+                auto* control=static_cast<value::Callable*>(setup->Run(GSE_CALL,{game->Wrap(GSE_CALL),base->Wrap(GSE_CALL)}));
+                for(const auto* action:{"row","close","open","escape","open","turn","open","refresh"}) {
+                    control->Run(GSE_CALL,{VALUE(value::String,,"detail"),VALUE(value::String,,action)});
+                }
+                control->Run(GSE_CALL,{VALUE(value::String,,"missing"),VALUE(value::String,,"missing")});
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==rng && fixture.Updates().empty(),"view/cancel/reopen or optional private providers mutated saved authority or requests");
+                bm->DefineFacility(new FacilityDef("unresolved","Unresolved facility","",10,{}));base->m_facilities.emplace("unresolved",bm->GetFacilityDef("unresolved"));
+                auto* missing=static_cast<value::Object*>(Call(GSE_CALL,wrapped,"get_smac_facility_details",{VALUE(value::String,,"unresolved")}));
+                GT_ASSERT(missing->value.count("cost")==0 && missing->value.count("current_maintenance")==0 && missing->value.count("prerequisite")==0
+                    && missing->value.count("art")==0 && static_cast<value::String*>(missing->Get("name"))->value=="Unresolved facility","absent metadata invented rules or artwork");GT_OK();
+            });if(!result.empty()) {return result;}
+        }GT_OK();
+    });
+    task->AddTest("SMAC installed facility details withhold foreign private cost and fee",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(HabitationSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,6,2);auto* bm=game->GetBM();
+            bm->DefineFacility(new FacilityDef("detail","Displayed","",80,{},24));base->m_facilities.emplace("detail",bm->GetFacilityDef("detail"));
+            const auto before=fixture.Snapshot();auto* detail=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_facility_details",{VALUE(value::String,,"detail")}));
+            GT_ASSERT(detail->value.count("cost")==0 && detail->value.count("current_maintenance")==0
+                && static_cast<value::String*>(detail->Get("name"))->value=="Hab Complex" && fixture.Snapshot()==before,"foreign information granted private pricing or hid public identity");GT_OK();
+        });
+    });
     task->AddTest("SMAC habitation picker completion queue maintenance and actual Start",[](GSE*,context::Context*)->std::string {
         std::string saved;std::array<std::string,8> names;names[0]=Roles().worker;
         for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}

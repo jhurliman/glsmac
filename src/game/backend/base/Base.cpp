@@ -1,6 +1,7 @@
 #include "Base.h"
 #include "SmacProductionDisplay.h"
 #include <limits>
+#include <algorithm>
 #include <set>
 #include <utility>
 
@@ -863,6 +864,56 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return VALUEEXT( gse::value::Object, GSE_CALL, result );
 		} ),
 	},
+    {
+        "get_smac_facility_details",
+        NATIVE_CALL(this) {
+            N_EXPECT_ARGS(1);N_GETVALUE(id,0,String);
+            if(m_game->GetBM()->GetBase(m_id)!=this) {THROW("Facility details require a registered Base");}
+            const auto found=m_facilities.find(id);if(found==m_facilities.end()) {return VALUE(gse::value::Undefined);}
+            const auto* def=found->second;
+            if(!def || m_game->GetBM()->GetFacilityDef(id)!=def) {THROW("Facility details require a registered installed definition");}
+            gse::value::object_properties_t fields{
+                {"name",VALUE(gse::value::String,,def->m_name)},
+                {"description",VALUE(gse::value::String,,def->m_description)}
+            };
+            const auto& render=def->m_render_info;
+            if(!render.file.empty() && render.width && render.height) {
+                const auto art=render.file+":crop("+std::to_string(render.x)+","+std::to_string(render.y)+","+
+                    std::to_string(uint32_t(render.x)+render.width-1)+","+std::to_string(uint32_t(render.y)+render.height-1)+")";
+                fields.emplace("art",VALUE(gse::value::String,,art));
+            }
+            const auto& global=m_game->GetState()->m_settings.global;
+            const auto& production=global.GetSmacProductionRules();const auto& technology=global.GetSmacTechnologyRules();
+            if(m_resource_context && def->m_smac_source_id && *def->m_smac_source_id>=1 && *def->m_smac_source_id<=33 && production) {
+                m_game->GetBM()->ValidateSmacFacilityDef(def);
+                const auto source=*def->m_smac_source_id;const auto& row=production->facilities.at(source-1);
+                fields.at("name")=VALUE(gse::value::String,,row.name);
+                fields.emplace("source_id",VALUE(gse::value::Int,,source));
+                if(row.maintenance>=0) {fields.emplace("listed_maintenance",VALUE(gse::value::Int,,row.maintenance));}
+                if(technology) {
+                    const auto reference=technology->ResolveToken(row.prerequisite);
+                    using Kind=settings::SmacTechnologyReference::Kind;
+                    if(reference.kind==Kind::NONE) {fields.emplace("prerequisite",VALUE(gse::value::String,,"None"));}
+                    else if(reference.kind==Kind::DISABLED) {fields.emplace("prerequisite",VALUE(gse::value::String,,"Unavailable"));}
+                    else if(reference.kind==Kind::TECHNOLOGY_ID && reference.technology_id) {
+                        fields.emplace("prerequisite",VALUE(gse::value::String,,technology->technologies.at(*reference.technology_id).name));
+                    }
+                }
+                if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()) {
+                    const auto item=m_game->MakeSmacProductionItem(m_owner,ProductionItemKind::Facility,source);
+                    // Optional private providers do not erase registered metadata.
+                    try {const auto cost=m_game->GetSmacProductionCost(m_owner,item);fields.emplace("cost",VALUE(gse::value::Int,,cost));}
+                    catch(const std::runtime_error&) {}
+                    try {
+                        const auto energy=m_game->GetCanonicalBaseEnergy(*this);
+                        const auto fee=std::find_if(energy.maintenance_fees.begin(),energy.maintenance_fees.end(),[&](const auto& entry){return entry.first==source;});
+                        fields.emplace("current_maintenance",VALUE(gse::value::Int,,fee==energy.maintenance_fees.end() ? 0 : fee->second));
+                    } catch(const std::runtime_error&) {}
+                }
+            }
+            return VALUE(gse::value::Object,,GSE_CALL_NOGC,fields);
+        })
+    },
 	{
 		"has_facility",
 		NATIVE_CALL( this ) {

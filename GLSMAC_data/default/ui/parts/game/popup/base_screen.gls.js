@@ -217,13 +217,7 @@ return {
 			ecodamage: canonical ? 'N/A' : 0, // TODO
 		});
 
-		let facilities = [];
-		const ff = base.get_facilities();
-		for (f in ff) {
-			facilities :+ff[f].name;
-		}
-
-		this.sections.facilities.set(facilities);
+		this.sections.facilities.set({base: base, entries: base.get_facilities()});
 
 		const resource_data = {
 			nutrients: {
@@ -333,6 +327,7 @@ return {
 	},
 
 	on_hide: () => {
+		this.sections.facilities.reset();
 		this.sections.specialist_selection.hide_view();
 		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
 		this.sections.bottom_bar.frame.hide();

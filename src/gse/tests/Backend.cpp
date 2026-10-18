@@ -4527,11 +4527,15 @@ public:
 			value.satellites.clear();
 			const auto original_economy = value.economy; value.economy.clear();
 			const auto original_hostility=value.hostility;value.hostility.owners.clear();
+			const auto original_strategy=*value.strategy;value.strategy->clear();
 			for ( size_t i = 0; i < value.roster.size(); ++i ) {
 				const auto count = static_cast< int32_t >( i );
 				value.satellites.emplace( ids[ i ], faction::SmacSatelliteCounts{ { count + 3, count + 5, count + 7 } } );
 				value.economy.emplace( ids[ i ], original_economy.at( value.roster[ i ].simulation_id ) );
 				value.hostility.owners.emplace(ids[i],original_hostility.owners.at(value.roster[i].simulation_id));
+				auto strategy=original_strategy.at(value.roster[i].simulation_id);
+				strategy.priorities={INT32_MIN,2,-1,INT32_MAX};
+				value.strategy->emplace(ids[i],strategy);
                 if(original_humans & (1u<<value.roster[i].simulation_id)) {value.human_membership|=static_cast<uint8_t>(1u<<ids[i]);}
 				value.roster[ i ].simulation_id = ids[ i ];
 				auto& social = value.social.factions[ i ]; social.admission.simulation_id = ids[ i ];
@@ -10237,6 +10241,19 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "SMAC simulation actual single participant Start admission", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( false, 0, true );
 	} );
+	task->AddTest("SMAC faction strategy is initialized by actual new-world admission",GT(){
+		BackendFixture fixture;fixture.ConfigureConventional(false,3,true);
+		bool matched=false;
+		fixture.ResourceState([&](auto& state){
+			matched=state.strategy && state.strategy->size()==state.roster.size();
+			for(const auto& participant:state.roster) {
+				// The synthetic source header is aggression-1/C0/D0/B1/E1.
+				matched=matched && state.strategy->at(participant.simulation_id).priorities==std::array<int32_t,4>{1,0,1,0};
+			}
+		});
+		GT_ASSERT(matched,"new-world admission omitted or reordered live strategy priorities");
+		GT_OK();
+	});
 	task->AddTest( "SMAC simulation actual host Start admission", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, true );
 	} );

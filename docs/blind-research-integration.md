@@ -40,6 +40,21 @@ the later regional comm-link bit8. Hunter-Seeker ancestry uses
 four-edge controlled chains distinguish that behavior from `1+Discover`.
 The public test now checks all 119 original results.
 
+## Persistent priorities
+
+New-world admission now copies the four frozen personality priorities into
+owned faction strategy records in Explore/Discover/Build/Conquer order. These
+records are separate from technology ownership, Base governors and immutable
+definitions. They preserve full signed values. A canceled priority question
+leaves them untouched; accepting any four-bit mask, including zero, stores
+exactly 0/1 per axis.
+
+Simulation format V16 retains these records by simulation ID. V11-V15 saves
+restore explicit absence because they never recorded priority authority;
+restoration does not fabricate it from current definitions. This state alone
+does not enable live Blind dispatch or suspended-priority save/resume. Those
+callers must require the saved authority and preserve the turn continuation.
+
 ## Automatic selector
 
 `SmacAutomaticResearch` now scans normal IDs in ascending order, admits enabled

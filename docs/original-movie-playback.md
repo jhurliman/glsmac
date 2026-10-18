@@ -13,6 +13,8 @@ OpenGL UI surface's `playmovie(path)`, `tickmovie()` and `stopmovie()` methods.
 Surface removal/reset/shutdown cancels and joins decoding, closes the movie
 audio device, and restores suspended engine sound. These methods do not attach
 movies to research, captures, victories or any other gameplay event.
+FFmpeg open/probe/read uses an interrupt callback tied to cancellation before
+the caller joins the worker; stalled supported I/O is interrupted on teardown.
 
 ## Formats and timing
 
@@ -52,6 +54,15 @@ Movies default on and require FFmpeg development libraries `avformat`,
 `libavformat-dev libavcodec-dev libavutil-dev libswscale-dev` packages.
 macOS uses Homebrew `ffmpeg`. Package discovery uses pkg-config, then
 `FFMPEG_ROOT/include` and `FFMPEG_ROOT/lib`.
+
+Linux Portable32/64 instead build SHA256-pinned FFmpeg 8.1.3 as static libraries
+with only the EA demuxer, TQI/EA ADPCM decoders, file protocol and CPU color
+conversion. Network and autodetected external codecs are disabled. Portable
+archives include its license, source archive and build-source receipt; the
+executable has no dependency on the build host's FFmpeg shared-library sonames.
+The focused `tools/tests/portable_movie` CMake project checks this actual static
+dependency path without rebuilding the game, and its Debug configuration checks
+cancellation of a deliberately stalled local HTTP stream against system FFmpeg.
 
 On Windows run `./tools/install_ffmpeg_windows.ps1`, then set `FFMPEG_ROOT`
 to its printed directory before configuring the normal Windows preset. CI does

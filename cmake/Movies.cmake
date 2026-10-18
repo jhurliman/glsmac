@@ -1,6 +1,9 @@
-# Shared LGPL FFmpeg development distribution; no original movie assets bundled.
+# FFmpeg movie codecs; no original movie assets are bundled.
 OPTION( GLSMAC_MOVIES "Decode original EA WVE movies with FFmpeg" ON )
 IF ( GLSMAC_MOVIES )
+	IF ( UNIX AND NOT APPLE AND ( CMAKE_BUILD_TYPE STREQUAL "Portable32" OR CMAKE_BUILD_TYPE STREQUAL "Portable64" ) )
+		INCLUDE( "${CMAKE_CURRENT_LIST_DIR}/PortableMovieFFmpeg.cmake" )
+	ELSE ()
 	FIND_PACKAGE( PkgConfig QUIET )
 	IF ( PkgConfig_FOUND AND NOT WIN32 )
 		PKG_CHECK_MODULES( MOVIE_FFMPEG QUIET IMPORTED_TARGET libavformat libavcodec libavutil libswscale )
@@ -35,6 +38,7 @@ IF ( GLSMAC_MOVIES )
 				COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MOVIE_FFMPEG_DLLS} "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
 				COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MOVIE_FFMPEG_ROOT}/LICENSE.txt" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/FFmpeg-LICENSE.txt" )
 		ENDIF ()
+	ENDIF ()
 	ENDIF ()
 	TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE GLSMAC_HAVE_MOVIES=1 )
 ENDIF ()

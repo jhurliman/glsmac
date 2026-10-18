@@ -288,8 +288,11 @@ void Surface::PresentMovieFrame(int width,int height,const std::vector<uint8_t>&
 	m_actor->SetTexture(m_background.texture);
 	auto* geometry=m_geometry->AsRectangle();geometry->SetStretched();
 	const auto* parent=m_parent->GetGeometry();
-	const float viewport_width=std::min(parent->GetInnerWidth(),parent->GetInnerHeight()*4.0f/3.0f);
-	const float scale=std::min(viewport_width/width,parent->GetInnerHeight()/height);
+	// GetInnerWidth/Height describe child-content bounds, which can be zero
+	// before the first frame. The root's actual box is the presentation stage.
+	const auto& parent_area=parent->GetEffectiveArea();
+	const float viewport_width=std::min(parent_area.width,parent_area.height*4.0f/3.0f);
+	const float scale=std::min(viewport_width/width,parent_area.height/height);
 	geometry->SetWidth(width*scale);geometry->SetHeight(height*scale);
 }
 

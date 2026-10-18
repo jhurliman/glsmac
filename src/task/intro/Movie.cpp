@@ -48,14 +48,21 @@ struct Movie::Impl {
 
 #ifdef GLSMAC_HAVE_MOVIES
 	void Decode( const std::string& path ) {
-		AVFormatContext* format = nullptr;
+		AVFormatContext* format = avformat_alloc_context();
+		if(format) {
+			format->interrupt_callback = { [](void* opaque) -> int {
+				auto* self=static_cast<Impl*>(opaque);
+				std::lock_guard<std::mutex> lock(self->mutex);
+				return self->stop ? 1 : 0;
+			}, this };
+		}
 		AVCodecContext* v = nullptr;
 		AVCodecContext* a = nullptr;
 		AVPacket* packet = av_packet_alloc();
 		AVFrame* frame = av_frame_alloc();
 		SwsContext* scaler = nullptr;
 		try {
-			if (!packet || !frame || avformat_open_input(&format,path.c_str(),nullptr,nullptr)<0 || avformat_find_stream_info(format,nullptr)<0) { throw std::runtime_error("Cannot open movie"); }
+			if (!format || !packet || !frame || avformat_open_input(&format,path.c_str(),nullptr,nullptr)<0 || avformat_find_stream_info(format,nullptr)<0) { throw std::runtime_error("Cannot open movie"); }
 			// The supported original assets use EA's WVE demuxer, TQI video and
 			// packed S16 EA ADPCM. Reject unexpected files before allocating frames.
 			if (std::string(format->iformat->name) != "ea") { throw std::runtime_error("Unsupported movie container (expected EA WVE)"); }
@@ -155,7 +162,10 @@ Movie::Movie(const std::string& path,bool sound):m(new Impl) {
 	}
 	m->status.audio_device_opened=m->device!=0;
 	if(sound && !m->device) {m->status.audio_fallback=SDL_GetError();}
-	m->worker=std::thread([this,path]{m->Decode(path);});
+	// Capture the worker-owned state, not Movie::m: libc++ clears the unique_ptr
+	// before entering Impl's destructor, while its worker may not have started.
+	auto* impl=m.get();
+	m->worker=std::thread([impl,path]{impl->Decode(path);});
 #else
 	(void)path; (void)sound;
 	m->eof=true; m->status.error="Movie playback was not enabled at build time";

@@ -30,10 +30,10 @@ SmacSimulationState State() {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false ) {
+std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int64_t replacement = 0, const std::string* random = nullptr, const std::string* modifiers = nullptr, const std::string* history = nullptr, const std::string* satellites = nullptr, const std::string* lifecycle = nullptr, bool legacy = false, bool v12 = false ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t v ) { buffer.WriteInt( number++ == index ? replacement : v ); };
-	write( 0x534d5353 ); write( legacy ? 11 : 12 ); write( value.roster.size() );
+	write( 0x534d5353 ); write( legacy ? 11 : v12 ? 12 : 13 ); write( value.roster.size() );
 	for ( const auto& participant : value.roster ) {
 		write( participant.simulation_id ); write( participant.slot ); buffer.WriteString( participant.gsid );
 		write( static_cast< int64_t >( participant.role ) ); buffer.WriteString( participant.faction_id );
@@ -77,11 +77,25 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
 			for(size_t design=0;design<512;++design) {if(item.second.losses[design]) {buffer.WriteInt(design);buffer.WriteInt(item.second.losses[design]);}}
 		}
 	}
+	if(!legacy && !v12) {buffer.WriteBool(value.human_defeat_request.has_value());if(value.human_defeat_request) {buffer.WriteInt(*value.human_defeat_request);}}
 	return buffer.ToString();
 }
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC human defeat request retains its owner independently of inactive status and migrates V12",GT(){
+		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+		auto value=State();value.roster[1].active=false;value.human_defeat_request=2;
+		const auto wire=value.Serialize(technologies,profiles,units).ToString();
+		GT_ASSERT(wire==Wire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"ending request was omitted or changed on restore");
+		auto legacy=value;legacy.human_defeat_request.reset();
+		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,false,true),technologies,profiles,units);
+		GT_ASSERT(migrated==legacy && !migrated.human_defeat_request,"V12 migration invented a request from inactive roster state");
+		for(const int owner:{0,1,7,8,INT32_MAX}) {auto invalid=value;invalid.human_defeat_request=owner;
+			GT_ASSERT(Rejects([&]{invalid.Serialize(technologies,profiles,units);}) && Rejects([&]{SmacSimulationState::Deserialize(Wire(invalid),technologies,profiles,units);}),"unknown or active request owner accepted");
+		}
+		GT_OK();
+	});
 	task->AddTest("SMAC simulation battle history survives restore and migrates pristine V11 campaigns",GT(){
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();

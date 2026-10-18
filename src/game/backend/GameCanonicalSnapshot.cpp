@@ -82,7 +82,7 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
 }
 
 void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) const {
-    if(!m_simulation || next.stage!=CanonicalTurnContinuation::Stage::Colony || !next.colony || next.energy || next.screen_base || next.screen_request_id
+    if(!m_simulation || m_simulation->value.human_defeat_request || next.stage!=CanonicalTurnContinuation::Stage::Colony || !next.colony || next.energy || next.screen_base || next.screen_request_id
         || next.turn!=GetTurnId() || next.owner_index>=next.owners.size()) {
         throw std::runtime_error("Only an explicit Colony question is a saved turn boundary");
     }

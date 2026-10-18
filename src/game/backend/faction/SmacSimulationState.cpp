@@ -42,7 +42,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 12;
+constexpr int64_t VERSION = 13;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -127,9 +127,13 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 			|| !social_state || social_state->admission.faction_id != participant.faction_id ) { throw std::runtime_error( "SMAC simulation roster and technology identities differ" ); }
 	}
 	if(hostility.owners.size()!=roster.size()) {throw std::runtime_error("Unexpected SMAC hostile-history owner");}
+	if(human_defeat_request) {
+		const auto owner=std::find_if(roster.begin(),roster.end(),[&](const auto& row){return row.simulation_id==*human_defeat_request;});
+		if(owner==roster.end() || owner->active) {throw std::runtime_error("Human defeat request requires an inactive saved participant");}
+	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request; }
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -191,6 +195,7 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 		buffer.WriteInt(std::count_if(owner.losses.begin(),owner.losses.end(),[](auto value){return value!=0;}));
 		for(size_t i=0;i<owner.losses.size();++i) {if(owner.losses[i]) {buffer.WriteInt(i);buffer.WriteInt(owner.losses[i]);}}
 	}
+	buffer.WriteBool(human_defeat_request.has_value());if(human_defeat_request) {buffer.WriteInt(*human_defeat_request);}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -202,7 +207,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -271,6 +276,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 				if(id<1 || id>7 || !result.hostility.owners.emplace(id,std::move(owner)).second) {throw std::runtime_error("Invalid SMAC hostile-history owner");}
 			}
 		}
+		if(version>=13 && buffer.ReadBool()) {result.human_defeat_request=ReadInt32(buffer);}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

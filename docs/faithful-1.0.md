@@ -233,22 +233,24 @@ Frontend ownership refresh merged in
 [#190](https://github.com/jhurliman/glsmac/pull/190), retaining stable Base identity,
 owner badges/labels and navigation membership. The saved post-upkeep faction
 population aggregate merged in [#191](https://github.com/jhurliman/glsmac/pull/191).
-[Ordinary undefended capture](smac-base-capture.md) is submitted in
+[Ordinary undefended capture](smac-base-capture.md) merged in
 [#192](https://github.com/jhurliman/glsmac/pull/192); its live transfer, loot,
 facility draws, remote home repair and actual Start tests pass. It remains a
-bounded population2 first-capture slice, pending current-head review and CI.
+bounded population2 first-capture slice. Assimilation upkeep and ordered Base
+screen entry merged in [#193](https://github.com/jhurliman/glsmac/pull/193) and
+[#194](https://github.com/jhurliman/glsmac/pull/194), after current-head review and
+relevant CI. [Human-defeat ending requests](smac-human-defeat-request.md) now have
+a saved producer and live controller in the following implementation slice.
 
 The next three actionable slices are:
 
-1. Connect conquered-Base assimilation decay at the original upkeep phase,
-   preserving stored history through save/reload and read-only recalculation.
-   Check complete original upkeep before using direct tail-block evidence as
-   the scheduling contract; connect citizen contribution when that live
-   citizen consumer exists.
-2. Finish captured-Base presentation through the nonmodal Base-screen entry.
-   Keep the original construction/show limitation distinct from a mandatory
-   gameplay choice: mode0 does not wait for the player to close the screen.
-   Verify movement, badges, owner navigation and Base management together.
+1. Replace the restart site's port approximation with the original nonzero-turn
+   candidate/retry contract and ordered gates, retaining CRT draws, region
+   presence and site-rating inputs. Use successful and failed actual callers.
+2. Connect [last-Base capture disposition](smac-last-base-capture-plan.md) with
+   post-loot reinitialization, lost-home and remaining Unit retirement/restart,
+   saved ending requests and coherent future worker/territory queries. Keep
+   notification and Base-screen entry distinct from final conquest resolution.
 3. Compose defended capture and last-Base disposition with conquest and the
    M2 save checkpoints. Establish the original remaining-unit/pod and victory
    conditions first. Then exercise the same scenario through network authority;

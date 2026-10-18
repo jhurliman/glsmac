@@ -255,6 +255,61 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC human defeat request finishes its owner tail blocks gameplay and survives actual Start",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(const int victim:{1,2}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(RestartSource,true);fixture.BasePresentationRoles(names);std::string saved;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();game->AdvanceTurn(3);auto* lost=Populate(GSE_CALL,fixture,true,false,victim==1 ? 0 : 6,victim);
+                SelectionPresentations(fixture);auto* bm=game->GetBM();auto* um=game->GetUM();
+                for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
+                const int other=victim==1 ? 2 : 1;auto* owner=&game->GetState()->m_slots->GetSlot(other==1 ? 0 : 6);
+                const auto stock=game->MakeSmacProductionItem(owner,ProductionItemKind::Stockpile,38);
+                const auto scout=game->MakeSmacProductionItem(lost->m_owner,ProductionItemKind::Unit,2);
+                lost->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});lost->SetAccumulatedNutrients(-1);
+                auto context=lost->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;lost->SetSmacResourceContext(GSE_CALL,context);
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+                auto* control=new Base(game,702,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Ending control",{},pops,41,5,
+                    ProductionState{stock,0,stock,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{other,false,0,0,0x40u,false});
+                bm->SpawnBase(GSE_CALL,control);control->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+                auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                if(victim==2) {um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),owner,game->GetMap()->GetTile(10,10),
+                    {2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});knowledge.units.push_back({92,0,false});}
+                for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                fixture.ResourceState([](auto& state){state.do_or_die=true;for(auto& row:state.economy) {row.second.credits=100;row.second.pending_debit=7;}
+                    for(auto& tech:state.technology.factions) {tech.target=5;tech.cached_threshold=10000;}});
+                auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+                GT_ASSERT(Call(GSE_CALL,wrapper,"get_smac_ending")->type==VT_NULL,"fresh campaign invented an ending request");
+                const auto control_before=Base::Serialize(control).ToString();size_t notifications=0;
+                game->On(GSE_CALL,"smac_ending",NATIVE_CALL(&notifications) {++notifications;return VALUE(value::Undefined);}));
+                game->Event(GSE_CALL,"complete_turn",{});
+                auto* moving=um->GetUnit(victim==1 ? 91 : 92);auto* destination=game->GetMap()->GetTile(victim==1 ? 8 : 11,victim==1 ? 6 : 11);
+                game->Event(GSE_CALL,"move_unit",{{"unit",moving->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}});fixture.DrainEvents();
+                auto* ending=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_smac_ending"));
+                GT_ASSERT(notifications==1 && !bm->GetBase(701) && !um->GetUnit(91) && ending->type==VT_OBJECT
+                    && static_cast<value::Int*>(ending->Get("owner_simulation_id"))->value==victim
+                    && static_cast<value::Bool*>(ending->Get("local"))->value==(victim==1)
+                    && static_cast<value::Bool*>(Call(GSE_CALL,wrapper,"get_smac_eliminated"))->value==(victim==1),"ending controller conflated local status, victim or request notification");
+                if(victim==1) {GT_ASSERT(Base::Serialize(control).ToString()==control_before,"ending processed a later owner's Base");}
+                else {GT_ASSERT(um->GetUnit(92)->GetTile()==game->GetMap()->GetTile(10,10),"prequeued gameplay ran after the human ending request");}
+                bool exact=false;fixture.ResourceState([&](auto& state){exact=state.human_defeat_request==victim && state.economy.at(victim).credits==120
+                    && state.economy.at(victim).population_aggregate==0;});GT_ASSERT(exact,"ending skipped the original empty-owner tail or lost persistent request");
+                saved=fixture.Snapshot();GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}) && fixture.Snapshot()==saved,"ending allowed another turn");
+                GT_ASSERT(Rejects([&]{Call(GSE_CALL,wrapper,"event",{VALUE(value::String,,"complete_turn"),VALUE(value::Object,,GSE_CALL_NOGC,{})});}) && fixture.Snapshot()==saved,
+                    "script event bypassed the terminal request");GT_OK();
+            });if(!result.empty()) {return "ending victim "+std::to_string(victim)+": "+result;}
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(RestartSource,true);restored.BasePresentationRoles(names);
+            const auto result2=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+                auto* ending=static_cast<value::Object*>(Call(GSE_CALL,wrapper,"get_smac_ending"));
+                GT_ASSERT(ending->type==VT_OBJECT && static_cast<value::Int*>(ending->Get("owner_simulation_id"))->value==victim
+                    && static_cast<value::Bool*>(ending->Get("local"))->value==(victim==1) && Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}),"actual Start dropped or replayed the ending request");GT_OK();
+            });if(!result2.empty()) {return result2;}
+        }GT_OK();
+    });
+
     task->AddTest("SMAC conquered Base upkeep ages incoming history once after resource passes",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         for(const int former:{1,2}) {for(const int timer:{0,1,2,50}) {
@@ -2041,7 +2096,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         "restart factory lost package order, common site or fresh state");
                 }
                 bool exact=false;fixture.ResourceState([&](auto& state){const auto& e=state.economy.at(1);const auto& t=state.technology.factions[0];
-                    exact=state.roster[0].active==restarted && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
+                    exact=state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
+                        && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
                         && e.pending_debit==0 && e.research_fraction==70 && t.target==5 && t.labs==40 && !t.cached_threshold
                         && e.rates.psych==(restarted ? 0 : 2) && e.rates.labs==(restarted ? 5 : 3);});
                 GT_ASSERT(exact && fixture.GameplayRandom()==pair && game->GetRandom()->GetStateString()==random,"disposition reset retained research, flags, treasury or RNG incorrectly");

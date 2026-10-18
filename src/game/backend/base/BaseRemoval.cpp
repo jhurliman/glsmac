@@ -87,7 +87,8 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
     auto updates=m_base_updates;QueueBaseUpdateInto(updates,&base,BUO_DESPAWN);
     std::unique_lock lock(m_updated_bases_mutex);auto triggers=m_updated_bases;triggers.erase(&base);
     auto& state=m_game->m_simulation->value;
-    auto& economy=state.economy.at(base.GetSmacResourceContext().owner_simulation_id);
+    const auto lost_owner=base.GetSmacResourceContext().owner_simulation_id;
+    auto& economy=state.economy.at(lost_owner);
     static_assert(std::is_nothrow_swappable_v<decltype(bases)> && std::is_nothrow_swappable_v<decltype(order)>
         && std::is_nothrow_swappable_v<decltype(assignments)> && std::is_nothrow_swappable_v<decltype(updates)>
         && std::is_nothrow_swappable_v<decltype(triggers)> && std::is_nothrow_copy_assignable_v<faction::SmacEconomyState>);
@@ -96,6 +97,7 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
     economy=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     state.hostility.owners.swap(plan.hostility.owners);
     state.roster[plan.participant].active=plan.site!=nullptr;
+    if(!plan.site) {state.human_defeat_request=lost_owner;}
     units.Commit();std::unique_ptr<Base> retired(&base);lock.unlock();
     units.Notify(GSE_CALL);
     m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&base) {{"base",base.Wrap(GSE_CALL)},};});

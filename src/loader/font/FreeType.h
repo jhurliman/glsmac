@@ -15,7 +15,7 @@ CLASS( FreeType, FontLoader )
 
 protected:
 
-	types::Font* LoadFontImpl( const std::string& name, const std::vector< unsigned char >& data, const unsigned char size ) override;
+	types::Font* LoadFontImpl( const std::string& name, const std::vector< unsigned char >& data, const unsigned char size, RasterMode mode ) override;
 
 private:
 	FT_Library m_freetype;

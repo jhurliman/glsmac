@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/UIClass.cpp
 	${PWD}/Sound.cpp
+	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp
@@ -70,6 +71,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacLiveEconomy.cpp
 	${PWD}/SmacResearch.cpp
 	${PWD}/HumanResearchValue.cpp
+	${PWD}/AutomaticResearch.cpp
 	${PWD}/SmacProductionSwitch.cpp
 	${PWD}/SmacWorkerAllocation.cpp
 	${PWD}/SmacWorkedSquareCollection.cpp

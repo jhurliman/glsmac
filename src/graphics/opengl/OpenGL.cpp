@@ -443,8 +443,11 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture, const bool requested_smoothen ) {
 	ASSERT( texture, "texture is null" );
+	// Indexed display-palette artwork must retain actual palette entries when
+	// stretched: the native menu's tint lookup addresses those same indices.
+	const bool smoothen = requested_smoothen && !texture->HasFlag( types::texture::TF_SMAC_PALETTE );
 
 	bool is_reload_needed = false;
 

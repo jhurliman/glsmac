@@ -1,4 +1,9 @@
 #include "SDL2.h"
+#include "SmacPalette.h"
+#include "loader/flic/MenuCompositor.h"
+#include <algorithm>
+
+#include <memory>
 
 #include "util/FS.h"
 #include "types/texture/Texture.h"
@@ -33,9 +38,57 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	return IMG_Load_RW( rw, 1 );
 }
 
+struct SmacMenuSource {
+	std::vector< unsigned char > animation;
+	std::vector< uint8_t > background;
+	std::array< std::array< uint8_t, 3 >, 256 > palette;
+	size_t width, height;
+	std::unordered_map< size_t, loader::flic::Frame > frames;
+};
+
+types::texture::Texture* SDL2::CreateSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame_index, size_t rows, size_t viewport_width, size_t viewport_height ) {
+	const auto animation_path = GetCustomFilename( animation ), background_path = GetCustomFilename( background );
+	const auto source_key = animation_path + ":" + background_path;
+	auto found = m_smac_menu_sources.find( source_key );
+	if ( found == m_smac_menu_sources.end() ) {
+		auto source = std::make_shared< SmacMenuSource >();
+		util::FS::ReadFile( source->animation, animation_path );
+		std::vector< unsigned char > bytes;
+		using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
+		util::FS::ReadFile( bytes, background_path );
+		Surface image( load_image( bytes ), SDL_FreeSurface );
+		util::FS::ReadFile( bytes, GetCustomFilename( "palette.pcx" ) );
+		Surface palette_image( load_image( bytes ), SDL_FreeSurface );
+		ApplySmacPalette( image.get(), palette_image ? palette_image->format->palette : nullptr );
+		for ( size_t i = 0; i < source->palette.size(); ++i ) {
+			const auto& color = palette_image->format->palette->colors[ i ];
+			source->palette[ i ] = { color.r, color.g, color.b };
+		}
+		source->width = image->w; source->height = image->h;
+		source->background.resize( source->width * source->height );
+		for ( int y = 0; y < image->h; ++y ) {
+			std::copy_n( static_cast< const uint8_t* >( image->pixels ) + y * image->pitch, image->w, source->background.data() + size_t( y ) * image->w );
+		}
+		found = m_smac_menu_sources.emplace( source_key, std::move( source ) ).first;
+	}
+	auto& source = *found->second;
+	auto frame = source.frames.find( frame_index );
+	if ( frame == source.frames.end() ) {
+		frame = source.frames.emplace( frame_index, loader::flic::FlicReader::ReadFrame( source.animation, frame_index ) ).first;
+	}
+	const auto composed = loader::flic::ComposeMenu( frame->second, source.background, source.width, source.height, source.palette, rows, viewport_width, viewport_height );
+	// Each Surface owns its current composed pixels. Only source data is cached,
+	// so dragging a window through many dimensions does not retain all canvases.
+	auto texture = std::make_unique< types::texture::Texture >( source_key, composed.width, composed.height );
+	memcpy( texture->m_bitmap, composed.rgba.data(), composed.rgba.size() );
+	texture->FullUpdate();
+	return texture.release();
+}
+
 types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {
 
-	texture_map_t::iterator it = m_textures.find( filename );
+	const auto cache_key = filename + ":flags=" + std::to_string( flags );
+	texture_map_t::iterator it = m_textures.find( cache_key );
 	if ( it != m_textures.end() ) {
 		return it->second;
 	}
@@ -43,21 +96,30 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 		Log( "Loading texture \"" + filename + "\"" );
 		std::vector< unsigned char > buffer = {};
 		util::FS::ReadFile( buffer, filename );
-		auto* image = load_image( buffer );
-		ASSERT( image, IMG_GetError() );
+		using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
+		Surface image( load_image( buffer ), SDL_FreeSurface );
+		if ( !image ) { THROW( IMG_GetError() ); }
+		if ( flags & types::texture::TF_SMAC_PALETTE ) {
+			if ( !m_transparent_colors.empty() || m_fix_yellow_shadows ) {
+				THROW( "SMAC display palette currently requires an opaque source" );
+			}
+			std::vector< unsigned char > palette_buffer;
+			util::FS::ReadFile( palette_buffer, GetCustomFilename( "palette.pcx" ) );
+			Surface palette_image( load_image( palette_buffer ), SDL_FreeSurface );
+			ApplySmacPalette( image.get(), palette_image ? palette_image->format->palette : nullptr );
+		}
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
-			SDL_Surface * old = image;
-			image = SDL_ConvertSurfaceFormat( old, SDL_PIXELFORMAT_RGBA32, 0 );
-			ASSERT( image, IMG_GetError() );
-			SDL_FreeSurface( old );
+			auto* converted = SDL_ConvertSurfaceFormat( image.get(), SDL_PIXELFORMAT_RGBA32, 0 );
+			if ( !converted ) { THROW( SDL_GetError() ); }
+			image.reset( converted );
 		}
 
 		NEWV( texture, types::texture::Texture, filename, image->w, image->h, flags );
 		texture->SetBitmap( image->pixels );
 		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
-		SDL_FreeSurface( image );
+		image.reset();
 
 		FixTexture( texture ); // some pcx files have strange artifacts that we need to fix procedurally
 
@@ -66,7 +128,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 
 		m_textures.insert(
 			{
-				filename,
+				cache_key,
 				texture
 			}
 		);
@@ -89,7 +151,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 			std::to_string( x2 ) + ":" +
 			std::to_string( y2 ) + ":" +
 			std::to_string( flags ) + ":" +
-			std::to_string( value );
+			std::to_string( value ) + ":" + std::to_string( texture_flags );
 
 	texture_map_t::iterator it = m_subtextures.find( subtexture_key );
 	if ( it != m_subtextures.end() ) {

@@ -125,7 +125,7 @@ return (m) => {
 			right: 0,
 			bottom: 0,
 			zindex: 0.2,
-			background: 'openinga.pcx:stretch()',
+			background: 'openinga.pcx:smacpalette():stretch()',
 		});
 
 		music = m.root.sound({

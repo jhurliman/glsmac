@@ -29,6 +29,17 @@ struct SmacSimulationParticipant {
 	bool operator==( const SmacSimulationParticipant& other ) const;
 };
 
+// Mutable faction strategy, shared by research and other strategy consumers.
+// Frozen personality headers supply startup values only. These are full
+// signed integers until an accepted research-priority question normalizes them.
+struct SmacFactionStrategy {
+	std::array<int32_t,4> priorities; // Explore/Discover/Build/Conquer
+	static SmacFactionStrategy NewWorld(const settings::SmacFactionStartupRule& profile) noexcept;
+	// Absence means cancel: retain every prior integer. Mask0 is a valid answer.
+	void ApplyResearchPriorities(std::optional<uint8_t> accepted_mask);
+	bool operator==(const SmacFactionStrategy& other) const noexcept {return priorities==other.priorities;}
+};
+
 // Authoritative global inputs, distinct from per-base governor options and
 // derived intake. The two solar flags belong to different calculation phases.
 struct SmacGlobalResourceModifiers {
@@ -74,6 +85,9 @@ struct SmacSimulationState {
 	// Required per-owner financial authority. Absence never means neutral
 	// allocation rates or a zero treasury; restoration never posts income.
 	std::map< int32_t, SmacEconomyState > economy;
+	// V11-V15 port saves did not retain this authority. Keep absence explicit
+	// on migration; restoring must not replay personality initialization.
+	std::optional<std::map<int32_t,SmacFactionStrategy>> strategy;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

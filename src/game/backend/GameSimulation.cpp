@@ -125,12 +125,14 @@ void Game::PrepareNewSimulation() {
     // control authority; it must not inherit a transport-role heuristic.
     for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
+	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
 		value.hostility.owners.emplace(participant.simulation_id,faction::SmacHostileOwner::NewWorld(m_smac_secondary_relations.at(participant.simulation_id)));
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );
 		if ( !resources || !profile ) { throw std::runtime_error( "New-world economy requires frozen resource and faction inputs" ); }
+		value.strategy->emplace(participant.simulation_id,faction::SmacFactionStrategy::NewWorld(*profile));
 		int32_t bonus = 0;
 		// ENERGY is a scalar assignment, independent of the shared eight-record
 		// list (original definition+4e8); later supported entries replace it.

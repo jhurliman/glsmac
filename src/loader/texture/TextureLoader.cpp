@@ -6,6 +6,7 @@
 #include "types/texture/LazyTexture.h"
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
+#include "util/FinallyGuard.h"
 
 namespace loader {
 namespace texture {
@@ -276,13 +277,12 @@ types::texture::LazyTexture* TextureLoader::GetLazyTexture( const std::string& f
 }
 
 types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const types::texture::texture_flag_t flags ) {
-	const transparent_colors_t colors_old = m_transparent_colors;
+	transparent_colors_t colors_old = m_transparent_colors;
 	const bool fix_yellow_shadows_old = m_fix_yellow_shadows;
+	util::FinallyGuard restore( [ & ] { m_transparent_colors.swap( colors_old ); m_fix_yellow_shadows = fix_yellow_shadows_old; } );
 	m_transparent_colors = GetTCs( res );
 	m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	auto* result = LoadTextureImpl( GetPath( res ), flags );
-	m_transparent_colors = colors_old;
-	m_fix_yellow_shadows = fix_yellow_shadows_old;
 	return result;
 }
 
@@ -291,11 +291,10 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 	key.resize( filename.size() );
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
 	const auto res = g_engine->GetResourceManager()->GetResource( filename );
-	transparent_colors_t colors_old;
-	bool fix_yellow_shadows_old;
+	transparent_colors_t colors_old = m_transparent_colors;
+	const bool fix_yellow_shadows_old = m_fix_yellow_shadows;
+	util::FinallyGuard restore( [ & ] { m_transparent_colors.swap( colors_old ); m_fix_yellow_shadows = fix_yellow_shadows_old; } );
 	if ( res != resource::NONE ) {
-		colors_old = m_transparent_colors;
-		fix_yellow_shadows_old = m_fix_yellow_shadows;
 		m_transparent_colors = GetTCs( res );
 		m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	}
@@ -303,10 +302,6 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 	auto* result = path.empty()
 		? nullptr
 		: LoadTextureImpl( path, flags );
-	if ( res != resource::NONE ) {
-		m_transparent_colors = colors_old;
-		m_fix_yellow_shadows = fix_yellow_shadows_old;
-	}
 	return result;
 }
 
@@ -319,11 +314,15 @@ types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& fi
 }
 
 types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value, const types::texture::texture_flag_t texture_flags ) {
-	const transparent_colors_t colors_old = m_transparent_colors;
+	transparent_colors_t colors_old = m_transparent_colors;
+	util::FinallyGuard restore( [ & ] { m_transparent_colors.swap( colors_old ); } );
 	m_transparent_colors = GetTCs( res );
 	types::texture::Texture* result = LoadTextureImpl( GetPath( res ), x1, y1, x2, y2, flags, value, texture_flags );
-	m_transparent_colors = colors_old;
 	return result;
+}
+
+types::texture::Texture* TextureLoader::CreateSmacMenuTexture( const std::string&, const std::string&, size_t, size_t, size_t, size_t ) {
+	THROW( "SMAC menu composition is unsupported by this texture backend" );
 }
 
 types::texture::Texture* TextureLoader::GetColorTexture( const types::Color& color ) {

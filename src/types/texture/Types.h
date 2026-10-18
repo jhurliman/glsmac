@@ -72,6 +72,7 @@ enum texture_flag_t {
 	TF_NONE = 0,
 	TF_MIPMAPS = 1 << 0,
 	TF_CPU_ONLY = 1 << 1, // owned compositor canvases: never submitted to graphics
+	TF_SMAC_PALETTE = 1 << 2, // indexed source uses the common display palette, capped at 235
 };
 
 }

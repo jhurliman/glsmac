@@ -165,6 +165,7 @@ template<class F> bool RegionalBasePairs(const RegionalRouteMap& map,const std::
 	ValidateRoutes(map,owner,peer);Require(region<128,"Regional route region is invalid");
 	if(region && (!owner_bases || !peer_bases)) {return false;}
 	for(const auto& base:bases) {Require(base.owner>=1 && base.owner<=7 && RouteCoordinate(map,base.coordinate),"Regional route Base is invalid");}
+	// Native failed routes retain peer marks across all source components.
 	std::vector<bool> marked(map.tiles.size());
 	for(const auto& source:bases) {
 		const auto si=RouteIndex(map,source.coordinate);

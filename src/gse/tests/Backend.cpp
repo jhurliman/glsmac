@@ -53,6 +53,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/Bool.h"
+#include "gse/value/Null.h"
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
@@ -4410,6 +4411,35 @@ public:
 		size_t produced = 0;
 		const auto create = [ & ]( GSE_CALLABLE ) {
 			auto* bm = m_game.GetBM(); auto* wrapper = static_cast< value::Object* >( bm->Wrap( GSE_CALL ) );
+            const auto original_history=m_game.m_simulation->value.victory_history;
+            const auto simulation=m_game.m_simulation->value.FindSlot(0)->simulation_id;
+            auto* handler=static_cast<value::Object*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/event/spawn_base"));
+            for(const bool available:{false,true}) {
+                m_game.m_simulation->value.victory_history=original_history;
+                if(available) {m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)=73;}
+                else {m_game.m_simulation->value.victory_history.reset();}
+                const auto before=m_game.m_simulation->value.victory_history;
+                auto* data=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                    {"owner",m_state->m_slots->GetSlot(0).GetPlayer()->Wrap(GSE_CALL)},
+                    {"tile",m_game.GetMap()->GetTile(0,2)->Wrap(GSE_CALL)},
+                    {"facilities",VALUE(value::Array,,{})},
+                    {"smac_starting_resource_context",VALUE(value::Bool,,true)}
+                }));
+                auto* event=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                    {"game",m_game.Wrap(GSE_CALL)},{"data",data},{"caller",VALUE(value::Int,,0)}
+                }));
+                auto* applied=static_cast<value::Object*>(static_cast<value::Callable*>(handler->Get("apply"))->Run(GSE_CALL,{event}));
+                event->Set("applied",applied,GSE_CALL);
+                if(available && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)!=0) {throw std::runtime_error("spawn event did not publish expansion history");}
+                if(available) {
+                    bool rejected=false;
+                    try {static_cast<value::Callable*>(wrapper->Get("rollback_spawn_base"))->Run(GSE_CALL,{applied->Get("base"),VALUE(value::Null)});}catch(const std::exception&) {rejected=true;}
+                    if(!rejected || bm->GetBases().empty() || m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)!=0) {throw std::runtime_error("invalid rollback changed a published Base or history");}
+                }
+                static_cast<value::Callable*>(handler->Get("rollback"))->Run(GSE_CALL,{event});
+                if(!bm->GetBases().empty() || !(m_game.m_simulation->value.victory_history==before)) {throw std::runtime_error("actual spawn event rollback retained rejected history or invented absent history");}
+            }
+            m_game.m_simulation->value.victory_history=original_history;
 			const auto spawn = [ & ]( size_t slot, size_t x ) {
 				auto* info = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "smac_starting_resource_context", VALUE( value::Bool,, true ) } } ) );
 				return static_cast< value::Callable* >( wrapper->Get( "spawn_base" ) )->Run( GSE_CALL, {

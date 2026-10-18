@@ -343,6 +343,18 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 			restored.RefreshPopulation(1);GT_ASSERT(!flags(restored,1),"Owner summary invented missing legacy bit8 history");GT_OK();
 		});
 	});
+    task->AddTest("SMAC regional routing preserves native peer marks across split source components",GT(){
+        namespace routes=game::backend::map::smac_territory;
+        routes::RegionalRouteMap graph{16,12,false,std::vector<routes::RegionalRouteTile>(96,{true,-1,1}),{},0};
+        const std::array<std::array<int32_t,3>,8> land{{{{2,2,1}},{{4,2,1}},{{2,8,1}},{{4,8,1}},{{6,8,-1}},{{8,8,-1}},{{10,8,2}},{{12,8,2}}}};
+        for(const auto& point:land) {graph.tiles.at(point[1]*8+point[0]/2)={false,static_cast<int8_t>(point[2]),1};}
+        const std::vector<routes::Base> bases{{{2,2},1},{{2,8},1},{{10,8},2}};
+        GT_ASSERT(!routes::RegionalBasesReachable(graph,bases,1,2,1,0,2,1),"Native failed first source lost the peer component mark");
+        GT_ASSERT(routes::RegionalLandReachable(graph,{{2,8},{10,8},1,2,0}),"Native second source direct path was not reachable");
+        auto reordered=bases;reordered[0]=bases[1];reordered[1]=bases[0];
+        GT_ASSERT(routes::RegionalBasesReachable(graph,reordered,1,2,1,0,2,1),"Native reachable-first Base order did not change the result");GT_OK();
+    });
+
 	task->AddTest("SMAC live regional fresh routes use actual claims Base order and saved Start",GT(){
 		namespace routes=map::smac_territory;
 		const auto query=[](ConventionalUnitFixture& fixture,int mode)->bool {

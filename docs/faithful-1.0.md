@@ -148,6 +148,17 @@ loops; keep validation notes proportionate to the change.
 - Preserve the existing architecture until evidence justifies a focused change.
   Performance changes need measurements; rules changes need reference cases.
 
+### Visual progress and original comparisons
+
+Share actual engine screenshots at visible gameplay/UI milestones, labeled with
+platform and build. Backend-only changes need their focused checks, not a fresh
+interactive platform matrix. Preserve the supplied Mac menu/map observations as
+historical baselines. Compare against the original executable with matched
+resolution, UI scale, camera, map and game state; otherwise image differences
+cannot establish fidelity. Begin with menus and Base screens, then compare
+matched terrain, unit and capture states. Keep original and PRACX references
+identified separately and exclude proprietary assets from published fixtures.
+
 ## Golden release gate
 
 - Every milestone above has evidence links, with no open critical correctness,
@@ -239,22 +250,30 @@ facility draws, remote home repair and actual Start tests pass. It remains a
 bounded population2 first-capture slice. Assimilation upkeep and ordered Base
 screen entry merged in [#193](https://github.com/jhurliman/glsmac/pull/193) and
 [#194](https://github.com/jhurliman/glsmac/pull/194), after current-head review and
-relevant CI. [Human-defeat ending requests](smac-human-defeat-request.md) now have
-a saved producer and live controller in the following implementation slice.
+relevant CI. [Human-defeat ending requests](smac-human-defeat-request.md) merged
+in [#195](https://github.com/jhurliman/glsmac/pull/195). The retained geography,
+site-query and original candidate-search dependencies merged through
+[#206](https://github.com/jhurliman/glsmac/pull/206).
+[Last-Base capture disposition](smac-last-base-capture-plan.md) merged in
+[#207](https://github.com/jhurliman/glsmac/pull/207), joining post-loot
+initialization, Unit cleanup/replacement, future worker/resource queries and
+successful restart tracking. Its current-head Codex review and relevant CI pass;
+94 affected native groups and focused leak-enabled sanitizers support the joined
+transaction. This does not establish final conquest or a full match.
 
 The next three actionable slices are:
 
-1. Replace the restart site's port approximation with the original nonzero-turn
-   candidate/retry contract and ordered gates, retaining CRT draws, region
-   presence and site-rating inputs. Use successful and failed actual callers.
-2. Connect [last-Base capture disposition](smac-last-base-capture-plan.md) with
-   post-loot reinitialization, lost-home and remaining Unit retirement/restart,
-   saved ending requests and coherent future worker/territory queries. Keep
-   notification and Base-screen entry distinct from final conquest resolution.
-3. Compose defended capture and last-Base disposition with conquest and the
-   M2 save checkpoints. Establish the original remaining-unit/pod and victory
-   conditions first. Then exercise the same scenario through network authority;
-   local controlled human tests alone do not satisfy M2.
+1. Join Headquarters capture and its paid relocation to ordinary population
+   loss, future resource/support queries, atomic facility publication and actual
+   save/Start. Use the original population3-to2 caller alongside population2-to1.
+2. Connect the original global ending controller and survivor/conquest branch.
+   Retain the distinction between a human-loss request, the active roster,
+   retained ranking reference and local focus. Establish the necessary owned
+   ranking/role inputs; zero Bases alone does not establish a conquest winner.
+3. Compose defended capture, disposition and the appropriate ending through the
+   M2 save checkpoints. Remove the remaining command/roster restrictions needed
+   by an actual match, then exercise it through network authority; local human
+   tests alone do not satisfy M2.
 
 The earlier [campaign-upkeep checkpoint](validation/campaign-upkeep-2026-10-17.md)
 retains its 112-group affected Linux evidence. The historical checkpoints below

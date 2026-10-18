@@ -4,8 +4,8 @@ The ordinary capture, assimilation and screen-entry slices now join the same
 faction-disposition producer as last-Base starvation and Colony abandonment.
 Capture supplies its captor and post-transfer Base list, preserves retained
 regional Base counts, and removes both homed and remaining defender Units.
-The captured Base remains at its original ID with the new owner, population
-one, assimilation50 and the original food/production continuation.
+The captured Base remains at its original ID with the new owner, ordinary loss
+of one citizen, assimilation50 and the original food/production continuation.
 
 The [failed native capture](behavior/last-base-capture.md) and
 [successful native capture/restart](behavior/successful-capture-restart.md)

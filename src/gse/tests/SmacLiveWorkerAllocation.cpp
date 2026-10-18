@@ -514,7 +514,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
-        for(const int scenario:{2,1,0,3,4,5,6}) {
+        // The final extension distinguishes relocation scoring from nearest
+        // home repair: the larger farther Base receives HQ, not the Former.
+        for(const int scenario:{2,1,0,3,4,5,6,7}) {
             const size_t population=scenario>=3 ? 3 : 2;
             const bool paid=scenario>=5;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);fixture.BasePresentationRoles(names);
@@ -528,9 +530,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 bm->DefineFacility(new FacilityDef("tanks","Tanks","",40,{},3));
                 bm->DefineFacility(new FacilityDef("capture-hq","HQ","",50,{},1));
                 std::vector<Base*> bases;
-                for(size_t i=0;i<2;++i) {
+                for(size_t i=0;i<(scenario==7 ? 3u : 2u);++i) {
                     Base::pops_t pops;
-                    for(size_t p=0;p<(i ? 1u : population);++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+                    for(size_t p=0;p<(i==2 ? 4u : i ? 1u : population);++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
                     const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
                     auto* base=new Base(game,702+i,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20+6*i,16),"Capture "+std::to_string(i),{},pops,41,5,
                         ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
@@ -545,7 +547,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=paid ? 1200 : 200;
                     state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=static_cast<int32_t>(population+1);
-                    state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=2;
+                    // HQ reference retains3 here despite only2 live defender
+                    // Bases. Relocation must not derive a fresh count.
+                    state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=scenario>=3 ? 3 : 2;
                 });
                 auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
                 knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
@@ -581,7 +585,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 own_record=Base::Serialize(own).ToString();
                 // Paid relocation changes only this control Base's HQ bit.
-                if(paid) {bases[1]->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
+                if(paid && scenario!=7) {bases[1]->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
                 foreign_record=Base::Serialize(bases[1]).ToString();
                 if(paid) {bases[1]->m_facilities.erase("capture-hq");}
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
@@ -597,11 +601,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(target->GetAccumulatedNutrients()==5 && production && production->minerals==0 && production->current_item==scout
                     && production->baseline_item.kind==ProductionItemKind::Stockpile && production->baseline_minerals==0 && production->queue && production->queue->empty()
                     && Base::Serialize(own).ToString()==own_record && Base::Serialize(bases[1]).ToString()==foreign_record,"capture changed food/control Bases or selected wrong production");
+                GT_ASSERT(target->GetSmacUpkeepCache() && target->GetSmacUpkeepCache()->calculation.nutrients.demand==(population==3 ? 4 : 2),
+                    "capture resource pass did not use the reduced population");
+                if(paid) {
+                    const auto* relocated=bases[scenario==7 ? 2 : 1];
+                    GT_ASSERT(relocated->m_facilities.count("capture-hq") && relocated->GetProductionState()->minerals==7,
+                        "paid capture did not relocate HQ independently of home repair or changed its production");
+                }
                 bool exact=false;fixture.ResourceState([&](auto& state) {
                     const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
                     exact=state.economy.at(1).credits==(paid ? 820 : population==3 ? 220 : 200) && state.economy.at(2).credits==(paid ? 0 : population==3 ? 80 : 100) && state.economy.at(1).population_aggregate==111
                         && state.economy.at(2).population_aggregate==static_cast<int32_t>(population+1) && state.economy.at(1).regional_base_counts->at(1)==1
-                        && state.economy.at(2).regional_base_counts->at(1)==2 && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
+                        && state.economy.at(2).regional_base_counts->at(1)==(scenario>=3 ? 3 : 2) && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
                         && a.directions[2].paired_a==population*2 && a.directions[2].paired_b==population*2 && d.directions[1].paired_a==0 && d.losses[2]==0;
                 });GT_ASSERT(exact,"capture differs from original loot and nondeduced history");
                 size_t captured_refresh=SIZE_MAX,captured_select=SIZE_MAX,selections=0;
@@ -616,7 +627,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(const auto& request:fixture.Updates()) {GT_ASSERT(request.type!=game::FrontendRequest::FR_BASE_SELECT,"capture screen selection replayed during later update flush");}
                 saved=fixture.Snapshot();GT_OK();
             });if(!result.empty()) {return "capture: "+result;}
-            if(scenario==0 || scenario==3 || scenario==5) {
+            if(scenario==0 || scenario==3 || scenario==5 || scenario==7) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
@@ -625,6 +636,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && base->m_pops.size()==population-1 && !base->m_facilities.count("capture-hq") && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
                         && restored.GameplayRandom()==SmacGameplayRandomState(3,1951609278u) && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record
                         && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,"actual Start replayed capture or lost saved ownership/history/home/control Bases");
+                    GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.nutrients.demand==(population==3 ? 4 : 2),"actual Start lost the captured population's resource cache");
+                    if(paid) {GT_ASSERT(game->GetBM()->GetBase(scenario==7 ? 704 : 703)->m_facilities.count("capture-hq"),"actual Start lost relocated Headquarters");}
                     base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
                     GT_ASSERT(base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,49}),"captured and reloaded Base did not reach the next assimilation tail");GT_OK();
                 });if(!result.empty()) {return "capture restore: "+result;}

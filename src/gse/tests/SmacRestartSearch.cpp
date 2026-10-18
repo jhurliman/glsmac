@@ -67,8 +67,8 @@ void AddSmacRestartSearchTests(task::gsetests::GSETests* task) {
 				candidate.elevation=tile.elevation;candidate.rockiness=tile.rockiness;candidate.region=tile.region;candidate.fungus=tile.fungus;
 				candidate.occupied=tile.base;candidate.valid_occupant=true;candidate.area=row.areas[tile.region];candidate.fertility=960;candidate.landmark_bucket=32;
 				const game::backend::base::SmacWorkerRadiusMap radius{point,geometry.width,geometry.height,geometry.wrap};
-				for(int offset=0;offset<21;++offset) {const auto near=game::backend::base::SmacWorkedSquareCollection::Resolve(radius,offset);if(!near) {continue;}
-					const auto value=query(*near);candidate.wet_neighbors+=value.elevation>=3 && value.moisture && value.rockiness<=1 && !value.fungus;
+				for(int offset=0;offset<21;++offset) {const auto nearby=game::backend::base::SmacWorkedSquareCollection::Resolve(radius,offset);if(!nearby) {continue;}
+					const auto value=query(*nearby);candidate.wet_neighbors+=value.elevation>=3 && value.moisture && value.rockiness<=1 && !value.fungus;
 				}return candidate;
 			},[&](auto point) {
 				auto& rating=cache[size_t(point[1])*(geometry.width/2)+point[0]/2];

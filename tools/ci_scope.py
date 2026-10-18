@@ -120,7 +120,7 @@ def changed_paths(event_name, event):
 def main():
     event_name = os.environ["GITHUB_EVENT_NAME"]
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-    paths = [] if event_name == "push" and event["ref"] == "refs/heads/stable" else changed_paths(event_name, event)
+    paths = changed_paths(event_name, event)
     validated = validate_reference_receipts(paths)
     if validated:
         print(f"Validated JSON syntax for {validated} changed reference receipts.")

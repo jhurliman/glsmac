@@ -110,26 +110,29 @@ class ScopeTests(unittest.TestCase):
         import json
         import os
         from unittest.mock import patch
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            receipt = root / "docs/behavior/example-cases.json"
-            receipt.parent.mkdir(parents=True)
-            receipt.write_text('{"cases": [}', encoding="utf-8")
-            event = root / "event.json"
-            event.write_text(json.dumps({"pull_request": {"draft": False}}))
-            output = root / "output"
-            validate = policy.validate_reference_receipts
-            with patch.dict(os.environ, {"GITHUB_EVENT_NAME": "pull_request", "GITHUB_EVENT_PATH": str(event),
-                                         "GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(root / "summary")}):
-                with patch.object(policy, "changed_paths", return_value=["docs/behavior/example-cases.json"]):
-                    with patch.object(policy, "validate_reference_receipts", side_effect=lambda paths: validate(paths, root)):
-                        with self.assertRaises(ValueError):
+        for kind, data, expected in (
+                ("pull_request", {"pull_request": {"draft": False}}, ("false", "false")),
+                ("push", {"ref": "refs/heads/stable", "before": "1" * 40, "after": "2" * 40}, ("true", "true"))):
+            with self.subTest(event=kind), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                receipt = root / "docs/behavior/example-cases.json"
+                receipt.parent.mkdir(parents=True)
+                receipt.write_text('{"cases": [}', encoding="utf-8")
+                event = root / "event.json"
+                event.write_text(json.dumps(data))
+                output = root / "output"
+                validate = policy.validate_reference_receipts
+                with patch.dict(os.environ, {"GITHUB_EVENT_NAME": kind, "GITHUB_EVENT_PATH": str(event),
+                                             "GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(root / "summary")}):
+                    with patch.object(policy, "changed_paths", return_value=["docs/behavior/example-cases.json"]):
+                        with patch.object(policy, "validate_reference_receipts", side_effect=lambda paths: validate(paths, root)):
+                            with self.assertRaises(ValueError):
+                                policy.main()
+                            self.assertFalse(output.exists())
+                            receipt.write_text('{"cases": []}', encoding="utf-8")
                             policy.main()
-                        self.assertFalse(output.exists())
-                        receipt.write_text('{"cases": []}', encoding="utf-8")
-                        policy.main()
-                        fields = dict(line.split("=", 1) for line in output.read_text().splitlines())
-                        self.assertEqual((fields["run"], fields["full"]), ("false", "false"))
+                            fields = dict(line.split("=", 1) for line in output.read_text().splitlines())
+                            self.assertEqual((fields["run"], fields["full"]), expected)
 
     def test_malformed_event_cannot_select_reduced_coverage(self):
         for event, data in (("schedule", {}), ("pull_request", {}),

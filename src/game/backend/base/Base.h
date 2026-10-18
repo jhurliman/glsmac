@@ -93,6 +93,11 @@ public:
 	// and bound owner. They do not run or mutate the manual worker handler.
 	SmacSpecialistMenu GetSmacSpecialistMenu( std::optional< size_t > pop_id = std::nullopt ) const;
 	uint8_t SelectAutomaticSmacSpecialist() const;
+	std::string SmacSpecialistSelectionState() const;
+	void OpenSmacSpecialistSelection( GSE_CALLABLE, size_t pop_id, bool apply );
+	void SelectSmacSpecialist( GSE_CALLABLE, size_t pop_id, int32_t type, bool apply );
+	gse::Value* CopySmacSpecialistChoices( GSE_CALLABLE, size_t pop_id ) const;
+	void RequireSmacSpecialistSelection() const;
 	// Explicit native publication only, in the owning writable GSE scope. No
 	// allocation calculation or founding/adoption policy is implied. Existing
 	// Pop nodes/IDs/variants survive; ascending IDs receive ascending worker
@@ -180,6 +185,10 @@ private:
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	std::optional< SmacBaseAllocationState > m_allocation;
 	std::optional<SmacBaseUpkeepCache> m_smac_upkeep_cache;
+	// Optional view interaction, not a suspended turn or saved gameplay authority.
+	struct SpecialistSelectionRequest { int64_t id; size_t pop_id; std::string expected; };
+	int64_t m_next_specialist_request = 1;
+	std::optional<SpecialistSelectionRequest> m_specialist_request;
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation, std::optional< size_t > population = {} ) const;
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;
@@ -187,6 +196,8 @@ private:
 		const unit::Unit* prepared_unit = nullptr, const ProductionState* production = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr ) const;
 	void PublishSmacCalculatedWorkers( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles,
 		const SmacBaseResourceContext& context, SmacBaseResourcePhase phase );
+	SmacAllocationRoles SpecialistSelectionRoles() const;
+	void PublishSmacSpecialistState( GSE_CALLABLE, const SmacBaseAllocationState&, const SmacBaseResourceContext& );
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step,

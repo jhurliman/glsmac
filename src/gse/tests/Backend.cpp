@@ -2020,6 +2020,8 @@ public:
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(unit->IsBadgeVisible(),"re-shown selected model lost retained visible phase");
             unit->StopBadgeBlink(true);
+            unit->Hide();unit->Show();
+            GT_ASSERT(unit->IsBadgeVisible(),"direct restoration of a hidden model lost its ordinary overlays");
             um->m_selected_unit=nullptr;frontend.m_is_turn_active=false;
 			// Publish the real Unit for the production Game widget lookup. Its
 			// scoped owner remains here; remove the entry before either teardown.

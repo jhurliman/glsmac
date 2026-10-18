@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
 
 #include <algorithm>
@@ -1677,7 +1678,10 @@ void Game::Initialize(
 											const auto* um = game->GetUM();
 											auto* unit=um->GetUnit(selected_id);
 											if(!unit) {return;}
-											if ( unit->IsConventional() || !defender_id ) {
+                                            if(unit->IsConventional()) {
+                                                backend::QueueLocalConventionalMove(GSE_CALL,*game,selected_id,destination_coords.x,destination_coords.y);
+                                            }
+                                            else if(!defender_id) {
 												// Native conventional movement owns hostile admission and battle.
 													auto* dst_tile = game->GetMap()->GetTile( destination_coords.x, destination_coords.y );
 												game->Event(

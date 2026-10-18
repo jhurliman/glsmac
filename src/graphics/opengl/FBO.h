@@ -38,6 +38,8 @@ CLASS( FBO, common::Class )
 	void Draw( shader_program::Orthographic* sp );
 
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
+	// Copy into an allocated cropped RGBA8 texture without CPU readback.
+	void CopyToTexture( GLuint texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
 	types::texture::Texture* CaptureToTexture();
 
 protected:

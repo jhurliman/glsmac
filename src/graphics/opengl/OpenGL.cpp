@@ -848,6 +848,13 @@ void OpenGL::CaptureToTexture( types::texture::Texture* const texture, const typ
 	m_capture_to_texture_fbo->CaptureToTexture( texture, top_left, bottom_right );
 }
 
+void OpenGL::CaptureToGPUTexture( GLuint texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f ) {
+	m_capture_to_texture_fbo->Write( f );
+	if ( bottom_right.x > top_left.x && bottom_right.y > top_left.y ) {
+		m_capture_to_texture_fbo->CopyToTexture( texture, top_left, bottom_right );
+	}
+}
+
 const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2< size_t >& xy ) const {
 	return {
 		m_px_to_gl_clamp.x.Clamp( xy.x ),

@@ -2723,7 +2723,16 @@ public:
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
             util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
-            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);ProcessRequests();
+            const auto restore_mode=[&]() {
+                auto* wrapped=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
+                auto* query=static_cast<value::Callable*>(wrapped->Get("is_campaign_restore"));
+                return static_cast<value::Bool*>(query->Run(GSE_CALL,{}))->value;
+            };
+            GT_ASSERT(!restore_mode(),"empty controller invented a restore admission");
+            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);
+            GT_ASSERT(!m_game.m_active_admission && restore_mode(),"configure mode lost the published restore before OP_INIT consumption");
+            ProcessRequests();
+            GT_ASSERT(restore_mode(),"active restore changed configuration mode");
             GT_ASSERT(m_game.MT_GetResponse(pending.request).result==R_SUCCESS,"campaign restore request was not admitted");
             util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
             for(int i=0;i<4;++i){m_game.Iterate();}
@@ -10126,6 +10135,23 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Resource snapshots restore present and absent no-resource artwork without double definition", GT() {
+        BackendFixture fixture;fixture.ConfigureConventional(true,3,true);
+        return fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* manager=fixture.GetGame()->GetRM();
+            for(const bool present:{false,true}) {
+                manager->Clear();
+                if(present) {manager->DefineNoResource({"saved-icons.pcx",{{{7,11},{19,23}}}});}
+                types::Buffer expected;manager->Serialize(expected);
+                for(int pass=0;pass<2;++pass) {
+                    auto input=types::Buffer(expected.ToString());manager->Deserialize(input);
+                    types::Buffer actual;manager->Serialize(actual);
+                    GT_ASSERT(input.lenr==input.lenw && actual.ToString()==expected.ToString(),"no-resource presence or saved artwork coordinates changed during restore");
+                }
+            }
+            GT_OK();
+        });
+    });
 	task->AddTest("font measurement matches rendered fallback for UTF-8 and control bytes",GT(){
 		types::Font font("bounded-metrics");font.m_dimensions={1,3};
 		for(size_t i=32;i<128;++i) {font.m_symbols[i]={1,0,1,2,0,0,nullptr};}

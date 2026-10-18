@@ -159,10 +159,12 @@ return {
 		let intake = undefined;
 		let consumption = undefined;
 		let energy = undefined;
+		let ecodamage = canonical ? 'N/A' : 0;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
 			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
@@ -208,7 +210,7 @@ return {
 		this.sections.game_state.set({
 			year: game.get_year(),
 			energy: #is_defined(energy) ? energy.credits : (canonical ? 'N/A' : 0),
-			ecodamage: canonical ? 'N/A' : 0, // TODO
+			ecodamage: ecodamage,
 		});
 
 		let facilities = [];

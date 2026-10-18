@@ -1106,6 +1106,6 @@
   "reused_receipts": [
     "animation-timing-followup",
     "selected-unit-blink-timing",
-    "scout-idle-view"
+    "../scout-idle-renderer.md"
   ]
 }

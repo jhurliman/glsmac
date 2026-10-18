@@ -1,4 +1,5 @@
 #include "SmacResearch.h"
+#include "game/backend/faction/SmacRankOrder.h"
 #include "game/backend/faction/SmacResearch.h"
 #include "game/backend/settings/SmacCouncilRules.h"
 #include "fixtures/SmacRulesSource.h"
@@ -91,6 +92,15 @@ void AddSmacResearchTests(task::gsetests::GSETests* task) {
 		GlobalSettings migrated;migrated.Deserialize(types::Buffer(v18));GT_ASSERT(!migrated.GetSmacCouncilRules(),"V18 restore invented current installed requirements");
 		GT_OK();
 	});
+    task->AddTest("SMAC dominance treats an empty retained leader rank as a non-match",GT(){
+        namespace f=game::backend::faction;using Ref=game::backend::settings::SmacTechnologyReference;
+        const auto rank=f::SmacRankOrder::Update({},128);
+        const f::SmacVictoryRequirements requirements{{Ref::Kind::UNKNOWN,{}},-1,-1};
+        f::SmacVictoryContext context;context.turn=251;context.humans=128;
+        const f::SmacDominanceQuery query{7,rank.Leader(),6,3,0,9999,0,0};
+        GT_ASSERT(rank.Leader()==0 && !f::SmacLeadingHumanDominance(context,query,requirements,smac_rules_fixture::Technologies()),
+            "A valid retained inactive rank gap aborted dominance instead of returning false");GT_OK();
+    });
 	task->AddTest("SMAC dominance uses wide score comparisons and rejects unmeasured vote overflow",GT(){
 		namespace f=game::backend::faction;using Ref=game::backend::settings::SmacTechnologyReference;
 		const f::SmacVictoryRequirements requirements{{Ref::Kind::TECHNOLOGY_ID,41},57,56};

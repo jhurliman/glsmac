@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/settings/Settings.h"
 #include "game/backend/WorldSnapshotRandom.h"
 #include "game/backend/WorldSnapshotTurn.h"
 #include "types/Buffer.h"
@@ -90,6 +91,10 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
 		result.WriteBool(id=="smac");
 		if(id=="smac") {result.WriteString(game::backend::settings::SmacCombatRules{25,25,25}.Serialize().ToString());}
 	}
+    if(version>=33) {
+        result.WriteInt(game::backend::settings::MapSettings::MT_RANDOM);
+        result.WriteBool(false); // legacy port options, matching this fixture's session
+    }
 	return result;
 }
 

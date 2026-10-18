@@ -7,10 +7,16 @@
 
 namespace game::backend::base {
 
+struct SmacConquestState {
+	int32_t former_owner;
+	uint8_t assimilation;
+	bool operator==(const SmacConquestState& other) const {return former_owner==other.former_owner && assimilation==other.assimilation;}
+};
+
 // Persistent inputs belonging to one canonical Base. These are not a cached
 // yield, a social rating, a population allocation, or a governor decision.
 struct SmacBaseResourceContext {
-	static constexpr uint32_t MAX_WIRE_BYTES = 5 * 14 + 3 * 7;
+	static constexpr uint32_t MAX_WIRE_BYTES = 7 * 14 + 4 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
 	static constexpr uint32_t STARTUP_AUTOMATION = 0x40000000u;
@@ -25,6 +31,9 @@ struct SmacBaseResourceContext {
 	int32_t resource_event_timer;
 	uint32_t governor_options; // one authority; preserve all supplied bits
 	bool drone_riots; // saved actual status; queries never derive it from population
+	// Absent in ordinary never-captured port records and pre-capture V2 saves.
+	// Native capture owns this history independently of current owner/size.
+	std::optional<SmacConquestState> conquest;
 
 	void Validate() const;
 	// Global startup difficulty precedes stored owner difficulty in the original.
@@ -38,7 +47,8 @@ struct SmacBaseResourceContext {
 	bool operator==( const SmacBaseResourceContext& other ) const;
 };
 
-// Port V2 inner record (adds drone-riot status). Absent means legacy/unavailable, never neutral SMAC.
+// Port V3 inner record (adds optional conquest history), with V2 migration.
+// Absent outer context means legacy/unavailable, never neutral SMAC.
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value );
 std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( types::Buffer buffer );
 

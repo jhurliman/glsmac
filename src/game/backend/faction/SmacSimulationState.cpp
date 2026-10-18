@@ -27,7 +27,7 @@ void SmacHostileState::RequireOrdinaryHostility(int32_t actor,int32_t target) co
 	if(actor<1 || actor>7 || target<1 || target>7 || actor==target || !owners.count(actor) || !owners.count(target)) {throw std::runtime_error("Hostile action requires two admitted factions");}
 	for(const auto& pair:{std::pair<int32_t,int32_t>{actor,target},{target,actor}}) {
 		const auto& direction=owners.at(pair.first).directions[pair.second];
-		if(direction.secondary || (direction.primary!=0 && direction.primary!=16 && direction.primary!=0x80008118u)) {
+		if(direction.secondary || (direction.primary!=0 && direction.primary!=16 && direction.primary!=0x80008118u && direction.primary!=0x8000a118u)) {
 			throw std::runtime_error("Hostile movement requires its ordinary no-peace or Vendetta diplomacy context");
 		}
 	}
@@ -36,7 +36,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 	RequireOrdinaryHostility(actor,target);
 	if(!((winner==actor && loser==target)||(winner==target && loser==actor)) || lost_design<0 || lost_design>=512) {throw std::runtime_error("Invalid Scout battle history identity");}
 	// Hostile movement uses mask32784 in the mutual setter, not war-break work.
-	owners.at(actor).directions[target].primary=0x80008118u;owners.at(target).directions[actor].primary=0x80008118u;
+	owners.at(actor).directions[target].primary|=0x80008118u;owners.at(target).directions[actor].primary|=0x80008118u;
 	auto& direction=owners.at(winner).directions[loser];++direction.paired_a;++direction.paired_b;
 	++owners.at(loser).losses[lost_design]; // actual unsigned DWORD/WORD stores
 }

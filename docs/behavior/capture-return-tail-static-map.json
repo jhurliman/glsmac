@@ -1,0 +1,72 @@
+{
+  "research_id": "RE-SMAC-CAPTURE-RETURN-STATIC-001",
+  "evidence": "static_only",
+  "new_original_executions": 0,
+  "normal_return_observed": false,
+  "prior_dynamic_case": "RE-SMAC-UNDEFENDED-BASE-ENTRY-001",
+  "return_chain": [
+    "mode0 screen completes show then returns",
+    "capture epilogue only",
+    "movement reloads capture-tracked actor",
+    "ordinary ground post-move and sight bookkeeping",
+    "body shared exit",
+    "local wrapper forwards body result"
+  ],
+  "conditional_prediction": {
+    "return_value": 1,
+    "runtime_proved": false,
+    "conditions": [
+      "screen show returns without gameplay edits",
+      "tracked actor and Unit count remain unchanged",
+      "ordinary positive-move result flag remains1",
+      "movement mode remains local ordinary mode",
+      "no unexpected warning/input or opaque callback state changes"
+    ]
+  },
+  "selected_ids": {
+    "last_observed_primary": 1,
+    "last_observed_secondary": null,
+    "conditional_preservation_only": true
+  },
+  "excluded_for_frozen_scout": [
+    "transport cargo order loop",
+    "sea automatic selection",
+    "air fuel/damage/deletion",
+    "monolith/special-site handling",
+    "Artifact transfer/production/deletion",
+    "cargo-arrival primary selection",
+    "AI transport arrival",
+    "multiplayer wrapper follow-up"
+  ],
+  "remaining_guarded_work": [
+    "sight/visibility/contact effects",
+    "Unit activity/order warning counter and possible confirmation",
+    "arrival-status flag query/clear",
+    "Unit count and result-flag cleanup branch",
+    "UI show/hide/focus dispatch"
+  ],
+  "direction_bookkeeping": {
+    "direction": 2,
+    "set_movement_marker": true,
+    "evidence": "static conditional route"
+  },
+  "rng": {
+    "top_level_direct_calls": 0,
+    "additional_transitive_calls_proved": null,
+    "final_state_proved": false,
+    "last_observed_crt": 1951609278,
+    "last_observed_shared": 3
+  },
+  "base_fields": {
+    "additional_top_level_production_worker_treasury_writes_on_selected_route": false,
+    "opaque_callbacks_not_proved": true
+  },
+  "close_path": {
+    "common_helper_identified": true,
+    "hide_lifecycle_callback_bound_statically": true,
+    "mode0_return_automatically_closes": false,
+    "direct_production_citizen_treasury_movement_rng_work_in_inspected_close_hide_bodies": false,
+    "all_event_routes_proved": false,
+    "done_escape_binding_proved": false
+  }
+}

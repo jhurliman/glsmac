@@ -19,6 +19,11 @@
 
 namespace game::backend::unit {
 namespace {
+bool ForeignBase(const Unit* actor,const map::tile::Tile* tile,const base::BaseManager& manager) {
+	if(!actor || !tile || !tile->base) {return false;}
+	for(const auto& row:manager.GetBases()) {if(row.second==tile->base) {return row.second->m_owner!=actor->m_owner;}}
+	return false;
+}
 smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitted_base ) {
 	using namespace map::tile;
 	constexpr auto features = FEATURE_RIVER | FEATURE_XENOFUNGUS;
@@ -232,12 +237,14 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 }
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
+	if(ForeignBase(unit,destination,*m_game->GetBM())) {(void)m_game->GetBM()->PrepareSmacCapture(unit,destination,caller);return;}
 	if(HasForeignOccupant(unit,destination)) {(void)PrepareConventionalAttack(unit,destination,caller);return;}
 	(void)PrepareConventionalMove( unit, destination, caller ); // owned copied RNG only
 }
 
 void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller ) {
 	m_game->CheckRW( GSE_CALL );
+	if(ForeignBase(unit,destination,*m_game->GetBM())) {m_game->GetBM()->ApplySmacCapture(GSE_CALL,m_game->GetBM()->PrepareSmacCapture(unit,destination,caller));return;}
 	if(HasForeignOccupant(unit,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(unit,destination,caller));return;}
 	auto prepared = PrepareConventionalMove( unit, destination, caller );
 	if ( !prepared.result ) {

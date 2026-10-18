@@ -96,7 +96,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 					for ( uint32_t governor : { 0u, 0x40u, 0x80000000u, 0xffffffffu } ) {
 						const SmacBaseResourceContext input{ owner, flags % 2 != 0, flags, timer, governor, flags % 3 == 0 };
 						const auto bytes = SerializeSmacBaseResourceContext( input );
-						GT_ASSERT( bytes.lenw == 91 && SmacBaseResourceContext::MAX_WIRE_BYTES == 91, "fixed context frame extent changed" );
+						GT_ASSERT( bytes.lenw == 98 && SmacBaseResourceContext::MAX_WIRE_BYTES == 126, "context frame extent changed" );
 						const auto restored = DeserializeSmacBaseResourceContext( bytes );
 						GT_ASSERT( restored && *restored == input && SerializeSmacBaseResourceContext( restored ).ToString() == bytes.ToString(), "restore reset or normalized persistent context" );
 						GT_ASSERT( restored->GovernorActive() == ( governor >= 0x80000000u ) && restored->ManageCitizens() == ( governor == 0x40u || governor == 0xffffffffu ), "citizen and active flags became coupled" );
@@ -106,8 +106,22 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		}
 		GT_ASSERT( !DeserializeSmacBaseResourceContext( SerializeSmacBaseResourceContext( std::nullopt ) ), "legacy absence invented neutral context" ); GT_OK();
 	} );
+	task->AddTest( "SMAC conquered Base context preserves history and migrates V2 without inventing it", GT() {
+		for ( const auto former : { 1, 2, 7 } ) { for ( const auto timer : { 0, 1, 50, 255 } ) {
+			auto input = Record(); input.conquest = SmacConquestState{ former, static_cast<uint8_t>(timer) };
+			const auto bytes = SerializeSmacBaseResourceContext(input);
+			GT_ASSERT(bytes.lenw == SmacBaseResourceContext::MAX_WIRE_BYTES && DeserializeSmacBaseResourceContext(bytes) == input, "conquest history did not round trip");
+		} }
+		const auto migrated = DeserializeSmacBaseResourceContext(Frame(2,1,37,-7,0x8f000041u));
+		GT_ASSERT(migrated == Record() && !migrated->conquest, "V2 migration invented capture history");
+		for ( const auto former : { 0, 1, 7, 8 } ) { for ( const auto timer : { -1, 0, 255, 256 } ) {
+			auto bytes = Frame(3,1,0,0,0); bytes.WriteBool(true); bytes.WriteInt(former); bytes.WriteInt(timer);
+			GT_ASSERT(Rejects([&] { DeserializeSmacBaseResourceContext(bytes); }) == (former == 0 || former == 8 || timer < 0 || timer > 255), "invalid conquest history admission");
+		} }
+		GT_OK();
+	} );
 	task->AddTest( "SMAC Base resource context rejects malformed bounded frames before publication", GT() {
-		for ( const auto& frame : { Frame( 0, 1, 0, 0, 0 ), Frame( 3, 1, 0, 0, 0 ), Frame( 2, 0, 0, 0, 0 ), Frame( 2, 8, 0, 0, 0 ),
+		for ( const auto& frame : { Frame( 0, 1, 0, 0, 0 ), Frame( 4, 1, 0, 0, 0 ), Frame( 2, 0, 0, 0, 0 ), Frame( 2, 8, 0, 0, 0 ),
 			Frame( 2, 1, -1, 0, 0 ), Frame( 2, 1, 64, 0, 0 ), Frame( 2, 1, 0, INT64_C( -2147483649 ), 0 ), Frame( 2, 1, 0, INT64_C( 2147483648 ), 0 ),
 			Frame( 2, 1, 0, 0, -1 ), Frame( 2, 1, 0, 0, INT64_C( 4294967296 ) ) } ) {
 			GT_ASSERT( Rejects( [ & ] { DeserializeSmacBaseResourceContext( frame ); } ), "malformed context accepted" );
@@ -115,7 +129,7 @@ void AddSmacBaseResourceContextTests( task::gsetests::GSETests* task ) {
 		const auto bytes = SerializeSmacBaseResourceContext( Record() ).ToString();
 		for ( size_t size = 0; size < bytes.size(); ++size ) { GT_ASSERT( Rejects( [ & ] { DeserializeSmacBaseResourceContext( types::Buffer( bytes.substr( 0, size ) ) ); } ), "truncated context accepted" ); }
 		GT_ASSERT( Rejects( [ & ] { DeserializeSmacBaseResourceContext( types::Buffer( bytes + "x" ) ); } ), "trailing context accepted" );
-		types::Buffer outer; outer.WriteString( bytes + "x" );
+		types::Buffer outer; outer.WriteString( std::string(SmacBaseResourceContext::MAX_WIRE_BYTES+1,'x') );
 		GT_ASSERT( Rejects( [ & ] { outer.ReadString( SmacBaseResourceContext::MAX_WIRE_BYTES ); } ) && outer.lenr == 0, "oversized context consumed its payload" );
 		GT_OK();
 	} );

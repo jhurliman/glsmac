@@ -1,0 +1,89 @@
+{
+  "research_id": "RE-SMAC-CAPTURE-GOVERNOR-DONOR-001",
+  "ruleset": "SMAC",
+  "scope": "Two actual selector fragments on a real capture frame; supplied donor records/governor canaries; no continued capture/UI. Static donor exclusion/ownership/signed-read/no-positive fallback and production-helper reuse described in contract.",
+  "cases": [
+    {
+      "id": "later_HQ_beats_larger_population",
+      "evidence": "executed_selector_fragment",
+      "captured_base_id": 1,
+      "before": [
+        {
+          "id": 0,
+          "owner": 1,
+          "population": 3,
+          "hq": false,
+          "governor": 287454020
+        },
+        {
+          "id": 1,
+          "owner": 1,
+          "population": 1,
+          "hq": false,
+          "governor": 2578103244
+        },
+        {
+          "id": 2,
+          "owner": 1,
+          "population": 2,
+          "hq": true,
+          "governor": 1432778632
+        }
+      ],
+      "eligible_donor_ids": [
+        0,
+        2
+      ],
+      "candidate_weights": [
+        3,
+        4
+      ],
+      "selected_donor_id": 2,
+      "captured_governor_after": 1432778632,
+      "donor_records_unchanged": true,
+      "random_calls": 0,
+      "complete_capture_return": false
+    },
+    {
+      "id": "equal_weight_keeps_first_record",
+      "evidence": "executed_selector_fragment",
+      "captured_base_id": 1,
+      "before": [
+        {
+          "id": 0,
+          "owner": 1,
+          "population": 4,
+          "hq": false,
+          "governor": 287454020
+        },
+        {
+          "id": 1,
+          "owner": 1,
+          "population": 1,
+          "hq": false,
+          "governor": 2578103244
+        },
+        {
+          "id": 2,
+          "owner": 1,
+          "population": 2,
+          "hq": true,
+          "governor": 1432778632
+        }
+      ],
+      "eligible_donor_ids": [
+        0,
+        2
+      ],
+      "candidate_weights": [
+        4,
+        4
+      ],
+      "selected_donor_id": 0,
+      "captured_governor_after": 287454020,
+      "donor_records_unchanged": true,
+      "random_calls": 0,
+      "complete_capture_return": false
+    }
+  ]
+}

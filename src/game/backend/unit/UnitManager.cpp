@@ -158,6 +158,10 @@ ConventionalUnitContext UnitManager::ResolveConventional( const ConventionalUnit
 	return m_game->ResolveConventionalUnit( state, owner );
 }
 
+void UnitManager::CommitPlacementHistory(const std::pair<SmacMovementHistory*,size_t>& prepared) const noexcept {
+	if(prepared.first) {prepared.first->MarkPlaced(prepared.second);}
+}
+
 std::pair< SmacMovementHistory*, size_t > UnitManager::PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const {
 	if ( !m_game->m_simulation || !m_game->m_simulation->value.movement_history || unit.m_def->GetMovementType() == MT_AIR ) { return { nullptr, 0 }; }
 	m_game->ValidateSimulation( *m_game->m_simulation );

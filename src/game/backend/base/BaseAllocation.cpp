@@ -11,6 +11,8 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "gc/Space.h"
+#include "game/backend/Player.h"
+#include "game/backend/slot/Slot.h"
 
 namespace game::backend::base {
 
@@ -118,6 +120,7 @@ struct Base::PreparedSmacWorkerState::Data {
 	std::optional< ProductionState > production;
 	int64_t nutrients;
 	std::vector<std::pair<Base*,facilities_t>> facility_changes;
+	slot::Slot* captured_owner=nullptr;
 };
 Base::PreparedSmacWorkerState::PreparedSmacWorkerState( std::unique_ptr< Data > data ) : m_data( std::move( data ) ) {}
 Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
@@ -129,6 +132,7 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	while ( !data.additions.empty() ) { data.base->m_pops.insert( data.additions.extract( data.additions.begin() ) ); }
 	for ( const auto id : data.removals ) { data.retired.push_back( data.base->m_pops.extract( id ) ); }
 	data.base->m_next_pop_id = data.next_pop_id;
+	if(data.captured_owner) {data.base->m_owner=data.captured_owner;data.base->m_faction=data.captured_owner->GetPlayer()->GetFaction();}
 	data.base->m_allocation.swap( data.allocation );
 	data.base->m_resource_context.swap( data.context );
 	data.base->m_production.swap( data.production );
@@ -153,7 +157,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
@@ -163,7 +167,14 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	const auto prior_context = GetSmacResourceContext();
 	context.Validate();
 	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
-	if ( !( unchanged_context == prior_context ) || ( context.governor_options != prior_context.governor_options
+	if(captured_owner) {
+		m_game->RequireSmacLocalHumanOwner(captured_owner);
+		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
+		if(captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
+			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
+		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
+		if(!(unchanged_context==prior_context)) {THROW("Capture publication changed unrelated Base context");}
+	} else if ( !( unchanged_context == prior_context ) || ( context.governor_options != prior_context.governor_options
 		&& context.governor_options != ( prior_context.governor_options & ~SmacBaseResourceContext::MANAGE_CITIZENS ) ) ) {
 		THROW( "SMAC worker publication may only clear citizen management in Base context" );
 	}
@@ -229,6 +240,10 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	auto& update = updates.try_emplace( m_id, BaseManager::base_update_t{ BaseManager::BUO_NONE, this } ).first->second;
 	if ( update.base != this || ( update.ops & BaseManager::BUO_DESPAWN ) ) { THROW( "SMAC allocation has an incompatible pending Base update" ); }
 	update.ops = static_cast< BaseManager::base_update_op_t >( update.ops | BaseManager::BUO_REFRESH );
+	for(auto* related:refresh_only) {
+		if(!related || bm->GetBase(related->m_id)!=related) {THROW("Related capture Base is not current");}
+		BaseManager::QueueBaseUpdateInto(updates,related,BaseManager::BUO_REFRESH);
+	}
 	std::set<size_t> changed;
 	for(const auto& change:facility_changes) {
 		if(!change.first || bm->GetBase(change.first->m_id)!=change.first || change.first->m_owner!=m_owner || !changed.insert(change.first->m_id).second) {
@@ -253,7 +268,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	static_assert( std::is_nothrow_copy_constructible_v< map::tile::coords_t > );
 	static_assert( std::is_nothrow_copy_assignable_v< map::tile::coords_t > );
 	static_assert( std::is_nothrow_swappable_v< decltype( replacement ) > );
-	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
+	if ( production ) { m_game->ValidateSmacProductionState( captured_owner ? captured_owner : m_owner, *production ); }
 	auto data = std::make_unique< PreparedSmacWorkerState::Data >();
 	data->base = this; data->manager = bm;
 	data->projection = std::move( projection ); data->additions = std::move( additions ); data->removals = std::move( removals );
@@ -261,6 +276,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	data->updates = std::move( updates ); data->triggers = std::move( triggers ); data->lock = std::move( lock );
 	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
 	data->facility_changes=std::move(facility_changes);
+	data->captured_owner=captured_owner;
 	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );
 	return PreparedSmacWorkerState( std::move( data ) );
 }

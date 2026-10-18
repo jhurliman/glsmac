@@ -166,6 +166,9 @@ void BaseManager::ValidateSmacResourceContext( const SmacBaseResourceContext& co
 	m_game->ValidateCurrentSimulation();
 	if ( !m_game->m_simulation ) { THROW( "SMAC base context requires an admitted simulation" ); }
 	const auto& global = m_game->GetState()->m_settings.global;
+	if(context.conquest && std::none_of(m_game->m_simulation->value.roster.begin(),m_game->m_simulation->value.roster.end(),[&](const auto& row){return row.simulation_id==context.conquest->former_owner;})) {
+		THROW("Conquered Base former owner is outside the saved roster");
+	}
 	if ( !global.GetSmacResourceRules() || !global.GetSmacSpecialistRules() ) { THROW( "SMAC base context requires frozen resource and specialist profiles" ); }
 	for ( const auto& participant : m_game->m_simulation->value.roster ) {
 		if ( participant.simulation_id == context.owner_simulation_id

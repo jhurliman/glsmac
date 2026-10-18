@@ -19,18 +19,19 @@ void SmacBaseResourceContext::Validate() const {
 	if ( owner_simulation_id < 1 || owner_simulation_id > 7 || resource_events > 63 ) {
 		throw std::runtime_error( "Invalid SMAC base resource context" );
 	}
+	if(conquest && (conquest->former_owner<1 || conquest->former_owner>7)) {throw std::runtime_error("Invalid SMAC conquered Base former owner");}
 }
 
 bool SmacBaseResourceContext::operator==( const SmacBaseResourceContext& other ) const {
 	return owner_simulation_id == other.owner_simulation_id && golden_age == other.golden_age
 		&& resource_events == other.resource_events && resource_event_timer == other.resource_event_timer
-		&& governor_options == other.governor_options && drone_riots == other.drone_riots;
+		&& governor_options == other.governor_options && drone_riots == other.drone_riots && conquest==other.conquest;
 }
 
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value ) {
 	if ( value ) { value->Validate(); }
 	types::Buffer buffer;
-	buffer.WriteInt( 2 );
+	buffer.WriteInt( 3 );
 	buffer.WriteBool( value.has_value() );
 	if ( value ) {
 		buffer.WriteInt( value->owner_simulation_id );
@@ -39,14 +40,17 @@ types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseRes
 		buffer.WriteInt( value->resource_event_timer );
 		buffer.WriteInt( value->governor_options );
 		buffer.WriteBool( value->drone_riots );
+		buffer.WriteBool(value->conquest.has_value());
+		if(value->conquest) {buffer.WriteInt(value->conquest->former_owner);buffer.WriteInt(value->conquest->assimilation);}
 	}
 	return buffer;
 }
 
 std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( types::Buffer buffer ) {
-	if ( buffer.lenw > SmacBaseResourceContext::MAX_WIRE_BYTES || buffer.ReadInt() != 2 ) {
+	if ( buffer.lenw > SmacBaseResourceContext::MAX_WIRE_BYTES ) {
 		throw std::runtime_error( "Unsupported SMAC base resource context" );
 	}
+	const auto version=buffer.ReadInt();if(version!=2 && version!=3) {throw std::runtime_error("Unsupported SMAC base resource context");}
 	std::optional< SmacBaseResourceContext > result;
 	if ( buffer.ReadBool() ) {
 		const auto owner = buffer.ReadInt();
@@ -61,6 +65,11 @@ std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( typ
 		}
 		result = SmacBaseResourceContext{ static_cast< int32_t >( owner ), golden_age, static_cast< uint8_t >( events ),
 			static_cast< int32_t >( timer ), static_cast< uint32_t >( governor ), riots };
+		if(version==3 && buffer.ReadBool()) {
+			const auto former=buffer.ReadInt(),assimilation=buffer.ReadInt();
+			if(former<1 || former>7 || assimilation<0 || assimilation>255) {throw std::runtime_error("Invalid SMAC conquered Base history");}
+			result->conquest=SmacConquestState{static_cast<int32_t>(former),static_cast<uint8_t>(assimilation)};
+		}
 	}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Trailing SMAC base resource context" ); }
 	return result;

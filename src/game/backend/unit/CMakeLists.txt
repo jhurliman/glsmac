@@ -3,6 +3,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp
 	${PWD}/SmacStartupDesignState.cpp
+	${PWD}/SmacRestartUnitPackage.cpp
 	${PWD}/SmacEmptyGroundMovement.cpp
 
 	${PWD}/UnitManager.cpp

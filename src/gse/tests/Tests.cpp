@@ -42,6 +42,7 @@
 #include "SmacSocialState.h"
 #include "SmacSimulationState.h"
 #include "SmacStartupDesignState.h"
+#include "SmacRestartUnitPackage.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
 #include "SmacPredefinedUnitRules.h"
@@ -329,6 +330,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacSocialStateTests( task );
 	AddSmacSimulationStateTests( task );
 	AddSmacStartupDesignStateTests( task );
+	AddSmacRestartUnitPackageTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );
 		tests::AddSmacPredefinedUnitRulesTests( task );

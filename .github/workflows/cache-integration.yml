@@ -4,10 +4,11 @@ on:
   push:
     branches: [codex/faithful-1.0]
 
-# Finish the first publisher so rapid merges cannot repeatedly cancel a cold
-# build. GitHub retains only the latest pending revision in this group.
+# Distinct revisions retain their own per-push scope: a later docs-only push
+# must not replace pending compiler/codec publication from an earlier revision.
+# Only duplicate runs for the same revision may coalesce.
 concurrency:
-  group: integration-build-cache-${{ github.ref }}
+  group: integration-build-cache-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 permissions:

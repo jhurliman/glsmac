@@ -9,9 +9,12 @@ therefore did not warm the next focused PR. This follows GitHub's documented
 
 `cache-integration.yml` publishes the matching Linux Debug compiler cache after
 trusted integration pushes. It performs an incremental build/cache publication,
-without repeating regression tests or a platform matrix. The first publisher is
-allowed to finish while the latest pending merge supersedes older queued merges;
-rapid integrations cannot repeatedly cancel the initial cold build. Documentation
+without repeating regression tests or a platform matrix. Concurrency is scoped
+by branch and revision: distinct pushes retain their per-push publication scope,
+including a codec change followed by unrelated or documentation-only pushes.
+Only duplicate runs for one revision may coalesce. Different revisions can build
+concurrently during a burst; this retains required cache work without a
+last-successful-publication watermark or extra API permissions. Documentation
 only pushes skip the build. Compiler hit/miss statistics are retained in both
 publisher and PR logs so cross-PR warm reuse can be measured.
 
@@ -25,7 +28,7 @@ The publisher has read-only repository permissions, runs only on integration
 pushes, and never imports object artifacts from untrusted PR runs. Existing PR
 review, regression, lifecycle, and selected platform gates are unchanged.
 
-The recent 30-PR audit (260Ã¢â‚¬â€œ289) had zero labeled/unlabeled issue events, so no
+The recent 30-PR audit (260ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“289) had zero labeled/unlabeled issue events, so no
 label-trigger runner savings were demonstrated. Existing ci:full label semantics
 are preserved rather than adding a second gate/reuse mechanism for unobserved
 waste.

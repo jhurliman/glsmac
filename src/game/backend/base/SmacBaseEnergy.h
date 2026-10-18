@@ -14,6 +14,9 @@ struct SmacEnergyRates {
 	void Validate() const;
 };
 
+// Original six buttons29..34; locks use cyclic Economy/Psych/Labs bits0..2.
+SmacEnergyRates AdjustSmacEnergyRates(SmacEnergyRates rates,int32_t button,uint32_t locks);
+
 struct SmacEnergyCategories {
 	int32_t economy, psych, labs;
 	bool operator==( const SmacEnergyCategories& other ) const noexcept;

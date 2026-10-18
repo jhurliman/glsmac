@@ -1,5 +1,6 @@
 #include "SmacBaseEnergy.h"
 #include "fixtures/SmacBaseEnergy.h"
+#include "fixtures/SmacEnergyRateButtons.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
 #include "types/Buffer.h"
@@ -73,6 +74,16 @@ std::string CheckSmacEnergyBoundaries() {
 }
 
 void AddSmacBaseEnergyTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC faction energy buttons match all3168 original coupled lock controls",GT(){
+        for(const auto& row:smac_energy_rate_fixture::controls) {
+            const auto result=AdjustSmacEnergyRates({row[1],row[2]},row[4],row[3]);
+            GT_ASSERT(result.psych==row[6] && result.labs==row[7] && 10-result.psych-result.labs==row[5],
+                "Native energy button normalization differs from original literal output");
+        }
+        for(const int button:{28,35}) {GT_ASSERT(Rejects([&]{AdjustSmacEnergyRates({0,5},button,0);}),"Invalid button accepted");}
+        GT_ASSERT(Rejects([]{AdjustSmacEnergyRates({0,5},29,8);}) && Rejects([]{AdjustSmacEnergyRates({6,5},29,0);}),"Invalid locks/rates accepted");
+        GT_OK();
+    });
 	task->AddTest("SMAC saved Base energy retains earned outputs and ordered maintenance",GT(){
 		SmacBaseEnergyCalculation value{};
 		value.raw_intake=41;value.headquarters_distance=5;value.waste=6;value.net=35;value.maintenance=7;

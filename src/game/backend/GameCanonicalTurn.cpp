@@ -168,9 +168,6 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		throw std::runtime_error("Canonical continuation is not owned or still awaits a choice");
 	}
 	using Stage=CanonicalTurnContinuation::Stage;
-	base::Base::SmacAllocationRoles roles;
-	const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
-	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
 	auto& next=*m_canonical_continuation;
 	if(next.stage==Stage::Screen) {ValidateCanonicalColonyScreen();return;}
 	while(next.owner_index<next.owners.size()) {
@@ -183,13 +180,8 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		auto* base=m_bm->GetBase(owner.second[next.base_index]);
 		if(!base || base->GetSmacResourceContext().owner_simulation_id!=owner.first) {throw std::runtime_error("Canonical continuation Base identity changed");}
 		if(next.stage==Stage::Base) {
-			const auto result=base->ProcessSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
-				return ResolveSmacProductionPresentation(base->m_owner,design);
-			},unit::SmacMoraleMode::Mode0);
-			if(result.removed_base) {++next.base_index;continue;}
-			if(!result.final_calculation) {throw std::runtime_error("Canonical upkeep omitted its final resource pass");}
-			next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
-			next.stage=Stage::ResearchStart;
+			if(!BeginCanonicalBaseUpkeep(GSE_CALL)) {return;}
+			if(next.stage==Stage::Base) {continue;} // starvation advanced the cursor
 		}
 		if(!ContinueCanonicalResearch(GSE_CALL)) {return;}
 		if(next.stage!=Stage::Credit || !next.energy) {throw std::runtime_error("Canonical research omitted its credit stage");}
@@ -230,8 +222,7 @@ void Game::FailCanonicalTurn(const std::string& error) {
 	// a retry nor a snapshot of the partially advanced world is permitted.
 }
 
-// Kept separate from the default caller until abandonment, UI and saved pause
-// transport are installed together. Tests execute this actual native entry.
+// One entry for ordinary upkeep and the saved Colony-choice continuation.
 bool Game::BeginCanonicalBaseUpkeep(GSE_CALLABLE) {
 	if(!m_canonical_turn_in_progress || !m_canonical_continuation || m_colony_request || m_research_request) {
 		throw std::runtime_error("Colony upkeep requires its owning active turn");
@@ -367,7 +358,14 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		const auto result=base->ResumeSmacColonyUpkeep(GSE_CALL,*next.colony,selected,roles,[&](int32_t design){
 			return ResolveSmacProductionPresentation(base->m_owner,design);
 		});
-		if(result.removed_base || result.completed_unit || !result.final_calculation) {
+		if(result.removed_base) {
+			// Population starvation retired the old Base. Its address and Screen
+			// request cannot survive into the continuation.
+			next.colony.reset();m_colony_request.reset();++next.base_index;
+			next.stage=CanonicalTurnContinuation::Stage::Base;
+			ContinueCanonicalTurn(GSE_CALL);if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}return true;
+		}
+		if(result.completed_unit || !result.final_calculation) {
 			throw std::runtime_error("Deferred Colony tail produced an invalid completion");
 		}
 		next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);

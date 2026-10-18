@@ -35,6 +35,8 @@ const result = {
 		);
 
 		if (game.get_ruleset() == 'smac') {
+			def(game, 'RECREATION_COMMONS', 'Recreation Commons', 'Fewer Drones', 40, 'fac006.pcx', 6);
+			def(game, 'ENERGY_BANK', 'Energy Bank', 'Economy Bonus', 80, 'fac007.pcx', 7);
 			def(game, 'PERIMETER_DEFENSE', 'Perimeter Defense', 'Defense +100%', 50, 'fac004.pcx', 4);
 			def(game, 'NETWORK_NODE', 'Network Node', 'Labs Bonus', 80, 'fac008.pcx', 8);
 		}

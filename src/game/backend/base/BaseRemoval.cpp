@@ -5,12 +5,99 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/SmacRestartUnitPackage.h"
 #include "gc/Space.h"
 #include <algorithm>
 #include <memory>
 #include <type_traits>
 
 namespace game::backend::base {
+
+struct BaseManager::SmacDispositionPlan {
+    size_t participant, technology;
+    faction::SmacEconomyState economy;
+    map::tile::Tile* site=nullptr;
+    std::vector<std::pair<unit::Def*,unit::ConventionalUnitState>> units;
+};
+
+BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(const Base& base) const {
+    if(!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+        THROW("Faction disposition requires the current size-one Base");
+    }
+    m_game->RequireSmacLocalHumanOwner(base.m_owner);
+    const auto owner=base.GetSmacResourceContext().owner_simulation_id;
+    for(const auto& row:m_bases) {if(row.second!=&base && row.second->m_owner==base.m_owner) {THROW("Faction disposition requires the last owned Base");}}
+    auto& state=m_game->m_simulation->value;
+    const auto participant=std::find_if(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner;});
+    const auto technology=std::find_if(state.technology.factions.begin(),state.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
+    if(participant==state.roster.end() || !participant->active || technology==state.technology.factions.end()) {THROW("Faction disposition has no active saved owner");}
+    SmacDispositionPlan plan{static_cast<size_t>(participant-state.roster.begin()),static_cast<size_t>(technology-state.technology.factions.begin()),
+        m_game->PrepareSmacNonzeroInitialization(owner),nullptr,{}};
+    const auto* map=m_game->GetMap();auto* center=base.GetTile();
+    if(!center || center->tiles!=map->GetTilesPtr() || center->base!=&base || !map->GetSmacWorkerKnowledge()) {THROW("Faction disposition has no canonical center or knowledge");}
+    if(state.do_or_die || participant->restart_prohibited || m_game->GetTurnId()>100) {return plan;}
+    const auto& global=m_game->GetState()->m_settings.global;
+    const auto package=unit::SmacRestartUnitPackage::Select(static_cast<int32_t>(m_game->GetTurnId()),state.designs,
+        global.GetSmacPredefinedUnitRules()->catalog,*technology,*global.GetSmacTechnologyRules());
+    // Explicit GLSMAC placement policy: maximize distance from surviving Bases
+    // and the lost center, with row-major ties. This is not the original search
+    // or a fixture coordinate. It consumes neither gameplay nor map RNG.
+    int64_t best=-1;
+    for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
+        auto* tile=map->GetTile(x,y);
+        if(tile->base || tile->is_water_tile || tile->IsLocked() || tile->rockiness==map::tile::ROCKINESS_ROCKY
+            || (tile->features & (map::tile::FEATURE_XENOFUNGUS|map::tile::FEATURE_MONOLITH))) {continue;}
+        if(std::any_of(tile->units.begin(),tile->units.end(),[&](const auto& row){return row.second->m_owner!=base.m_owner;})) {continue;}
+        if(std::any_of(tile->neighbours.begin(),tile->neighbours.end(),[&](const auto* adjacent){return adjacent->base && adjacent->base!=&base;})) {continue;}
+        int64_t nearest=INT64_MAX;
+        for(const auto& row:m_bases) {
+            const auto* other=row.second->GetTile();
+            auto dx=std::abs(int64_t(x)-int64_t(other->coord.x));dx=std::min(dx,int64_t(map->GetWidth())-dx);
+            const auto dy=std::abs(int64_t(y)-int64_t(other->coord.y));nearest=std::min(nearest,std::max(dx,dy));
+        }
+        if(nearest>best) {best=nearest;plan.site=tile;}
+    }}
+    if(!plan.site) {return plan;}
+    for(const auto id:package.creation_order) {
+        plan.units.push_back({m_game->ResolveSmacProductionPresentation(base.m_owner,id),
+            {id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0}});
+    }
+    plan.economy.rates={0,5};return plan;
+}
+
+BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,
+    unit::Def* transient_definition,unit::SmacMoraleMode mode) {
+    const auto plan=PrepareLastSmacBaseDisposition(base);
+    auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
+    if(!territory) {THROW("Faction disposition requires staged territory");}
+    auto* um=m_game->GetUM();
+    std::optional<unit::UnitManager::PreparedConventionalUnit> transient;
+    SmacAbandonmentResult result{};
+    if(transient_definition) {
+        transient.emplace(um->PrepareManufacturedConventionalUnit(GSE_CALL,base,*base.GetProductionState()->current_item.smac_source_id,transient_definition,mode));
+        result.newborn_id=transient->Candidate().m_id;
+    }
+    auto units=um->PrepareFactionUnits(GSE_CALL,base.m_owner,plan.site,plan.units,*territory,transient ? &*transient : nullptr);
+    auto bases=m_bases;bases.erase(base.m_id);
+    auto order=m_base_order;order.erase(std::remove(order.begin(),order.end(),base.m_id),order.end());
+    auto assignments=m_work_assignments;
+    for(auto it=assignments.begin();it!=assignments.end();) {if(it->second.first==base.m_id) {it=assignments.erase(it);} else {++it;}}
+    auto updates=m_base_updates;QueueBaseUpdateInto(updates,&base,BUO_DESPAWN);
+    std::unique_lock lock(m_updated_bases_mutex);auto triggers=m_updated_bases;triggers.erase(&base);
+    auto& state=m_game->m_simulation->value;
+    auto& economy=state.economy.at(base.GetSmacResourceContext().owner_simulation_id);
+    static_assert(std::is_nothrow_swappable_v<decltype(bases)> && std::is_nothrow_swappable_v<decltype(order)>
+        && std::is_nothrow_swappable_v<decltype(assignments)> && std::is_nothrow_swappable_v<decltype(updates)>
+        && std::is_nothrow_swappable_v<decltype(triggers)> && std::is_nothrow_copy_assignable_v<faction::SmacEconomyState>);
+    m_bases.swap(bases);m_base_order.swap(order);m_work_assignments.swap(assignments);
+    m_base_updates.swap(updates);m_updated_bases.swap(triggers);base.GetTile()->base=nullptr;
+    economy=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
+    state.roster[plan.participant].active=plan.site!=nullptr;
+    units.Commit();std::unique_ptr<Base> retired(&base);lock.unlock();
+    units.Notify(GSE_CALL);
+    m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&base) {{"base",base.Wrap(GSE_CALL)},};});
+    return result;
+}
 
 void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
     if (!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
@@ -43,7 +130,7 @@ void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
         const auto* candidate=GetBase(id);
         return candidate && candidate!=&base && candidate->m_owner==base.m_owner;
     });
-    if (!other_owned) {THROW("Last-owned-Base abandonment requires the restart/disposition path");}
+    if (!other_owned) {(void)PrepareLastSmacBaseDisposition(base);}
 }
 
 BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, Base& base,
@@ -78,7 +165,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
         const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
         if (distance<=nearest) {replacement=candidate;nearest=distance;}
     }
-    if (!replacement) {THROW("Last-owned-Base abandonment requires the restart/disposition path");}
+    if (!replacement) {return DisposeLastSmacBase(GSE_CALL,base,definition,mode);}
     auto* um=m_game->GetUM();
     if (!um) {THROW("Colony abandonment requires its Unit manager");}
     um->RequireConventionalUnitsReady();
@@ -137,7 +224,7 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
         const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
         if (distance<=nearest) {replacement=candidate;nearest=distance;}
     }
-    if (!replacement) {THROW("Last-owned-Base starvation requires the restart/disposition path");}
+    if (!replacement) {(void)DisposeLastSmacBase(GSE_CALL,base,nullptr,unit::SmacMoraleMode::Mode0);return;}
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
     if (!territory) {THROW("Canonical starvation requires saved worker knowledge and territory");}
 

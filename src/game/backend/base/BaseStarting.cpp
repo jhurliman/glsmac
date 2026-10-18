@@ -24,7 +24,7 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     const std::array<int32_t,3>& intake, bool startup, std::optional<size_t> consumed_unit ) const {
     if(startup) {m_game->RequireConventionalStartupClaim();}
     if(!m_game->m_simulation || !candidate.m_resource_context || GetBase(candidate.m_id)
-        || candidate.GetGame()!=m_game || candidate.m_pops.size()!=1 || !m_game->GetUM()) {
+        || candidate.GetGame()!=m_game || candidate.m_pops.empty() || candidate.m_pops.size()>127 || !m_game->GetUM()) {
         THROW("Initial resource cache requires the prepared new Base");
     }
     const auto* social=m_game->m_simulation->value.social.Find(candidate.m_resource_context->owner_simulation_id);
@@ -34,7 +34,8 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     // has no home links. Retain every surviving actual record as Ignored, using
     // the actual current rating for the allowance; do not invent retained Early
     // social ratings or an empty global Unit roster.
-    auto support=SmacUnitSupport::Recalculate(social->current.at(2),1,{});
+    const auto population=static_cast<int32_t>(candidate.m_pops.size());
+    auto support=SmacUnitSupport::Recalculate(social->current.at(2),population,{});
     const auto* um=m_game->GetUM();support.units.reserve(um->GetUnits().size());
     for(const auto id:um->GetUnitRecordOrder()) {
         const auto* current=um->GetUnit(id);
@@ -56,7 +57,7 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     }
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();
     if(!rules) {THROW("Initial resource cache has no frozen nutrient demand");}
-    return {FinishSmacResourceIntake({intake[0],intake[1],intake[2]},rules->nutrients_per_citizen,
+    return {FinishSmacResourceIntake({intake[0],intake[1],intake[2]},int64_t(rules->nutrients_per_citizen)*population,
         candidate.m_accumulated_nutrients,support.mineral_support,multiplier_steps),std::move(support)};
 }
 

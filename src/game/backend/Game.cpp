@@ -736,7 +736,11 @@ WRAPIMPL_BEGIN( Game )
 					|| m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE ) {
 					return VALUE( gse::value::Undefined );
 				}
-				try { return VALUE( gse::value::Int,, GetCanonicalEconomy( m_slot ).credits ); }
+				try {
+					const auto* participant=m_simulation->value.FindSlot(m_slot->GetIndex());
+					if(participant && !participant->active) {return VALUE(gse::value::Int,,m_simulation->value.economy.at(participant->simulation_id).credits);}
+					return VALUE( gse::value::Int,, GetCanonicalEconomy( m_slot ).credits );
+				}
 				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 			} )
 		},
@@ -936,6 +940,14 @@ WRAPIMPL_BEGIN( Game )
 				}
 				return VALUE( gse::value::Undefined );
 			} )
+		},
+		{
+			"get_smac_eliminated",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(0);
+				const auto* participant=IsRunning() && m_simulation && m_slot ? m_simulation->value.FindSlot(m_slot->GetIndex()) : nullptr;
+				return VALUE(gse::value::Bool,,participant && !participant->active);
+			})
 		},
 		{
 			"get_pending_smac_colony_screen",

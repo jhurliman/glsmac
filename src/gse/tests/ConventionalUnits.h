@@ -27,7 +27,7 @@ public:
 	void ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
 	void ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
 	void ProductionPresentations( const std::array< std::string, 4 >& roles );
-	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source );
+	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map = false );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );
 	void PostEconomy( const game::backend::base::Base& base );
 	void SettleEconomy( int32_t owner );

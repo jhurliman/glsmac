@@ -667,6 +667,7 @@ private:
 	std::optional< map::SmacWorkerKnowledge > PrepareConventionalSight( uint64_t id, int32_t owner, const map::tile::Tile* destination, const map::tile::Tile* source, bool startup = false ) const;
 	void CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
 	base::ProductionItem SelectSmacFoundingProduction( const slot::Slot* owner, const map::tile::Tile* tile ) const;
+	faction::SmacEconomyState PrepareSmacNonzeroInitialization( int32_t owner ) const;
 	bool IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const;
 	bool HandleConventionalWorkEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	std::optional<map::SmacWorkerKnowledge> PrepareConventionalWorkMemory( const unit::Unit& unit, uint16_t terraforming ) const;

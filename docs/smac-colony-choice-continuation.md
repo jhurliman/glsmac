@@ -1,10 +1,9 @@
 # Explicit Colony choice and upkeep continuation
 
-This checkpoint implements the native question, Delay, Base Control Screen,
-non-last-base abandonment and saved question state. The default turn controller
-still uses its strict upkeep entry; activation waits for the last-owned-base
-restart/disposition path. The new UI module is likewise prepared but not added
-to the default game modules yet.
+The default turn controller and UI now use the native question, Delay, Base
+Control Screen, abandonment, last-base restart/disposition and saved question
+state. An eliminated local faction gets a port outcome window with a return to
+the main menu; this is not a recreation of the original ending presentation.
 
 `Base::BeginSmacUpkeep` repairs workers and calculates the actual first resource
 pass. At a size-one Colony question it commits posted minerals and allocation,
@@ -25,8 +24,8 @@ stale edits cannot apply after close or to a later screen.
 Accept uses a distinct staged abandonment provider. It creates the actual Pod,
 clears the newborn's home, rehomes older units, and retires the Base and claims.
 An eligible compacted successor consumes its retained population/resource tail
-without its own mineral posting. Last-owned-base disposition and a foreign
-compacted successor remain explicit preflight rejections; a rejected answer
+without its own mineral posting. A foreign compacted successor remains an
+explicit preflight rejection; a rejected answer
 leaves the question available for Delay or Screen.
 An unsupported population-removal tail in the successor likewise rejects before
 manufacturing or deleting anything.
@@ -71,7 +70,7 @@ set. Submission now blocks only after successful event queuing; the real GSE
 script passes both rejected-Accept-to-Delay and rejected-Accept-to-Screen paths
 without replacing the request or resetting the game.
 
-## Last-base integration in progress
+## Last-base integration
 
 The working branch now stores faction activity and restart prohibition
 independently, plus Do or Die, in simulation V11. Restoring these fields does
@@ -83,20 +82,40 @@ that was eliminated during that upkeep. The installed SMAC manual (PDF page
 Custom rule selection and the special Mind Worm/interlude prohibition producer
 remain separate consumers; prohibition must never become a restart-used latch.
 
-Sixty affected native groups pass with memory tracking, including the actual
-inactive-world restore and rejected-asset checks. Six changed production units
-pass scoped clang-tidy 15 in 13.04 seconds. This work is held unpublished until
-the last-base caller is connected. Remaining steps are:
+Starvation and accepted abandonment stage removal of every old owned Unit,
+replacement factories, record order, tile membership, sight/claims, placement
+history and Base retirement before publication. Accept includes its actual
+manufactured Pod, which is then retired with the old roster. IDs advance only
+on commit; all callbacks observe the final roster and faction state. A late
+factory failure leaves the old world and available question unchanged.
 
-1. Stage removal of every old owned Unit together with the actual replacement
-   factories, record order, tile membership, sight/claims and placement history.
-   Reserve IDs only on commit; callbacks run after the complete publication.
-2. Connect starvation and accepted Colony abandonment to that transaction.
-   Preserve technologies, target, labs and research fraction; invalidate the
-   threshold and apply the evidenced nonzero-turn treasury/debit initialization.
-   Refusal reaches a second initialization at the faction tail; do not replace
-   that with a once-only guard or a hardcoded doubled bonus.
-3. Provide the loss outcome, verify restart → actual founding → next upkeep and
-   save/reload, then activate the prepared upkeep entry and Colony UI module.
-   Restart placement remains an explicit GLSMAC world-generation policy rather
-   than hardcoded coordinates from a reference fixture.
+Loss preserves technologies, target, labs and research fraction, invalidates
+the research threshold, adds the frozen starting-energy scalar and faction
+ENERGY bonus to treasury, and clears pending debit. Successful restart resets
+psych/labs to 0/5. Refusal sets activity false; the empty faction's later upkeep
+tail performs the second initialization independently (100→110→120 in the
+reference inputs). A successful restart leaves the independent prohibition
+flag clear and does not act as a once-only restart latch.
+
+The port placement policy scans ordinary founding-capable land, maximizes
+distance from surviving Bases and the lost center, and breaks ties in row-major
+order. It consumes no RNG. **This is not the original placement search.** There
+is no hardcoded reference coordinate. No site produces ordinary elimination.
+Custom designs lacking an admitted renderer still reject before publication.
+
+A zero-Base faction can found again. The first-Base count predicate grants HQ;
+the non-network turn package grants population 1..5, Tanks at 75, Commons at
+100 and Bank at 150. Resource caches use the actual new population and current
+SUPPORT. Source contracts: RE-SMAC-LAST-BASE-RESTART-001,
+RE-SMAC-RESTART-PACKAGE-001, RE-SMAC-FOUND-FAC-001,
+RE-SMAC-FOUND-POP-001 and RE-SMAC-FOUND-TERR-001 in the research workspace.
+
+Validation: 72 affected Linux native groups pass with memory tracking. New
+cases include starvation/Accept × turn3/100/101/Do or Die/prohibition/no site,
+actual Start restoration, and ten first-Base population/facility boundaries.
+The integrated Accept → restart → founding → world save/Start → turn4 path
+matches food0→2, Scout completion/mineral baseline1, credits110→111 and labs0→1
+with fraction70 retained. World-body tests explicitly admit the saved Player
+difficulty, which belongs to the campaign roster envelope. The actual GSE
+Colony callback and eliminated-outcome scripts pass. Scoped clang-tidy 15 passes
+for the changed production sources. A rendered UI session remains unverified.

@@ -181,7 +181,8 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 		if ( startup ) { RequireConventionalStartupClaim(); }
 		else { RequireSmacLocalHumanOwner( evaluating_base.m_owner ); }
 		if ( !evaluating_base.m_resource_context || m_bm->GetBase( evaluating_base.m_id )
-			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.m_pops.size()!=1 ) {
+			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.m_pops.empty()
+			|| evaluating_base.m_pops.size()>5 || (startup && evaluating_base.m_pops.size()!=1) ) {
 			throw std::runtime_error( "First-Base resources require a private uninstalled candidate" );
 		}
 		m_bm->ValidateSmacResourceContext( *evaluating_base.m_resource_context, evaluating_base.m_owner, evaluating_base.m_faction );

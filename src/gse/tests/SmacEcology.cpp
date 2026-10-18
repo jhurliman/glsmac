@@ -25,6 +25,7 @@
 namespace gse::tests {
 namespace {
 namespace b=game::backend::base;
+using game::backend::SmacGameplayRandomState;
 using SpawnCoordinate=std::array<int32_t,2>;
 using game::backend::settings::SmacEcologyRules;
 bool Rejects(const std::function<void()>& call) {try {call();}catch(const std::exception&) {return true;}return false;}

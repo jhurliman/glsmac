@@ -1,6 +1,6 @@
 # Retained-input climate and terrain recalculation
 
-2026-10-18. RE-SMAC-CLIMATE-SEMANTIC-RULES-001. Implementable [named-field reference](climate_recalculation_reference.py) and [literal cases](climate-recalculation-rules-cases.json). This supplements the [warming scheduler](ecology-warming-and-climate.md); the preceding32-control freeze remains unchanged. Broad RE remains paused.
+2026-10-18. RE-SMAC-CLIMATE-SEMANTIC-RULES-001. Implementable [named-field reference](climate_recalculation_reference.py) and [literal cases](climate-recalculation-rules-cases.json). This supplements the warming scheduler; the preceding32-control freeze remains unchanged. Broad RE remains paused.
 
 **The reference now independently reproduces altitude reconstruction, height shaping, the admitted ecology volcano geometry, temperature, rivers and rainfall.** Thirty-four native comparisons check every byte of all3,200 tiles and the actual random requests, outputs and seeds. Eleven separate returned live-record controls establish flooding, Pressure Dome/population changes, actual Base removal and actual Unit compaction. Three complete recalculation calls also compare the composed first four passes before the established region/coastal passes.
 
@@ -12,7 +12,7 @@ When the deferred scheduler applies its signed sea step, or after the separate h
 2. Recompute temperature codes using retained temperature category, climate-extra and world-builder divisors.
 3. Rebuild rivers, with their contour changes and source-specific shared seeds.
 4. Recompute rainfall and retained local climate flags.
-5. Rebuild regions, then coastal metadata and site-rating invalidation; reuse [region/Freshwater](water-region-rebuild-and-freshwater.md) and [coastal/area](coastal-metadata-and-region-area.md) contracts. Preserve stored-area quirks rather than recounting final labels.
+5. Rebuild regions, then coastal metadata and site-rating invalidation; reuse region/Freshwater and [coastal/area](coastal-metadata-and-region-area.md) contracts. Preserve stored-area quirks rather than recounting final labels.
 6. Run the admitted territory refresh, then reseed the shared generator from the supplied OS millisecond-clock authority and publish views.
 
 Do this against the evolving staged world. Neighbors read earlier mutations in the stated scan order. Entity destruction can compact live arrays while a terrain routine is still traversing them. The reference's `entity_change` and `invalidate_landmark_cache` hooks identify real engine responsibilities; they are not permission to omit them. Occupied cross-category changes without a coupling hook raise explicitly. Region capacity/nonempty auxiliary summaries and the final frontend publication transaction retain their previously documented limits.

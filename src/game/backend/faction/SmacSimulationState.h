@@ -105,6 +105,19 @@ struct SmacVictoryHistory {
 	}
 };
 
+// Native retained signed words, including unoccupied slots and slot0. H is
+// event history, not a count of currently installed ecological facilities.
+struct SmacEcologyHistory {
+    std::array<int32_t,8> clean_minerals{}, major_atrocities{}, research_aggregate{};
+    // Fresh owner initialization clears H/atrocities only. A nonzero-turn
+    // restart preserves all three arrays; aggregate has a later owner-pass reset.
+    void Initialize(int32_t owner,int32_t turn);
+    bool operator==(const SmacEcologyHistory& other) const noexcept {
+        return clean_minerals==other.clean_minerals && major_atrocities==other.major_atrocities
+            && research_aggregate==other.research_aggregate;
+    }
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -152,6 +165,9 @@ struct SmacSimulationState {
 	// Global score provider writes positive slots; slot0 retains its prior word.
 	// Dominance reads this table at retained rank IDs, not fresh per-owner scores.
 	std::optional<std::array<int32_t,8>> ranking_scores;
+	// V11-V24 did not retain these words. Loading preserves absence and never
+	// rebuilds H from facilities, atrocity history or aggregate from current Bases.
+	std::optional<SmacEcologyHistory> ecology_history;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

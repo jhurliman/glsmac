@@ -407,7 +407,8 @@ public:
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             using Rows=std::array<faction::SmacRegionalStrategyRow,8>;
             using Scores=std::array<int32_t,8>;
-            GT_ASSERT(m_game.m_simulation->value.regional_strategy==std::optional<Rows>{Rows{}}
+            GT_ASSERT(m_game.m_simulation->value.ecology_history==std::optional<faction::SmacEcologyHistory>{faction::SmacEcologyHistory{}}
+                && m_game.m_simulation->value.regional_strategy==std::optional<Rows>{Rows{}}
                 && m_game.m_simulation->value.ranking_scores==std::optional<Scores>{Scores{}},"Cold engine storage was not zero");
             for(const bool present:{true,false}) {
                 std::optional<Rows> rows;std::optional<Scores> scores;
@@ -415,6 +416,12 @@ public:
                     rows.emplace();for(size_t owner=0;owner<8;++owner) {for(size_t region=0;region<128;++region) {rows->at(owner)[region]=static_cast<uint8_t>(17*owner+3*region);}}
                     scores=Scores{{17,31,47,61,79,97,113,127}};
                 }
+                std::optional<faction::SmacEcologyHistory> ecology;
+                if(present) {
+                    ecology.emplace();
+                    for(size_t i=0;i<8;++i) {ecology->clean_minerals[i]=101+7*i;ecology->major_atrocities[i]=202+7*i;ecology->research_aggregate[i]=303+7*i;}
+                }
+                m_game.m_simulation->value.ecology_history=ecology;
                 m_game.m_simulation->value.regional_strategy=rows;m_game.m_simulation->value.ranking_scores=scores;
                 ResetWorld();
                 GT_ASSERT(!m_game.m_simulation && !m_game.m_map && !m_state->GetGame(),"Real reset retained its preceding world");
@@ -423,6 +430,10 @@ public:
                 for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
                 m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
                 m_game.PrepareNewSimulation();
+                if(ecology) {for(const auto& participant:m_game.m_simulation->value.roster) {
+                    ecology->clean_minerals[participant.simulation_id]=0;ecology->major_atrocities[participant.simulation_id]=0;
+                }}
+                GT_ASSERT(m_game.m_simulation->value.ecology_history==ecology,"Actual Reset/new-world initialization changed peers, aggregate or absent history");
                 GT_ASSERT(m_game.m_simulation->value.regional_strategy==rows && m_game.m_simulation->value.ranking_scores==scores,
                     "New simulation cleared retained storage or invented absent old history");
             }
@@ -10353,7 +10364,7 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
-    task->AddTest("SMAC actual Reset and new simulation retain all strategy rows and score words",GT(){
+    task->AddTest("SMAC actual Reset and new simulation retain ecology strategy and score history",GT(){
         BackendFixture fixture;return fixture.CheckCrossWorldStrategyStorage();
     });
 

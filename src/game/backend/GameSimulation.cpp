@@ -244,6 +244,7 @@ std::optional<bool> Game::PrepareSmacPerihelionForTurn(const size_t turn) const 
 	ValidateCurrentSimulation();
 	const auto active=m_simulation->value.perihelion;
 	if(!active) {return {};}
+	if(!m_state->m_settings.global.IsOrdinarySmacCampaign()) {return active;}
 	// Ordinary campaigns currently use the same2100 origin as the turn event.
 	// Scenarios/custom calendars require their own admitted saved authority.
 	if(turn>static_cast<size_t>(INT32_MAX-2100)) {throw std::overflow_error("Ordinary mission year exceeds signed32");}

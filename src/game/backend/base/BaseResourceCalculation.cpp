@@ -7,6 +7,7 @@
 #include "game/backend/map/tile/Tile.h"
 #include "gse/value/Object.h"
 #include "gse/value/Int.h"
+#include "gse/value/Null.h"
 #include <limits>
 #include <stdexcept>
 
@@ -89,14 +90,17 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
         }
     }
     // No Space Elevator: every target has the same final and pre-orbital
-    // surplus. No target/buildability lookup or ecology result is invented.
-    return FinishSmacResourceIntake(result.raw_intake,m_game->CalculateCanonicalNutrientDemand(*this,population),
+    // surplus. Target/buildability does not change this gross mineral input.
+    result = FinishSmacResourceIntake(result.raw_intake,m_game->CalculateCanonicalNutrientDemand(*this,population),
         stored.value_or(m_accumulated_nutrients),support,multiplier_steps);
+    result.eco_damage = CalculateSmacEcologyDamage(result, allocation, population, granted);
+    return result;
 }
 
 gse::Value* Base::CopySmacResourceCalculation( GSE_CALLABLE ) const {
     const auto result = PrepareSmacResourceCalculation();
     return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+        { "eco_damage", result.eco_damage ? static_cast<gse::Value*>(VALUE(gse::value::Int,, *result.eco_damage)) : static_cast<gse::Value*>(VALUE(gse::value::Null)) },
         { "raw_intake", VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
             { "NUTRIENTS", VALUE( gse::value::Int,, result.raw_intake[ 0 ] ) },
             { "MINERALS", VALUE( gse::value::Int,, result.raw_intake[ 1 ] ) },

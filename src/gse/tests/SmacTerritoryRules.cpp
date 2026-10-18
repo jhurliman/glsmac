@@ -1,6 +1,7 @@
 #include "SmacTerritoryRules.h"
 #include "fixtures/SmacTerritoryRules.h"
 #include "fixtures/SmacRegionalRoutes.h"
+#include "fixtures/SmacRegionalWorkspace.h"
 #include "game/backend/map/SmacWorkerKnowledge.h"
 #include "task/gsetests/GSETests.h"
 
@@ -132,6 +133,43 @@ std::string CheckTerritoryBoundaries() {
 }
 
 void AddSmacTerritoryRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC retained regional workspace matches17 native sequences and6 complete footprints",GT(){
+		namespace native=regional_workspace_fixture;
+		const territory::RegionalRouteQuery initial{{16,16},{20,16},1,2,0};
+		for(const auto& row:native::Sequences()) {
+			int32_t plan=8;const auto resolver=[&](int32_t id) {if(id!=0) {throw std::invalid_argument("Unprovided prototype");}return plan;};
+			territory::RegionalLandWorkspace workspace(64,32);auto warm=initial;warm.mode=row.mode;
+			GT_ASSERT(workspace.Query(row.before,warm,0,resolver) && workspace.Distances()==native::Field(1),
+				"Native warm workspace differs: "+std::string(row.id));
+			plan=row.plan;
+			GT_ASSERT(workspace.Query(row.after,row.query,0,resolver)==row.warm && workspace.Distances()==native::Field(row.field),
+				"Native retained query or partial footprint differs: "+std::string(row.id));
+			const auto retained=workspace.Distances();workspace.Invalidate();
+			GT_ASSERT((workspace.Destination()==territory::Coordinate{-1,-1}) && workspace.Distances()==retained,
+				"Invalidation cleared native retained distances");
+			GT_ASSERT(workspace.Query(row.after,row.query,0,resolver)==row.fresh,"Native invalidated query differs: "+std::string(row.id));
+			if(std::string(row.id)=="terrain_warm_base_caller") {
+				territory::RegionalLandWorkspace pairs(64,32);
+				const std::vector<territory::Base> bases{{initial.source,1},{initial.target,2}};
+				GT_ASSERT(territory::RegionalBasesReachable(row.before,bases,1,2,1,0,1,1,pairs,resolver)
+					&& territory::RegionalBasesReachable(row.after,bases,1,2,1,0,1,1,pairs,resolver),"Base-pair caller discarded retained reachability");
+				GT_ASSERT(!territory::RegionalBasesReachable(row.after,bases,1,2,1,0,0,1,pairs,resolver),"Warm route bypassed retained Base counts");
+				pairs.Invalidate();
+				GT_ASSERT(!territory::RegionalBasesReachable(row.after,bases,1,2,1,0,1,1,pairs,resolver),"Base-pair caller ignored retired route");
+			}
+		}
+		for(const auto& row:native::Footprints()) {
+			territory::RegionalLandWorkspace workspace(row.map.width,row.map.height);
+			GT_ASSERT(workspace.Query(row.map,row.query,0,[](int32_t){return 8;})==row.expected
+				&& workspace.Distances()==native::Field(row.field),"Native mixed-map footprint differs: "+std::string(row.id));
+		}
+		territory::RegionalLandWorkspace workspace(64,32);const auto row=native::Sequences().front();
+		GT_ASSERT(Rejects([&]{workspace.Query(row.before,row.query,0,{});})
+			&& Rejects([&]{workspace.Query(row.before,row.query,512,[](int32_t){return 8;});})
+			&& Rejects([&]{territory::RegionalLandWorkspace wrong(12,10);wrong.Query(row.before,row.query,0,[](int32_t){return 8;});}),
+			"Workspace admitted missing prototype authority or mismatched allocation");
+		GT_OK();
+	});
 	task->AddTest("SMAC regional land routes match386 native queries and66 actual Base caller projections",GT(){
 		size_t queries=0,pairs=0;
 		for(const auto& row:regional_routes_fixture::Cases()) {

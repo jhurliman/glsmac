@@ -65,6 +65,61 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC live regional workspace preserves Base events but retires at owner tail and Start",GT(){
+		namespace routes=map::smac_territory;
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+		const auto graph=[](Game* game) {
+			routes::RegionalRouteMap value{static_cast<int32_t>(game->GetMap()->GetWidth()),static_cast<int32_t>(game->GetMap()->GetHeight()),true,{}, {},2};
+			value.tiles.assign(value.width*value.height/2,{false,1,1});value.tiles[Index(value.width,20,16)].territory=2;return value;
+		};
+		const routes::RegionalRouteQuery query{{16,16},{20,16},1,2,0};
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			auto& workspace=game->GetMap()->GetRegionalPathWorkspace();const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+			GT_ASSERT(workspace.Query(graph(game),query,0,[](int32_t){return 8;}),"Live workspace failed warm route");
+			const auto distances=workspace.Distances();
+			GT_ASSERT(before==fixture.Snapshot() && random==fixture.GameplayRandom(),"Transient workspace entered save or RNG authority");
+			Found(GSE_CALL,game,901,0,1,16,16);fixture.RefreshPopulation(1);
+			GT_ASSERT(workspace.Destination()==query.target && workspace.Distances()==distances,"Founding or summary eagerly retired the route");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(workspace.Destination()==query.target && workspace.Distances()==distances,"Base removal retired the route");
+			saved=fixture.Snapshot();
+			std::array<std::string,8> roles;
+			for(size_t i=0;i<roles.size();++i) {
+				roles[i]="route-role-"+std::to_string(i);
+				game->GetBM()->DefinePop(new base::PopDef(roles[i],roles[i],{},{},i ? base::PopDef::PF_NONE : base::PopDef::PF_TILE_WORKER,
+					i ? std::optional<uint8_t>(i-1) : std::nullopt));
+			}
+			fixture.BasePresentationRoles(roles);
+			// This asset-free source deliberately has synthetic negative score
+			// inputs. Enter the supported pre-ranking state; upkeep owns its
+			// first aggregate publication independently of the transient route.
+			fixture.ResourceState([](auto& state){state.economy.at(1).population_aggregate.reset();});
+			game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+			GT_ASSERT((workspace.Destination()==routes::Coordinate{-1,-1}) && workspace.Distances()==distances,
+				"Actual owner tail failed destination-only invalidation");GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		const auto second=restored.Run([&](GSE_CALLABLE)->std::string {
+			auto& old=restored.Game()->GetMap()->GetRegionalPathWorkspace();
+			GT_ASSERT(old.Query(graph(restored.Game()),query,0,[](int32_t){return 8;}),"Restore fixture failed warm route");
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			auto* game=restored.Game();auto& workspace=game->GetMap()->GetRegionalPathWorkspace();
+			GT_ASSERT((workspace.Destination()==routes::Coordinate{-1,-1})
+				&& std::all_of(workspace.Distances().begin(),workspace.Distances().end(),[](uint32_t value){return value==0;}),"Actual Start restored a warm route");
+			GT_ASSERT(workspace.Query(graph(game),query,0,[](int32_t){return 8;}),"Fresh restored workspace cannot query");
+			GT_OK();
+		});
+		if(!second.empty()) {return second;}
+		ConventionalUnitFixture imported;imported.ConfigureMovementCampaign(false);
+		return imported.Run([&](GSE_CALLABLE)->std::string {
+			auto* world=imported.Game()->GetMap();
+			GT_ASSERT(world->GetRegionalPathWorkspace().Query(graph(imported.Game()),query,0,[](int32_t){return 8;}),"Raw import fixture failed warm route");
+			auto bytes=world->GetTilesPtr()->Serialize();
+			GT_ASSERT(world->LoadFromBuffer(bytes)==map::Map::EC_NONE,"Raw map replacement failed");
+			GT_ASSERT((world->GetRegionalPathWorkspace().Destination()==routes::Coordinate{-1,-1}),"Raw map replacement retained route key");GT_OK();
+		});
+	});
 	task->AddTest("SMAC live Base-phase flags retain peers removal and actual Start history",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
 		const auto flags=[](ConventionalUnitFixture& value,int owner) {

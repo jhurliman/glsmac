@@ -105,19 +105,23 @@ bool RouteTerritory(const RegionalRouteMap& map,const RegionalRouteQuery& query,
 	if((forward&0x100000u) && !(forward&0x11u)) {return false;}
 	return (reverse&0x11u) || !(map.human_membership&(1u<<territory));
 }
-bool LandRoute(const RegionalRouteMap& map,const RegionalRouteQuery& query) {
+std::vector<uint32_t> RouteDistances(const RegionalRouteMap& map,const RegionalRouteQuery& query,std::vector<uint32_t> distances={}) {
 	const auto source=RouteIndex(map,query.source),target=RouteIndex(map,query.target);
-	std::vector<bool> seen(map.tiles.size());std::vector<size_t> pending{target};seen[target]=true;
+	if(distances.empty()) {distances.resize(map.tiles.size());}
+	std::vector<size_t> pending{target};distances[target]=1;
+	uint32_t best=UINT32_MAX;
 	for(size_t cursor=0;cursor<pending.size();++cursor) {
-		const auto current=pending[cursor];if(current==source) {return true;}
+		const auto current=pending[cursor];const auto distance=distances[current];
+		if(distance>best) {continue;}
+		if(current==source) {best=distance;continue;}
 		RouteNeighbors(map,current,[&](size_t next) {
-			if(seen[next]) {return;}
+			if(distances[next]) {return;}
 			const auto& tile=map.tiles[next];
 			if((tile.sea && next!=source && next!=target) || !RouteTerritory(map,query,tile.territory)) {return;}
-			seen[next]=true;pending.push_back(next);
+			distances[next]=distance+1;pending.push_back(next);
 		});
 	}
-	return false;
+	return distances;
 }
 void MarkRouteComponent(const RegionalRouteMap& map,size_t seed,int32_t owner,std::vector<bool>& marked) {
 	if(map.tiles[seed].sea) {return;}
@@ -131,10 +135,33 @@ void MarkRouteComponent(const RegionalRouteMap& map,size_t seed,int32_t owner,st
 bool RegionalLandReachable(const RegionalRouteMap& map,const RegionalRouteQuery& query) {
 	ValidateRoutes(map,query.owner,query.peer);
 	Require(RouteCoordinate(map,query.source) && RouteCoordinate(map,query.target),"Regional route endpoint is invalid");
-	return LandRoute(map,query);
+	return RouteDistances(map,query)[RouteIndex(map,query.source)]!=0;
 }
-bool RegionalBasesReachable(const RegionalRouteMap& map,const std::vector<Base>& bases,
-	int32_t owner,int32_t peer,uint8_t region,int32_t mode,uint8_t owner_bases,uint8_t peer_bases) {
+RegionalLandWorkspace::RegionalLandWorkspace(int32_t width,int32_t height):m_width(width),m_height(height) {
+	Require(width>=2 && width<=512 && !(width&1) && height>=1 && height<=256,"Regional workspace requires the bounded parity map");
+	m_distances.resize(size_t(width)*height/2);
+}
+bool RegionalLandWorkspace::Query(const RegionalRouteMap& map,const RegionalRouteQuery& query,int32_t prototype,const PlanResolver& current_plan) {
+	ValidateRoutes(map,query.owner,query.peer);
+	Require(map.width==m_width && map.height==m_height && RouteCoordinate(map,query.source) && RouteCoordinate(map,query.target),
+		"Regional workspace map or endpoint differs from its allocation");
+	Require(prototype>=0 && prototype<512 && bool(current_plan),"Regional workspace requires an explicit current prototype resolver");
+	const uint32_t options=query.mode==0 ? 0x201u : 0xe01u;
+	const auto source=RouteIndex(map,query.source);
+	const bool matching=m_destination==query.target && m_peer==query.peer && m_options==options
+		&& current_plan(prototype)==current_plan(m_prototype);
+	if(matching && m_distances[source]) {return true;}
+	// A matching key with an unreached source restarts the queue WITHOUT
+	// clearing the retained footprint. This differs from a fresh search.
+	auto distances=RouteDistances(map,query,matching ? m_distances : std::vector<uint32_t>{});
+	if(matching) {m_distances=std::move(distances);return m_distances[source]!=0;}
+	m_destination=query.target;m_peer=query.peer;m_options=options;m_prototype=prototype;m_distances=std::move(distances);
+	return m_distances[source]!=0;
+}
+namespace {
+template<class F> bool RegionalBasePairs(const RegionalRouteMap& map,const std::vector<Base>& bases,
+	int32_t owner,int32_t peer,uint8_t region,int32_t mode,uint8_t owner_bases,uint8_t peer_bases,
+	F route) {
 	ValidateRoutes(map,owner,peer);Require(region<128,"Regional route region is invalid");
 	if(region && (!owner_bases || !peer_bases)) {return false;}
 	for(const auto& base:bases) {Require(base.owner>=1 && base.owner<=7 && RouteCoordinate(map,base.coordinate),"Regional route Base is invalid");}
@@ -148,10 +175,24 @@ bool RegionalBasesReachable(const RegionalRouteMap& map,const std::vector<Base>&
 			const auto ti=RouteIndex(map,target.coordinate);
 			if(target.owner!=peer || map.tiles[ti].region!=region || marked[ti]) {continue;}
 			MarkRouteComponent(map,ti,peer,marked);
-			if(LandRoute(map,{source.coordinate,target.coordinate,owner,peer,mode})) {return true;}
+			if(route(RegionalRouteQuery{source.coordinate,target.coordinate,owner,peer,mode})) {return true;}
 		}
 	}
 	return false;
+}
+}
+bool RegionalBasesReachable(const RegionalRouteMap& map,const std::vector<Base>& bases,
+	int32_t owner,int32_t peer,uint8_t region,int32_t mode,uint8_t owner_bases,uint8_t peer_bases) {
+	return RegionalBasePairs(map,bases,owner,peer,region,mode,owner_bases,peer_bases,[&](const RegionalRouteQuery& query) {
+		return RouteDistances(map,query)[RouteIndex(map,query.source)]!=0;
+	});
+}
+bool RegionalBasesReachable(const RegionalRouteMap& map,const std::vector<Base>& bases,
+	int32_t owner,int32_t peer,uint8_t region,int32_t mode,uint8_t owner_bases,uint8_t peer_bases,
+	RegionalLandWorkspace& workspace,const RegionalLandWorkspace::PlanResolver& current_plan) {
+	return RegionalBasePairs(map,bases,owner,peer,region,mode,owner_bases,peer_bases,[&](const RegionalRouteQuery& query) {
+		return workspace.Query(map,query,0,current_plan);
+	});
 }
 RegionalRouteMap ProjectRegionalRoutes(const SmacWorkerKnowledge& knowledge,const std::vector<bool>& sea,
 	const std::vector<uint8_t>& regions,RegionalRelations relations,uint8_t human_membership) {

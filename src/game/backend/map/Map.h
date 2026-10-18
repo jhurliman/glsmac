@@ -50,6 +50,8 @@ class MapSettings;
 
 namespace map {
 
+namespace smac_territory { class RegionalLandWorkspace; }
+
 namespace tile {
 class Tile;
 class TileState;
@@ -157,6 +159,10 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const std::optional< GlsmacResourceMapPolicy >& GetResourcePolicy() const { return m_resource_policy; }
 	const std::optional< SmacWorkerKnowledge >& GetSmacWorkerKnowledge() const { return m_worker_knowledge; }
 	const std::optional< GlsmacTerritoryTopology >& GetTerritoryTopology() const { return m_territory_topology; }
+	// Worker-owned transient path history. Ordinary world edits preserve it;
+	// owner upkeep invalidates after summary, and map replacement allocates anew.
+	smac_territory::RegionalLandWorkspace& GetRegionalPathWorkspace();
+	void InvalidateRegionalPathWorkspace() noexcept;
 	std::vector< bool > TerritorySea() const;
 	GlsmacTerritoryTopology PrepareFreshTerritoryTopology() const;
 	GlsmacTerritoryTopology PrepareSiteRatingRefill(const GlsmacTerritoryTopology& topology,
@@ -223,6 +229,7 @@ private:
 	std::optional< GlsmacResourceMapPolicy > m_resource_policy;
 	std::optional< SmacWorkerKnowledge > m_worker_knowledge;
 	std::optional< GlsmacTerritoryTopology > m_territory_topology;
+	std::unique_ptr< smac_territory::RegionalLandWorkspace > m_regional_path_workspace;
 	bool m_worker_knowledge_ready = false;
 	tile::Tiles* m_tiles = nullptr;
 	tile::Tile* m_selected_tile = nullptr;

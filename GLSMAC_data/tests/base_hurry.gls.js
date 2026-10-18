@@ -1,6 +1,7 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/hurry');
 let commands = []; let actions = []; let listeners = {}; let keys = undefined; let handlers = {};
-const field = {value: '', hide: () => {}, show: () => {}, on: (event, cb) => { handlers[event] = cb; }};
+let focused = true;
+const field = {value: '', hide: () => { test.assert(focused); focused = false; }, show: () => { test.assert(!focused); focused = true; }, on: (event, cb) => { handlers[event] = cb; }};
 const child = (data) => { data.hide = () => {}; data.show = () => {}; return data; };
 const window = {hidden: false, hide: () => { this.hidden = true; }, show: () => { this.hidden = false; },
     text: child, input: (data) => { return field; },
@@ -30,3 +31,6 @@ expected = 'changed'; handlers.change({value: '5'}); test.assert(!dialog.active 
 expected = 'prepared'; dialog.open(base, data); listeners.research_choice({}); test.assert(!dialog.active);
 dialog.open(base, {available: false, expected_state: 'paid', reason: 'Partial payment already used'});
 dialog.submit(true); dialog.submit(false); test.assert(dialog.active && #sizeof(commands) == 3 && dialog.info.text == 'Partial payment already used');
+
+dialog.hide_view(); test.assert(focused); dialog.hide_view(); test.assert(focused);
+dialog.open(base, data); test.assert(dialog.active && focused); dialog.hide_view();

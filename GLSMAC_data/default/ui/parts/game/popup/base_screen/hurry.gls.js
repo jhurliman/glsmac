@@ -8,6 +8,7 @@ return {
         this.budget = this.window.text({class: 'game-popup-text', top: 65, left: 12, right: 12});
         this.input_label = this.window.text({class: 'game-popup-text', top: 100, left: 12, text: 'Partial credits:'});
         this.input = this.window.input({class: 'popup-input', top: 94, left: 150, width: 180, value: '0'});
+        this.input_visible = true;
         this.input.on('change', (e) => { this.change_amount(e.value); return true; });
         this.input.on('input', (e) => { this.submit(false); return true; });
         this.preview = this.window.text({class: 'game-popup-text', top: 135, left: 12, right: 12});
@@ -27,9 +28,9 @@ return {
         this.base = base; this.selection = data; this.active = true; this.valid_amount = false;
         if (!data.available) {
             this.info.text = data.reason; this.budget.text = ''; this.preview.text = '';
-            this.input.hide(); this.input_label.hide(); this.full_button.hide(); this.partial_button.hide();
+            if (this.input_visible) { this.input.hide(); this.input_visible = false; } this.input_label.hide(); this.full_button.hide(); this.partial_button.hide();
         } else {
-            this.input.show(); this.input_label.show(); this.full_button.show(); this.partial_button.show();
+            if (!this.input_visible) { this.input.show(); this.input_visible = true; } this.input_label.show(); this.full_button.show(); this.partial_button.show();
             this.info.text = 'Stored ' + #to_string(data.stored) + ' / ' + #to_string(data.cost) + ' minerals; full quote: ' + #to_string(data.quote) + ' credits.';
             this.budget.text = 'Treasury: ' + #to_string(data.credits) + '; reserved spending: ' + #to_string(data.reserved) + '.';
             this.full_button.text = data.can_full ? 'Full payment: ' + #to_string(data.quote) : 'Full payment unavailable';
@@ -67,5 +68,10 @@ return {
         const data = base.get_smac_hurry_preview(0);
         if (!#is_defined(data) || data.expected_state != this.selection.expected_state) { this.hide_view(); }
     },
-    hide_view: () => { this.active = false; this.base = null; this.window.hide(); },
+    hide_view: () => {
+        this.active = false; this.base = null; this.window.hide();
+        // Input focus registration is not idempotent; restore the ordinary child
+        // visibility before later reopening/destruction, without showing its parent.
+        if (!this.input_visible) { this.input.show(); this.input_visible = true; }
+    },
 };

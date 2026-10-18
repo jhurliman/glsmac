@@ -1,0 +1,299 @@
+{
+  "research_id": "RE-SMAC-DOMINANCE-CONSUMED-SCORES-001",
+  "common_inputs": {
+    "turn": 251,
+    "leader_human": true,
+    "leader_difficulty": 2,
+    "leader_retained_Base_count": 6,
+    "live_owned_Bases": 6,
+    "all_Base_populations": 1,
+    "scenario_parameters": [
+      9999,
+      9999,
+      0
+    ],
+    "no_technology_ownership": true,
+    "no_cached_Units": true,
+    "project_markers_all": -1,
+    "economic_deadlines_zero": true,
+    "supplied_score_table_slots0_to7": [
+      0,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1
+    ]
+  },
+  "cases": [
+    {
+      "id": "normal_runner2",
+      "inputs": {
+        "leader": 1,
+        "runner": 2,
+        "leader_score": -1,
+        "runner_score": -1,
+        "Conquest_enabled": true,
+        "Intense_Rivalry": false,
+        "active_mask": 6
+      },
+      "actual": {
+        "return_value": 1,
+        "dominance": true,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 2,
+            "runner_weight": 3
+          },
+          {
+            "stage": "runner_read",
+            "score": -1
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -2,
+            "runner_product": -3
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "normal_runner0",
+      "inputs": {
+        "leader": 1,
+        "runner": 0,
+        "leader_score": -1,
+        "runner_score": 0,
+        "Conquest_enabled": true,
+        "Intense_Rivalry": false,
+        "active_mask": 2
+      },
+      "actual": {
+        "return_value": 0,
+        "dominance": false,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 2,
+            "runner_weight": 3
+          },
+          {
+            "stage": "runner_read",
+            "score": 0
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -2,
+            "runner_product": 0
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "objectives_double_runner2",
+      "inputs": {
+        "leader": 1,
+        "runner": 2,
+        "leader_score": -1,
+        "runner_score": -1,
+        "Conquest_enabled": false,
+        "Intense_Rivalry": false,
+        "active_mask": 6
+      },
+      "actual": {
+        "return_value": 1,
+        "dominance": true,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 1,
+            "runner_weight": 2
+          },
+          {
+            "stage": "runner_read",
+            "score": -1
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -1,
+            "runner_product": -2
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "objectives_double_runner0",
+      "inputs": {
+        "leader": 1,
+        "runner": 0,
+        "leader_score": -1,
+        "runner_score": 0,
+        "Conquest_enabled": false,
+        "Intense_Rivalry": false,
+        "active_mask": 2
+      },
+      "actual": {
+        "return_value": 0,
+        "dominance": false,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 1,
+            "runner_weight": 2
+          },
+          {
+            "stage": "runner_read",
+            "score": 0
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -1,
+            "runner_product": 0
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "intense_rivalry_runner2",
+      "inputs": {
+        "leader": 1,
+        "runner": 2,
+        "leader_score": -1,
+        "runner_score": -1,
+        "Conquest_enabled": true,
+        "Intense_Rivalry": true,
+        "active_mask": 6
+      },
+      "actual": {
+        "return_value": 1,
+        "dominance": true,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 4,
+            "runner_weight": 5
+          },
+          {
+            "stage": "runner_read",
+            "score": -1
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -4,
+            "runner_product": -5
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "intense_rivalry_runner0",
+      "inputs": {
+        "leader": 1,
+        "runner": 0,
+        "leader_score": -1,
+        "runner_score": 0,
+        "Conquest_enabled": true,
+        "Intense_Rivalry": true,
+        "active_mask": 2
+      },
+      "actual": {
+        "return_value": 0,
+        "dominance": false,
+        "trace": [
+          {
+            "stage": "pressure_return",
+            "value": 0
+          },
+          {
+            "stage": "ratio_selected",
+            "leader_weight": 4,
+            "runner_weight": 5
+          },
+          {
+            "stage": "runner_read",
+            "score": 0
+          },
+          {
+            "stage": "leader_read",
+            "score": -1
+          },
+          {
+            "stage": "signed_comparison",
+            "leader_product": -4,
+            "runner_product": 0
+          }
+        ],
+        "score_table_unchanged": true,
+        "score_refresh_calls": 0,
+        "rng_calls": 0
+      }
+    }
+  ],
+  "validation": {
+    "complete_native_predicate_calls": 6,
+    "normal_returns": 6,
+    "score_refreshes": 0,
+    "score_table_writes": 0,
+    "rng_calls": 0,
+    "helper_result_substitutions": 0,
+    "full_ranking_replayed": false
+  }
+}

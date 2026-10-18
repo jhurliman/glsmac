@@ -66,6 +66,82 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC live regional strategy connects owner summary actual routes and saved Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants({},true,64,32);std::string saved;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);auto* world=game->GetMap();
+            for(size_t y=0;y<world->GetHeight();++y) {for(size_t x=y&1;x<world->GetWidth();x+=2) {
+                auto* tile=world->GetTile(x,y);tile->moisture=map::tile::MOISTURE_RAINY;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->features=0;
+            }}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.regional_strategy && *state.regional_strategy==std::array<faction::SmacRegionalStrategyRow,8>{};
+                state.regional_strategy->at(0).fill(241);state.regional_strategy->at(1).fill(99);state.regional_strategy->at(2).fill(55);
+                state.retained_land_region_concentration=true;state.strategy->at(1).priorities={1,0,0,0};
+            });GT_ASSERT(fresh,"Cold port world did not own zero strategy bytes");
+            Found(GSE_CALL,game,901,0,1,16,16);
+            const auto territory=[&](uint16_t covered) {
+                auto summary=*world->GetTerritoryTopology()->Summary();summary.owners[1].suitable[1]=4;summary.owners[1].covered_suitable[1]=covered;
+                summary.owners[0].suitable[1]=0;summary.maximum_rating[1]=2;
+                fixture.TerritoryTopology(world->GetTerritoryTopology()->WithTerritorySummary(summary).Serialize());
+            };
+            territory(0);const auto random=fixture.GameplayRandom();fixture.RefreshPopulation(1);bool exact=false;
+            fixture.ResourceState([&](auto& state){const auto& rows=*state.regional_strategy;exact=rows[1][1]==8 && rows[1][0]==99 && rows[2][1]==55 && rows[0][0]==241;});
+            GT_ASSERT(exact,"Actual summary missed native good4/rating2 result or refreshed a peer");
+            territory(1);fixture.RefreshPopulation(1);
+            fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==7;});GT_ASSERT(exact,"Covered-suitable producer was not consumed");
+            Found(GSE_CALL,game,902,6,2,20,16);territory(0);
+            fixture.ResourceState([&](auto& state){state.hostility.owners.at(1).directions[2].primary=24;
+                state.regional_military->factions[1].units[1]=2;state.regional_military->factions[1].attack[1]=2;});
+            fixture.RefreshPopulation(1);
+            fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==2 && state.regional_strategy->at(2)[1]==55;});
+            GT_ASSERT(exact && world->GetRegionalPathWorkspace().Destination()==map::smac_territory::Coordinate({20,16}) && fixture.GameplayRandom()==random,
+                "Actual hostile Base route did not produce code2 or used fresh peer/RNG inputs");
+            saved=fixture.Snapshot();
+            fixture.ResourceState([&](auto& state){state.economy.at(2).regional_base_counts.reset();});const auto before=fixture.Snapshot();
+            GT_ASSERT(Rejects([&]{fixture.RefreshPopulation(1);}) && fixture.Snapshot()==before,"Failed strategy preparation published partial owner summaries");GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants({},true,64,32);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool exact=false;
+            restored.ResourceState([&](auto& state){exact=state.regional_strategy && state.regional_strategy->at(1)[1]==2
+                && state.regional_strategy->at(1)[0]==99 && state.regional_strategy->at(2)[1]==55 && state.regional_strategy->at(0)[0]==241;state.regional_strategy.reset();});
+            GT_ASSERT(exact,"Actual Start reconstructed strategy rows");restored.RefreshPopulation(1);
+            restored.ResourceState([&](auto& state){exact=!state.regional_strategy;});GT_ASSERT(exact,"Owner summary invented missing legacy strategy rows");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live regional strategy consumes retained rank and score table without fresh scoring",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants({},true,64,32);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();game->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(251);Land(game);auto* world=game->GetMap();
+            for(size_t y=0;y<world->GetHeight();++y) {for(size_t x=y&1;x<world->GetWidth();x+=2) {
+                auto* tile=world->GetTile(x,y);tile->moisture=map::tile::MOISTURE_RAINY;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->features=0;
+            }}game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            for(size_t i=0;i<6;++i) {Found(GSE_CALL,game,901+i,0,1,8+4*i,16);}Found(GSE_CALL,game,950,6,2,40,16);
+            auto summary=*world->GetTerritoryTopology()->Summary();summary.owners[1].suitable[1]=24;summary.owners[1].covered_suitable[1]=0;
+            summary.owners[0].suitable[1]=48;summary.maximum_rating[1]=2;
+            fixture.TerritoryTopology(world->GetTerritoryTopology()->WithTerritorySummary(summary).Serialize());
+            fixture.ResourceState([&](auto& state){state.rank_order=faction::SmacRankOrder{};state.rank_order->faction_at_rank[7]=1;state.rank_order->faction_at_rank[6]=2;
+                state.retained_land_region_concentration=true;state.strategy->at(1).priorities={0,0,0,0};
+                state.economy.at(2).population_aggregate=10000;state.economy.at(2).design_counts.emplace();
+                state.ranking_scores=std::array<int32_t,8>{};state.ranking_scores->at(1)=24;state.ranking_scores->at(2)=17;
+            });fixture.RefreshPopulation(1);bool exact=false;
+            fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==8;state.ranking_scores->at(2)=16;});
+            GT_ASSERT(exact,"Weak retained leader incorrectly contributed dominance");fixture.RefreshPopulation(1);
+            fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==7 && state.rank_order->Leader()==1 && state.retained_base_totals->at(1)==6;});
+            GT_ASSERT(exact,"Retained dominance score table did not affect regional Q or reranked the world");
+            for(const int32_t score:{0,16,17}) {
+                fixture.ResourceState([&](auto& state){state.rank_order->faction_at_rank[6]=0;state.ranking_scores->at(0)=score;});fixture.RefreshPopulation(1);
+                fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==(score<=16 ? 7 : 8)
+                    && state.ranking_scores->at(0)==score && state.ranking_scores->at(1)==24 && *state.economy.at(2).population_aggregate==10000;});
+                GT_ASSERT(exact,"Retained runner0 score was replaced by inactive/fresh scoring");
+            }
+            for(const int32_t peer:{2,0}) {
+                fixture.ResourceState([&](auto& state){state.rank_order->faction_at_rank[6]=peer;state.ranking_scores->fill(-1);state.ranking_scores->at(0)=0;});fixture.RefreshPopulation(1);
+                fixture.ResourceState([&](auto& state){exact=state.regional_strategy->at(1)[1]==(peer ? 7 : 8) && state.ranking_scores->at(1)==-1;});
+                GT_ASSERT(exact,"Owner summary did not consume retained negative ranking words");
+            }GT_OK();
+        });
+    });
     task->AddTest("SMAC live Base totals retain action offsets owner-only recount and actual Start",GT(){
         ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
         const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {

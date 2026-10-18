@@ -402,6 +402,35 @@ public:
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
 	void RefreshPopulation(int32_t owner) {m_game.RefreshCanonicalPopulationAggregate(owner);}
+    std::string CheckCrossWorldStrategyStorage() {
+        using namespace game::backend;
+        ConfigureConventional(true,3,true);
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            using Rows=std::array<faction::SmacRegionalStrategyRow,8>;
+            using Scores=std::array<int32_t,8>;
+            GT_ASSERT(m_game.m_simulation->value.regional_strategy==std::optional<Rows>{Rows{}}
+                && m_game.m_simulation->value.ranking_scores==std::optional<Scores>{Scores{}},"Cold engine storage was not zero");
+            for(const bool present:{true,false}) {
+                std::optional<Rows> rows;std::optional<Scores> scores;
+                if(present) {
+                    rows.emplace();for(size_t owner=0;owner<8;++owner) {for(size_t region=0;region<128;++region) {rows->at(owner)[region]=static_cast<uint8_t>(17*owner+3*region);}}
+                    scores=Scores{{17,31,47,61,79,97,113,127}};
+                }
+                m_game.m_simulation->value.regional_strategy=rows;m_game.m_simulation->value.ranking_scores=scores;
+                ResetWorld();
+                GT_ASSERT(!m_game.m_simulation && !m_game.m_map && !m_state->GetGame(),"Real reset retained its preceding world");
+                m_state->SetGame(&m_game);
+                NEWV(map,map::Map,&m_game,8,8);m_map.reset(map);m_game.m_map=map;map->GetTilesPtr()->Clear();
+                for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
+                m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
+                m_game.PrepareNewSimulation();
+                GT_ASSERT(m_game.m_simulation->value.regional_strategy==rows && m_game.m_simulation->value.ranking_scores==scores,
+                    "New simulation cleared retained storage or invented absent old history");
+            }
+            GT_OK();
+        });
+    }
+
 	std::optional<uint16_t> BattlePalette() const {return m_game.m_smac_hit_palette_identifier;}
 	void BattlePalette(std::optional<uint16_t> value) {m_game.m_smac_hit_palette_identifier=value;}
 	void PostEconomy( const game::backend::base::Base& base ) {
@@ -10354,6 +10383,10 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC actual Reset and new simulation retain all strategy rows and score words",GT(){
+        BackendFixture fixture;return fixture.CheckCrossWorldStrategyStorage();
+    });
+
     task->AddTest("Resource snapshots preserve authored tile glyph order across repeated restore", GT() {
         BackendFixture fixture;fixture.ConfigureConventional(true,3,true);
         return fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {

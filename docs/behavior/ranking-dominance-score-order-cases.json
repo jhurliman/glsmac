@@ -1,0 +1,92 @@
+{
+  "research_id": "RE-SMAC-RANKING-DOMINANCE-ORDER-001",
+  "observations": [
+    {
+      "boundary": "scores_built",
+      "turn": 0,
+      "scores_slots0_to7": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "leader": 2,
+      "runner": 0
+    },
+    {
+      "boundary": "ranking_return_before_turn_increment",
+      "turn": 0,
+      "scores_slots0_to7": [
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "leader": 1,
+      "runner": 0
+    },
+    {
+      "boundary": "owner_summary_entry",
+      "turn": 1,
+      "scores_slots0_to7": [
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "leader": 1,
+      "runner": 0
+    },
+    {
+      "boundary": "first_command_boundary",
+      "turn": 1,
+      "scores_slots0_to7": [
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "leader": 1,
+      "runner": 0
+    }
+  ],
+  "regional_call_sites": {
+    "count": 124,
+    "scores_slots0_to7": [
+      0,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1,
+      -1
+    ],
+    "all_match": true
+  },
+  "score_provider_arguments": [
+    1
+  ],
+  "intervening_score_only_refreshes": 0,
+  "validation": {
+    "continuous_native_paths": 1,
+    "late_game_score_comparisons_executed": false,
+    "full_seven_faction_world": false
+  }
+}

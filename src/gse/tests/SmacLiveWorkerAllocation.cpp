@@ -849,6 +849,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(auto& technology:state.technology.factions) {technology.owned.fill(false);}
                 for(auto& row:state.economy) {row.second.rates={0,0};row.second.population_aggregate=row.first==1 ? 0 : 3;}
                 state.economy.at(1).design_counts->at(2)=251;
+                state.ranking_scores=std::array<int32_t,8>{{17,31,47,61,79,97,113,127}};
             });
             saved=fixture.Snapshot();GT_OK();
         });if(!setup.empty()) {return "ranking setup: "+setup;}
@@ -858,13 +859,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto* game=restored.Game();for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
             restored.ResourceState([](auto& state){
-                if(state.rank_order || state.economy.at(1).design_counts->at(2)!=251 || *state.economy.at(2).population_aggregate!=3) {
+                if(state.rank_order || state.economy.at(1).design_counts->at(2)!=251 || *state.economy.at(2).population_aggregate!=3
+                    || state.ranking_scores!=std::optional<std::array<int32_t,8>>{{{17,31,47,61,79,97,113,127}}}) {
                     throw std::runtime_error("Start rebuilt retained ranking inputs from entities");
                 }
             });
             game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
             int32_t leader=0;restored.ResourceState([&](auto& state){leader=state.rank_order ? state.rank_order->Leader() : 0;});
             GT_ASSERT(leader==2,"ranking used post-summary population or ignored the above-250 count guard");
+            bool consumed=false;restored.ResourceState([&](auto& state){consumed=state.ranking_scores==std::optional<std::array<int32_t,8>>{{{17,-1,-1,-1,-1,-1,-1,-1}}};});
+            GT_ASSERT(consumed,"Full global ranking published fresh scores instead of consumed sentinels or overwrote slot0");
             const auto economy=game->GetCanonicalEconomy(&game->GetState()->m_slots->GetSlot(0));
             GT_ASSERT(economy.design_counts->at(2)==1 && *economy.population_aggregate==1,"owner summary did not rebuild actual Unit and population caches");
             game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();

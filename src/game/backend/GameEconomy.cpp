@@ -334,12 +334,21 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
             region,design.plan,0,!square->is_water_tile,power,armor,morale,0,false,valid_base});
     }
     if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Faction summary omitted a registered Unit");}
-    m_simulation->value.capabilities=std::move(capability_candidate.capabilities);
-    m_simulation->value.regional_military=std::move(military);
-    m_simulation->value.economy.at(owner).design_counts=design_counts;
-	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
-	m_simulation->value.economy.at(owner).regional_base_counts=counts;
-	if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=static_cast<int32_t>(base_total);}
+    // The final strategy phase sees this owner's newly recounted inputs and
+    // every peer's retained row. Prepare it before publishing any summary.
+    capability_candidate.regional_military=std::move(military);
+    auto& economy=capability_candidate.economy.at(owner);
+    economy.design_counts=design_counts;economy.population_aggregate=static_cast<int32_t>(population);economy.regional_base_counts=counts;
+    if(capability_candidate.retained_base_totals) {capability_candidate.retained_base_totals->at(owner)=static_cast<int32_t>(base_total);}
+    const auto regional=PrepareCanonicalRegionalStrategy(owner,capability_candidate);
+    if(regional) {capability_candidate.regional_strategy->at(owner)=*regional;}
+    m_simulation->value.capabilities.swap(capability_candidate.capabilities);
+    m_simulation->value.regional_military.swap(capability_candidate.regional_military);
+    m_simulation->value.regional_strategy.swap(capability_candidate.regional_strategy);
+    m_simulation->value.economy.at(owner).design_counts=economy.design_counts;
+    m_simulation->value.economy.at(owner).population_aggregate=economy.population_aggregate;
+    m_simulation->value.economy.at(owner).regional_base_counts=economy.regional_base_counts;
+    m_simulation->value.retained_base_totals=capability_candidate.retained_base_totals;
 }
 
 void Game::SettleCanonicalEconomy( int32_t owner ) {

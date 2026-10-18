@@ -149,6 +149,8 @@ void Game::PrepareNewSimulation() {
 	// lifecycle. Do not derive the retained status from the generated map here.
 	value.retained_land_region_concentration=false;
 	value.retained_base_totals=faction::SmacBaseTotals{};
+	value.regional_strategy=m_smac_cross_world_strategy;
+	value.ranking_scores=m_smac_cross_world_scores;
 	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
 	for(int32_t owner=0;owner<=7;++owner) {value.victory_history->Initialize(owner,0);}
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}

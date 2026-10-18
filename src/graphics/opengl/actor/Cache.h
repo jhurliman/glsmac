@@ -48,7 +48,9 @@ private:
 
 	types::Vec2< size_t > m_top_left = {};
 	types::Vec2< size_t > m_bottom_right = {};
-	types::texture::Texture* m_texture = nullptr;
+	GLuint m_texture = 0;
+	types::Vec2< size_t > m_texture_size = {};
+	bool m_has_image = false;
 	types::mesh::Rectangle* m_mesh = nullptr;
 	GLuint m_vbo = 0;
 	GLuint m_ibo = 0;

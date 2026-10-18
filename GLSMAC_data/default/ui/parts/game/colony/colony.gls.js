@@ -100,9 +100,9 @@ return {
 		this.window.text({class: 'game-popup-text', top: 44, left: 12, right: 12, text: 'The Base has only one citizen. Completing the Pod abandons it.'});
 		this.buttons = this.window.panel({left: 12, right: 12, top: 80, height: 32});
 		this.status = this.window.text({class: 'game-popup-text', top: 126, left: 12, right: 12});
-		this.save_button = this.window.button({class: 'game-popup-button', bottom: 12, left: 12, right: 288, height: 28, text: 'Save Campaign…'});
+		this.save_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 12, right: 288, height: 28, text: 'Save Campaign…'});
 		this.save_button.on('click', () => { this.save(); return true; });
-		this.reset_button = this.window.button({class: 'game-popup-button', bottom: 12, left: 288, right: 12, height: 28, text: 'Return to Main Menu'});
+		this.reset_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 288, right: 12, height: 28, text: 'Return to Main Menu'});
 		this.reset_button.on('click', () => { this.p.glsmac.reset(); return true; });
 		this.window.on('keydown', (e) => {
 			if (e.modifiers == {ctrl: true, shift: true} && e.code == 'Q') { this.p.glsmac.reset(); }

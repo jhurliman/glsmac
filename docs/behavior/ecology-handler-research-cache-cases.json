@@ -1,0 +1,1761 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-HANDLER-CACHE-001",
+  "ruleset": "pinned stock SMAC",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "installed_Planet_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "scope": "18 complete original human land ecology handlers with declared damage/history and loaded installed Planet terrain; 4 native research/upkeep prefixes and 2 subsequent native refresh queries; 2 empty-owner prefixes; 4 faction-initializer prefixes; 2 ordinary save/load pairs. Presentation services and diagnostic controls explicitly distinguished. No live GUI or natural high-mineral campaign.",
+  "validation": {
+    "complete_handler_controls": 18,
+    "upkeep_prefixes": 4,
+    "subsequent_queries": 2,
+    "empty_owner_prefixes": 2,
+    "initializer_prefixes": 4,
+    "save_load_pairs": 2,
+    "all_literal_checks_passed": true
+  },
+  "cache_cases": [
+    {
+      "id": "no_award",
+      "inputs": {
+        "before": {
+          "cache": 1,
+          "base": 1,
+          "score": 49,
+          "damage": 0,
+          "labs": 0,
+          "target": 0,
+          "owned": false
+        },
+        "gross_minerals": 17,
+        "terraforming_raw": 0,
+        "PLANET": 0,
+        "H": 0,
+        "major_atrocities": 0,
+        "difficulty": 0,
+        "native_life": 0,
+        "future_counter": 0,
+        "research_progress": 0,
+        "research_threshold": 1000,
+        "diagnostic_post_research_invalidation": false
+      },
+      "expected": {
+        "at_ecology_entry": {
+          "cache": 0,
+          "base": 0,
+          "score": 49,
+          "damage": 0,
+          "labs": 2,
+          "target": 0,
+          "owned": false
+        },
+        "resource_passes_before_ecology": 2,
+        "following_queries": []
+      }
+    },
+    {
+      "id": "award_nonviewer",
+      "inputs": {
+        "before": {
+          "cache": 1,
+          "base": 1,
+          "score": 49,
+          "damage": 0,
+          "labs": 999,
+          "target": 0,
+          "owned": false
+        },
+        "gross_minerals": 17,
+        "terraforming_raw": 0,
+        "PLANET": 0,
+        "H": 0,
+        "major_atrocities": 0,
+        "difficulty": 0,
+        "native_life": 0,
+        "future_counter": 0,
+        "research_progress": 999,
+        "research_threshold": 1000,
+        "diagnostic_post_research_invalidation": false
+      },
+      "expected": {
+        "at_ecology_entry": {
+          "cache": 0,
+          "base": 0,
+          "score": 51,
+          "damage": 0,
+          "labs": 0,
+          "target": 0,
+          "owned": true
+        },
+        "resource_passes_before_ecology": 2,
+        "following_queries": [
+          {
+            "refresh": 0,
+            "state": {
+              "cache": 0,
+              "base": 0,
+              "score": 51,
+              "damage": 0,
+              "labs": 0,
+              "target": 0,
+              "owned": true
+            },
+            "mineral_stage_entries": 0
+          },
+          {
+            "refresh": 1,
+            "state": {
+              "cache": 0,
+              "base": 0,
+              "score": 51,
+              "damage": 1,
+              "labs": 0,
+              "target": 0,
+              "owned": true
+            },
+            "mineral_stage_entries": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "award_viewer",
+      "inputs": {
+        "before": {
+          "cache": 1,
+          "base": 1,
+          "score": 49,
+          "damage": 0,
+          "labs": 999,
+          "target": 0,
+          "owned": false
+        },
+        "gross_minerals": 17,
+        "terraforming_raw": 0,
+        "PLANET": 0,
+        "H": 0,
+        "major_atrocities": 0,
+        "difficulty": 0,
+        "native_life": 0,
+        "future_counter": 0,
+        "research_progress": 999,
+        "research_threshold": 1000,
+        "diagnostic_post_research_invalidation": false
+      },
+      "expected": {
+        "at_ecology_entry": {
+          "cache": 0,
+          "base": 0,
+          "score": 51,
+          "damage": 0,
+          "labs": 0,
+          "target": -1,
+          "owned": true
+        },
+        "resource_passes_before_ecology": 2,
+        "following_queries": []
+      }
+    },
+    {
+      "id": "award_invalidated",
+      "inputs": {
+        "before": {
+          "cache": 1,
+          "base": 1,
+          "score": 49,
+          "damage": 0,
+          "labs": 999,
+          "target": 0,
+          "owned": false
+        },
+        "gross_minerals": 17,
+        "terraforming_raw": 0,
+        "PLANET": 0,
+        "H": 0,
+        "major_atrocities": 0,
+        "difficulty": 0,
+        "native_life": 0,
+        "future_counter": 0,
+        "research_progress": 999,
+        "research_threshold": 1000,
+        "diagnostic_post_research_invalidation": true
+      },
+      "expected": {
+        "at_ecology_entry": {
+          "cache": 0,
+          "base": 0,
+          "score": 51,
+          "damage": 1,
+          "labs": 0,
+          "target": -1,
+          "owned": true
+        },
+        "resource_passes_before_ecology": 3,
+        "following_queries": []
+      }
+    }
+  ],
+  "empty_owner_cases": [
+    {
+      "id": "no_global_bases",
+      "owner": 1,
+      "live_global_bases": 0,
+      "before": [
+        777,
+        888
+      ],
+      "after": [
+        0,
+        888
+      ],
+      "Base_upkeep_entries": [],
+      "stop": "after Base loop before post-loop continuation"
+    },
+    {
+      "id": "foreign_only",
+      "owner": 1,
+      "live_global_bases": 2,
+      "before": [
+        777,
+        888
+      ],
+      "after": [
+        0,
+        888
+      ],
+      "Base_upkeep_entries": [],
+      "stop": "after Base loop before post-loop continuation"
+    }
+  ],
+  "suppression_storage": [
+    {
+      "id": "suppression_off",
+      "before": {
+        "primary": 0,
+        "secondary": 0,
+        "status": [
+          16384,
+          16385,
+          16386,
+          16387,
+          16388,
+          16389,
+          16390,
+          16391
+        ]
+      },
+      "after": {
+        "primary": 0,
+        "secondary": 0,
+        "status": [
+          16384,
+          16385,
+          16386,
+          16387,
+          16388,
+          16389,
+          16390,
+          16391
+        ]
+      },
+      "save_return": 0,
+      "load_return": 0
+    },
+    {
+      "id": "suppression_on",
+      "before": {
+        "primary": 2097152,
+        "secondary": 1048576,
+        "status": [
+          16384,
+          16385,
+          16386,
+          16387,
+          16388,
+          16389,
+          16390,
+          16391
+        ]
+      },
+      "after": {
+        "primary": 2097152,
+        "secondary": 1048576,
+        "status": [
+          16384,
+          16385,
+          16386,
+          16387,
+          16388,
+          16389,
+          16390,
+          16391
+        ]
+      },
+      "save_return": 0,
+      "load_return": 0
+    }
+  ],
+  "status_initialization": [
+    {
+      "turn": 0,
+      "owner_results": [
+        {
+          "owner": 1,
+          "after": {
+            "status": [
+              0
+            ]
+          }
+        },
+        {
+          "owner": 2,
+          "after": {
+            "status": [
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turn": 1,
+      "owner_results": [
+        {
+          "owner": 1,
+          "after": {
+            "status": [
+              777
+            ]
+          }
+        },
+        {
+          "owner": 2,
+          "after": {
+            "status": [
+              777
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "ordered_candidate_offsets": [
+    [
+      1,
+      -1
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      -1,
+      1
+    ],
+    [
+      -2,
+      0
+    ],
+    [
+      -1,
+      -1
+    ],
+    [
+      0,
+      -2
+    ],
+    [
+      2,
+      -2
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      -2,
+      2
+    ],
+    [
+      -2,
+      -2
+    ],
+    [
+      1,
+      -3
+    ],
+    [
+      3,
+      -1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      -1,
+      3
+    ],
+    [
+      -3,
+      1
+    ],
+    [
+      -3,
+      -1
+    ],
+    [
+      -1,
+      -3
+    ],
+    [
+      4,
+      0
+    ],
+    [
+      -4,
+      0
+    ],
+    [
+      0,
+      4
+    ],
+    [
+      0,
+      -4
+    ],
+    [
+      1,
+      -5
+    ],
+    [
+      2,
+      -4
+    ],
+    [
+      3,
+      -3
+    ],
+    [
+      4,
+      -2
+    ],
+    [
+      5,
+      -1
+    ],
+    [
+      5,
+      1
+    ],
+    [
+      4,
+      2
+    ],
+    [
+      3,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      1,
+      5
+    ],
+    [
+      -1,
+      5
+    ],
+    [
+      -2,
+      4
+    ],
+    [
+      -3,
+      3
+    ],
+    [
+      -4,
+      2
+    ],
+    [
+      -5,
+      1
+    ],
+    [
+      -5,
+      -1
+    ],
+    [
+      -4,
+      -2
+    ],
+    [
+      -3,
+      -3
+    ],
+    [
+      -2,
+      -4
+    ],
+    [
+      -1,
+      -5
+    ],
+    [
+      0,
+      6
+    ],
+    [
+      6,
+      0
+    ],
+    [
+      0,
+      -6
+    ],
+    [
+      -6,
+      0
+    ]
+  ],
+  "literal_bloom_candidate_results": [
+    {
+      "ordinal": 1,
+      "x": 65,
+      "y": 15,
+      "weight": 30,
+      "score": 27,
+      "prior_best": 0
+    },
+    {
+      "ordinal": 3,
+      "x": 65,
+      "y": 17,
+      "weight": 30,
+      "score": 1,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 4,
+      "x": 64,
+      "y": 18,
+      "weight": 50,
+      "score": 6,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 9,
+      "x": 66,
+      "y": 14,
+      "weight": 20,
+      "score": 2,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 11,
+      "x": 62,
+      "y": 18,
+      "weight": 40,
+      "score": 10,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 12,
+      "x": 62,
+      "y": 14,
+      "weight": 60,
+      "score": 26,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 15,
+      "x": 67,
+      "y": 17,
+      "weight": 20,
+      "score": 12,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 17,
+      "x": 63,
+      "y": 19,
+      "weight": 40,
+      "score": 39,
+      "prior_best": 27
+    },
+    {
+      "ordinal": 19,
+      "x": 61,
+      "y": 15,
+      "weight": 20,
+      "score": 4,
+      "prior_best": 39
+    },
+    {
+      "ordinal": 22,
+      "x": 60,
+      "y": 16,
+      "weight": 20,
+      "score": 7,
+      "prior_best": 39
+    },
+    {
+      "ordinal": 24,
+      "x": 64,
+      "y": 12,
+      "weight": 40,
+      "score": 4,
+      "prior_best": 39
+    }
+  ],
+  "literal_neighbor_weights": [
+    {
+      "ordinal": 1,
+      "weight": 2,
+      "candidate_byte_offset": 0,
+      "x": 65,
+      "y": 15,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 1,
+      "weight": 3,
+      "candidate_byte_offset": 0,
+      "x": 65,
+      "y": 15,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 2,
+      "weight": 0,
+      "candidate_byte_offset": 4,
+      "x": 66,
+      "y": 16,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 3,
+      "weight": 2,
+      "candidate_byte_offset": 8,
+      "x": 65,
+      "y": 17,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 3,
+      "weight": 3,
+      "candidate_byte_offset": 8,
+      "x": 65,
+      "y": 17,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 4,
+      "weight": 4,
+      "candidate_byte_offset": 12,
+      "x": 64,
+      "y": 18,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 4,
+      "weight": 5,
+      "candidate_byte_offset": 12,
+      "x": 64,
+      "y": 18,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 9,
+      "weight": 2,
+      "candidate_byte_offset": 32,
+      "x": 66,
+      "y": 14,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 9,
+      "weight": 2,
+      "candidate_byte_offset": 32,
+      "x": 66,
+      "y": 14,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 11,
+      "weight": 4,
+      "candidate_byte_offset": 40,
+      "x": 62,
+      "y": 18,
+      "items": 1048576,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 11,
+      "weight": 4,
+      "candidate_byte_offset": 40,
+      "x": 62,
+      "y": 18,
+      "items": 1048576,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 12,
+      "weight": 6,
+      "candidate_byte_offset": 44,
+      "x": 62,
+      "y": 14,
+      "items": 1048576,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 12,
+      "weight": 6,
+      "candidate_byte_offset": 44,
+      "x": 62,
+      "y": 14,
+      "items": 1048576,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 14,
+      "weight": 0,
+      "candidate_byte_offset": 52,
+      "x": 67,
+      "y": 15,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 15,
+      "weight": 2,
+      "candidate_byte_offset": 56,
+      "x": 67,
+      "y": 17,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 15,
+      "weight": 2,
+      "candidate_byte_offset": 56,
+      "x": 67,
+      "y": 17,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 17,
+      "weight": 4,
+      "candidate_byte_offset": 64,
+      "x": 63,
+      "y": 19,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 17,
+      "weight": 4,
+      "candidate_byte_offset": 64,
+      "x": 63,
+      "y": 19,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 19,
+      "weight": 2,
+      "candidate_byte_offset": 72,
+      "x": 61,
+      "y": 15,
+      "items": 1048704,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 19,
+      "weight": 2,
+      "candidate_byte_offset": 72,
+      "x": 61,
+      "y": 15,
+      "items": 1048704,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 21,
+      "weight": 0,
+      "candidate_byte_offset": 80,
+      "x": 68,
+      "y": 16,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 22,
+      "weight": 2,
+      "candidate_byte_offset": 84,
+      "x": 60,
+      "y": 16,
+      "items": 1048576,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 22,
+      "weight": 2,
+      "candidate_byte_offset": 84,
+      "x": 60,
+      "y": 16,
+      "items": 1048576,
+      "stage": "before_sea_scaling"
+    },
+    {
+      "ordinal": 24,
+      "weight": 4,
+      "candidate_byte_offset": 92,
+      "x": 64,
+      "y": 12,
+      "items": 0,
+      "stage": "after_neighbors"
+    },
+    {
+      "ordinal": 24,
+      "weight": 4,
+      "candidate_byte_offset": 92,
+      "x": 64,
+      "y": 12,
+      "items": 0,
+      "stage": "before_sea_scaling"
+    }
+  ],
+  "event_cases": [
+    {
+      "id": "zero",
+      "inputs": {
+        "final_damage": 0,
+        "CRT_seed": 19,
+        "first_raw_remainder": 0,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 7,
+        "status": 0,
+        "damage": 0,
+        "units": [],
+        "CRT_seed": 6597258,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          100
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "below",
+      "inputs": {
+        "final_damage": 49,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 56,
+        "status": 0,
+        "damage": 49,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "equal",
+      "inputs": {
+        "final_damage": 50,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 57,
+        "status": 0,
+        "damage": 50,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "above_first_bloom",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "suppressed_rule",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 2097152,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "editor_hold",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 1,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "editor_playtest",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 9,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "perihelion_equal",
+      "inputs": {
+        "final_damage": 101,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 1048576,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 108,
+        "status": 0,
+        "damage": 101,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "perihelion_above",
+      "inputs": {
+        "final_damage": 102,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 1048576,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 109,
+        "status": 0,
+        "damage": 102,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "no_eligible",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": "all_fungus",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 0,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "protected_winner",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": "landmark",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "improvements",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": "improvements",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0,
+        "selected_cell_items_injected_after_selection": 23625820
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "signed_landmark",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": "signed_landmark",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "native_voice_hold",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 6,
+        "patch": "voice",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": 0,
+        "status": 0
+      },
+      "expected": {
+        "history": 7,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "native_spawn",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 6,
+        "patch": null,
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 0
+      },
+      "expected": {
+        "history": 7,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [
+          {
+            "design": 8,
+            "owner": 0,
+            "x": 63,
+            "y": 19,
+            "ecology_owner_tag": 1
+          },
+          {
+            "design": 8,
+            "owner": 0,
+            "x": 65,
+            "y": 19,
+            "ecology_owner_tag": 1
+          },
+          {
+            "design": 8,
+            "owner": 0,
+            "x": 64,
+            "y": 20,
+            "ecology_owner_tag": 1
+          },
+          {
+            "design": 8,
+            "owner": 0,
+            "x": 63,
+            "y": 21,
+            "ecology_owner_tag": 1
+          },
+          {
+            "design": 8,
+            "owner": 0,
+            "x": 62,
+            "y": 20,
+            "ecology_owner_tag": 1
+          }
+        ],
+        "CRT_seed": 2029258301,
+        "warming_count": 1,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": [
+          [
+            8,
+            0,
+            63,
+            19
+          ],
+          [
+            8,
+            0,
+            65,
+            19
+          ],
+          [
+            8,
+            0,
+            64,
+            20
+          ],
+          [
+            8,
+            0,
+            63,
+            21
+          ],
+          [
+            8,
+            0,
+            62,
+            20
+          ]
+        ]
+      }
+    },
+    {
+      "id": "native_once_hold",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 6,
+        "patch": "once",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 16384
+      },
+      "expected": {
+        "history": 7,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "once_equal_retained",
+      "inputs": {
+        "final_damage": 50,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 6,
+        "patch": "once",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 16384
+      },
+      "expected": {
+        "history": 6,
+        "atrocities": 3,
+        "aggregate": 57,
+        "status": 16384,
+        "damage": 50,
+        "units": [],
+        "CRT_seed": 16441856,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [],
+        "factory_arguments": []
+      }
+    },
+    {
+      "id": "once_first_bloom",
+      "inputs": {
+        "final_damage": 51,
+        "CRT_seed": 65,
+        "first_raw_remainder": 50,
+        "secondary_state": 0,
+        "primary_rules": 0,
+        "history": 0,
+        "patch": "once",
+        "Base_coordinate": [
+          64,
+          16
+        ],
+        "population": 3,
+        "PLANET": 0,
+        "initial_aggregate": 7,
+        "major_atrocities": 3,
+        "Voice_host": -1,
+        "status": 16384
+      },
+      "expected": {
+        "history": 1,
+        "atrocities": 3,
+        "aggregate": 58,
+        "status": 0,
+        "damage": 51,
+        "units": [],
+        "CRT_seed": 2029258301,
+        "warming_count": 0,
+        "CRT_raw_values": [
+          250,
+          18237,
+          2761,
+          26456,
+          23942,
+          4890,
+          14066,
+          5852,
+          2359,
+          24204,
+          29007,
+          30964
+        ],
+        "shared_RNG_calls": 0,
+        "fungus_cells": [
+          [
+            63,
+            19
+          ]
+        ],
+        "factory_arguments": []
+      }
+    }
+  ]
+}

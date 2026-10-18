@@ -1,0 +1,2393 @@
+{
+  "research_id": "RE-SMAC-REGIONAL-STRATEGY-002",
+  "scope": "33 complete summaries with retained region-phase inputs explicitly supplied after real preceding summary stages; live Base records and raw territory controlled; route/path/bilateral policy results native; no RNG observed; not33 organically produced armies or arbitrary-map pathfinder certification",
+  "profile": {
+    "width": 64,
+    "height": 32,
+    "own_base": [
+      16,
+      16
+    ],
+    "phase_input_supply": true,
+    "previous_all_region_pressure_grid_reused": true
+  },
+  "cases": [
+    {
+      "id": "war_live_adjacent_base_weak",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_stale_presence_no_live_base",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_live_adjacent_base_strong",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 2,
+        "V": 2,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 0,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "no_contact",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 16
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 0,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 369
+      },
+      "normal_return": true
+    },
+    {
+      "id": "truce",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 25
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 0,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 369
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_state_400",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 1032
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 53
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_state_800",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 2056
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 53
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_treaty_native_bilateral_policy",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 26
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 113
+      },
+      "normal_return": true
+    },
+    {
+      "id": "no_cached_peer_base_shortcut",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 16405
+      },
+      "normal_return": true
+    },
+    {
+      "id": "no_cached_peer_base_zero_units_skip",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 0,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 0,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 273
+      },
+      "normal_return": true
+    },
+    {
+      "id": "no_cached_peer_base_five_attack_equality",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 5,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 0,
+        "flags": 21
+      },
+      "normal_return": true
+    },
+    {
+      "id": "no_cached_peer_base_five_attack_exceeded",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 6,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 0,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 273
+      },
+      "normal_return": true
+    },
+    {
+      "id": "owned_base_zero",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 0,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 8,
+        "final": 0,
+        "flags": 4
+      },
+      "normal_return": true
+    },
+    {
+      "id": "owned_cached_base_zero_native_route_gate",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 0,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 8,
+        "final": 0,
+        "flags": 100
+      },
+      "normal_return": true
+    },
+    {
+      "id": "stale_same_region_peer_count_actual_other_region",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": true,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "pact_without_reachable_war_bypassed",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 3,
+            "v": 3,
+            "directed_relation": 40
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 0,
+        "take2": 0,
+        "pact_mask": 1,
+        "initial": 7,
+        "final": 7,
+        "flags": 309
+      },
+      "normal_return": true
+    },
+    {
+      "id": "war_take0_clears_pact_take2",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 2,
+        "V": 2,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 3,
+            "v": 3,
+            "directed_relation": 40
+          },
+          {
+            "faction": 3,
+            "C": 0,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        },
+        {
+          "peer": 3,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 1,
+        "initial": 7,
+        "final": 0,
+        "flags": 53
+      },
+      "normal_return": true
+    },
+    {
+      "id": "pact_zero_with_reachable_war",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 2,
+        "V": 2,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 1,
+            "v": 3,
+            "directed_relation": 40
+          },
+          {
+            "faction": 3,
+            "C": 0,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        },
+        {
+          "peer": 3,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 2,
+        "initial": 7,
+        "final": 0,
+        "flags": 53
+      },
+      "normal_return": true
+    },
+    {
+      "id": "two_war_peers_code2_after_code0",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 2,
+        "V": 2,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 0,
+            "u": 3,
+            "v": 3,
+            "directed_relation": 24
+          },
+          {
+            "faction": 3,
+            "C": 0,
+            "u": 1,
+            "v": 1,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        },
+        {
+          "peer": 3,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 2,
+        "take0": 1,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 16917
+      },
+      "normal_return": true
+    },
+    {
+      "id": "third_party_ai_territory_broad_route",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": true,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "broad",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "third_party_human_territory_blocks_both",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1,
+          3
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": true,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "broad",
+          "native_result": -1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "two_peer_components_two_failed_paths_per_mode",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1,
+          3
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 2,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          },
+          {
+            "owner": 2,
+            "coordinate": [
+              24,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": true,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            24,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "broad",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            24,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "broad",
+          "native_result": -1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "one_peer_component_one_failed_path_per_mode",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 1,
+        "stored_region_area": 1024,
+        "human_factions": [
+          1,
+          3
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 2,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          },
+          {
+            "owner": 2,
+            "coordinate": [
+              24,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": true,
+        "peer_other_region": false,
+        "peer_territory_bridge": true
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": false
+        },
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "broad",
+          "native_result": false
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": -1
+        },
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "broad",
+          "native_result": -1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "small_area_product49_fresh",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 7,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 2,
+        "stored_region_area": 499,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 7,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "small_area_product50_stagger",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 5,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 2,
+        "stored_region_area": 499,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 10,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area499_fresh",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 2,
+        "stored_region_area": 499,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area500_stagger_old7",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 2,
+        "stored_region_area": 500,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area500_stagger_old2",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 2,
+        "turn": 2,
+        "stored_region_area": 500,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area500_stagger_old3",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 3,
+        "turn": 2,
+        "stored_region_area": 500,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area500_phase_zero",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 7,
+        "stored_region_area": 500,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area999_phase_zero",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 7,
+        "stored_region_area": 999,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area1000_new_phase_nonzero",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 7,
+        "stored_region_area": 1000,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [],
+      "native_path_queries": [],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 0,
+          "broad": 0
+        }
+      ],
+      "decision": {
+        "reachable_wars": 0,
+        "take0": 1,
+        "take2": 0,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 7,
+        "flags": 373
+      },
+      "normal_return": true
+    },
+    {
+      "id": "area1000_phase_zero",
+      "inputs": {
+        "owner": 1,
+        "region": 1,
+        "B": 1,
+        "U": 1,
+        "V": 0,
+        "old_strategy": 7,
+        "turn": 14,
+        "stored_region_area": 1000,
+        "human_factions": [
+          1
+        ],
+        "peers": [
+          {
+            "faction": 2,
+            "C": 1,
+            "u": 2,
+            "v": 2,
+            "directed_relation": 24
+          }
+        ],
+        "live_foreign_bases": [
+          {
+            "owner": 2,
+            "coordinate": [
+              20,
+              16
+            ]
+          }
+        ],
+        "third_party_territory": false,
+        "peer_other_region": false,
+        "peer_territory_bridge": false
+      },
+      "native_route_queries": [
+        {
+          "owner": 1,
+          "peer": 2,
+          "region": 1,
+          "mode": "strict",
+          "native_result": true
+        }
+      ],
+      "native_path_queries": [
+        {
+          "source": [
+            16,
+            16
+          ],
+          "target": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "peer": 2,
+          "mode": "strict",
+          "native_result": 1
+        }
+      ],
+      "reachability": [
+        {
+          "peer": 2,
+          "strict": 1,
+          "broad": 1
+        }
+      ],
+      "decision": {
+        "reachable_wars": 1,
+        "take0": 0,
+        "take2": 1,
+        "pact_mask": 0,
+        "initial": 7,
+        "final": 2,
+        "flags": 117
+      },
+      "normal_return": true
+    }
+  ]
+}

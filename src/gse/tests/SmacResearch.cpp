@@ -4,6 +4,8 @@
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacResearch.h"
 #include "fixtures/SmacDominance.h"
+#include "fixtures/SmacRegionalStrategy.h"
+#include "game/backend/map/SmacTerritoryRules.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
 #include "task/gsetests/GSETests.h"
 #include <sstream>
@@ -39,6 +41,54 @@ std::string ResearchRates() {
 }
 }
 void AddSmacResearchTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC regional strategy matches33 native policy controls with exact route dispatch",GT(){
+        using namespace game::backend::faction;
+        for(const auto& row:regional_strategy_fixture::Cases()) {
+            std::array<SmacRegionalStrategyRegion,128> regions{};regions[1]=row.region;
+            SmacRegionalStrategyRow previous{};previous[0]=99;previous[1]=row.old_code;size_t calls=0;
+            const auto actual=RefreshSmacRegionalStrategy(row.context,regions,previous,[&](int32_t peer,uint8_t region,int32_t mode) {
+                if(calls>=row.queries.size()) {throw std::runtime_error("Unexpected route call for "+std::string(row.id));}
+                const auto query=row.queries[calls++];
+                if(region!=1 || peer!=query.peer || mode!=query.mode) {throw std::runtime_error("Route order differs for "+std::string(row.id));}
+                return query.result;
+            });
+            GT_ASSERT(actual[1]==row.expected && calls==row.queries.size() && actual[0]==99,"Native policy or route admission differs: "+std::string(row.id));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC regional strategy matches14 native opening projections and region range canaries",GT(){
+        using namespace game::backend::faction;
+        for(const auto& row:regional_strategy_fixture::Openings()) {
+            SmacRegionalStrategyContext context{1,1,1024,row.total_bases,1,0,false,true};
+            std::array<SmacRegionalStrategyRegion,128> regions{};regions[1]=row.region;
+            SmacRegionalStrategyRow previous{};previous[0]=99;previous[1]=row.old_code;
+            const auto actual=RefreshSmacRegionalStrategy(context,regions,previous,[](int32_t,uint8_t,int32_t){return false;});
+            GT_ASSERT(actual[1]==row.expected,"Native opening region1 differs: "+std::string(row.id));
+            if(std::string(row.id)=="regional_reset_canaries") {
+                GT_ASSERT(actual[0]==99 && actual[1]==7 && actual[2]==8 && actual[62]==8 && actual[63]==8
+                    && actual[64]==8 && actual[65]==7 && actual[126]==7 && actual[127]==8,"Native all-region range canaries differ");
+            }
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC regional strategy composes actual Base routing and retained path workspace",GT(){
+        using namespace game::backend::faction;namespace t=game::backend::map::smac_territory;
+        for(const auto& row:regional_strategy_fixture::Cases()) {
+            const auto name=std::string(row.id);
+            if(name!="war_live_adjacent_base_weak" && name!="war_live_adjacent_base_strong" && name!="war_stale_presence_no_live_base") {continue;}
+            t::RegionalRouteMap map{64,32,true,{}, {},2};map.tiles.assign(1024,{false,1,1});map.tiles[16*32+10].territory=2;
+            std::vector<t::Base> bases{{{{16,16}},1}};
+            if(name!="war_stale_presence_no_live_base") {bases.push_back({{{20,16}},2});}
+            t::RegionalLandWorkspace workspace(64,32);size_t calls=0;
+            std::array<SmacRegionalStrategyRegion,128> regions{};regions[1]=row.region;SmacRegionalStrategyRow previous{};previous[1]=row.old_code;
+            const auto actual=RefreshSmacRegionalStrategy(row.context,regions,previous,[&](int32_t peer,uint8_t region,int32_t mode) {
+                ++calls;return t::RegionalBasesReachable(map,bases,1,peer,region,mode,row.region.peers[1].bases,row.region.peers[peer].bases,
+                    workspace,[](int32_t){return 8;});
+            });
+            GT_ASSERT(actual[1]==row.expected && calls==row.queries.size(),"Composed actual route differs: "+name);
+        }
+        GT_OK();
+    });
 	if(const auto* asset=std::getenv("GLSMAC_TEST_ALPHA_ASSET")) {
 		const std::string path=asset;
 		task->AddTest("SMAC installed proposals match all11 native requirement records",[path](GSE*,context::Context*)->std::string {

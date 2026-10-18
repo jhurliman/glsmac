@@ -501,7 +501,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             if(name=="gaians.txt") {const auto at=text.find("SOCIAL,-POLICE");text.replace(at,14,"SOCIAL,---POLICE");}return text;};
         for(const int32_t scenario:{1,2,3,4}) {
             const int32_t old_owner=scenario>=3 ? 1:scenario;const bool screen=scenario==3,suspended=scenario==4;
-            const int32_t recipient=3-old_owner;std::string saved;int64_t food=0,final_food=0;
+            const int32_t recipient=3-old_owner,former=scenario==1 ? old_owner:recipient;std::string saved;int64_t food=0,final_food=0;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source,true);
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* bm=game->GetBM();
@@ -510,7 +510,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(screen || suspended) {for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}}
                 std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
                 auto context=base->GetSmacResourceContext();context.governor_options=0;context.drone_riots=true;
-                context.uncaptured_former_owner=recipient;context.retained_status_word=2;base->SetSmacResourceContext(GSE_CALL,context);
+                context.uncaptured_former_owner=former;context.retained_status_word=2;base->SetSmacResourceContext(GSE_CALL,context);
                 const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
                 base->SetProductionState(GSE_CALL,ProductionState{stockpile,7,stockpile,7,std::vector<ProductionItem>{},true});
                 if(screen) {const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
@@ -571,8 +571,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(game->GetTurnId()==2 && base->GetSmacResourceContext().owner_simulation_id==recipient,
                     "Actual owner pass did not transfer the rioting Base");
                 food=(screen ? 0:13)+surplus*(old_owner==1 && !suspended ? 2:1);final_food=13+2*surplus;
-                GT_ASSERT(base->GetAccumulatedNutrients()==food && base->GetSmacResourceContext().FormerOwner()==recipient
-                    && base->GetSmacResourceContext().conquest->assimilation==0,
+                GT_ASSERT(base->GetAccumulatedNutrients()==food && base->GetSmacResourceContext().FormerOwner()==former
+                    && base->GetSmacResourceContext().conquest->assimilation==(former==recipient ? 0:49),
                     "Transferred Base replayed or skipped its normal owner pass: food="+std::to_string(base->GetAccumulatedNutrients())+" expected="+std::to_string(food));
                 GT_ASSERT(!um->GetUnit(93) && (screen ? !um->GetUnit(92):(um->GetUnit(92)->Conventional().owner_simulation_id==recipient
                     && um->GetUnit(92)->Conventional().home_base_id==701)) && um->GetUnit(91)->Conventional().owner_simulation_id==old_owner,

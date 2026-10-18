@@ -85,8 +85,19 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	}
 	// Actionability precedes edge pricing, including a zero-cost tube edge.
 	if ( source == destination || !source->IsAdjactentTo( destination ) || source->IsLocked() || destination->IsLocked()
-		|| unit->m_animation_id || !destination->units.empty() ) {
-		throw std::runtime_error( "Conventional movement requires an unlocked adjacent empty destination and no animation" );
+		|| unit->m_animation_id ) {
+		throw std::runtime_error( "Conventional movement requires an unlocked adjacent destination and no animation" );
+	}
+	for (const auto& entry:destination->units) {
+		const auto* other=entry.second;
+		if(!other || GetUnit(entry.first)!=other || other->m_id!=entry.first || other->GetTile()!=destination
+			|| !other->IsConventional() || other->m_owner!=unit->m_owner || other->Conventional().owner_simulation_id!=stored.owner_simulation_id) {
+			throw std::runtime_error("Conventional occupied entry requires a canonical same-owner stack; hostile entry needs combat");
+		}
+		other->QueryStats(other->Conventional().render_morale_mode);
+	}
+	if(!destination->units.empty() && (destination->features & map::tile::FEATURE_XENOFUNGUS)) {
+		throw std::runtime_error("Occupied fungus entry requires its distinct exemption and encounter-history continuation");
 	}
 	const auto membership = source->units.find( unit->m_id );
 	if ( membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact source membership" ); }

@@ -245,6 +245,42 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC live friendly stack movement retains Base occupancy and saved sight",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* um=game->GetUM();auto* actor=um->GetUnit(91);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            auto* outside=game->GetMap()->GetTile(3,3);actor->SetTile(GSE_CALL,outside);
+            const ConventionalUnitState home{2,1,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0,base->m_id};
+            auto* resident=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),base->m_owner,base->GetTile(),home);
+            auto data=KnowledgeValue(true,true,128,64).CopyData();data.units.push_back({92,0,false});for(auto& tile:data.tiles) {tile.explored_by=2;}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            const auto resident_wire=Unit::Serialize(resident).ToString();const auto random=fixture.GameplayRandom();fixture.Updates();
+            fixture.MoveEvent(GSE_CALL,actor,base->GetTile());
+            auto observed=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            GT_ASSERT(base->GetTile()->units.size()==2 && outside->units.empty() && observed.units.size()==2
+                && observed.remembered[1].at(2*64+1)->unit_present && !observed.remembered[1].at(3*64+1)->unit_present,
+                "live occupied Base entry lost stack members or retained the wrong source/destination sight markers");
+            um->ResetConventionalSpent(GSE_CALL,actor);fixture.MoveEvent(GSE_CALL,actor,outside);
+            observed=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            GT_ASSERT(base->GetTile()->units.size()==1 && base->GetTile()->units.at(92)==resident && actor->GetTile()==outside
+                && observed.remembered[1].at(2*64+1)->unit_present && observed.remembered[1].at(3*64+1)->unit_present
+                && Unit::Serialize(resident).ToString()==resident_wire && fixture.GameplayRandom()==random,
+                "live stack departure cleared a resident's occupancy, changed it or consumed randomness");
+            um->ResetConventionalSpent(GSE_CALL,actor);fixture.MoveEvent(GSE_CALL,actor,base->GetTile());saved=fixture.Snapshot();GT_OK();
+        });if(!result.empty()) {return result;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetTile()->units.size()==2 && base->GetTile()->units.at(91)==game->GetUM()->GetUnit(91)
+                && base->GetTile()->units.at(92)==game->GetUM()->GetUnit(92)
+                && game->GetMap()->GetSmacWorkerKnowledge()->CopyData().remembered[1].at(2*64+1)->unit_present,
+                "actual Start changed the live friendly stack or its remembered occupancy");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC maintenance insolvency follows live Base order and retains already earned research",[](GSE*,context::Context*)->std::string {
         for(int scenario=0;scenario<5;++scenario) {
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(scenario==4 ? EnergyFacilitySource : MaintenanceSource,true);

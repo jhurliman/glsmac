@@ -1577,14 +1577,21 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true ) );
 			const auto allocation = base->GetSmacAllocation(); auto* pop = &base->m_pops.at( 19 );
 			for ( const auto kind : { ProductionItemKind::Unit, ProductionItemKind::Facility, ProductionItemKind::Stockpile } ) {
-				base->SetProductionState( GSE_CALL, Production( kind ) ); const auto before = Base::Serialize( base ).ToString();
+				base->SetProductionState( GSE_CALL, Production( kind ) );
+				const auto without_cache = [&] {
+					const auto saved = Base::Serialize( base ).ToString(); types::Buffer cache;
+					cache.WriteString( SerializeSmacBaseUpkeepCache( base->GetSmacUpkeepCache() ).ToString() );
+					return saved.substr( 0, saved.size() - cache.lenw );
+				};
+				const auto before = without_cache();
 				base->RecalculateSmacWorkers( GSE_CALL, Roles() );
-				GT_ASSERT( Base::Serialize( base ).ToString() == before && base->GetSmacAllocation() == allocation && &base->m_pops.at( 19 ) == pop
+				GT_ASSERT( without_cache() == before && base->GetSmacUpkeepCache() && base->GetSmacAllocation() == allocation && &base->m_pops.at( 19 ) == pop
 					&& !pop->GetWorkedTileCoords() && pop->m_def->m_smac_specialist_id == 1, "ordinary recalculation optimized a complete valid Doctor allocation" );
+				const auto calculated = Base::Serialize( base ).ToString();
 				base->RecalculateSmacWorkers( GSE_CALL, Roles(), SmacBaseResourcePhase::Upkeep );
-				GT_ASSERT( Base::Serialize( base ).ToString() == before, "unmanaged upkeep changed a complete valid Doctor allocation" );
+				GT_ASSERT( Base::Serialize( base ).ToString() == calculated, "unmanaged upkeep changed a complete valid Doctor allocation" );
 				GT_ASSERT( Rejects( [ & ] { base->RecalculateSmacWorkers( GSE_CALL, Roles(), static_cast< SmacBaseResourcePhase >( 99 ) ); } )
-					&& Base::Serialize( base ).ToString() == before, "unknown allocation phase changed Base" );
+					&& Base::Serialize( base ).ToString() == calculated, "unknown allocation phase changed Base" );
 			}
 			GT_OK();
 		} );

@@ -1,4 +1,5 @@
 #include "TerrainRenderUpdate.h"
+#include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
 #include "game/backend/map/Consts.h"
@@ -73,6 +74,18 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("Selected Unit badge phase is monotonic refresh-stable and skips missed frames",GT(){
+        using Blink=game::frontend::unit::SelectionBlink;using namespace std::chrono;
+        Blink phase;const auto epoch=Blink::Clock::time_point{}+seconds(10);
+        GT_ASSERT(phase.Start(epoch) && !phase.Visible(epoch),"new selection did not start hidden");
+        GT_ASSERT(!phase.Visible(epoch+milliseconds(499)) && phase.Visible(epoch+milliseconds(500)),"half-period boundary differs");
+        GT_ASSERT(!phase.Start(epoch+milliseconds(700)) && phase.Visible(epoch+milliseconds(999)),"refresh restarted selected badge");
+        GT_ASSERT(!phase.Visible(epoch+milliseconds(1000)) && phase.Visible(epoch+milliseconds(5500)),"missed frames changed phase parity");
+        for(int i=0;i<100;++i) {GT_ASSERT(phase.Visible(epoch+milliseconds(5500)),"repeated redraw advanced clock");}
+        phase.Stop();GT_ASSERT(!phase.IsRunning(),"deselection retained animation");
+        GT_ASSERT(phase.Start(epoch+seconds(20)) && !phase.Visible(epoch+seconds(20)),"new selection failed to reset phase");
+        GT_OK();
+    });
 	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){
 		using graphics::PresentationViewport;
 		const auto wide=PresentationViewport::Fit(1920,1080);

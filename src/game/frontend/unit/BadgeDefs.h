@@ -41,7 +41,6 @@ public:
 	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale );
 	sprite::InstancedSprite* GetFakeBadgeSprite();
 	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
-	const size_t GetBadgeBlinkInterval() const;
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 
@@ -84,9 +83,6 @@ private:
 			};
 			const float step_x = 0.032f;
 		} fake_badges;
-		struct {
-			const size_t interval_ms = 128;
-		} blink;
 	} s_consts;
 
 	sprite::InstancedSpriteManager* const m_ism = nullptr;

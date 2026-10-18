@@ -7,7 +7,7 @@
 
 #include "game/backend/unit/Types.h"
 
-#include "util/Timer.h"
+#include "SelectionBlink.h"
 #include "util/Scroller.h"
 #include "types/Vec3.h"
 
@@ -146,9 +146,7 @@ private:
 				sprite::Sprite* def = nullptr;
 				size_t instance_id = 0;
 			} healthbar;
-			struct {
-				util::Timer timer;
-			} blink;
+			SelectionBlink blink;
 		} badge;
 		struct {
 			size_t instance_id = 0;

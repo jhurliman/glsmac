@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <filesystem>
 
 #include "Mesh.h"
 #include "graphics/opengl/actor/TextureReloadState.h"
+#include "graphics/PresentationViewport.h"
 #include "loader/texture/SmacPalette.h"
 
 #include "task/gsetests/GSETests.h"
@@ -47,7 +49,8 @@ namespace gse::tests {
 // rendering remains disabled. This fixture outlives the local UI's GC runtime.
 class WidgetGraphicsFixture {
 public:
-	explicit WidgetGraphicsFixture( const std::string& texture_path = {} ) {
+	explicit WidgetGraphicsFixture( const std::string& texture_path = {}, unsigned short width=64, unsigned short height=64, bool fit_stage=false )
+		: m_graphics(width,height,fit_stage) {
 		if ( !texture_path.empty() ) {
 			m_resources = std::make_unique< resource::ResourceManager >( texture_path );
 			m_textures = std::make_unique< loader::texture::SDL2 >();
@@ -80,11 +83,14 @@ public:
 private:
 	class SizedNull : public graphics::Null {
 	public:
-		SizedNull() { OnWindowResize(); }
-		const unsigned short GetWindowWidth() const override { return 64; }
-		const unsigned short GetWindowHeight() const override { return 64; }
-		const unsigned short GetViewportWidth() const override { return 64; }
-		const unsigned short GetViewportHeight() const override { return 64; }
+		SizedNull(unsigned short width,unsigned short height,bool fit_stage):width(width),height(height),
+			stage(fit_stage ? graphics::PresentationViewport::Fit(width,height) : graphics::PresentationViewport{0,0,width,height}) { OnWindowResize(); }
+		const unsigned short GetWindowWidth() const override { return width; }
+		const unsigned short GetWindowHeight() const override { return height; }
+		const unsigned short GetViewportWidth() const override { return stage.width; }
+		const unsigned short GetViewportHeight() const override { return stage.height; }
+		unsigned short width,height;
+		graphics::PresentationViewport stage;
 		void UnloadTexture( const types::texture::Texture* texture ) override {
 			std::lock_guard guard( texture_mutex );
 			++texture_unloads[ texture ];
@@ -513,6 +519,36 @@ static std::string CheckMinimapCaptureOwnership() {
 	return result;
 }
 
+static std::string CheckMovieStageLayout() {
+	WidgetGraphicsFixture graphics({},1920,1080,true);
+	GSE runtime;
+	std::string result;
+	auto* gc_space=runtime.GetGCSpace();
+	gc_space->Accumulate(&runtime,[&] {
+		auto* ctx=runtime.CreateGlobalContext();const si_t si;ExecutionPointer ep;
+		auto* ui=new ::ui::UI(GSE_CALL);
+		util::FinallyGuard cleanup([&] {ui->GetRoot()->Container::Destroy(GSE_CALL);});
+		auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+		auto* props=new value::Object(GSE_CALL,{{"align",new value::String(gc_space,"center")}});
+		auto* surface=static_cast<::ui::dom::Surface*>(::ui::dom::Object::Unwrap(
+			static_cast<value::Callable*>(root->Get("surface"))->Run(GSE_CALL,{props})));
+		surface->PresentMovieFrame(592,288,std::vector<uint8_t>(592*288*4,255));
+		ui->GetRoot()->GetGeometry()->NeedUpdate();
+		const auto art=surface->GetGeometry()->GetEffectiveArea();
+		const auto stage=graphics::PresentationViewport::Fit(1920,1080);
+		result=[&]() -> std::string {
+			GT_ASSERT(g_engine->GetGraphics()->GetWindowWidth()==1920 && ui->GetRoot()->GetGeometry()->GetWidth()==1440,
+				"movie UI root used raw window width instead of presentation stage");
+			GT_ASSERT(stage.x==240 && stage.width==1440 && art.left==0 && art.right==1440 &&
+				std::abs(art.top-189.72973f)<0.1f && std::abs(art.bottom-890.27027f)<0.1f,
+				"native movie aspect did not remain letterboxed inside the 4:3 stage: "+
+				std::to_string(art.left)+","+std::to_string(art.top)+","+std::to_string(art.right)+","+std::to_string(art.bottom));
+			GT_OK();
+		}();
+	});
+	return result;
+}
+
 static std::string CheckSurfaceBackgroundOwnership() {
 	std::string result;
 	try {
@@ -584,6 +620,14 @@ static std::string CheckSurfaceBackgroundOwnership() {
 					GT_OK();
 				};
 				result = [ & ]() -> std::string {
+					std::vector<uint8_t> movie_pixels(16,255);
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					const auto first_revision=actor->GetTextureRevision();
+					const auto* first_texture=actor->GetTexture();
+					movie_pixels[0]=17;
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					GT_ASSERT(actor->GetTexture()==first_texture && actor->GetTextureRevision()>first_revision &&
+						actor->GetTexture()->GetBitmap()[0]==17,"movie frame failed to refresh the cached actor or reused texture");
 					for ( const auto* background : { "#123456", "fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)",
 						"fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)", "fixture.bmp", "#456789", "#abcdef" } ) {
 						const auto error = change( background );
@@ -801,6 +845,7 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	});
 
 	task->AddTest( "UI viewport cache includes the bottom-right pixel", GT() { return CheckViewportEdges(); } );
+	task->AddTest( "movie native aspect stays inside the 4:3 presentation stage", GT() { return CheckMovieStageLayout(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
 	task->AddTest(

@@ -36,11 +36,14 @@ CLASS( SDL2, Audio )
 	void RemoveActor( scene::actor::Sound* actor ) override;
 
 	void Mix( Uint8* stream, int len );
+	void SuspendForMovie() override;
+	void ResumeAfterMovie() override;
 
 protected:
 
 private:
 	bool m_is_sound_enabled = false;
+	size_t m_movie_suspensions = 0;
 
 	common::Mutex m_actors_mutex;
 	std::unordered_map< scene::actor::Sound*, sdl2::Sound* > m_actors = {};

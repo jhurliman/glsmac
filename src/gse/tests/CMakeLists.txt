@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacNativeUnitRecord.cpp
 	${PWD}/SmacEcology.cpp
 	${PWD}/Tests.cpp
+	${PWD}/Movie.cpp
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/UIClass.cpp
 	${PWD}/Sound.cpp

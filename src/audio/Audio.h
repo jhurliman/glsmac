@@ -17,6 +17,8 @@ CLASS( Audio, common::Module )
 	// TODO: scenes?
 	virtual void AddActor( scene::actor::Sound* actor ) = 0;
 	virtual void RemoveActor( scene::actor::Sound* actor ) = 0;
+	virtual void SuspendForMovie() {}
+	virtual void ResumeAfterMovie() {}
 
 	void Iterate() override;
 

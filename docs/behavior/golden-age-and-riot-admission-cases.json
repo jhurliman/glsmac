@@ -1,0 +1,473 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-STATUS-001",
+  "status": "Original upkeep turn gate, Golden Age/status routing, recovery flag clearing and riot-handler admission checked; notification/map callbacks omitted without state mutation; riot consequences unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "golden-age-and-riot-admission.md",
+  "scope": "Human faction1, supplied final T/D/S/counts and prior status. Ordinary recovery notification mode. Stop after riot handler sets status before its notification/consequences. Upstream calculation and callback intervention outside scope.",
+  "defaults": {
+    "turn_index": 2,
+    "population": 7,
+    "talents": 4,
+    "drones": 0,
+    "extra_drone_steps": 0,
+    "golden_before": false,
+    "riots_before": false,
+    "telepathic_matrix": "none",
+    "nerve_stapling_counter": 0,
+    "unrelated_status": true
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-STATUS-001",
+      "name": "Golden Age begins",
+      "overrides": {},
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-002",
+      "name": "existing Golden Age no repeated message",
+      "overrides": {
+        "golden_before": true
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-003",
+      "name": "population two cannot celebrate",
+      "overrides": {
+        "population": 2,
+        "talents": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-004",
+      "name": "population three needs two talents",
+      "overrides": {
+        "population": 3,
+        "talents": 1
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-005",
+      "name": "population three two talents qualifies",
+      "overrides": {
+        "population": 3,
+        "talents": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-006",
+      "name": "even population half enough",
+      "overrides": {
+        "population": 4,
+        "talents": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-007",
+      "name": "odd population half rounded up",
+      "overrides": {
+        "population": 5,
+        "talents": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-008",
+      "name": "one drone prevents Golden Age",
+      "overrides": {
+        "drones": 1
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-009",
+      "name": "Golden Age ends without riot",
+      "overrides": {
+        "golden_before": true,
+        "talents": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age_over"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-010",
+      "name": "Golden Age ends directly into riot without over message",
+      "overrides": {
+        "golden_before": true,
+        "talents": 1,
+        "drones": 3
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": true,
+        "riot_handler_dispatched": true,
+        "riot_is_new": true,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-011",
+      "name": "equal drones talents no riot",
+      "overrides": {
+        "talents": 2,
+        "drones": 2
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-012",
+      "name": "strictly greater drones dispatches riot",
+      "overrides": {
+        "talents": 2,
+        "drones": 3
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": true,
+        "riot_handler_dispatched": true,
+        "riot_is_new": true,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-013",
+      "name": "ongoing riot detected",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "riots_before": true
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": true,
+        "riot_handler_dispatched": true,
+        "riot_is_new": false,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-014",
+      "name": "riot recovery message and refresh",
+      "overrides": {
+        "talents": 2,
+        "drones": 2,
+        "riots_before": true
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "riots_over"
+        ],
+        "map_refresh_requested": true,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-015",
+      "name": "recovery into Golden Age omits riot over message",
+      "overrides": {
+        "riots_before": true
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": true,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-016",
+      "name": "owned Matrix prevents dispatch",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "telepathic_matrix": "self_elsewhere"
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-017",
+      "name": "rival Matrix does not prevent dispatch",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "telepathic_matrix": "other"
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": true,
+        "riot_handler_dispatched": true,
+        "riot_is_new": true,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-018",
+      "name": "owned Matrix clears existing riot despite drone majority",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "riots_before": true,
+        "telepathic_matrix": "self_here"
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "riots_over"
+        ],
+        "map_refresh_requested": true,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-019",
+      "name": "nerve counter prevents dispatch",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "nerve_stapling_counter": 1
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-020",
+      "name": "high bit nerve counter prevents dispatch",
+      "overrides": {
+        "talents": 0,
+        "drones": 3,
+        "nerve_stapling_counter": 128
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-021",
+      "name": "extra burden not read by status predicate",
+      "overrides": {
+        "extra_drone_steps": 3
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-022",
+      "name": "turn zero caller skips status",
+      "overrides": {
+        "turn_index": 0,
+        "golden_before": false
+      },
+      "expected": {
+        "status_check_admitted": false,
+        "golden_after": false,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-023",
+      "name": "turn one caller skips status and recovery",
+      "overrides": {
+        "turn_index": 1,
+        "riots_before": true
+      },
+      "expected": {
+        "status_check_admitted": false,
+        "golden_after": false,
+        "riots_after": true,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    },
+    {
+      "id": "CITIZEN-STATUS-024",
+      "name": "maximum population threshold",
+      "overrides": {
+        "population": 127,
+        "talents": 64
+      },
+      "expected": {
+        "status_check_admitted": true,
+        "golden_after": true,
+        "riots_after": false,
+        "riot_handler_dispatched": false,
+        "riot_is_new": null,
+        "notification_requests": [
+          "golden_age"
+        ],
+        "map_refresh_requested": false,
+        "unrelated_status_preserved": true
+      }
+    }
+  ]
+}

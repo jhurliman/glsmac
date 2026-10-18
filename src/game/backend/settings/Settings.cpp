@@ -277,6 +277,7 @@ void GlobalSettings::SelectInstalledPlanet() {
 	// Original map-loader authority, not the generated Standard preset. The
 	// installed file retains category4 with80x80 geometry (PLANET-IMPORT001).
 	map.SetSmacWorldSize({4,80,80});map.type=MapSettings::MT_INSTALLED_PLANET;map.filename.clear();
+    map.ocean_coverage=0.6f; // representation of serialized category1, RE-PLANET-OCEAN001
 }
 
 void GlobalSettings::RestoreSmacWorldSize( const int64_t category, const int64_t width, const int64_t height ) {

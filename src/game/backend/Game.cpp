@@ -2717,6 +2717,9 @@ void Game::AcquireInitializationMap() {
                     if(!options || !m_state->m_settings.global.IsOrdinarySmacCampaign()) {THROW("Installed Planet requires explicit ordinary campaign options");}
                     ec=candidate->LoadInstalledPlanet(path,options->AutomaticLandResources(),m_init_cancel);
 					installed_planet=ec==map::Map::EC_NONE;
+                    if(installed_planet && map_settings.GetSmacOceanCoverage()!=candidate->GetResourcePolicy()->OriginalPlanet()->OceanCoverageCategory()) {
+                        THROW("Installed Planet ocean category differs from the accepted setup");
+                    }
 				}
 				else if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
@@ -2976,7 +2979,8 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	}
 	if(map_policy && map_policy->OriginalPlanet()) {
         const auto& options=m_state->m_settings.global.GetSmacCampaignRules();
-        if(!options || !m_state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=map_policy->AutomaticLandResources()) {THROW("Installed Planet resource policy differs from active campaign options");}
+        if(!options || !m_state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=map_policy->AutomaticLandResources()
+            || m_state->m_settings.global.map.GetSmacOceanCoverage()!=map_policy->OriginalPlanet()->OceanCoverageCategory()) {THROW("Installed Planet resource policy differs from active campaign options");}
 		for(size_t y=0;y<m_map->GetHeight();++y) {for(size_t x=y&1;x<m_map->GetWidth();x+=2) {m_map->GetTile(x,y)->Update();}}
 	}
 	if (territory) { territory->ValidateTerrain(m_map->TerritorySea()); }

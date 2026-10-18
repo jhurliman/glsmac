@@ -58,7 +58,11 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC installed Planet settings retain explicit options across frozen settings and world headers", GT() {
         using namespace game::backend::settings;
         GlobalSettings host;host.Initialize();host.SelectRuleset("smac");host.InitializeHostRules(smac_rules_fixture::Source);
-        host.SelectInstalledPlanet();host.SelectSmacCampaignRules(false);host.LockWorldSize();
+        for(const float previous : {0.4f,0.8f,-1.0f,77.0f}) {
+            host.map.ocean_coverage=previous;host.SelectInstalledPlanet();
+            GT_ASSERT(host.map.GetSmacOceanCoverage()==1,"Planet retained abandoned generator ocean authority");
+        }
+        host.SelectSmacCampaignRules(false);host.LockWorldSize();
         GT_ASSERT(host.GetSmacCampaignRules() && host.GetSmacCampaignRules()->primary==0x1a0e
             && host.IsOrdinarySmacCampaign() && !host.GetSmacCampaignRules()->AutomaticLandResources(),"Ordinary Standard Planet authority missing");
         GlobalSettings restored;restored.Deserialize(host.Serialize());
@@ -68,6 +72,13 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         game::backend::world_snapshot::ValidateHeader(world,restored);
         bool rejected=false;try {host.SelectSmacCampaignRules(true);} catch(const std::exception&) {rejected=true;}
         GT_ASSERT(rejected,"Campaign options changed after world freeze");
+        GT_OK();
+    });
+    task->AddTest("SMAC Planet ocean field decodes signed little endian independently of geometry",GT(){
+        for(const int32_t category : {0,1,2,-1,3,16909060}) {
+            auto wire=Synthetic();Put(wire,15+0xa34,static_cast<uint32_t>(category));
+            GT_ASSERT(Planet::Decode(wire).OceanCoverageCategory()==category,"Ocean header field changed signed byte interpretation");
+        }
         GT_OK();
     });
     task->AddTest("SMAC standard Planet container preserves record ordering and opaque fields", GT() {

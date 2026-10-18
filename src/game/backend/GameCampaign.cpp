@@ -123,7 +123,8 @@ void Game::ValidateCampaignWorld(State* state,const std::string& world) {
     }
     if(policy && policy->OriginalPlanet()) {
         const auto& options=state->m_settings.global.GetSmacCampaignRules();
-        if(!options || !state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=policy->AutomaticLandResources()) {
+        if(!options || !state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=policy->AutomaticLandResources()
+            || state->m_settings.global.map.GetSmacOceanCoverage()!=policy->OriginalPlanet()->OceanCoverageCategory()) {
             THROW("Installed Planet resource policy differs from active campaign options");
         }
     }

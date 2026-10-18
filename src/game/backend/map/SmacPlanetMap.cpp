@@ -16,6 +16,10 @@ int32_t SmacPlanetMap::ResourcePattern() const {
     const auto value = Read32(m_header.data() + 8);
     return value <= INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value) - (int64_t(1) << 32));
 }
+int32_t SmacPlanetMap::OceanCoverageCategory() const {
+    const auto value=Read32(m_header.data()+0xa34);
+    return value<=INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value)-(int64_t(1)<<32));
+}
 int32_t SmacPlanetMap::WorldSizeCategory() const { return static_cast<int32_t>(Read32(m_header.data() + 0xa30)); }
 
 std::string SmacPlanetMap::Encode() const {

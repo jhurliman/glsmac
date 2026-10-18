@@ -13,6 +13,9 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::DisplayedTerrainV1() { return {
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::InstalledPlanetV1( SmacPlanetMap source, bool automatic_land_resources ) {
 	if ( source.WorldSizeCategory() != 4 || source.Header()[0x1c] != 0 || source.Header()[0x1d] != 0
 		|| source.Header()[0x1e] != 0 || source.Header()[0x1f] != 0 ) { throw std::runtime_error("Installed Planet requires its saved category4 and horizontal-wrap topology"); }
+    if(source.OceanCoverageCategory()<0 || source.OceanCoverageCategory()>2) {
+        throw std::runtime_error("Installed Planet requires a normal serialized ocean category");
+    }
 	for (uint32_t y=0;y<SmacPlanetMap::HEIGHT;++y) {for(uint32_t x=y&1;x<SmacPlanetMap::WIDTH;x+=2) {
 		const auto& square=source.At(x,y);
 		if(((square.Climate()>>3)&3)>2 || (square.Climate()&7)>2 || (square.bytes[5]>>6)>2 || (square.Items()&(3|0x800000)) || square.bytes[4]!=0) {

@@ -31,6 +31,7 @@ public:
     std::string Encode() const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
+    int32_t OceanCoverageCategory() const;
     const Tile& At(uint32_t x, uint32_t y) const;
     const std::array<uint8_t, HEADER_BYTES>& Header() const { return m_header; }
     const std::array<uint8_t, TRAILER_BYTES>& Trailer() const { return m_trailer; }

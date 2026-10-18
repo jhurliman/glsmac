@@ -171,7 +171,7 @@ public:
             const auto put=[](std::string& value,size_t at,uint32_t word) {for(size_t i=0;i<4;++i) {value.at(at+i)=static_cast<char>(word>>(i*8));}};
             if(installed_asset.empty()) {
                 bytes.assign(Planet::FILE_BYTES,'\0');bytes.replace(0,11,"TERRANMAP\0\x1a",11);
-                put(bytes,11,5);put(bytes,15,80);put(bytes,19,80);put(bytes,23,27067);put(bytes,15+0xa30,4);
+                put(bytes,11,5);put(bytes,15,80);put(bytes,19,80);put(bytes,23,27067);put(bytes,15+0xa30,4);put(bytes,15+0xa34,1);
                 for(size_t i=0;i<3200;++i) {
                     const auto offset=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;
                     bytes[offset]=static_cast<char>((i%8)<<5);bytes[offset+1]=static_cast<char>(i%126);
@@ -209,7 +209,7 @@ public:
                 tile->Update();GT_ASSERT(tile->is_water_tile==((raw.Climate()>>5)<3),"Display update replaced source land/sea authority");
             }}
             if(!installed_asset.empty()) {
-                GT_ASSERT(land==1374 && standard==Counts({3111,34,28,27})
+                GT_ASSERT(source.OceanCoverageCategory()==1 && land==1374 && standard==Counts({3111,34,28,27})
                     && automatic==Counts({3028,87,44,41}),"Installed source differs from original full-loader resource receipt");
             }
             GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(policy.Serialize().ToString())==policy,"Saved native source policy lost original bytes or option");

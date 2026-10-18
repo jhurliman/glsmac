@@ -256,6 +256,28 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base production presentation leaves unresolved legacy records unavailable", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=Populate(GSE_CALL,fixture,false);
+            const auto before=fixture.Snapshot();
+            auto* view=Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation");
+            GT_ASSERT(view->type==VT_UNDEFINED && fixture.Snapshot()==before,"Unresolved production threw, invented a source identity or mutated the world");
+            GT_OK();
+        });
+    });
+    task->AddTest("SMAC Base production presentation does not require local control of foreign custom designs", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);
+            const auto rover=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,128);
+            base->SetProductionState(GSE_CALL,ProductionState{rover,7,rover,7,std::vector<ProductionItem>{}});
+            const auto before=fixture.Snapshot();
+            auto* view=Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation");
+            GT_ASSERT(view->type==VT_UNDEFINED && fixture.Snapshot()==before,"Foreign custom presentation invoked local commands or changed the world");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC Base production presentation reads current and complete saved queue without mutation", [](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

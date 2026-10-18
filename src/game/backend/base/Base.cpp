@@ -522,7 +522,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"get_smac_production_presentation",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
-			if ( !m_resource_context || !m_production ) { return VALUE( gse::value::Undefined ); }
+			if ( !m_resource_context || !m_production || !m_production->queue ) { return VALUE( gse::value::Undefined ); }
+			const auto available = [ & ]( const ProductionItem& item ) {
+				return item.smac_source_id && (item.kind!=ProductionItemKind::Unit || *item.smac_source_id<64
+					|| (m_owner && m_owner->GetPlayer()==m_game->GetPlayer()));
+			};
+			if (!available(m_production->current_item)) {return VALUE(gse::value::Undefined);}
+			for (const auto& item:*m_production->queue) {if(!available(item)) {return VALUE(gse::value::Undefined);}}
 			const auto& settings = m_game->GetState()->m_settings.global;
 			if ( !settings.GetSmacProductionRules() || !settings.GetSmacPredefinedUnitRules() ) { THROW( "Production presentation requires frozen source catalogs" ); }
 			const auto label = [ & ]( const ProductionItem& item ) -> std::string {

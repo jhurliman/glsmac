@@ -4088,6 +4088,8 @@ public:
 			Base* remote_first=nullptr;
 			if(scenario==11) {remote_first=spawn(&m_state->m_slots->GetSlot(2),map->GetTile(2,4));}
 			auto* base=spawn(owner,center);const auto allocation=*base->GetSmacAllocation();
+			const auto& regional=m_game.m_simulation->value.economy.at(base->GetSmacResourceContext().owner_simulation_id).regional_base_counts;
+			require(regional && regional->at(1)==1 && regional->at(63)==0,"initial Base did not increment its fresh regional count before publication");
 			if(scenario==1) {require(base->m_pops.at(1).GetWorkedTile()==map->GetTile(6,4) && allocation.specialists.total_count==0,"productive first Base used fixed Doctor allocation");}
 			else {require(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1,"arid first-worker literal changed");}
 			for(size_t i=1;i<16;++i) {require(allocation.specialists.types[i]==0,"fresh packed padding was fabricated from active type");}

@@ -25,7 +25,9 @@ or claim that fertility, ocean-choice and site-rating cache ownership are done.
 
 Validation: cached Linux Debug build; 51 affected regional/economy/simulation,
 capture, founding, last-Base, abandonment, starvation and summary groups with
-memory debugging. Tests distinguish delta updates from recounts, retain stale
+memory debugging, plus ten existing startup/first-Base integration groups.
+The first-Base fixture checks the fresh regional increment at actual creation
+across difficulties, owner packages and claimed/queued Start. Tests distinguish delta updates from recounts, retain stale
 counts through capture/load, exercise byte underflow and reject malformed array
 framing. LLVM15 correctness analysis passed seven changed/affected production
 translation units in 9.99s. Scalar state and transaction writes add no ownership

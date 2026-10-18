@@ -11,7 +11,9 @@ return (i) => {
 				i.steps.select_mapsize(i);
 			}],
 			['The Map of Planet', () => {
-				i.steps.notimpl(i);
+				if (i.glsmac.game.get_ruleset() != 'smac') { i.steps.notimpl(i); return; }
+				i.settings.global.select_installed_planet();
+				i.steps.select_difficulty_level(i);
 			}],
 			['Huge Map of Planet', () => {
 				i.steps.notimpl(i);

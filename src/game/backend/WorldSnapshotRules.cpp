@@ -149,7 +149,8 @@ void ValidateHeader( types::Buffer& buffer, const settings::GlobalSettings& sett
 	if ( sizes ) {
 		const auto incoming = settings::SmacWorldSizeRules::Deserialize( types::Buffer( buffer.ReadString( max_profile_bytes ) ) );
 		const auto selection = settings::SmacWorldSizeSelection::Deserialize( types::Buffer( buffer.ReadString( max_selection_bytes ) ) );
-		incoming.ValidateSelection( selection );
+		if(settings.map.type!=settings::MapSettings::MT_INSTALLED_PLANET) {incoming.ValidateSelection( selection );}
+		else if(!(selection==settings::SmacWorldSizeSelection{4,80,80})) {throw std::runtime_error("World snapshot has invalid installed Planet geometry");}
 		if ( !( incoming == *sizes ) || !( selection == *settings.map.GetSmacWorldSize() ) ) { throw std::runtime_error( "World snapshot world-size profile or selection differs from the session" ); }
 	}
 	const auto& factions = settings.GetSmacFactionStartupRules();

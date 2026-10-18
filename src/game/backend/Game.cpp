@@ -32,6 +32,7 @@
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
 #include "resource/ResourceManager.h"
+#include <resource/ResourceManager.h>
 #include "Bindings.h"
 #include "graphics/Graphics.h"
 #include "animation/Def.h"
@@ -2671,6 +2672,7 @@ void Game::AcquireInitializationMap() {
 
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 		bool generated_map = false;
+		bool installed_planet = false;
 
 #ifdef DEBUG
 		if ( !connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
@@ -2690,7 +2692,13 @@ void Game::AcquireInitializationMap() {
 			}
 			else {
 				auto& map_settings = m_state->m_settings.global.map;
-				if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
+				if ( map_settings.type == settings::MapSettings::MT_INSTALLED_PLANET ) {
+					m_state->m_settings.global.ValidateWorldSize();
+					const auto& path=g_engine->GetResourceManager()->GetCustomPath("maps/planet.MP");
+					ec=candidate->LoadInstalledPlanet(path,true,m_init_cancel);
+					installed_planet=ec==map::Map::EC_NONE;
+				}
+				else if ( map_settings.type == settings::MapSettings::MT_MAPFILE ) {
 					ASSERT( !map_settings.filename.empty(), "loading map requested but map file not specified" );
 					ec = candidate->LoadFromFile( map_settings.filename );
 				}
@@ -2709,6 +2717,7 @@ void Game::AcquireInitializationMap() {
 		if ( !ec ) {
 			PublishInitializationMap( candidate );
 			if ( m_active_admission ) { m_active_admission->generated_map = generated_map; }
+			if ( m_active_admission ) { m_active_admission->installed_planet = installed_planet; }
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
 			if ( connection ) {
 				connection->UpdateSlot( m_slot_num, m_slot, true );
@@ -2804,6 +2813,8 @@ std::string Game::SerializeWorldSnapshot() const {
 	// Capture at the start of the existing synchronous world serialization.
 	// Reading/writing this state does not draw from the generator.
 	const auto random_state = m_random->GetState();
+	if (bool(m_map->GetResourcePolicy() && m_map->GetResourcePolicy()->OriginalPlanet())
+		!= (m_state->m_settings.global.map.type==settings::MapSettings::MT_INSTALLED_PLANET)) {THROW("World resource provenance differs from accepted map origin");}
 	const auto turn_state = world_snapshot::CaptureTurnState( m_current_turn.GetId(), m_state->m_slots->GetSlots() );
 	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
 		m_state->m_settings.global.ValidateWorldSize();
@@ -2939,9 +2950,15 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
 	if ( ec != map::Map::EC_NONE ) {
 		throw std::runtime_error( "Failed to unpack world snapshot map (code=" + std::to_string( ec ) + ")" );
 	}
+	m_map->m_resource_policy = map_policy; // decoded before Map allocation; raw loader never infers it
+	if (bool(map_policy && map_policy->OriginalPlanet()) != (m_state->m_settings.global.map.type==settings::MapSettings::MT_INSTALLED_PLANET)) {
+		throw std::runtime_error("World resource provenance differs from the accepted map origin");
+	}
+	if(map_policy && map_policy->OriginalPlanet()) {
+		for(size_t y=0;y<m_map->GetHeight();++y) {for(size_t x=y&1;x<m_map->GetWidth();x+=2) {m_map->GetTile(x,y)->Update();}}
+	}
 	if (territory) { territory->ValidateTerrain(m_map->TerritorySea()); }
 	m_map->m_territory_topology = std::move(territory);
-	m_map->m_resource_policy = map_policy; // decoded before Map allocation; raw loader never infers it
 	m_map->m_worker_knowledge = std::move( worker_knowledge );
 	m_map->m_worker_knowledge_ready = false; // only bind after both pending entity registries drain
 	{

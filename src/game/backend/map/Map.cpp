@@ -636,6 +636,7 @@ void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	m_game->RequireWorkerKnowledgeMutation();
+	if(map_settings->type==settings::MapSettings::MT_INSTALLED_PLANET) {throw std::runtime_error("Installed Planet must use its checked importer, not generation");}
 	m_resource_policy.reset();
 	m_territory_topology.reset();
 	auto* random = m_game->GetRandom();

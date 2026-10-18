@@ -8,6 +8,7 @@ SET( SRC ${SRC}
 	${PWD}/Consts.cpp
 	${PWD}/Map.cpp
 	${PWD}/SmacPlanetMap.cpp
+	${PWD}/MapPlanet.cpp
 	${PWD}/MapTerrainUpdate.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp

@@ -1,0 +1,215 @@
+{
+  "research_id": "RE-SMAC-PLANET-IMPORT-001",
+  "scope": "Complete original map-file loader with external FILE/heap/display-reset services. Real installed map; complete resolver and N/M/E routines with declared neutral query context. No menu/terrain-climate preparation/actual faction start/full campaign claim.",
+  "asset": {
+    "name": "maps/planet.MP",
+    "sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "version": 5,
+    "bytes": 143667
+  },
+  "neutral_query_context": {
+    "faction": 1,
+    "base": 0,
+    "base_count": 2,
+    "resource_rows": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        1
+      ],
+      [
+        2,
+        2,
+        2
+      ],
+      [
+        1,
+        2,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        2,
+        1,
+        3
+      ],
+      [
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        6,
+        6
+      ]
+    ],
+    "resource_row_order": [
+      "Ocean",
+      "Base Square",
+      "Bonus Square",
+      "Forest",
+      "Recycling",
+      "Improved Land",
+      "Improved Sea",
+      "Monolith",
+      "Borehole"
+    ],
+    "cap_technologies_owned": false,
+    "economy": 0,
+    "planet": 0,
+    "fungal_capabilities": [
+      1,
+      0,
+      0
+    ],
+    "facilities_projects_events": "none",
+    "atmospheric_dust": false,
+    "solar_event": false,
+    "automatic_land_resources": true
+  },
+  "decoded_terrain_histograms": {
+    "altitude_band": {
+      "0": 59,
+      "1": 578,
+      "2": 1189,
+      "3": 973,
+      "4": 342,
+      "5": 57,
+      "6": 2
+    },
+    "moisture": {
+      "0": 366,
+      "1": 1148,
+      "2": 1686
+    },
+    "climate_code": {
+      "0": 1346,
+      "1": 1298,
+      "2": 556
+    },
+    "rockiness": {
+      "0": 2356,
+      "1": 774,
+      "2": 70
+    }
+  },
+  "cases": [
+    {
+      "id": "PLANET-IMPORT-LOAD-01",
+      "inputs": {
+        "asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+        "prior_world_size_category": 99,
+        "prior_pattern_offset": 123
+      },
+      "expected": {
+        "load_success": true,
+        "width": 80,
+        "height": 80,
+        "actual_tiles": 3200,
+        "horizontal_wrap": true,
+        "vertical_wrap": false,
+        "world_size_category": 4,
+        "pattern_offset": 27067,
+        "layout_scale": 56,
+        "coarse_map_bytes": 128,
+        "asset_bytes_consumed": 143667,
+        "tile_records_changed": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "PLANET-IMPORT-BONUS-01",
+      "inputs": {
+        "map": "loaded installed Planet",
+        "automatic_land_resources": false
+      },
+      "expected": {
+        "calls": 3200,
+        "counts": {
+          "none": 3111,
+          "nutrients": 34,
+          "minerals": 28,
+          "energy": 27
+        },
+        "row_major_byte_codes_sha256": "44247600f0465882c7657662e1e671ce9983930367abcf2a00ffa53b0af2a754",
+        "tile_writes": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "PLANET-IMPORT-BONUS-02",
+      "inputs": {
+        "map": "loaded installed Planet",
+        "automatic_land_resources": true
+      },
+      "expected": {
+        "calls": 3200,
+        "counts": {
+          "none": 3028,
+          "nutrients": 87,
+          "minerals": 44,
+          "energy": 41
+        },
+        "row_major_byte_codes_sha256": "d024bfd62f0d213db8491b8f940cf68e3aab98f77ad5a19600408e3d397a403f",
+        "tile_writes": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "PLANET-IMPORT-YIELD-01",
+      "inputs": {
+        "map": "loaded installed Planet",
+        "query": "ordinary_tile",
+        "context": "neutral_query_context"
+      },
+      "expected": {
+        "triples": 3200,
+        "complete_calls": 9600,
+        "distinct_results": 34,
+        "compact_json_nme_triples_sha256": "93be10d21970ad2729440b657990e5ad2c6cef48c748324bd3b83bfb1fa59284",
+        "remaining_tile_changes": 0,
+        "rng_calls": 0
+      }
+    },
+    {
+      "id": "PLANET-IMPORT-YIELD-02",
+      "inputs": {
+        "map": "loaded installed Planet",
+        "query": "synthetic_center_overlay",
+        "context": "neutral_query_context"
+      },
+      "expected": {
+        "triples": 3200,
+        "complete_calls": 9600,
+        "distinct_results": 16,
+        "compact_json_nme_triples_sha256": "47613eba2f5f5ec084d6f65a57aa15524e5d6e66e78707da27cb9ed151f5bccf",
+        "remaining_tile_changes": 0,
+        "rng_calls": 0
+      }
+    }
+  ],
+  "unsupported": [
+    "complete terrain/climate/river/region preparation after menu load",
+    "full first-command faction campaign",
+    "general maps/scenarios/SMAX/Huge/malformed files",
+    "original geographic placement",
+    "opaque item bits outside direct N/M/E consumer effects",
+    "contour-to-GLSMAC-render-height conversion",
+    "Standard Rules automatic-land-option producer"
+  ]
+}

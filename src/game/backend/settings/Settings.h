@@ -37,6 +37,7 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 		MT_RANDOM,
 		MT_CUSTOM,
 		MT_MAPFILE,
+		MT_INSTALLED_PLANET,
 	};
 	type_t type = MT_RANDOM;
 
@@ -55,6 +56,7 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 	void SetSmacWorldSize( const SmacWorldSizeSelection& selection );
 	void ClearSmacWorldSize();
 	void LockWorldSize();
+	bool IsOrdinaryCampaignMap() const { return type==MT_RANDOM || type==MT_CUSTOM || type==MT_INSTALLED_PLANET; }
 
 	/*
 	 	{ settings::MAP_CONFIG_OCEAN_LOW,    0.4f }, // '30-50% of surface'
@@ -120,6 +122,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	const std::optional< SmacTerraformingRules >& GetSmacTerraformingRules() const;
 	void SelectSmacWorldSize( int64_t category );
 	void SelectSmacCustomSize( int64_t width, int64_t height );
+	void SelectInstalledPlanet();
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
 	void ValidateWorldSize( bool require_selection = true ) const;
 	void LockWorldSize();

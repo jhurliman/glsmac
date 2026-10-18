@@ -20,6 +20,7 @@ WRAPMAP( type, MapSettings::type_t,
 	{ MapSettings::MT_RANDOM, "random" },
 	{ MapSettings::MT_CUSTOM, "custom" },
 	{ MapSettings::MT_MAPFILE, "mapfile" },
+	{ MapSettings::MT_INSTALLED_PLANET, "planet" },
 )
 
 WRAPIMPL_DYNAMIC_GETTERS( MapSettings )
@@ -92,7 +93,7 @@ void MapSettings::Deserialize( types::Buffer buf ) {
 	MapSettings next;
 	if ( buf.ReadBool() ) { next.m_smac_world_size = SmacWorldSizeSelection::Deserialize( types::Buffer( buf.ReadString() ) ); }
 	const auto raw_type = buf.ReadInt();
-	if ( raw_type < MT_RANDOM || raw_type > MT_MAPFILE ) { THROW( "Unknown map settings type" ); }
+	if ( raw_type < MT_RANDOM || raw_type > MT_INSTALLED_PLANET ) { THROW( "Unknown map settings type" ); }
 	next.type = static_cast< type_t >( raw_type );
 	next.filename = buf.ReadString();
 	next.size_x = buf.ReadInt();
@@ -248,6 +249,13 @@ void GlobalSettings::SelectSmacCustomSize( const int64_t width, const int64_t he
 	map.SetSmacWorldSize( SmacWorldSizeRules::SelectCustom( width, height ) );
 }
 
+void GlobalSettings::SelectInstalledPlanet() {
+	if(m_ruleset!=RULESET_SMAC || !m_smac_world_size_rules || m_ruleset_locked) {THROW("Installed Planet selection requires unlocked SMAC settings");}
+	// Original map-loader authority, not the generated Standard preset. The
+	// installed file retains category4 with80x80 geometry (PLANET-IMPORT001).
+	map.SetSmacWorldSize({4,80,80});map.type=MapSettings::MT_INSTALLED_PLANET;map.filename.clear();
+}
+
 void GlobalSettings::RestoreSmacWorldSize( const int64_t category, const int64_t width, const int64_t height ) {
 	if ( category == 99 ) { SelectSmacCustomSize( width, height ); return; }
 	if ( m_ruleset != RULESET_SMAC || !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
@@ -270,6 +278,10 @@ void GlobalSettings::ValidateWorldSize( const bool require_selection ) const {
 	if ( !m_smac_world_size_rules ) { THROW( "SMAC world-size rules are unavailable" ); }
 	if ( !selection ) { if ( require_selection ) { THROW( "Select a SMAC world size before starting a game" ); } return; }
 	if ( map.type == MapSettings::MT_MAPFILE ) { THROW( "A map file does not establish a SMAC world-size category" ); }
+	if ( map.type == MapSettings::MT_INSTALLED_PLANET ) {
+		if (!(*selection==SmacWorldSizeSelection{4,80,80})) {THROW("Installed Planet requires its original category4 and80x80 dimensions");}
+		return;
+	}
 	m_smac_world_size_rules->ValidateSelection( *selection );
 }
 
@@ -314,6 +326,11 @@ void GlobalSettings::ResetRuleset() {
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
+			{ "select_installed_planet", NATIVE_CALL( this ) {
+				N_EXPECT_ARGS(0);
+				try {SelectInstalledPlanet();} catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+				return VALUE(gse::value::Undefined);
+			} ) },
 			{ "get_world_size", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				try {
@@ -477,7 +494,9 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	const auto& next_selection = next_map.GetSmacWorldSize();
 	if ( next_selection ) {
 		if ( !world_sizes || next_map.type == MapSettings::MT_MAPFILE ) { THROW( "Unexpected SMAC world-size selection" ); }
-		world_sizes->ValidateSelection( *next_selection );
+		if(next_map.type==MapSettings::MT_INSTALLED_PLANET) {
+			if(ruleset!=RULESET_SMAC || !(*next_selection==SmacWorldSizeSelection{4,80,80})) {THROW("Unexpected installed Planet geometry");}
+		} else {world_sizes->ValidateSelection( *next_selection );}
 	}
 	const auto rules_data = buf.ReadString();
 	// Default rules currently serialize no fields; V13 must not silently drop

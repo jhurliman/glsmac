@@ -12,6 +12,20 @@ uint32_t Read32(const uint8_t* value) {
 
 uint32_t SmacPlanetMap::Tile::Items() const { return Read32(bytes.data() + 8); }
 uint32_t SmacPlanetMap::Tile::Landmarks() const { return Read32(bytes.data() + 12); }
+int32_t SmacPlanetMap::ResourcePattern() const {
+    const auto value = Read32(m_header.data() + 8);
+    return value <= INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value) - (int64_t(1) << 32));
+}
+int32_t SmacPlanetMap::WorldSizeCategory() const { return static_cast<int32_t>(Read32(m_header.data() + 0xa30)); }
+
+std::string SmacPlanetMap::Encode() const {
+    if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }
+    std::string result("TERRANMAP\0\x1a\x05\0\0\0", PREFIX_BYTES);
+    result.append(reinterpret_cast<const char*>(m_header.data()), m_header.size());
+    for (const auto& tile : m_tiles) { result.append(reinterpret_cast<const char*>(tile.bytes.data()), tile.bytes.size()); }
+    result.append(reinterpret_cast<const char*>(m_trailer.data()), m_trailer.size());
+    return result;
+}
 
 SmacPlanetMap SmacPlanetMap::Decode(const std::string& bytes) {
     // Check the exact bounded layout before reading any scalar or allocating

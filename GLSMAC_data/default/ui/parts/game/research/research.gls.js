@@ -50,6 +50,15 @@ return {
 		// Only an authoritative research_choice notification clears/replaces it.
 	},
 
+	save: () => {
+		if (this.pending == null || this.submitted) { return; }
+		const request_id = this.pending.request_id;
+		this.window.hide();
+		this.p.modules.popup.show('save_campaign', (result) => {
+			if (this.pending != null && this.pending.request_id == request_id) { this.window.show(); }
+		});
+	},
+
 	init: (p) => {
 		this.p = p;
 		this.pending = null;
@@ -57,13 +66,15 @@ return {
 		this.submitted = false;
 		this.choice_buttons = [];
 		this.window = p.root.window({
-			class: 'game-popup', zindex: 0.9, width: 620, height: 420,
+			class: 'game-popup', zindex: 0.9, width: 620, height: 456,
 			blocker: 'rgba(0, 0, 0, 180)',
 		});
 		this.window.hide();
 		this.prompt = this.window.text({class: 'game-popup-text', align: 'top left', top: 12, left: 12, right: 12});
-		this.list = this.window.scrollview({left: 8, right: 8, top: 42, bottom: 86, vscroll_class: 'default-scroll-v', has_vscroll: true, has_hscroll: false});
-		this.selection = this.window.text({class: 'game-popup-text', align: 'bottom left', bottom: 55, left: 12, right: 12});
+		this.list = this.window.scrollview({left: 8, right: 8, top: 42, bottom: 122, vscroll_class: 'default-scroll-v', has_vscroll: true, has_hscroll: false});
+		this.selection = this.window.text({class: 'game-popup-text', align: 'bottom left', bottom: 91, left: 12, right: 12});
+		this.save_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 48, left: 12, right: 12, height: 28, text: 'Save Campaign…'});
+		this.save_button.on('click', () => { this.save(); return true; });
 		this.confirm_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 12, right: 320, height: 28, text: 'Confirm Research'});
 		this.confirm_button.on('click', () => { this.submit(); return true; });
 		this.reset_button = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 12, left: 320, right: 12, height: 28, text: 'Return to Main Menu'});

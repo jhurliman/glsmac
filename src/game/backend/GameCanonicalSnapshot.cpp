@@ -2,7 +2,10 @@
 #include "State.h"
 #include "base/Base.h"
 #include "base/BaseManager.h"
+#include "base/FacilityDef.h"
 #include "base/SmacBaseUpkeepCache.h"
+#include "base/SmacBaseEnergy.h"
+#include "faction/SmacResearch.h"
 #include "types/Buffer.h"
 #include "util/FinallyGuard.h"
 #include <limits>
@@ -24,34 +27,55 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
     if(m_canonical_turn_in_progress || m_canonical_turn_failed || m_pending_canonical_continuation) {
         throw std::runtime_error("Canonical transition is not at a stable snapshot boundary");
     }
-    types::Buffer buffer;buffer.WriteInt(1);buffer.WriteBool(m_canonical_continuation.has_value());
+    types::Buffer buffer;buffer.WriteInt(2);buffer.WriteBool(m_canonical_continuation.has_value());
     if(!m_canonical_continuation) {
         if(m_colony_request || m_research_request) {throw std::runtime_error("Orphaned canonical choice cannot be saved");}
         return buffer;
     }
-    ValidateCanonicalColony();
     const auto& next=*m_canonical_continuation;
     ValidateCanonicalContinuation(next);
+    const bool colony=next.stage==CanonicalTurnContinuation::Stage::Colony;
+    if(colony) {ValidateCanonicalColony();}
+    else {
+        const auto owner=next.owners.at(next.owner_index).first;
+        if(m_colony_request || !m_research_request || m_research_request->owner!=owner ||
+            bool(next.screen_base)!=bool(next.screen_request_id) ||
+            m_research_request->bonus!=(next.stage==CanonicalTurnContinuation::Stage::ResearchBonus) ||
+            m_research_request->choices!=faction::SmacManualResearchPool(*m_simulation->value.technology.Find(owner),*m_state->m_settings.global.GetSmacTechnologyRules())) {
+            throw std::runtime_error("Saved research question differs from its suspended turn");
+        }
+    }
+    buffer.WriteInt(colony?0:next.stage==CanonicalTurnContinuation::Stage::ResearchBonus?2:1);
     buffer.WriteInt(next.turn);buffer.WriteInt(next.owner_index);buffer.WriteInt(next.base_index);
     buffer.WriteInt(next.owners.size());
     for(const auto& owner:next.owners) {
         buffer.WriteInt(owner.first);buffer.WriteInt(owner.second.size());
         for(const auto id:owner.second) {buffer.WriteInt(id);}
     }
-    base::WriteSmacResourceCalculation(buffer,next.colony->first_calculation);
-    buffer.WriteInt(static_cast<int64_t>(next.colony->morale_mode));
+    if(colony) {
+        base::WriteSmacResourceCalculation(buffer,next.colony->first_calculation);
+        buffer.WriteInt(static_cast<int64_t>(next.colony->morale_mode));
+    }
+    else {
+        base::WriteSmacBaseEnergy(buffer,*next.energy);
+        buffer.WriteBool(next.screen_base.has_value());if(next.screen_base) {buffer.WriteInt(*next.screen_base);}
+    }
     return buffer;
 }
 
 std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(types::Buffer buffer,size_t turn) const {
-    if(buffer.ReadInt()!=1) {throw std::runtime_error("Unsupported canonical continuation");}
+    const auto version=buffer.ReadInt();
+    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported canonical continuation");}
     std::optional<CanonicalTurnContinuation> result;
     if(buffer.ReadBool()) {
         if(!m_state || m_state->GetConnection() || m_state->m_settings.global.GetRulesetId()!="smac") {
             throw std::runtime_error("Saved Colony choice requires a local SMAC campaign");
         }
         result=CanonicalTurnContinuation{turn};auto& next=*result;
-        next.stage=CanonicalTurnContinuation::Stage::Colony;
+        const auto kind=version==1?0:buffer.ReadInt();
+        if(kind<0 || kind>2) {throw std::runtime_error("Invalid saved canonical choice kind");}
+        next.stage=kind==0?CanonicalTurnContinuation::Stage::Colony:kind==1?
+            CanonicalTurnContinuation::Stage::ResearchFinish:CanonicalTurnContinuation::Stage::ResearchBonus;
         next.turn=ReadIdentity(buffer);next.owner_index=ReadIdentity(buffer);next.base_index=ReadIdentity(buffer);
         const auto owners=ReadIdentity(buffer);
         if(next.turn!=turn || !turn || turn>INT32_MAX || !owners || owners>7 || next.owner_index>=owners) {
@@ -72,19 +96,28 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
             }
         }
         if(next.base_index>=next.owners[next.owner_index].second.size()) {throw std::runtime_error("Saved Colony Base cursor is outside its owner");}
-        const auto calculation=base::ReadSmacResourceCalculation(buffer);
-        const auto mode=buffer.ReadInt();
-        if(mode<0 || mode>1) {throw std::runtime_error("Invalid saved Colony morale mode");}
-        next.colony=base::SmacColonyUpkeepPause{calculation,static_cast<unit::SmacMoraleMode>(mode)};
+        if(kind==0) {
+            const auto calculation=base::ReadSmacResourceCalculation(buffer);
+            const auto mode=buffer.ReadInt();
+            if(mode<0 || mode>1) {throw std::runtime_error("Invalid saved Colony morale mode");}
+            next.colony=base::SmacColonyUpkeepPause{calculation,static_cast<unit::SmacMoraleMode>(mode)};
+        }
+        else {
+            next.energy=base::ReadSmacBaseEnergy(buffer);
+            if(buffer.ReadBool()) {next.screen_base=ReadIdentity(buffer);}
+        }
     }
     if(buffer.lenr!=buffer.lenw) {throw std::runtime_error("Trailing canonical continuation");}
     return result;
 }
 
 void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) const {
-    if(!m_simulation || m_simulation->value.human_defeat_request || next.stage!=CanonicalTurnContinuation::Stage::Colony || !next.colony || next.energy || next.screen_base || next.screen_request_id
+    const bool colony=next.stage==CanonicalTurnContinuation::Stage::Colony;
+    const bool research=next.stage==CanonicalTurnContinuation::Stage::ResearchFinish || next.stage==CanonicalTurnContinuation::Stage::ResearchBonus;
+    if(!m_simulation || m_simulation->value.human_defeat_request || (!colony && !research) ||
+        (colony?(!next.colony || bool(next.energy) || bool(next.screen_base) || bool(next.screen_request_id)):(bool(next.colony) || !next.energy))
         || next.turn!=GetTurnId() || next.owner_index>=next.owners.size()) {
-        throw std::runtime_error("Only an explicit Colony question is a saved turn boundary");
+        throw std::runtime_error("Only an explicit Colony or research question is a saved turn boundary");
     }
     std::map<int32_t,bool> roster;std::set<int32_t> required;
     for(const auto& participant:m_simulation->value.roster) {
@@ -123,13 +156,31 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
     const auto& owner=next.owners[next.owner_index];
     if(next.base_index>=owner.second.size()) {throw std::runtime_error("Saved Colony Base cursor is outside its owner");}
     const auto* base=m_bm->GetBase(owner.second[next.base_index]);
-    base->ValidateSmacColonyPause(*next.colony);
+    RequireSmacLocalHumanOwner(base->m_owner);
+    if(colony) {base->ValidateSmacColonyPause(*next.colony);}
     const auto& cache=base->GetSmacUpkeepCache();
     if(!cache) {throw std::runtime_error("Saved Colony question lacks its committed resource cache");}
-    types::Buffer first,cached;
-    base::WriteSmacResourceCalculation(first,next.colony->first_calculation);
-    base::WriteSmacResourceCalculation(cached,cache->calculation);
-    if(first.ToString()!=cached.ToString()) {throw std::runtime_error("Saved Colony cache differs from its first pass");}
+    if(colony) {
+        types::Buffer first,cached;
+        base::WriteSmacResourceCalculation(first,next.colony->first_calculation);
+        base::WriteSmacResourceCalculation(cached,cache->calculation);
+        if(first.ToString()!=cached.ToString()) {throw std::runtime_error("Saved Colony cache differs from its first pass");}
+    }
+    else {
+        const auto* technology=m_simulation->value.technology.Find(owner.first);
+        if(!technology || technology->target || (next.screen_base && *next.screen_base!=base->m_id) ||
+            (next.screen_request_id && (!next.screen_base || *next.screen_request_id<1)) || next.energy->raw_intake!=cache->calculation.raw_intake[2] ||
+            faction::SmacManualResearchPool(*technology,*m_state->m_settings.global.GetSmacTechnologyRules()).empty()) {
+            throw std::runtime_error("Saved research question has no current target selection boundary");
+        }
+        types::Buffer energy;base::WriteSmacBaseEnergy(energy,*next.energy);
+        for(const auto& charge:next.energy->maintenance_fees) {
+            const auto* definition=m_bm->GetSmacFacilityDef(charge.first);
+            if(!definition || !base->m_facilities.count(definition->m_id)) {
+                throw std::runtime_error("Saved research maintenance facility is absent");
+            }
+        }
+    }
 }
 
 void Game::ApplySnapshotContinuation(GSE_CALLABLE) {
@@ -143,6 +194,16 @@ void Game::ApplySnapshotContinuation(GSE_CALLABLE) {
     m_canonical_turn_in_progress=true;
     util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
     m_is_turn_complete=false;
-    RequestCanonicalColony(GSE_CALL); // A fresh request; no gameplay stage runs.
+    if(m_canonical_continuation->stage==CanonicalTurnContinuation::Stage::Colony) {RequestCanonicalColony(GSE_CALL);}
+    else {
+        auto& next=*m_canonical_continuation;
+        if(next.screen_base) {
+            if(m_next_colony_request==INT64_MAX) {throw std::overflow_error("Restored Colony screen identity exhausted");}
+            next.screen_request_id=++m_next_colony_request;
+        }
+        if(!RequestCanonicalResearch(GSE_CALL,next.owners.at(next.owner_index).first,next.stage==CanonicalTurnContinuation::Stage::ResearchBonus)) {
+            throw std::runtime_error("Restored research choice has no candidates");
+        }
+    } // A fresh request; no gameplay stage runs.
 }
 }

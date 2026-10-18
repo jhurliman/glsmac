@@ -292,6 +292,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
             }
             GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Support drawing changed world, history or RNG");
+            auto removal=um->PrepareConventionalRemoval(GSE_CALL,{91});removal.Commit();removal.Notify(GSE_CALL);
+            auto* after=query();
+            auto* now=static_cast<value::Object*>(after->Get("current"));
+            auto* history=static_cast<value::Object*>(after->Get("retained"));
+            GT_ASSERT(!um->GetUnit(91) && static_cast<value::Array*>(now->Get("units"))->value.size()==2
+                && static_cast<value::Int*>(history->Get("eligible"))->value==1,
+                "Historical support resolved retired Unit IDs or lost its saved pass");
             GT_OK();
         });
     });

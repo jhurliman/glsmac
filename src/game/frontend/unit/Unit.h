@@ -11,6 +11,8 @@
 #include "util/Scroller.h"
 #include "types/Vec3.h"
 
+namespace gse::tests { class BackendFixture; }
+
 namespace types {
 namespace texture {
 class Texture;
@@ -127,6 +129,7 @@ protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
 private:
+	friend class gse::tests::BackendFixture;
 
 	UnitManager* m_um = nullptr;
 

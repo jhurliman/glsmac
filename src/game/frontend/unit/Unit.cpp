@@ -197,7 +197,7 @@ void Unit::Show() {
 void Unit::Hide() {
 	if ( m_render.is_rendered ) {
 		m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
-		StopBadgeBlink( false );
+		HideBadge(); // Tile redraws hide sprites without ending selection.
 		m_render.is_rendered = false;
 	}
 }
@@ -207,6 +207,7 @@ const bool Unit::IsBadgeVisible() const {
 }
 
 void Unit::ShowBadge() {
+	if(m_render.badge.blink.IsRunning() && !m_render.badge.blink.Visible(SelectionBlink::Clock::now())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
 }

@@ -391,6 +391,7 @@ void UnitManager::DeselectUnit() {
 			m_selected_unit->StopBadgeBlink( true );
 		}
 		else if ( most_important_unit ) {
+			m_selected_unit->StopBadgeBlink( false );
 			m_selected_unit->Hide();
 			most_important_unit->Show();
 		}

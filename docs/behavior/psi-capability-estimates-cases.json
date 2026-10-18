@@ -1,0 +1,424 @@
+{
+  "research_id": "RE-SMAC-PSI-CAPABILITY-001",
+  "cases": [
+    {
+      "id": "native_only",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 6,
+      "after": {
+        "own_attack": 1,
+        "own_armor": 1,
+        "own_psi_attack": 12,
+        "own_psi_defense": 6,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "components_only",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": false,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 6,
+      "after": {
+        "own_attack": 12,
+        "own_armor": 6,
+        "own_psi_attack": 12,
+        "own_psi_defense": 6,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "neither",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [],
+      "project_hosts": "none",
+      "native_design_eligible": false,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 6,
+      "after": {
+        "own_attack": 1,
+        "own_armor": 1,
+        "own_psi_attack": 0,
+        "own_psi_defense": 0,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "zero_prior",
+      "previous_foreign_weapon": 0,
+      "previous_foreign_armor": 0,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 0,
+      "expected_psi_armor": 0,
+      "after": {
+        "own_attack": 1,
+        "own_armor": 1,
+        "own_psi_attack": 0,
+        "own_psi_defense": 0,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "odd_prior",
+      "previous_foreign_weapon": 7,
+      "previous_foreign_armor": 5,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 7,
+      "expected_psi_armor": 4,
+      "after": {
+        "own_attack": 7,
+        "own_armor": 4,
+        "own_psi_attack": 7,
+        "own_psi_defense": 4,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "percent_rounding",
+      "previous_foreign_weapon": 7,
+      "previous_foreign_armor": 5,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 25,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 8,
+      "expected_psi_armor": 5,
+      "after": {
+        "own_attack": 8,
+        "own_armor": 5,
+        "own_psi_attack": 8,
+        "own_psi_defense": 5,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "negative_percent",
+      "previous_foreign_weapon": 7,
+      "previous_foreign_armor": 5,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": -25,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 5,
+      "expected_psi_armor": 3,
+      "after": {
+        "own_attack": 5,
+        "own_armor": 3,
+        "own_psi_attack": 5,
+        "own_psi_defense": 3,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "both_projects",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "both",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 18,
+      "expected_psi_armor": 9,
+      "after": {
+        "own_attack": 18,
+        "own_armor": 9,
+        "own_psi_attack": 18,
+        "own_psi_defense": 9,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "attack_project",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "attack",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 18,
+      "expected_psi_armor": 6,
+      "after": {
+        "own_attack": 18,
+        "own_armor": 6,
+        "own_psi_attack": 18,
+        "own_psi_defense": 6,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "defense_project",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "defense",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 9,
+      "after": {
+        "own_attack": 12,
+        "own_armor": 9,
+        "own_psi_attack": 12,
+        "own_psi_defense": 9,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "foreign_projects",
+      "previous_foreign_weapon": 9,
+      "previous_foreign_armor": 8,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "foreign",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 6,
+      "after": {
+        "own_attack": 12,
+        "own_armor": 6,
+        "own_psi_attack": 12,
+        "own_psi_defense": 6,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "round_before_project",
+      "previous_foreign_weapon": 7,
+      "previous_foreign_armor": 5,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 25,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "both",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 12,
+      "expected_psi_armor": 7,
+      "after": {
+        "own_attack": 12,
+        "own_armor": 7,
+        "own_psi_attack": 12,
+        "own_psi_defense": 7,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "ratio_control",
+      "previous_foreign_weapon": 7,
+      "previous_foreign_armor": 5,
+      "land_psi_ratio": [
+        5,
+        4
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 6,
+      "expected_psi_armor": 5,
+      "after": {
+        "own_attack": 6,
+        "own_armor": 5,
+        "own_psi_attack": 6,
+        "own_psi_defense": 5,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "zero_estimate_floor",
+      "previous_foreign_weapon": 1,
+      "previous_foreign_armor": 0,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 0,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "none",
+      "native_design_eligible": true,
+      "expected_psi_weapon": 0,
+      "expected_psi_armor": 0,
+      "after": {
+        "own_attack": 1,
+        "own_armor": 1,
+        "own_psi_attack": 0,
+        "own_psi_defense": 0,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    },
+    {
+      "id": "negative_input",
+      "previous_foreign_weapon": -7,
+      "previous_foreign_armor": -5,
+      "land_psi_ratio": [
+        3,
+        2
+      ],
+      "definition_psi_percent": 25,
+      "owned_technologies": [
+        "CentEmp",
+        "CentPsi",
+        "Eudaim"
+      ],
+      "project_hosts": "both",
+      "native_design_eligible": true,
+      "expected_psi_weapon": -12,
+      "expected_psi_armor": -7,
+      "after": {
+        "own_attack": 1,
+        "own_armor": 1,
+        "own_psi_attack": -12,
+        "own_psi_defense": -7,
+        "foreign_attack": 0,
+        "foreign_armor": 0
+      },
+      "rng_calls": 0
+    }
+  ],
+  "validation": {
+    "complete_capability_refreshes": 15,
+    "complete_negative_component_evaluations": 30,
+    "complete_conventional_component_evaluations": 30,
+    "independent_archived_output_checks_passed": true
+  }
+}

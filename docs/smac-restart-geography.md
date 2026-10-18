@@ -30,10 +30,10 @@ The new record does not add Freshwater marking, region-capacity merging, origina
 world generation or site-rating cache ownership, and does not enable restart
 search or last-Base capture yet. Those consumers remain the next integration.
 
-Validation: cached Linux Debug build and affected native integration checks;
+Validation: cached Linux Debug build and 33 affected native integration groups;
 the eleven recorded compositions compare 2,816 region labels, 1,408 stored area
 words and 2,560 coastal results. Separate tests cover 960/64 fertility totals,
 rebuild/postpass separation, V1 migration, malformed metadata, live field
 conversion and actual Start retaining a deliberately stale fertility total.
 Eleven affected production units (including the ocean-lock review fix) passed
-LLVM15 correctness analysis in 18.30s. Focused serialization sanitizers follow.
+LLVM15 correctness analysis in 18.30s.

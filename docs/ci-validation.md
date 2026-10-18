@@ -9,12 +9,20 @@ the small asset-free CTest baseline to avoid guessing which tests a change needs
 | --- | --- |
 | Ordinary PR, draft or ready | Linux Debug build and all CTests; Linux lifecycle sanitizers |
 | Ordinary `main` push or merge queue | Same Linux coverage |
-| Markdown-only or empty diff | Selection and gates report; engine and lifecycle jobs skip |
+| Markdown/reference-receipt-only or empty diff | Selection and gates report; engine and lifecycle jobs skip |
 | Platform/build/threading-sensitive changes | Linux and macOS regression/lifecycle, Windows regression |
 | PR labeled `ci:full` | Full platform coverage for an explicit integration checkpoint |
 | Manual regression/lifecycle dispatch or `stable` release push | Full platform coverage |
 
-Explicit full coverage overrides the Markdown-only skip.
+Reference receipts are limited to `docs/behavior/*-cases.json` (one directory
+level). The scope job decodes changed receipts as UTF-8 JSON and rejects invalid
+syntax/non-JSON numeric constants before choosing jobs. Deleted receipts need
+no decode. This checks syntax, not original-game correctness or native fixture
+agreement. These files are not engine runtime input; compiled fixture/test,
+projection tool, script and production changes still request their normal jobs.
+Other JSON paths retain normal coverage.
+
+Explicit full coverage overrides the documentation/reference-receipt skip.
 
 Adding or removing `ci:full` reevaluates coverage, as does a new commit. The
 selector checks the complete PR diff, including both sides of renames. Pushes

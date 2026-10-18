@@ -32,6 +32,30 @@ PLATFORM_FILES = {
 PLATFORM_MANIFESTS = {"vcpkg.json", "vcpkg-configuration.json", "conanfile.py", "conanfile.txt", "conan.lock"}
 
 
+def reference_receipt(path):
+    # These are published evidence, not engine data or compiled native fixtures.
+    return re.fullmatch(r"docs/behavior/[^/]+-cases\.json", path) is not None
+
+
+def validate_reference_receipts(paths, root=Path(__file__).resolve().parents[1]):
+    def reject_constant(value):
+        raise ValueError("Non-JSON numeric constant: " + value)
+
+    count = 0
+    for name in paths:
+        if not reference_receipt(name):
+            continue
+        path = root / name
+        if not path.exists():  # A deleted receipt needs no JSON decoding.
+            continue
+        try:
+            json.loads(path.read_text(encoding="utf-8"), parse_constant=reject_constant)
+        except (OSError, ValueError) as error:
+            raise ValueError("Invalid reference receipt " + name + ": " + str(error)) from error
+        count += 1
+    return count
+
+
 def select_scope(event_name, event, paths):
     if event_name == "workflow_dispatch" or (event_name == "push" and event["ref"] == "refs/heads/stable"):
         return True, True, event_name
@@ -42,8 +66,8 @@ def select_scope(event_name, event, paths):
             raise ValueError("Missing boolean pull-request draft state")
         if any(label["name"] == "ci:full" for label in event["pull_request"].get("labels", [])):
             return True, True, "explicit ci:full integration checkpoint"
-    if not paths or all(p.endswith(".md") for p in paths):
-        return False, False, "Documentation-only or empty change; engine and lifecycle tests not requested"
+    if not paths or all(p.endswith(".md") or reference_receipt(p) for p in paths):
+        return False, False, "Documentation/reference receipts only or empty change; engine and lifecycle tests not requested"
     sensitive = [p for p in paths if p in PLATFORM_FILES
                  or p.startswith(PLATFORM_PREFIXES) or p.endswith((".cmake", ".rc", ".ico", ".icns", ".plist", ".mm"))
                  or p.rsplit("/", 1)[-1] in PLATFORM_MANIFESTS
@@ -95,6 +119,9 @@ def main():
     event_name = os.environ["GITHUB_EVENT_NAME"]
     event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
     paths = [] if event_name == "push" and event["ref"] == "refs/heads/stable" else changed_paths(event_name, event)
+    validated = validate_reference_receipts(paths)
+    if validated:
+        print(f"Validated JSON syntax for {validated} changed reference receipts.")
     run, full, reason = select_scope(event_name, event, paths)
     unix = ["ubuntu-24.04", "macos-14"] if full else ["ubuntu-24.04"]
     lifecycle = [{"os": "ubuntu-24.04", "compiler": "g++"}]

@@ -1,0 +1,139 @@
+{
+  "research_id": "RE-SMAC-CAPTURE-PARTIAL-HURRY-MARKER-001",
+  "profile": "Stock SMAC; actual clear/set capture through native screen/outer return, supplied display-only notice and virtual show; no last-Base/recapture/alternate transfer claim",
+  "cases": [
+    {
+      "id": "capture_marker_0",
+      "inputs": {
+        "profile": "accepted_undefended_survivor_capture",
+        "old_owner": 2,
+        "new_owner": 1,
+        "current_turn": 6,
+        "preexisting_partial_marker": false,
+        "stored_minerals": 7,
+        "baseline_minerals": 7,
+        "baseline_item": "Former",
+        "current_item": "Former",
+        "additional_queue": [
+          "Scout Patrol",
+          "Former"
+        ],
+        "marker_injected_as_input_not_new_payment": true
+      },
+      "expected_after_capture": {
+        "owner": 1,
+        "partial_marker": false,
+        "status": 0,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "baseline_item": -38,
+        "current_item": 2,
+        "queue_count": 0
+      },
+      "expected_positive_choice_routes": [
+        {
+          "choice": 1,
+          "route": "continues"
+        },
+        {
+          "choice": 2,
+          "route": "continues"
+        }
+      ],
+      "expected_capture_write_order": [
+        "minerals",
+        "baseline_minerals",
+        "queue_count",
+        "baseline_item",
+        "current_item",
+        "status"
+      ],
+      "expected_after_processed_owner1_reset": {
+        "owner": 1,
+        "partial_marker": false,
+        "status": 0,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "baseline_item": -38,
+        "current_item": 2,
+        "queue_count": 0
+      },
+      "expected_owner1_reset_marker_controls": {
+        "owned_Base0": false,
+        "captured_Base1": false,
+        "foreign_Base2": true
+      },
+      "normal_native_outer_return": true
+    },
+    {
+      "id": "capture_marker_1",
+      "inputs": {
+        "profile": "accepted_undefended_survivor_capture",
+        "old_owner": 2,
+        "new_owner": 1,
+        "current_turn": 6,
+        "preexisting_partial_marker": true,
+        "stored_minerals": 7,
+        "baseline_minerals": 7,
+        "baseline_item": "Former",
+        "current_item": "Former",
+        "additional_queue": [
+          "Scout Patrol",
+          "Former"
+        ],
+        "marker_injected_as_input_not_new_payment": true
+      },
+      "expected_after_capture": {
+        "owner": 1,
+        "partial_marker": true,
+        "status": 1073741824,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "baseline_item": -38,
+        "current_item": 2,
+        "queue_count": 0
+      },
+      "expected_positive_choice_routes": [
+        {
+          "choice": 1,
+          "route": "partial_marker_blocked"
+        },
+        {
+          "choice": 2,
+          "route": "partial_marker_blocked"
+        }
+      ],
+      "expected_capture_write_order": [
+        "minerals",
+        "baseline_minerals",
+        "queue_count",
+        "baseline_item",
+        "current_item",
+        "status"
+      ],
+      "expected_after_processed_owner1_reset": {
+        "owner": 1,
+        "partial_marker": false,
+        "status": 0,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "baseline_item": -38,
+        "current_item": 2,
+        "queue_count": 0
+      },
+      "expected_owner1_reset_marker_controls": {
+        "owned_Base0": false,
+        "captured_Base1": false,
+        "foreign_Base2": true
+      },
+      "normal_native_outer_return": true
+    }
+  ],
+  "validation": {
+    "complete_capture_outer_returns": 2,
+    "positive_choice_guard_queries": 4,
+    "separate_owner_reset_compositions": 2,
+    "marker_preserved_on_capture": true,
+    "full_Hurry_dialog_or_payment_replayed": false
+  }
+}

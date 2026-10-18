@@ -14,6 +14,7 @@ return {
 		'specialist_selection',
 		'rename',
 		'queue_editor',
+		'hurry',
 	],
 
 	production_selection_no_hiding: {
@@ -22,6 +23,7 @@ return {
 		specialist_selection: true,
 		rename: true,
 		queue_editor: true,
+		hurry: true,
 	},
 
 	init: (p) => {
@@ -101,15 +103,15 @@ return {
 				}
 			});
 			body.listen(p.game, 'smac_specialist_menu', (e) => {
-				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.specialist_selection.open(e.base, e.selection); }
+				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view(); this.sections.specialist_selection.open(e.base, e.selection); }
 			});
 			body.listen(p.game, 'smac_rename_menu', (e) => {
-				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.specialist_selection.hide_view(); this.sections.queue_editor.hide_view(); this.sections.rename.open(e.base, e.selection); }
+				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.specialist_selection.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view(); this.sections.rename.open(e.base, e.selection); }
 			});
 			body.listen(p.game, 'base_despawn', (e) => {
 				if (this.base_id == e.base_id) {
 					this.sections.specialist_selection.hide_view();
-					this.sections.rename.hide_view(); this.sections.queue_editor.hide_view();
+					this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
 					if (this.is_open) { this.p.modules.popup.hide('base_screen'); }
 					this.base = null;
 					this.base_id = null;
@@ -128,6 +130,7 @@ return {
 					open_specialist_selection: parent.parent.open_specialist_selection,
 					open_rename: parent.parent.open_rename,
 					open_queue_editor: parent.parent.open_queue_editor,
+					open_hurry: parent.parent.open_hurry,
 					can_edit_queue: parent.parent.can_edit_queue,
 					can_rename: parent.parent.can_rename,
 					show_production_selection: parent.parent.show_production_selection,
@@ -160,11 +163,13 @@ return {
 		let consumption = undefined;
 		let energy = undefined;
 		let ecodamage = canonical ? 'N/A' : 0;
+        let mineral_surplus = undefined;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
 			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
+            mineral_surplus = calculation.minerals.surplus;
 			energy = base.get_smac_energy_calculation();
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
@@ -182,6 +187,7 @@ return {
 		this.sections.specialist_selection.on_base_update(base);
 		this.sections.rename.on_base_update(base);
 		this.sections.queue_editor.on_base_update(base);
+		this.sections.hurry.on_base_update(base);
 
 		if (canonical) {
 			let nutrients = base.get_smac_nutrient_presentation();
@@ -213,13 +219,7 @@ return {
 			ecodamage: ecodamage,
 		});
 
-		let facilities = [];
-		const ff = base.get_facilities();
-		for (f in ff) {
-			facilities :+ff[f].name;
-		}
-
-		this.sections.facilities.set(facilities);
+		this.sections.facilities.set({base: base, entries: base.get_facilities()});
 
 		const resource_data = {
 			nutrients: {
@@ -281,17 +281,26 @@ return {
 
 		this.sections.bottom_bar.set({
 			base: base,
+            mineral_surplus: mineral_surplus,
 		});
 	},
 
 	can_rename: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
 	can_edit_queue: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
 
+	open_hurry: () => {
+		if (!this.is_open || !this.can_edit_queue()) { return; }
+		const base = this.base; const data = base.get_smac_hurry_preview(0);
+		if (!#is_defined(data)) { return; }
+		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view(); this.sections.queue_editor.hide_view();
+		this.sections.hurry.open(base, data);
+	},
+
 	open_queue_editor: () => {
 		if (!this.is_open) { return; }
 		const base = this.base; const data = base.get_smac_queue_editor();
 		if (!#is_defined(data)) { return; }
-		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view();
+		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view(); this.sections.hurry.hide_view();
 		this.sections.queue_editor.open(base, data);
 	},
 
@@ -320,8 +329,9 @@ return {
 	},
 
 	on_hide: () => {
+		this.sections.facilities.reset();
 		this.sections.specialist_selection.hide_view();
-		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view();
+		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;

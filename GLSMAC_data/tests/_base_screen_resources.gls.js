@@ -67,7 +67,7 @@ return (game, base, ui) => {
 		screen.set({ base: base });
 		let section_count = 0;
 		for (section in screen.sections) { section_count++; }
-		check(section_count == 13, 'complete screen sections were not initialized');
+		check(section_count == 14, 'complete screen sections were not initialized');
 		if (#is_defined(expected.canonical) && expected.canonical) {
 			check(screen.sections.nutrients.growth_label.text == 'Growth unavailable', 'canonical growth forecast was invented');
 			const stored = screen.sections.nutrients.growth_cells.children;

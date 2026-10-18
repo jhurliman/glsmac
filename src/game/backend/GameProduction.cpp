@@ -100,7 +100,7 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 }
 
 bool Game::SupportsSmacFacilityProduction(int32_t source_id) noexcept {
-	return source_id==1 || source_id==3 || source_id==7 || source_id==8;
+	return source_id==1 || source_id==3 || source_id==7 || source_id==8 || source_id==24 || source_id==25;
 }
 
 bool Game::IsSmacFacilityProductionEligible(const base::Base& base,const base::ProductionItem& item,const base::FacilityDef* granted) const {
@@ -113,16 +113,18 @@ bool Game::IsSmacFacilityProductionEligible(const base::Base& base,const base::P
 		throw std::runtime_error("Facility eligibility requires the admitted no-project campaign");
 	}
 	if(!HasSmacProductionPrerequisite(base.m_owner,item)) {return false;}
+	bool hab_complex = false;
 	if(granted) {
 		if(m_bm->GetFacilityDef(granted->m_id)!=granted || !granted->m_smac_source_id || !SupportsSmacFacilityProduction(*granted->m_smac_source_id)) {throw std::runtime_error("Staged facility grant is not a supported registered definition");}
-		m_bm->ValidateSmacFacilityDef(granted);if(granted->m_smac_source_id==item.smac_source_id) {return false;}
+		m_bm->ValidateSmacFacilityDef(granted);hab_complex=granted->m_smac_source_id==24;if(granted->m_smac_source_id==item.smac_source_id) {return false;}
 	}
 	for(const auto& row:base.m_facilities) {
 		if(!row.second || m_bm->GetFacilityDef(row.first)!=row.second) {throw std::runtime_error("Facility eligibility has an invalid local definition");}
 		m_bm->ValidateSmacFacilityDef(row.second);
+		if(row.second->m_smac_source_id==24) {hab_complex=true;}
 		if(row.second->m_smac_source_id==item.smac_source_id || (item.smac_source_id==3 && row.second->m_smac_source_id==26)) {return false;}
 	}
-	return true;
+	return item.smac_source_id!=25 || hab_complex;
 }
 
 bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const {
@@ -159,11 +161,8 @@ bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::t
 	return true;
 }
 
-int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {
-	item.Validate();
-	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
-	const auto& participant = RequireSmacProductionOwner( owner );
-	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
+int32_t Game::GetSmacProductionMineralFactor(const slot::Slot* owner) const {
+	const auto& participant=RequireSmacProductionOwner(owner);
 	RequireSmacLocalHumanOwner( owner );
 	const auto* social = m_simulation->value.social.Find( participant.simulation_id );
 	if ( !social ) { throw std::runtime_error( "Production social context is unavailable" ); }
@@ -175,8 +174,18 @@ int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::Produc
 	using namespace resource::smac;
 	const auto size = selection->category == 0 ? MineralCostWorldSize::Tiny : selection->category == 1 ? MineralCostWorldSize::Small : MineralCostWorldSize::StandardOrLarger;
 	// The checked human branch does not consume leader/dominance/network values.
-	const int32_t factor = CalculateMineralCostFactor( { true, m_simulation->value.designs.global_difficulty,
+	return CalculateMineralCostFactor( { true, m_simulation->value.designs.global_difficulty,
 		false, false, false, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
+}
+
+int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {
+	item.Validate();
+	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
+	const auto& participant = RequireSmacProductionOwner( owner );
+	(void)MakeSmacProductionItem( owner, item.kind, *item.smac_source_id );
+	using namespace resource::smac;
+	const auto factor=GetSmacProductionMineralFactor(owner);
+	const auto& global=m_state->m_settings.global;
 	int32_t cached_cost;
 	if ( item.kind == base::ProductionItemKind::Unit ) {
 		const auto design = ResolveConventionalDesign( { *item.smac_source_id, participant.simulation_id, 1, 0, 0, false,

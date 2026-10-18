@@ -51,13 +51,15 @@ return {
 			right: 2,
 		});
 		this.edit_button.on('click', () => { if (this.p.utils.can_edit_queue()) { this.p.utils.open_queue_editor(); } return true; });
-		this.frame.text({class: 'base-screen-frame-text', font: 'arialnb.ttf:11', text: 'Hurry unavailable', align: 'bottom', bottom: 2, left: 2, right: 2});
+		this.hurry_button = this.frame.button({class: 'game-popup-button', text: 'Hurry unavailable', align: 'bottom', bottom: 2, left: 2, right: 2});
+		this.hurry_button.on('click', () => { if (this.p.utils.can_edit_queue()) { this.p.utils.open_hurry(); } return true; });
 
 	},
 
 	set_stored: (presentation) => {
 		const button = this.edit_button; const editable = this.p.utils.can_edit_queue();
 		button.text = editable ? 'EDIT QUEUE' : 'Queue unavailable';
+		this.hurry_button.text = editable ? 'HURRY' : 'Hurry unavailable';
 		if (!#is_defined(presentation) || !#is_defined(presentation.queue)) { this.set_unavailable(); return; }
 		this.items.clear();
 		if (#sizeof(presentation.queue) == 0) {
@@ -69,13 +71,13 @@ return {
 	},
 
 	set_unavailable: () => {
-		this.edit_button.text = 'Queue unavailable';
+		this.edit_button.text = 'Queue unavailable'; this.hurry_button.text = 'Hurry unavailable';
 		this.items.clear();
 		this.items.text({ class: 'base-screen-frame-text', text: 'Unavailable' });
 	},
 
 	set: (data) => {
-		this.edit_button.text = 'Queue unavailable';
+		this.edit_button.text = 'Queue unavailable'; this.hurry_button.text = 'Hurry unavailable';
 
 		this.items.clear();
 

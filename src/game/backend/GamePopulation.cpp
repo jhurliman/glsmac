@@ -13,7 +13,7 @@ namespace game::backend {
 base::SmacPopulationRules Game::GetCanonicalPopulationRules( const base::Base& evaluating_base ) const {
 	return CalculateCanonicalPopulationRules( evaluating_base, evaluating_base.m_pops.size() );
 }
-base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::Base& evaluating_base, size_t population ) const {
+base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::Base& evaluating_base, size_t population, const base::FacilityDef* granted ) const {
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base ) {
 		throw std::runtime_error( "Population rules require a registered Base in this world" );
 	}
@@ -64,6 +64,16 @@ base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::B
 				default: break;
 			}
 		}
+	}
+	// Completion grants precede housing evaluation, while the transaction is
+	// still private. Earlier nutrient intake remains the caller's input.
+	if(granted) {
+		if(m_bm->GetFacilityDef(granted->m_id)!=granted || !granted->m_smac_source_id || !SupportsSmacFacilityProduction(*granted->m_smac_source_id)) {
+			throw std::runtime_error("Population staged grant is not a supported registered facility");
+		}
+		m_bm->ValidateSmacFacilityDef(granted);
+		hab_complex = hab_complex || granted->m_smac_source_id==24;
+		hab_dome = hab_dome || granted->m_smac_source_id==25;
 	}
 	const int64_t growth = int64_t( social->current[ 6 ] ) + ( creche ? 2 : 0 ) + ( context.golden_age ? 2 : 0 );
 	if ( growth < INT32_MIN || growth > INT32_MAX || population < 1 || population > 127 ) {

@@ -1,0 +1,186 @@
+{
+  "research_id": "RE-SMAC-HAB-COMPLETION-GROWTH-ORDER-001",
+  "cases": [
+    {
+      "id": "Complex_completed",
+      "inputs": {
+        "item": "Hab Complex",
+        "population": 7,
+        "actual_mineral_cost": 80,
+        "stored_minerals": 80,
+        "stored_nutrients": 80,
+        "Complex_initially_present": false,
+        "worked_tiles_including_center": 8
+      },
+      "expected_population_entry": {
+        "population": 7,
+        "nutrient_box": 80,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -38
+      },
+      "expected_after_population": {
+        "population": 8,
+        "nutrient_box": 2,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -38
+      },
+      "expected_after_second_resource_pass": {
+        "population": 8,
+        "nutrient_box": 2,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -38
+      },
+      "facility_granted_before_population": true
+    },
+    {
+      "id": "Complex_not_completed",
+      "inputs": {
+        "item": "Hab Complex",
+        "population": 7,
+        "actual_mineral_cost": 80,
+        "stored_minerals": 78,
+        "stored_nutrients": 80,
+        "Complex_initially_present": false,
+        "worked_tiles_including_center": 8
+      },
+      "expected_population_entry": {
+        "population": 7,
+        "nutrient_box": 80,
+        "nutrient_surplus": 2,
+        "mineral_store": 79,
+        "mineral_surplus": 1,
+        "Complex": false,
+        "Dome": false,
+        "target": -24
+      },
+      "expected_after_population": {
+        "population": 7,
+        "nutrient_box": 42,
+        "nutrient_surplus": 2,
+        "mineral_store": 79,
+        "mineral_surplus": 1,
+        "Complex": false,
+        "Dome": false,
+        "target": -24
+      },
+      "expected_after_second_resource_pass": {
+        "population": 7,
+        "nutrient_box": 42,
+        "nutrient_surplus": 2,
+        "mineral_store": 79,
+        "mineral_surplus": 1,
+        "Complex": false,
+        "Dome": false,
+        "target": -24
+      },
+      "facility_granted_before_population": false
+    },
+    {
+      "id": "Dome_completed",
+      "inputs": {
+        "item": "Habitation Dome",
+        "population": 14,
+        "actual_mineral_cost": 160,
+        "stored_minerals": 160,
+        "stored_nutrients": 150,
+        "Complex_initially_present": true,
+        "worked_tiles_including_center": 15
+      },
+      "expected_population_entry": {
+        "population": 14,
+        "nutrient_box": 150,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": true,
+        "target": -38
+      },
+      "expected_after_population": {
+        "population": 15,
+        "nutrient_box": 2,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": true,
+        "target": -38
+      },
+      "expected_after_second_resource_pass": {
+        "population": 15,
+        "nutrient_box": 2,
+        "nutrient_surplus": 2,
+        "mineral_store": 1,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": true,
+        "target": -38
+      },
+      "facility_granted_before_population": true
+    },
+    {
+      "id": "Dome_not_completed",
+      "inputs": {
+        "item": "Habitation Dome",
+        "population": 14,
+        "actual_mineral_cost": 160,
+        "stored_minerals": 158,
+        "stored_nutrients": 150,
+        "Complex_initially_present": true,
+        "worked_tiles_including_center": 15
+      },
+      "expected_population_entry": {
+        "population": 14,
+        "nutrient_box": 150,
+        "nutrient_surplus": 2,
+        "mineral_store": 159,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -25
+      },
+      "expected_after_population": {
+        "population": 14,
+        "nutrient_box": 77,
+        "nutrient_surplus": 2,
+        "mineral_store": 159,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -25
+      },
+      "expected_after_second_resource_pass": {
+        "population": 14,
+        "nutrient_box": 77,
+        "nutrient_surplus": 2,
+        "mineral_store": 159,
+        "mineral_surplus": 1,
+        "Complex": true,
+        "Dome": false,
+        "target": -25
+      },
+      "facility_granted_before_population": false
+    }
+  ],
+  "validation": {
+    "native_Base_upkeep_caller_prefixes": 4,
+    "complete_population_steps": 4,
+    "facility_grants": 2,
+    "matched_noncompletion_controls": 2,
+    "second_resource_passes": 4,
+    "grant_or_population_results_substituted": false,
+    "complete_Base_or_faction_upkeep_return": false
+  }
+}

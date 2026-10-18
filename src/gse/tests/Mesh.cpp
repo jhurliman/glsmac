@@ -678,6 +678,8 @@ static std::string CheckDisplayPalette() {
 		std::filesystem::create_directories( data );
 		util::FinallyGuard remove_fixture( [ & ] {
 			std::filesystem::remove( data / "fixture.bmp" );
+			std::filesystem::remove( data / "interface.pcx" );
+			std::filesystem::remove( data / "after-rejection.bmp" );
 			std::filesystem::remove( data / "palette.pcx" );
 			std::filesystem::remove( data );
 			std::filesystem::remove( directory );
@@ -701,9 +703,21 @@ static std::string CheckDisplayPalette() {
 			// the common-palette fixture uses the installed asset's filename.
 			const auto path = data / ( common ? "palette.pcx" : "fixture.bmp" );
 			GT_ASSERT( SDL_SaveBMP( image, path.string().c_str() ) == 0, "could not save indexed fixture" );
+			if ( !common ) {
+				colors[ 1 ] = { 255, 0, 255, 255 };
+				GT_ASSERT( SDL_SetPaletteColors( image->format->palette, colors, 0, 256 ) == 0, "could not set rejection fixture palette" );
+				GT_ASSERT( SDL_SaveBMP( image, ( data / "interface.pcx" ).string().c_str() ) == 0 &&
+					SDL_SaveBMP( image, ( data / "after-rejection.bmp" ).string().c_str() ) == 0, "could not save rejection fixtures" );
+			}
 		}
 		WidgetGraphicsFixture graphics( directory.string() );
 		auto* loader = g_engine->GetTextureLoader();
+		bool rejected = false;
+		try { loader->LoadCustomTexture( "interface.pcx", types::texture::TF_SMAC_PALETTE ); }
+		catch ( const std::exception& ) { rejected = true; }
+		GT_ASSERT( rejected, "registered transparency source admitted the opaque palette profile" );
+		GT_ASSERT( loader->LoadCustomTexture( "after-rejection.bmp" )->GetPixel( 0, 0 ) == types::Color::RGB( 255, 0, 255 ),
+			"rejected registered load leaked transparency into the next custom texture" );
 		auto* raw = loader->LoadCustomTexture( "fixture.bmp" );
 		auto* mapped = loader->LoadCustomTexture( "fixture.bmp", types::texture::TF_SMAC_PALETTE );
 		GT_ASSERT( raw != mapped && loader->LoadCustomTexture( "fixture.bmp" ) == raw,

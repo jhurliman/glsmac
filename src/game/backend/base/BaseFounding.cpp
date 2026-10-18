@@ -152,6 +152,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     auto* base=candidate.get();
     const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
     auto& economy=m_game->m_simulation->value.economy.at(simulation_id);
+	const auto totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,simulation_id,1);
 	auto victory=m_game->m_simulation->value.victory_history;
 	if(victory) {
 		if(m_game->GetTurnId()>INT32_MAX) {THROW("Founding history turn exceeds signed32");}
@@ -161,6 +162,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     candidate.release(); base->CommitStartupPlacement(); removal.Commit();
     m_game->CommitBaseTerritory(knowledge,topology);
     economy.regional_base_counts=regional;
+	m_game->m_simulation->value.retained_base_totals=totals;
 	if(victory) {m_game->m_simulation->value.victory_history=std::move(victory);}
     removal.Notify(GSE_CALL); // retired wrappers are owned even if a hook throws
     m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});

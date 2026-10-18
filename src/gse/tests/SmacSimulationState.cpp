@@ -89,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=22,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=23,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -137,6 +137,10 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=22,bool
         suffix.WriteBool(value.retained_land_region_concentration.has_value());
         if(value.retained_land_region_concentration) {suffix.WriteBool(*value.retained_land_region_concentration);}
     }
+    if(version>=23) {
+        suffix.WriteBool(value.retained_base_totals.has_value());
+        if(value.retained_base_totals) {for(const auto total:*value.retained_base_totals) {suffix.WriteInt(total);}}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -154,6 +158,38 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC retained Base totals V23 preserve all8 signed words without a live recount",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.retained_base_totals=faction::SmacBaseTotals{{-3,111,222,333,444,555,666,777}};
+        auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"Original all8 Base totals changed on restore");
+        GT_ASSERT(!SmacSimulationState::Deserialize(CurrentWire(value,22),technologies,profiles,units).retained_base_totals,"V22 migration recounted missing history");
+        for(const auto bad:{wire.substr(0,wire.size()-1),wire+"x"}) {GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(bad,technologies,profiles,units);}),"Malformed Base-total suffix accepted");}
+        value.retained_base_totals->at(0)=INT32_MIN;value.retained_base_totals->at(7)=INT32_MAX;
+        GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,"Signed diagnostic Base totals narrowed");
+        value.retained_base_totals.reset();wire=value.Serialize(technologies,profiles,units).ToString();
+        types::Buffer absent;absent.WriteBool(false);types::Buffer overflow;overflow.WriteBool(true);overflow.WriteInt(INT64_MAX);
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-absent.ToString().size())+overflow.ToString(),technologies,profiles,units);}),"Base total outside signed32 admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC retained Base total deltas preserve native stale offsets and capture transfers",GT(){
+        for(const auto before:{1,7}) {
+            auto totals=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};totals->at(1)=before;totals->at(2)=888;
+            totals=faction::AdjustSmacBaseTotal(totals,1,1);
+            GT_ASSERT(totals->at(1)==before+1 && totals->at(2)==888,"Founding recounted a stale Base total or touched peer");
+            totals=faction::AdjustSmacBaseTotal(totals,1,-1);
+            GT_ASSERT(totals->at(1)==before,"Removal repaired a stale Base total");
+        }
+        for(const auto values:{std::array<int32_t,4>{{10,20,11,19}},std::array<int32_t,4>{{1,1,2,0}}}) {
+            auto totals=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};totals->at(1)=values[0];totals->at(2)=values[1];
+            const auto next=faction::AdjustSmacBaseTotal(faction::AdjustSmacBaseTotal(totals,2,-1),1,1);
+            GT_ASSERT(next->at(1)==values[2] && next->at(2)==values[3] && totals->at(1)==values[0],"Native capture deltas changed source or recount totals");
+        }
+        GT_ASSERT(!faction::AdjustSmacBaseTotal({},1,1),"Legacy absent Base totals were invented");
+        auto limits=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};limits->at(1)=INT32_MAX;limits->at(2)=INT32_MIN;
+        GT_ASSERT(Rejects([&]{faction::AdjustSmacBaseTotal(limits,1,1);}) && Rejects([&]{faction::AdjustSmacBaseTotal(limits,2,-1);})
+            && Rejects([&]{faction::AdjustSmacBaseTotal(limits,0,1);}),"Unsupported count overflow or slot admitted");GT_OK();
+    });
     task->AddTest("SMAC retained land concentration V22 preserves false true and unavailable history",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         for(const auto retained:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {

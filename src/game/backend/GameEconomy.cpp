@@ -259,7 +259,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	if(!GetGCSpace()->IsAccumulating() || !IsRunning() || !m_simulation->value.economy.count(owner)) {
 		throw std::runtime_error("Population refresh requires its current owning faction upkeep");
 	}
-	int64_t population=0;
+	int64_t population=0,base_total=0;
 	const auto& topology=m_map->GetTerritoryTopology();
 	auto military=m_simulation->value.regional_military;
 	const bool recount_military=military.has_value() && topology.has_value();
@@ -276,6 +276,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
 			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
 			population+=static_cast<int64_t>(base->m_pops.size());
+			if(++base_total>INT32_MAX) {throw std::overflow_error("Base total exceeds signed32");}
 			if(counts) {
 				if(!base->GetTile()) {throw std::runtime_error("Regional summary Base has no center");}
 				const auto region=GetCanonicalRegion(*base->GetTile(),*topology);++(*counts)[region];
@@ -338,6 +339,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     m_simulation->value.economy.at(owner).design_counts=design_counts;
 	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
 	m_simulation->value.economy.at(owner).regional_base_counts=counts;
+	if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=static_cast<int32_t>(base_total);}
 }
 
 void Game::SettleCanonicalEconomy( int32_t owner ) {
@@ -357,6 +359,7 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
 		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
 		saved=initialized;technology->cached_threshold.reset();
+		if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=0;}
 		if(m_simulation->value.capabilities) {m_simulation->value.capabilities->factions.at(owner-1)={};}
 		m_simulation->value.hostility.owners.swap(hostility.owners);
 		m_simulation->value.victory_history=std::move(victory);

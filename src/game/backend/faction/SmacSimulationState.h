@@ -86,6 +86,11 @@ struct SmacSatelliteCounts {
 	bool operator==( const SmacSatelliteCounts& other ) const noexcept { return resources == other.resources; }
 };
 
+using SmacBaseTotals=std::array<int32_t,8>;
+// Staged immediate action delta; no live recount. Preserve unavailable legacy
+// history. Original signed overflow outside ordinary counts is unmeasured.
+std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta);
+
 // Original retained signed words, including native slot0. Query-time pressure
 // is derived; it is not a saved latch. A history turn is not a faction birth.
 struct SmacVictoryHistory {
@@ -135,6 +140,10 @@ struct SmacSimulationState {
 	// regional flags. New-world initialization clears it; restore retains it.
 	// Absent before V22: current terrain cannot recover its saved lifetime.
 	std::optional<bool> retained_land_region_concentration;
+	// All eight native signed totals. Separate from population and byte regional
+	// counts: action deltas preserve stale offsets, summary refreshes one owner.
+	// V11-V22 migration retains absence rather than recounting current Bases.
+	std::optional<SmacBaseTotals> retained_base_totals;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

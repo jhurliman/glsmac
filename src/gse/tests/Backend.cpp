@@ -4247,6 +4247,8 @@ public:
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
 				require(m_game.m_simulation->value.victory_history && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[state.owner_simulation_id]==0,
 					"starting Base callback observed stale expansion history");
+                require(m_game.m_simulation->value.retained_base_totals && m_game.m_simulation->value.retained_base_totals->at(state.owner_simulation_id)==1,
+                    "starting Base callback observed missing or doubled total");
 				const auto& cache=base->GetSmacUpkeepCache();
 				require(cache && cache->calculation.nutrients.intake==(scenario==1 ? 4 : 2)
 					&& cache->calculation.nutrients.demand==2 && cache->calculation.nutrients.surplus==(scenario==1 ? 2 : 0)

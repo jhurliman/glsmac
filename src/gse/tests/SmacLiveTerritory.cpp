@@ -66,6 +66,47 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC live Base totals retain action offsets owner-only recount and actual Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.retained_base_totals==std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};});
+            GT_ASSERT(fresh,"Fresh world lacked all8 zero totals");Found(GSE_CALL,game,901,0,1,16,16);
+            fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=7;state.retained_base_totals->at(2)=888;});
+            Found(GSE_CALL,game,902,0,1,24,16);bool exact=false;
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==8 && state.retained_base_totals->at(2)==888;});
+            GT_ASSERT(exact,"Live founding repaired stale total7 instead of incrementing to8");game->GetBM()->DespawnBase(GSE_CALL,902);
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==7;});GT_ASSERT(exact,"Live removal did not return to stale7");
+            fixture.RefreshPopulation(1);
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==1 && state.retained_base_totals->at(2)==888;
+            });GT_ASSERT(exact,"Owner summary recounted foreign total or omitted own Base");
+            fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=7;});saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool exact=false;
+            restored.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==7 && state.retained_base_totals->at(2)==888;state.retained_base_totals.reset();});
+            GT_ASSERT(exact,"Actual Start recounted saved stale Base totals");Found(GSE_CALL,restored.Game(),903,0,1,32,16);
+            restored.ResourceState([&](auto& state){exact=!state.retained_base_totals;});GT_ASSERT(exact,"Legacy founding invented missing totals");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live owner Base totals match native0 1 5 256 counts independently of byte wrap",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            size_t made=0;
+            for(const size_t total:{0u,1u,5u,256u}) {
+                while(made<total) {Found(GSE_CALL,game,1000+made,0,1,2*(made%32),4+2*(made/32));++made;}
+                if(total==5) {Found(GSE_CALL,game,9000,1,2,50,40);}
+                fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=777;state.retained_base_totals->at(2)=888;state.economy.at(1).regional_base_counts->fill(255);});
+                fixture.RefreshPopulation(1);bool exact=false;
+                fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==static_cast<int32_t>(total) && state.retained_base_totals->at(2)==888
+                    && state.economy.at(1).regional_base_counts->at(1)==static_cast<uint8_t>(total);});
+                GT_ASSERT(exact,"Owner recount confused total with wrapping regional bytes at "+std::to_string(total));
+            }
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC land concentration matches8 native builders and6 retained area reductions",GT(){
         for(const auto& row:land_concentration_fixture::cases) {
             if(row.width) {

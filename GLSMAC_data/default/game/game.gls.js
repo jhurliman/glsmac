@@ -40,8 +40,13 @@ return (glsmac) => {
 			units.configure(game);
 			resources.configure(game);
 
-			resources.define(game);
-			units.define(game);
+            // A campaign restore owns saved definition catalogs. Configure
+            // callbacks and presentation roles, but never prepopulate managers
+            // that the authenticated snapshot transaction must fill itself.
+            if (!game.is_campaign_restore()) {
+                resources.define(game);
+                units.define(game);
+            }
 
 			const worldscript = #is_defined(glsmac.config.worldscript) ? glsmac.config.worldscript : 'default';
 			game.on('create_world', (e) => {

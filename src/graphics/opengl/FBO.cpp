@@ -255,6 +255,22 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 	}
 }
 
+void FBO::CopyToTexture( GLuint texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right ) {
+	if ( m_is_enabled || !texture || top_left.x >= bottom_right.x || top_left.y >= bottom_right.y
+		|| bottom_right.x > m_width || bottom_right.y > m_height ) {
+		THROW( "Invalid GPU cache copy bounds or target" );
+	}
+	m_opengl->WithBindFramebuffer( GL_READ_FRAMEBUFFER, m_fbo, [&] {
+		glReadBuffer( GL_COLOR_ATTACHMENT0 );
+		glActiveTexture( GL_TEXTURE0 );
+		m_opengl->WithBindTexture( texture, [&] {
+			glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, top_left.x, top_left.y,
+				bottom_right.x - top_left.x, bottom_right.y - top_left.y );
+		} );
+		glReadBuffer( GL_NONE );
+	} );
+}
+
 types::texture::Texture* FBO::CaptureToTexture() {
 	ASSERT( !m_is_enabled, "can't read fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );

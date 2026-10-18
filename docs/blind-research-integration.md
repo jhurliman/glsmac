@@ -125,6 +125,12 @@ The automatic chooser consumes the shared bounded-range stream, not the CRT stre
 
 ## Retained producer contracts
 
+The [regional land reachability implementation](regional-land-reachability.md)
+now matches the original fresh-workspace boolean graph and Base-pair controls,
+including directional diplomacy and the unowned/slot0 distinction. Its actual
+summary dispatch still requires the original workspace lifetime and complete
+regional strategy inputs; it does not replace them with a universal route.
+
 The [live regional military producer](regional-military-producer.md) now retains
 unit counts and attack sums at the post-Base owner boundary. Its V18 storage
 preserves stale peer/restore history; flags and final strategy are still needed.

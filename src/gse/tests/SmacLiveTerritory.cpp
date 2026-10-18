@@ -15,6 +15,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacTerritoryRules.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slots.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
@@ -64,6 +65,53 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC regional routing preserves native peer marks across split source components",GT(){
+        namespace routes=game::backend::map::smac_territory;
+        routes::RegionalRouteMap graph{16,12,false,std::vector<routes::RegionalRouteTile>(96,{true,-1,1}),{},0};
+        const std::array<std::array<int32_t,3>,8> land{{{{2,2,1}},{{4,2,1}},{{2,8,1}},{{4,8,1}},{{6,8,-1}},{{8,8,-1}},{{10,8,2}},{{12,8,2}}}};
+        for(const auto& point:land) {graph.tiles.at(point[1]*8+point[0]/2)={false,static_cast<int8_t>(point[2]),1};}
+        const std::vector<routes::Base> bases{{{2,2},1},{{2,8},1},{{10,8},2}};
+        GT_ASSERT(!routes::RegionalBasesReachable(graph,bases,1,2,1,0,2,1),"Native failed first source lost the peer component mark");
+        GT_ASSERT(routes::RegionalLandReachable(graph,{{2,8},{10,8},1,2,0}),"Native second source direct path was not reachable");
+        auto reordered=bases;reordered[0]=bases[1];reordered[1]=bases[0];
+        GT_ASSERT(routes::RegionalBasesReachable(graph,reordered,1,2,1,0,2,1),"Native reachable-first Base order did not change the result");GT_OK();
+    });
+
+	task->AddTest("SMAC live regional fresh routes use actual claims Base order and saved Start",GT(){
+		namespace routes=map::smac_territory;
+		const auto query=[](ConventionalUnitFixture& fixture,int mode)->bool {
+			auto* game=fixture.Game();auto* world=game->GetMap();
+			routes::RegionalRelations relations{};uint8_t humans=0,own_bases=0,peer_bases=0;
+			fixture.ResourceState([&](auto& state){
+				humans=state.human_membership;
+				for(const auto& owner:state.hostility.owners) {for(size_t target=0;target<8;++target) {relations.at(owner.first).at(target)=owner.second.directions[target].primary;}}
+				own_bases=state.economy.at(1).regional_base_counts->at(1);peer_bases=state.economy.at(2).regional_base_counts->at(1);
+			});
+			const auto graph=routes::ProjectRegionalRoutes(*world->GetSmacWorkerKnowledge(),world->TerritorySea(),
+				world->GetTerritoryTopology()->Regions(),relations,humans);
+			std::vector<routes::Base> bases;
+			for(const auto id:game->GetBM()->GetBaseRecordOrder()) {
+				const auto* base=game->GetBM()->GetBase(id);const auto* tile=base->GetTile();
+				bases.push_back({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},base->GetSmacResourceContext().owner_simulation_id});
+			}
+			return routes::RegionalBasesReachable(graph,bases,1,2,1,mode,own_bases,peer_bases);
+		};
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,64,16);
+			const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+			GT_ASSERT(query(fixture,0) && !query(fixture,1),"Actual unclaimed corridor did not distinguish regional route modes");
+			GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Fresh route query changed saved world or RNG");saved=before;GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			GT_ASSERT(query(restored,0) && !query(restored,1),"Actual Start changed retained route inputs");
+			restored.Game()->GetBM()->DespawnBase(GSE_CALL,800);
+			GT_ASSERT(!query(restored,0) && !query(restored,1),"Actual Base removal left an invented route endpoint");GT_OK();
+		});
+	});
     task->AddTest("SMAC territory summary matches 12 complete original aggregate passes",GT(){
         namespace native=map::smac_territory;
         for(const auto& row:territory_summary_fixture::Cases()) {

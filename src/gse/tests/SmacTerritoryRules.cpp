@@ -1,5 +1,6 @@
 #include "SmacTerritoryRules.h"
 #include "fixtures/SmacTerritoryRules.h"
+#include "fixtures/SmacRegionalRoutes.h"
 #include "game/backend/map/SmacWorkerKnowledge.h"
 #include "task/gsetests/GSETests.h"
 
@@ -131,6 +132,45 @@ std::string CheckTerritoryBoundaries() {
 }
 
 void AddSmacTerritoryRulesTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC regional land routes match386 native queries and66 actual Base caller projections",GT(){
+		size_t queries=0,pairs=0;
+		for(const auto& row:regional_routes_fixture::Cases()) {
+			GT_ASSERT(territory::RegionalLandReachable(row.map,row.query)==row.expected,"Native regional route differs: "+std::string(row.id));++queries;
+			if(row.base) {
+				const std::vector<territory::Base> bases{{row.query.source,row.query.owner},{row.query.target,row.query.peer}};
+				const auto region=row.map.tiles[size_t(row.query.source[1])*(row.map.width/2)+row.query.source[0]/2].region;
+				GT_ASSERT(territory::RegionalBasesReachable(row.map,bases,row.query.owner,row.query.peer,region,row.query.mode,1,1)==*row.base,
+					"Native Base caller differs: "+std::string(row.id));++pairs;
+			}
+		}
+		GT_ASSERT(queries==386 && pairs==66,"Native regional route coverage changed");GT_OK();
+	});
+	task->AddTest("SMAC regional route projection preserves unclaimed slot0 and retained Base gates",GT(){
+		for(const auto& row:regional_routes_fixture::Cases()) {
+			Knowledge::Data data{row.map.width,row.map.height,row.map.horizontal_wrap,true,0,{},{},{}};
+			data.observers[1]=Knowledge::Observer{false,{}};
+			std::vector<bool> sea;std::vector<uint8_t> regions;
+			for(const auto& tile:row.map.tiles) {
+				data.tiles.push_back({0,tile.territory<0 ? std::nullopt : std::optional<int32_t>(tile.territory)});
+				sea.push_back(tile.sea);regions.push_back(tile.region);
+			}
+			const auto knowledge=Knowledge::Create(data),before=knowledge;
+			const auto projection=territory::ProjectRegionalRoutes(knowledge,sea,regions,row.map.relations,row.map.human_membership);
+			GT_ASSERT(territory::RegionalLandReachable(projection,row.query)==row.expected && knowledge==before,
+				"Owned route projection changed territory or graph: "+std::string(row.id));
+		}
+		const auto row=regional_routes_fixture::Cases().front();
+		const std::vector<territory::Base> bases{{row.query.source,1},{row.query.target,2}};
+		GT_ASSERT(!territory::RegionalBasesReachable(row.map,bases,1,2,1,0,0,1)
+			&& !territory::RegionalBasesReachable(row.map,bases,1,2,1,0,1,0)
+			&& !territory::RegionalBasesReachable(row.map,{},1,2,1,0,1,1),"Route rebuilt retained counts or invented live Bases");
+		auto bad=row.map;bad.tiles.back().territory=8;
+		GT_ASSERT(Rejects([&]{territory::RegionalLandReachable(bad,row.query);}),"Invalid route territory admitted");
+		bad=row.map;bad.tiles.pop_back();
+		GT_ASSERT(Rejects([&]{territory::RegionalLandReachable(bad,row.query);}),"Truncated route map admitted");
+		auto query=row.query;query.source={-2,0};
+		GT_ASSERT(Rejects([&]{territory::RegionalLandReachable(row.map,query);}),"Invalid route endpoint admitted");GT_OK();
+	});
 	task->AddTest("SMAC territory matches 14 original complete land and sea maps", GT(){return CheckTerritoryOriginalMaps();});
 	task->AddTest("SMAC territory replacement preserves 12 original worker recognition frames", GT(){return CheckTerritoryWorkerFrames();});
 	task->AddTest("SMAC territory replacement owns claims and preserves all other knowledge", GT(){return CheckTerritoryOwnedReplacement();});

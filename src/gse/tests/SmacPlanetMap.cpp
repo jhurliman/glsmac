@@ -2,6 +2,9 @@
 #include "game/backend/map/SmacPlanetMap.h"
 #include "game/backend/settings/Settings.h"
 #include "fixtures/SmacRulesSource.h"
+#include "fixtures/SmacBloomTerrain.h"
+#include "game/backend/map/GlsmacResourceMapPolicy.h"
+#include "game/backend/map/tile/Tile.h"
 #include "game/backend/WorldSnapshotRules.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
@@ -28,6 +31,73 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet bloom authority preserves opaque geometry and survives saved resource policy", GT() {
+        using Policy = game::backend::map::GlsmacResourceMapPolicy;
+        using Coordinate = std::array<int32_t,2>;
+        for (const auto& row : smac_bloom_terrain_fixture::cases) {
+            auto wire = Synthetic(); Put(wire, 15 + 0xa30, 4);
+            const auto offset = [](Coordinate c) {
+                return Planet::PREFIX_BYTES + Planet::HEADER_BYTES + (size_t(c[1]) * 40 + size_t(c[0]) / 2) * Planet::RECORD_BYTES;
+            };
+            std::map<Coordinate,game::backend::base::SmacBloomTerrainCell> cells;
+            for (const auto& cell : row.cells) { cells.emplace(cell.coordinate, cell.value); }
+            for (int32_t y = 0; y < 80; ++y) { for (int32_t x = y & 1; x < 80; x += 2) {
+                const Coordinate c{x,y}; const auto at = offset(c);
+                const auto found = cells.find(c); const auto cell = found == cells.end() ? row.default_tile : found->second;
+                for (size_t byte = 0; byte < Planet::RECORD_BYTES; ++byte) { wire[at + byte] = static_cast<char>((at + byte) % 256); }
+                wire[at] = static_cast<char>((cell.altitude_class << 5) | 0x12);
+                wire[at + 4] = 0; wire[at + 5] = static_cast<char>((cell.rockiness << 6) | 0x2d);
+                wire[at + 7] = static_cast<char>(0xa0 | cell.affiliation);
+                Put(wire, at + 8, cell.items & ~(3u | 0x800000u)); Put(wire, at + 12, cell.landmarks);
+            } }
+            const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), true);
+            const auto prepared = original.WithBloomTerrain(row.changes);
+            auto expected = wire;
+            for (const auto& delta : row.changes) {
+                const auto at = offset(delta.coordinate);
+                expected[at] = static_cast<char>((delta.after.altitude_class << 5) | 0x12);
+                expected[at + 5] = static_cast<char>((delta.after.rockiness << 6) | 0x2d);
+                const auto old_items = original.OriginalPlanet()->At(delta.coordinate[0], delta.coordinate[1]).Items();
+                Put(expected, at + 8, (old_items & ~0x00288070u) | (delta.after.items & 0x00288070u));
+                Put(expected, at + 12, delta.after.landmarks);
+            }
+            GT_ASSERT(original.OriginalPlanet()->Encode() == wire && prepared.OriginalPlanet()->Encode() == expected,
+                "Bloom changed source authority, contours, region or opaque bytes: " + std::string(row.id));
+            const auto restored = Policy::Deserialize(prepared.Serialize().ToString());
+            GT_ASSERT(restored == prepared && restored.AutomaticLandResources(), "Saved bloom resource authority changed");
+            for (const auto& delta : row.changes) {
+                game::backend::map::tile::Tile tile;
+                tile.coord = {static_cast<size_t>(delta.coordinate[0]), static_cast<size_t>(delta.coordinate[1])};
+                GT_ASSERT(static_cast<int32_t>(restored.Altitude(tile)) == delta.after.altitude_class,
+                    "Reloaded resource calculation retained pre-bloom altitude");
+            }
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC Planet bloom authority rejects stale late peer and invalid deltas atomically", GT() {
+        using Policy = game::backend::map::GlsmacResourceMapPolicy;
+        using Delta = game::backend::base::SmacBloomTerrainDelta;
+        auto wire = Synthetic(); Put(wire, 15 + 0xa30, 4);
+        const auto original = Policy::InstalledPlanetV1(Planet::Decode(wire), false);
+        const Delta valid{{0,0},{0,0,0,0,0},{2,0,0x20,0,0}};
+        const auto rejects = [&](const std::vector<Delta>& changes) {
+            try { (void)original.WithBloomTerrain(changes); } catch (const std::exception&) { return true; }
+            return false;
+        };
+        auto stale = valid; stale.coordinate = {2,0}; stale.before.altitude_class = 1;
+        GT_ASSERT(rejects({valid,stale}) && original.OriginalPlanet()->Encode() == wire, "Late stale peer partly published");
+        auto bad = valid; bad.coordinate = {-1,1}; GT_ASSERT(rejects({valid,bad}), "Negative coordinate accepted");
+        bad = valid; bad.coordinate = {1,0}; GT_ASSERT(rejects({bad}), "Parity mismatch accepted");
+        GT_ASSERT(rejects({valid,valid}), "Duplicate coordinate accepted");
+        bad = valid; bad.after.items |= 1; GT_ASSERT(rejects({bad}), "Live Base presence copied into source metadata");
+        bad = valid; bad.after.altitude_class = 3; GT_ASSERT(rejects({bad}), "Unimplemented sea to land conversion accepted");
+        bad = valid; bad.after.affiliation = 1; GT_ASSERT(rejects({bad}), "Affiliation changed through terrain producer");
+        bad = valid; bad.after.rockiness = 3; GT_ASSERT(rejects({bad}), "Invalid rockiness accepted");
+        bool rejected = false;
+        try { (void)Policy::DisplayedTerrainV1().WithBloomTerrain({valid}); } catch (const std::exception&) { rejected = true; }
+        GT_ASSERT(rejected, "Generated terrain invented original class authority");
+        GT_OK();
+    });
     task->AddTest("SMAC Planet ecology header words retain independent signed32 authorities", GT() {
         for (const int32_t value : {0, 1, 2, -1, 16909060, INT32_MIN, INT32_MAX}) {
             auto wire = Synthetic();

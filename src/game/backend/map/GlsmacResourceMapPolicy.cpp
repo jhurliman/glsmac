@@ -29,6 +29,11 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::InstalledPlanetV1( SmacPlanetMa
 	return result;
 }
 
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const std::vector<base::SmacBloomTerrainDelta>& changes) const {
+    if (!m_planet) { throw std::runtime_error("Bloom terrain requires original Planet resource authority"); }
+    return InstalledPlanetV1(m_planet->WithBloomTerrain(changes), m_automatic_land_resources);
+}
+
 bool GlsmacResourceMapPolicy::operator==( const GlsmacResourceMapPolicy& other ) const {
 	return m_automatic_land_resources==other.m_automatic_land_resources && (m_planet==other.m_planet
 		|| (m_planet && other.m_planet && m_planet->Encode()==other.m_planet->Encode()));

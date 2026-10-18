@@ -50,7 +50,7 @@ GlsmacTerritoryTopology Map::PrepareSiteRatings(const GlsmacTerritoryTopology& t
 			static_cast<uint8_t>(square->is_water_tile ? 0 : square->rockiness-tile::ROCKINESS_FLAT),topology.Regions()[at],
 			feature(tile::FEATURE_XENOFUNGUS),feature(tile::FEATURE_MONOLITH),bool(square->terraforming&tile::TERRAFORMING_FOREST),
 			feature(tile::FEATURE_RIVER),topology.SiteRatings()->Excluded(point),markers[at],
-			m_resource_policy->Bonus(*square)!=resource::smac::ResourceBonus::None,feature(tile::FEATURE_UNITY_POD),bool(topology.Postpass()->coastal[at]),
+			m_resource_policy->Bonus(*square)!=resource::smac::ResourceBonus::None,m_resource_policy->SiteSignal(*square)!=0,bool(topology.Postpass()->coastal[at]),
 			feature(tile::FEATURE_VOLCANO),feature(tile::FEATURE_GARLAND_CRATER),feature(tile::FEATURE_URANIUM),feature(tile::FEATURE_JUNGLE),
 			topology.LandmarkDetails() ? topology.LandmarkDetails()->at(at) : uint8_t(0)};
 		return *resolved[at];

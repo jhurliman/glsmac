@@ -1,6 +1,7 @@
 #include "SmacResourceBonus.h"
 
 #include "fixtures/SmacResourceBonus.h"
+#include "fixtures/SmacSiteSignal.h"
 #include "task/gsetests/GSETests.h"
 
 #include <limits>
@@ -10,6 +11,23 @@ namespace gse::tests {
 
 void AddSmacResourceBonusTests( task::gsetests::GSETests* task ) {
 	using namespace game::backend::resource::smac;
+    task->AddTest("SMAC resolved site signals match 36 complete original query controls",GT(){
+        for(const auto& test:smac_site_signal_fixture::cases) {
+            GT_ASSERT(ResolveSiteSignal(test.input)==test.expected,"Original site signal differs: "+std::string(test.name));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC site signal rejects invalid map coordinates and altitude",GT(){
+        for(const auto point:std::array<std::array<int32_t,2>,5>{{{-2,0},{0,-2},{1,0},{512,0},{0,256}}}) {
+            bool rejected=false;try {ResolveSiteSignal({point[0],point[1],AltitudeBand::Land3,0,false,1,11,61});}
+            catch(const std::invalid_argument&) {rejected=true;}
+            GT_ASSERT(rejected,"Invalid site coordinate accepted");
+        }
+        bool rejected=false;try {ResolveSiteSignal({0,0,static_cast<AltitudeBand>(8),0,false,1,11,61});}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Invalid site altitude accepted");GT_OK();
+    });
+
 	for ( const auto& test : smac_resource_fixture::cases ) {
 		task->AddTest( std::string( "SMAC " ) + test.id + ": " + test.name, GT( test ) {
 			GT_ASSERT( ResolveResourceBonus( test.inputs ) == test.expected, "original-x86 checked resource expectation changed" );

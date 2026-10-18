@@ -13,6 +13,9 @@ It reads the committed upkeep resource pass. An ordinary technology award does
 not force a new damage calculation. Accumulation checks signed32 bounds before
 publishing. Worlds lacking the ecology calculation authorities retain their
 historical words rather than inventing newly calculated zeroes.
+This includes admitted source presets of doubled width4 or6: their aliased
+radius is outside current ecology calculation coverage, so a real Base turn
+continues without clearing history or requiring a nonexistent damage value.
 
 The live two-Base/two-faction test suspends twice at real research questions.
 It checks contribution ordering, preservation of peer words, clearing an empty
@@ -22,7 +25,7 @@ fresh calculation would give1; another posts20 per Base, totaling40. Saves at
 the research pauses serialize successfully. Existing continuation and history
 tests cover restore; this new fixture does not itself resume those saved files.
 
-Validation: cached incremental build;33 focused native groups and three GSE
+Validation: cached incremental build;34 focused native groups and three GSE
 inspector scripts pass. Targeted LLVM correctness analysis passes the changed
 production translation unit, `GameCanonicalTurn.cpp`.
 

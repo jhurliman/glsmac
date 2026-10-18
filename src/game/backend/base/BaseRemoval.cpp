@@ -129,7 +129,7 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
     state.roster[plan.participant].active=plan.site!=nullptr;
-    if(!plan.site) {state.human_defeat_request=owner;}
+    if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}
 }
 
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,

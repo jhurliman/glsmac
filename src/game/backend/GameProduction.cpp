@@ -17,7 +17,7 @@ namespace game::backend {
 
 void Game::RequireSmacLocalHumanOwner( const slot::Slot* owner ) const {
 	const auto& participant = RequireSmacProductionOwner( owner );
-	if ( !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
+	if ( !m_simulation->value.IsHuman(participant.simulation_id) || !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
 		|| ( participant.role != roster::Role::Single && participant.role != roster::Role::Player ) ) {
 		throw std::runtime_error( "Canonical calculation requires the explicit local human-controlled roster" );
 	}

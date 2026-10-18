@@ -304,6 +304,36 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live human membership survives Start without transport or inactive-owner inference",[](GSE*,context::Context*)->std::string {
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(const uint8_t membership:{2,6}) {
+            std::string saved;ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);fixture.BasePresentationRoles(names);
+            const auto source=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);game->AdvanceTurn(1);
+                for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
+                fixture.ResourceState([&](auto& state){
+                    if(state.human_membership!=6) {throw std::runtime_error("new-world accepted human controllers were not bound explicitly");}
+                    state.human_membership=membership;state.roster[1].active=membership==2;
+                });
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));saved=fixture.Snapshot();GT_OK();
+            });if(!source.empty()) {return "human membership source: "+source;}
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(TanksSource,true);restored.BasePresentationRoles(names);
+            restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+            const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=restored.Game();for(const size_t slot:{0u,6u}) {game->GetState()->m_slots->GetSlot(slot).GetPlayer()->SetDifficultyLevel("Librarian");}
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+                bool exact=false;restored.ResourceState([&](auto& state){exact=state.human_membership==membership && state.roster[1].active==(membership==2)
+                    && state.roster[1].role==roster::Role::Player && !state.human_defeat_request;});
+                GT_ASSERT(exact,"Start inferred human membership or a loss from transport/activity");
+                const auto before=restored.Snapshot();const auto random=restored.GameplayRandom();
+                (void)game->GetCanonicalEconomy(&game->GetState()->m_slots->GetSlot(0));
+                GT_ASSERT(Rejects([&]{game->GetCanonicalEconomy(&game->GetState()->m_slots->GetSlot(6));})
+                    && restored.Snapshot()==before && restored.GameplayRandom()==random,"nonhuman/inactive owner was treated as active human or query mutated state");
+                GT_OK();
+            });if(!result.empty()) {return "human membership restore: "+result;}
+        }GT_OK();
+    });
+
     task->AddTest("SMAC live ranking uses saved caches before owner summary and preserves them through actual Start",[](GSE*,context::Context*)->std::string {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         std::string saved;

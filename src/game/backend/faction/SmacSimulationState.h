@@ -80,6 +80,10 @@ struct SmacSimulationState {
 	// Original human-loss ending request, distinct from local focus, inactive
 	// roster status and a conquest victory. Absence is not inferred from Bases.
 	std::optional<int32_t> human_defeat_request;
+    // Accepted human controllers, independent of active membership, focus and
+    // Single/Host/Player transport roles. Elimination/restart preserves this.
+    uint8_t human_membership = 0;
+    bool IsHuman(int32_t owner) const noexcept {return owner>=1 && owner<=7 && (human_membership & (1u<<owner));}
     // Absent before the first real update and on migrated port campaigns.
     // Retained through capture/elimination; never reconstructed on restore.
     std::optional<SmacRankOrder> rank_order;

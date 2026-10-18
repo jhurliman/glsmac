@@ -134,6 +134,21 @@ class ScopeTests(unittest.TestCase):
                             fields = dict(line.split("=", 1) for line in output.read_text().splitlines())
                             self.assertEqual((fields["run"], fields["full"]), expected)
 
+    def test_movie_probe_dependency_scope(self):
+        event = {"pull_request": {"draft": False}}
+        for path in ("src/task/intro/Movie.cpp", "src/task/intro/Movie.h", "cmake/Movies.cmake",
+                     "cmake/PortableMovieFFmpeg.cmake", "tools/tests/portable_movie/CMakeLists.txt",
+                     "tools/tests/movie_playback_probe.cpp", "tools/tests/test_movie_io_cancel.py",
+                     ".github/workflows/regression.yml", "CMakeLists.txt"):
+            self.assertTrue(policy.select_movie_probes("pull_request", event, [path]), path)
+        for path in ("src/game/backend/base/SmacEcology.cpp", "src/gse/tests/SmacEcology.cpp",
+                     "GLSMAC_data/default/game/base.gls.js", "src/audio/sdl/SDL.cpp", "README.md"):
+            self.assertFalse(policy.select_movie_probes("pull_request", event, [path]), path)
+        self.assertTrue(policy.select_movie_probes("workflow_dispatch", {}, []))
+        self.assertTrue(policy.select_movie_probes("push", {"ref": "refs/heads/stable"}, []))
+        event["pull_request"]["labels"] = [{"name": "ci:full"}]
+        self.assertTrue(policy.select_movie_probes("pull_request", event, []))
+
     def test_malformed_event_cannot_select_reduced_coverage(self):
         for event, data in (("schedule", {}), ("pull_request", {}),
                             ("pull_request", {"pull_request": {"draft": "true"}})):

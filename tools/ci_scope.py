@@ -79,6 +79,19 @@ def select_scope(event_name, event, paths):
     return True, False, "Linux coverage; platform suites not requested for this change"
 
 
+def select_movie_probes(event_name, event, paths):
+    """Standalone probes compile Movie.cpp and the portable FFmpeg recipe only."""
+    if event_name == "workflow_dispatch" or (event_name == "push" and event.get("ref") == "refs/heads/stable"):
+        return True
+    if event_name == "pull_request" and any(label["name"] == "ci:full" for label in event["pull_request"].get("labels", [])):
+        return True
+    return any(path.startswith(("src/task/intro/", "cmake/", "tools/tests/portable_movie/", ".github/"))
+               or path in {"CMakeLists.txt", "CMakePresets.json", "tools/ci_scope.py", "tools/tests/test_ci_scope.py",
+                           "tools/tests/movie_playback_probe.cpp", "tools/tests/test_movie_io_cancel.py",
+                           "tools/install_ffmpeg_windows.ps1"}
+               for path in paths)
+
+
 def validate_lifecycle(run, full, scope, lifecycle):
     if run not in ("true", "false") or full not in ("true", "false") or scope != "success":
         raise ValueError("CI scope selection did not succeed")
@@ -132,6 +145,7 @@ def main():
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
         output.write("run=" + str(run).lower() + "\n")
         output.write("full=" + str(full).lower() + "\n")
+        output.write("movies=" + str(run and select_movie_probes(event_name, event, paths)).lower() + "\n")
         output.write("unix=" + json.dumps(unix) + "\n")
         output.write("lifecycle=" + json.dumps({"include": lifecycle}) + "\n")
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:

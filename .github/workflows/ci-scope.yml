@@ -7,6 +7,8 @@ on:
         value: ${{ jobs.scope.outputs.run }}
       full:
         value: ${{ jobs.scope.outputs.full }}
+      movies:
+        value: ${{ jobs.scope.outputs.movies }}
       unix:
         value: ${{ jobs.scope.outputs.unix }}
       lifecycle:
@@ -21,6 +23,7 @@ jobs:
     outputs:
       run: ${{ steps.select.outputs.run }}
       full: ${{ steps.select.outputs.full }}
+      movies: ${{ steps.select.outputs.movies }}
       unix: ${{ steps.select.outputs.unix }}
       lifecycle: ${{ steps.select.outputs.lifecycle }}
     steps:

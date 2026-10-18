@@ -1,0 +1,914 @@
+{
+  "research_id": "RE-SMAC-PERIHELION-SCHEDULE-001",
+  "status": "original-x86 checked",
+  "scope": "Complete event routine and calendar helper with supplied announcement presentation and target draw99 to end later random selection; actual full center yields and original final ecology scaling from explicit resolved burden, no upstream ecology prefix. Not full-turn or live-game observation.",
+  "ecology_inputs": {
+    "post_human_burden": 1,
+    "technology_score": 125,
+    "future_technology_counter": 0,
+    "planet": 0,
+    "native_life": 0,
+    "human_difficulty": 0,
+    "voice_of_planet_exists": false
+  },
+  "cases": [
+    {
+      "id": "PERI-001",
+      "input": {
+        "start_year": 2100,
+        "turn": 89,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1174,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-002",
+      "input": {
+        "start_year": 2100,
+        "turn": 90,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-003",
+      "input": {
+        "start_year": 2100,
+        "turn": 91,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1200,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-004",
+      "input": {
+        "start_year": 2100,
+        "turn": 109,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1434,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-005",
+      "input": {
+        "start_year": 2100,
+        "turn": 110,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [
+            "perihelion_ends"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-006",
+      "input": {
+        "start_year": 2100,
+        "turn": 111,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1460,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-007",
+      "input": {
+        "start_year": 2100,
+        "turn": 170,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-008",
+      "input": {
+        "start_year": 2100,
+        "turn": 190,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [
+            "perihelion_ends"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-009",
+      "input": {
+        "start_year": 2100,
+        "turn": 90,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": true,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-010",
+      "input": {
+        "start_year": 2100,
+        "turn": 110,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": true,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [
+            "perihelion_ends"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-011",
+      "input": {
+        "start_year": 2100,
+        "turn": 90,
+        "active": false,
+        "maintenance": false,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-012",
+      "input": {
+        "start_year": 2100,
+        "turn": 110,
+        "active": true,
+        "maintenance": false,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-013",
+      "input": {
+        "start_year": 2140,
+        "turn": 50,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 667,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-014",
+      "input": {
+        "start_year": 2139,
+        "turn": 51,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-015",
+      "input": {
+        "start_year": 2160,
+        "turn": 50,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [
+            "perihelion_ends"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-016",
+      "input": {
+        "start_year": 2100,
+        "turn": 90,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 2,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        },
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-017",
+      "input": {
+        "start_year": 2100,
+        "turn": 110,
+        "active": true,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 2,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [
+            "perihelion_ends"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        },
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1447,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "PERI-018",
+      "input": {
+        "start_year": 2100,
+        "turn": 90,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [
+          "bumper_crop"
+        ],
+        "local_timer": 1,
+        "dust": 1,
+        "solar_phase": 1
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "dust_ends",
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 2,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            3
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-019",
+      "input": {
+        "start_year": 2000,
+        "turn": 110,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": true,
+          "announcements": [
+            "perihelion_starts"
+          ],
+          "target_draws": [],
+          "seed_assignment": null,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 3
+        }
+      ]
+    },
+    {
+      "id": "PERI-020",
+      "input": {
+        "start_year": 2100,
+        "turn": 110,
+        "active": false,
+        "maintenance": true,
+        "random_events_disabled": false,
+        "steps": 1,
+        "existing_events": [],
+        "local_timer": 0,
+        "dust": 0,
+        "solar_phase": 0
+      },
+      "expected_steps": [
+        {
+          "active": false,
+          "announcements": [],
+          "target_draws": [
+            [
+              0,
+              100
+            ]
+          ],
+          "seed_assignment": 1447,
+          "local_events": [],
+          "local_timer": 0,
+          "dust": 0,
+          "solar_phase": 0,
+          "unrelated_state_preserved": true,
+          "center_ordinary": [
+            2,
+            1,
+            1
+          ],
+          "center_upkeep": [
+            2,
+            1,
+            1
+          ],
+          "eco_damage": 1
+        }
+      ]
+    }
+  ]
+}

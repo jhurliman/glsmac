@@ -11,6 +11,8 @@
 #include "base/Base.h"
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
+#include "map/Map.h"
+#include "map/SmacPlanetMap.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 
@@ -132,6 +134,13 @@ void Game::PrepareNewSimulation() {
 	// GLSMAC policy, not an original startup seed reconstruction. Each word
 	// is sampled exactly once, in this order, without constructing/seeding JSF.
 	// A second-sample failure publishes neither word nor the staged simulation.
+	std::optional<faction::SmacEcologyWorld> ecology_world;
+	if(m_map && m_map->GetResourcePolicy()) {
+		if(const auto* planet=m_map->GetResourcePolicy()->OriginalPlanet()) {
+			ecology_world=faction::SmacEcologyWorld{planet->NativeLifeCategory(),planet->CloudCoverCategory(),planet->CumulativeSeaLevelOffset()};
+			ecology_world->Validate();
+		}
+	}
 	const auto shared = m_gameplay_entropy_word_source();
 	const auto crt = m_gameplay_entropy_word_source();
 	// Explicit GLSMAC supported campaign: project effects are not activated.
@@ -149,11 +158,17 @@ void Game::PrepareNewSimulation() {
 	// lifecycle. Do not derive the retained status from the generated map here.
 	value.retained_land_region_concentration=false;
 	value.retained_base_totals=faction::SmacBaseTotals{};
+	value.regional_strategy=m_smac_cross_world_strategy;
+	value.ranking_scores=m_smac_cross_world_scores;
+	value.ecology_history=m_smac_cross_world_ecology;
+	value.ecology_world=ecology_world;
+	value.perihelion=false; // accepted fresh-world reset, never replayed on restore
 	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
 	for(int32_t owner=0;owner<=7;++owner) {value.victory_history->Initialize(owner,0);}
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
+		if(value.ecology_history) {value.ecology_history->Initialize(participant.simulation_id,0);}
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );
@@ -222,6 +237,17 @@ std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer&
 	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
 	value.social.ValidateTurn( turn );
 	return BindSimulation( std::move( value ) );
+}
+
+std::optional<bool> Game::PrepareSmacPerihelionForTurn(const size_t turn) const {
+	if(m_state->m_settings.global.GetRulesetId()!="smac") {return {};}
+	ValidateCurrentSimulation();
+	const auto active=m_simulation->value.perihelion;
+	if(!active) {return {};}
+	// Ordinary campaigns currently use the same2100 origin as the turn event.
+	// Scenarios/custom calendars require their own admitted saved authority.
+	if(turn>static_cast<size_t>(INT32_MAX-2100)) {throw std::overflow_error("Ordinary mission year exceeds signed32");}
+	return faction::AdvanceSmacPerihelion(*active,static_cast<int32_t>(turn),2100+static_cast<int32_t>(turn),true).active;
 }
 
 void Game::RefreshSimulationForTurn( const size_t turn ) {

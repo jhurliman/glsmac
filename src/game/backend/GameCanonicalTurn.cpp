@@ -122,7 +122,7 @@ bool Game::HandleCanonicalStartupTurnEvent(GSE_CALLABLE,const std::string& name,
 	return true;
 }
 
-std::optional<faction::SmacRankOrder> Game::PrepareCanonicalRankOrder() const {
+std::optional<Game::CanonicalRanking> Game::PrepareCanonicalRankOrder() const {
     const auto& simulation=m_simulation->value;
     if(simulation.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
         throw std::runtime_error("Ordinary ranking requires the admitted no-project campaign");
@@ -141,7 +141,11 @@ std::optional<faction::SmacRankOrder> Game::PrepareCanonicalRankOrder() const {
             *economy.design_counts,*settings.GetSmacTechnologyRules(),settings.GetSmacPredefinedUnitRules()->catalog,simulation.designs);
         active|=static_cast<uint8_t>(1u<<owner.simulation_id);
     }
-    return faction::SmacRankOrder::Update(scores,active);
+    auto retained=simulation.ranking_scores;
+    // Full rank selection consumes every positive score slot, including inactive
+    // zero-score slots. Dominance later reads this same retained table.
+    if(retained) {for(size_t i=1;i<retained->size();++i) {retained->at(i)=-1;}}
+    return CanonicalRanking{faction::SmacRankOrder::Update(scores,active),retained};
 }
 
 void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
@@ -173,11 +177,16 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
 	try {
         const auto rank_order=PrepareCanonicalRankOrder();
+        const auto perihelion=PrepareSmacPerihelionForTurn(turn_id);
 		RefreshSimulationForTurn(turn_id);
-        if(rank_order) {m_simulation->value.rank_order=rank_order;}
+        if(rank_order) {
+            m_simulation->value.ranking_scores=rank_order->scores;
+            m_simulation->value.rank_order=rank_order->order;
+        }
 		// Rules such as the post-first-turn mineral deficit branch must observe
 		// the incoming turn. UI notification remains after successful upkeep.
 		m_current_turn.AdvanceTurn(turn_id);
+		m_simulation->value.perihelion=perihelion;
 		m_is_turn_complete=false;
 		m_canonical_continuation=std::move(continuation);
 		for (const auto& entry:m_um->GetUnits()) {

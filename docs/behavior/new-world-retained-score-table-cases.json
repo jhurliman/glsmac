@@ -1,0 +1,55 @@
+{
+  "research_id": "RE-SMAC-NEW-WORLD-SCORE-TABLE-001",
+  "inputs": {
+    "previous_turn": 17,
+    "human_mask": 2,
+    "score_words_slots0_to7": [
+      17,
+      31,
+      47,
+      61,
+      79,
+      97,
+      113,
+      127
+    ]
+  },
+  "expected_before_first_child": {
+    "current_turn": 0,
+    "first_child_owner": 1,
+    "score_words_slots0_to7": [
+      17,
+      31,
+      47,
+      61,
+      79,
+      97,
+      113,
+      127
+    ],
+    "score_table_writes": 0
+  },
+  "expected_after_resumed_fresh_child_prefix": {
+    "owner": 1,
+    "score_words_slots0_to7": [
+      17,
+      31,
+      47,
+      61,
+      79,
+      97,
+      113,
+      127
+    ],
+    "score_table_writes": 0
+  },
+  "validation": {
+    "whole_world_prefix_controls": 1,
+    "resumed_fresh_child_prefixes": 1,
+    "score_words_watched": 8,
+    "score_bytes_watched": 32,
+    "complete_parent_or_child_return": false,
+    "score_provider_invoked": false,
+    "frontend_replayed": false
+  }
+}

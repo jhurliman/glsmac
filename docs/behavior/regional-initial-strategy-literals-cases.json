@@ -1,0 +1,1130 @@
+{
+  "research_id": "RE-SMAC-REGIONAL-INITIAL-LITERALS-001",
+  "field_definitions": {
+    "C": "regional owned Base count, native nonnegative byte-derived input",
+    "N": "retained signed faction Base total",
+    "G": "owned suitable uint16 count",
+    "F": "covered suitable uint16 count",
+    "Z": "neutral suitable uint16 count",
+    "R": "site rating byte",
+    "Explore": "signed stored Explore priority",
+    "Build": "signed stored Build priority",
+    "H": "completed peer-scan present-positive-faction count, including self when present",
+    "worldTiles": "signed world tile-count scalar",
+    "turn": "signed elapsed turn",
+    "dominance": "resolved native dominance result0/1 at fragment boundary",
+    "state_bit256": "retained secondary-state bit256 represented0/1",
+    "regional_flag8": "retained regional flag8 represented0/1"
+  },
+  "entry_scopes": {
+    "complete_owner_summary_initial_store": "Original complete owner summary; inputs captured after preceding producer work, expected initial value captured immediately after store and before peer/sea overrides. Native dominance inactive by turn1 admission.",
+    "post_dominance_Q_and_initial_store": "Original native fragment entered after dominance helper returns; completed-peer H and dominance supplied explicitly as primitive inputs. Executes Q, pressure branches and initial store; no full producer, route, dominance-helper or later override claim."
+  },
+  "cases": [
+    {
+      "id": "reused_good4_rating2_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 8,
+        "pressure_register": 0
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "good4_rating2",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_good4_farmed1_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 1,
+        "Z": 0,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 7,
+        "pressure_register": 1
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "good4_farmed1",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_good4_rating1_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 0,
+        "Z": 0,
+        "R": 1,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 7,
+        "pressure_register": 1
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "good4_rating1",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_retained_flag8_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 1
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 7,
+        "pressure_register": 8
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "retained_flag8",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_two_owned_base_records_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 2,
+        "N": 2,
+        "G": 0,
+        "F": 0,
+        "Z": 0,
+        "R": 1,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 7,
+        "pressure_register": 1
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "two_owned_base_records",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_pact_stale_base_presence_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 2,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 4,
+        "initial_strategy": 7,
+        "pressure_register": 1
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "pact_stale_base_presence",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "reused_pact_regional_units_no_base_region1",
+      "entry_scope": "complete_owner_summary_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 1,
+        "G": 4,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 1024,
+        "turn": 1,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "retained_presence_bytes_owners1_to7": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 8,
+        "pressure_register": 0
+      },
+      "provenance": {
+        "native_report": "regional-research-summary-development-20261018.json",
+        "case": "pact_regional_units_no_base",
+        "region": 1,
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_first_comparison_equal",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "first_comparison_equal",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_first_comparison_strict",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 19,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "first_comparison_strict",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_retained_bit256_set",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 19,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 1,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 3,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "retained_bit256_set",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_N_five",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 5,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 6,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "N_five",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_world_tiles_3201",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3201,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 6,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "world_tiles_3201",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_turn_76",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 76,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 6,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "turn_76",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_dominance_one",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 1,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 6,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "dominance_one",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_presence_H_two",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 2,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 6,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "presence_H_two",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_Explore_one",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 1,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "Explore_one",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_Build_one",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 1,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "Build_one",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_signed_Build_six",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 6,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "signed_Build_six",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_signed_Explore_negative",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": -6,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "signed_Explore_negative",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_second_comparison_equal",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 16,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": {
+          "quotient": 8,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "second_comparison_equal",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_ceil_C_three",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 15,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 7,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "ceil_C_three",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_ceil_C_two",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 2,
+        "N": 4,
+        "G": 15,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": {
+          "quotient": 15,
+          "denominator": 1
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "ceil_C_two",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_ceil_C_four",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 4,
+        "N": 4,
+        "G": 15,
+        "F": 0,
+        "Z": 0,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 7,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "ceil_C_four",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_R_three",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 19,
+        "R": 3,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": 5,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "R_three",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_R_four",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 10,
+        "F": 0,
+        "Z": 19,
+        "R": 4,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 4,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "R_four",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_G_minus_F_four",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 4,
+        "G": 4,
+        "F": 0,
+        "Z": 1000,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "G_minus_F_four",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_G_minus_F_three",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 1,
+        "N": 4,
+        "G": 4,
+        "F": 1,
+        "Z": 1000,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "G_minus_F_three",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_negative_G_minus_F_division",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": 4,
+        "G": 0,
+        "F": 5,
+        "Z": 0,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": {
+          "quotient": -2,
+          "denominator": 2
+        }
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "negative_G_minus_F_division",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_C_nineteen",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 19,
+        "N": 4,
+        "G": 1000,
+        "F": 0,
+        "Z": 10000,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "C_nineteen",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_C_twenty",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 20,
+        "N": 4,
+        "G": 1000,
+        "F": 0,
+        "Z": 10000,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 7,
+        "pressure_register": 1,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "C_twenty",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_empty_C_bypasses_pressure",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 0,
+        "N": 4,
+        "G": 0,
+        "F": 5,
+        "Z": 20,
+        "R": 1,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 1
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "empty_C_bypasses_pressure",
+        "outputs_copied_from_native_observations": true
+      }
+    },
+    {
+      "id": "fragment_signed_N_negative",
+      "entry_scope": "post_dominance_Q_and_initial_store",
+      "inputs": {
+        "C": 3,
+        "N": -1,
+        "G": 10,
+        "F": 0,
+        "Z": 20,
+        "R": 2,
+        "Explore": 0,
+        "Build": 0,
+        "H": 1,
+        "worldTiles": 3200,
+        "turn": 75,
+        "dominance": 0,
+        "state_bit256": 0,
+        "regional_flag8": 0
+      },
+      "expected": {
+        "Q": 5,
+        "initial_strategy": 8,
+        "pressure_register": 0,
+        "division": null
+      },
+      "provenance": {
+        "native_report": "regional-initial-strategy-literals-development-20261018.json",
+        "case": "signed_N_negative",
+        "outputs_copied_from_native_observations": true
+      }
+    }
+  ],
+  "validation": {
+    "reused_complete_summary_rows": 7,
+    "reused_validated_pressure_comparisons_in_parent": 1736,
+    "new_native_fragment_controls": 25,
+    "total_literal_rows": 32,
+    "expectations_recomputed_with_model": false,
+    "broad_matrices_rerun": false,
+    "negative_priority_and_N_inputs_are_diagnostic": true,
+    "negative_G_minus_F_initial_result_already_forced_by_shortcut": true,
+    "division_null_means_branch_not_executed": true
+  }
+}

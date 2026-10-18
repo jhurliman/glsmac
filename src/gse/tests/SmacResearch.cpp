@@ -6,6 +6,7 @@
 #include "fixtures/SmacResearch.h"
 #include "fixtures/SmacDominance.h"
 #include "fixtures/SmacRegionalStrategy.h"
+#include "fixtures/SmacRegionalInitial.h"
 #include "game/backend/map/SmacTerritoryRules.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
 #include "task/gsetests/GSETests.h"
@@ -42,6 +43,14 @@ std::string ResearchRates() {
 }
 }
 void AddSmacResearchTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC regional initial strategy matches32 literal native threshold stores",GT(){
+        using namespace game::backend::faction;
+        for(const auto& row:regional_initial_fixture::Cases()) {
+            std::array<SmacRegionalStrategyRegion,128> regions{};regions[1]=row.region;
+            const auto actual=RefreshSmacRegionalStrategy(row.context,regions,{},[](int32_t,uint8_t,int32_t)->bool {throw std::runtime_error("Initial pressure case unexpectedly routed");});
+            GT_ASSERT(actual[1]==row.expected,"Native threshold store differs: "+std::string(row.id));
+        }GT_OK();
+    });
     task->AddTest("SMAC regional strategy matches33 native policy controls with exact route dispatch",GT(){
         using namespace game::backend::faction;
         for(const auto& row:regional_strategy_fixture::Cases()) {
@@ -138,7 +147,7 @@ void AddSmacResearchTests(task::gsetests::GSETests* task) {
 		GT_ASSERT(!legacy.GetSmacCouncilRules(),"V17 restore invented proposal prerequisites");
 		GlobalSettings minimal;minimal.SelectRuleset("smac");minimal.InitializeHostRules(smac_rules_fixture::Source);smac_rules_fixture::AcceptWorldSize(minimal);
 		auto wire=minimal.Serialize();wire.ReadInt();types::Buffer prefix;prefix.WriteInt(18);types::Buffer marker;marker.WriteBool(false);
-		const auto v18=prefix.ToString()+wire.ToString().substr(wire.lenr,wire.lenw-wire.lenr-marker.ToString().size());
+		const auto v18=prefix.ToString()+wire.ToString().substr(wire.lenr,wire.lenw-wire.lenr-2*marker.ToString().size());
 		GlobalSettings migrated;migrated.Deserialize(types::Buffer(v18));GT_ASSERT(!migrated.GetSmacCouncilRules(),"V18 restore invented current installed requirements");
 		GT_OK();
 	});
@@ -150,6 +159,16 @@ void AddSmacResearchTests(task::gsetests::GSETests* task) {
         const f::SmacDominanceQuery query{7,rank.Leader(),6,3,0,9999,0,0};
         GT_ASSERT(rank.Leader()==0 && !f::SmacLeadingHumanDominance(context,query,requirements,smac_rules_fixture::Technologies()),
             "A valid retained inactive rank gap aborted dominance instead of returning false");GT_OK();
+    });
+    task->AddTest("SMAC dominance accepts six native consumed-score sentinel comparisons",GT(){
+        namespace f=game::backend::faction;using Ref=game::backend::settings::SmacTechnologyReference;
+        const f::SmacVictoryRequirements requirements{{Ref::Kind::UNKNOWN,{}},-1,-1};
+        f::SmacVictoryContext context;context.turn=251;context.humans=2;
+        const auto catalog=smac_rules_fixture::Technologies();
+        for(const uint32_t rules:{2u,0u,0x40u}) {for(const int32_t runner:{-1,0}) {
+            context.rules=rules;const f::SmacDominanceQuery query{1,1,6,2,0,9999,-1,runner};
+            GT_ASSERT(f::SmacLeadingHumanDominance(context,query,requirements,catalog)==(runner==-1),"Consumed native score sign was rejected or converted to zero");
+        }}GT_OK();
     });
 	task->AddTest("SMAC dominance uses wide score comparisons and rejects unmeasured vote overflow",GT(){
 		namespace f=game::backend::faction;using Ref=game::backend::settings::SmacTechnologyReference;

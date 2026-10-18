@@ -1,0 +1,177 @@
+{
+  "research_id": "RE-SMAC-DOMINANCE-SLOT0-SCORE-001",
+  "provider_profile": {
+    "Base_records": 6,
+    "all_Base_owners": 1,
+    "all_Base_populations": 1,
+    "retained_population": 6,
+    "retained_future_counter": 0,
+    "technology_ownership_empty": true,
+    "all_cached_Unit_counts": 0,
+    "all_project_markers": -1,
+    "turn": 251,
+    "leader_difficulty": 2,
+    "leader_retained_Base_total": 6,
+    "no_future_economic_deadline": true
+  },
+  "cases": [
+    {
+      "id": "ordinary_provider_slot0_0",
+      "inputs": {
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "human_mask": 2,
+        "leader": 1,
+        "runner_up": 0,
+        "slot0_before": 0,
+        "slot0_zero_case_uses_untouched_PE_mapping": true
+      },
+      "expected": {
+        "slot0_after_provider": 0,
+        "leader_score_after_provider": 24,
+        "slot0_provider_writes": 0,
+        "caller_runner_score_read": 0,
+        "dominance": true
+      }
+    },
+    {
+      "id": "ordinary_provider_slot0_16",
+      "inputs": {
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "human_mask": 2,
+        "leader": 1,
+        "runner_up": 0,
+        "slot0_before": 16,
+        "slot0_zero_case_uses_untouched_PE_mapping": false
+      },
+      "expected": {
+        "slot0_after_provider": 16,
+        "leader_score_after_provider": 24,
+        "slot0_provider_writes": 0,
+        "caller_runner_score_read": 16,
+        "dominance": true
+      }
+    },
+    {
+      "id": "ordinary_provider_slot0_17",
+      "inputs": {
+        "scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "active_mask": 2,
+        "human_mask": 2,
+        "leader": 1,
+        "runner_up": 0,
+        "slot0_before": 17,
+        "slot0_zero_case_uses_untouched_PE_mapping": false
+      },
+      "expected": {
+        "slot0_after_provider": 17,
+        "leader_score_after_provider": 24,
+        "slot0_provider_writes": 0,
+        "caller_runner_score_read": 17,
+        "dominance": false
+      }
+    },
+    {
+      "id": "caller_objectives_1000_9999",
+      "inputs": {
+        "provider_scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "caller_scenario_parameters": [
+          1000,
+          9999,
+          0
+        ],
+        "Conquest_enabled": false,
+        "retained_leader_score": 24,
+        "retained_runner_slot0_score": 13,
+        "score_not_recomputed_after_parameter_change": true
+      },
+      "expected": {
+        "dominance": true,
+        "caller_runner_score_read": 13
+      }
+    },
+    {
+      "id": "caller_objectives_1001_9999",
+      "inputs": {
+        "provider_scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "caller_scenario_parameters": [
+          1001,
+          9999,
+          0
+        ],
+        "Conquest_enabled": false,
+        "retained_leader_score": 24,
+        "retained_runner_slot0_score": 13,
+        "score_not_recomputed_after_parameter_change": true
+      },
+      "expected": {
+        "dominance": false,
+        "caller_runner_score_read": 13
+      }
+    },
+    {
+      "id": "caller_objectives_9999_1000",
+      "inputs": {
+        "provider_scenario_parameters": [
+          9999,
+          9999,
+          0
+        ],
+        "caller_scenario_parameters": [
+          9999,
+          1000,
+          0
+        ],
+        "Conquest_enabled": false,
+        "retained_leader_score": 24,
+        "retained_runner_slot0_score": 13,
+        "score_not_recomputed_after_parameter_change": true
+      },
+      "expected": {
+        "dominance": false,
+        "caller_runner_score_read": 13
+      }
+    }
+  ],
+  "new_world_prefix": {
+    "inputs": {
+      "previous_score0": 17,
+      "entry": "whole_new_world_through_first_faction_initializer_entry"
+    },
+    "expected_score0": 17
+  },
+  "scenario_tuple_fields": [
+    "Objectives Required for Victory",
+    "Objectives for Sudden Death Victory",
+    "Points for each Objective Achieved"
+  ],
+  "validation": {
+    "native_provider_caller_contexts": 6,
+    "poisoned_new_world_prefixes": 1,
+    "slot0_activity_zeroing_inferred": false,
+    "untouched_pinned_PE_slot0": 0,
+    "ranking_reference1_0_reused": true,
+    "broad_grids_rerun": false
+  }
+}

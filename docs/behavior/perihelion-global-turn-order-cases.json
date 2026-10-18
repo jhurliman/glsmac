@@ -1,0 +1,121 @@
+{
+  "research_id": "RE-SMAC-PERIHELION-TURN-BOUNDARY-001",
+  "inputs": {
+    "previous_turn": 89,
+    "calendar_start": 2100,
+    "previous_year": 2189,
+    "perihelion_before": false,
+    "existing_Bumper_Crop_timer": 1,
+    "new_random_events_disabled": true,
+    "human_and_active_owner": 1
+  },
+  "observations": [
+    {
+      "stage": "controller_entry",
+      "turn": 89,
+      "stored_year": 2189,
+      "perihelion": false,
+      "resource_event_timer": 1,
+      "bumper_crop": true,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "global_advance_entry",
+      "turn": 89,
+      "stored_year": 2189,
+      "perihelion": false,
+      "resource_event_timer": 1,
+      "bumper_crop": true,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "after_turn_increment",
+      "turn": 90,
+      "stored_year": 2189,
+      "perihelion": false,
+      "resource_event_timer": 1,
+      "bumper_crop": true,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "event_maintenance_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": false,
+      "resource_event_timer": 1,
+      "bumper_crop": true,
+      "current_Base": 0,
+      "argument": 0
+    },
+    {
+      "stage": "event_maintenance_return",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "owner_upkeep_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": 1
+    },
+    {
+      "stage": "Base_upkeep_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": 0
+    },
+    {
+      "stage": "mineral_ecology_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "mineral_ecology_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": null
+    },
+    {
+      "stage": "Base_research_entry",
+      "turn": 90,
+      "stored_year": 2190,
+      "perihelion": true,
+      "resource_event_timer": 0,
+      "bumper_crop": false,
+      "current_Base": 0,
+      "argument": null
+    }
+  ],
+  "expected_start_announcements": 1,
+  "validation": {
+    "native_controller_boundary_paths": 1,
+    "complete_mineral_ecology_bodies": 2,
+    "stops_before_Base_research_body": true,
+    "all_factions_replayed": false
+  }
+}

@@ -95,6 +95,7 @@ inline types::Buffer Header( const std::string& id = "smac", const bool present 
         result.WriteInt(game::backend::settings::MapSettings::MT_RANDOM);
         result.WriteBool(false); // legacy port options, matching this fixture's session
     }
+    if(version>=34) {result.WriteBool(false);}
 	return result;
 }
 

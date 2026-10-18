@@ -6,6 +6,8 @@
 #include "SmacRankOrder.h"
 #include "SmacHostileState.h"
 #include "SmacRegionalMilitaryState.h"
+#include "SmacRegionalStrategy.h"
+#include "SmacEcologyWorld.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -104,6 +106,19 @@ struct SmacVictoryHistory {
 	}
 };
 
+// Native retained signed words, including unoccupied slots and slot0. H is
+// event history, not a count of currently installed ecological facilities.
+struct SmacEcologyHistory {
+    std::array<int32_t,8> clean_minerals{}, major_atrocities{}, research_aggregate{};
+    // Fresh owner initialization clears H/atrocities only. A nonzero-turn
+    // restart preserves all three arrays; aggregate has a later owner-pass reset.
+    void Initialize(int32_t owner,int32_t turn);
+    bool operator==(const SmacEcologyHistory& other) const noexcept {
+        return clean_minerals==other.clean_minerals && major_atrocities==other.major_atrocities
+            && research_aggregate==other.research_aggregate;
+    }
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -144,6 +159,20 @@ struct SmacSimulationState {
 	// counts: action deltas preserve stale offsets, summary refreshes one owner.
 	// V11-V22 migration retains absence rather than recounting current Bases.
 	std::optional<SmacBaseTotals> retained_base_totals;
+	// Retained native bytes, including slot0 and every region0. Cold new port
+	// worlds start0; owner summaries replace only that owner's regions1..127.
+	// Nonzero faction initialization preserves them. V11-V23 remain absent.
+	std::optional<std::array<SmacRegionalStrategyRow,8>> regional_strategy;
+	// Global score provider writes positive slots; slot0 retains its prior word.
+	// Dominance reads this table at retained rank IDs, not fresh per-owner scores.
+	std::optional<std::array<int32_t,8>> ranking_scores;
+	// V11-V24 did not retain these words. Loading preserves absence and never
+	// rebuilds H from facilities, atrocity history or aggregate from current Bases.
+	std::optional<SmacEcologyHistory> ecology_history;
+	// V11-V25 did not retain these inputs. World metadata and the campaign's
+	// active perihelion bit have independent authorities and lifetimes.
+	std::optional<SmacEcologyWorld> ecology_world;
+	std::optional<bool> perihelion;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

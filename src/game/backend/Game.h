@@ -640,6 +640,13 @@ private:
 	// The checked initializer resets primary/history rows but preserves secondary
 	// rows. Fresh engine storage is zero; retiring a world retains its latest rows.
 	std::array<std::array<uint32_t,8>,8> m_smac_secondary_relations{};
+	// Cold executable storage starts0. Whole-world/faction initialization does
+	// not clear these retained rows; ordinary restore supplies its saved words.
+	std::optional<std::array<faction::SmacRegionalStrategyRow,8>> m_smac_cross_world_strategy{std::in_place};
+	std::optional<std::array<int32_t,8>> m_smac_cross_world_scores{std::in_place};
+	// Explicit cold-engine zero storage; later world preparation retains these
+	// words until actual per-owner initialization. An absent old save stays absent.
+	std::optional<faction::SmacEcologyHistory> m_smac_cross_world_ecology{std::in_place};
 	// Injectable word source for the GLSMAC new-world policy; never used by restore.
 	std::function< uint32_t() > m_gameplay_entropy_word_source;
 	BoundSimulation BindSimulation( faction::SmacSimulationState value ) const;
@@ -653,6 +660,7 @@ private:
 	void WriteSimulationState( types::Buffer& buffer ) const;
 	std::optional< BoundSimulation > ReadSimulationState( types::Buffer& buffer, size_t turn ) const;
 	void RefreshSimulationForTurn( size_t turn );
+	std::optional<bool> PrepareSmacPerihelionForTurn( size_t turn ) const;
 	void RequireConventionalStartupClaim() const;
 	unit::ConventionalUnitState PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const;
 	unit::ConventionalUnitContext ResolveConventionalIdentity( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
@@ -687,6 +695,8 @@ private:
 	void CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
 	base::ProductionItem SelectSmacFoundingProduction( const slot::Slot* owner, const map::tile::Tile* tile ) const;
 	faction::SmacEconomyState PrepareSmacNonzeroInitialization( int32_t owner ) const;
+	std::optional<faction::SmacRegionalStrategyRow> PrepareCanonicalRegionalStrategy(int32_t owner,const faction::SmacSimulationState& candidate);
+	bool PrepareCanonicalLeadingHumanDominance(const faction::SmacSimulationState& candidate) const;
 	bool IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const;
 	bool HandleConventionalWorkEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	std::optional<map::SmacWorkerKnowledge> PrepareConventionalWorkMemory( const unit::Unit& unit, uint16_t terraforming ) const;
@@ -808,7 +818,8 @@ private:
 	std::vector<std::string> PostCanonicalBaseMaintenance( const base::Base& base, const base::SmacBaseEnergyCalculation& energy );
 	void SettleCanonicalEconomy( int32_t simulation_id );
 	void RefreshCanonicalPopulationAggregate( int32_t simulation_id );
-    std::optional<faction::SmacRankOrder> PrepareCanonicalRankOrder() const;
+    struct CanonicalRanking {faction::SmacRankOrder order;std::optional<std::array<int32_t,8>> scores;};
+    std::optional<CanonicalRanking> PrepareCanonicalRankOrder() const;
 	uint8_t GetCanonicalRegion( const map::tile::Tile& tile, const map::GlsmacTerritoryTopology& topology ) const;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> PrepareCanonicalRegionalBaseDelta(
 		const base::Base& base, int delta, const std::optional<map::GlsmacTerritoryTopology>& topology ) const;

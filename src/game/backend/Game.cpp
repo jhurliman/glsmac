@@ -1572,8 +1572,10 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	if (m_map && m_map->m_worker_knowledge) { THROW("Canonical turn advancement requires its native event dispatcher"); }
 	// Stage the first-command social refresh before publishing the new turn or
 	// invoking any upkeep consumer. A malformed context leaves both unchanged.
+	const auto perihelion=PrepareSmacPerihelionForTurn(turn_id);
 	RefreshSimulationForTurn( turn_id );
 	m_current_turn.AdvanceTurn( turn_id );
+	if(m_simulation) {m_simulation->value.perihelion=perihelion;}
 	m_is_turn_complete = false;
 	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
 
@@ -3196,6 +3198,11 @@ void Game::ResetGame() {
 		if(m_simulation) {for(const auto& owner:m_simulation->value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {m_smac_secondary_relations.at(owner.first)[i]=owner.second.directions[i].secondary;}
 		}}
+		if(m_simulation) {
+			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
+			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
+			m_smac_cross_world_ecology=m_simulation->value.ecology_history;
+		}
 		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();

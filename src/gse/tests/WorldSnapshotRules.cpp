@@ -221,6 +221,7 @@ void AddWorldSnapshotRulesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(wire.ReadBool()==smac,"combat presence changed");
 			if(smac) {GT_ASSERT(wire.ReadString()==settings.GetSmacCombatRules()->Serialize().ToString(),"combat profile changed");}
 			GT_ASSERT(wire.ReadInt()==settings.map.type && !wire.ReadBool(),"legacy port provenance or absent campaign authority changed");
+			GT_ASSERT(!wire.ReadBool(),"legacy port acquired ecology authority");
 			GT_ASSERT( wire.lenr == wire.lenw, "unexpected fields in written header" );
 			const auto header_size = snapshot.lenw;
 			const std::string body( "\0arbitrary world body\xff", 22 );

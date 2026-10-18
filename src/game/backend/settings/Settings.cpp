@@ -148,6 +148,7 @@ void GlobalSettings::SelectRuleset( const std::string& id ) {
 	m_smac_production_rules.reset();
 	m_smac_technology_rules.reset();
 	m_smac_council_rules.reset();
+	m_smac_ecology_rules.reset();
 	m_smac_world_size_rules.reset();
 	m_smac_faction_startup_rules.reset();
 	m_smac_predefined_unit_rules.reset();
@@ -166,6 +167,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	std::optional< SmacProductionRules > production;
 	std::optional< SmacTechnologyRules > technologies;
 	std::optional< SmacCouncilRules > council;
+	std::optional< SmacEcologyRules > ecology;
 	std::optional< SmacWorldSizeRules > world_sizes;
 	std::optional< SmacFactionStartupRules > factions;
 	std::optional< SmacPredefinedUnitRules > units;
@@ -184,6 +186,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 		production = loader::txt::SmacRulesTXTLoader::ParseProductionRules( source );
 		technologies = loader::txt::SmacRulesTXTLoader::ParseTechnologyRules( source );
 		council=SmacCouncilRules::Read(source,*technologies);
+		ecology=SmacEcologyRules::Read(source);
 		parsed = loader::txt::SmacRulesTXTLoader::ParseResourceRules( source, *technologies );
 		world_sizes = loader::txt::SmacRulesTXTLoader::ParseWorldSizeRules( source );
 		factions = loader::txt::FactionTXTLoader::ParseStartupRules( source, read_source, *technologies );
@@ -202,6 +205,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	staged.m_smac_production_rules = std::move( production );
 	staged.m_smac_technology_rules = std::move( technologies );
 	staged.m_smac_council_rules=std::move(council);
+	staged.m_smac_ecology_rules=std::move(ecology);
 	staged.m_smac_world_size_rules = std::move( world_sizes );
 	staged.m_smac_faction_startup_rules = std::move( factions );
 	staged.m_smac_predefined_unit_rules = std::move( units );
@@ -215,6 +219,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 	m_smac_production_rules = std::move( staged.m_smac_production_rules );
 	m_smac_technology_rules = std::move( staged.m_smac_technology_rules );
 	m_smac_council_rules=std::move(staged.m_smac_council_rules);
+	m_smac_ecology_rules=std::move(staged.m_smac_ecology_rules);
 	m_smac_world_size_rules = std::move( staged.m_smac_world_size_rules );
 	m_smac_faction_startup_rules = std::move( staged.m_smac_faction_startup_rules );
 	m_smac_predefined_unit_rules = std::move( staged.m_smac_predefined_unit_rules );
@@ -346,6 +351,7 @@ void GlobalSettings::ResetRuleset() {
 	m_smac_production_rules.reset();
 	m_smac_technology_rules.reset();
 	m_smac_council_rules.reset();
+	m_smac_ecology_rules.reset();
 	m_smac_world_size_rules.reset();
 	m_smac_faction_startup_rules.reset();
 	m_smac_predefined_unit_rules.reset();
@@ -415,7 +421,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_territory_rules.has_value() ) { THROW( "Gameplay ruleset and territory profile do not match" ); }
 	if ( ( m_ruleset == RULESET_SMAC ) != m_smac_terraforming_rules.has_value() ) { THROW( "Gameplay ruleset and terraforming profile do not match" ); }
 	ValidateWorldSize( false );
-	buf.WriteInt( 19 );
+	buf.WriteInt( 20 );
 	buf.WriteString( GetRulesetId() );
 	buf.WriteBool( m_smac_resource_rules.has_value() );
 	if ( m_smac_resource_rules ) {
@@ -452,6 +458,11 @@ const types::Buffer GlobalSettings::Serialize() const {
 		if(m_ruleset!=RULESET_SMAC || !m_smac_technology_rules) {THROW("Non-SMAC proposal profile");}
 		buf.WriteString(m_smac_council_rules->Serialize(*m_smac_technology_rules).ToString());
 	}
+	buf.WriteBool(m_smac_ecology_rules.has_value());
+	if(m_smac_ecology_rules) {
+		if(m_ruleset!=RULESET_SMAC) {THROW("Non-SMAC ecology profile");}
+		buf.WriteString(m_smac_ecology_rules->Serialize().ToString());
+	}
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
 
 	return buf;
@@ -460,7 +471,7 @@ const types::Buffer GlobalSettings::Serialize() const {
 void GlobalSettings::Deserialize( types::Buffer buf ) {
 	if ( buf.lenw > network::Network::MAX_PACKET_BYTES ) { THROW( "Global settings exceed the network packet budget" ); }
 	const auto version=buf.ReadInt();
-	if(version!=17 && version!=18 && version!=19) {THROW("Unsupported global settings format");}
+	if(version!=17 && version!=18 && version!=19 && version!=20) {THROW("Unsupported global settings format");}
 	const auto ruleset = ParseRuleset( buf.ReadString() );
 	const auto has_smac_rules = buf.ReadBool();
 	if ( ( ruleset == RULESET_SMAC ) != has_smac_rules ) {
@@ -564,6 +575,13 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	}
 	if(m_ruleset_locked && (council.has_value()!=m_smac_council_rules.has_value()
 		|| (council && !(*council==*m_smac_council_rules)))) {THROW("Host changed frozen proposal requirements");}
+	std::optional<SmacEcologyRules> ecology;
+	if(version>=20 && buf.ReadBool()) {
+		if(ruleset!=RULESET_SMAC) {THROW("Non-SMAC ecology profile");}
+		ecology=SmacEcologyRules::Deserialize(types::Buffer(buf.ReadString(SmacEcologyRules::MAX_WIRE_BYTES)));
+	}
+	if(m_ruleset_locked && (ecology.has_value()!=m_smac_ecology_rules.has_value()
+		|| (ecology && !(*ecology==*m_smac_ecology_rules)))) {THROW("Host changed frozen ecology profile");}
 	if ( buf.lenr != buf.lenw ) {
 		THROW( "Unexpected fields in global settings" );
 	}
@@ -579,6 +597,7 @@ void GlobalSettings::Deserialize( types::Buffer buf ) {
 	m_smac_production_rules = std::move( production );
 	m_smac_technology_rules = std::move( technologies );
 	m_smac_council_rules=std::move(council);
+	m_smac_ecology_rules=std::move(ecology);
 	m_smac_world_size_rules = std::move( world_sizes );
 	m_smac_faction_startup_rules = std::move( factions );
 	m_smac_predefined_unit_rules = std::move( units );

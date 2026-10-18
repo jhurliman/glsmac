@@ -211,7 +211,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 23;
+constexpr int64_t VERSION = 26;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -361,6 +361,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 		throw std::runtime_error( "Unknown SMAC supported-campaign movement capability" );
 	}
 	resource_modifiers.Validate();
+	if(ecology_world) {ecology_world->Validate();}
 	if(strategy) {
 		if(strategy->size()!=roster.size()) {throw std::runtime_error("Incomplete SMAC faction strategy");}
 		for(const auto& participant:roster) {
@@ -419,7 +420,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals && regional_strategy==other.regional_strategy && ranking_scores==other.ranking_scores && ecology_history==other.ecology_history && ecology_world==other.ecology_world && perihelion==other.perihelion; }
 
 std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta) {
 	if(owner<1 || owner>7 || (delta!=1 && delta!=-1)) {throw std::invalid_argument("Base total delta requires positive owner and unit delta");}
@@ -429,6 +430,11 @@ std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> 
 		saved->at(owner)=static_cast<int32_t>(value);
 	}
 	return saved;
+}
+
+void SmacEcologyHistory::Initialize(int32_t owner,int32_t turn) {
+    if(owner<0 || owner>7 || turn<0) {throw std::invalid_argument("Invalid ecology history initialization owner or turn");}
+    if(turn==0) {clean_minerals[owner]=0;major_atrocities[owner]=0;}
 }
 
 void SmacVictoryHistory::RecordBaseExpansion(int32_t owner,int32_t turn) {
@@ -518,6 +524,23 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	if(retained_land_region_concentration) {buffer.WriteBool(*retained_land_region_concentration);}
 	buffer.WriteBool(retained_base_totals.has_value());
 	if(retained_base_totals) {for(const auto total:*retained_base_totals) {buffer.WriteInt(total);}}
+	buffer.WriteBool(regional_strategy.has_value());
+	if(regional_strategy) {
+		std::string packed;packed.reserve(8*128);
+		for(const auto& row:*regional_strategy) {for(const auto code:row) {packed+=static_cast<char>(code);}}
+		buffer.WriteString(packed);
+	}
+	buffer.WriteBool(ranking_scores.has_value());
+	if(ranking_scores) {for(const auto score:*ranking_scores) {buffer.WriteInt(score);}}
+	buffer.WriteBool(ecology_history.has_value());
+	if(ecology_history) {
+		for(const auto* words:{&ecology_history->clean_minerals,&ecology_history->major_atrocities,&ecology_history->research_aggregate}) {
+			for(const auto word:*words) {buffer.WriteInt(word);}
+		}
+	}
+	buffer.WriteBool(ecology_world.has_value());
+	if(ecology_world) {buffer.WriteInt(ecology_world->native_life);buffer.WriteInt(ecology_world->cloud_cover);buffer.WriteInt(ecology_world->sea_level_offset);}
+	buffer.WriteBool(perihelion.has_value());if(perihelion) {buffer.WriteBool(*perihelion);}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -529,7 +552,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -624,6 +647,28 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		if(version>=22 && buffer.ReadBool()) {result.retained_land_region_concentration=buffer.ReadBool();}
 		if(version>=23 && buffer.ReadBool()) {
 			result.retained_base_totals.emplace();for(auto& total:*result.retained_base_totals) {total=ReadInt32(buffer);}
+		}
+		if(version>=24 && buffer.ReadBool()) {
+			const auto packed=buffer.ReadString(8*128);
+			if(packed.size()!=8*128) {throw std::runtime_error("Regional strategy requires8 complete128-byte rows");}
+			result.regional_strategy.emplace();size_t index=0;
+			for(auto& row:*result.regional_strategy) {for(auto& code:row) {code=static_cast<uint8_t>(packed[index++]);}}
+		}
+		if(version>=24 && buffer.ReadBool()) {
+			result.ranking_scores.emplace();for(auto& score:*result.ranking_scores) {score=ReadInt32(buffer);}
+		}
+		if(version>=25 && buffer.ReadBool()) {
+			result.ecology_history.emplace();
+			for(auto* words:{&result.ecology_history->clean_minerals,&result.ecology_history->major_atrocities,&result.ecology_history->research_aggregate}) {
+				for(auto& word:*words) {word=ReadInt32(buffer);}
+			}
+		}
+		if(version>=26) {
+			if(buffer.ReadBool()) {
+				const auto life=ReadInt32(buffer);const auto clouds=ReadInt32(buffer);const auto sea=ReadInt32(buffer);
+				result.ecology_world=SmacEcologyWorld{life,clouds,sea};
+			}
+			if(buffer.ReadBool()) {result.perihelion=buffer.ReadBool();}
 		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

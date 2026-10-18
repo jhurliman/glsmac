@@ -1,0 +1,218 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-INPUT-LIFETIMES-001",
+  "profile": "Pinned stock SMAC; poisoned native initializer prefixes, complete blank-map helper, ordinary file bodies and explicitly admitted writer fragments",
+  "initialization": [
+    {
+      "inputs": {
+        "current_turn": 0,
+        "owner": 1,
+        "entry": "higher_newgame",
+        "previous_clean_history": 777,
+        "previous_major_atrocities": 777,
+        "previous_aggregate": 777
+      },
+      "expected": {
+        "clean_history": 0,
+        "major_atrocities": 0,
+        "ecology_aggregate": 777
+      }
+    },
+    {
+      "inputs": {
+        "current_turn": 0,
+        "owner": 2,
+        "entry": "same_faction_initializer",
+        "previous_clean_history": 777,
+        "previous_major_atrocities": 777,
+        "previous_aggregate": 777
+      },
+      "expected": {
+        "clean_history": 0,
+        "major_atrocities": 0,
+        "ecology_aggregate": 777
+      }
+    },
+    {
+      "inputs": {
+        "current_turn": 1,
+        "owner": 1,
+        "entry": "direct_nonzero_faction_initializer",
+        "previous_clean_history": 777,
+        "previous_major_atrocities": 777,
+        "previous_aggregate": 777
+      },
+      "expected": {
+        "clean_history": 777,
+        "major_atrocities": 777,
+        "ecology_aggregate": 777
+      }
+    },
+    {
+      "inputs": {
+        "current_turn": 1,
+        "owner": 2,
+        "entry": "direct_nonzero_faction_initializer",
+        "previous_clean_history": 777,
+        "previous_major_atrocities": 777,
+        "previous_aggregate": 777
+      },
+      "expected": {
+        "clean_history": 777,
+        "major_atrocities": 777,
+        "ecology_aggregate": 777
+      }
+    }
+  ],
+  "blank_map_reset": {
+    "before": 777,
+    "after": 0,
+    "complete_native_helper": true
+  },
+  "ordinary_storage": {
+    "inputs": {
+      "map_width": 16,
+      "map_height": 8,
+      "Base_records": 0,
+      "Unit_records": 0,
+      "values": {
+        "clean_history": [
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "major_atrocities": [
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27
+        ],
+        "ecology_aggregate": [
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37
+        ],
+        "sea_level_offset": 12
+      },
+      "all_fields_poisoned_before_load": true
+    },
+    "expected": {
+      "clean_history": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "major_atrocities": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "ecology_aggregate": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37
+      ],
+      "sea_level_offset": 12
+    },
+    "restored_words": 25
+  },
+  "writer_controls": [
+    {
+      "id": "major_atrocity_increment_0",
+      "inputs": {
+        "owner": 1,
+        "previous": 0,
+        "entry": "admitted native major-atrocity increment"
+      },
+      "expected": {
+        "value": 1
+      }
+    },
+    {
+      "id": "major_atrocity_increment_7",
+      "inputs": {
+        "owner": 1,
+        "previous": 7,
+        "entry": "admitted native major-atrocity increment"
+      },
+      "expected": {
+        "value": 8
+      }
+    },
+    {
+      "id": "sea_step_-2",
+      "inputs": {
+        "previous_offset": 12,
+        "pending_change": -2,
+        "accumulator": 0,
+        "increment": 1,
+        "threshold": 1,
+        "stop_before_terrain_recalculation": true
+      },
+      "expected": {
+        "offset": 11,
+        "pending_change": -1
+      }
+    },
+    {
+      "id": "sea_step_2",
+      "inputs": {
+        "previous_offset": 12,
+        "pending_change": 2,
+        "accumulator": 0,
+        "increment": 1,
+        "threshold": 1,
+        "stop_before_terrain_recalculation": true
+      },
+      "expected": {
+        "offset": 13,
+        "pending_change": 1
+      }
+    }
+  ],
+  "reused_aggregate": {
+    "complete_two_Base_contexts": 10,
+    "research_before_contribution": true,
+    "contribution_before_CRT_draw": true,
+    "draws_per_Base_including_damage0": 1,
+    "stream": "existing CRT",
+    "summary_preserves_completed_aggregate": true,
+    "next_pass_clears_owner_only": true
+  },
+  "validation": {
+    "new_initializer_prefixes": 4,
+    "complete_map_reset_controls": 1,
+    "ordinary_file_round_trips": 1,
+    "admitted_writer_controls": 4,
+    "complete_climate_or_bloom_audit": false,
+    "new_gameplay_rule_implementation": false
+  }
+}

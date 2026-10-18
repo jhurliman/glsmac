@@ -1,0 +1,85 @@
+{
+  "research_id": "RE-SMAC-NEW-WORLD-ECOLOGY-WORDS-001",
+  "inputs": {
+    "previous_turn": 17,
+    "human_mask": 2,
+    "ecology_words_slots0_to7": {
+      "clean_mineral_history": [
+        101,
+        108,
+        115,
+        122,
+        129,
+        136,
+        143,
+        150
+      ],
+      "major_atrocities": [
+        202,
+        209,
+        216,
+        223,
+        230,
+        237,
+        244,
+        251
+      ],
+      "retained_research_ecology_aggregate": [
+        303,
+        310,
+        317,
+        324,
+        331,
+        338,
+        345,
+        352
+      ]
+    }
+  },
+  "expected_before_first_faction_initializer": {
+    "current_turn": 0,
+    "first_child_owner": 1,
+    "ecology_words_slots0_to7": {
+      "clean_mineral_history": [
+        101,
+        108,
+        115,
+        122,
+        129,
+        136,
+        143,
+        150
+      ],
+      "major_atrocities": [
+        202,
+        209,
+        216,
+        223,
+        230,
+        237,
+        244,
+        251
+      ],
+      "retained_research_ecology_aggregate": [
+        303,
+        310,
+        317,
+        324,
+        331,
+        338,
+        345,
+        352
+      ]
+    },
+    "writes": []
+  },
+  "validation": {
+    "native_parent_prefixes": 1,
+    "watched_words": 24,
+    "watched_bytes": 96,
+    "observed_writes": 0,
+    "child_instructions_executed": 0,
+    "complete_parent_return": false,
+    "two_game_frontend_replayed": false
+  }
+}

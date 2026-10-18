@@ -89,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=23,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=26,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -141,6 +141,30 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=23,bool
         suffix.WriteBool(value.retained_base_totals.has_value());
         if(value.retained_base_totals) {for(const auto total:*value.retained_base_totals) {suffix.WriteInt(total);}}
     }
+    if(version>=24) {
+        suffix.WriteBool(value.regional_strategy.has_value());
+        if(value.regional_strategy) {
+            std::string packed;for(const auto& row:*value.regional_strategy) {for(const auto code:row) {packed.push_back(static_cast<char>(code));}}
+            suffix.WriteString(packed);
+        }
+    }
+    if(version>=24) {
+        suffix.WriteBool(value.ranking_scores.has_value());
+        if(value.ranking_scores) {for(const auto score:*value.ranking_scores) {suffix.WriteInt(score);}}
+    }
+    if(version>=25) {
+        suffix.WriteBool(value.ecology_history.has_value());
+        if(value.ecology_history) {
+            for(const auto* words:{&value.ecology_history->clean_minerals,&value.ecology_history->major_atrocities,&value.ecology_history->research_aggregate}) {
+                for(const auto word:*words) {suffix.WriteInt(word);}
+            }
+        }
+    }
+    if(version>=26) {
+        suffix.WriteBool(value.ecology_world.has_value());
+        if(value.ecology_world) {suffix.WriteInt(value.ecology_world->native_life);suffix.WriteInt(value.ecology_world->cloud_cover);suffix.WriteInt(value.ecology_world->sea_level_offset);}
+        suffix.WriteBool(value.perihelion.has_value());if(value.perihelion) {suffix.WriteBool(*value.perihelion);}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -158,6 +182,109 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ecology world V26 preserves mutable globals and independent perihelion availability",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        for(const auto active:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {
+            for(const int32_t sea:{INT32_MIN,-12,0,12,INT32_MAX}) {
+                auto value=State();value.ecology_world=faction::SmacEcologyWorld{1,2,sea};value.perihelion=active;
+                const auto random=value.gameplay_random;const auto wire=value.Serialize(technologies,profiles,units).ToString();
+                const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+                GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random, "World ecology restore changed categories, sea sign, active bit or RNG");
+                const auto legacy=SmacSimulationState::Deserialize(CurrentWire(value,25),technologies,profiles,units);
+                GT_ASSERT(!legacy.ecology_world && !legacy.perihelion,"V25 restore invented world ecology inputs");
+                GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+                    && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}), "Malformed ecology world suffix admitted");
+                value.ecology_world.reset();
+                GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,
+                    "Perihelion required invented world categories");
+            }
+        }
+        for(const int32_t category:{-1,3,INT32_MIN,INT32_MAX}) {
+            for(const bool life:{false,true}) {
+                auto value=State();value.ecology_world=faction::SmacEcologyWorld{life?category:1,life?2:category,12};
+                GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);})
+                    && Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value),technologies,profiles,units);}), "Unsupported ecology category admitted");
+            }
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC ecology history V25 preserves all24 signed words and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.ecology_history.emplace();
+        for(size_t i=0;i<8;++i) {
+            value.ecology_history->clean_minerals[i]=101+7*i;
+            value.ecology_history->major_atrocities[i]=202+7*i;
+            value.ecology_history->research_aggregate[i]=303+7*i;
+        }
+        value.ecology_history->clean_minerals[0]=INT32_MIN;value.ecology_history->research_aggregate[7]=INT32_MAX;
+        const auto random=value.gameplay_random;
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        const auto restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+        GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random, "Ecology codec changed signed history, slot0 or RNG");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,24),technologies,profiles,units);
+        GT_ASSERT(!old.ecology_history && !SmacSimulationState::Deserialize(CurrentWire(value,23),technologies,profiles,units).ecology_history,
+            "Legacy restore reconstructed ecology authority");
+        auto absent=value;absent.ecology_history.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(absent.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==absent,
+            "Absent V25 ecology history became zero");
+        types::Buffer marker;marker.WriteBool(false);const auto absent_wire=CurrentWire(absent,25);
+        const auto prefix=absent_wire.substr(0,absent_wire.size()-marker.lenw);
+        for(size_t count=0;count<24;++count) {
+            types::Buffer truncated;truncated.WriteBool(true);for(size_t i=0;i<count;++i) {truncated.WriteInt(i);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+truncated.ToString(),technologies,profiles,units);}), "Partial ecology history admitted");
+        }
+        for(const size_t corrupt:{0u,23u}) {
+            types::Buffer overflow;overflow.WriteBool(true);
+            for(size_t i=0;i<24;++i) {overflow.WriteInt(i==corrupt ? INT64_MAX : 0);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+overflow.ToString(),technologies,profiles,units);}), "Ecology word outside signed32 admitted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}), "Trailing ecology history admitted");GT_OK();
+    });
+    task->AddTest("SMAC ecology owner initialization matches four native fresh and nonzero prefixes",GT(){
+        for(const int32_t owner:{1,2}) {for(const int32_t turn:{0,1}) {
+            faction::SmacEcologyHistory history;
+            history.clean_minerals.fill(777);history.major_atrocities.fill(777);history.research_aggregate.fill(777);
+            const auto before=history;history.Initialize(owner,turn);
+            for(int32_t i=0;i<8;++i) {
+                const auto expected=i==owner && turn==0 ? 0 : 777;
+                GT_ASSERT(history.clean_minerals[i]==expected && history.major_atrocities[i]==expected
+                    && history.research_aggregate[i]==777, "Owner initialization changed peers, retained aggregate or nonzero history");
+            }
+            if(turn!=0) {GT_ASSERT(history==before,"Nonzero initializer changed ecology history");}
+        }}
+        faction::SmacEcologyHistory history;
+        for(const int32_t owner:{-1,8}) {GT_ASSERT(Rejects([&]{history.Initialize(owner,0);}), "Invalid ecology owner admitted");}
+        GT_ASSERT(Rejects([&]{history.Initialize(1,-1);}), "Negative ecology initialization turn admitted");GT_OK();
+    });
+    task->AddTest("SMAC regional strategy V24 preserves all8 rows and region0 without recomputation",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.regional_strategy.emplace();value.ranking_scores=std::array<int32_t,8>{{17,INT32_MIN,-1,0,24,16,INT32_MAX,127}};
+        for(size_t owner=0;owner<8;++owner) {for(size_t region=0;region<128;++region) {value.regional_strategy->at(owner)[region]=static_cast<uint8_t>(17*owner+3*region);}}
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"Strategy codec lost byte canaries or rank0/region0");
+        const auto old=CurrentWire(value,23);
+        const auto migrated=SmacSimulationState::Deserialize(old,technologies,profiles,units);
+        GT_ASSERT(!migrated.regional_strategy && !migrated.ranking_scores,"V23 migration invented strategy or score history");
+        auto absent=value;absent.regional_strategy.reset();absent.ranking_scores.reset();
+        types::Buffer marker;marker.WriteBool(false);
+        const auto absent_wire=CurrentWire(absent,24);
+        const auto prefix=absent_wire.substr(0,absent_wire.size()-2*marker.ToString().size());
+        for(const size_t length:{0u,1023u,1025u}) {
+            types::Buffer tail;tail.WriteBool(true);tail.WriteString(std::string(length,'x'));tail.WriteBool(false);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+tail.ToString(),technologies,profiles,units);}),"Malformed V24 strategy row extent accepted");
+        }
+        for(const int64_t score:{INT64_MIN,INT64_MAX}) {
+            types::Buffer tail;tail.WriteBool(false);tail.WriteBool(true);tail.WriteInt(score);
+            for(size_t i=1;i<8;++i) {tail.WriteInt(0);}
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(prefix+tail.ToString(),technologies,profiles,units);}),"Score outside signed32 admitted");
+        }
+        for(const bool rows:{false,true}) {
+            auto independent=value;if(rows) {independent.ranking_scores.reset();}else {independent.regional_strategy.reset();}
+            GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(independent),technologies,profiles,units)==independent,"Optional histories were coupled on restore");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+            && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"Truncated/trailing strategy accepted");GT_OK();
+    });
     task->AddTest("SMAC retained Base totals V23 preserve all8 signed words without a live recount",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();value.retained_base_totals=faction::SmacBaseTotals{{-3,111,222,333,444,555,666,777}};
@@ -167,7 +294,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         for(const auto bad:{wire.substr(0,wire.size()-1),wire+"x"}) {GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(bad,technologies,profiles,units);}),"Malformed Base-total suffix accepted");}
         value.retained_base_totals->at(0)=INT32_MIN;value.retained_base_totals->at(7)=INT32_MAX;
         GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,"Signed diagnostic Base totals narrowed");
-        value.retained_base_totals.reset();wire=value.Serialize(technologies,profiles,units).ToString();
+        value.retained_base_totals.reset();wire=CurrentWire(value,23);
         types::Buffer absent;absent.WriteBool(false);types::Buffer overflow;overflow.WriteBool(true);overflow.WriteInt(INT64_MAX);
         GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-absent.ToString().size())+overflow.ToString(),technologies,profiles,units);}),"Base total outside signed32 admitted");
         GT_OK();

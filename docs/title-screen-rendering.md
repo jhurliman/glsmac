@@ -85,7 +85,20 @@ Live GL texture count stays at 28 across the sequence, and clicking Exit Game
 completes normal memorydebug shutdown without tracked memory/OpenGL leaks.
 These are WSLg/llvmpipe rendering checks, not native-platform certification.
 
-Remaining presentation gates include native-platform captures, hover/keyboard
+
+A later current-integration audit at b69d4133 repeated the strict whole-screen
+comparison with zero changed pixels. Real SDL Down selected Quick Start and Up
+returned to the exact initial Start Game pixels. Enter opened Game Ruleset;
+Escape returned to the exact same title. Mouse hover selected Load Game, then
+Up selected Scenario. The real Exit button completed normal memorydebug
+shutdown without tracked memory/OpenGL leaks. All captures retained the actual
+1024x768 drawable/viewport with GL error zero; baseline live texture count was 28.
+This checks these input/return states, not original hover-state pixel references
+or transition cadence. Evidence is retained externally under
+playable-planet-inspector/title-audit; the unchanged title production path was
+validated from that named binary, not a screenshot reconstruction.
+
+Remaining presentation gates include native-platform captures, original hover/keyboard
 selection and return-to-menu states, transition frames, resizing/letterboxing,
 other setup menus, SMAX-specific artwork, and in-game screens. The broader
 faithful 1.0.0 roadmap remains unchanged.

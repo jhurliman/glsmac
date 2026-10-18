@@ -1,6 +1,7 @@
 #include "BaseManager.h"
 #include "Base.h"
 #include "FacilityDef.h"
+#include "SmacFactionDisposition.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
@@ -39,6 +40,8 @@ struct BaseManager::PreparedSmacCapture::Data {
 	std::optional<map::GlsmacTerritoryTopology> topology;
 	std::vector<std::pair<unit::Unit*,unit::ConventionalUnitState>> units;
 	std::vector<Base*> refresh;
+	std::optional<SmacDispositionPlan> disposition;
+	std::optional<unit::UnitManager::PreparedFactionUnits> faction_units;
 };
 BaseManager::PreparedSmacCapture::PreparedSmacCapture(std::unique_ptr<Data> data):m_data(std::move(data)) {}
 BaseManager::PreparedSmacCapture::~PreparedSmacCapture()=default;
@@ -133,16 +136,20 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 			if(weight>best_governor) {best_governor=weight;data->context.governor_options=candidate->GetSmacResourceContext().governor_options;}
 		}
 	}
-	if(!replacement) {THROW("Last-Base capture requires elimination and conquest handling");}
+	std::optional<unit::UnitManager::PreparedConventionalRemoval> leaving;
+	if(!replacement) {
+		std::vector<size_t> ids;for(const auto id:um->GetUnitRecordOrder()) {if(um->GetUnit(id)->m_owner==captured->m_owner) {ids.push_back(id);}}
+		leaving.emplace(um->PrepareRemovalForQuery(ids));
+	}
 	auto actor_state=actor->Conventional();actor_state.spent=3;actor_state.failed_move=false;data->units.emplace_back(actor,actor_state);
 	for(const auto& entry:um->GetUnits()) {
 		auto* unit=entry.second;auto next=unit->Conventional();
-		if(unit->m_owner==captured->m_owner && next.home_base_id==captured->m_id) {
+		if(replacement && unit->m_owner==captured->m_owner && next.home_base_id==captured->m_id) {
 			next.home_base_id=replacement->m_id;next.home=unit::ConventionalUnitState::Home::Base;
 			(void)um->ResolveConventional(next,unit->m_owner);data->units.emplace_back(unit,next);
 		}
 	}
-	data->refresh.push_back(replacement);
+	if(replacement) {data->refresh.push_back(replacement);}
 	if(actor_state.home_base_id) {data->refresh.push_back(GetBase(*actor_state.home_base_id));}
 	const auto target=m_game->SelectSmacFoundingProduction(actor->m_owner,destination);
 	data->production=ProductionState{target,0,m_game->MakeSmacProductionItem(actor->m_owner,ProductionItemKind::Stockpile,38),0,std::vector<ProductionItem>{}};
@@ -159,11 +166,18 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	std::optional<SmacBaseResourceContext> preview_context=data->context;
 	auto preview_facilities=data->facilities;auto preview_production=data->production;auto preview_knowledge=data->knowledge;
 	auto preview_topology=data->topology;
+	auto preview_actor_economy=data->actor_economy,preview_defender_economy=data->defender_economy;
+	auto preview_history=data->history;
+	std::map<size_t,unit::Unit*> preview_source,preview_destination{{actor->m_id,actor}};
+	auto& query_simulation=m_game->m_simulation->value;
 	auto* next_faction=data->owner->GetPlayer()->GetFaction();
 	bool preview_active=false;
 	util::FinallyGuard restore([&]{
 		if(!preview_active) {return;}preview_active=false;
 		m_game->CommitBaseTerritory(preview_knowledge,preview_topology);
+		query_simulation.hostility.owners.swap(preview_history.owners);
+		std::swap(query_simulation.economy.at(new_owner),preview_actor_economy);std::swap(query_simulation.economy.at(old_owner),preview_defender_economy);
+		actor->CommitConventionalMove(actor->Conventional(),source);source->units.swap(preview_source);destination->units.swap(preview_destination);
 		for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
 		captured->m_resource_context.swap(preview_context);captured->m_facilities.swap(preview_facilities);captured->m_production.swap(preview_production);
 		captured->m_owner=previous_owner;captured->m_faction=previous_faction;
@@ -172,14 +186,31 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	captured->m_owner=data->owner;captured->m_faction=next_faction;
 	captured->m_resource_context.swap(preview_context);captured->m_facilities.swap(preview_facilities);captured->m_production.swap(preview_production);
 	for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
+	actor->CommitConventionalMove(actor->Conventional(),destination);source->units.swap(preview_source);destination->units.swap(preview_destination);
+	query_simulation.hostility.owners.swap(preview_history.owners);
+	std::swap(query_simulation.economy.at(new_owner),preview_actor_economy);std::swap(query_simulation.economy.at(old_owner),preview_defender_economy);
 	m_game->CommitBaseTerritory(preview_knowledge);
-	auto sight=m_game->PrepareConventionalSight(actor->m_id,new_owner,destination,source);m_game->CommitBaseTerritory(sight);
-	std::optional<map::GlsmacTerritoryTopology> topology;
-	auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false,&topology);m_game->CommitBaseTerritory(territory,topology);
-	data->allocation=captured->CalculateSmacWorkers(*captured->m_allocation,data->context,SmacBaseResourcePhase::Ordinary,1,nullptr,&*data->production);
-	data->cache=SmacBaseUpkeepCache{captured->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&data->allocation,1),m_game->CalculateCanonicalUnitSupport(*captured,1,nullptr)};
-	data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
-	data->topology=m_game->GetMap()->GetTerritoryTopology();
+	const auto calculate=[&] {
+		data->allocation=captured->CalculateSmacWorkers(*captured->m_allocation,data->context,SmacBaseResourcePhase::Ordinary,1,nullptr,&*data->production);
+		data->cache=SmacBaseUpkeepCache{captured->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&data->allocation,1),m_game->CalculateCanonicalUnitSupport(*captured,1,nullptr)};
+		data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();data->topology=m_game->GetMap()->GetTerritoryTopology();
+	};
+	const auto prepare=[&] {
+		auto sight=m_game->PrepareConventionalSight(actor->m_id,new_owner,destination,source);m_game->CommitBaseTerritory(sight);
+		std::optional<map::GlsmacTerritoryTopology> topology;
+		auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false,&topology);m_game->CommitBaseTerritory(territory,topology);
+		if(leaving) {
+			data->disposition=PrepareSmacFactionDisposition(previous_owner,nullptr,new_owner,data->random);
+			auto& plan=*data->disposition;
+			data->faction_units.emplace(um->PrepareFactionUnitsForQuery(previous_owner,plan.site,plan.units,*plan.territory,nullptr,&*leaving));
+			data->faction_units->Refresh(actor);
+			query_simulation.economy.at(old_owner)=plan.economy;
+			auto history=plan.hostility;query_simulation.hostility.owners.swap(history.owners);
+			auto search_topology=plan.topology;m_game->CommitBaseTerritoryTopology(search_topology);
+			data->faction_units->Query(calculate);
+		} else {calculate();}
+	};
+	if(leaving) {leaving->Query(prepare);}else{prepare();}
 	// Restore while Data is still owned locally; the guard must not reference a
 	// moved-from unique_ptr when return-value construction transfers the plan.
 	restore.f_after();
@@ -203,12 +234,14 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	for(const auto& entry:data.units) {entry.first->CommitConventionalMove(entry.second,entry.first==data.actor ? data.base->GetTile() : entry.first->GetTile());}
 	data.source->units.swap(source);data.base->GetTile()->units.swap(destination);
 	um->CommitPlacementHistory(placement);
-	um->m_unit_updates.swap(updates);
+	if(data.faction_units) {data.faction_units->Commit();}else{um->m_unit_updates.swap(updates);}
 	m_game->CommitBaseTerritory(data.knowledge,data.topology);
 	auto& simulation=m_game->m_simulation->value;
 	simulation.hostility.owners.swap(data.history.owners);simulation.gameplay_random=data.random;
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;
+	if(data.disposition) {CommitSmacFactionDisposition(*data.disposition);}
 	workers.Commit();data.base->m_smac_upkeep_cache.swap(data.cache);workers.Finish();
+	if(data.faction_units) {data.faction_units->Notify(GSE_CALL);}
 	m_game->Message(message);
 }
 

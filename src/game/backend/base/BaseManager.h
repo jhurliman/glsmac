@@ -23,6 +23,7 @@ namespace game {
 namespace backend {
 
 class Game;
+class SmacGameplayRandomState;
 
 namespace map {
 class Map;
@@ -134,6 +135,8 @@ private:
 	void RemoveStarvedSmacBase( GSE_CALLABLE, Base& base );
 	struct SmacDispositionPlan;
 	SmacDispositionPlan PrepareLastSmacBaseDisposition( const Base& base ) const;
+	SmacDispositionPlan PrepareSmacFactionDisposition(slot::Slot* owner,const Base* removed,int32_t captor,const SmacGameplayRandomState& random) const;
+	void CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexcept;
 	SmacAbandonmentResult DisposeLastSmacBase( GSE_CALLABLE, Base& base, unit::Def* transient_definition, unit::SmacMoraleMode mode );
 	using tile_key_t = std::pair< size_t, size_t >;
 	using pop_key_t = std::pair< size_t, size_t >;

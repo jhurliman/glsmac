@@ -14,6 +14,7 @@
 #include <deque>
 #include <memory>
 #include <vector>
+#include <functional>
 
 namespace game {
 namespace backend {
@@ -107,6 +108,8 @@ public:
 		void Notify( GSE_CALLABLE );
 	private:
 		friend class UnitManager;
+		friend class base::BaseManager;
+		void Query(const std::function<void()>& query) const;
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;
@@ -124,6 +127,9 @@ public:
 		void Notify( GSE_CALLABLE );
 	private:
 		friend class UnitManager;
+		friend class base::BaseManager;
+		void Query(const std::function<void()>& query) const;
+		void Refresh(Unit* unit);
 		struct Data;
 		explicit PreparedFactionUnits( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;
@@ -232,6 +238,16 @@ private:
 	friend class Unit;
 	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
+	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr);
+	PreparedFactionUnits PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
+		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
+		PreparedConventionalUnit* transient=nullptr,const PreparedConventionalRemoval* supplied=nullptr);
+	using PreparedOccupants=std::map<map::tile::Tile*,std::map<size_t,Unit*>>;
+	// Native queries only, in the owning accumulation: no hooks, yields, ID
+	// publication or retirement. All registry/placement/knowledge swaps restore.
+	void QueryPreparedUnits(const std::map<size_t,Unit*>& units,const std::vector<size_t>& order,
+		const PreparedOccupants& occupants,const std::optional<map::SmacWorkerKnowledge>& knowledge,
+		const std::vector<std::pair<Unit*,map::tile::Tile*>>& positions,const std::function<void()>& query);
 	std::pair< SmacMovementHistory*, size_t > PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const;
 	void CommitPlacementHistory(const std::pair<SmacMovementHistory*,size_t>& prepared) const noexcept;
 	map::Map* GetMap() const;

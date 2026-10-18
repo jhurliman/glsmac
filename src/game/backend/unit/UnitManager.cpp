@@ -6,6 +6,7 @@
 #include "Unit.h"
 #include <memory>
 #include "gc/Space.h"
+#include "util/FinallyGuard.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/animation/AnimationManager.h"
@@ -318,9 +319,13 @@ UnitManager::PreparedConventionalRemoval::~PreparedConventionalRemoval() = defau
 UnitManager::PreparedConventionalRemoval::PreparedConventionalRemoval(PreparedConventionalRemoval&&) noexcept = default;
 UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemoval::operator=(PreparedConventionalRemoval&&) noexcept = default;
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
+    m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
+    if(gc_space!=m_game->GetGCSpace()) {THROW("Removal requires the owning accumulation");}
+    return PrepareRemovalForQuery(ids,created,battle_survivor);
+}
+UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
     m_game->RequireSmacGameplayActive();
-    m_game->CheckRW(GSE_CALL);
-    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
+    if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
     m_game->RequireConventionalSightWorld();
     const auto* creation=created ? created->m_data.get() : nullptr;
     if(created && (!creation || creation->manager!=this || !creation->candidate || creation->published)) {THROW("Removal requires an uncommitted same-manager creation");}
@@ -387,6 +392,29 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval
 bool UnitManager::PreparedConventionalRemoval::Removes(size_t id) const {
     return std::find(m_data->removed_ids.begin(),m_data->removed_ids.end(),id)!=m_data->removed_ids.end();
 }
+void UnitManager::QueryPreparedUnits(const std::map<size_t,Unit*>& units,const std::vector<size_t>& order,
+    const PreparedOccupants& occupants,const std::optional<map::SmacWorkerKnowledge>& knowledge,
+    const std::vector<std::pair<Unit*,map::tile::Tile*>>& positions,const std::function<void()>& query) {
+    if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning() || !knowledge || !query) {THROW("Prepared Unit queries require owned world knowledge and accumulation");}
+    auto view_units=units;auto view_order=order;auto view_occupants=occupants;auto view_knowledge=knowledge;
+    std::vector<std::pair<Unit*,map::tile::Tile*>> old_positions;old_positions.reserve(positions.size());
+    for(const auto& row:positions) {old_positions.emplace_back(row.first,row.first->GetTile());}
+    bool active=false;util::FinallyGuard restore([&]{
+        if(!active) {return;}active=false;
+        for(const auto& row:old_positions) {row.first->CommitConventionalMove(row.first->Conventional(),row.second);}
+        m_units.swap(view_units);m_unit_order.swap(view_order);
+        for(auto& row:view_occupants) {row.first->units.swap(row.second);}
+        m_game->CommitConventionalSight(view_knowledge);
+    });
+    active=true;m_units.swap(view_units);m_unit_order.swap(view_order);
+    for(auto& row:view_occupants) {row.first->units.swap(row.second);}
+    for(const auto& row:positions) {row.first->CommitConventionalMove(row.first->Conventional(),row.second);}
+    m_game->CommitConventionalSight(view_knowledge);query();
+}
+void UnitManager::PreparedConventionalRemoval::Query(const std::function<void()>& query) const {
+    if(!m_data || m_data->committed) {THROW("Removal query requires an uncommitted plan");}
+    const auto& d=*m_data;d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,{},query);
+}
 void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     if(!m_data || m_data->committed) {return;}
     auto& d=*m_data;
@@ -433,7 +461,14 @@ UnitManager::PreparedFactionUnits& UnitManager::PreparedFactionUnits::operator=(
 UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,slot::Slot* owner,map::tile::Tile* destination,
     const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
     PreparedConventionalUnit* transient) {
-    m_game->CheckRW(GSE_CALL);m_game->RequireSmacLocalHumanOwner(owner);RequireConventionalUnitsReady();
+    m_game->CheckRW(GSE_CALL);if(gc_space!=m_game->GetGCSpace()) {THROW("Faction preparation requires the owning accumulation");}
+    return PrepareFactionUnitsForQuery(owner,destination,replacements,territory,transient);
+}
+UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
+    const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
+    PreparedConventionalUnit* transient,const PreparedConventionalRemoval* supplied) {
+    m_game->RequireSmacGameplayActive();m_game->RequireSmacLocalHumanOwner(owner);RequireConventionalUnitsReady();
+    if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning()) {THROW("Faction preparation requires its owning accumulation");}
     if(replacements.size()>8 || (replacements.empty() ? destination!=nullptr : destination==nullptr)) {
         THROW("Faction disposition requires at most eight replacements at one admitted site");
     }
@@ -452,11 +487,20 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,
         removed.push_back(transient->m_data->id);
     }
     auto data=std::make_unique<PreparedFactionUnits::Data>();data->manager=this;data->destination=destination;data->transient=transient;
-    data->removal.emplace(PrepareConventionalRemoval(GSE_CALL,removed,transient));
+    if(supplied) {
+        if(transient || !supplied->m_data || supplied->m_data->committed || supplied->m_data->manager!=this) {THROW("Capture removal is not an uncommitted same-world plan");}
+        // Duplicate prepared tables, never ownership of retired objects. The
+        // supplied plan may be installed as a read-only nested query view.
+        const auto& old=*supplied->m_data;auto copy=std::make_unique<PreparedConventionalRemoval::Data>();
+        copy->manager=this;copy->removed=old.removed;copy->removed_ids=old.removed_ids;copy->units=old.units;copy->order=old.order;
+        copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
+        data->removal.emplace(PreparedConventionalRemoval(std::move(copy)));
+    } else {data->removal.emplace(PrepareRemovalForQuery(removed,transient));}
     const auto& removal=*data->removal->m_data;
     if(!removal.knowledge) {THROW("Faction disposition requires saved sight and territory");}
     data->units=removal.units;data->order=removal.order;data->updates=removal.updates;data->occupants=removal.occupants;
-    auto knowledge=removal.knowledge->CopyData();const auto claims=territory.CopyData();
+    auto knowledge=supplied ? territory.CopyData() : removal.knowledge->CopyData();const auto claims=territory.CopyData();
+    if(supplied) {knowledge.units.erase(std::remove_if(knowledge.units.begin(),knowledge.units.end(),[&](const auto& row){return data->removal->Removes(row.id);}),knowledge.units.end());}
     if(knowledge.width!=claims.width || knowledge.height!=claims.height || knowledge.horizontal_wrap!=claims.horizontal_wrap
         || knowledge.tiles.size()!=claims.tiles.size()) {THROW("Faction disposition territory geometry differs");}
     for(size_t i=0;i<knowledge.tiles.size();++i) {knowledge.tiles[i].claimant=claims.tiles[i].claimant;}
@@ -524,6 +568,18 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,
     }
     data->knowledge=map::SmacWorkerKnowledge::Create(knowledge);
     return PreparedFactionUnits(std::move(data));
+}
+void UnitManager::PreparedFactionUnits::Query(const std::function<void()>& query) const {
+    if(!m_data || m_data->committed) {THROW("Faction Unit query requires an uncommitted plan");}
+    const auto& d=*m_data;std::vector<std::pair<Unit*,map::tile::Tile*>> positions;positions.reserve(d.candidates.size());
+    for(const auto& row:d.candidates) {positions.emplace_back(row.get(),d.destination);}
+    d.manager->QueryPreparedUnits(d.units,d.order,d.occupants,d.knowledge,positions,query);
+}
+void UnitManager::PreparedFactionUnits::Refresh(Unit* unit) {
+    if(!m_data || m_data->committed || !unit || !m_data->units.count(unit->m_id) || m_data->units.at(unit->m_id)!=unit) {THROW("Faction refresh needs a prepared surviving Unit");}
+    auto& update=m_data->updates.try_emplace(unit->m_id,unit_update_t{UUO_NONE,unit}).first->second;
+    if(update.unit!=unit || (update.ops&UUO_DESPAWN)) {THROW("Faction refresh has a stale pending update");}
+    update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
 }
 void UnitManager::PreparedFactionUnits::Commit() noexcept {
     if(!m_data || m_data->committed) {return;}

@@ -5419,8 +5419,8 @@ void ConventionalUnitFixture::ConfigureProduction( const std::function< std::str
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ProductionPresentations( const std::array< std::string, 4 >& roles ) { fixture->ProductionPresentations( roles ); }
-void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map ) {
-	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, {}, production_map ); fixture->ResourcePolicy( true );
+void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map,int32_t width,int32_t height ) {
+	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, {}, production_map,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SiteRatings(const std::string& packed) {fixture->SiteRatings(packed);}

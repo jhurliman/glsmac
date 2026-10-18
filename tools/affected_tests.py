@@ -88,9 +88,15 @@ def select(paths, root=ROOT, changed_lines=""):
         if path.endswith(".cpp") and (root / (path[:-4] + ".h")).is_file():
             targets.add(path[:-4] + ".h")
     selected_native = {source for source in native if closure(dependencies, source) & targets}
-    if closure(dependencies, "src/gse/tests/Scripts.cpp") & targets:
+    script_support = closure(dependencies, "src/gse/tests/Scripts.cpp")
+    for mock in (root / "src/gse/tests/mocks").glob("*.cpp"):
+        script_support.update(closure(dependencies, mock.relative_to(root).as_posix()))
+    if script_support & targets:
         full_scripts = True
-        reasons.append("Shared script runner/fixture changes affect every standalone script")
+        reasons.append("Shared script runner/mock bridge changes affect every standalone script")
+    if any(path.startswith("src/gse/tests/mocks/") for path in paths):
+        full_native = full_scripts = True
+        reasons.append("Shared native/script mock boundary")
     if paths & {"src/gse/tests/Tests.cpp", "src/gse/tests/Tests.h"}:
         full_native = full_scripts = True
         reasons.append("Central test dispatcher changes can alter every registration")
@@ -120,7 +126,8 @@ def select(paths, root=ROOT, changed_lines=""):
     if production and not selected_native:
         full_native = True
         reasons.append("No proven native consumer: fall back to all native groups")
-    if any(path == "CMakeLists.txt" or path.startswith(("cmake/", ".github/")) for path in paths):
+    if any(path.rsplit("/", 1)[-1] in {"CMakeLists.txt", "CMakePresets.json", "CMakeUserPresets.json"}
+           or path.endswith(".cmake") or path.startswith(("cmake/", ".github/")) for path in paths):
         full_native = full_scripts = True
         reasons.append("Build/test registration boundary")
     if full_native:

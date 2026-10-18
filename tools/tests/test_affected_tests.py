@@ -60,7 +60,8 @@ class AffectedTests(unittest.TestCase):
         expected = sorted(path.relative_to(policy.ROOT).as_posix() for path in
                           (policy.ROOT / "GLSMAC_data/tests").glob("*.gls.js")
                           if not path.name.startswith("_"))
-        for path in ("src/gse/tests/Scripts.cpp", "src/gse/tests/mocks/Mocks.cpp"):
+        for path in ("src/gse/tests/Scripts.cpp", "src/gse/tests/mocks/Mocks.cpp",
+                     "src/gse/tests/mocks/Test.cpp", "src/gse/tests/Mesh.cpp"):
             plan = policy.select([path])
             self.assertEqual(plan["scripts"], expected, path)
             self.assertIn("GLSMAC_data/tests/exceptions.gls.js", plan["scripts"])
@@ -74,6 +75,16 @@ class AffectedTests(unittest.TestCase):
             plan = policy.select([path])
             self.assertTrue(plan["native_all"], path)
             self.assertEqual(plan["native_sources"], expected, path)
+            self.assertIn("GLSMAC_data/tests/async.gls.js", plan["scripts"])
+            self.assertIn("GLSMAC_data/tests/base_queue_editor.gls.js", plan["scripts"])
+
+    def test_nested_build_registration_files_select_all_cases(self):
+        for path in ("src/gse/tests/CMakeLists.txt", "src/gse/tests/mocks/CMakeLists.txt",
+                     "src/game/backend/CMakeLists.txt", "tools/tests/check.cmake",
+                     "CMakePresets.json", "CMakeUserPresets.json"):
+            plan = policy.select([path])
+            self.assertTrue(plan["native_all"], path)
+            self.assertIn("src/gse/tests/Backend.cpp", plan["native_sources"])
             self.assertIn("GLSMAC_data/tests/async.gls.js", plan["scripts"])
             self.assertIn("GLSMAC_data/tests/base_queue_editor.gls.js", plan["scripts"])
 

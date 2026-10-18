@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "Mesh.h"
+#include "loader/texture/SmacPalette.h"
 
 #include "task/gsetests/GSETests.h"
 #include "types/mesh/Rectangle.h"
@@ -655,8 +656,102 @@ static std::string CheckTextureCopyUpdates() {
 	GT_OK();
 }
 
+static std::string CheckDisplayPalette() {
+	try {
+		{
+			auto* image = SDL_CreateRGBSurfaceWithFormat( 0, 3, 2, 8, SDL_PIXELFORMAT_INDEX8 );
+			GT_ASSERT( image, "could not allocate palette boundary fixture" );
+			util::FinallyGuard release( [ & ] { SDL_FreeSurface( image ); } );
+			SDL_Color colors[ 256 ] = {};
+			colors[ 235 ] = { 255, 245, 240, 255 };
+			SDL_Palette common = { 256, colors, 0, 1 };
+			auto* pixels = static_cast< uint8_t* >( image->pixels );
+			std::fill_n( pixels, image->pitch * image->h, uint8_t( 255 ) );
+			for ( int y = 0; y < image->h; ++y ) { std::fill_n( pixels + y * image->pitch, image->w, uint8_t( 235 ) ); }
+			loader::texture::ApplySmacPalette( image, &common );
+			GT_ASSERT( image->format->palette->colors[ 235 ].r == 235, "last admitted PCX index was not gamma corrected" );
+			for ( const uint8_t index : { 236, 255 } ) {
+				pixels[ image->pitch + 2 ] = index;
+				bool rejected = false;
+				try { loader::texture::ApplySmacPalette( image, &common ); }
+				catch ( const std::invalid_argument& ) { rejected = true; }
+				GT_ASSERT( rejected, "unsupported system-reserved PCX index was accepted" );
+			}
+		}
+		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-palette-" + util::UUID::Generate() );
+		const auto data = directory / "default";
+		std::filesystem::create_directories( data );
+		util::FinallyGuard remove_fixture( [ & ] {
+			std::filesystem::remove( data / "fixture.bmp" );
+			std::filesystem::remove( data / "interface.pcx" );
+			std::filesystem::remove( data / "after-rejection.bmp" );
+			std::filesystem::remove( data / "palette.pcx" );
+			std::filesystem::remove( data );
+			std::filesystem::remove( directory );
+		} );
+		for ( const bool common : { false, true } ) {
+			auto* image = SDL_CreateRGBSurfaceWithFormat( 0, 3, 2, 8, SDL_PIXELFORMAT_INDEX8 );
+			GT_ASSERT( image, "could not allocate indexed fixture" );
+			util::FinallyGuard release( [ & ] { SDL_FreeSurface( image ); } );
+			SDL_Color colors[ 256 ] = {};
+			for ( auto& color : colors ) { color.a = 255; }
+			// Distinct indices deliberately have the same source RGB. RGB repainting
+			// would lose the distinction that the display palette must preserve.
+			colors[ 1 ] = common ? SDL_Color{ 250, 40, 80, 255 } : SDL_Color{ 10, 20, 30, 255 };
+			colors[ 2 ] = common ? SDL_Color{ 5, 99, 248, 255 } : colors[ 1 ];
+			GT_ASSERT( SDL_SetPaletteColors( image->format->palette, colors, 0, 256 ) == 0, "could not set indexed fixture palette" );
+			auto* pixels = static_cast< uint8_t* >( image->pixels );
+			for ( size_t row = 0; row < 2; ++row ) {
+				pixels[ row * image->pitch ] = 1; pixels[ row * image->pitch + 1 ] = 2; pixels[ row * image->pitch + 2 ] = 1;
+			}
+			// SDL_image detects the synthetic BMP by its contents, including when
+			// the common-palette fixture uses the installed asset's filename.
+			const auto path = data / ( common ? "palette.pcx" : "fixture.bmp" );
+			GT_ASSERT( SDL_SaveBMP( image, path.string().c_str() ) == 0, "could not save indexed fixture" );
+			if ( !common ) {
+				colors[ 1 ] = { 255, 0, 255, 255 };
+				GT_ASSERT( SDL_SetPaletteColors( image->format->palette, colors, 0, 256 ) == 0, "could not set rejection fixture palette" );
+				GT_ASSERT( SDL_SaveBMP( image, ( data / "interface.pcx" ).string().c_str() ) == 0 &&
+					SDL_SaveBMP( image, ( data / "after-rejection.bmp" ).string().c_str() ) == 0, "could not save rejection fixtures" );
+			}
+		}
+		WidgetGraphicsFixture graphics( directory.string() );
+		auto* loader = g_engine->GetTextureLoader();
+		bool rejected = false;
+		try { loader->LoadCustomTexture( "interface.pcx", types::texture::TF_SMAC_PALETTE ); }
+		catch ( const std::exception& ) { rejected = true; }
+		GT_ASSERT( rejected, "registered transparency source admitted the opaque palette profile" );
+		GT_ASSERT( loader->LoadCustomTexture( "after-rejection.bmp" )->GetPixel( 0, 0 ) == types::Color::RGB( 255, 0, 255 ),
+			"rejected registered load leaked transparency into the next custom texture" );
+		auto* raw = loader->LoadCustomTexture( "fixture.bmp" );
+		auto* mapped = loader->LoadCustomTexture( "fixture.bmp", types::texture::TF_SMAC_PALETTE );
+		GT_ASSERT( raw != mapped && loader->LoadCustomTexture( "fixture.bmp" ) == raw,
+			"display-palette cache aliased the ordinary source" );
+		GT_ASSERT( raw->GetPixel( 0, 0 ) == types::Color::RGB( 10, 20, 30 ) && raw->GetPixel( 1, 0 ) == raw->GetPixel( 0, 0 ),
+			"ordinary source palette changed" );
+		GT_ASSERT( mapped->GetPixel( 0, 0 ) == types::Color::RGB( 235, 40, 80 ) &&
+			mapped->GetPixel( 1, 0 ) == types::Color::RGB( 5, 99, 235 ) && mapped->GetPixel( 2, 0 ) == mapped->GetPixel( 0, 0 ),
+			"common palette did not preserve indices and clamp bright channels" );
+		class FragmentLoader : public loader::texture::SDL2 {
+		public:
+			using SDL2::LoadTextureImpl;
+		} fragments;
+		const auto source = ( data / "fixture.bmp" ).string();
+		auto* raw_fragment = fragments.LoadTextureImpl( source, 0, 0, 1, 0, types::texture::LT_NONE, 1.0f, types::texture::TF_NONE );
+		auto* mapped_fragment = fragments.LoadTextureImpl( source, 0, 0, 1, 0, types::texture::LT_NONE, 1.0f, types::texture::TF_SMAC_PALETTE );
+		GT_ASSERT( raw_fragment != mapped_fragment && raw_fragment->GetPixel( 0, 0 ) == raw->GetPixel( 0, 0 ) &&
+			mapped_fragment->GetPixel( 1, 0 ) == mapped->GetPixel( 1, 0 ), "cropped cache aliased palette variants" );
+		const auto& dirty = mapped_fragment->GetUpdatedAreas().back();
+		GT_ASSERT( dirty.left == 0 && dirty.top == 0 && dirty.right == 2 && dirty.bottom == 1,
+			"one-row copy did not notify the full exclusive dirty rectangle" );
+	}
+	catch ( const std::exception& error ) { GT_FAIL( std::string( "display palette check failed: " ) + error.what() ); }
+	GT_OK();
+}
+
 void AddMeshTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
+	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
 	task->AddTest(
 		"test surface background replacement preserves texture ownership",
 		GT() { return CheckSurfaceBackgroundOwnership(); }

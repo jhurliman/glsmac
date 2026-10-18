@@ -1,0 +1,671 @@
+{
+  "research_id": "RE-SMAC-TITLE-001",
+  "profile": {
+    "width": 1024,
+    "height": 768,
+    "selected_row": 0,
+    "gamma_correction": 100,
+    "gamma": 1.0,
+    "menu_count": 7,
+    "reference_sha256": "732ec16f1bed508f0953ab3e97ed68432c66b9b6893ded2571d525ca6602aa3e"
+  },
+  "assets": {
+    "openinga.pcx": {
+      "bytes": 410006,
+      "sha256": "75b1622c981e957635fdb1a81c23a658b50a5cf43a7faec9faa51bf76c45fb8e"
+    },
+    "openingb.pcx": {
+      "bytes": 262581,
+      "sha256": "9ae9661800e733c3b71a3c5cf768960e9877033b21dc24bfc8048c3548f7749d"
+    },
+    "openitem.flc": {
+      "bytes": 55651,
+      "sha256": "e9776571d359292da42d1fdfaa8f67d15bda1f213e65dc78772704f2dd262a3f"
+    },
+    "palette.pcx": {
+      "bytes": 78073,
+      "sha256": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866"
+    },
+    "arialn.ttf": {
+      "bytes": 123976,
+      "sha256": "e17b243cbf2e194890c561dbb63e515dc34e941ee1a7923748b336199b812f52"
+    },
+    "ALPHC___.TTF": {
+      "bytes": 39048,
+      "sha256": "f8957130f950a1ec0c0c7d2f90f7d3dd4db0893a08d488412f0e4ed07eb5bd51"
+    },
+    "bluetint.tmp": {
+      "bytes": 256,
+      "sha256": "bfab4aa716a2f99136786f25efeb1ea33de7978a88e4bb739b9289d7232719e6"
+    },
+    "palcheck.tmp": {
+      "bytes": 1024,
+      "sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6"
+    }
+  },
+  "geometry": {
+    "origin": [
+      670,
+      243
+    ],
+    "canvas": [
+      354,
+      525
+    ],
+    "frame": [
+      354,
+      75
+    ],
+    "settled_frame_zero_based": 5,
+    "source_pixel_codes": {
+      "transparent": 9,
+      "blue_tint": 0
+    },
+    "frame_counts": {
+      "transparent": 7999,
+      "blue": 8296,
+      "art": 10255
+    },
+    "row_pitch": 75,
+    "label_hit_rectangle_first": [
+      15,
+      0,
+      300,
+      75
+    ],
+    "label_clip_first": [
+      15,
+      31,
+      300,
+      57
+    ],
+    "label_center_rectangle_first": [
+      27,
+      33,
+      304,
+      55
+    ]
+  },
+  "palette": {
+    "pcx_source_index_offset": 10,
+    "game_entry_range_inclusive": [
+      10,
+      245
+    ],
+    "source": "palette.pcx",
+    "gamma_input_divisor": 235.0,
+    "gamma_output_multiplier": 235.99,
+    "gamma_exponent": "1/gamma",
+    "active_text_index": 222,
+    "active_text_rgb": [
+      176,
+      212,
+      235
+    ],
+    "inactive_text_index": 225,
+    "inactive_text_rgb": [
+      104,
+      140,
+      196
+    ],
+    "selected_background_mappings": [
+      {
+        "source_index": 32,
+        "opening_rgb": [
+          248,
+          244,
+          216
+        ],
+        "expected_rgb": [
+          235,
+          235,
+          216
+        ]
+      },
+      {
+        "source_index": 80,
+        "opening_rgb": [
+          248,
+          248,
+          236
+        ],
+        "expected_rgb": [
+          235,
+          235,
+          235
+        ]
+      },
+      {
+        "source_index": 128,
+        "opening_rgb": [
+          116,
+          119,
+          64
+        ],
+        "expected_rgb": [
+          128,
+          128,
+          43
+        ]
+      },
+      {
+        "source_index": 138,
+        "opening_rgb": [
+          31,
+          26,
+          16
+        ],
+        "expected_rgb": [
+          39,
+          31,
+          12
+        ]
+      },
+      {
+        "source_index": 145,
+        "opening_rgb": [
+          216,
+          224,
+          244
+        ],
+        "expected_rgb": [
+          216,
+          224,
+          235
+        ]
+      },
+      {
+        "source_index": 224,
+        "opening_rgb": [
+          192,
+          208,
+          248
+        ],
+        "expected_rgb": [
+          192,
+          208,
+          235
+        ]
+      }
+    ],
+    "gamma_cases": [
+      {
+        "input": [
+          248,
+          244,
+          216
+        ],
+        "expected": [
+          235,
+          235,
+          216
+        ]
+      },
+      {
+        "input": [
+          248,
+          248,
+          236
+        ],
+        "expected": [
+          235,
+          235,
+          235
+        ]
+      },
+      {
+        "input": [
+          240,
+          228,
+          176
+        ],
+        "expected": [
+          235,
+          228,
+          176
+        ]
+      },
+      {
+        "input": [
+          39,
+          31,
+          12
+        ],
+        "expected": [
+          39,
+          31,
+          12
+        ]
+      },
+      {
+        "input": [
+          236,
+          236,
+          248
+        ],
+        "expected": [
+          235,
+          235,
+          235
+        ]
+      },
+      {
+        "input": [
+          0,
+          97,
+          255
+        ],
+        "expected": [
+          0,
+          97,
+          235
+        ]
+      },
+      {
+        "input": [
+          176,
+          212,
+          248
+        ],
+        "expected": [
+          176,
+          212,
+          235
+        ]
+      },
+      {
+        "input": [
+          192,
+          208,
+          248
+        ],
+        "expected": [
+          192,
+          208,
+          235
+        ]
+      }
+    ]
+  },
+  "blue_tint": {
+    "target_game_index": 179,
+    "target_rgb": [
+      17,
+      66,
+      88
+    ],
+    "input_weight": 20,
+    "target_weight": 80,
+    "nearest_range_inclusive": [
+      10,
+      245
+    ],
+    "distance": "sum squared RGB differences",
+    "tie": "first ascending index",
+    "protected_ranges": [],
+    "cases": [
+      {
+        "background_game_index": 10,
+        "input_rgb": [
+          172,
+          129,
+          81
+        ],
+        "expected_index": 211,
+        "expected_rgb": [
+          43,
+          88,
+          79
+        ]
+      },
+      {
+        "background_game_index": 64,
+        "input_rgb": [
+          4,
+          4,
+          4
+        ],
+        "expected_index": 185,
+        "expected_rgb": [
+          17,
+          50,
+          79
+        ]
+      },
+      {
+        "background_game_index": 65,
+        "input_rgb": [
+          0,
+          0,
+          0
+        ],
+        "expected_index": 185,
+        "expected_rgb": [
+          17,
+          50,
+          79
+        ]
+      },
+      {
+        "background_game_index": 90,
+        "input_rgb": [
+          235,
+          235,
+          235
+        ],
+        "expected_index": 167,
+        "expected_rgb": [
+          51,
+          106,
+          122
+        ]
+      },
+      {
+        "background_game_index": 94,
+        "input_rgb": [
+          235,
+          228,
+          176
+        ],
+        "expected_index": 167,
+        "expected_rgb": [
+          51,
+          106,
+          122
+        ]
+      },
+      {
+        "background_game_index": 148,
+        "input_rgb": [
+          39,
+          31,
+          12
+        ],
+        "expected_index": 182,
+        "expected_rgb": [
+          16,
+          55,
+          82
+        ]
+      },
+      {
+        "background_game_index": 179,
+        "input_rgb": [
+          17,
+          66,
+          88
+        ],
+        "expected_index": 179,
+        "expected_rgb": [
+          17,
+          66,
+          88
+        ]
+      },
+      {
+        "background_game_index": 222,
+        "input_rgb": [
+          176,
+          212,
+          235
+        ],
+        "expected_index": 169,
+        "expected_rgb": [
+          42,
+          101,
+          120
+        ]
+      },
+      {
+        "background_game_index": 234,
+        "input_rgb": [
+          192,
+          208,
+          235
+        ],
+        "expected_index": 169,
+        "expected_rgb": [
+          42,
+          101,
+          120
+        ]
+      },
+      {
+        "background_game_index": 245,
+        "input_rgb": [
+          193,
+          173,
+          26
+        ],
+        "expected_index": 208,
+        "expected_rgb": [
+          48,
+          94,
+          80
+        ]
+      }
+    ],
+    "native_generation_matches_installed_cache": true
+  },
+  "font": {
+    "logfont": {
+      "height": -18,
+      "width": 0,
+      "escapement": 0,
+      "orientation": 0,
+      "weight": 700,
+      "italic": 0,
+      "underline": 0,
+      "strikeout": 0,
+      "charset": 0,
+      "out_precision": 7,
+      "clip_precision": 0,
+      "quality": 0,
+      "pitch_family": 0,
+      "face": "Arial"
+    },
+    "textmetrics": {
+      "height": 21,
+      "ascent": 17,
+      "descent": 4,
+      "internal_leading": 3,
+      "external_leading": 1
+    },
+    "centering_height": 14,
+    "raster": "monochrome coverage in indexed8 DIB",
+    "background_mode": 1,
+    "text_alignment": 24,
+    "active_glyph_pixels": 810,
+    "inactive_glyph_pixels": 4653,
+    "host_font_hashes": {
+      "arial.ttf": "b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a",
+      "arialbd.ttf": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5"
+    },
+    "rows": [
+      {
+        "label": "START GAME",
+        "advance_width": 119,
+        "local_origin_x": 106,
+        "local_baseline": 51,
+        "global_origin_x": 776,
+        "global_baseline": 294
+      },
+      {
+        "label": "QUICK START",
+        "advance_width": 123,
+        "local_origin_x": 104,
+        "local_baseline": 126,
+        "global_origin_x": 774,
+        "global_baseline": 369
+      },
+      {
+        "label": "SCENARIO",
+        "advance_width": 95,
+        "local_origin_x": 118,
+        "local_baseline": 201,
+        "global_origin_x": 788,
+        "global_baseline": 444
+      },
+      {
+        "label": "LOAD GAME",
+        "advance_width": 110,
+        "local_origin_x": 110,
+        "local_baseline": 276,
+        "global_origin_x": 780,
+        "global_baseline": 519
+      },
+      {
+        "label": "MULTIPLAYER",
+        "advance_width": 129,
+        "local_origin_x": 101,
+        "local_baseline": 351,
+        "global_origin_x": 771,
+        "global_baseline": 594
+      },
+      {
+        "label": "VIEW CREDITS",
+        "advance_width": 131,
+        "local_origin_x": 100,
+        "local_baseline": 426,
+        "global_origin_x": 770,
+        "global_baseline": 669
+      },
+      {
+        "label": "EXIT GAME",
+        "advance_width": 99,
+        "local_origin_x": 116,
+        "local_baseline": 501,
+        "global_origin_x": 786,
+        "global_baseline": 744
+      }
+    ]
+  },
+  "flc": {
+    "header": {
+      "file_size": 55651,
+      "type": 44818,
+      "frames": 12,
+      "width": 354,
+      "height": 75,
+      "depth": 8,
+      "speed_ms": 40,
+      "first_frame": 128,
+      "second_frame": 1783
+    },
+    "physical_frames": 13,
+    "ring_frames": 1,
+    "frame_containing_color_and_brun": 0,
+    "child_chunk_types": [
+      4,
+      7,
+      15
+    ],
+    "chunks_per_physical_frame": [
+      {
+        "number": 0,
+        "bytes": 1655,
+        "types": [
+          4,
+          15
+        ]
+      },
+      {
+        "number": 1,
+        "bytes": 2648,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 2,
+        "bytes": 5168,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 3,
+        "bytes": 7498,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 4,
+        "bytes": 8180,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 5,
+        "bytes": 7060,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 6,
+        "bytes": 7986,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 7,
+        "bytes": 6182,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 8,
+        "bytes": 5206,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 9,
+        "bytes": 2750,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 10,
+        "bytes": 590,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 11,
+        "bytes": 154,
+        "types": [
+          7
+        ]
+      },
+      {
+        "number": 12,
+        "bytes": 446,
+        "types": [
+          7
+        ]
+      }
+    ],
+    "decoded_frames_checked": 12
+  },
+  "validation": {
+    "compared_pixels": 786432,
+    "mismatching_pixels": 0,
+    "background_pixels": 483840,
+    "background_mismatches": 0,
+    "independent_gamma_channels": 708,
+    "independent_tint_entries": 256,
+    "native_decoded_frames_match_independent": 12,
+    "full_original_window_loop_executed": false,
+    "original_gamma_and_tint_results_supplied": false,
+    "original_assets_or_glyph_masks_embedded": false
+  }
+}

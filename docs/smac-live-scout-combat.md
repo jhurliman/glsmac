@@ -12,7 +12,8 @@ strategic AI, network play and victory remain separate work.
 Directional keyboard input sends conventional Units through this native move
 route even when the frontend sees an enemy. Legacy native-life combat retains
 its separate script event. The queued callback carries scalar Unit IDs and
-destination coordinates and resolves current entities before dispatch.
+destination coordinates, belongs to the current Game session, and resolves
+current entities before dispatch.
 
 The existing copied-RNG combat kernel feeds the live survivor, casualty,
 home-Base refreshes, remembered occupancy and ordered Unit roster. These publish

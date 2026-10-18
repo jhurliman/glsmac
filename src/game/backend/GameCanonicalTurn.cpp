@@ -77,7 +77,7 @@ void Game::RequireCanonicalTurn(size_t turn_id) const {
 	}
 	RequireSmacLocalHumanOwner(m_slot);
 	ValidateCurrentSimulation();
-	if(m_simulation->value.human_defeat_request) {throw std::runtime_error("Campaign has a human-defeat ending request");}
+	RequireSmacGameplayActive();
 	for (const auto& participant:m_simulation->value.roster) {
 		if (participant.active) {RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant.slot));}
 	}
@@ -217,6 +217,10 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	}
 	CheckTurnComplete();
 	if(!m_is_turn_complete) {SetTurnStatus(turn::TS_TURN_ACTIVE);}
+}
+
+void Game::RequireSmacGameplayActive() const {
+	if(m_simulation && m_simulation->value.human_defeat_request) {throw std::runtime_error("Campaign has a human-defeat ending request");}
 }
 
 gse::Value* Game::GetSmacEnding(GSE_CALLABLE) const {

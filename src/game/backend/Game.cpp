@@ -595,7 +595,7 @@ void Game::ClearEvents() {
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	if(m_simulation && m_simulation->value.human_defeat_request) {THROW("Campaign has a human-defeat ending request");}
+	RequireSmacGameplayActive();
 	if(HandleSmacResearchEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyEvent(GSE_CALL,name,args,m_slot_num,false) || HandleSmacColonyScreenClose(GSE_CALL,name,args,m_slot_num,false)) {
 		AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,name,args));return;
 	}
@@ -972,7 +972,7 @@ WRAPIMPL_BEGIN( Game )
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
 				N_GET( args, 1, Object );
-				if(m_simulation && m_simulation->value.human_defeat_request) {THROW("Campaign has a human-defeat ending request");}
+				RequireSmacGameplayActive();
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
 				}

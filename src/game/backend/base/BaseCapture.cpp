@@ -44,6 +44,7 @@ BaseManager::PreparedSmacCapture::~PreparedSmacCapture()=default;
 BaseManager::PreparedSmacCapture::PreparedSmacCapture(PreparedSmacCapture&&) noexcept=default;
 
 BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* actor,map::tile::Tile* destination,size_t caller) const {
+	m_game->RequireSmacGameplayActive();
 	auto* um=m_game->GetUM();
 	if(!actor || um->GetUnit(actor->m_id)!=actor || !actor->IsConventional()) {THROW("Capture requires a current conventional unit");}
 	m_game->RequireConventionalSightWorld();actor->RequireConventionalReady();

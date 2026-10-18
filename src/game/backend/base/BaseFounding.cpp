@@ -19,6 +19,7 @@
 
 namespace game::backend::base {
 void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
+	m_game->RequireSmacGameplayActive();
     using namespace map::tile;
     if (!m_game->IsRunning() || m_game->GetTurnId()==0 || m_game->GetTurnId()>INT32_MAX
         || m_dispatching_updates || m_game->GetUM()->GetUnit(colony.m_id)!=&colony || !colony.IsConventional()

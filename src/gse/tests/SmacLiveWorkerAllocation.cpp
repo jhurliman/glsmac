@@ -297,6 +297,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 bool exact=false;fixture.ResourceState([&](auto& state){exact=state.human_defeat_request==victim && state.economy.at(victim).credits==120
                     && state.economy.at(victim).population_aggregate==0;});GT_ASSERT(exact,"ending skipped the original empty-owner tail or lost persistent request");
                 saved=fixture.Snapshot();GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}) && fixture.Snapshot()==saved,"ending allowed another turn");
+                if(victim==2) {
+                    auto* unit=um->GetUnit(92);auto* unit_wrapper=static_cast<value::Object*>(unit->Wrap(GSE_CALL));
+                    GT_ASSERT(Rejects([&]{Call(GSE_CALL,unit_wrapper,"move_conventional",{VALUE(value::Int,,0),destination->Wrap(GSE_CALL)});})
+                        && Rejects([&]{um->ValidateConventionalMove(unit,destination,0);}) && fixture.Snapshot()==saved,"direct movement wrapper bypassed the ending request");
+                    GT_ASSERT(Rejects([&]{control->SetAccumulatedNutrients(999);}) && Rejects([&]{control->SetProductionState(GSE_CALL,control->GetProductionState());})
+                        && Rejects([&]{control->SetSmacResourceContext(GSE_CALL,control->GetSmacResourceContext());})
+                        && Rejects([&]{control->RecalculateSmacWorkers(GSE_CALL,Roles());}) && fixture.Snapshot()==saved,"direct Base mutation bypassed the ending request");
+                    GT_ASSERT(Call(GSE_CALL,unit_wrapper,"get_conventional_state")->type==VT_OBJECT && unit->QueryStats(SmacMoraleMode::Mode0).hit_points>0,
+                        "terminal request blocked read-only Unit inspection");
+                }
                 GT_ASSERT(Rejects([&]{Call(GSE_CALL,wrapper,"event",{VALUE(value::String,,"complete_turn"),VALUE(value::Object,,GSE_CALL_NOGC,{})});}) && fixture.Snapshot()==saved,
                     "script event bypassed the terminal request");GT_OK();
             });if(!result.empty()) {return "ending victim "+std::to_string(victim)+": "+result;}

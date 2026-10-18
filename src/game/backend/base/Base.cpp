@@ -209,6 +209,7 @@ int64_t Base::GetAccumulatedNutrients() const {
 }
 
 void Base::SetAccumulatedNutrients( const int64_t nutrients ) {
+	m_game->RequireSmacGameplayActive();
 	if ( m_accumulated_nutrients != nutrients ) {
 		m_accumulated_nutrients = nutrients;
 		TriggerUpdate();
@@ -220,6 +221,7 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 }
 
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	// Copy completely before swapping: even an allocation failure preserves the
@@ -243,6 +245,7 @@ SmacBaseResourceContext Base::GetSmacResourceContext() const {
 }
 
 void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& context ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	const auto previous = GetSmacResourceContext();
 	context.Validate();

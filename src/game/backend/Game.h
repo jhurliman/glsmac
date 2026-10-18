@@ -489,6 +489,7 @@ private:
 	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
 	gse::Value* GetSmacEnding(GSE_CALLABLE) const;
+	void RequireSmacGameplayActive() const;
 	void NotifyCanonicalColony(GSE_CALLABLE);
 	void ValidateCanonicalColonyScreen() const;
 	void NotifyCanonicalColonyScreen(GSE_CALLABLE);

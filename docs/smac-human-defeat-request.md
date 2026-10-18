@@ -12,7 +12,8 @@ case projection omits per-tile exploration/site dumps from the private trace.
 The native controller finishes the current owner's population summary and
 empty-faction financial tail, then delivers the ending to the existing outcome
 overlay. Later owners do not begin upkeep. Enqueued gameplay after the loss is
-discarded, and new gameplay/turn commands are rejected. The existing menu return
+discarded, and new gameplay/turn commands, including direct Unit movement and
+Base mutation APIs, are rejected. Read-only inspection and the existing menu return
 remains available. A request for a different human faction displays that faction;
 it does not falsely label the local faction eliminated or announce conquest.
 
@@ -29,13 +30,15 @@ fenced pending faithful restart search. It does not implement the original
 global endgame presentation, scores, survivor-count/conquest/council victories,
 AI or network outcome scheduling.
 
-Validation: cached Linux Debug build; 86 affected upkeep, Colony, research,
-simulation and save/Start groups passed with memory debugging, plus five existing
-event/session lifetime groups and the actual `smac_outcome.gls.js` overlay test.
+Validation: cached Linux Debug build; 91 affected upkeep, Colony, research,
+simulation, save/Start and event/session lifetime groups passed with memory
+debugging. The actual `smac_outcome.gls.js` overlay test also passed and its
+unchanged script result is reused after the native API guard fix.
 The live test covers local and foreign human loss, the losing owner's retained
 financial tail, unchanged later-owner Base, discarded prequeued movement,
 read-only status, rejected native/script commands and actual Start. Codec tests
 check V12 migration and invalid/active owner identities. LLVM15 correctness
-analysis passed eight changed/affected production translation units in18.67s.
+analysis passed ten changed/affected production translation units in 21.77s
+after the native API guard fix (the initial eight-unit pass took 18.67s).
 The change adds scalar saved state and control flow; existing last-Base ownership
 sanitizer evidence is reused, without another platform/sanitizer matrix.

@@ -302,10 +302,10 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
         for(const auto& row:m_game->GetBM()->GetBases()) {
             auto* base=row.second;if(distance(tile,base->GetTile())>2) {continue;}
             const auto owner=base->GetSmacResourceContext().owner_simulation_id;
-            if(base->m_pops.size()>127) {throw std::runtime_error("Native Base memory exceeds its population byte");}
+            if(base->GetPopulation()>127) {throw std::runtime_error("Native Base memory exceeds its population byte");}
             auto found=std::find_if(knowledge.bases.begin(),knowledge.bases.end(),[&](const auto& b){return b.id==row.first;});
             if(found==knowledge.bases.end()) {knowledge.bases.push_back({row.first,0,{}});found=std::prev(knowledge.bases.end());}
-            found->known_by|=1u;found->population[0]=static_cast<uint8_t>(base->m_pops.size());disclosed|=static_cast<uint8_t>(1u<<owner);
+            found->known_by|=1u;found->population[0]=static_cast<uint8_t>(base->GetPopulation());disclosed|=static_cast<uint8_t>(1u<<owner);
         }
         for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {
             if(std::abs(dx)+std::abs(dy)>4 || ((dx^dy)&1)) {continue;}

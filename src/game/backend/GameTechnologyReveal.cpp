@@ -41,11 +41,11 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareSmacTechnologyReveal( con
     } }
     for ( const auto& entry:m_bm->GetBases() ) {
         const auto id=entry.first; const auto* base=entry.second;
-        if ( !base || base->m_pops.size()>127 ) { throw std::runtime_error("Technology revelation Base population is invalid"); }
+        if ( !base || base->GetPopulation()>127 ) { throw std::runtime_error("Technology revelation Base population is invalid"); }
         auto found=std::find_if(data.bases.begin(),data.bases.end(),[&](const auto& item){return item.id==id;});
         if(found==data.bases.end()) { data.bases.push_back({id,0,{}}); found=std::prev(data.bases.end()); }
         found->known_by |= bit;
-        found->population[owner]=static_cast<uint8_t>(base->m_pops.size());
+        found->population[owner]=static_cast<uint8_t>(base->GetPopulation());
     }
     data.all_map_revealed |= bit;
     return map::SmacWorkerKnowledge::Create(data);

@@ -1226,7 +1226,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					}
 				);
 			}
-			base->SetPops( pops );
+			base->SetPops( pops, d.has_population ? d.population : pops.size() );
 			m_bm->RefreshBase( base );
 			break;
 		}

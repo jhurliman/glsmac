@@ -32,7 +32,7 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     const auto& profiles=m_state->m_settings.global.GetSmacFactionStartupRules();
     const auto* profile=profiles ? profiles->Find(target.m_faction->m_id):nullptr;
     if(!social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed || !profile) {return missing("Citizens require the frozen faction and current social ratings");}
-    const auto count=population.value_or(target.m_pops.size());
+    const auto count=population.value_or(target.GetPopulation());
     if(count>127 || m_map->GetWidth()>INT32_MAX || m_map->GetHeight()>INT32_MAX) {throw std::runtime_error("Citizen population or map geometry exceeds its measured domain");}
     const auto allocation=candidate ? std::optional<base::SmacBaseAllocationState>(*candidate):target.GetSmacAllocation();
     if(!allocation) {return missing("Citizen specialist allocation is unavailable");}

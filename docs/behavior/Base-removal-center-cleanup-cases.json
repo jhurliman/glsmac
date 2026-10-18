@@ -1,0 +1,1916 @@
+{
+  "research_id": "RE-SMAC-BASE-REMOVE-CENTER-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "id": "old_land_mixed",
+      "before": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 3,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_home_repair_before_marker_clear": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 3,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_marker_clear_and_Base_compaction": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 3,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "casualties_in_order": [
+        {
+          "id": 5,
+          "owner": 1,
+          "design": 4,
+          "domain": 1,
+          "plan": 9,
+          "position": [
+            64,
+            16
+          ],
+          "home": -1,
+          "order": 0,
+          "payload": -1,
+          "flags": 0
+        },
+        {
+          "id": 4,
+          "owner": 1,
+          "design": 3,
+          "domain": 1,
+          "plan": 7,
+          "position": [
+            64,
+            16
+          ],
+          "home": 0,
+          "order": 0,
+          "payload": -1,
+          "flags": 0
+        },
+        {
+          "id": 1,
+          "owner": 0,
+          "design": 9,
+          "domain": 1,
+          "plan": 7,
+          "position": [
+            64,
+            16
+          ],
+          "home": -1,
+          "order": 0,
+          "payload": -1,
+          "flags": 32
+        }
+      ],
+      "transport_preprocessing": [],
+      "after": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 999,
+        "native_designs": [
+          17,
+          16,
+          17
+        ],
+        "peer_plan": 2,
+        "peer_designs": [
+          2,
+          0,
+          1
+        ],
+        "surface": 3,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "helper_returned_scalar": 7,
+      "accounting": {
+        "active_design_debits": 3,
+        "active_plan_debits": 2,
+        "global_Unit_count_debits": 3
+      }
+    },
+    {
+      "id": "old_sea_mixed_transport",
+      "before": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_home_repair_before_marker_clear": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_marker_clear_and_Base_compaction": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "casualties_in_order": [],
+      "transport_preprocessing": [
+        {
+          "unit": {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          "mode": 0,
+          "presence": 2,
+          "cached_occupant": 1
+        },
+        {
+          "unit": {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          "mode": 0,
+          "presence": 2,
+          "cached_occupant": 1
+        }
+      ],
+      "after": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 1,
+            "payload": 4,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 6,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          2,
+          1,
+          2
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "helper_returned_scalar": 7,
+      "accounting": {
+        "active_design_debits": 0,
+        "active_plan_debits": 0,
+        "global_Unit_count_debits": 0
+      }
+    },
+    {
+      "id": "old_sea_no_transport",
+      "before": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 2,
+        "peer_designs": [
+          2,
+          0,
+          2
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_home_repair_before_marker_clear": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 2,
+        "peer_designs": [
+          2,
+          0,
+          2
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_marker_clear_and_Base_compaction": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 2,
+        "peer_designs": [
+          2,
+          0,
+          2
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "casualties_in_order": [
+        {
+          "id": 2,
+          "owner": 1,
+          "design": 2,
+          "domain": 0,
+          "plan": 3,
+          "position": [
+            64,
+            16
+          ],
+          "home": 0,
+          "order": 0,
+          "payload": -1,
+          "flags": 0
+        },
+        {
+          "id": 0,
+          "owner": 0,
+          "design": 8,
+          "domain": 0,
+          "plan": 1,
+          "position": [
+            64,
+            16
+          ],
+          "home": -1,
+          "order": 0,
+          "payload": -1,
+          "flags": 0
+        }
+      ],
+      "transport_preprocessing": [],
+      "after": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 999,
+        "native_designs": [
+          16,
+          17,
+          17
+        ],
+        "peer_plan": 1,
+        "peer_designs": [
+          1,
+          0,
+          2
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "helper_returned_scalar": 7,
+      "accounting": {
+        "active_design_debits": 2,
+        "active_plan_debits": 2,
+        "global_Unit_count_debits": 2
+      }
+    },
+    {
+      "id": "old_sea_order_payload_exception",
+      "before": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 1,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          3,
+          0,
+          1
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_home_repair_before_marker_clear": {
+        "Base_count": 2,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 1,
+            "order": 1,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          3,
+          0,
+          1
+        ],
+        "surface": 2,
+        "presence": 3,
+        "cached_occupant": 1
+      },
+      "after_marker_clear_and_Base_compaction": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": 0,
+            "order": 1,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 4,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 32
+          },
+          {
+            "id": 5,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 1000,
+        "native_designs": [
+          17,
+          17,
+          17
+        ],
+        "peer_plan": 3,
+        "peer_designs": [
+          3,
+          0,
+          1
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "casualties_in_order": [
+        {
+          "id": 4,
+          "owner": 0,
+          "design": 8,
+          "domain": 0,
+          "plan": 1,
+          "position": [
+            64,
+            16
+          ],
+          "home": -1,
+          "order": 0,
+          "payload": -1,
+          "flags": 32
+        },
+        {
+          "id": 2,
+          "owner": 1,
+          "design": 2,
+          "domain": 0,
+          "plan": 3,
+          "position": [
+            64,
+            16
+          ],
+          "home": 0,
+          "order": 1,
+          "payload": -1,
+          "flags": 0
+        }
+      ],
+      "transport_preprocessing": [],
+      "after": {
+        "Base_count": 1,
+        "units": [
+          {
+            "id": 0,
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          },
+          {
+            "id": 2,
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "order": 1,
+            "payload": 1,
+            "flags": 0
+          },
+          {
+            "id": 3,
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              66,
+              16
+            ],
+            "home": -1,
+            "order": 0,
+            "payload": -1,
+            "flags": 0
+          }
+        ],
+        "native_plan": 999,
+        "native_designs": [
+          16,
+          17,
+          17
+        ],
+        "peer_plan": 2,
+        "peer_designs": [
+          2,
+          0,
+          1
+        ],
+        "surface": 2,
+        "presence": 2,
+        "cached_occupant": 1
+      },
+      "helper_returned_scalar": 7,
+      "accounting": {
+        "active_design_debits": 2,
+        "active_plan_debits": 2,
+        "global_Unit_count_debits": 2
+      }
+    }
+  ],
+  "scope": "Four complete ordinary Base removals on prepared Planet with declared second own Base and actual native initializer/factories. Homes/orders/payloads/flag20 and native counter canaries are explicit inputs. No new climate pass or full transport/combat audit; existing flood ordering reused.",
+  "passed": true
+}

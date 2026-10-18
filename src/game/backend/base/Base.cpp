@@ -334,10 +334,15 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteBool( base->m_allocation.has_value() );
 	if ( base->m_allocation ) { buf.WriteString( base->m_allocation->Serialize().ToString() ); }
 	buf.WriteString( SerializeSmacBaseUpkeepCache( base->m_smac_upkeep_cache ).ToString() );
+	if(base->m_retained_population) {
+		if(!base->m_resource_context || !base->m_allocation || !base->m_production || !*base->m_retained_population
+			|| *base->m_retained_population>=base->m_pops.size() || base->m_pops.size()>127) { THROW("Invalid retained Base population"); }
+		buf.WriteString("SMAC_RETAINED_POPULATION_V1");buf.WriteInt(*base->m_retained_population);
+	}
 	return buf;
 }
 
-Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
+Base* Base::Deserialize( types::Buffer& buf, Game* game, bool allow_retained_population ) {
 	ASSERT( game, "game is null" );
 	const auto id = buf.ReadInt();
 	auto* slot = &game->GetState()->m_slots->GetSlot( buf.ReadInt() );
@@ -383,9 +388,17 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	if ( buf.ReadBool() ) { allocation = SmacBaseAllocationState::Deserialize( types::Buffer( buf.ReadString( SmacBaseAllocationState::WIRE_BYTES ) ) ); }
 	auto cache = DeserializeSmacBaseUpkeepCache( types::Buffer( buf.ReadString() ) );
 	if ( cache && ( !resource_context || !allocation || !production ) ) { THROW( "Saved upkeep cache requires a canonical Base" ); }
+	std::optional<size_t> retained_population;
+	if(buf.lenr!=buf.lenw) {
+		if(!allow_retained_population || buf.ReadString(64)!="SMAC_RETAINED_POPULATION_V1") { THROW("Unsupported retained Base population"); }
+		const auto population=buf.ReadInt();
+		if(!resource_context || !allocation || !production || population<1 || population>=static_cast<int64_t>(pops.size()) || pops.size()>127) { THROW("Invalid saved retained Base population"); }
+		retained_population=static_cast<size_t>(population);
+	}
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
 	auto* base = new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
 	base->m_smac_upkeep_cache = std::move( cache );
+	base->m_retained_population = retained_population;
 	return base;
 }
 
@@ -956,7 +969,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			ValidateSmacAllocation();
 			N_EXPECT_ARGS( 0 );
-			return VALUE( gse::value::Int,, m_pops.size() );
+			return VALUE( gse::value::Int,, GetPopulation() );
 		} ),
 	},
 	{
@@ -1046,19 +1059,19 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"get_smac_nutrient_presentation",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
-			if ( !m_resource_context || !m_allocation || !m_production || m_pops.empty()
+			if ( !m_resource_context || !m_allocation || !m_production || (GetPopulation()==0)
 				|| !m_owner || m_owner->GetPlayer() != m_game->GetPlayer()
 				|| !m_game->GetState()->m_settings.global.IsOrdinarySmacCampaign() ) { return VALUE( gse::value::Undefined ); }
 			const auto rules = m_game->GetCanonicalPopulationRules( *this );
 			const auto resources = PrepareSmacResourceCalculation();
-			const auto threshold = int64_t( rules.cost_per_step ) * static_cast<int64_t>( m_pops.size() + 1 );
+			const auto threshold = int64_t( rules.cost_per_step ) * static_cast<int64_t>( GetPopulation() + 1 );
 			if ( threshold > INT32_MAX ) { return VALUE( gse::value::Undefined ); }
 			gse::value::object_properties_t fields{
 				{ "stored", VALUE( gse::value::Int,, m_accumulated_nutrients ) },
 				{ "normalized_stored", VALUE( gse::value::Int,, resources.nutrients.normalized_stored ) },
 				{ "surplus", VALUE( gse::value::Int,, resources.nutrients.surplus ) },
 				{ "cost_per_step", VALUE( gse::value::Int,, rules.cost_per_step ) },
-				{ "rows", VALUE( gse::value::Int,, m_pops.size() + 1 ) },
+				{ "rows", VALUE( gse::value::Int,, GetPopulation() + 1 ) },
 				{ "threshold", VALUE( gse::value::Int,, threshold ) },
 				{ "display_basis", VALUE( gse::value::String,, "current_resource_preparation" ) },
 				{ "display_label", VALUE( gse::value::String,, FormatSmacNutrientGrowthLabel(m_accumulated_nutrients, static_cast<int32_t>(threshold), resources.nutrients.surplus) ) },
@@ -1070,7 +1083,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				// This is the nutrient kernel at the CURRENT population/allocation,
 				// not a forecast of production, governor repair, Colony completion
 				// or the outer upkeep recalculation. Drawing never runs those writes.
-				const auto step = SmacPopulationStep::Prepare( rules, static_cast<int32_t>(m_pops.size()),
+				const auto step = SmacPopulationStep::Prepare( rules, static_cast<int32_t>(GetPopulation()),
 					m_accumulated_nutrients, resources.nutrients.surplus, false );
 				const char* branch = nullptr;
 				switch ( step.branch ) {
@@ -1123,7 +1136,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			// roster is private even when the Base tile itself is explored.
 			if ( !m_resource_context || !m_allocation || !m_production || !m_owner
 				|| m_owner->GetPlayer() != m_game->GetPlayer() ) { return VALUE( gse::value::Undefined ); }
-			const auto current = m_game->CalculateCanonicalUnitSupport( *this, m_pops.size(), nullptr );
+			const auto current = m_game->CalculateCanonicalUnitSupport( *this, GetPopulation(), nullptr );
 			const auto totals = [ & ]( const SmacUnitSupportResult& support ) {
 				return gse::value::object_properties_t{
 					{ "free_allowance", VALUE( gse::value::Int,, support.free_allowance ) },

@@ -80,7 +80,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto registered=std::find_if(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second==destination->base;});
 	if(registered==m_bases.end() || registered->second->m_id!=registered->first) {THROW("Capture target is not a current Base");}
 	auto* captured=registered->second;const auto before=captured->GetSmacResourceContext();
-	if(captured->m_owner==actor->m_owner || captured->m_pops.size()<2 || before.conquest || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
+	if(captured->m_owner==actor->m_owner || captured->GetPopulation()<2 || before.conquest || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
 	m_game->RequireSmacLocalHumanOwner(actor->m_owner);m_game->RequireSmacLocalHumanOwner(captured->m_owner);
 	const auto resolved=um->ResolveConventional(actor->Conventional(),actor->m_owner);
 	const auto design=m_game->ResolveConventionalDesign(actor->Conventional(),*m_game->m_simulation);
@@ -113,8 +113,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		data->victory->RecordBaseExpansion(new_owner,static_cast<int32_t>(m_game->GetTurnId()));
 	}
 	data->actor=actor;data->base=captured;data->source=source;data->owner=actor->m_owner;data->old_owner=old_owner;data->new_owner=new_owner;
-	data->population=captured->m_pops.size()-1;
-	const int64_t numerator=int64_t(defender_economy.credits)*static_cast<int64_t>(captured->m_pops.size());
+	data->population=captured->GetPopulation()-1;
+	const int64_t numerator=int64_t(defender_economy.credits)*static_cast<int64_t>(captured->GetPopulation());
 	if(numerator>INT32_MAX) {THROW("Capture treasury multiplication exceeds the admitted ordinary domain");}
 	const int64_t booty=numerator/(*defender_economy.population_aggregate+1);
 	if(booty>INT32_MAX || int64_t(data->actor_economy.credits)+booty>INT32_MAX) {THROW("Capture treasury arithmetic exceeds the admitted ordinary domain");}
@@ -147,7 +147,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 				const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
 				distance_sum+=distance*(candidate_region==region(other.second) ? 1 : 2);
 			}
-			const auto divisor=int64_t(defender_economy.regional_base_counts->at(candidate_region))+2*int64_t(candidate->m_pops.size());
+			const auto divisor=int64_t(defender_economy.regional_base_counts->at(candidate_region))+2*int64_t(candidate->GetPopulation());
 			if(divisor<=0) {THROW("HQ relocation has an invalid population/region denominator");}
 			const auto score=256*distance_sum/divisor;
 			if(score<best) {best=score;selected=candidate;}
@@ -179,7 +179,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 			if(distance<=nearest) {nearest=distance;replacement=candidate;}
 		}
 		if(candidate!=captured && candidate->m_owner==actor->m_owner) {
-			int64_t weight=candidate->m_pops.size();
+			int64_t weight=candidate->GetPopulation();
 			for(const auto& entry:candidate->m_facilities) {if(!entry.second || GetFacilityDef(entry.first)!=entry.second) {THROW("Governor donor has an invalid facility");}if(entry.second->m_smac_source_id==1) {weight*=2;}}
 			if(weight>best_governor) {best_governor=weight;data->context.governor_options=candidate->GetSmacResourceContext().governor_options;}
 		}
@@ -204,7 +204,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	// Successful ordinary survivor capture preserves the independent paid marker.
 	data->production->hurry_partial_paid=captured->m_production->hurry_partial_paid;
 	for(const auto& pair:{std::pair<int32_t,int32_t>{old_owner,new_owner},{new_owner,old_owner}}) {data->history.owners.at(pair.first).directions.at(pair.second).primary|=0x8000a118u;}
-	auto& counters=data->history.owners.at(new_owner).directions.at(old_owner);const auto encounters=static_cast<uint32_t>(captured->m_pops.size())*2u;counters.paired_a+=encounters;counters.paired_b+=encounters;
+	auto& counters=data->history.owners.at(new_owner).directions.at(old_owner);const auto encounters=static_cast<uint32_t>(captured->GetPopulation())*2u;counters.paired_a+=encounters;counters.paired_b+=encounters;
 	data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
 	data->topology=m_game->GetMap()->GetTerritoryTopology();
 	if(!data->knowledge) {THROW("Capture needs saved movement sight and territory");}
@@ -295,7 +295,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 								if(tile->base) {
 									auto found=std::find_if(knowledge.bases.begin(),knowledge.bases.end(),[&](const auto& value){return value.id==tile->base->m_id;});
 									if(found==knowledge.bases.end()) {knowledge.bases.push_back({tile->base->m_id,0,{}});found=std::prev(knowledge.bases.end());}
-									found->known_by|=bit;found->population[new_owner]=static_cast<uint8_t>(tile->base==captured ? 1 : tile->base->m_pops.size());
+									found->known_by|=bit;found->population[new_owner]=static_cast<uint8_t>(tile->base==captured ? 1 : tile->base->GetPopulation());
 								}
 								data->tracked_center=std::array<int32_t,2>{{x,y}};
 							}

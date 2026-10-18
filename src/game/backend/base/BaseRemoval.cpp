@@ -20,7 +20,7 @@
 namespace game::backend::base {
 
 BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(const Base& base) const {
-    if(!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+    if(!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.GetPopulation()!=1) {
         THROW("Faction disposition requires the current size-one Base");
     }
     const auto* map=m_game->GetMap();const auto* center=base.GetTile();
@@ -170,7 +170,7 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
 }
 
 void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
-    if (!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+    if (!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.GetPopulation()!=1) {
         THROW("Colony abandonment requires the current size-one canonical Base");
     }
     m_game->RequireSmacLocalHumanOwner(base.m_owner);
@@ -191,7 +191,7 @@ void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
         const auto* successor=GetBase(*std::next(position));
         if (!successor || successor->m_owner!=base.m_owner) {THROW("Foreign compacted successor continuation is not yet admitted");}
         if (!successor->GetSmacUpkeepCache()) {THROW("Compacted successor lacks its retained resource calculation");}
-        const auto population=static_cast<int32_t>(successor->m_pops.size());
+        const auto population=static_cast<int32_t>(successor->GetPopulation());
         const auto plan=SmacPopulationStep::Prepare(m_game->CalculateCanonicalPopulationRules(*successor,population),population,
             successor->GetAccumulatedNutrients(),successor->GetSmacUpkeepCache()->calculation.nutrients.surplus,false);
         if (!plan.stored_nutrients) {THROW("Compacted successor removal requires the disposition continuation");}
@@ -207,7 +207,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
     unit::Def* definition, unit::SmacMoraleMode mode ) {
     m_game->CheckRW(GSE_CALL);
     if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()
-        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.GetPopulation()!=1) {
         THROW("Colony abandonment requires the current size-one canonical Base");
     }
     ValidateSmacAbandonment(base);
@@ -277,7 +277,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
 void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     m_game->CheckRW(GSE_CALL);
     if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning()
-        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
+        || m_dispatching_updates || GetBase(base.m_id)!=&base || base.GetPopulation()!=1) {
         THROW("Starvation removal requires the current size-one canonical Base");
     }
     m_game->RequireSmacLocalHumanOwner(base.m_owner);

@@ -75,6 +75,9 @@ public:
 	virtual ~Base() = default;
 
 	const Game* const GetGame() const;
+	// Flood damage can reduce the retained count before its later worker pass.
+	// Pop nodes continue projecting the stored allocation until that pass commits.
+	size_t GetPopulation() const noexcept { return m_retained_population.value_or(m_pops.size()); }
 
 	Pop* const AddPop( const Pop& pop );
 	void RemovePop( const size_t pop_id );
@@ -161,7 +164,7 @@ public:
 	pops_t m_pops;
 
 	static const types::Buffer Serialize( const Base* base );
-	static Base* Deserialize( types::Buffer& buf, Game* game );
+	static Base* Deserialize( types::Buffer& buf, Game* game, bool allow_retained_population = true );
 
 	WRAPDEFS_DYNAMIC( Base );
 
@@ -198,6 +201,7 @@ private:
 	std::optional< ProductionState > m_production;
 	std::optional< SmacBaseResourceContext > m_resource_context;
 	std::optional< SmacBaseAllocationState > m_allocation;
+	std::optional<size_t> m_retained_population;
 	std::optional<SmacBaseUpkeepCache> m_smac_upkeep_cache;
 	// Optional view interaction, not a suspended turn or saved gameplay authority.
 	struct SpecialistSelectionRequest { int64_t id; size_t pop_id; std::string expected; };

@@ -166,7 +166,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			const auto* hq = entry.second;
 			const auto* definition = m_game->GetBM()->GetFacilityDef( "HEADQUARTERS" );
 			if ( !hq || hq->m_id != entry.first || hq->GetGame() != m_game || hq->m_owner != unit->m_owner
-				|| hq->m_faction != unit->m_owner->GetPlayer()->GetFaction() || hq->m_pops.size() != 1
+				|| hq->m_faction != unit->m_owner->GetPlayer()->GetFaction() || hq->GetPopulation() != 1
 				|| !definition || hq->m_facilities.size() != 1 || hq->m_facilities.begin()->first != "HEADQUARTERS"
 				|| hq->m_facilities.begin()->second != definition ) {
 				throw std::runtime_error( "Friendly HQ movement requires a canonical same-owner population1 HQ with no other facilities" );

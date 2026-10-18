@@ -34,7 +34,13 @@ EnergyPreview PrepareEnergyRates(const Game& game,const base::Base& anchor,base:
 }
 }
 base::SmacBaseEnergyCalculation Game::PreviewCanonicalBaseEnergy(const base::Base& base,base::SmacEnergyRates rates) const {
-    rates.Validate();return CalculateCanonicalBaseEnergy(base,base.PrepareSmacResourceCalculation(),&rates);
+    rates.Validate();
+    if(base.m_retained_population) {
+        const auto allocation=base.CalculateSmacWorkers(*base.m_allocation,base.GetSmacResourceContext());
+        const auto resources=base.CalculateSmacResourceCalculation(base::SmacBaseResourcePhase::Ordinary,&allocation);
+        return CalculateCanonicalBaseEnergy(base,resources,&rates,&allocation);
+    }
+    return CalculateCanonicalBaseEnergy(base,base.PrepareSmacResourceCalculation(),&rates);
 }
 
 gse::Value* Game::CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& anchor,std::optional<base::SmacEnergyRates> candidate) const {
@@ -88,7 +94,7 @@ void Game::ApplySmacEnergyRates(GSE_CALLABLE,base::Base& anchor,base::SmacEnergy
                 base::SmacBaseResourcePhase::Ordinary,{},nullptr,nullptr,{},nullptr,availability.unavailable);
             frame.bases.at(row.frame_index).selected_radius=row.allocation.selected&map::SmacWorkerMapFrame::RADIUS_MASK;
             const auto resources=row.base->CalculateSmacResourceCalculation(base::SmacBaseResourcePhase::Ordinary,&row.allocation,{},row.food);
-            const auto support=CalculateCanonicalUnitSupport(*row.base,row.base->m_pops.size(),nullptr);
+            const auto support=CalculateCanonicalUnitSupport(*row.base,row.base->GetPopulation(),nullptr);
             CalculateCanonicalBaseEnergy(*row.base,resources,&rates,&row.allocation);
             row.food=resources.nutrients.normalized_stored;
             row.cache=base::SmacBaseUpkeepCache{resources,support};

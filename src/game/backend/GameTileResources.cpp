@@ -86,7 +86,7 @@ void RequireResourceDefinitions( const resource::ResourceManager& manager ) {
 }
 
 int32_t Game::GetCanonicalMineralSupport( const base::Base& evaluating_base ) const {
-	return CalculateCanonicalMineralSupport( evaluating_base, evaluating_base.m_pops.size(), nullptr );
+	return CalculateCanonicalMineralSupport( evaluating_base, evaluating_base.GetPopulation(), nullptr );
 }
 int32_t Game::CalculateCanonicalMineralSupport( const base::Base& evaluating_base, const size_t population, const unit::Unit* prepared_unit ) const {
 	return CalculateCanonicalUnitSupport( evaluating_base, population, prepared_unit ).mineral_support;
@@ -150,7 +150,7 @@ base::SmacUnitSupportResult Game::CalculateCanonicalUnitSupport( const base::Bas
 }
 
 std::array< int32_t, 3 > Game::GetCanonicalOrbitalIntake( const base::Base& evaluating_base ) const {
-	return CalculateCanonicalOrbitalIntake( evaluating_base, evaluating_base.m_pops.size() );
+	return CalculateCanonicalOrbitalIntake( evaluating_base, evaluating_base.GetPopulation() );
 }
 std::array< int32_t, 3 > Game::CalculateCanonicalOrbitalIntake( const base::Base& evaluating_base, const size_t population ) const {
 	ValidateCurrentSimulation();
@@ -185,8 +185,8 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 		if ( startup ) { RequireConventionalStartupClaim(); }
 		else { RequireSmacLocalHumanOwner( evaluating_base.m_owner ); }
 		if ( !evaluating_base.m_resource_context || m_bm->GetBase( evaluating_base.m_id )
-			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.m_pops.empty()
-			|| evaluating_base.m_pops.size()>5 || (startup && evaluating_base.m_pops.size()!=1) ) {
+			|| !evaluating_base.GetTile() || evaluating_base.GetTile()->base || evaluating_base.GetPopulation()==0
+			|| evaluating_base.GetPopulation()>5 || (startup && evaluating_base.GetPopulation()!=1) ) {
 			throw std::runtime_error( "First-Base resources require a private uninstalled candidate" );
 		}
 		m_bm->ValidateSmacResourceContext( *evaluating_base.m_resource_context, evaluating_base.m_owner, evaluating_base.m_faction );
@@ -320,7 +320,7 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 }
 
 int64_t Game::GetCanonicalNutrientDemand( const base::Base& base ) const {
-	return CalculateCanonicalNutrientDemand( base, base.m_pops.size() );
+	return CalculateCanonicalNutrientDemand( base, base.GetPopulation() );
 }
 int64_t Game::CalculateCanonicalNutrientDemand( const base::Base& base, const size_t population ) const {
 	(void)base.GetSmacResourceContext();

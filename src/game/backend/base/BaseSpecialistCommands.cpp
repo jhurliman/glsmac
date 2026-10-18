@@ -65,7 +65,7 @@ namespace base {
 void Base::RequireSmacSpecialistSelection() const {
     RequireSmacProductionSelection();
     m_game->GetBM()->RequireSmacWorkerRecalculation();
-    if(m_pops.empty() || !m_game->HasSmacBasePresentations()) {THROW("Manual specialist selection requires current population/presentation authority");}
+    if((GetPopulation()==0) || !m_game->HasSmacBasePresentations()) {THROW("Manual specialist selection requires current population/presentation authority");}
     ValidateAllocationProjection(true);
 }
 std::string Base::SmacSpecialistSelectionState() const {
@@ -83,7 +83,7 @@ void Base::PublishSmacSpecialistState(GSE_CALLABLE,const SmacBaseAllocationState
     // credits or research. Stage the complete allocation/cache before publishing.
     std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{
         CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&allocation),
-        m_game->CalculateCanonicalUnitSupport(*this,m_pops.size(),nullptr)}};
+        m_game->CalculateCanonicalUnitSupport(*this,GetPopulation(),nullptr)}};
     auto prepared=PrepareSmacWorkerState(GSE_CALL,allocation,SpecialistSelectionRoles(),context,m_production,cache->calculation.nutrients.normalized_stored);
     static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
     prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
@@ -91,7 +91,7 @@ void Base::PublishSmacSpecialistState(GSE_CALLABLE,const SmacBaseAllocationState
 void Base::OpenSmacSpecialistSelection(GSE_CALLABLE,size_t pop_id,bool apply) {
     RequireSmacSpecialistSelection();
     if(m_next_specialist_request==INT64_MAX) {THROW("Manual specialist request identity exhausted");}
-    if(!m_pops.count(pop_id)) {THROW("Manual specialist population is no longer in this Base");}
+    (void)GetSmacSpecialistMenu(pop_id); // validate survival before the owning repair commits
     const auto context=GetSmacResourceContext();
     const auto preliminary=CalculateSmacWorkers(*m_allocation,context);
     if(!apply) {return;}

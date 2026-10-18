@@ -1,5 +1,6 @@
 #include "SmacLiveWorkerAllocation.h"
 #include "ConventionalUnits.h"
+#include "game/backend/map/SmacClimate.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacRestartSearch.h"
 #include "fixtures/SmacCaptureRestart.h"
@@ -250,6 +251,18 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	setup->Run( GSE_CALL, { game->Wrap( GSE_CALL ) } );
 	return base;
 }
+std::string FloodSource(const std::string& filename) {
+    const auto source=UpkeepSource(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,output;size_t row=0;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line.front()=='#') {section=line;row=0;}
+        else if(++row==26 && section=="#FACILITIES") {
+            const auto first=line.find(','),second=line.find(',',first+1),third=line.find(',',second+1);
+            line.replace(second+1,third-second-1,"0");
+        }
+        output+=line+'\n';
+    }return output;
+}
 Knowledge KnowledgeValue( bool old_available = false, bool candidate_available = true, int32_t width = 8, int32_t height = 8 ) {
 	Knowledge::Data data{ width, height, true, true, 0, {}, {}, { { 91, 0, false } } };
 	data.observers[ 1 ] = Knowledge::Observer{ false, {} }; data.observers[ 1 ]->pact_with = 0; data.tiles.resize( width * height / 2, { 0, {} } );
@@ -343,6 +356,179 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+
+    task->AddTest("SMAC owning flood preparation preserves allocation and stages Dome damage before publication",[](GSE*,context::Context*)->std::string {
+        using Floods=BaseManager::PreparedSmacFloods;
+        std::string flooded_save;
+        // Damage, deletion, last-Base/objective protection, existing Dome,
+        // sea-to-land, discarded candidate and changed-preimage rejection.
+        for(int scenario=0;scenario<8;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(FloodSource,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,scenario==0 || scenario>=6 ? 12:1);
+                game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                auto context=base->GetSmacResourceContext();context.retained_status_word=scenario==3 ? 0x8000u:0u;base->SetSmacResourceContext(GSE_CALL,context);
+                bm->DefineFacility(new FacilityDef("flood-dome","Pressure Dome","",80,{},26));
+                if(scenario==4) {base->m_facilities.emplace("flood-dome",bm->GetFacilityDef("flood-dome"));}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));base->RecalculateSmacWorkers(GSE_CALL,Roles());
+                if(base->GetPopulation()==12) {auto allocation=*base->GetSmacAllocation();allocation.selected=511;allocation.specialists.total_count=4;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());}
+                fixture.ResourceState([&](auto& state){state.retained_base_totals=faction::SmacBaseTotals{};state.retained_base_totals->at(1)=scenario==2 ? 1:9;state.faction_status.values[1]=0x1000u;});
+                Base* peer=nullptr;
+                if(scenario==7) {
+                    Base::pops_t pops;for(size_t i=0;i<12;++i) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(100+i),std::forward_as_tuple(nullptr,100+i,bm->GetPopDef(Roles().specialists[1]),1));}
+                    SmacBaseAllocationState peer_allocation{1,{{},12}};peer_allocation.specialists.types.fill(1);
+                    peer=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(20,16),"Flood peer",{},pops,112,7,Production(),context,peer_allocation);bm->SpawnBase(GSE_CALL,peer);
+                }
+                const auto before=fixture.Snapshot();const auto record=Base::Serialize(base).ToString();const auto allocation=base->GetSmacAllocation();
+                const auto cache=SerializeSmacBaseUpkeepCache(base->GetSmacUpkeepCache()).ToString();const auto production=base->GetProductionState();
+                const auto live_random=fixture.GameplayRandom();auto random=live_random;map::smac_climate::Streams streams{random};
+                auto plan=bm->PrepareSmacFloods(GSE_CALL);
+                const auto result=plan.Flood(GSE_CALL,*base,scenario==5 ? 2:3,scenario==5 ? 3:2,streams);
+                const bool unchanged=scenario==4 || scenario==5;
+                GT_ASSERT(streams.crt_draws==(unchanged ? 0u:1u) && streams.shared_draws==0,"Flood consumed the wrong random stream or draw count");
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==live_random,"Preparing flood published Base, owner or RNG changes");
+                if(scenario==1) {
+                    GT_ASSERT(result==Floods::Outcome::Remove && Rejects([&]{plan.CommitSurvivors(GSE_CALL);}) && fixture.Snapshot()==before,
+                        "Flood deletion was normalized to survival or partially committed without ordinary removal");GT_OK();
+                }
+                GT_ASSERT(result==(unchanged ? Floods::Outcome::Unchanged:Floods::Outcome::Survived),"Wrong flood survival result");
+                if(!unchanged) {const auto draws=streams.crt_draws;GT_ASSERT(plan.Flood(GSE_CALL,*base,3,2,streams)==Floods::Outcome::Unchanged && streams.crt_draws==draws,"Candidate Dome failed to suppress a repeated flood draw");}
+                if(scenario==6) {GT_ASSERT(fixture.Snapshot()==before,"Discarded flood changed live state");GT_OK();}
+                if(scenario==7) {
+                    GT_ASSERT(plan.Flood(GSE_CALL,*peer,3,2,streams)==Floods::Outcome::Survived,"Peer flood was not staged");
+                    peer->m_name="Changed peer";const auto edited=fixture.Snapshot();
+                    GT_ASSERT(Rejects([&]{plan.CommitSurvivors(GSE_CALL);}) && fixture.Snapshot()==edited,"Changed flood preimage partially published");GT_OK();
+                }
+                plan.CommitSurvivors(GSE_CALL);
+                GT_ASSERT(base->GetPopulation()==(scenario==0 ? 6u:1u) && base->m_pops.size()==(scenario==0 ? 12u:1u)
+                    && base->GetSmacAllocation()==allocation && SerializeSmacBaseUpkeepCache(base->GetSmacUpkeepCache()).ToString()==cache
+                    && base->GetAccumulatedNutrients()==13 && base->GetProductionState()==production && fixture.GameplayRandom()==live_random,
+                    "Flood repaired allocation, posted stores/cache or published detached RNG");
+                fixture.ResourceState([&](const auto& state){if(state.faction_status.values[1]!=(unchanged ? 0x1000u:0x81000u)) {throw std::runtime_error("Flood status did not retain unrelated bits");}});
+                GT_ASSERT(base->m_facilities.count("flood-dome")==size_t(scenario!=5),"Flood Dome installation differs");
+                if(unchanged) {GT_ASSERT(Base::Serialize(base).ToString()==record,"Bypassed flood changed Base bytes");}
+                if(scenario==0) {flooded_save=fixture.Snapshot();}
+                GT_ASSERT(Rejects([&]{plan.CommitSurvivors(GSE_CALL);}),"Flood plan published twice");GT_OK();
+            });if(!error.empty()) {return "Flood scenario "+std::to_string(scenario)+": "+error;}
+        }
+        ConventionalUnitFixture restored;restored.ConfigureProduction(FloodSource,"GAIANS");
+        std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}restored.BasePresentationRoles(names);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Game()->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+            restored.RestoreThroughStart(GSE_CALL,flooded_save,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->GetPopulation()==6 && base->m_pops.size()==12 && base->m_facilities.count("flood-dome"),"Actual Start lost produced flood state");
+            Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"select_base",{base->Wrap(GSE_CALL)});restored.DrainEvents();
+            GT_ASSERT(base->GetPopulation()==6 && base->m_pops.size()==6 && base->GetSmacUpkeepCache()->calculation.citizens
+                && base->GetSmacUpkeepCache()->calculation.citizens->population==6 && base->GetAccumulatedNutrients()==13,
+                "Produced flood state did not survive Start until actual inspector worker repair");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC flooded retained population survives actual Start until queued inspector opening",[](GSE*,context::Context*)->std::string {
+        const auto source_rules=[](const std::string& filename) {
+            const auto source=UpkeepSource(filename);if(filename!="alpha.txt") {return source;}
+            std::istringstream input(source);std::string line,section,output;size_t row=0;
+            while(std::getline(input,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;row=0;}
+                else if(++row==26 && section=="#FACILITIES") {
+                    const auto first=line.find(','),second=line.find(',',first+1),third=line.find(',',second+1);
+                    line.replace(second+1,third-second-1,"0"); // admitted ordinary Dome fee, not fixture's negative sentinel
+                }
+                output+=line+'\n';
+            }return output;
+        };
+        const auto replace_frame=[](std::string whole,const std::string& before,const std::string& after) {
+            types::Buffer old_frame,new_frame;old_frame.WriteString(before);new_frame.WriteString(after);
+            const auto old=old_frame.ToString();const auto at=whole.find(old);
+            if(at==std::string::npos || whole.find(old,at+1)!=std::string::npos) {throw std::runtime_error("Fixture expected one owned snapshot frame");}
+            whole.replace(at,old.size(),new_frame.ToString());return whole;
+        };
+        ConventionalUnitFixture source;source.ConfigureProduction(source_rules,"GAIANS");std::string seeded,expected,repaired,old_cache;
+        SmacBaseAllocationState allocation{};std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}
+        source.BasePresentationRoles(names);
+        const auto setup=source.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=source.Game();auto* bm=game->GetBM();auto* base=Populate(GSE_CALL,source,true,false,0,1,12,16,16);
+            const auto stock=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{stock,17,stock,5,std::vector<ProductionItem>{}});
+            bm->DefineFacility(new FacilityDef("flood-dome","Pressure Dome","",80,{},26));base->m_facilities.emplace("flood-dome",bm->GetFacilityDef("flood-dome"));
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            base->RecalculateSmacWorkers(GSE_CALL,Roles());
+            allocation=*base->GetSmacAllocation();allocation.selected=511;allocation.specialists.total_count=4;
+            base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            old_cache=SerializeSmacBaseUpkeepCache(base->GetSmacUpkeepCache()).ToString();
+            const auto old_record=Base::Serialize(base).ToString();types::Buffer record(old_record);
+            const auto retained_prefix=record.ToString();record.WriteString("SMAC_RETAINED_POPULATION_V1");record.WriteInt(6);expected=record.ToString();
+            const auto before=source.Snapshot();const auto next=Base::GetNextId();
+            for(const int64_t invalid:{int64_t(-1),int64_t(0),int64_t(12),int64_t(128),INT64_MAX}) {
+                types::Buffer bad(retained_prefix);bad.WriteString("SMAC_RETAINED_POPULATION_V1");bad.WriteInt(invalid);std::string error;
+                try {std::unique_ptr<Base> decoded(Base::Deserialize(bad,game));}catch(const std::runtime_error& e){error=e.what();}
+                GT_ASSERT(error.find("Invalid saved retained Base population")!=std::string::npos && source.Snapshot()==before && Base::GetNextId()==next,
+                    "Malformed retained count reached construction or changed live world");
+            }
+            for(int malformed=0;malformed<3;++malformed) {
+                types::Buffer bad(retained_prefix);bad.WriteString(malformed==0 ? "SMAC_RETAINED_POPULATION_V9":"SMAC_RETAINED_POPULATION_V1");
+                if(malformed!=1) {bad.WriteInt(6);}if(malformed==2) {bad.WriteBool(false);}
+                GT_ASSERT(Rejects([&]{std::unique_ptr<Base> decoded(Base::Deserialize(bad,game));}) && source.Snapshot()==before && Base::GetNextId()==next,
+                    "Malformed retained extension changed the world or was admitted");
+            }
+            types::Buffer legacy(expected);std::string error;try {std::unique_ptr<Base> decoded(Base::Deserialize(legacy,game,false));}catch(const std::runtime_error& e){error=e.what();}
+            GT_ASSERT(error.find("Unsupported retained Base population")!=std::string::npos && source.Snapshot()==before,"V11 reader admitted retained population extension");
+            types::Buffer manager;bm->Serialize(manager);auto changed=replace_frame(manager.ToString(),old_record,expected);
+            types::Buffer v11,v12;v11.WriteString("GLSMAC_BASES_V11");v12.WriteString("GLSMAC_BASES_V12");
+            GT_ASSERT(changed.substr(0,v11.lenw)==v11.ToString(),"Ordinary saved Base manager did not preserve V11");
+            changed.replace(0,v11.lenw,v12.ToString());seeded=replace_frame(before,manager.ToString(),changed);GT_OK();
+        });if(!setup.empty()) {return setup;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source_rules,"GAIANS");restored.BasePresentationRoles(names);
+        const auto loaded=restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,seeded,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->GetPopulation()==6 && base->m_pops.size()==12 && Base::Serialize(base).ToString()==expected
+                && base->GetSmacAllocation()==std::optional<SmacBaseAllocationState>{allocation}
+                && SerializeSmacBaseUpkeepCache(base->GetSmacUpkeepCache()).ToString()==old_cache,
+                "Actual Start normalized retained allocation/cache or lost reduced population");
+            bool published=false;for(const auto& fr:restored.Updates()) {if(fr.type==game::FrontendRequest::FR_BASE_UPDATE && fr.data.base_update.base_id==701) {
+                published=fr.data.base_update.has_population && fr.data.base_update.population==6 && fr.data.base_update.pops->size()==12;
+            }}GT_ASSERT(published,"Frontend population was inferred from retained worker projection");
+            const auto random=restored.GameplayRandom();const auto turn=game->GetTurnId();const auto credits=game->GetCanonicalEconomy(base->m_owner).credits;
+            const auto food=base->GetAccumulatedNutrients();const auto production=base->GetProductionState();
+            const auto preview=base->PrepareSmacResourceCalculation();
+            const auto energy=game->PreviewCanonicalBaseEnergy(*base,game->GetCanonicalEconomy(base->m_owner).rates);
+            GT_ASSERT(Base::Serialize(base).ToString()==expected && restored.GameplayRandom()==random,"Fresh flood preview mutated the retained Base or RNG");
+            const auto tail=base->m_pops.rbegin()->first;
+            GT_ASSERT(Rejects([&]{(void)base->GetSmacSpecialistMenu(tail);})
+                && Rejects([&]{base->OpenSmacSpecialistSelection(GSE_CALL,tail,true);})
+                && Base::Serialize(base).ToString()==expected && restored.Updates().empty(),"Retired-tail specialist request published repair or a menu");
+
+            Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"select_base",{base->Wrap(GSE_CALL)});
+            GT_ASSERT(Base::Serialize(base).ToString()==expected && restored.Updates().empty(),"Inspector selection mutated the read-only caller or opened before its owning calculation");
+            restored.DrainEvents();
+            bool updated=false,selected=false;for(const auto& fr:restored.Updates()) {
+                if(fr.type==game::FrontendRequest::FR_BASE_UPDATE && fr.data.base_update.base_id==701) {
+                    updated=fr.data.base_update.population==6 && fr.data.base_update.pops->size()==6;
+                }
+                if(fr.type==game::FrontendRequest::FR_BASE_SELECT && fr.data.base_select.base_id==701) {selected=updated;}
+            }
+            GT_ASSERT(selected && restored.GameplayRandom()==random && game->GetTurnId()==turn && base->GetAccumulatedNutrients()==food
+                && base->GetProductionState()==production && game->GetCanonicalEconomy(base->m_owner).credits==credits,
+                "Inspector opened before data publication or posted stores, credits, RNG or a turn");
+            GT_ASSERT(preview.raw_intake==base->GetSmacUpkeepCache()->calculation.raw_intake
+                && preview.nutrients.demand==base->GetSmacUpkeepCache()->calculation.nutrients.demand
+                && preview.minerals.demand==base->GetSmacUpkeepCache()->calculation.minerals.demand,
+                "Fresh preview used ghost worker intake or obsolete demand before actual repair");
+            const auto repaired_energy=game->PreviewCanonicalBaseEnergy(*base,game->GetCanonicalEconomy(base->m_owner).rates);
+            GT_ASSERT(energy.tail.final.economy==repaired_energy.tail.final.economy && energy.tail.final.psych==repaired_energy.tail.final.psych
+                && energy.tail.final.labs==repaired_energy.tail.final.labs,"Energy preview before flood repair differs from the owning result");
+            GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.citizens && base->GetSmacUpkeepCache()->calculation.citizens->population==6,"Inspector did not store the fresh resource calculation");
+            GT_ASSERT(base->GetPopulation()==6 && base->m_pops.size()==6 && base->m_pops.begin()->first==19 && base->m_pops.rbegin()->first==24,
+                "Later owning worker producer repaired to the obsolete population or changed survivor identities");
+            types::Buffer manager;game->GetBM()->Serialize(manager);GT_ASSERT(manager.ReadString()=="GLSMAC_BASES_V11","Repaired coherent state retained the optional extension");
+            repaired=restored.Snapshot();GT_OK();
+        });if(!loaded.empty()) {return loaded;}
+        ConventionalUnitFixture final;final.ConfigureProduction(source_rules,"GAIANS");final.BasePresentationRoles(names);
+        return final.Run([&](GSE_CALLABLE)->std::string {
+            final.RestoreThroughStart(GSE_CALL,repaired,[](GSE_CALLABLE){});const auto* base=final.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->GetPopulation()==6 && base->m_pops.size()==6,"Second actual Start lost the repaired population");GT_OK();
+        });
+    });
 
     task->AddTest("SMAC energy modal keeps live changes cancels by recalculation and fences retired requests",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");int64_t request=0;int closed=0;

@@ -123,7 +123,7 @@ void Base::CommandSmacWorkerTile( GSE_CALLABLE, map::tile::Tile* tile ) {
             const auto* faction = factions ? factions->Find( m_faction->m_id ) : nullptr;
             if ( !faction ) { THROW( "Manual replacement requires frozen faction priorities" ); }
             const auto& priorities = faction->worker_priorities;
-            const int32_t population = static_cast< int32_t >( m_pops.size() );
+            const int32_t population = static_cast< int32_t >( GetPopulation() );
             const auto query = [ & ]( int32_t index, const SmacWorkerStepState& ) -> std::optional< SmacWorkerTileYield > {
                 const auto xy = SmacWorkedSquareCollection::Resolve( radius, index );
                 if ( !xy ) { return std::nullopt; }

@@ -52,8 +52,8 @@ bool Game::PrepareCanonicalLeadingHumanDominance(const faction::SmacSimulationSt
         std::vector<faction::SmacCouncilBase> bases;
         for(const auto id:m_bm->GetBaseRecordOrder()) {
             const auto* base=m_bm->GetBase(id);
-            if(!base || base->m_pops.size()>INT32_MAX) {throw std::runtime_error("Council Base record is invalid");}
-            bases.push_back({base->GetSmacResourceContext().owner_simulation_id,static_cast<int32_t>(base->m_pops.size())});
+            if(!base || base->GetPopulation()>INT32_MAX) {throw std::runtime_error("Council Base record is invalid");}
+            bases.push_back({base->GetSmacResourceContext().owner_simulation_id,static_cast<int32_t>(base->GetPopulation())});
         }
         for(const auto& owner:state.roster) {
             const auto* profile=global.GetSmacFactionStartupRules()->Find(owner.faction_id);

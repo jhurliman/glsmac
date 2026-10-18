@@ -54,6 +54,8 @@ void BaseManager::Clear() {
 	}
 	m_bases.clear();
 	m_base_order.clear();
+	m_unprocessed_bases.clear();
+	m_unprocessed_retained_population = false;
 	for ( auto& it : m_base_facilitydefs ) {
 		delete it.second;
 	}
@@ -461,9 +463,10 @@ const BaseManager::popdefs_t& BaseManager::GetBasePopDefs() const {
 
 void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	for ( auto& it : m_unprocessed_bases ) {
-		RegisterBase( Base::Deserialize( it, m_game ) );
+		RegisterBase( Base::Deserialize( it, m_game, m_unprocessed_retained_population ) );
 	}
 	m_unprocessed_bases.clear();
+	m_unprocessed_retained_population = false;
 }
 
 void BaseManager::PushUpdates() {
@@ -495,6 +498,8 @@ void BaseManager::PushUpdates() {
 				auto fr = FrontendRequest( FrontendRequest::FR_BASE_UPDATE );
 				fr.data.base_update.base_id = base->m_id;
 				fr.data.base_update.slot_index = base->m_owner->GetIndex();
+				fr.data.base_update.has_population = true;
+				fr.data.base_update.population = base->GetPopulation();
 				NEW( fr.data.base_update.name, std::string, base->m_name );
 				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
 				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
@@ -859,7 +864,8 @@ void BaseManager::TriggerUpdates( GSE_CALLABLE ) {
 }
 
 void BaseManager::Serialize( types::Buffer& buf ) const {
-	buf.WriteString( s_snapshot_format );
+	const bool retained = std::any_of(m_bases.begin(),m_bases.end(),[](const auto& row){return row.second->m_retained_population.has_value();});
+	buf.WriteString( retained ? "GLSMAC_BASES_V12" : s_snapshot_format );
 
 	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
 	buf.WriteInt( m_base_popdefs.size() );
@@ -898,8 +904,10 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 
 	// Unversioned snapshots start with an integer and fail the typed read;
 	// unknown versions fail here, before mutating any manager state.
-	if ( buf.ReadString() != s_snapshot_format ) {
-		THROW( "unsupported base snapshot format (expected " + s_snapshot_format + ")" );
+	const auto format=buf.ReadString();
+	const bool retained=format=="GLSMAC_BASES_V12";
+	if ( format != s_snapshot_format && !retained ) {
+		THROW( "unsupported base snapshot format (expected " + s_snapshot_format + " or GLSMAC_BASES_V12)" );
 	}
 
 	size_t sz = buf.ReadInt();
@@ -925,11 +933,12 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	Log( "Unserializing " + std::to_string( sz ) + " bases" );
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_bases.reserve( sz );
+		m_unprocessed_retained_population = retained;
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
 		if ( m_game->IsRunning() ) {
-			RegisterBase( Base::Deserialize( b, m_game ) );
+			RegisterBase( Base::Deserialize( b, m_game, retained ) );
 		}
 		else {
 			m_unprocessed_bases.push_back( b );

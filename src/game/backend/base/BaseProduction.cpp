@@ -48,7 +48,7 @@ Base::SmacProductionResult Base::BeginSmacUpkeep( GSE_CALLABLE, const SmacAlloca
 
 void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
 	const auto context = GetSmacResourceContext();
-	if ( !m_allocation || !m_production || !m_production->queue || m_pops.size() != 1
+	if ( !m_allocation || !m_production || !m_production->queue || GetPopulation() != 1
 		|| m_production->current_item.kind != ProductionItemKind::Unit || !m_production->current_item.smac_source_id
 		|| pause.first_calculation.nutrients.stored_before != m_accumulated_nutrients
 		|| pause.first_calculation.nutrients.normalized_stored < 0
@@ -118,7 +118,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	if ( !m_allocation || !m_production || !m_production->queue ) { THROW( "Production requires complete allocation and target/queue authority" ); }
 	m_game->ValidateSmacProductionState( m_owner, *m_production );
 	auto production = *m_production;
-	auto population = m_pops.size();
+	auto population = GetPopulation();
 	if ( production.current_item.kind != ProductionItemKind::Unit && production.current_item.kind != ProductionItemKind::Stockpile
 		&& !(production.current_item.kind==ProductionItemKind::Facility && Game::SupportsSmacFacilityProduction(*production.current_item.smac_source_id)) ) {
 		THROW( "Production completion for this target kind is not yet connected" );

@@ -31,6 +31,7 @@ return {
 			padding: 5,
 			has_hscroll: false,
 			has_vscroll: true,
+			vscroll_class: 'default-scroll-v',
 		});
 
 		this.frame.button({

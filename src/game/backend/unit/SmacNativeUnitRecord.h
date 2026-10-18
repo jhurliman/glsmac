@@ -39,6 +39,9 @@ struct SmacNativeUnitRecord {
     int16_t stack_previous = -1;
     std::array<int16_t,4> waypoint_x{{-1,-1,-1,-1}}, waypoint_y{{-1,-1,-1,-1}};
     static SmacNativeUnitRecord InitializeMindWorm(int32_t id, int32_t native_direct_morale);
+    // Caller has already unlinked the removed node. Returns a detached survivor
+    // with dense index, surviving stack links and order1 payload repaired.
+    SmacNativeUnitRecord AfterUnlinkedIndexErasure(int32_t removed) const;
     void Validate() const;
     bool operator==(const SmacNativeUnitRecord& other) const noexcept;
     types::Buffer Serialize() const;

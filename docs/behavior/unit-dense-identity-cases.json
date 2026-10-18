@@ -1,0 +1,993 @@
+{
+  "research_id": "RE-SMAC-UNIT-DENSE-IDENTITY-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Five mixed human/native ordinary deletion cores, real unlink and shift/reference repairs, diagnostic logging supplied0; stops before refresh, not a complete caller return. No transport/network lifecycle replay.",
+  "storage": {
+    "identity": "current dense global record index",
+    "allocation": "append at old count",
+    "deletion": "stable left shift of every following record",
+    "last_record_swap": false,
+    "sparse_free_list": false,
+    "capacity": 2048,
+    "valid_zero_index": true,
+    "factory_failure": -1
+  },
+  "reference_rules": {
+    "stack_links": "unlink removed node, then decrement references greater than deleted index",
+    "order1_payload": "equal clears order only; greater decrements payload; other order codes unchanged",
+    "four_global_reference_slots": "equal clears to-1; greater decrements; lower preserves",
+    "traversal_cursor": "nonzero and >=deleted decrements; zero preserves",
+    "network_external_cursor": "source-only guarded optional pointer update; not executed",
+    "caller_local_reference_coverage": "not an exhaustive indirect/caller-local alias proof"
+  },
+  "cases": [
+    {
+      "inputs": {
+        "id": "middle_human_before_native_stack",
+        "deleted": 1,
+        "order": 1,
+        "payload": 2
+      },
+      "before": {
+        "count": 5,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 2,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 4,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          2,
+          1,
+          4,
+          0
+        ],
+        "traversal_cursor": 4,
+        "active_counts": [
+          2,
+          2,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "after": {
+        "count": 4,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 1,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 2,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 2,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          1,
+          -1,
+          3,
+          0
+        ],
+        "traversal_cursor": 3,
+        "active_counts": [
+          2,
+          2,
+          0
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "stop": "after deletion core, before view/Base refresh",
+      "native_nonlink_bytes_preserved": true,
+      "deleted_tile_has_units": false
+    },
+    {
+      "inputs": {
+        "id": "first_human_shifts_all_survivors",
+        "deleted": 0,
+        "order": 1,
+        "payload": 2
+      },
+      "before": {
+        "count": 5,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 2,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 4,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          2,
+          0,
+          4,
+          0
+        ],
+        "traversal_cursor": 4,
+        "active_counts": [
+          2,
+          2,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "after": {
+        "count": 4,
+        "records": [
+          {
+            "index": 0,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 2,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 2,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          1,
+          -1,
+          3,
+          -1
+        ],
+        "traversal_cursor": 3,
+        "active_counts": [
+          2,
+          1,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          1
+        ]
+      },
+      "stop": "after deletion core, before view/Base refresh",
+      "native_nonlink_bytes_preserved": true,
+      "deleted_tile_has_units": false
+    },
+    {
+      "inputs": {
+        "id": "last_human_no_survivor_shift",
+        "deleted": 4,
+        "order": 1,
+        "payload": 2
+      },
+      "before": {
+        "count": 5,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 2,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 4,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          2,
+          4,
+          4,
+          0
+        ],
+        "traversal_cursor": 4,
+        "active_counts": [
+          2,
+          2,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "after": {
+        "count": 4,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 2,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          }
+        ],
+        "tracked_references": [
+          2,
+          -1,
+          -1,
+          0
+        ],
+        "traversal_cursor": 3,
+        "active_counts": [
+          2,
+          1,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          1
+        ]
+      },
+      "stop": "after deletion core, before view/Base refresh",
+      "native_nonlink_bytes_preserved": true,
+      "deleted_tile_has_units": false
+    },
+    {
+      "inputs": {
+        "id": "order1_target_deleted_clears_order",
+        "deleted": 1,
+        "order": 1,
+        "payload": 1
+      },
+      "before": {
+        "count": 5,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 1,
+            "order1_payload": 1,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 4,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          2,
+          1,
+          4,
+          0
+        ],
+        "traversal_cursor": 4,
+        "active_counts": [
+          2,
+          2,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "after": {
+        "count": 4,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 1,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 2,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 2,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          1,
+          -1,
+          3,
+          0
+        ],
+        "traversal_cursor": 3,
+        "active_counts": [
+          2,
+          2,
+          0
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "stop": "after deletion core, before view/Base refresh",
+      "native_nonlink_bytes_preserved": true,
+      "deleted_tile_has_units": false
+    },
+    {
+      "inputs": {
+        "id": "other_order_payload_not_adjusted",
+        "deleted": 1,
+        "order": 0,
+        "payload": 3
+      },
+      "before": {
+        "count": 5,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 3,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 1,
+            "owner": 1,
+            "design": 1,
+            "position": [
+              4,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 2,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 3,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 2,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 4,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          2,
+          1,
+          4,
+          0
+        ],
+        "traversal_cursor": 4,
+        "active_counts": [
+          2,
+          2,
+          1
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "after": {
+        "count": 4,
+        "records": [
+          {
+            "index": 0,
+            "label": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              2,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 3,
+            "ecology_attribution": 0
+          },
+          {
+            "index": 1,
+            "label": 2,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": -1,
+            "previous": 2,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 2,
+            "label": 3,
+            "owner": 0,
+            "design": 8,
+            "position": [
+              6,
+              2
+            ],
+            "next": 1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 1
+          },
+          {
+            "index": 3,
+            "label": 4,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              8,
+              2
+            ],
+            "next": -1,
+            "previous": -1,
+            "order": 0,
+            "order1_payload": 0,
+            "ecology_attribution": 0
+          }
+        ],
+        "tracked_references": [
+          1,
+          -1,
+          3,
+          0
+        ],
+        "traversal_cursor": 3,
+        "active_counts": [
+          2,
+          2,
+          0
+        ],
+        "plan_tallies": [
+          2,
+          2
+        ]
+      },
+      "stop": "after deletion core, before view/Base refresh",
+      "native_nonlink_bytes_preserved": true,
+      "deleted_tile_has_units": false
+    }
+  ],
+  "native_initialized_tail": {
+    "runtime_reference_pair": [
+      -1,
+      -1
+    ],
+    "decisive_predicate": "signed reference X<0",
+    "Y_read_on_early_exit": false,
+    "additional_assignment_RNG_draws": 0,
+    "common_creation_placement_visibility_still_execute": true,
+    "definition_direct_morale": 0,
+    "stored_morale_result": 1,
+    "reset_reference_at_each_birth": false,
+    "preserve_loaded_nonnegative_reference": true,
+    "evidence": "reused frozen complete native birth receipt"
+  },
+  "validation": {
+    "new_deletion_core_fragments": 5,
+    "new_full_caller_returns": 0,
+    "existing_lifecycle_controls_rerun": false
+  },
+  "raw_receipt_sha256": "b9066f1696c037d888dfe60aa1fafe812ac0516a65018bc56b1417dc2c7ee128",
+  "reused_birth_fixture_sha256": "d6b562bba1a1472a756cf04635740ec54bc3acd5214d93adce6bfa747a4bd765",
+  "related_contracts": [
+    "founding-colony-removal.md",
+    "active-design-count-cache.md",
+    "ecology-native-unit-records.md",
+    "repair-bay-boarding.md"
+  ]
+}

@@ -17,6 +17,7 @@
 #include "util/FinallyGuard.h"
 #include <memory>
 #include "fixtures/SmacNativeUnitRecord.h"
+#include "fixtures/SmacDenseUnitIdentity.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
 #include "task/gsetests/GSETests.h"
 #include <limits>
@@ -36,6 +37,108 @@ std::string Replace(const Record& record,size_t index,int64_t value) {
 }
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC native dense index repair matches five original mixed-owner erasures",GT(){
+        const auto record=[](const smac_dense_identity_fixture::Row& row) {
+            auto value=Record::InitializeMindWorm(row[0],0);value.owner=row[2];value.design=row[3];value.x=row[4];value.y=row[5];
+            value.stack_next=row[6];value.stack_previous=row[7];value.order=row[8];value.waypoint_x[0]=row[9];value.ecology_owner_tag=row[10];
+            value.aux_word=0x1200+row[1];value.automation_control=17+row[1];value.status_character=80+row[1];
+            value.waypoint_y[3]=900+row[1];value.home_base=27;return value;
+        };
+        for(const auto& c:smac_dense_identity_fixture::cases) {
+            size_t output=0;
+            for(const auto& row:c.before) {
+                if(row[0]==c.deleted) {continue;}
+                const auto before=record(row);const auto expected=record(c.after.at(output++));
+                GT_ASSERT(before.AfterUnlinkedIndexErasure(c.deleted)==expected,"Dense repair changed survivor order, links, order payload or opaque canaries");
+            }
+            GT_ASSERT(output==4,"Original dense survivor count differs");
+        }
+        auto linked=Record::InitializeMindWorm(2,0);linked.stack_next=1;
+        GT_ASSERT(Rejects([&]{linked.AfterUnlinkedIndexErasure(1);}),"Dense repair accepted a still-linked removed neighbor");
+        GT_ASSERT(Rejects([&]{linked.AfterUnlinkedIndexErasure(2);}),"Erased record treated as a survivor");
+        GT_OK();
+    });
+    task->AddTest("SMAC native dense restore rejects stale indices dangling links cycles and split stacks",GT(){
+        using namespace game::backend::unit;
+        for(int scenario=0;scenario<4;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* manager=fixture.Game()->GetUM();MoraleSet::morale_values_t names;for(int n=0;n<7;++n) {names.emplace_back("level");}
+                manager->DefineMoraleSet(new MoraleSet("bad-native-stack",names));
+                manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("bad-native-stack"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+                for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t n=0;n<count;++n) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+                GT_ASSERT(definitions.ReadInt()==0,"Malformed stack fixture already contains units");loaded.WriteInt(2);
+                for(int n=0;n<2;++n) {
+                    auto record=Record::InitializeMindWorm(n,0);record.x=6;record.y=2;record.stack_previous=n==0?1:-1;record.stack_next=n==1?0:-1;
+                    if(scenario==0 && n==0) {record.id=2;}
+                    if(scenario==1 && n==0) {record.stack_previous=2047;}
+                    if(scenario==2) {record.stack_previous=1-n;record.stack_next=1-n;}
+                    if(scenario==3) {record.stack_previous=record.stack_next=-1;}
+                    types::Buffer unit;unit.WriteInt(5);unit.WriteInt(2);unit.WriteInt(71+n);unit.WriteString("MindWorms");unit.WriteInt(-1);
+                    unit.WriteInt(6);unit.WriteInt(2);unit.WriteString(record.Serialize().ToString());loaded.WriteString(unit.ToString());
+                }
+                loaded.WriteInt(73);manager->Clear();
+                GT_ASSERT(Rejects([&]{manager->Deserialize(GSE_CALL,loaded);}),"Malformed native reference graph admitted");
+                // The manager-level fixture owns this rejected, unpublished map.
+                manager->Clear();fixture.Game()->GetMap()->GetTile(6,2)->units.clear();GT_OK();
+            });GT_ASSERT(error.empty(),"Malformed native dense restore: "+error);
+        }GT_OK();
+    });
+    task->AddTest("SMAC native dense survivors commit atomically with conventional removal and restore",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+        std::string snapshot,knowledge;std::array<Record,2> expected;
+        faction::SmacNativeFactoryState counts{0,{{-1,-1}},UINT32_MAX,{}};counts.active_designs[8]=254;
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* manager=game->GetUM();
+            for(size_t y=0;y<40;++y) {for(size_t x=y&1;x<80;x+=2) {auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}tile->Update();}}
+            MoraleSet::morale_values_t names;for(int i=0;i<7;++i) {names.emplace_back("level"+std::to_string(i));}
+            manager->DefineMoraleSet(new MoraleSet("native-dense",names));
+            manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("native-dense"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            manager->DefineUnit(new StaticDef("human-dense",manager->GetMoraleSet("native-dense"),"Human",MT_LAND,999,new CvrScoutRender(2,0,100,100,{1,1},{128,128})));
+            types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+            for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t i=0;i<count;++i) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+            GT_ASSERT(definitions.ReadInt()==0,"Dense fixture unexpectedly contains units");loaded.WriteInt(4);
+            for(int index=0;index<4;++index) {
+                types::Buffer unit;const bool native=index==1 || index==2;
+                unit.WriteInt(native?5:4);unit.WriteInt(native?2:1);unit.WriteInt(71+index);unit.WriteString(native?"MindWorms":"human-dense");
+                unit.WriteInt(native?-1:0);unit.WriteInt(native?6:index==0?2:8);unit.WriteInt(2);
+                if(native) {
+                    auto record=Record::InitializeMindWorm(index,0);record.x=6;record.y=2;record.ecology_owner_tag=1;
+                    record.stack_previous=index==1?2:-1;record.stack_next=index==2?1:-1;
+                    record.waypoint_x[0]=3;record.order=index==1?1:0;expected[index-1]=record;
+                    unit.WriteString(record.Serialize().ToString());
+                } else {ConventionalUnitState{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0}.Serialize(unit);}
+                loaded.WriteString(unit.ToString());
+            }
+            loaded.WriteInt(75);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+            Knowledge::Data data{80,40,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+            data.tiles.resize(1600,{2,std::nullopt});for(uint64_t id=71;id<75;++id) {data.units.push_back({id,0,false});}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            fixture.ResourceState([&](faction::SmacSimulationState& state) {state.native_factory=counts;});
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            {auto abandoned=manager->PrepareConventionalRemoval(GSE_CALL,{71,74});}
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Abandoned dense plan changed live records");
+            GT_ASSERT(Rejects([&]{manager->PrepareConventionalRemoval(GSE_CALL,{71,71});}) && fixture.Snapshot()==before,"Failed duplicate removal leaked native repairs");
+            auto prepared=manager->PrepareConventionalRemoval(GSE_CALL,{71,74});prepared.Commit();prepared.Notify(GSE_CALL);
+            expected[0].id=0;expected[0].stack_previous=1;expected[0].order=0;expected[0].waypoint_x[0]=2;
+            expected[1].id=1;expected[1].stack_next=0;
+            GT_ASSERT(manager->GetUnitRecordOrder()==std::vector<size_t>({72,73}) && manager->GetUnit(72)->Native()==expected[0]
+                && manager->GetUnit(73)->Native()==expected[1] && fixture.GameplayRandom()==random,"Live dense erasure lost native identity/reference/history or consumed RNG");
+            bool retained=false;fixture.ResourceState([&](faction::SmacSimulationState& state) {retained=state.native_factory==counts;});
+            GT_ASSERT(retained,"Conventional removal recounted or debited retained native counters");
+            knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();snapshot=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(error.empty(),"Native dense removal: "+error);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,snapshot,true);auto* manager=restored.Game()->GetUM();
+            bool retained=false;restored.ResourceState([&](faction::SmacSimulationState& state) {retained=state.native_factory==counts;});
+            GT_ASSERT(retained,"Native counter history changed on dense world restore");
+            GT_ASSERT(manager->GetUnitRecordOrder()==std::vector<size_t>({72,73}) && manager->GetUnit(72)->Native()==expected[0]
+                && manager->GetUnit(73)->Native()==expected[1] && restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"Native compacted stack failed actual world restore");GT_OK();
+        });
+    });
     task->AddTest("SMAC native Unit live ZOC and stationary visibility match five original movement controls",GT(){
         using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
         struct Case {const char* name;int32_t destination,count;std::array<std::array<int32_t,2>,2> native;uint8_t pacts,spent;std::array<uint8_t,3> masks;std::set<std::pair<int32_t,int32_t>> explored;};

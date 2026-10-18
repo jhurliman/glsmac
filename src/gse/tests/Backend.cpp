@@ -2415,6 +2415,8 @@ public:
 		util::FinallyGuard clean_ui( [ & ] { ui->GetRoot()->Container::Destroy( GSE_CALL ); } );
 		game::frontend::Game frontend( m_glsmac.get(), m_state, ui, {}, {} );
 		frontend.m_is_initialized = true; frontend.m_is_turn_active = true; frontend.m_turn_id = m_game.GetTurnId();
+		frontend.m_state = nullptr; // Real initialization transfers ownership to backend.
+		frontend.m_game = &m_game;
 		util::FinallyGuard clean_frontend( [ & ] { frontend.m_is_initialized = false; } );
 		scene::Scene controller_scene( "Selected work fixture", scene::SCENE_TYPE_WORLD );
 		game::frontend::sprite::InstancedSpriteManager sprites( &controller_scene );
@@ -2472,6 +2474,8 @@ public:
 			ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
 			frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
 			frontend->m_is_initialized=true;frontend->m_turn_id=m_game.GetTurnId();frontend->m_ism=&sprites;
+			frontend->m_state=nullptr; // Pump the actual post-initialization frontend.
+			frontend->m_game=&m_game;
 			controller=std::make_unique<game::frontend::unit::UnitManager>(frontend.get());
 			controller->PumpSelectedWork( id );
 			frontend->m_is_turn_active = true; controller->PumpSelectedWork( std::nullopt );

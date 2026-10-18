@@ -370,7 +370,7 @@ public:
 			legacy.WriteInt(owner.first);legacy.WriteInt(owner.second.size());
 			for(const auto id:owner.second) {legacy.WriteInt(id);}
 		}
-		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation);
+		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation,false);
 		legacy.WriteInt(static_cast<int64_t>(paused.colony->morale_mode));
 		const auto decoded=m_game.ReadCanonicalContinuation(types::Buffer(legacy.ToString()),paused.turn);
 		if(!decoded) {throw std::runtime_error("V1 Colony continuation was lost");}
@@ -8544,10 +8544,10 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			// V31 appends one versioned, absent continuation after the managers.
-			// Continuation V2 adds research choices alongside V1 Colony choices.
+			// Continuation V3 adds retained ecology to V2 research/V1 Colony choices.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 2 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 3 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();

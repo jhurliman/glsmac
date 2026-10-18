@@ -1,0 +1,995 @@
+{
+  "research_id": "RE-SMAC-TERRAFORM-ECO-001",
+  "status": "original-x86 checked; not full-game observed",
+  "specification": "terraforming-ecology-input.md",
+  "input_contract": "Coordinates use doubled-x parity. worked means the original per-square worked flag, including explicitly supplied center flag. Result is the terraforming contribution, NOT final eco-damage or bloom probability. Original radius scan and its initial divide-by-eight scaling execute; earlier worker selection and later mineral/clean-limit/faction scaling do not.",
+  "cases": [
+    {
+      "id": "TERRAFORM-ECO-001",
+      "name": "empty radius",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": []
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-002",
+      "name": "road unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "road"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-003",
+      "name": "road worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "road"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-004",
+      "name": "mag_tube unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "mag_tube"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-005",
+      "name": "mag_tube worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "mag_tube"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-006",
+      "name": "mine unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "mine"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-007",
+      "name": "mine worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "mine"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-008",
+      "name": "solar unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "solar"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-009",
+      "name": "solar worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "solar"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-010",
+      "name": "farm unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "farm"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-011",
+      "name": "farm worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "farm"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-012",
+      "name": "soil_enricher unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "soil_enricher"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 1,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-013",
+      "name": "soil_enricher worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "soil_enricher"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 2,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-014",
+      "name": "condenser unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "condenser"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 5,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-015",
+      "name": "condenser worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "condenser"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 6,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-016",
+      "name": "echelon_mirror unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "echelon_mirror"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 7,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-017",
+      "name": "echelon_mirror worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "echelon_mirror"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 8,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-018",
+      "name": "borehole unworked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 9,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-019",
+      "name": "borehole worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 10,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-020",
+      "name": "forest subtracts one even when worked",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "forest"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": -1,
+        "scaled_terraforming_input": -1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-021",
+      "name": "uncounted features",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "fungus",
+              "river",
+              "sensor",
+              "airbase",
+              "bunker",
+              "base"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-022",
+      "name": "road plus tube counted separately",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "road",
+              "mag_tube"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 4,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-023",
+      "name": "foreign improvement still contributes",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 2
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 9,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-024",
+      "name": "outside radius ignored",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 12,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-025",
+      "name": "center features counted",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 8,
+            "y": 8,
+            "features": [
+              "base",
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 9,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-026",
+      "name": "tree farm halves each tile toward zero",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": true,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 4,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-027",
+      "name": "hybrid alone also halves",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": true,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 4,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-028",
+      "name": "both facilities remove terraforming points",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": true,
+        "hybrid_forest": true,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "borehole",
+              "condenser"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-029",
+      "name": "single-point halves round separately",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": true,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "road"
+            ],
+            "worked": false,
+            "owner": 1
+          },
+          {
+            "x": 9,
+            "y": 9,
+            "features": [
+              "farm"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-030",
+      "name": "forest minus one halves to zero",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": true,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "forest"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-031",
+      "name": "positive seven points scale to zero",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "echelon_mirror"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 7,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-032",
+      "name": "positive eight points scale to one",
+      "inputs": {
+        "x": 8,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 10,
+            "y": 8,
+            "features": [
+              "echelon_mirror"
+            ],
+            "worked": true,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 8,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-033",
+      "name": "left seam wraps",
+      "inputs": {
+        "x": 0,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 14,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 9,
+        "scaled_terraforming_input": 1
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-034",
+      "name": "flat map rejects seam",
+      "inputs": {
+        "x": 0,
+        "y": 8,
+        "width": 16,
+        "height": 16,
+        "wrap_x": false,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 14,
+            "y": 8,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    },
+    {
+      "id": "TERRAFORM-ECO-035",
+      "name": "pole does not wrap",
+      "inputs": {
+        "x": 8,
+        "y": 0,
+        "width": 16,
+        "height": 16,
+        "wrap_x": true,
+        "tree_farm": false,
+        "hybrid_forest": false,
+        "tiles": [
+          {
+            "x": 8,
+            "y": 14,
+            "features": [
+              "borehole"
+            ],
+            "worked": false,
+            "owner": 1
+          }
+        ]
+      },
+      "expected": {
+        "raw_terraforming_points": 0,
+        "scaled_terraforming_input": 0
+      }
+    }
+  ]
+}

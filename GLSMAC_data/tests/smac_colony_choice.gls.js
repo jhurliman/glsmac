@@ -50,9 +50,10 @@ old_close(false); old_close(false);
 test.assert(events[3] == {name: 'close_colony_screen', args: {request_id: 13}} && #sizeof(events) == 4 && ui.state().visible);
 screen = null; handlers.colony_screen({}); old_close(false);
 test.assert(!ui.state().visible && #sizeof(events) == 4);
-screen = {request_id: 14, base_id: 702, base_name: 'The Hive', owner_slot: 1};
+screen = {request_id: 14, base_id: 702, base_name: 'The Hive', owner_slot: 1, read_only: true};
 handlers.colony_screen({}); old_close(false);
 test.assert(!ui.state().visible && #sizeof(events) == 4);
+test.assert(ui.popup_data().read_only && ui.popup_data().base.id == 702);
 ui.popup().callback(false);
 test.assert(events[4] == {name: 'close_colony_screen', args: {request_id: 14}} && #sizeof(events) == 5);
 

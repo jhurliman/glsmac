@@ -13,6 +13,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/CvrScoutRender.h"
+#include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/PopDef.h"
@@ -44,13 +45,16 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
                 new CvrScoutRender(2,0,1,1,{1,1},{0,0},CvrScoutRender::Composition::InitializedScout));um->DefineUnit(def);
             ConventionalUnitState state{2,1,1,0,1,true,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
             um->SpawnConventionalUnit(GSE_CALL,71,def,&game->GetState()->m_slots->GetSlot(0),tile,state);
+            auto* colony=new StaticDef("campaign-pod",um->GetMoraleSet("campaign"),"Colony Pod",MT_LAND,1,new ColonyMarkerRender());um->DefineUnit(colony);
+            um->SpawnConventionalUnit(GSE_CALL,72,colony,&game->GetState()->m_slots->GetSlot(0),tile,
+                {0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
             std::array<std::string,8> roles;roles[0]="campaign-worker";
             game->GetBM()->DefinePop(new base::PopDef(roles[0],"Worker",{},{},base::PopDef::PF_TILE_WORKER));
             for(uint8_t i=0;i<7;++i){roles[i+1]="campaign-specialist"+std::to_string(i);game->GetBM()->DefinePop(new base::PopDef(roles[i+1],"Specialist",{},{},base::PopDef::PF_NONE,i));}
             fixture.BasePresentationRoles(roles);
             map::SmacWorkerKnowledge::Data knowledge{int32_t(game->GetMap()->GetWidth()),int32_t(game->GetMap()->GetHeight()),true,true,0,{},{},{}};
             knowledge.tiles.resize(knowledge.width*knowledge.height/2,{2,std::nullopt});knowledge.observers[1]=map::SmacWorkerKnowledge::Observer{};knowledge.observers[1]->pact_with=0;
-            knowledge.units={{71,0,false}};
+            knowledge.units={{71,0,false},{72,0,false}};
             knowledge.remembered[1].resize(knowledge.tiles.size(),map::SmacWorkerKnowledge::Improvements{0,0,false,false});
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
             snapshot=fixture.Snapshot();

@@ -1,7 +1,9 @@
 #include "Base.h"
 
 #include "BaseManager.h"
+#include "BaseDefection.h"
 #include "FacilityDef.h"
+#include "game/backend/faction/Faction.h"
 #include "SmacPopulationStep.h"
 #include "SmacUnitSupport.h"
 #include "game/backend/Game.h"
@@ -12,6 +14,7 @@
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "gc/Space.h"
+#include "util/FinallyGuard.h"
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
@@ -67,7 +70,8 @@ void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
 	const auto actual = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &*m_allocation );
 	const auto& expected = pause.first_calculation;
 	const auto same = []( const SmacBaseResourceCalculation& a, const SmacBaseResourceCalculation& b ) {
-		return (!b.eco_damage || a.eco_damage == b.eco_damage) && a.raw_intake == b.raw_intake
+		return (!b.eco_damage || a.eco_damage == b.eco_damage) && (!b.citizens || a.citizens == b.citizens)
+			&& a.raw_intake == b.raw_intake
 			&& std::tie( a.nutrients.intake, a.nutrients.demand, a.nutrients.surplus, a.nutrients.stored_before, a.nutrients.normalized_stored,
 				a.minerals.multiplier_steps, a.minerals.intake, a.minerals.demand, a.minerals.surplus, a.minerals.pre_orbital_surplus )
 			== std::tie( b.nutrients.intake, b.nutrients.demand, b.nutrients.surplus, b.nutrients.stored_before, b.nutrients.normalized_stored,
@@ -95,12 +99,22 @@ Base::SmacProductionResult Base::ResumeSmacAbandonmentTail( GSE_CALLABLE, const 
 
 Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, const bool population_step,
-	const bool allow_colony_pause, const SmacColonyUpkeepPause* pause, const SmacBaseUpkeepCache* retained ) {
+	const bool allow_colony_pause, const SmacColonyUpkeepPause* pause, const SmacBaseUpkeepCache* retained, std::optional<int32_t> former_repair, bool* publication ) {
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "Production requires its owning accumulation" ); }
 	m_game->GetBM()->RequireSmacWorkerRecalculation();
 	m_game->RequireSmacLocalHumanOwner( m_owner );
-	const auto context = GetSmacResourceContext();
+    // An explicit legacy answer belongs to this unpublished query view until
+    // the complete Base transaction commits. Preparation failure restores it.
+    const auto original_context=GetSmacResourceContext();
+    auto* const manager=m_game->GetBM();const auto identity=m_id;
+    bool committed=false;
+    util::FinallyGuard restore_repair([&]{
+        if(former_repair && !committed && manager->GetBase(identity)==this) {m_resource_context=original_context;}
+    });
+    if(former_repair) {m_resource_context=original_context.WithFormerOwnerRepair(*former_repair);}
+    const auto context = GetSmacResourceContext();
+    const auto publishing=[&]{committed=true;if(publication) {*publication=true;}};
 	if ( !m_allocation || !m_production || !m_production->queue ) { THROW( "Production requires complete allocation and target/queue authority" ); }
 	m_game->ValidateSmacProductionState( m_owner, *m_production );
 	auto production = *m_production;
@@ -150,7 +164,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 						auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, m_accumulated_nutrients );
 						std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{resources,support}};
 						static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
-						prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
+						publishing();prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
 						return result;
 					}
 					else { THROW( "Size-one Colony completion requires an explicit player choice" ); }
@@ -227,7 +241,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			// so a future producer cannot discard an uncommitted newborn here.
 			if ( unit ) { THROW( "Starvation removal cannot retain a prepared completion" ); }
 			result.removed_base = true;
-			m_game->GetBM()->RemoveStarvedSmacBase( GSE_CALL, *this );
+			publishing();m_game->GetBM()->RemoveStarvedSmacBase( GSE_CALL, *this );
 			return result; // this has retired; only the owned local result remains
 		}
 		population = plan.population; food = *plan.stored_nutrients;
@@ -279,19 +293,108 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn, result.removed_units );
 		const auto remaining_support = support.mineral_support;
 		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, remaining_support, granted );
-		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support, granted );
+		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support, granted, result.removed_units );
 		food = result.final_calculation->nutrients.normalized_stored;
 	}
 	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{result.final_calculation.value_or(result.first_calculation),support}};
 	static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
 	// Both resource passes consume incoming conquest history. Its one tail step
 	// publishes with the finished Base state and does not trigger another pass.
-	const auto next_context=population_step ? context.AfterUpkeep() : context;
+	auto next_context=population_step ? context.AfterUpkeep() : context;
+    auto random=m_game->m_simulation->value.gameplay_random;
+    std::vector<std::string> status_messages;
+    if(population_step && result.final_calculation && result.final_calculation->citizens) {
+        const auto& citizens=*result.final_calculation->citizens;
+        const auto status=CalculateSmacCitizenStatus(Checked(m_game->GetTurnId()),Checked(population),citizens.final,context.golden_age,context.drone_riots,false,0);
+        if(status.admitted) {
+            // The original second pass is retained before status and facility
+            // destruction. A later query may refresh; this pass's income may not.
+            result.retained_energy=m_game->CalculateCanonicalBaseEnergy(*this,*result.final_calculation,nullptr,&allocation,granted);
+            next_context.golden_age=status.golden;next_context.drone_riots=status.riots;next_context.SyncKnownStatusBits();
+            if(status.golden_start) {status_messages.push_back(m_name+": Golden Age begins.");}
+            if(status.golden_over) {status_messages.push_back(m_name+": Golden Age ends.");}
+            if(status.riots_over) {status_messages.push_back(m_name+": drone riots end.");}
+            if(status.riot_new) {status_messages.push_back(m_name+": drone riots begin.");}
+            if(status.riot_dispatch) {
+                std::array<bool,39> present{},grants{};
+                for(const auto& row:m_facilities) {present.at(*row.second->m_smac_source_id)=true;}
+                if(granted) {present.at(*granted->m_smac_source_id)=true;}
+                const auto& profile=m_game->GetState()->m_settings.global.GetSmacFactionStartupRules()->Find(m_faction->m_id);
+                for(const auto& bonus:profile->bonuses) {
+                    if(bonus.kind==settings::SmacFactionStartupBonus::Kind::FACILITY && bonus.parameter>=1 && bonus.parameter<=33) {grants[bonus.parameter]=true;}
+                }
+                const auto& simulation=m_game->m_simulation->value;
+                const auto loss=CalculateSmacRiotFacilityLoss(context.drone_riots,citizens.police,Checked(population),
+                    simulation.retained_base_totals->at(context.owner_simulation_id),context.conquest ? context.conquest->assimilation:0,
+                    unit::SmacStartupDesignState::OriginalDifficulty(m_owner->GetPlayer()->GetDifficultyLevel()),present,grants,[&]() {
+                        if(!simulation.rank_order) {throw std::runtime_error("Riot search has no retained ranking publication");}
+                        const auto& ranks=simulation.rank_order->faction_at_rank;
+                        const auto it=std::find(ranks.begin()+1,ranks.end(),context.owner_simulation_id);
+                        if(it==ranks.end()) {throw std::runtime_error("Riot owner is absent from retained active ranks");}
+                        return static_cast<int32_t>(it-ranks.begin());
+                    },[&]() {return random.NextCrtRaw15();});
+                if(loss.exhausted && citizens.police<-2) {
+                    if(!context.FormerOwner()) {result.needs_former_owner=true;return result;}
+                    std::optional<int32_t> recipient;
+                    const auto former=*context.FormerOwner();
+                    if(former!=context.owner_simulation_id) {recipient=former;}
+                    else {
+                        if(!simulation.victory_history) {THROW("Riot recipient search needs the retained faction activity history");}
+                        std::vector<SmacRiotBase> candidates;const auto& order=m_game->GetBM()->GetBaseRecordOrder();
+                        for(size_t i=0;i<order.size();++i) {const auto* candidate=m_game->GetBM()->GetBase(order[i]);
+                            if(!candidate) {THROW("Riot recipient Base record disappeared");}
+                            const auto* tile=candidate->GetTile();
+                            candidates.push_back({i,candidate->GetSmacResourceContext().owner_simulation_id,Checked(tile->coord.x),Checked(tile->coord.y)});
+                        }
+                        std::array<SmacRiotRelationship,8> relationships{};
+                        const auto& directions=simulation.hostility.owners.at(context.owner_simulation_id).directions;
+                        for(size_t owner=0;owner<8;++owner) {const auto word=directions.at(owner).primary;
+                            relationships[owner]={bool(word&1u),bool(word&2u),bool(word&4u)};
+                        }
+                        const auto stamp=static_cast<uint32_t>(simulation.victory_history->last_base_expansion_or_advice_turn.at(context.owner_simulation_id));
+                        const auto selected=CalculateSmacRiotRecipient(citizens.police,true,context.owner_simulation_id,former,stamp,
+                            Checked(GetTile()->coord.x),Checked(GetTile()->coord.y),Checked(m_game->GetMap()->GetWidth()),true,candidates,relationships);
+                        recipient=selected.selected;
+                    }
+                    if(recipient && *recipient>0) {
+                        SmacDefectionAttempt attempt{roles,*recipient,context,production,allocation,population,food,granted,
+                            std::move(facility_changes),unit ? &*unit:nullptr,result.removed_units,random,committed,publication};
+                        return CompleteSmacRiotDefection(GSE_CALL,std::move(result),attempt);
+                    }
+
+                }
+                if(loss.removed) {
+                    const auto* definition=m_game->GetBM()->GetSmacFacilityDef(*loss.removed);
+                    auto it=std::find_if(facility_changes.begin(),facility_changes.end(),[&](const auto& row){return row.first==this;});
+                    if(it==facility_changes.end()) {facility_changes.emplace_back(this,m_facilities);it=facility_changes.end()-1;}
+                    it->second.erase(definition->m_id);
+                    auto& energy=*result.retained_energy;
+                    for(auto fee=energy.maintenance_fees.begin();fee!=energy.maintenance_fees.end();) {
+                        if(fee->first==*loss.removed) {energy.maintenance-=fee->second;fee=energy.maintenance_fees.erase(fee);}else {++fee;}
+                    }
+                    status_messages.push_back(m_name+": "+definition->m_name+" destroyed in drone riots.");
+                }
+            }
+        }
+    }
+    // Publish markers for the roster present at the actual support pass. A
+    // production-only call calculated before its factory; full upkeep's outer
+    // pass includes a surviving newborn. Wrong-owner/home history is retained.
+    auto* accounting_created=population_step && unit ? &*unit:nullptr;
+    auto accounting_removal=m_game->GetUM()->PrepareRemovalForQuery(result.removed_units,accounting_created);
+    std::optional<unit::UnitManager::PreparedDefectionUnits> accounting;
+    m_game->GetUM()->QueryDefectionUnits(accounting_created,accounting_removal,[&] {
+        const auto changes=m_game->CalculateCanonicalUnitAccounting(*this,support);
+        accounting.emplace(m_game->GetUM()->PrepareDefectionUnitsForQuery(m_owner,changes,accounting_created,&accounting_removal));
+    });
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, next_context, production, food, population, std::move(facility_changes), nullptr, {}, population_step );
 	// No callback, allocation or validation between Unit and Base authority.
+	publishing();
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
-	prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
+	accounting->Commit();
+	prepared.Commit();m_smac_upkeep_cache.swap(cache);m_game->m_simulation->value.gameplay_random=random;prepared.Finish();
+    for(const auto& message:status_messages) {m_game->Message(message);}
 	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
 	if ( removal ) { removal->Notify( GSE_CALL ); }
 	return result;

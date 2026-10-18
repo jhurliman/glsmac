@@ -334,6 +334,9 @@ UnitManager::PreparedConventionalRemoval& UnitManager::PreparedConventionalRemov
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareConventionalRemoval(GSE_CALLABLE,const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
     m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
     if(gc_space!=m_game->GetGCSpace()) {THROW("Removal requires the owning accumulation");}
+    for(const auto id:ids) {const auto* unit=GetUnit(id);
+        if(unit && unit->IsConventional()) {m_game->RequireSmacProductionOwner(unit->m_owner);}
+    }
     return PrepareRemovalForQuery(ids,created,battle_survivor);
 }
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created,Unit* battle_survivor) {
@@ -411,6 +414,34 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     }
     if(knowledge) {data->knowledge=map::SmacWorkerKnowledge::Create(*knowledge);}
     return PreparedConventionalRemoval(std::move(data));
+}
+void UnitManager::QueryDefectionUnits(const PreparedConventionalUnit* created,const PreparedConventionalRemoval& removed,const std::function<void()>& query) {
+    const auto* creation=created ? created->m_data.get():nullptr;const auto* removal=removed.m_data.get();
+    if(!removal || removal->manager!=this || removal->committed || !query
+        || (created && (!creation || creation->manager!=this || !creation->candidate || creation->published))) {
+        THROW("Defection query requires current unpublished same-manager plans");
+    }
+    auto occupants=removal->occupants;std::vector<std::pair<Unit*,map::tile::Tile*>> positions;
+    if(creation && removal->units.count(creation->candidate->m_id)) {
+        // Removal already owns this tile when it removed another occupant there.
+        occupants.try_emplace(creation->tile,creation->occupants);
+        positions.emplace_back(creation->candidate.get(),creation->tile);
+    }
+    removed.QueryWithNativeRecords([&]{
+        if(removal->knowledge) {SyncNativeObservationMasks(*removal->knowledge);}
+        QueryPreparedUnits(removal->units,removal->order,occupants,removal->knowledge,positions,query);
+    });
+}
+UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(slot::Slot* recipient,
+    const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+    const PreparedConventionalUnit* created,const PreparedConventionalRemoval* removed) {
+    // Called inside the owning private future registry view. Publication must
+    // retain the factory/removal queue that will be installed before transfer.
+    const auto* creation=created ? created->m_data.get():nullptr;
+    const auto* removal=removed ? removed->m_data.get():nullptr;
+    if((created && (!creation || creation->manager!=this || !creation->candidate || creation->published))
+        || (removed && (!removal || removal->manager!=this || removal->committed))) {THROW("Defection has a stale future Unit plan");}
+    return PrepareDefectionUnitsCore(recipient,changes,removal ? removal->updates:creation ? creation->updates:m_unit_updates);
 }
 void UnitManager::PreparedConventionalRemoval::DiscoverDefendedBase(base::Base* target,int32_t observer) {
     auto& d=*m_data;
@@ -671,6 +702,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
+	m_game->RequireSmacProductionOwner(owner);
 	if ( !m_game->IsRunning() || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
 		THROW( "Prepared unit creation requires its running owning accumulation" );
 	}
@@ -728,7 +760,8 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 	// these two local training categories precede the ordinary baseline one.
 	int32_t training = ( command_center ? 2 : 0 ) + ( bioenhancement ? 2 : 0 );
 	if ( social->current[ 4 ] < -1 ) { training /= 2; }
-	const ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
+	state.retained_state_word=0; // new manufactured record; no legacy state reconstruction
 	const auto design = m_game->ResolveConventionalDesign( state, *m_game->m_simulation );
 	if ( design.id >= 64 && !design.prototyped ) { THROW( "First custom prototype completion is not yet admitted" ); }
 	return PrepareConventionalUnit( GSE_CALL, Unit::GetNextId(), def, home.m_owner, home.GetTile(), state );
@@ -737,6 +770,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
+	m_game->RequireSmacProductionOwner(owner);
 	if ( m_game->IsRunning() ) {
 		auto prepared = PrepareConventionalUnit( GSE_CALL, id, def, owner, tile, state );
 		auto* unit = prepared.Commit(); prepared.Notify( GSE_CALL ); return unit;
@@ -820,6 +854,7 @@ void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const Conven
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) { THROW( "Conventional update requires a registered unit" ); }
+	m_game->RequireSmacProductionOwner(unit->m_owner);
 	unit->RequireConventionalReady();
 	const auto& prior = unit->Conventional();
 	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home || state.home_base_id != prior.home_base_id
@@ -990,7 +1025,12 @@ void UnitManager::PushUpdates() {
                 if(!viewer) {THROW("Native map presentation requires the current viewing simulation faction");}
                 return unit->GetPresentation(viewer->simulation_id);
             };
-			if ( uu.ops & UUO_SPAWN ) {
+			// Rebuild only the frontend view. Backend identity and wrapper stay live.
+            if((uu.ops & UUO_OWNER_CHANGE) && !(uu.ops & UUO_SPAWN)) {
+                auto fr=FrontendRequest(FrontendRequest::FR_UNIT_DESPAWN);
+                fr.data.unit_despawn.unit_id=unit_id;m_game->AddFrontendRequest(fr);
+            }
+            if ( uu.ops & (UUO_SPAWN | UUO_OWNER_CHANGE) ) {
 				const auto presentation = presentation_for_viewer();
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SPAWN );
 				fr.data.unit_spawn.unit_id = unit->m_id;

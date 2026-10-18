@@ -16,10 +16,25 @@ bool ConventionalUnitState::operator==( const ConventionalUnitState& other ) con
 	return design_id == other.design_id && owner_simulation_id == other.owner_simulation_id
 		&& stored_morale == other.stored_morale && damage == other.damage && spent == other.spent
 		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode
-		&& work_order == other.work_order && work_progress == other.work_progress;
+		&& work_order == other.work_order && work_progress == other.work_progress
+		&& retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
 }
 
+uint8_t ConventionalUnitState::AccountingMarkers(uint32_t word) noexcept {
+	return uint8_t((word&PAID_SUPPORT ? 1:0) | (word&PACIFISM_PENALIZED ? 2:0) | (word&PACIFISM_EXEMPT ? 4:0));
+}
+void ConventionalUnitState::SetAccountingMarkers(uint8_t markers) {
+	if(markers>7) {throw std::invalid_argument("Invalid conventional accounting markers");}
+	accounting_markers=markers;
+	if(retained_state_word) {
+		*retained_state_word=(*retained_state_word & ~(PAID_SUPPORT|PACIFISM_PENALIZED|PACIFISM_EXEMPT))
+			| (markers&1 ? PAID_SUPPORT:0u) | (markers&2 ? PACIFISM_PENALIZED:0u) | (markers&4 ? PACIFISM_EXEMPT:0u);
+	}
+}
 void ConventionalUnitState::Validate() const {
+	if(accounting_markers && (*accounting_markers>7 || (retained_state_word && AccountingMarkers(*retained_state_word)!=*accounting_markers))) {
+		throw std::runtime_error("Inconsistent conventional accounting history");
+	}
 	if ( work_order > WorkOrder::Mine || design_id < 0 || design_id >= 512 || owner_simulation_id < 1 || owner_simulation_id > 7
 		|| ( home != Home::None && home != Home::Base )
 		|| ( home == Home::Base ) != home_base_id.has_value()
@@ -28,7 +43,7 @@ void ConventionalUnitState::Validate() const {
 	}
 }
 
-void ConventionalUnitState::Serialize( types::Buffer& buffer ) const {
+void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history ) const {
 	Validate();
 	buffer.WriteInt( design_id ); buffer.WriteInt( owner_simulation_id );
 	buffer.WriteInt( stored_morale ); buffer.WriteInt( damage ); buffer.WriteInt( spent );
@@ -36,9 +51,13 @@ void ConventionalUnitState::Serialize( types::Buffer& buffer ) const {
 	buffer.WriteInt( static_cast< int32_t >( render_morale_mode ) );
 	if ( home_base_id ) { buffer.WriteInt( static_cast< int64_t >( *home_base_id ) ); }
 	buffer.WriteInt( static_cast< int32_t >( work_order ) ); buffer.WriteInt( work_progress );
+	if(include_state_history) {
+		buffer.WriteBool(retained_state_word.has_value());if(retained_state_word) {buffer.WriteInt(*retained_state_word);}
+		buffer.WriteBool(accounting_markers.has_value());if(accounting_markers) {buffer.WriteInt(*accounting_markers);}
+	}
 }
 
-ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer ) {
+ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history ) {
 	const auto design = Integer( buffer, 0, 511 ), owner = Integer( buffer, 1, 7 );
 	const auto morale = Integer( buffer, 0, 255 ), damage = Integer( buffer, 0, 255 ), spent = Integer( buffer, 0, 255 );
 	const bool failed = buffer.ReadBool();
@@ -49,6 +68,13 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer 
 		failed, static_cast< Home >( home ), static_cast< SmacMoraleMode >( mode ), home_id };
 	result.work_order = static_cast< WorkOrder >( Integer( buffer, 0, static_cast< int32_t >( WorkOrder::Mine ) ) );
 	result.work_progress = static_cast< uint8_t >( Integer( buffer, 0, 255 ) );
+	if(include_state_history) {
+		if(buffer.ReadBool()) {
+			const auto word=buffer.ReadInt();if(word<0 || uint64_t(word)>UINT32_MAX) {throw std::runtime_error("Invalid conventional full state word");}
+			result.retained_state_word=static_cast<uint32_t>(word);
+		}
+		if(buffer.ReadBool()) {result.accounting_markers=static_cast<uint8_t>(Integer(buffer,0,7));}
+	}
 	result.Validate(); return result;
 }
 

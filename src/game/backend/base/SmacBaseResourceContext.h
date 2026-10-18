@@ -16,7 +16,7 @@ struct SmacConquestState {
 // Persistent inputs belonging to one canonical Base. These are not a cached
 // yield, a social rating, a population allocation, or a governor decision.
 struct SmacBaseResourceContext {
-	static constexpr uint32_t MAX_WIRE_BYTES = 7 * 14 + 5 * 7;
+	static constexpr uint32_t MAX_WIRE_BYTES = 9 * 14 + 8 * 7;
 	static constexpr uint32_t GOVERNOR_ACTIVE = 0x80000000u;
 	static constexpr uint32_t MANAGE_CITIZENS = 0x40u;
 	static constexpr uint32_t STARTUP_AUTOMATION = 0x40000000u;
@@ -35,6 +35,19 @@ struct SmacBaseResourceContext {
 	// Native capture owns this history independently of current owner/size.
 	std::optional<SmacConquestState> conquest;
 	bool recent_defender_loss = false; // native status mask8; cleared at Base upkeep tail
+	// Full native word, independent of named effects. Legacy records retain
+	// absence; an update to known named bits must preserve every other bit.
+	std::optional<uint32_t> retained_status_word;
+	// Fresh original creation writes former=current/assimilation0. Keep this
+	// independent of the port's first-capture capability marker above. Earlier
+	// saves do not gain invented history; conquest is authoritative once present.
+	std::optional<int32_t> uncaptured_former_owner;
+	// Explicit port migration answer, never inferred from the current owner.
+	bool former_owner_migration = false;
+	SmacBaseResourceContext WithFormerOwnerRepair(int32_t former) const;
+	std::optional<int32_t> FormerOwner() const noexcept {return conquest ? std::optional<int32_t>(conquest->former_owner):uncaptured_former_owner;}
+	void SyncKnownStatusBits() noexcept;
+	void SyncKnownHurryBit(bool paid) noexcept {if(retained_status_word) {*retained_status_word=(*retained_status_word&~0x40000000u)|(paid?0x40000000u:0u);}}
 
 	void Validate() const;
 	SmacBaseResourceContext AfterUpkeep() const;
@@ -57,7 +70,7 @@ struct SmacBaseResourceContext {
 	bool operator==( const SmacBaseResourceContext& other ) const;
 };
 
-// Port V4 inner record (adds defender-loss aftermath), with V2/V3 migration.
+// Port V5 inner record (retains full status when known), with V2-V4 migration.
 // Absent outer context means legacy/unavailable, never neutral SMAC.
 types::Buffer SerializeSmacBaseResourceContext( const std::optional< SmacBaseResourceContext >& value );
 std::optional< SmacBaseResourceContext > DeserializeSmacBaseResourceContext( types::Buffer buffer );

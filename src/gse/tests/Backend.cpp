@@ -279,7 +279,7 @@ public:
 			} );
 		}
 		ConfigureConventional( true, 3, true );
-		auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.m_map->m_resource_policy = Policy::DisplayedTerrainV1(); GT_OK(); } );
+		auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string { m_game.m_map->m_resource_policy = Policy::DisplayedTerrainV1(); m_game.m_simulation->value.roster.front().active=false; /* no owned Bases or Pods in this policy-only fixture */ GT_OK(); } );
 		if ( !setup.empty() ) { return setup; }
 		const auto saved = WorldSnapshot(); const auto random = m_game.m_simulation->value.gameplay_random; const auto jsf = m_game.GetRandom()->GetStateString();
 		BackendFixture destination; destination.ConfigureConventional( true, 3, true );
@@ -375,7 +375,7 @@ public:
 			legacy.WriteInt(owner.first);legacy.WriteInt(owner.second.size());
 			for(const auto id:owner.second) {legacy.WriteInt(id);}
 		}
-		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation,false);
+		game::backend::base::WriteSmacResourceCalculation(legacy,paused.colony->first_calculation,false,false);
 		legacy.WriteInt(static_cast<int64_t>(paused.colony->morale_mode));
 		const auto decoded=m_game.ReadCanonicalContinuation(types::Buffer(legacy.ToString()),paused.turn);
 		if(!decoded) {throw std::runtime_error("V1 Colony continuation was lost");}
@@ -2945,7 +2945,7 @@ public:
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
-            const auto normalize_pop_definition_order=[&](const std::string& world) {
+            const auto normalize_definition_order=[&](const std::string& world) {
                 // Definition registry iteration is not saved gameplay order.
                 // Compare each owned definition by ID; retain exact bytes for
                 // all other fields, including Base and Unit record order.
@@ -2953,17 +2953,26 @@ public:
                 world_snapshot::ValidateHeader(input,m_state->m_settings.global);
                 world_snapshot::ReadRandomState(input);world_snapshot::ReadTurnState(input,m_state->m_slots->GetSlots());
                 ReadSimulationPrefix(input);
-                input.ReadString();input.ReadString();input.ReadString(); // map/resources/Units
-                const auto base_offset=input.lenr;types::Buffer bases(input.ReadString()),prefix;
+                input.ReadString();input.ReadString(); // map/resources
+                const auto units_offset=input.lenr;types::Buffer units(input.ReadString()),unit_prefix;
+                unit_prefix.WriteString(units.ReadString());
+                for(int registry=0;registry<2;++registry) {
+                    const auto count=units.ReadInt();unit_prefix.WriteInt(count);std::map<std::string,std::string> definitions;
+                    for(int64_t i=0;i<count;++i) {const auto id=units.ReadString();const auto value=units.ReadString();definitions.emplace(id,value);}
+                    if(definitions.size()!=static_cast<size_t>(count)) {throw std::runtime_error("duplicate restored Unit definition");}
+                    for(const auto& row:definitions) {unit_prefix.WriteString(row.first);unit_prefix.WriteString(row.second);}
+                }
+                types::Buffer units_frame;units_frame.WriteString(unit_prefix.ToString()+units.ToString().substr(units.lenr));
+                types::Buffer bases(input.ReadString()),prefix;
                 prefix.WriteString(bases.ReadString());const auto count=bases.ReadInt();prefix.WriteInt(count);
                 std::map<std::string,std::string> definitions;
                 for(int64_t i=0;i<count;++i){const auto id=bases.ReadString();const auto value=bases.ReadString();definitions.emplace(id,value);}
                 if(definitions.size()!=static_cast<size_t>(count)){throw std::runtime_error("duplicate restored population definition");}
                 for(const auto& row:definitions){prefix.WriteString(row.first);prefix.WriteString(row.second);}
                 types::Buffer frame;frame.WriteString(prefix.ToString()+bases.ToString().substr(bases.lenr));
-                return world.substr(0,base_offset)+frame.ToString()+world.substr(input.lenr);
+                return world.substr(0,units_offset)+units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
             };
-            GT_ASSERT(normalize_pop_definition_order(m_game.SerializeWorldSnapshot())==normalize_pop_definition_order(expected_world),
+            GT_ASSERT(normalize_definition_order(m_game.SerializeWorldSnapshot())==normalize_definition_order(expected_world),
                 "campaign restore changed world bytes or population definition values");
             m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
             GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
@@ -4848,6 +4857,11 @@ public:
 		const auto expected = source.m_game.m_simulation->value;
 		const auto snapshot = source.WorldSnapshot(); const auto random = source.m_game.GetRandom()->GetStateString();
 		GT_ASSERT( source.m_game.m_simulation->value == expected, "snapshot writer advanced gameplay RNG" );
+        // This transport fixture owns no Bases or Units. Native post-load repair
+        // clears activity without changing the serialized owner payloads.
+        auto repaired=expected;for(auto& owner:repaired.roster) {owner.active=false;}
+        source.m_game.m_simulation->value=repaired;
+        const auto repaired_snapshot=source.WorldSnapshot();source.m_game.m_simulation->value=expected;
 		Client* client = nullptr; Value* observations = nullptr; size_t errors = 0;
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			// Real canonical join order: roster then phase then frozen settings.
@@ -4900,7 +4914,7 @@ public:
 			GT_ASSERT( errors == ( failure == 3 ? 0u : 1u ), "late simulation mismatch did not take terminal startup failure" );
 			GT_OK();
 		}
-		GT_ASSERT( m_game.IsRunning() && !m_game.m_pending_simulation && m_game.m_simulation->value == expected && m_game.GetRandom()->GetStateString() == random,
+		GT_ASSERT( m_game.IsRunning() && !m_game.m_pending_simulation && m_game.m_simulation->value == repaired && m_game.GetRandom()->GetStateString() == random,
 			"claimed Start replayed grants, reallocated IDs, or lost exact continuation" );
 		const auto check = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			const auto phases = static_cast< value::Array* >( static_cast< value::Callable* >( observations )->Run( GSE_CALL, {} ) );
@@ -4927,7 +4941,7 @@ public:
 						&& !static_cast< value::Bool* >( row->Get( "active" ) )->value && !static_cast< value::Bool* >( row->Get( "prototyped" ) )->value, "restore regenerated custom state" );
 				}
 			}
-			GT_ASSERT( WorldSnapshot() == snapshot, "complete world serialization changed after restore" );
+			GT_ASSERT( WorldSnapshot() == repaired_snapshot, "complete world serialization changed after restore" );
 			// Real refresh packet preserves the accepted Player lifetime, despite
 			// copied wire records and flags. Retain/reconnect uses the real State path.
 			const auto identity = m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity();
@@ -4936,7 +4950,7 @@ public:
 			GT_ASSERT( client->ErrorReason().empty() && m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity, "same-occupant refresh replaced the Player" );
 			m_state->m_slots->GetSlot( 6 ).GetPlayer()->Connect(); // downloaded remote was initially disconnected
 			m_state->RetirePlayerSlot( 6, client, true, []() {} ); m_state->ReconnectPlayerSlot( 6, 90, "rejoined" );
-			GT_ASSERT( m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity && WorldSnapshot() == snapshot,
+			GT_ASSERT( m_state->m_slots->GetSlot( 6 ).GetPlayer()->GetIdentity() == identity && WorldSnapshot() == repaired_snapshot,
 				"retained reconnect rederived or lost simulation state" );
 			if ( early ) {
 				auto refreshed = expected.social;
@@ -5793,8 +5807,8 @@ void ConventionalUnitFixture::ConfigureProduction( const std::function< std::str
 	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ProductionPresentations( const std::array< std::string, 4 >& roles ) { fixture->ProductionPresentations( roles ); }
-void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map,int32_t width,int32_t height ) {
-	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, {}, production_map,width,height ); fixture->ResourcePolicy( true );
+void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map,int32_t width,int32_t height,const std::string& local_faction ) {
+	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, local_faction, production_map,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
 void ConventionalUnitFixture::SiteRatings(const std::string& packed) {fixture->SiteRatings(packed);}
@@ -8586,10 +8600,10 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			// V31 appends one versioned, absent continuation after the managers.
-			// Continuation V3 adds retained ecology to V2 research/V1 Colony choices.
+			// Continuation V4 retains ordered citizens after V3 ecology and V2 research/V1 Colony choices.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 3 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 5 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();
@@ -9679,6 +9693,10 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_OK();
 			} );
 			GT_ASSERT( source_error.empty(), "source setup: " + source_error );
+            if(scenario==3) {source.ResourceState([](auto& state) {
+                // The legacy Base is bound to slot2; the other owner has no Pod.
+                for(auto& owner:state.roster) {owner.active=owner.slot==2;}
+            });}
 			const auto snapshot = source.WorldSnapshot();
 			const auto error = destination.WithMutableScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = destination.GetGame();

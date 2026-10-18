@@ -1,0 +1,221 @@
+{
+  "research_id": "RE-SMAC-BATTLE-TARGET-INITIALIZATION-001",
+  "faction_initialization": [
+    {
+      "owner": 0,
+      "global_turn": 0,
+      "second_argument": 0,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        -1,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 0,
+      "global_turn": 0,
+      "second_argument": -1,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        -1,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 0,
+      "global_turn": 3,
+      "second_argument": 0,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        -1,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 0,
+      "global_turn": 3,
+      "second_argument": -1,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        -1,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 2,
+      "global_turn": 0,
+      "second_argument": 0,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        701,
+        702,
+        -1,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 2,
+      "global_turn": 0,
+      "second_argument": -1,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        701,
+        702,
+        -1,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 2,
+      "global_turn": 3,
+      "second_argument": 0,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        701,
+        702,
+        -1,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    },
+    {
+      "owner": 2,
+      "global_turn": 3,
+      "second_argument": -1,
+      "before": [
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708
+      ],
+      "after": [
+        701,
+        702,
+        -1,
+        704,
+        705,
+        706,
+        707,
+        708
+      ]
+    }
+  ],
+  "fresh_Base_status": [
+    {
+      "before": 4294967295,
+      "after": 0,
+      "peer_before": 305419896,
+      "peer_after": 305419896
+    },
+    {
+      "before": 2779077210,
+      "after": 0,
+      "peer_before": 305419896,
+      "peer_after": 305419896
+    }
+  ],
+  "whole_world_caller": "Source-mapped complementary human/nonhuman loops each cover slots0..7; each slot is initialized once. Not a newly executed whole-world run.",
+  "scope": "Eight actual faction initializer prefixes to immediately after target store, no helper substitutions or full return; empty Unit/Base lists. Tests both global turn branches and both supplied second args. Two isolated original Base initialization store fragments; not full founding runs. Whole-world all-eight caller is source-mapped separately, not executed here."
+}

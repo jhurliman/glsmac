@@ -471,14 +471,17 @@ private:
 		std::vector<int32_t> choices;
 	};
 	struct CanonicalTurnContinuation {
-		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen };
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen, FormerOwner };
 		size_t turn, owner_index=0, base_index=0;
 		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
 		Stage stage=Stage::Base;
 		std::optional<base::SmacBaseEnergyCalculation> energy;
 		std::optional<base::SmacColonyUpkeepPause> colony;
+		std::optional<base::SmacColonyChoice> former_colony_choice; // accepted prefix to resume, never replay
+		std::optional<unit::SmacMoraleMode> former_abandonment_tail;
 		std::optional<size_t> screen_base;
 		std::optional<int64_t> screen_request_id;
+		bool screen_after_transfer=false; // ephemeral; close resumes the normalized old-owner cursor
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
 	std::optional<CanonicalTurnContinuation> m_pending_canonical_continuation;
@@ -491,7 +494,12 @@ private:
 	std::optional<CanonicalColonyRequest> m_colony_request;
 	int64_t m_next_colony_request=0; // never reused by ResetGame
 	bool BeginCanonicalBaseUpkeep(GSE_CALLABLE);
+	void PrepareCanonicalOwnershipContinuation();
+	void CompleteCanonicalOwnershipChange(GSE_CALLABLE,size_t base_id);
 	void RequestCanonicalColony(GSE_CALLABLE);
+	void RequestCanonicalFormerOwner(GSE_CALLABLE);
+	void ValidateCanonicalFormerOwner() const;
+	bool HandleSmacFormerOwnerEvent(GSE_CALLABLE,const std::string&,const gse::value::object_properties_t&,size_t,bool);
 	void ValidateCanonicalColony() const;
 	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
@@ -681,6 +689,8 @@ private:
 	unit::ConventionalUnitState PrepareStartingConventionalUnit( const slot::Slot* owner, unit::SmacMoraleMode mode ) const;
 	unit::ConventionalUnitContext ResolveConventionalIdentity( const unit::ConventionalUnitState& unit, const slot::Slot* owner, const BoundSimulation& simulation ) const;
 	const faction::SmacSimulationParticipant& RequireSimulationParticipant( const Player* player ) const;
+	// Only a synchronous prepared riot calculation may inspect an inactive recipient.
+	std::optional<int32_t> m_smac_riot_query_owner;
 	const faction::SmacSimulationParticipant& RequireSmacProductionOwner( const slot::Slot* owner ) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
@@ -824,13 +834,15 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
+	std::optional<base::SmacCitizenCalculation> CalculateCanonicalCitizens(const base::Base&,const base::SmacBaseResourceCalculation&,const base::SmacBaseAllocationState* allocation = nullptr,std::optional<size_t> population = {},const unit::Unit* prepared = nullptr,const std::vector<size_t>& removed = {},const base::FacilityDef* granted = nullptr,std::string* unavailable = nullptr) const;
 	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population, const base::FacilityDef* granted = nullptr ) const;
 	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
+    std::vector<std::pair<size_t,unit::ConventionalUnitState>> CalculateCanonicalUnitAccounting(const base::Base&,const base::SmacUnitSupportResult&) const;
 	base::SmacUnitSupportResult CalculateCanonicalUnitSupport( const base::Base& base, size_t population,
 		const unit::Unit* prepared_unit, const std::vector<size_t>& removed = {} ) const;
 	std::array< int32_t, 3 > CalculateCanonicalOrbitalIntake( const base::Base& base, size_t population ) const;
 	int64_t CalculateCanonicalNutrientDemand( const base::Base& base, size_t population ) const;
-	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates = nullptr, const base::SmacBaseAllocationState* candidate_allocation = nullptr ) const;
+	base::SmacBaseEnergyCalculation CalculateCanonicalBaseEnergy( const base::Base& base, const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates = nullptr, const base::SmacBaseAllocationState* candidate_allocation = nullptr, const base::FacilityDef* granted = nullptr ) const;
 	// Native controller stages these calls in its once-only Base/faction order.
 	// They are deliberately not script callbacks or independently queued events.
 	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );

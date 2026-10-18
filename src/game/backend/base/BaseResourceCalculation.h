@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include "SmacCitizens.h"
 
 namespace game::backend::base {
 
@@ -22,6 +23,7 @@ struct SmacBaseResourceCalculation {
     } minerals;
     // Missing retained inputs remain unavailable; queries never invent history.
     std::optional<int32_t> eco_damage;
+    std::optional<SmacCitizenCalculation> citizens;
 };
 
 // Finish an already calculated raw intake. Founding retains the allocator's

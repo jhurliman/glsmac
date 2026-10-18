@@ -118,8 +118,9 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
     const auto package=unit::SmacRestartUnitPackage::Select(static_cast<int32_t>(m_game->GetTurnId()),state.designs,
         global.GetSmacPredefinedUnitRules()->catalog,*technology,*global.GetSmacTechnologyRules());
     for(const auto id:package.creation_order) {
-        plan.units.push_back({m_game->ResolveSmacProductionPresentation(owner_slot,id),
-            {id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0}});
+        unit::ConventionalUnitState fresh{id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0};
+        fresh.retained_state_word=0; // actual newly initialized Unit, independent of preserved faction history
+        plan.units.push_back({m_game->ResolveSmacProductionPresentation(owner_slot,id),fresh});
     }
     plan.economy.rates={0,5};return plan;
 }
@@ -134,6 +135,7 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
 		state.victory_history->last_base_expansion_or_advice_turn[owner]=*plan.initialization_history_turn;
 	}
     state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
+    if(plan.site) {state.battle_plan_target.at(owner)=-1;} // nonzero faction initializer resets only this owner
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}
 }

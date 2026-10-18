@@ -24,10 +24,18 @@ struct ConventionalUnitState {
 	enum class WorkOrder : uint8_t { None, Farm, Road, Forest, Solar, Mine };
 	WorkOrder work_order = WorkOrder::None;
 	uint8_t work_progress = 0;
+	// Native full word remains unknown on migrated Unit4 records. An actual
+	// support pass may own these three accounting bits without knowing others.
+	std::optional<uint32_t> retained_state_word;
+	std::optional<uint8_t> accounting_markers;
+	static constexpr uint32_t PAID_SUPPORT=16u, PACIFISM_PENALIZED=0x200000u, PACIFISM_EXEMPT=0x400000u;
+	static uint8_t AccountingMarkers(uint32_t word) noexcept;
+	void SetAccountingMarkers(uint8_t markers);
+	bool HasStateHistory() const noexcept {return retained_state_word.has_value() || accounting_markers.has_value();}
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
-	void Serialize( types::Buffer& buffer ) const;
-	static ConventionalUnitState Deserialize( types::Buffer& buffer );
+	void Serialize( types::Buffer& buffer, bool include_state_history = true ) const;
+	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true );
 };
 
 // An owned resolved copy produced from a checked current or downloaded bound

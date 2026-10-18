@@ -1,0 +1,484 @@
+{
+  "research_id": "RE-SMAC-RIOT-POLICY-001",
+  "status": "Original replay append/policy inheritance/status clear and disconnected original old/new FACILITY-grant loops; diagnostic logging omitted, intervening units/map processing unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "riot-defection-policy-and-facilities.md",
+  "scope": "Positive distinct owners, supplied remaining-base population/HQ/opaque policy settings and faction grants. Policy option identities/extra cleared status markers and full defection remain outside scope.",
+  "defaults": {
+    "old_owner": 1,
+    "new_owner": 2,
+    "turn_index": 20,
+    "x": 12,
+    "y": 6,
+    "current_policy": "original",
+    "other_bases": [
+      {
+        "owner": 1,
+        "population": 4,
+        "headquarters": false,
+        "policy": "source_a"
+      }
+    ],
+    "facilities": [
+      "recycling_tanks"
+    ],
+    "old_grants": [],
+    "new_grants": [],
+    "riots_before": true,
+    "golden_before": false,
+    "history_events_before": 0
+  },
+  "cases": [
+    {
+      "id": "RIOT-POLICY-001",
+      "name": "policy from remaining old-owner base",
+      "overrides": {},
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-002",
+      "name": "larger recipient base ignored",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 2,
+            "population": 127,
+            "headquarters": true,
+            "policy": "source_b"
+          },
+          {
+            "owner": 1,
+            "population": 4,
+            "headquarters": false,
+            "policy": "source_a"
+          }
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 2,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-003",
+      "name": "headquarters doubles selection score",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 1,
+            "population": 4,
+            "headquarters": false,
+            "policy": "source_a"
+          },
+          {
+            "owner": 1,
+            "population": 3,
+            "headquarters": true,
+            "policy": "source_b"
+          }
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 2,
+        "policy_after": "source_b",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-004",
+      "name": "equal score keeps earliest base",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 1,
+            "population": 6,
+            "headquarters": false,
+            "policy": "source_a"
+          },
+          {
+            "owner": 1,
+            "population": 3,
+            "headquarters": true,
+            "policy": "source_b"
+          }
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-005",
+      "name": "no old-owner source retains current policy",
+      "overrides": {
+        "other_bases": []
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": null,
+        "policy_after": "original",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-006",
+      "name": "zero population does not become source",
+      "overrides": {
+        "other_bases": [
+          {
+            "owner": 1,
+            "population": 0,
+            "headquarters": true,
+            "policy": "source_a"
+          }
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": null,
+        "policy_after": "original",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-007",
+      "name": "both riot and Golden Age cleared",
+      "overrides": {
+        "golden_before": true
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-008",
+      "name": "old grant retained",
+      "overrides": {
+        "old_grants": [
+          "recycling_tanks"
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-009",
+      "name": "missing old grant added",
+      "overrides": {
+        "facilities": [],
+        "old_grants": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "network_node"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-010",
+      "name": "new grant added",
+      "overrides": {
+        "new_grants": [
+          "energy_bank"
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks",
+          "energy_bank"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-011",
+      "name": "both grants union and unrelated facility retained",
+      "overrides": {
+        "facilities": [
+          "tree_farm"
+        ],
+        "old_grants": [
+          "network_node"
+        ],
+        "new_grants": [
+          "energy_bank"
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "energy_bank",
+          "network_node",
+          "tree_farm"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-012",
+      "name": "duplicate grants do not double",
+      "overrides": {
+        "old_grants": [
+          "network_node",
+          "network_node"
+        ],
+        "new_grants": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks",
+          "network_node"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-013",
+      "name": "custom grant limits clamp",
+      "overrides": {
+        "old_grants": [
+          0
+        ],
+        "new_grants": [
+          99
+        ]
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "headquarters",
+          "recycling_tanks",
+          "stockpile_energy"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-014",
+      "name": "replay appends after existing events",
+      "overrides": {
+        "history_events_before": 3
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 20,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 4,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    },
+    {
+      "id": "RIOT-POLICY-015",
+      "name": "replay turn wraps at sixteen bits",
+      "overrides": {
+        "turn_index": 65536
+      },
+      "expected": {
+        "replay_event": {
+          "kind": "base_changed_owner",
+          "faction": 2,
+          "turn": 0,
+          "x": 12,
+          "y": 6
+        },
+        "history_events_after": 1,
+        "policy_source_base": 1,
+        "policy_after": "source_a",
+        "riots_after": false,
+        "golden_after": false,
+        "unrelated_status_preserved": true,
+        "facilities_after": [
+          "recycling_tanks"
+        ]
+      }
+    }
+  ]
+}

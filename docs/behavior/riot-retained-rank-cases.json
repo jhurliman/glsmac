@@ -1,0 +1,168 @@
+{
+  "research_id": "RE-SMAC-RIOT-RETAINED-RANK-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One original rank assignment/inverse-publication fragment from supplied score checkpoint, one complete active ongoing-riot handler return with RNG0/notification callbacks supplied, one inactive-slot arithmetic fragment. No fresh scoring/full ranking or Base/faction upkeep.",
+  "publication_case": {
+    "input_scores_by_faction": [
+      123,
+      30,
+      70,
+      10,
+      60,
+      20,
+      50,
+      40
+    ],
+    "active_factions": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      7
+    ],
+    "expected": {
+      "direct_rank_by_faction": [
+        99,
+        3,
+        7,
+        1,
+        6,
+        2,
+        5,
+        4
+      ],
+      "faction_at_rank": [
+        0,
+        3,
+        0,
+        1,
+        7,
+        6,
+        4,
+        2
+      ],
+      "score_table": [
+        123,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ]
+    }
+  },
+  "active_riot_case": {
+    "faction": 1,
+    "population": 4,
+    "difficulty": 5,
+    "POLICE": 0,
+    "rank_read": 3,
+    "limit": 16,
+    "attempted_candidates": 17,
+    "complete_handler_return": true,
+    "search_exhausted": true,
+    "direct_and_inverse_unchanged": true,
+    "ranking_provider_entries": 0
+  },
+  "active_riot_draws": [
+    {
+      "purpose": "POLICE_gate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    },
+    {
+      "purpose": "facility_candidate",
+      "supplied_raw": 0
+    }
+  ],
+  "inactive_arithmetic_fragment": {
+    "faction": 5,
+    "direct_rank": 2,
+    "inverse_position": null,
+    "population": 4,
+    "difficulty": 5,
+    "limit": 17
+  },
+  "mapping": "Direct rank equals inverse-table position for a faction included in that same produced snapshot. Strongest7; do not reverse. Inactive direct words need not appear in inverse.",
+  "lifetime": "Retain last nonzero-update publication. Score-only update and riot consumption do not reassign ranks.",
+  "validation": {
+    "native_publication_fragments": 1,
+    "complete_riot_handler_returns": 1,
+    "inactive_arithmetic_fragments": 1,
+    "full_score_provider_returns": 0,
+    "Base_upkeep_returns": 0,
+    "supplied_RNG_and_nonmutating_notifications": true
+  },
+  "raw_receipt_sha256": "8f4ae85aa6a29fcc221ab16aad9a899771271eb31ca45aa64e3009f5bea05d19",
+  "related_contracts": [
+    "ending-input-producers.md",
+    "ranking-dominance-score-order.md",
+    "riot-facility-aftermath.md"
+  ]
+}

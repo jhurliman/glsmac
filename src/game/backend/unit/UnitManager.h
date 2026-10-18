@@ -165,6 +165,28 @@ public:
 		const map::SmacWorkerKnowledge& territory, PreparedConventionalUnit* transient = nullptr );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 
+    // Same accumulation as the complete Base consequence. This stages only
+    // resolved Unit changes; recipient/radius/order decisions belong to the
+    // original defection producer, not to this publication primitive.
+    class PreparedDefectionUnits {
+    public:
+        ~PreparedDefectionUnits();
+        PreparedDefectionUnits(PreparedDefectionUnits&&) noexcept;
+        PreparedDefectionUnits& operator=(PreparedDefectionUnits&&) noexcept;
+        void Commit() noexcept;
+    private:
+        friend class UnitManager;
+        friend class base::BaseManager;
+        friend class base::Base;
+        void Query(const std::function<void()>& query) const;
+        struct Data;
+        explicit PreparedDefectionUnits(std::unique_ptr<Data> data);
+        std::unique_ptr<Data> m_data;
+    };
+    PreparedDefectionUnits PrepareDefectionUnits(GSE_CALLABLE,slot::Slot* recipient,
+        const std::vector<std::pair<size_t,ConventionalUnitState>>& changes);
+
+
 	MoraleSet* GetMoraleSet( const std::string& name ) const;
 	Unit* GetUnit( const size_t id ) const;
 	Def* GetUnitDef( const std::string& name ) const;
@@ -254,6 +276,7 @@ private:
 		UUO_SPAWN = 1 << 0,
 		UUO_REFRESH = 1 << 1,
 		UUO_DESPAWN = 1 << 2,
+        UUO_OWNER_CHANGE = 1 << 3,
 	};
 	struct unit_update_t {
 		unit_update_op_t ops = UUO_NONE;
@@ -269,6 +292,13 @@ private:
 	friend class Unit;
 	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
+    void QueryDefectionUnits(const PreparedConventionalUnit* created,const PreparedConventionalRemoval& removed,const std::function<void()>& query);
+    PreparedDefectionUnits PrepareDefectionUnitsCore(slot::Slot* recipient,
+        const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+        const std::unordered_map<size_t,unit_update_t>& updates);
+    PreparedDefectionUnits PrepareDefectionUnitsForQuery(slot::Slot* recipient,
+        const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
+        const PreparedConventionalUnit* created=nullptr,const PreparedConventionalRemoval* removed=nullptr);
 	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr);
 	PreparedFactionUnits PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
 		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,

@@ -29,6 +29,7 @@ SET( SRC ${SRC}
 	${PWD}/GameSimulation.cpp
 	${PWD}/GameProduction.cpp
 	${PWD}/GamePopulation.cpp
+	${PWD}/GameCitizens.cpp
 	${PWD}/GameEconomy.cpp
 	${PWD}/GameEnergyRates.cpp
 	${PWD}/GameRegionalStrategy.cpp

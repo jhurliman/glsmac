@@ -41,7 +41,7 @@ base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& 
 }
 
 base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::Base& evaluating_base,
-	const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates, const base::SmacBaseAllocationState* candidate_allocation ) const {
+	const base::SmacBaseResourceCalculation& resources, const base::SmacEnergyRates* candidate_rates, const base::SmacBaseAllocationState* candidate_allocation, const base::FacilityDef* granted ) const {
 	using namespace base;
 	if ( evaluating_base.GetGame() != this || !m_bm || m_bm->GetBase( evaluating_base.m_id ) != &evaluating_base || !m_map ) {
 		throw std::runtime_error( "Energy calculation requires a registered Base in this world" );
@@ -113,6 +113,17 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 			maintenance_fees.emplace_back( id, fee );
 		}
 	}
+    if(granted) {
+        if(m_bm->GetFacilityDef(granted->m_id)!=granted || !granted->m_smac_source_id || !SupportsSmacFacilityProduction(*granted->m_smac_source_id)) {throw std::runtime_error("Energy staged facility is not admitted");}
+        m_bm->ValidateSmacFacilityDef(granted);const auto id=*granted->m_smac_source_id;
+        if(!local.at(id) && !free_facility.at(id)) {
+            const auto fee=facilities->facilities.at(id-1).maintenance;
+            if(fee<0) {throw std::runtime_error("Negative staged facility maintenance is outside ordinary posting");}
+            maintenance=Checked(int64_t(maintenance)+fee);maintenance_fees.emplace_back(id,fee);
+        }
+        local.at(id)=true;
+        if(id==1) {const auto* center=evaluating_base.GetTile();headquarters={{Checked(center->coord.x),Checked(center->coord.y)}};}
+    }
 	const auto allocation = candidate_allocation ? std::optional<SmacBaseAllocationState>(*candidate_allocation) : evaluating_base.GetSmacAllocation();
 	const auto& production = evaluating_base.GetProductionState();
 	if ( !allocation || !production ) { throw std::runtime_error( "Energy calculation requires exact allocation and production authority" ); }

@@ -161,7 +161,7 @@ void Base::PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& 
 
 Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation,
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
-	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep, PreparedSmacWorkerState* previous ) {
+	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep, PreparedSmacWorkerState* previous, bool riot_defection ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
 	m_game->RequireSmacGameplayActive();
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
@@ -173,17 +173,37 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
         || !previous->m_data->lock.owns_lock() || captured_owner || finish_upkeep || !facility_changes.empty()
         || population!=m_pops.size())) {THROW("Joined worker preparation requires an unpublished same-manager population-preserving batch");}
     const auto prior_context = GetSmacResourceContext();
-	const auto expected_context=finish_upkeep ? prior_context.AfterUpkeep() : prior_context;
-	context.Validate();
-	auto unchanged_context = context; unchanged_context.governor_options = prior_context.governor_options;
-	if(captured_owner) {
-		m_game->RequireSmacLocalHumanOwner(captured_owner);
+    auto expected_context=finish_upkeep ? prior_context.AfterUpkeep() : prior_context;
+    auto published_context=context;
+    if(production) {expected_context.SyncKnownHurryBit(production->hurry_partial_paid);published_context.SyncKnownHurryBit(production->hurry_partial_paid);}
+	context.Validate();published_context.Validate();
+	auto unchanged_context = published_context; unchanged_context.governor_options = prior_context.governor_options;
+    // Only the private completed upkeep transaction may publish status admitted
+    // from its second citizen pass. Ordinary allocation/query edits retain it.
+    if(finish_upkeep) {unchanged_context.golden_age=expected_context.golden_age;unchanged_context.drone_riots=expected_context.drone_riots;unchanged_context.SyncKnownStatusBits();}
+    if(riot_defection) {
+        if(!captured_owner || captured_owner==m_owner || finish_upkeep || previous || !prior_context.FormerOwner() || !context.conquest
+            || context.conquest->former_owner!=*prior_context.FormerOwner()
+            || context.conquest->assimilation!=(context.owner_simulation_id==*prior_context.FormerOwner() ? 0:50)
+            || context.golden_age || context.drone_riots || context.recent_defender_loss
+            || context.former_owner_migration!=prior_context.former_owner_migration) {THROW("Riot publication differs from its measured ownership transition");}
+        m_game->RequireSmacLocalHumanOwner(captured_owner);
+        bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
+        const auto masked=prior_context.retained_status_word ? std::optional<uint32_t>(*prior_context.retained_status_word&0xffdef7b1u):std::nullopt;
+        if(context.retained_status_word!=masked) {THROW("Riot publication changed unrelated status history");}
+        unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
+        unchanged_context.uncaptured_former_owner=prior_context.uncaptured_former_owner;
+        unchanged_context.golden_age=prior_context.golden_age;unchanged_context.drone_riots=prior_context.drone_riots;
+        unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;unchanged_context.retained_status_word=prior_context.retained_status_word;
+        if(!(unchanged_context==prior_context)) {THROW("Riot publication changed unrelated Base context");}
+    } else if(captured_owner) {
+        m_game->RequireSmacLocalHumanOwner(captured_owner);
 		bm->ValidateSmacResourceContext(context,captured_owner,captured_owner->GetPlayer()->GetFaction());
 		if(finish_upkeep || captured_owner==m_owner || prior_context.conquest || !context.conquest || context.conquest->former_owner!=prior_context.owner_simulation_id
 			|| context.conquest->assimilation!=50 || population+1!=m_pops.size()) {THROW("Capture publication requires its first ordinary population-loss transition");}
-		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;
+		unchanged_context.owner_simulation_id=prior_context.owner_simulation_id;unchanged_context.conquest=prior_context.conquest;unchanged_context.uncaptured_former_owner=prior_context.uncaptured_former_owner;unchanged_context.former_owner_migration=prior_context.former_owner_migration;
 		if(context.recent_defender_loss) {THROW("Capture must clear defender-loss history");}
-		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;
+		unchanged_context.recent_defender_loss=prior_context.recent_defender_loss;unchanged_context.SyncKnownStatusBits();
 		if(!(unchanged_context==prior_context)) {THROW("Capture publication changed unrelated Base context");}
 	} else if ( !( unchanged_context == expected_context ) || ( context.governor_options != prior_context.governor_options
 		&& context.governor_options != ( prior_context.governor_options & ~SmacBaseResourceContext::MANAGE_CITIZENS ) ) ) {
@@ -287,7 +307,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	data->projection = std::move( projection ); data->additions = std::move( additions ); data->removals = std::move( removals );
 	data->retired.reserve( data->removals.size() ); data->next_pop_id = next_pop_id; data->assignments = std::move( assignments );
 	data->updates = std::move( updates ); data->triggers = std::move( triggers ); data->lock = std::move( lock );
-	data->allocation = allocation; data->context = context; data->production = production; data->nutrients = nutrients;
+	data->allocation = allocation; data->context = published_context; data->production = production; data->nutrients = nutrients;
 	data->facility_changes=std::move(facility_changes);
 	data->captured_owner=captured_owner;
 	if(previous) {data->lock=std::move(previous->m_data->lock);data->previous=std::move(previous->m_data);}

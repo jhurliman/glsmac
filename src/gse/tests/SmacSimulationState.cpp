@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=29,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=30,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -173,6 +173,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=29,bool
         suffix.WriteBool(value.ecology_warming_count.has_value());if(value.ecology_warming_count) {suffix.WriteInt(*value.ecology_warming_count);}
     }
     if(version>=29) {suffix.WriteBool(value.native_factory.has_value());if(value.native_factory) {suffix.WriteString(value.native_factory->Serialize().ToString());}}
+    if(version>=30) {for(const auto target:value.battle_plan_target) {suffix.WriteBool(target.has_value());if(target) {suffix.WriteInt(*target);}}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -209,6 +210,22 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         const auto before=state;
         for(const auto design:{-1,512}) {GT_ASSERT(Rejects([&]{state.Adjust(design,1,1);}) && state==before,"Invalid adjustment mutated retained state");}
         GT_ASSERT(Rejects([&]{state.Adjust(8,1,0);}) && state==before,"Invalid delta mutated counters");
+        GT_OK();
+    });
+    task->AddTest("SMAC battle-plan V30 preserves signed stale identities and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();const auto random=value.gameplay_random;
+        value.battle_plan_target={{INT64_MIN,-1,0,INT64_MAX,std::nullopt,17,777,-23}};
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value
+            && value.gameplay_random==random,"V30 rebuilt stale targets or changed RNG");
+        for(const auto version:{16,27,28,29}) {
+            auto legacy=value;legacy.battle_plan_target={};if(version<29) {legacy.native_factory.reset();}
+            // Other version-dependent histories are intentionally absent in State().
+            GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,version),technologies,profiles,units).battle_plan_target==legacy.battle_plan_target,
+                "Legacy frame invented a battle target");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"V30 trailing target data accepted");
         GT_OK();
     });
     task->AddTest("SMAC native factory V29 retains stale counters and migrates V28 without initialization",GT(){

@@ -95,7 +95,10 @@ Base::Base(
 	, m_resource_context( resource_context )
 	, m_allocation( allocation ) {
 	if ( m_production ) { game->ValidateSmacProductionState( owner, *m_production ); }
-	if ( m_resource_context ) { game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction ); }
+	if ( m_resource_context ) {
+        if(kind==ConstructionKind::Live) {game->RequireSmacProductionOwner(owner);}
+        game->GetBM()->ValidateSmacResourceContext( *m_resource_context, owner, faction );
+    }
 	// Validate the complete record before claiming the center or advancing IDs.
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );
@@ -230,6 +233,7 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
 	m_game->RequireSmacGameplayActive();
+	if(m_resource_context) {m_game->RequireSmacProductionOwner(m_owner);}
 	m_game->CheckRW( GSE_CALL );
 	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	// Copy completely before swapping: even an allocation failure preserves the
@@ -237,6 +241,7 @@ void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionStat
 	if ( m_production == production ) { return; }
 	auto replacement = production;
 	m_production.swap( replacement );
+	if(m_resource_context && m_production) {m_resource_context->SyncKnownHurryBit(m_production->hurry_partial_paid);}
 	TriggerUpdate();
 }
 

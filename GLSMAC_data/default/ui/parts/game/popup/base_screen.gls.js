@@ -1,4 +1,5 @@
 return {
+	read_only: false,
 
 	available_sections: [
 		'top_buttons',
@@ -156,6 +157,7 @@ return {
 		const faction = owner.get_faction();
 
 		this.base_id = base.id;
+		if (#is_defined(data.read_only)) { this.read_only = data.read_only; }
 		this.base = base;
 		this.sections.top_buttons.set_base(base);
 
@@ -163,15 +165,19 @@ return {
 		let intake = undefined;
 		let consumption = undefined;
 		let energy = undefined;
+        let citizens = undefined;
 		let ecodamage = canonical ? 'N/A' : 0;
         let mineral_surplus = undefined;
+        let retained_resources = false;
 		if (canonical) {
 			// Fresh preparation only: drawing does not normalize stored food,
 			// collect nutrients, post minerals or settle faction credits.
 			const calculation = base.get_smac_resource_calculation();
+            retained_resources = #is_defined(calculation.retained_only) && calculation.retained_only;
 			if (#typeof(calculation.eco_damage) == 'Int') { ecodamage = calculation.eco_damage; }
-            mineral_surplus = calculation.minerals.surplus;
-			energy = base.get_smac_energy_calculation();
+            if (!retained_resources) { mineral_surplus = calculation.minerals.surplus; }
+            citizens = {current: calculation.citizens, retained: calculation.retained_citizens, reason: calculation.citizens_unavailable};
+			if (!retained_resources) { energy = base.get_smac_energy_calculation(); }
 			intake = {NUTRIENTS: calculation.nutrients.intake, MINERALS: calculation.minerals.intake, ENERGY: calculation.raw_intake.ENERGY};
 			consumption = {NUTRIENTS: calculation.nutrients.demand, MINERALS: calculation.minerals.demand};
 			if (#is_defined(energy)) {
@@ -183,6 +189,11 @@ return {
 			consumption = base.get_consumption();
 		}
 
+        this.read_only = this.read_only || retained_resources;
+        const read_only = this.read_only;
+        this.sections.top_buttons.set_read_only(read_only);
+        if (retained_resources) { this.sections.top_buttons.set_retained_resources(); }
+
 		this.hide_production_selection();
 		this.sections.buttons.show_default(); // Recompute availability after the viewed Base is bound.
 		this.sections.specialist_selection.on_base_update(base);
@@ -191,7 +202,8 @@ return {
 		this.sections.hurry.on_base_update(base);
 
 		if (canonical) {
-			let nutrients = base.get_smac_nutrient_presentation();
+			let nutrients = undefined;
+            if (!retained_resources) { nutrients = base.get_smac_nutrient_presentation(); }
 			if (!#is_defined(nutrients)) { nutrients = {stored: base.get_accumulated_nutrients()}; }
 			this.sections.nutrients.set_stored(nutrients);
 		} else {
@@ -277,17 +289,18 @@ return {
 		}
 
 		this.sections.middle_area.set({
-			base: base,
+			base: base, citizens: citizens, read_only: read_only,
 		});
 
 		this.sections.bottom_bar.set({
 			base: base,
+            read_only: read_only,
             mineral_surplus: mineral_surplus,
 		});
 	},
 
-	can_rename: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
-	can_edit_queue: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
+	can_rename: () => { return !this.read_only && #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
+	can_edit_queue: () => { return !this.read_only && #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
 
 	open_hurry: () => {
 		if (!this.is_open || !this.can_edit_queue()) { return; }
@@ -298,7 +311,7 @@ return {
 	},
 
 	open_queue_editor: () => {
-		if (!this.is_open) { return; }
+		if (!this.is_open || this.read_only) { return; }
 		const base = this.base; const data = base.get_smac_queue_editor();
 		if (!#is_defined(data)) { return; }
 		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view(); this.sections.hurry.hide_view();
@@ -313,7 +326,7 @@ return {
 	},
 
 	open_specialist_selection: (base, pop_id) => {
-		if (!this.is_open || base.id != this.base_id) { return; }
+		if (!this.is_open || this.read_only || base.id != this.base_id) { return; }
 		const expected = base.get_smac_specialist_selection_state();
 		if (!#is_defined(expected)) { return; }
 		this.hide_production_selection();
@@ -337,6 +350,7 @@ return {
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;
+		this.read_only = false;
 	},
 
 	on_show: () => {
@@ -405,6 +419,7 @@ return {
 	},
 
 	show_production_selection: () => {
+		if (this.read_only) { return; }
 		if (this.production_selection == null) {
 			// Query before hiding anything: a stale/unavailable Base leaves the
 			// ordinary screen intact. All gameplay values come from the native Base.
@@ -456,6 +471,7 @@ return {
 	},
 
 	update_production_selection: () => {
+		if (this.read_only) { return; }
 		if (this.production_selection != null) {
 			if (!#is_defined(this.production_choice)) { return; }
 			const choice = this.production_choice;

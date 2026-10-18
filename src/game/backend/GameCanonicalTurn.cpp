@@ -14,6 +14,7 @@
 #include "unit/UnitManager.h"
 #include "gc/Space.h"
 #include "gse/value/Int.h"
+#include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Null.h"
 #include "gse/value/Object.h"
@@ -25,6 +26,9 @@
 
 namespace game::backend {
 namespace {
+bool IsActiveOwner(const faction::SmacSimulationState& state,int32_t owner) {
+    return std::any_of(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner && row.active;});
+}
 bool HasEcologyCalculationAuthority(const faction::SmacSimulationState& state,const settings::GlobalSettings& settings,const map::Map& world) {
     return world.GetWidth()>=8 && state.ecology_history && state.ecology_world && state.perihelion && settings.GetSmacEcologyRules();
 }
@@ -187,14 +191,16 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	for (const auto id:records) {
 		const auto* base=m_bm->GetBase(id);
 		if (!base || !base->HasSmacResourceContext()) { throw std::runtime_error("Canonical campaign contains a legacy or missing Base"); }
-		RequireSmacLocalHumanOwner(base->m_owner);
+        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        const auto row=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& p){return p.simulation_id==owner;});
+        if(row!=m_simulation->value.roster.end() && row->active) {RequireSmacLocalHumanOwner(base->m_owner);}
 	}
 	// The original upkeep traverses one faction's live records at a time.
 	// Ascending accepted simulation IDs are the explicit local human campaign
 	// controller policy; saved record order remains authoritative within it.
 	std::map<int32_t,const slot::Slot*> owners;
 	for (const auto& participant:m_simulation->value.roster) {
-		if (participant.active) {owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));}
+		owners.emplace(participant.simulation_id,&m_state->m_slots->GetSlot(participant.slot));
 	}
 	CanonicalTurnContinuation continuation{turn_id};
 	size_t count=0;
@@ -219,11 +225,12 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		m_simulation->value.perihelion=perihelion;
 		m_is_turn_complete=false;
 		m_canonical_continuation=std::move(continuation);
-        if(!m_canonical_continuation->owners.empty()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
+        if(!m_canonical_continuation->owners.empty() && IsActiveOwner(m_simulation->value,m_canonical_continuation->owners.front().first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
 		for (const auto& entry:m_um->GetUnits()) {
             // Positive-owner upkeep does not run the separate native controller.
             if(entry.second->IsNative()) {(void)m_um->QueryNativeUnit(entry.second->Native());continue;}
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
+			if(!IsActiveOwner(m_simulation->value,entry.second->Conventional().owner_simulation_id)) {continue;}
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);
 		}
 		ContinueCanonicalTurn(GSE_CALL);
@@ -243,6 +250,15 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	if(next.stage==Stage::Screen) {ValidateCanonicalColonyScreen();return;}
 	while(next.owner_index<next.owners.size()) {
 		const auto& owner=next.owners[next.owner_index];
+        const auto participant=std::find_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& p){return p.simulation_id==owner.first;});
+        if(participant==m_simulation->value.roster.end()) {throw std::runtime_error("Canonical owner is outside the admitted roster");}
+        // An owner eliminated during its admitted pass still retires the
+        // empty-owner tail before the existing human-ending break.
+        if(!participant->active && m_simulation->value.human_defeat_request!=owner.first) {
+            ++next.owner_index;next.base_index=0;next.stage=Stage::Base;
+            if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
+            continue; // owned entities do not revive an eliminated controller
+        }
 		if(next.base_index==owner.second.size()) {
 			RefreshCanonicalPopulationAggregate(owner.first);
 			// Native upkeep retires the shared route only AFTER this summary.
@@ -251,7 +267,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
-            if(next.owner_index<next.owners.size()) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
+            if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
 			continue;
 		}
 		auto* base=m_bm->GetBase(owner.second[next.base_index]);
@@ -330,6 +346,36 @@ void Game::FailCanonicalTurn(const std::string& error) {
 	// a retry nor a snapshot of the partially advanced world is permitted.
 }
 
+void Game::PrepareCanonicalOwnershipContinuation() {
+    if(!m_canonical_turn_in_progress || !m_canonical_continuation) {throw std::runtime_error("Ownership continuation has no active turn");}
+    const auto count=m_bm->GetBaseRecordOrder().size();
+    for(auto& owner:m_canonical_continuation->owners) {owner.second.reserve(count);}
+}
+void Game::CompleteCanonicalOwnershipChange(GSE_CALLABLE,size_t base_id) {
+    auto& next=*m_canonical_continuation;const auto old_owner=next.owners.at(next.owner_index).first;
+    const auto& records=m_bm->GetBaseRecordOrder();
+    for(auto& owner:next.owners) {
+        if(owner.second.capacity()<records.size()) {throw std::runtime_error("Ownership continuation storage was not prepared");}
+        owner.second.clear();
+    }
+    size_t cursor=0;bool before=true,found=false;
+    for(const auto id:records) {
+        const auto* base=m_bm->GetBase(id);if(!base) {throw std::runtime_error("Ownership continuation lost a live Base record");}
+        if(id==base_id) {before=false;found=true;}
+        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        const auto row=std::find_if(next.owners.begin(),next.owners.end(),[&](const auto& candidate){return candidate.first==owner;});
+        if(row==next.owners.end()) {throw std::runtime_error("Transferred Base has no retained owner traversal");}
+        row->second.push_back(id);if(before && owner==old_owner) {++cursor;}
+    }
+    if(!found) {throw std::runtime_error("Transferred Base disappeared from its stable record");}
+    next.base_index=cursor;next.energy.reset();next.stage=CanonicalTurnContinuation::Stage::Base;
+    if(next.screen_base) {
+        if(*next.screen_base!=base_id || !next.screen_request_id) {throw std::runtime_error("Transferred Colony Screen identity differs");}
+        next.screen_after_transfer=true;next.stage=CanonicalTurnContinuation::Stage::Screen;
+        ValidateCanonicalColonyScreen();NotifyCanonicalColonyScreen(GSE_CALL);
+    }
+}
+
 // One entry for ordinary upkeep and the saved Colony-choice continuation.
 bool Game::BeginCanonicalBaseUpkeep(GSE_CALLABLE) {
 	if(!m_canonical_turn_in_progress || !m_canonical_continuation || m_colony_request || m_research_request) {
@@ -347,16 +393,19 @@ bool Game::BeginCanonicalBaseUpkeep(GSE_CALLABLE) {
 	base::Base::SmacAllocationRoles roles;
 	const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
 	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+    PrepareCanonicalOwnershipContinuation();
 	const auto result=base->BeginSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
 		return ResolveSmacProductionPresentation(base->m_owner,design);
 	},unit::SmacMoraleMode::Mode0);
+    if(result.ownership_changed) {CompleteCanonicalOwnershipChange(GSE_CALL,base->m_id);return m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen;}
+	if(result.needs_former_owner) {next.stage=CanonicalTurnContinuation::Stage::FormerOwner;RequestCanonicalFormerOwner(GSE_CALL);return false;}
 	if(result.colony_pause) {
 		next.colony=result.colony_pause;next.stage=CanonicalTurnContinuation::Stage::Colony;
 		RequestCanonicalColony(GSE_CALL);return false;
 	}
 	if(result.removed_base) {++next.base_index;return true;}
 	if(!result.final_calculation) {throw std::runtime_error("Colony upkeep omitted its final resource pass");}
-	next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+	next.energy=result.retained_energy ? *result.retained_energy:CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
 	next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 	return true;
 }
@@ -398,6 +447,21 @@ void Game::NotifyCanonicalColony(GSE_CALLABLE) {
 
 gse::Value* Game::GetPendingSmacColony(GSE_CALLABLE) const {
 	if(!m_colony_request || m_canonical_turn_failed) {return VALUE(gse::value::Null);}
+    if(m_canonical_continuation->stage==CanonicalTurnContinuation::Stage::FormerOwner) {
+        ValidateCanonicalFormerOwner();const auto& request=*m_colony_request;const auto* base=m_bm->GetBase(request.base);
+        gse::value::array_elements_t choices;
+        choices.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+            {"id",VALUE(gse::value::Int,,0)},{"name",VALUE(gse::value::String,,"Native life")}})));
+        for(const auto& participant:m_simulation->value.roster) {
+            auto* player=m_state->m_slots->GetSlot(participant.slot).GetPlayer();
+            choices.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                {"id",VALUE(gse::value::Int,,participant.simulation_id)},{"name",VALUE(gse::value::String,,player->GetFaction()->m_name)}})));
+        }
+        return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+            {"kind",VALUE(gse::value::String,,"former_owner")},{"request_id",VALUE(gse::value::Int,,request.id)},
+            {"base_id",VALUE(gse::value::Int,,request.base)},{"base_name",VALUE(gse::value::String,,base->m_name)},
+            {"owner_slot",VALUE(gse::value::Int,,base->m_owner->GetIndex())},{"choices",VALUE(gse::value::Array,,choices)}}));
+    }
 	ValidateCanonicalColony();
 	const auto& request=*m_colony_request;const auto* base=m_bm->GetBase(request.base);
 	const gse::value::object_properties_t properties{
@@ -409,6 +473,7 @@ gse::Value* Game::GetPendingSmacColony(GSE_CALLABLE) const {
 
 bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 	const gse::value::object_properties_t& args,size_t caller,bool apply) {
+	if(name=="choose_former_faction") {return HandleSmacFormerOwnerEvent(GSE_CALL,name,args,caller,apply);}
 	if(name!="choose_colony") {return false;}
 	const auto request=args.find("request_id"),choice=args.find("choice");
 	if(caller!=m_slot_num || args.size()!=2 || request==args.end() || choice==args.end()
@@ -451,21 +516,42 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 				}
 				auto* successor=m_bm->GetBase(*abandoned.successor_id);
 				if(!successor) {throw std::runtime_error("Abandonment successor disappeared");}
+                PrepareCanonicalOwnershipContinuation();
 				const auto tail=successor->ResumeSmacAbandonmentTail(GSE_CALL,*abandoned.successor_cache,roles,mode);
+                if(tail.needs_former_owner) {
+                    next.former_abandonment_tail=mode;next.stage=CanonicalTurnContinuation::Stage::FormerOwner;
+                    RequestCanonicalFormerOwner(GSE_CALL);return true;
+                }
+                if(tail.ownership_changed) {
+                    CompleteCanonicalOwnershipChange(GSE_CALL,successor->m_id);ContinueCanonicalTurn(GSE_CALL);
+                    if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}return true;
+                }
 				if(tail.removed_base || tail.completed_unit || !tail.final_calculation) {
 					throw std::runtime_error("Abandonment successor produced an unsupported tail");
 				}
-				next.energy=CalculateCanonicalBaseEnergy(*successor,*tail.final_calculation);
+				next.energy=tail.retained_energy ? *tail.retained_energy:CalculateCanonicalBaseEnergy(*successor,*tail.final_calculation);
 				next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 			} else {next.stage=CanonicalTurnContinuation::Stage::Base;}
 			ContinueCanonicalTurn(GSE_CALL);
 			if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}
 			return true;
 		}
+        PrepareCanonicalOwnershipContinuation();
 		const auto selected=answer=="screen"?base::SmacColonyChoice::Screen:base::SmacColonyChoice::Delay;
 		const auto result=base->ResumeSmacColonyUpkeep(GSE_CALL,*next.colony,selected,roles,[&](int32_t design){
 			return ResolveSmacProductionPresentation(base->m_owner,design);
 		});
+        if(result.ownership_changed) {
+            next.colony.reset();m_colony_request.reset();
+            if(selected==base::SmacColonyChoice::Screen) {next.screen_base=pending.base;next.screen_request_id=pending.id;}
+            CompleteCanonicalOwnershipChange(GSE_CALL,pending.base);
+            if(next.stage!=CanonicalTurnContinuation::Stage::Screen) {ContinueCanonicalTurn(GSE_CALL);}
+            if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}return true;
+        }
+        if(result.needs_former_owner) {
+            next.former_colony_choice=selected;next.stage=CanonicalTurnContinuation::Stage::FormerOwner;
+            m_colony_request.reset();RequestCanonicalFormerOwner(GSE_CALL);return true;
+        }
 		if(result.removed_base) {
 			// Population starvation retired the old Base. Its address and Screen
 			// request cannot survive into the continuation.
@@ -476,7 +562,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		if(result.completed_unit || !result.final_calculation) {
 			throw std::runtime_error("Deferred Colony tail produced an invalid completion");
 		}
-		next.energy=CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+		next.energy=result.retained_energy ? *result.retained_energy:CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
 		next.colony.reset();next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
 		if(selected==base::SmacColonyChoice::Screen) {next.screen_base=pending.base;next.screen_request_id=pending.id;}
 		m_colony_request.reset();
@@ -487,24 +573,111 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 	return true;
 }
 
+void Game::ValidateCanonicalFormerOwner() const {
+    if(!m_canonical_continuation || !m_colony_request || m_research_request || m_canonical_turn_failed || !IsRunning()) {
+        throw std::runtime_error("Former faction question has no current suspended turn");
+    }
+    const auto& next=*m_canonical_continuation;const auto& request=*m_colony_request;
+    if(next.stage!=CanonicalTurnContinuation::Stage::FormerOwner || next.energy || next.screen_base || next.screen_request_id
+        || next.turn!=GetTurnId() || request.turn!=next.turn || next.owner_index>=next.owners.size()) {
+        throw std::runtime_error("Former faction question checkpoint differs");
+    }
+    const auto& owner=next.owners[next.owner_index];
+    if(next.base_index>=owner.second.size() || owner.first!=request.owner || owner.second[next.base_index]!=request.base
+        || bool(next.colony)!=bool(next.former_colony_choice) || (next.colony && next.former_abandonment_tail)) {throw std::runtime_error("Former faction question identity differs");}
+    const auto* base=m_bm->GetBase(request.base);
+    if(!base || base->GetSmacResourceContext().owner_simulation_id!=owner.first || base->GetSmacResourceContext().FormerOwner()) {
+        throw std::runtime_error("Former faction question no longer needs an answer");
+    }
+    RequireSmacLocalHumanOwner(base->m_owner);
+    if(next.former_abandonment_tail && (!base->GetSmacUpkeepCache() || (*next.former_abandonment_tail!=unit::SmacMoraleMode::Mode0 && *next.former_abandonment_tail!=unit::SmacMoraleMode::Mode1))) {
+        throw std::runtime_error("Former faction question lost its committed successor cache");
+    }
+    if(next.colony) {
+        if(*next.former_colony_choice!=base::SmacColonyChoice::Delay && *next.former_colony_choice!=base::SmacColonyChoice::Screen) {
+            throw std::runtime_error("Former faction question lost the accepted Colony continuation");
+        }
+        base->ValidateSmacColonyPause(*next.colony);
+    }
+}
+void Game::RequestCanonicalFormerOwner(GSE_CALLABLE) {
+    if(!m_canonical_turn_in_progress || !m_canonical_continuation || m_colony_request || m_research_request || m_next_colony_request==INT64_MAX) {
+        throw std::runtime_error("Former faction request cannot be published");
+    }
+    const auto& next=*m_canonical_continuation;const auto& owner=next.owners.at(next.owner_index);
+    m_colony_request=CanonicalColonyRequest{++m_next_colony_request,owner.first,owner.second.at(next.base_index),next.turn};
+    ValidateCanonicalFormerOwner();SetTurnStatus(turn::TS_PLEASE_WAIT);NotifyCanonicalColony(GSE_CALL);
+}
+bool Game::HandleSmacFormerOwnerEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply) {
+    if(name!="choose_former_faction") {return false;}
+    const auto request=args.find("request_id"),former=args.find("former_owner");
+    if(caller!=m_slot_num || args.size()!=2 || request==args.end() || former==args.end() || !request->second || !former->second
+        || request->second->type!=gse::VT_INT || former->second->type!=gse::VT_INT) {
+        throw std::runtime_error("Former faction requires its authenticated request and explicit answer");
+    }
+    const auto id=static_cast<gse::value::Int*>(request->second)->value;
+    const auto answer=static_cast<gse::value::Int*>(former->second)->value;
+    if(id<1 || answer< -1 || answer>7) {throw std::runtime_error("Invalid former faction answer");}
+    if(m_canonical_turn_in_progress || m_canonical_turn_failed) {throw std::runtime_error("Former faction question is not currently available");}
+    if(!m_colony_request || m_colony_request->id!=id) {return true;}
+    ValidateCanonicalFormerOwner();
+    if(!apply || answer==-1) {return true;} // Cancel retains the exact checkpoint and question.
+    if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Former faction answer requires its owning accumulation");}
+    auto& next=*m_canonical_continuation;const auto pending=*m_colony_request;auto* base=m_bm->GetBase(pending.base);
+    base::Base::SmacAllocationRoles roles;const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
+    for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
+    m_canonical_turn_in_progress=true;bool publication=false;
+    util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
+    try {
+        PrepareCanonicalOwnershipContinuation();
+        const auto result=base->ProcessSmacProductionAndPopulation(GSE_CALL,roles,[&](int32_t design){
+            return ResolveSmacProductionPresentation(base->m_owner,design);
+        },next.colony ? next.colony->morale_mode:next.former_abandonment_tail.value_or(unit::SmacMoraleMode::Mode0),true,!next.colony && !next.former_abandonment_tail,
+            next.colony ? &*next.colony:nullptr,next.former_abandonment_tail ? &*base->m_smac_upkeep_cache:nullptr,static_cast<int32_t>(answer),&publication);
+        if(result.needs_former_owner || result.colony_pause || (!result.removed_base && !result.final_calculation)) {
+            throw std::runtime_error("Former faction answer did not complete its Base attempt");
+        }
+        if(next.former_colony_choice && *next.former_colony_choice==base::SmacColonyChoice::Screen && !result.removed_base) {
+            next.screen_base=pending.base;next.screen_request_id=pending.id;
+        }
+        next.colony.reset();next.former_colony_choice.reset();next.former_abandonment_tail.reset();m_colony_request.reset();
+        if(result.ownership_changed) {
+            CompleteCanonicalOwnershipChange(GSE_CALL,pending.base);
+            if(next.stage!=CanonicalTurnContinuation::Stage::Screen) {ContinueCanonicalTurn(GSE_CALL);}
+            if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}return true;
+        }
+        if(result.removed_base) {++next.base_index;next.stage=CanonicalTurnContinuation::Stage::Base;}
+        else {
+            next.energy=result.retained_energy ? *result.retained_energy:CalculateCanonicalBaseEnergy(*base,*result.final_calculation);
+            next.stage=CanonicalTurnContinuation::Stage::ResearchStart;
+        }
+        ContinueCanonicalTurn(GSE_CALL);if(!m_colony_request) {NotifyCanonicalColony(GSE_CALL);}
+    } catch(const std::exception& error) {
+        // A failed unpublished preparation leaves this explicit question retryable.
+        // Errors after authority publication retain the existing terminal policy.
+        if(publication) {FailCanonicalTurn(error.what());}else {NotifyCanonicalColony(GSE_CALL);}throw;
+    } catch(...) {if(publication) {FailCanonicalTurn("Unknown former faction continuation failure");}throw;}
+    return true;
+}
+
 void Game::ValidateCanonicalColonyScreen() const {
 	if(!m_canonical_continuation || m_colony_request || m_research_request || m_canonical_turn_failed || !IsRunning()) {
 		throw std::runtime_error("Colony screen has no active suspended turn");
 	}
 	const auto& next=*m_canonical_continuation;
-	if(next.stage!=CanonicalTurnContinuation::Stage::Screen || next.colony || !next.energy
+	if(next.stage!=CanonicalTurnContinuation::Stage::Screen || next.colony || (next.screen_after_transfer ? bool(next.energy):!next.energy)
 		|| !next.screen_base || !next.screen_request_id || *next.screen_request_id<1 || next.turn!=GetTurnId()
 		|| next.owner_index>=next.owners.size()) {throw std::runtime_error("Colony screen stage differs");}
 	const auto& owner=next.owners[next.owner_index];
-	if(next.base_index>=owner.second.size() || *next.screen_base!=owner.second[next.base_index]) {
+	if(!next.screen_after_transfer && (next.base_index>=owner.second.size() || *next.screen_base!=owner.second[next.base_index])) {
 		throw std::runtime_error("Colony screen traversal identity differs");
 	}
 	ValidateCurrentSimulation();
 	const auto* base=m_bm->GetBase(*next.screen_base);
-	if(!base || base->GetSmacResourceContext().owner_simulation_id!=owner.first) {
+	if(!base || (!next.screen_after_transfer && base->GetSmacResourceContext().owner_simulation_id!=owner.first)) {
 		throw std::runtime_error("Colony screen Base no longer exists for its owner");
 	}
-	RequireSmacLocalHumanOwner(base->m_owner);
+	if(!next.screen_after_transfer) {RequireSmacLocalHumanOwner(base->m_owner);}
 }
 
 void Game::NotifyCanonicalColonyScreen(GSE_CALLABLE) {
@@ -524,7 +697,8 @@ gse::Value* Game::GetPendingSmacColonyScreen(GSE_CALLABLE) const {
 	const auto& next=*m_canonical_continuation;const auto* base=m_bm->GetBase(*next.screen_base);
 	const gse::value::object_properties_t properties{
 		{"request_id",VALUE(gse::value::Int,,*next.screen_request_id)}, {"base_id",VALUE(gse::value::Int,,base->m_id)},
-		{"base_name",VALUE(gse::value::String,,base->m_name)}, {"owner_slot",VALUE(gse::value::Int,,base->m_owner->GetIndex())}
+		{"base_name",VALUE(gse::value::String,,base->m_name)}, {"owner_slot",VALUE(gse::value::Int,,base->m_owner->GetIndex())},
+        {"read_only",VALUE(gse::value::Bool,,next.screen_after_transfer)}
 	};
 	return VALUE(gse::value::Object,,GSE_CALL_NOGC,properties);
 }
@@ -547,7 +721,7 @@ bool Game::HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,
 	try {
 		auto& next=*m_canonical_continuation;
 		next.screen_base.reset();next.screen_request_id.reset();next.energy.reset();
-		++next.base_index;next.stage=CanonicalTurnContinuation::Stage::Base;
+		if(!next.screen_after_transfer) {++next.base_index;}next.screen_after_transfer=false;next.stage=CanonicalTurnContinuation::Stage::Base;
 		NotifyCanonicalColonyScreen(GSE_CALL);
 		ContinueCanonicalTurn(GSE_CALL);
 	} catch(const std::exception& error) {FailCanonicalTurn(error.what());throw;}
@@ -560,6 +734,7 @@ bool Game::QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,
 	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen) {return false;}
 	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production" && name!="apply_smac_governor") {return false;}
 	ValidateCanonicalColonyScreen();
+    if(m_canonical_continuation->screen_after_transfer) {throw std::runtime_error("Close this screen to continue after the Base changed faction");}
 	const gse::value::object_properties_t stamped{
 		{"request_id",VALUE(gse::value::Int,,*m_canonical_continuation->screen_request_id)},
 		{"name",VALUE(gse::value::String,,name)}, {"args",VALUE(gse::value::Object,,GSE_CALL_NOGC,args)}
@@ -583,6 +758,7 @@ bool Game::HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object
 	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen
 		|| m_canonical_continuation->screen_request_id!=static_cast<gse::value::Int*>(request->second)->value) {return true;}
 	ValidateCanonicalColonyScreen();
+    if(m_canonical_continuation->screen_after_transfer) {throw std::runtime_error("Close this screen to continue after the Base changed faction");}
 	const auto& command=static_cast<gse::value::String*>(name->second)->value;
 	const auto& payload=static_cast<gse::value::Object*>(data->second)->value;
 	const auto target=payload.find("base");

@@ -119,8 +119,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const int64_t booty=numerator/(*defender_economy.population_aggregate+1);
 	if(booty>INT32_MAX || int64_t(data->actor_economy.credits)+booty>INT32_MAX) {THROW("Capture treasury arithmetic exceeds the admitted ordinary domain");}
 	data->loot=static_cast<int32_t>(booty);data->actor_economy.credits+=data->loot;
-	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};
-	data->context.recent_defender_loss=false;
+	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};data->context.uncaptured_former_owner.reset();data->context.former_owner_migration=false;
+	data->context.recent_defender_loss=false;data->context.SyncKnownStatusBits();
 	data->facilities=captured->m_facilities;
 	bool headquarters=false;
 	for(const auto& entry:data->facilities) {
@@ -353,6 +353,7 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;
 	simulation.victory_history=data.victory;
 	simulation.retained_base_totals=data.totals;
+	for(size_t owner=1;owner<8;++owner) {auto& target=simulation.battle_plan_target[owner];if(target && *target==static_cast<int64_t>(data.base->m_id)) {target=-1;}}
 	if(data.disposition) {CommitSmacFactionDisposition(*data.disposition);}
 	workers.Commit();data.base->m_smac_upkeep_cache.swap(data.cache);workers.Finish();
 	if(data.faction_units) {data.faction_units->Notify(GSE_CALL);}

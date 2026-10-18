@@ -175,7 +175,6 @@ void BaseManager::ValidateSmacResourceContext( const SmacBaseResourceContext& co
 		if ( participant.simulation_id == context.owner_simulation_id
 			&& &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner
 			&& faction && participant.faction_id == faction->m_id ) {
-			if (!participant.active) { THROW("Eliminated faction cannot own a live canonical Base"); }
 			return;
 		}
 	}
@@ -193,11 +192,12 @@ SmacBaseResourceContext BaseManager::PrepareStartingResourceContext( const slot:
 	}
 	for ( const auto& participant : m_game->m_simulation->value.roster ) {
 		if ( &m_game->GetState()->m_slots->GetSlot( participant.slot ) == owner ) {
-			// Drone riots begin false by explicit GLSMAC new-campaign policy.
-			// Later citizen calculation owns changes; restore never replays this.
+			// Original fresh Base initialization clears the whole status word.
+			// Restore retains optional history and never replays this producer.
 			const auto options=m_game->m_simulation->value.remembered_governor.at(participant.simulation_id);
 			if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
 			SmacBaseResourceContext result{ participant.simulation_id, false, 0, 0, *options, false };
+			result.retained_status_word=0;result.uncaptured_former_owner=participant.simulation_id;
 			ValidateSmacResourceContext( result, owner, owner->GetPlayer()->GetFaction() );
 			return result;
 		}
@@ -430,6 +430,9 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	tile->base = nullptr;
 	RemoveAssignments( base );
 
+	if(base->HasSmacResourceContext() && m_game->m_simulation) {for(size_t owner=1;owner<8;++owner) {
+		auto& target=m_game->m_simulation->value.battle_plan_target[owner];if(target && *target==static_cast<int64_t>(base_id)) {target=-1;}
+	}} // stable IDs do not shift after removal; unrelated and unknown targets survive
 	m_bases.erase( it );
 	m_base_order.erase( ordered );
 	m_game->CommitBaseTerritory( territory, topology );

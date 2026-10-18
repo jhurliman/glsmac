@@ -510,7 +510,7 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                     record.stack_previous=index==1?2:-1;record.stack_next=index==2?1:-1;
                     record.waypoint_x[0]=3;record.order=index==1?1:0;expected[index-1]=record;
                     unit.WriteString(record.Serialize().ToString());
-                } else {ConventionalUnitState{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0}.Serialize(unit);}
+                } else {ConventionalUnitState{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0}.Serialize(unit,false);}
                 loaded.WriteString(unit.ToString());
             }
             loaded.WriteInt(75);manager->Clear();manager->Deserialize(GSE_CALL,loaded);

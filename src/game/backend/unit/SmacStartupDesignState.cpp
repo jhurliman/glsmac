@@ -1,13 +1,14 @@
 #include "SmacStartupDesignState.h"
 
 #include <array>
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
 namespace game::backend::unit {
 namespace {
 constexpr int64_t MAGIC = 0x534d5344; // SMSD
-constexpr int64_t VERSION = 1;
+constexpr int64_t VERSION = 2;
 
 void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
@@ -25,6 +26,10 @@ void ValidateOwner( const SmacDesignOwner& owner, const SmacPredefinedUnitCatalo
 			|| design.chassis >= catalog.chassis.chassis.size() || design.weapon >= catalog.weapons.weapons.size()
 			|| design.defense >= catalog.defenses.defenses.size() || design.reactor < 1 || design.reactor > catalog.reactors.reactors.size()
 			|| design.abilities > 0xffffff ) { throw std::runtime_error( "Invalid SMAC custom design record" ); }
+        if((design.name && (design.name->size()>31 || design.name->find('\0')!=std::string::npos))
+            || (design.riot && (design.riot->source_design<64 || design.riot->source_design>511 || design.riot->source_design==design.id))) {
+            throw std::runtime_error("Invalid retained prototype metadata");
+        }
 		previous = design.id;
 		selected = selected || design.id == owner.starting_scout;
 	}
@@ -99,7 +104,7 @@ uint32_t ReadUnsigned( types::Buffer& buffer, uint32_t maximum ) {
 bool SmacCustomDesign::operator==( const SmacCustomDesign& other ) const {
 	return id == other.id && chassis == other.chassis && weapon == other.weapon && defense == other.defense && reactor == other.reactor
 		&& cost == other.cost && plan == other.plan && carry == other.carry && abilities == other.abilities && faction_exclusion == other.faction_exclusion
-		&& active == other.active && prototyped == other.prototyped;
+		&& active == other.active && prototyped == other.prototyped && name==other.name && riot==other.riot;
 }
 bool SmacDesignOwner::operator==( const SmacDesignOwner& other ) const { return simulation_id == other.simulation_id && designs == other.designs && starting_scout == other.starting_scout; }
 bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners; }
@@ -156,8 +161,63 @@ void SmacStartupDesignState::Validate( const SmacPredefinedUnitCatalog& catalog 
 	for ( const auto& owner : owners ) {
 		ValidateOwner( owner, catalog );
 		if ( seen[ owner.simulation_id ] ) { throw std::runtime_error( "Duplicate SMAC custom design owner" ); }
-		seen[ owner.simulation_id ] = true;
-	}
+        seen[ owner.simulation_id ] = true;
+    }
+    for(const auto& owner:owners) {for(const auto& design:owner.designs) {
+        const auto* current=&design;std::array<bool,512> visited{};
+        while(current->riot) {
+            if(visited[current->id]) {throw std::runtime_error("Cyclic riot prototype source history");}visited[current->id]=true;
+            const auto source=current->riot->source_design;const auto* block=Find(source/64);
+            if(!block) {throw std::runtime_error("Missing riot prototype source block");}
+            const auto found=std::find_if(block->designs.begin(),block->designs.end(),[&](const auto& row){return row.id==source;});
+            if(found==block->designs.end()) {throw std::runtime_error("Missing riot prototype source definition");}current=&*found;
+        }
+    }}
+}
+
+int32_t SmacStartupDesignState::RequestHumanRiotPrototype(int32_t source,int32_t recipient,bool morgan,const SmacPredefinedUnitCatalog& catalog) {
+    Validate(catalog);
+    if(source<=64 || source>511 || recipient<1 || recipient>7 || !Find(recipient)) {throw std::runtime_error("Riot prototype request has no admitted source or recipient");}
+    const auto* source_owner=Find(source/64);
+    if(!source_owner) {throw std::runtime_error("Riot prototype source block is unavailable");}
+    const auto found=std::find_if(source_owner->designs.begin(),source_owner->designs.end(),[&](const auto& row){return row.id==source;});
+    if(found==source_owner->designs.end()) {throw std::runtime_error("Riot prototype source definition is unavailable");}
+    const auto original=*found;const auto* target=Find(recipient);
+    if(original.chassis==0 && original.weapon==0 && original.defense==0 && original.reactor==1 && original.abilities==0) {return 2;}
+    const bool rover=original.chassis==1 && original.defense==0 && original.plan==3;
+    const bool armored=original.chassis==0 && original.defense==1 && original.plan==2;
+    if((!rover && !armored) || original.weapon!=0 || original.reactor!=1 || original.abilities!=0
+        || original.cost!=2 || original.carry!=0 || original.faction_exclusion || !original.active || !original.prototyped) {
+        throw std::runtime_error("This riot prototype needs a different measured component producer");
+    }
+    for(const auto& row:target->designs) {
+        if(row.active && row.chassis==original.chassis && row.weapon==original.weapon && row.defense==original.defense
+            && row.reactor==original.reactor && row.abilities==original.abilities) {return -1;}
+    }
+    const bool empty=target->designs.empty();
+    const auto is_morgan=[&] {
+        if(!morgan || target->designs.size()!=1) {return false;}const auto& row=target->designs[0];
+        return row.id==64*recipient && row.chassis==0 && row.weapon==0 && row.defense==1 && row.reactor==1 && !row.abilities
+            && row.cost==2 && row.plan==2 && !row.carry && !row.faction_exclusion && row.active && row.prototyped;
+    };
+    const auto is_spartan=[&] {
+        if(target->designs.size()!=1) {return false;}const auto& row=target->designs[0];
+        return row.id==64*recipient && row.chassis==1 && row.weapon==0 && row.defense==0 && row.reactor==1 && !row.abilities
+            && row.cost==2 && row.plan==3 && !row.carry && !row.faction_exclusion && row.active && row.prototyped;
+    };
+    if(!empty && !(rover ? is_morgan():is_spartan())) {throw std::runtime_error("This occupied riot prototype block needs its original allocation producer");}
+    SmacCustomDesign allocated;allocated.id=64*recipient+(empty?0:1);allocated.chassis=original.chassis;allocated.weapon=0;allocated.defense=original.defense;
+    allocated.reactor=1;allocated.cost=2;allocated.plan=original.plan;allocated.carry=0;allocated.abilities=0;allocated.faction_exclusion=0;allocated.active=true;allocated.prototyped=true;
+    allocated.riot=SmacRiotPrototypeMetadata{source,197,0,{uint8_t(rover ? 10:2),0,2,255,0}};
+    if(original.name) {
+        if(empty) {allocated.name=original.name;}
+        else if(target->designs[0].name) {
+            if(*target->designs[0].name!=*original.name) {allocated.name=original.name;}
+            else if(original.name->size()<31) {allocated.name=*original.name+"*";}
+        }
+    }
+    auto next=*this;auto owner=std::find_if(next.owners.begin(),next.owners.end(),[&](const auto& row){return row.simulation_id==recipient;});
+    owner->designs.push_back(allocated);next.Validate(catalog);owners.swap(next.owners);return allocated.id;
 }
 
 const SmacDesignOwner* SmacStartupDesignState::Find( int32_t id ) const {
@@ -168,13 +228,22 @@ const SmacDesignOwner* SmacStartupDesignState::Find( int32_t id ) const {
 types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog& catalog ) const {
 	Validate( catalog );
 	types::Buffer buffer;
-	buffer.WriteInt( MAGIC ); buffer.WriteInt( VERSION ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
+    bool metadata=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {metadata=metadata || design.name || design.riot;}}
+    const auto version=metadata ? VERSION:1;
+	buffer.WriteInt( MAGIC ); buffer.WriteInt( version ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
 	for ( const auto& owner : owners ) {
 		buffer.WriteInt( owner.simulation_id ); buffer.WriteInt( owner.starting_scout ); buffer.WriteInt( owner.designs.size() );
 		for ( const auto& d : owner.designs ) {
 			buffer.WriteInt( d.id ); buffer.WriteInt( d.chassis ); buffer.WriteInt( d.weapon ); buffer.WriteInt( d.defense ); buffer.WriteInt( d.reactor );
 			buffer.WriteInt( d.cost ); buffer.WriteInt( d.plan ); buffer.WriteInt( d.carry ); buffer.WriteInt( d.abilities ); buffer.WriteInt( d.faction_exclusion );
 			buffer.WriteBool( d.active ); buffer.WriteBool( d.prototyped );
+            if(version>=2) {
+                buffer.WriteBool(d.name.has_value());if(d.name) {buffer.WriteString(*d.name);}
+                buffer.WriteBool(d.riot.has_value());if(d.riot) {
+                    buffer.WriteInt(d.riot->source_design);buffer.WriteInt(d.riot->flags);buffer.WriteInt(d.riot->prerequisite);
+                    for(const auto byte:d.riot->auxiliary) {buffer.WriteInt(byte);}
+                }
+            }
 		}
 	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
@@ -184,7 +253,8 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
 SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& wire, const SmacPredefinedUnitCatalog& catalog ) {
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	types::Buffer buffer( wire );
-	if ( buffer.ReadInt() != MAGIC || buffer.ReadInt() != VERSION ) { throw std::runtime_error( "Unsupported SMAC custom design state format" ); }
+    if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC custom design state format");}
+    const auto version=buffer.ReadInt();if(version!=1 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
 	SmacStartupDesignState result;
 	result.global_difficulty = static_cast< int32_t >( ReadUnsigned( buffer, 5 ) );
 	const auto owners = ReadUnsigned( buffer, 7 );
@@ -201,7 +271,16 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 			d.reactor = static_cast< uint8_t >( ReadUnsigned( buffer, 255 ) ); d.cost = static_cast< uint8_t >( ReadUnsigned( buffer, 255 ) );
 			d.plan = static_cast< uint8_t >( ReadUnsigned( buffer, 255 ) ); d.carry = static_cast< uint8_t >( ReadUnsigned( buffer, 255 ) );
 			d.abilities = ReadUnsigned( buffer, 0xffffff ); d.faction_exclusion = ReadUnsigned( buffer, UINT32_MAX );
-			d.active = buffer.ReadBool(); d.prototyped = buffer.ReadBool(); owner.designs.push_back( d );
+			d.active = buffer.ReadBool(); d.prototyped = buffer.ReadBool();
+            if(version>=2) {
+                if(buffer.ReadBool()) {d.name=buffer.ReadString(31);}
+                if(buffer.ReadBool()) {
+                    SmacRiotPrototypeMetadata metadata{};metadata.source_design=static_cast<int32_t>(ReadUnsigned(buffer,511));
+                    metadata.flags=static_cast<uint8_t>(ReadUnsigned(buffer,255));metadata.prerequisite=static_cast<uint8_t>(ReadUnsigned(buffer,255));
+                    for(auto& byte:metadata.auxiliary) {byte=static_cast<uint8_t>(ReadUnsigned(buffer,255));}d.riot=metadata;
+                }
+            }
+            owner.designs.push_back( d );
 		}
 		result.owners.push_back( std::move( owner ) );
 	}

@@ -229,13 +229,14 @@ std::string WithLastHome( const std::string& bytes, Game* game, int64_t home ) {
 		auto wire = units.ReadString();
 		if ( i + 1 == count ) {
 			types::Buffer record( wire );
-			if ( record.ReadInt() != 4 || record.ReadInt() != 1 ) { throw std::runtime_error( "expected current conventional Unit record" ); }
+			const auto version=record.ReadInt();
+			if ( (version!=4 && version!=6) || record.ReadInt() != 1 ) { throw std::runtime_error( "expected current conventional Unit record" ); }
 			(void)record.ReadInt(); (void)record.ReadString();
 			for ( int field = 0; field < 3; ++field ) { (void)record.ReadInt(); } // owner and coordinates
 			types::Buffer changed( wire.substr( 0, record.lenr ) );
-			auto state = ConventionalUnitState::Deserialize( record );
+			auto state = ConventionalUnitState::Deserialize( record, version>=6 );
 			if ( !state.home_base_id || record.lenr != record.lenw ) { throw std::runtime_error( "expected complete homed Unit state" ); }
-			state.home_base_id = static_cast< uint64_t >( home ); state.Serialize( changed ); wire = changed.ToString();
+			state.home_base_id = static_cast< uint64_t >( home ); state.Serialize( changed, version>=6 ); wire = changed.ToString();
 		}
 		replacement.WriteString( wire );
 	}
@@ -359,6 +360,22 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(tile->units.size()==2 && game->GetUM()->GetUnit(71)==tile->units.at(71) && game->GetUM()->GetUnit(72)==tile->units.at(72),
 				"actual Start did not retain both members of the occupied friendly HQ");GT_OK();
 		});
+	});
+	task->AddTest("Conventional state history preserves opaque words and independent accounting absence",GT(){
+		for(const auto word:{0u,0xffffffffu,0x600010u,0x80000000u}) {
+			auto input=Record();input.retained_state_word=word;input.SetAccountingMarkers(7);
+			GT_ASSERT(input.retained_state_word==((word&~0x600010u)|0x600010u),"Accounting update erased unrelated state");
+			types::Buffer wire;input.Serialize(wire);const auto restored=ConventionalUnitState::Deserialize(wire);
+			GT_ASSERT(restored==input && wire.lenr==wire.lenw,"Full Unit state failed exact round trip");
+		}
+		auto legacy=Record();types::Buffer old;legacy.Serialize(old,false);
+		const auto migrated=ConventionalUnitState::Deserialize(old,false);
+		GT_ASSERT(migrated==legacy && !migrated.HasStateHistory() && old.lenr==old.lenw,"Legacy invented a zero state word");
+		legacy.SetAccountingMarkers(6);types::Buffer markers;legacy.Serialize(markers);
+		GT_ASSERT(!legacy.retained_state_word && ConventionalUnitState::Deserialize(markers)==legacy,"Owned markers invented unknown other state bits");
+		legacy.retained_state_word=0;
+		bool failed=false;try {types::Buffer invalid;legacy.Serialize(invalid);}catch(const std::exception&) {failed=true;}
+		GT_ASSERT(failed,"Contradictory mapped marker/full-word pair accepted");GT_OK();
 	});
 	task->AddTest( "Conventional home codec preserves explicit IDs and rejects malformed shapes", GT() {
 		for ( uint64_t id : { uint64_t( 1 ), uint64_t( 701 ), uint64_t( INT64_MAX - 1 ) } ) {
@@ -979,7 +996,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				"saved selected Rover was rebound to current selection or lost exact destination state" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "selected Spartan Rover rejects other owners selections and mismatched renderers before effects", GT() {
+	task->AddTest( "selected Spartan Rover rejects unsupported selections and mismatched renderers before effects", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure( true, 3, false, true );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Define( manager, true ); fixture.Updates();
@@ -988,7 +1005,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			fixture.CopyRoverDesign( 2, 129 ); fixture.CopyRoverDesign( 3, 192 ); fixture.SelectStartup( 3, 192 );
 			const auto next = Unit::GetNextId(); const auto before = fixture.Snapshot(); size_t hooks = 0;
 			manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
-			for ( int scenario = 0; scenario < 6; ++scenario ) {
+			for ( int scenario = 0; scenario < 5; ++scenario ) {
 				ConventionalUnitState state{ 128, 2, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 				size_t owner = 2; const char* def = "EXPLICIT_ROVER";
 				if ( scenario == 0 ) { def = "EXPLICIT_SCOUT"; }
@@ -996,12 +1013,17 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				if ( scenario == 2 ) { state.design_id = 192; state.owner_simulation_id = 3; owner = 6; }
 				if ( scenario == 3 ) { state.design_id = 2; }
 				if ( scenario == 4 ) { state.design_id = 11; }
-				if ( scenario == 5 ) { state.owner_simulation_id = 3; owner = 6; }
 				bool rejected = false; try { Spawn( GSE_CALL, fixture, state, next, owner, def ); } catch ( const std::exception& ) { rejected = true; }
 				GT_ASSERT( rejected && Unit::GetNextId() == next && manager->GetUnits().empty() && game->GetMap()->GetTile( 2, 2 )->units.empty()
 					&& hooks == 0 && fixture.Updates().empty(), "invalid selected Rover produced effects at scenario " + std::to_string( scenario ) );
 			}
-			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" ); GT_OK();
+			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" );
+			// A genuine retained Spartan source is global identity. A different
+			// current controller may keep128; its own fabricated192 is still rejected.
+			const ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
+			GT_ASSERT(unit->Conventional()==retained && unit->m_owner==&game->GetState()->m_slots->GetSlot(6) && hooks==1,
+				"retained Spartan128 was rebound to the recipient's invalid local192 or rejected");GT_OK();
 		} );
 	} );
 	task->AddTest( "conventional selected Rover HQ movement matches21 original startup outcomes", []( GSE*, context::Context* ) -> std::string {
@@ -1636,7 +1658,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			manager->DespawnUnit( GSE_CALL, restored->m_id ); GT_OK();
 		} );
 	} );
-	task->AddTest("conventional inactive faction rejects live Unit Base and production admission atomically",GT(){
+	task->AddTest("conventional inactive faction rejects live admission but permits catalog identity",GT(){
 		ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
 		const auto unit_next=Unit::GetNextId(),base_next=base::Base::GetNextId();
 		util::FinallyGuard restore_ids([=]{Unit::SetNextId(unit_next);base::Base::SetNextId(base_next);});
@@ -1649,9 +1671,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* tile=game->GetMap()->GetTile(2,2);
 			const auto rejects=[](const auto& call){try{call();}catch(const std::exception&){return true;}return false;};
 			GT_ASSERT(rejects([&]{um->SpawnConventionalUnit(GSE_CALL,next_unit,def,owner,tile,Record());})
-				&& rejects([&]{game->MakeSmacProductionItem(owner,base::ProductionItemKind::Unit,2);})
 				&& rejects([&]{std::unique_ptr<base::Base> rejected(new base::Base(game,next_base,owner,owner->GetPlayer()->GetFaction(),tile,"Inactive",{},{},1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false}));}),
-				"eliminated owner admitted a live Unit, Base or production target");
+				"eliminated owner admitted a new live Unit or Base");
+            GT_ASSERT(game->MakeSmacProductionItem(owner,base::ProductionItemKind::Unit,2).smac_source_id==2,"inactive retained catalog identity was rejected");
 			GT_ASSERT(fixture.Snapshot()==saved && Unit::GetNextId()==next_unit && base::Base::GetNextId()==next_base
 				&& um->GetUnits().empty() && game->GetBM()->GetBases().empty() && tile->units.empty() && !tile->base
 				&& fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf && fixture.Updates().empty(),

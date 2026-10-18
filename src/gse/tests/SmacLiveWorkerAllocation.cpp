@@ -265,6 +265,86 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base Rename accepts empty duplicate spaced and byte bounded names through live requests",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        int64_t request=0;std::string expected;
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto* second=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(12,2),"Duplicate",{},pops,20,0,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+            bm->SpawnBase(GSE_CALL,second);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;second->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles) {tile.explored_by=2;tile.claimant=1;}game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            base->SetAccumulatedNutrients(-3);GT_OK();
+        });GT_ASSERT(setup.empty(),"Rename setup: "+setup);
+        const auto open=[&]()->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();
+            return fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacRenameChoices(GSE_CALL));
+                request=static_cast<value::Int*>(menu->Get("request_id"))->value;expected=static_cast<value::String*>(menu->Get("expected_state"))->value;
+                GT_ASSERT(base->GetAccumulatedNutrients()>=0 && static_cast<value::String*>(menu->Get("name"))->value==base->m_name,"Rename did not retain prelude/default text");GT_OK();
+            });
+        };
+        const auto answer=[&](const std::string& event,const std::string& text)->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)}};
+                if(event=="commit_smac_rename") {args.emplace("name",VALUE(value::String,,text));}game->Event(GSE_CALL,event,args);game->Event(GSE_CALL,event,args);GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();return {};
+        };
+        std::vector<std::pair<std::string,std::string>> roundtrips;
+        const auto random=fixture.GameplayRandom();
+        for(const std::string text:{std::string(""),std::string("   "),std::string("Duplicate"),std::string(" duplicate "),std::string("12345678901234567890123456789"),std::string("NUL\0ignored",11)}) {
+            const auto opened=open();GT_ASSERT(opened.empty(),"Rename open: "+opened);const auto committed=answer("commit_smac_rename",text);GT_ASSERT(committed.empty(),"Rename commit: "+committed);
+            const auto checked=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto accepted=text.substr(0,std::min(size_t(24),text.find('\0')));
+                GT_ASSERT(base->m_name==accepted && game->GetBM()->GetBase(702)->m_name=="Duplicate" && game->GetBM()->GetBaseRecordOrder()==std::vector<size_t>({701,702}) && fixture.GameplayRandom()==random,"Rename trimmed/coerced text, changed neighbor/order or drew RNG");roundtrips.emplace_back(accepted,fixture.Snapshot());GT_OK();
+            });GT_ASSERT(checked.empty(),"Rename check: "+checked);
+        }
+        const auto invalid_open=open();GT_ASSERT(invalid_open.empty(),"Rename invalid open: "+invalid_open);
+        const auto invalid=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto before=fixture.Snapshot();
+            for(const auto text:{std::string("high")+char(0x80),std::string("control\t")}) {
+                GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)},{"name",VALUE(value::String,,text)}});}) && fixture.Snapshot()==before,"Unsupported display bytes published or changed state");
+            }GT_OK();
+        });GT_ASSERT(invalid.empty(),"Rename unsupported text: "+invalid);
+        const auto opened=open();GT_ASSERT(opened.empty(),"Rename cancel open: "+opened);auto unchanged=fixture.Snapshot();
+        const auto cancelled=answer("cancel_smac_rename","");GT_ASSERT(cancelled.empty(),"Rename cancel: "+cancelled);
+        const auto replay=answer("commit_smac_rename","replay");GT_ASSERT(replay.empty(),"Rename replay: "+replay);GT_ASSERT(fixture.Snapshot()==unchanged,"Cancel or old request replay changed saved state");
+        const auto stale_open=open();GT_ASSERT(stale_open.empty(),"Rename stale open: "+stale_open);
+        const auto mutate=fixture.Run([&](GSE_CALLABLE)->std::string {fixture.Game()->GetBM()->GetBase(701)->SetAccumulatedNutrients(9);GT_OK();});GT_ASSERT(mutate.empty(),"Rename intervening mutation: "+mutate);unchanged=fixture.Snapshot();
+        const auto stale=answer("commit_smac_rename","stale");GT_ASSERT(stale.empty(),"Rename stale answer: "+stale);GT_ASSERT(fixture.Snapshot()==unchanged,"Stale Rename overwrote changed Base");
+        for(const auto& saved:roundtrips) {
+            ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");restored.BasePresentationRoles(roles);
+            const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Restore(GSE_CALL,saved.second,true);auto* bm=restored.Game()->GetBM();
+                GT_ASSERT(bm->GetBase(701)->m_name==saved.first && bm->GetBase(702)->m_name=="Duplicate" && bm->GetBaseRecordOrder()==std::vector<size_t>({701,702}),"Actual Base codec coerced duplicate/empty/byte-bounded names");GT_OK();
+            });GT_ASSERT(result.empty(),"Rename codec restore: "+result);
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC Base Rename withholds foreign authority",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_rename_state")->type==VT_UNDEFINED && Rejects([&]{game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});}) && fixture.Snapshot()==before,"Foreign Rename exposed authority or changed state");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC Base Rename withholds captured AI consequences until saved counter authority exists",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto context=own->GetSmacResourceContext();context.conquest=SmacConquestState{2,50};
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto* base=new Base(game,702,own->m_owner,own->m_faction,game->GetMap()->GetTile(6,4),"Captured saved history",{},pops,20,0,Production(),context);
+            bm->SpawnBase(GSE_CALL,base);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            fixture.ResourceState([](auto& state){state.human_membership=2;});const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            GT_ASSERT(!base->CanSmacRename() && Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_rename_state")->type==VT_UNDEFINED && Rejects([&]{game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});}) && fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Captured AI Rename fabricated diplomacy, changed RNG or exposed command");
+            fixture.ResourceState([](auto& state){state.human_membership=6;});
+            GT_ASSERT(base->CanSmacRename(),"Known human former owner was treated as captured AI");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC manual specialist foreign Base cannot expose or accept commands",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
         std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
@@ -2487,6 +2567,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			request=static_cast<value::Int*>(pending->Get("request_id"))->value;
 			game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"screen")}});GT_OK();
 		});GT_ASSERT(setup.empty(),"Screen setup: "+setup);fixture.DrainEvents();
+        const auto rename_open=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+            game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+        });GT_ASSERT(rename_open.empty(),"Screen Rename open: "+rename_open);fixture.DrainEvents();
+        const auto rename_commit=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacRenameChoices(GSE_CALL));
+            game->Event(GSE_CALL,"commit_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"request_id",menu->Get("request_id")},{"expected_state",menu->Get("expected_state")},{"name",VALUE(value::String,,"Screen renamed")}});GT_OK();
+        });GT_ASSERT(rename_commit.empty(),"Screen Rename commit: "+rename_commit);fixture.DrainEvents();
+        const auto renamed=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base->m_name=="Screen renamed" && base->GetAccumulatedNutrients()==1 && base->GetProductionState()->minerals==30,"Screen Rename failed or reposted upkeep");GT_OK();
+        });GT_ASSERT(renamed.empty(),"Screen Rename result: "+renamed);
         // Optional specialist menus must use the real suspended Screen command
         // admission, rather than bypassing the stamped continuation dispatcher.
         for(const int32_t type:{1,-1}) {

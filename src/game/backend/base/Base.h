@@ -98,6 +98,9 @@ public:
 	void SelectSmacSpecialist( GSE_CALLABLE, size_t pop_id, int32_t type, bool apply );
 	gse::Value* CopySmacSpecialistChoices( GSE_CALLABLE, size_t pop_id ) const;
 	void RequireSmacSpecialistSelection() const;
+	bool CanSmacRename() const;
+	void OpenSmacRename(GSE_CALLABLE,bool apply);
+	gse::Value* CopySmacRenameChoices(GSE_CALLABLE) const;
 	// Explicit native publication only, in the owning writable GSE scope. No
 	// allocation calculation or founding/adoption policy is implied. Existing
 	// Pop nodes/IDs/variants survive; ascending IDs receive ascending worker
@@ -189,6 +192,9 @@ private:
 	struct SpecialistSelectionRequest { int64_t id; size_t pop_id; std::string expected; };
 	int64_t m_next_specialist_request = 1;
 	std::optional<SpecialistSelectionRequest> m_specialist_request;
+	struct RenameRequest { int64_t id; std::string expected; };
+	int64_t m_next_rename_request = 1;
+	std::optional<RenameRequest> m_rename_request;
 	std::vector< map::tile::coords_t > AllocationCoordinates( const SmacBaseAllocationState& allocation, std::optional< size_t > population = {} ) const;
 	void ValidateAllocationProjection( bool registered, bool attached = false ) const;
 	void RequireGenericPopulationMutation() const;

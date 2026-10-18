@@ -1,0 +1,323 @@
+{
+  "research_id": "RE-SMAC-LIVE-ECOLOGY-001",
+  "cases": [
+    {
+      "id": "ordinary_low",
+      "resolved_mineral_intakes": null,
+      "resolved_terraforming_points": null,
+      "resolved_effective_planet": null,
+      "resolved_acquisition_score": null,
+      "controlled_scaling": null,
+      "native_life_events_suppressed": false,
+      "base_ecology": [
+        0,
+        0
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        0
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "clean_boundary",
+      "resolved_mineral_intakes": [
+        16,
+        17
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 0,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        0,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        1
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "threshold_below",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 0,
+      "resolved_acquisition_score": 49,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        0,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        1
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "threshold_half",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 0,
+      "resolved_acquisition_score": 50,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        1,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        1
+      ],
+      "aggregate_after_each_base": [
+        1,
+        2
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_negative",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": -3,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        2,
+        4
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        1
+      ],
+      "aggregate_after_each_base": [
+        1,
+        3
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_zero",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 0,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        1,
+        2
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        1
+      ],
+      "aggregate_after_each_base": [
+        1,
+        3
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_positive",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 1,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        1,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        1
+      ],
+      "aggregate_after_each_base": [
+        1,
+        2
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_two",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 2,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        0,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        2
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_upper_denominator",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": 5,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        0,
+        1
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        4
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    },
+    {
+      "id": "planet_lower_denominator",
+      "resolved_mineral_intakes": [
+        17,
+        18
+      ],
+      "resolved_terraforming_points": 0,
+      "resolved_effective_planet": -100,
+      "resolved_acquisition_score": 100,
+      "controlled_scaling": "Citizen, sparse native life, future/history/atrocity0, no facility/project modifiers",
+      "native_life_events_suppressed": true,
+      "base_ecology": [
+        2,
+        4
+      ],
+      "research_aggregate_snapshots": [
+        0,
+        0
+      ],
+      "aggregate_after_each_base": [
+        0,
+        0
+      ],
+      "next_low_pass_aggregate": 0,
+      "peer_aggregate_before_and_after": 888,
+      "ecology_crt_draws_per_pass": 2,
+      "complete_owner_passes": 2
+    }
+  ],
+  "startup_snapshot": {
+    "profile": "admitted one-human Gaian first-Base campaign; controlled map and declared headless services",
+    "cold_pe_storage": {
+      "own_attack": 0,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology_aggregate": 0
+    },
+    "first_base_pass_before_summary": {
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology_aggregate": 0
+    },
+    "completed_opening_owner_summary": {
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 7,
+      "ecology_aggregate": 0
+    },
+    "actual_opening_positive_research_submissions": 0,
+    "actual_opening_chooser_calls": 0,
+    "early_controlled_positive_submission_is_intervention": true,
+    "early_priorities": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "early_labs": 0,
+    "early_target": -1,
+    "initializer_strategy_canary_preserved": true,
+    "ecology_initializer_reset_independently_tested": false
+  },
+  "validation": {
+    "native_controls": 10,
+    "complete_owner_passes": 20,
+    "base_ecology_contributions_checked": 40,
+    "ecology_crt_calls": 40,
+    "independent_archived_output_checks_passed": true
+  }
+}

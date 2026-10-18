@@ -1856,7 +1856,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC installed facility details withhold foreign private cost and fee",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(HabitationSource,true);
         return fixture.Run([&](GSE_CALLABLE)->std::string {
-            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);auto* bm=game->GetBM();
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,6,2);auto* bm=game->GetBM();
             bm->DefineFacility(new FacilityDef("detail","Displayed","",80,{},24));base->m_facilities.emplace("detail",bm->GetFacilityDef("detail"));
             const auto before=fixture.Snapshot();auto* detail=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_facility_details",{VALUE(value::String,,"detail")}));
             GT_ASSERT(detail->value.count("cost")==0 && detail->value.count("current_maintenance")==0

@@ -2,9 +2,9 @@
 const view = #include('../default/ui/parts/game/popup/base_screen/facilities');
 return (game, base) => {
     const listeners = {};
-    const node = (properties) => {
+    const node = (properties, interactive = true) => {
         const result = properties; result.children = []; result.handlers = {};
-        result.on = (name, callback) => { result.handlers[name] = callback; };
+        result.on = (name, callback) => { if (!interactive && (name == 'mousedown' || name == 'click')) { throw TestError('Decorative Text cannot receive pointer input'); } result.handlers[name] = callback; };
         result.listen = (object, name, callback) => { listeners[name] = callback; };
         result.hide = () => {}; result.show = () => {};
         result.clear = () => { result.children = []; };
@@ -12,7 +12,7 @@ return (game, base) => {
         const child = (props) => { const value = node(props); result.children :+ value; return value; };
         result.panel = child; result.listview = child; result.window = child; result.button = child;
         result.surface = child; result.scrollview = child;
-        if (!#is_defined(result.text)) { result.text = child; }
+        if (!#is_defined(result.text)) { result.text = (props) => { const value = node(props, false); result.children :+value; return value; }; }
         return result;
     };
     const root = node({});

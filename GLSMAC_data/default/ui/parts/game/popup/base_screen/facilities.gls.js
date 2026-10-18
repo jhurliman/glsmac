@@ -21,9 +21,10 @@ return {
         this.hide_view(); this.base = data.base; this.list.clear();
         for (id in data.entries) {
             const facility_id = id;
-            this.list.text({class: 'base-screen-frame-text', text: data.entries[id].name}).on('mousedown', (e) => {
-                this.open(facility_id); return true;
-            });
+            // Text is decorative; the Area owns the actual pointer subscription.
+            const row = this.list.panel({left: 0, right: 0, height: 17});
+            row.text({class: 'base-screen-frame-text', left: 0, top: 0, text: data.entries[id].name});
+            row.on('mousedown', (e) => { this.open(facility_id); return true; });
         }
     },
     open: (id) => {

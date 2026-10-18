@@ -1,0 +1,889 @@
+{
+  "research_id": "RE-SMAC-START-CAP-RNG-001",
+  "new_native_startup_controls": 1,
+  "existing_startup_rng_traces_rechecked": 63,
+  "startup_order": [
+    {
+      "boundary": "startup_branch",
+      "own_attack": 0,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "automatic_generator_entry",
+      "own_attack": 0,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "early_capability_refresh_entry",
+      "own_attack": 0,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "first_base_pass",
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "first_base_body",
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "later_owner_summary",
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "later_capability_refresh_entry",
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 0,
+      "ecology": 0
+    },
+    {
+      "boundary": "first_command",
+      "own_attack": 1,
+      "foreign_attack": 0,
+      "region1_strategy": 7,
+      "ecology": 0
+    }
+  ],
+  "rng_cases": [
+    {
+      "id": "START-RNG-001",
+      "faction": "gaians",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-002",
+      "faction": "gaians",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-003",
+      "faction": "gaians",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-004",
+      "faction": "gaians",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-005",
+      "faction": "gaians",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-006",
+      "faction": "gaians",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-007",
+      "faction": "gaians",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-008",
+      "faction": "gaians",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-009",
+      "faction": "gaians",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-010",
+      "faction": "hive",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-011",
+      "faction": "hive",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-012",
+      "faction": "hive",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-013",
+      "faction": "hive",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-014",
+      "faction": "hive",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-015",
+      "faction": "hive",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-016",
+      "faction": "hive",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-017",
+      "faction": "hive",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-018",
+      "faction": "hive",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-019",
+      "faction": "univ",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-020",
+      "faction": "univ",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-021",
+      "faction": "univ",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-022",
+      "faction": "univ",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-023",
+      "faction": "univ",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-024",
+      "faction": "univ",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-025",
+      "faction": "univ",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-026",
+      "faction": "univ",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-027",
+      "faction": "univ",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-028",
+      "faction": "morgan",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-029",
+      "faction": "morgan",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-030",
+      "faction": "morgan",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-031",
+      "faction": "morgan",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-032",
+      "faction": "morgan",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-033",
+      "faction": "morgan",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-034",
+      "faction": "morgan",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-035",
+      "faction": "morgan",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-036",
+      "faction": "morgan",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-037",
+      "faction": "spartans",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-038",
+      "faction": "spartans",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-039",
+      "faction": "spartans",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-040",
+      "faction": "spartans",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-041",
+      "faction": "spartans",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-042",
+      "faction": "spartans",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-043",
+      "faction": "spartans",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-044",
+      "faction": "spartans",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-045",
+      "faction": "spartans",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-046",
+      "faction": "believe",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-047",
+      "faction": "believe",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-048",
+      "faction": "believe",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-049",
+      "faction": "believe",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-050",
+      "faction": "believe",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-051",
+      "faction": "believe",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-052",
+      "faction": "believe",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-053",
+      "faction": "believe",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-054",
+      "faction": "believe",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-055",
+      "faction": "peace",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-056",
+      "faction": "peace",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-057",
+      "faction": "peace",
+      "initial_paired_state": [
+        0,
+        0
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 2727824503,
+      "ecology_crt_after": 773150046,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-058",
+      "faction": "peace",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-059",
+      "faction": "peace",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-060",
+      "faction": "peace",
+      "initial_paired_state": [
+        1,
+        3
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 460785054,
+      "ecology_crt_after": 1545176553,
+      "ecology_raw": 23577,
+      "ecology_remainder": 77
+    },
+    {
+      "id": "START-RNG-061",
+      "faction": "peace",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-062",
+      "faction": "peace",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    },
+    {
+      "id": "START-RNG-063",
+      "faction": "peace",
+      "initial_paired_state": [
+        4294967295,
+        2147483648
+      ],
+      "crt_draw_count_including_ecology": 6,
+      "ecology_crt_before": 580340855,
+      "ecology_crt_after": 2920633694,
+      "ecology_raw": 11797,
+      "ecology_remainder": 97
+    }
+  ],
+  "limits": {
+    "full_frontend_seed_origin_closed": false,
+    "ordinary_file_body_restores_saved_paired_words": false,
+    "ecology_has_separate_stream": false
+  }
+}

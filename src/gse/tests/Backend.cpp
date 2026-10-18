@@ -3765,6 +3765,12 @@ public:
 					for(auto value:specialists[row]) {line+=","+std::to_string(value);}line+=",tail";
 				}
 				if(section=="#TECHNOLOGY") {line.replace(line.rfind(',')+1,std::string::npos,research && row==64?"000001001":"000000000");}
+				if(research && section=="#WEAPONS" && row==1) {
+					std::istringstream input(line);std::vector<std::string> fields;std::string field;
+					while(std::getline(input,field,',')) {fields.push_back(field);}
+					fields.at(2)="2";fields.at(6)="Tech64";line.clear();
+					for(size_t i=0;i<fields.size();++i) {if(i) {line+=',';}line+=fields[i];}
+				}
 				result+=line+"\n";++row;
 			}
 			return result;
@@ -3990,6 +3996,9 @@ public:
 			GT_OK();
 		}
 		if(research) {
+			GT_ASSERT(m_game.m_simulation && m_game.m_simulation->value.capabilities &&
+				m_game.m_simulation->value.capabilities->factions[0].available[0]==1 &&
+				m_game.m_simulation->value.capabilities->factions[0].foreign[0]==0,"startup generation failed to publish capability state before research");
 			GT_ASSERT(errors==0 && m_game.IsRunning() && m_game.GetTurnId()==1 && m_game.m_research_request
 				&& m_game.m_canonical_continuation && turns==0 && !m_game.GetUM()->HasPendingConventionalUnits(),"actual claimed Start failed to pause with sealed Units before final turn notification: "+startup_error);
 			if(scenario==11) {
@@ -4036,6 +4045,7 @@ public:
 				GT_ASSERT(m_game.m_research_request && m_game.m_research_request->bonus && turns==1
 					&& m_game.m_simulation->value.technology.Find(1)->owned[64] && m_game.HasSmacTechnologyReveal(1),"ordinary completion did not stage Secrets and map revelation before pause");
 				const auto second_minerals=base->GetProductionState()->minerals;
+				GT_ASSERT(m_game.m_simulation->value.capabilities->factions[0].available[0]==1,"research discovery refreshed capability history before owner summary");
 				research_saves.push_back(m_game.SerializeWorldSnapshot());retired_requests.push_back(m_game.m_research_request->id);
 				answer(0,true);
 				GT_ASSERT(m_game.m_research_request && !m_game.m_research_request->bonus
@@ -4043,6 +4053,7 @@ public:
 				research_saves.push_back(m_game.SerializeWorldSnapshot());retired_requests.push_back(m_game.m_research_request->id);
 				const auto selected=m_game.m_research_request->choices.front();answer(selected,true);
 				const auto& after=*m_game.m_simulation->value.technology.Find(1);
+				GT_ASSERT(m_game.m_simulation->value.capabilities->factions[0].available[0]==2,"later owner summary did not observe acquired component availability");
 				GT_ASSERT(!m_game.m_canonical_continuation && turns==2 && after.score==4 && after.labs==0 && !after.pending_secrets
 					&& after.target==selected && base->GetProductionState()->minerals==second_minerals
 					&& m_game.m_simulation->value.gameplay_random==rng,"bonus/final answer replayed posting, lost score or consumed RNG");

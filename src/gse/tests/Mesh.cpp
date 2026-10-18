@@ -702,6 +702,29 @@ static std::string CheckTextureCopyUpdates() {
 	GT_OK();
 }
 
+static std::string CheckNativeBadgePalette() {
+    try {
+        const auto directory=std::filesystem::temp_directory_path()/("glsmac-native-badge-"+util::UUID::Generate());const auto data=directory/"default";std::filesystem::create_directories(data);
+        util::FinallyGuard remove([&]{std::filesystem::remove(data/"units.pcx");std::filesystem::remove(data/"palette.pcx");std::filesystem::remove(data);std::filesystem::remove(directory);});
+        using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+        Surface units(SDL_CreateRGBSurfaceWithFormat(0,170,762,8,SDL_PIXELFORMAT_INDEX8),SDL_FreeSurface),palette(SDL_CreateRGBSurfaceWithFormat(0,1,1,8,SDL_PIXELFORMAT_INDEX8),SDL_FreeSurface);
+        GT_ASSERT(units && palette,"Native indexed fixture allocation failed");
+        SDL_Color local[256]{},common[256]{};for(auto& c:local) {c={25,25,25,255};}for(auto& c:common) {c.a=255;}common[62]={173,196,192,255};
+        GT_ASSERT(SDL_SetPaletteColors(units->format->palette,local,0,256)==0 && SDL_SetPaletteColors(palette->format->palette,common,0,256)==0,"Native fixture palette setup failed");
+        auto* pixels=static_cast<uint8_t*>(units->pixels);std::fill_n(pixels,size_t(units->pitch)*units->h,uint8_t(255));const uint8_t markers[]{249,250,255,55,252,253,62};
+        for(int m=0;m<7;++m) {for(int v=0;v<2;++v) {std::copy(std::begin(markers),std::end(markers),pixels+(700+31*v)*units->pitch+1+24*m);}}
+        GT_ASSERT(SDL_SaveBMP(units.get(),(data/"units.pcx").string().c_str())==0 && SDL_SaveBMP(palette.get(),(data/"palette.pcx").string().c_str())==0,"Native fixture save failed");
+        WidgetGraphicsFixture graphics(directory.string());auto* loader=g_engine->GetTextureLoader();std::unique_ptr<types::texture::Texture> first(loader->CreateSmacNativeBadgeTexture(0,0));
+        GT_ASSERT(first->GetWidth()==23 && first->GetHeight()==30 && first->GetPixel(0,0)==types::Color::RGB(128,0,0) && first->GetPixel(1,0)==types::Color::RGB(255,0,0)
+            && first->GetPixel(2,0)==0 && first->GetPixel(3,0)==types::Color::RGB(0,0,0) && first->GetPixel(4,0)==0 && first->GetPixel(5,0)==0 && first->GetPixel(6,0)==types::Color::RGB(173,196,192),
+            "Native decode lost index wrap, reserved remap, key transparency, opaque black or common palette");
+        std::fill_n(pixels,size_t(units->pitch)*units->h,uint8_t(0));GT_ASSERT(SDL_SaveBMP(units.get(),(data/"units.pcx").string().c_str())==0,"Native cache fixture overwrite failed");
+        std::unique_ptr<types::texture::Texture> last(loader->CreateSmacNativeBadgeTexture(6,1));GT_ASSERT(last->GetPixel(0,0)==types::Color::RGB(128,0,0) && last->GetPixel(2,0)==0,"Native bank source was reread for a later level");
+        first->SetPixel(0,0,types::Color::RGB(0,0,255));GT_ASSERT(last->GetPixel(0,0)==types::Color::RGB(128,0,0),"Caller-owned native textures alias each other");
+        bool rejected=false;try {std::unique_ptr<types::texture::Texture> bad(loader->CreateSmacNativeBadgeTexture(7,0));}catch(const std::exception&) {rejected=true;}GT_ASSERT(rejected,"Native loader accepted an invalid bank index");
+    }catch(const std::exception& error) {GT_FAIL(std::string("Native badge palette: ")+error.what());}GT_OK();
+}
+
 static std::string CheckDisplayPalette() {
 	try {
 		{
@@ -848,6 +871,7 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "movie native aspect stays inside the 4:3 presentation stage", GT() { return CheckMovieStageLayout(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
+	task->AddTest("SMAC native badge indexed palette transparency cached bank and owned textures",GT(){return CheckNativeBadgePalette();});
 	task->AddTest(
 		"test surface background replacement preserves texture ownership",
 		GT() { return CheckSurfaceBackgroundOwnership(); }

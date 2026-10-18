@@ -37,6 +37,9 @@ CLASS( TextureLoader, Loader )
 	// Caller owns the viewport-specific result; decoded source assets may be cached.
 	virtual types::texture::Texture* CreateSmacMenuTexture( const std::string& animation, const std::string& background, size_t frame, size_t rows, size_t viewport_width, size_t viewport_height );
 
+	// Caller owns this original native owner0 badge texture (gamma100).
+	virtual types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant);
+
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );
 

@@ -1,5 +1,6 @@
 #include "HumanResearchValue.h"
 #include "game/backend/faction/SmacResearchValue.h"
+#include "game/backend/faction/SmacAutomaticResearch.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
 
@@ -487,11 +488,36 @@ std::string CheckHumanResearchValues() {
             if ( actual != expected ) { return "native Hunter-Seeker depth discriminator: edges=" + std::to_string(edges) + " Discover=" + std::to_string(discover); }
         }
     }
+    // Compose the complete value implementation with selection, using six
+    // original chooser traces (RE-SMAC-BLIND-RESEARCH-001). UI is outside this
+    // check: these are the retained priorities after accept/cancel.
+    const std::array<std::array<int32_t,4>,6> priorities{{
+        {0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1}, {2,0,-1,0}
+    }};
+    const std::array<std::array<int32_t,6>,6> expected_values{{
+        {42,7,7,5,39,16}, {540,13,11,5,507,142}, {114,21,73,61,63,46},
+        {90,37,15,12,111,16}, {14,87,21,288,13,32}, {540,-23,7,4,363,238}
+    }};
+    for (size_t c=0; c<priorities.size(); ++c) {
+        auto input=Inputs(0); input.base_count=1; input.priorities=priorities[c];
+        game::backend::faction::SmacAutomaticResearchInputs selection{
+            input.faction_id,true,input.blind,input.technologies,input.priorities,input.former_prerequisite
+        };
+        game::backend::SmacGameplayRandomState random(1234,5678);
+        std::vector<int32_t> values;
+        const auto target=game::backend::faction::SelectSmacAutomaticResearch(selection,random,[&](int32_t id) {
+            values.push_back(CalculateSmacHumanResearchValue(input,id)); return values.back();
+        });
+        if (target != (c==4 ? 3 : 0) || random.Shared()!=1275680328u || random.Crt()!=5678u ||
+            values != std::vector<int32_t>(expected_values[c].begin(),expected_values[c].end())) {
+            return "complete human value/selector original chooser trace: "+std::to_string(c);
+        }
+    }
     return {};
 }
 }
 void AddHumanResearchValueTests( task::gsetests::GSETests* task ) {
-    task->AddTest( "SMAC human research value matches 119 complete original queries", GT() {
+    task->AddTest( "SMAC human research value matches 119 original values and six selector traces", GT() {
         try { return CheckHumanResearchValues(); } catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
     } );
 }

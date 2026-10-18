@@ -11,6 +11,26 @@ screen parity. Reusable font/palette fixes should subsequently be checked in
 their actual in-game consumers. Do not expand this pass into general menu work
 before this screen matches.
 
+## Current gate, 2026-10-18
+
+The settled original SMAC title profile now matches all 786,432 pixels at
+1024x768. The implemented common palette/tint, openitem.flc frame artwork,
+Arial Bold 18 monochrome labels and native placement are described in
+[the rendering result](title-screen-rendering.md). The initial diagnosis below
+is retained as history; its former console fragments and colors have been
+replaced. This completes one settled-screen profile, not all menu presentation.
+
+A fresh actual OpenGL audit [at the recorded PR #283 production head](https://github.com/jhurliman/glsmac/commit/b69d4133856a653f29e18b0f2cdf6403efc88fe3) also exercised Down/Up selection,
+Enter into Game Ruleset and Escape back to the title, mouse hover on Load Game,
+Up to Scenario, and the real Exit button. Both the Up return to Start Game and
+the return from setup reproduced the initial title pixels exactly. The run
+used installed GOG assets, a hidden 1024x768 SDL window, WSLg/llvmpipe and
+memorydebug; normal Exit reported no tracked memory/OpenGL leaks. No title
+production code changed in that audit. Native-platform/font-version captures,
+SMAX, other setup menus and original transition-frame/timing parity remain
+open gates. The reference's reconstruction/runtime provenance limits remain
+in the native receipt; a pixel match does not expand them.
+
 ## Capture and compare
 
 Use the user's supplied SMAC title image as the initial visual reference.
@@ -60,12 +80,12 @@ The installed `openinga.pcx` is natively 1024x768. Across the reference's
 background-only left region, every one of its 145 used palette indices maps to
 one reference RGB value, but 25 mappings differ from the raw PCX palette. For
 example, index 80 changes from (248,248,236) to (235,235,235). Thus background
-geometry already aligns while palette handling remains a real discrepancy.
+geometry already aligned while palette handling was a real discrepancy.
 Do not paint over the screenshot or hard-code these sampled RGB mappings as a
 substitute for reproducing the original palette operation.
 
-Current `sliding.gls.js` uses rotated console fragments, green translucent
-fills and `arialnb.ttf:20`. These choices have not been established as the
+The initial `sliding.gls.js` used rotated console fragments, green translucent
+fills and `arialnb.ttf:20`. Those choices had not been established as the
 original title renderer. Resolve their actual original sources before treating
 color/font adjustments as correct. The separate SMAX title needs its own
 reference and gate after this screen.

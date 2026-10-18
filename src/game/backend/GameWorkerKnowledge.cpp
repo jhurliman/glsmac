@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "LocalMoveCommand.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -14,6 +15,24 @@
 #include "gc/Space.h"
 
 namespace game::backend {
+
+bool QueueLocalConventionalMove(GSE_CALLABLE, Game& game, size_t unit_id, size_t x, size_t y) {
+    std::string rejection;
+    try {
+        auto* actor=game.GetUM()->GetUnit(unit_id);
+        const auto* map=game.GetMap();
+        if(!actor || !actor->IsConventional() || !map || x>=map->GetWidth() || y>=map->GetHeight() || (x&1)!=(y&1)) {
+            throw std::runtime_error("The selected Unit or destination is no longer available");
+        }
+        auto* destination=game.GetMap()->GetTile(x,y);
+        game.Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",destination->Wrap(GSE_CALL)}});
+        return true;
+    } catch(const std::runtime_error& error) {
+        rejection=error.what();
+    }
+    game.Message("Movement unavailable: "+rejection);
+    return false;
+}
 
 map::SmacWorkerMapFrame Game::ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base, bool startup ) const {
 	using Frame = map::SmacWorkerMapFrame;

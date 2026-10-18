@@ -288,6 +288,7 @@ void BaseManager::UndefineFacility( const std::string& id ) {
 }
 
 void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
+	m_game->RequireSmacGameplayActive();
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
@@ -371,6 +372,7 @@ void BaseManager::RegisterBase( Base* base ) {
 }
 
 void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
+	m_game->RequireSmacGameplayActive();
 	const auto& it = m_bases.find( base_id );
 	if ( it == m_bases.end() ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Base id " + std::to_string( base_id ) + " not found" );
@@ -497,7 +499,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"define_pop",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
@@ -562,7 +564,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"undefine_pop",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );
@@ -602,7 +604,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"define_facility",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
@@ -650,7 +652,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"undefine_facility",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );
@@ -664,7 +666,7 @@ WRAPIMPL_BEGIN( BaseManager )
 		{
 			"spawn_starting_smac_base",
 			NATIVE_CALL( this ) {
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 				N_EXPECT_ARGS( 3 );
 				N_GETVALUE_UNWRAP( owner, 0, Player );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
@@ -684,7 +686,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"spawn_base",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS_MIN_MAX( 3, 4 );
 				N_GETVALUE_UNWRAP( owner, 0, Player );
@@ -739,7 +741,7 @@ WRAPIMPL_BEGIN( BaseManager )
 			"despawn_base",
 			NATIVE_CALL( this ) {
 
-				m_game->CheckRW( GSE_CALL );
+				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 

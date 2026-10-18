@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "Player.h"
+#include "faction/Faction.h"
 #include "slot/Slots.h"
 #include "base/Base.h"
 #include "base/BaseManager.h"
@@ -11,11 +12,13 @@
 #include "unit/UnitManager.h"
 #include "gc/Space.h"
 #include "gse/value/Int.h"
+#include "gse/value/Bool.h"
 #include "gse/value/Null.h"
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
 #include "util/FinallyGuard.h"
 #include <set>
+#include <algorithm>
 #include <thread>
 
 namespace game::backend {
@@ -74,6 +77,7 @@ void Game::RequireCanonicalTurn(size_t turn_id) const {
 	}
 	RequireSmacLocalHumanOwner(m_slot);
 	ValidateCurrentSimulation();
+	RequireSmacGameplayActive();
 	for (const auto& participant:m_simulation->value.roster) {
 		if (participant.active) {RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant.slot));}
 	}
@@ -176,6 +180,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			RefreshCanonicalPopulationAggregate(owner.first);
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
+			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
 			continue;
 		}
 		auto* base=m_bm->GetBase(owner.second[next.base_index]);
@@ -206,8 +211,32 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	m_state->TriggerObject(this,"turn",ARGS_F(this) {
 		{"year",VALUE(gse::value::Int,,m_current_turn.GetId()+2100)},
 	}; });
+	if(m_simulation->value.human_defeat_request) {
+		m_state->TriggerObject(this,"smac_ending",ARGS_F(this) { }; });
+		return;
+	}
 	CheckTurnComplete();
 	if(!m_is_turn_complete) {SetTurnStatus(turn::TS_TURN_ACTIVE);}
+}
+
+void Game::RequireSmacGameplayActive() const {
+	if(m_simulation && m_simulation->value.human_defeat_request) {throw std::runtime_error("Campaign has a human-defeat ending request");}
+}
+
+gse::Value* Game::GetSmacEnding(GSE_CALLABLE) const {
+	if(!IsRunning() || !m_simulation || !m_simulation->value.human_defeat_request) {return VALUE(gse::value::Null);}
+	ValidateCurrentSimulation();
+	const auto owner=*m_simulation->value.human_defeat_request;
+	const auto& roster=m_simulation->value.roster;
+	const auto found=std::find_if(roster.begin(),roster.end(),[&](const auto& row){return row.simulation_id==owner;});
+	if(found==roster.end() || found->active) {throw std::runtime_error("Ending request owner differs from current saved roster");}
+	auto* player=m_state->m_slots->GetSlot(found->slot).GetPlayer();
+	const auto name=player->GetFaction()->m_name;
+	const bool local=m_slot && found->slot==static_cast<int32_t>(m_slot->GetIndex());
+	return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+		{"kind",VALUE(gse::value::String,,"human_defeat")}, {"owner_simulation_id",VALUE(gse::value::Int,,owner)},
+		{"faction_name",VALUE(gse::value::String,,name)}, {"local",VALUE(gse::value::Bool,,local)}
+	}));
 }
 
 void Game::FailCanonicalTurn(const std::string& error) {

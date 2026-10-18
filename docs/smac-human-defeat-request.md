@@ -1,0 +1,53 @@
+# Human-defeat ending request
+
+Last-Base disposition now records an owned human-defeat request when restart
+does not produce a replacement site. Successful restart leaves it absent. This
+is separate from the inactive roster flag, local focus and a conquest result.
+The [original last-Base capture receipt](behavior/last-base-capture.md) records
+a human-loss request while focus remains on the captor, and the
+[last-Base starvation receipt](behavior/last-base-restart.md) establishes the
+existing disposition producer and complete owner-tail behavior. Its public
+case projection omits per-tile exploration/site dumps from the private trace.
+
+The native controller finishes the current owner's population summary and
+empty-faction financial tail, then delivers the ending to the existing outcome
+overlay. Later owners do not begin upkeep. Enqueued gameplay after the loss is
+discarded, and new gameplay/turn commands, including direct Unit movement and
+Base mutation APIs, are rejected. Script-facing manager writes use the shared
+`CheckGameplayRW` boundary; native Base/Unit creation, removal and update entry
+points also reject the request. Internal snapshot reconstruction and postcommit
+notification retain their separate `CheckRW` check. Read-only inspection and the existing menu return
+remains available. A request for a different human faction displays that faction;
+it does not falsely label the local faction eliminated or announce conquest.
+
+Simulation V13 stores the optional defeated simulation ID and validates its
+binding to an inactive saved participant. V11/V12 have no tracked request and
+migrate with it absent, without inferring a request from roster status. The
+existing local-inactive status overlay remains available for those older saves.
+Actual Start restores the new request without replaying disposition, grants,
+Unit removal or an upkeep pass. A saved Colony continuation cannot coexist with
+a terminal request.
+
+This supplies the ending-state dependency for last-Base capture, which remains
+fenced pending faithful restart search. It does not implement the original
+global endgame presentation, scores, survivor-count/conquest/council victories,
+AI or network outcome scheduling.
+
+Validation: cached Linux Debug build; 91 affected upkeep, Colony, research,
+simulation, save/Start and event/session lifetime groups passed with memory
+debugging. The actual `smac_outcome.gls.js` overlay test also passed and its
+unchanged script result is reused after the native API guard fix.
+The live test covers local and foreign human loss, the losing owner's retained
+financial tail, unchanged later-owner Base, discarded prequeued movement,
+read-only status, rejected native/script commands and actual Start. Codec tests
+check V12 migration and invalid/active owner identities. LLVM15 correctness
+analysis passed ten changed/affected production translation units in 21.77s
+after the native API guard fix (the initial eight-unit pass took 18.67s).
+The manager-boundary review fix additionally passed 65 affected native
+campaign, capture, founding, Colony, simulation and event/session groups and
+ten changed/affected production translation units in 32.63s. Its regression
+attempts script and native Base removal inside the actual ending callback,
+and direct Unit manager removal/update after the callback, without changing
+the saved world. Prior unchanged overlay and arithmetic checks are reused.
+The change adds scalar saved state and control flow; existing last-Base ownership
+sanitizer evidence is reused, without another platform/sanitizer matrix.

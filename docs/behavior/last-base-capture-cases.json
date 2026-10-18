@@ -1,0 +1,102 @@
+{
+  "research_id": "RE-SMAC-LAST-BASE-CAPTURE-001",
+  "ruleset": "SMAC",
+  "scope": "Two complete capture callers through returned native restart/disposition and display-only notifications, stopped without an answer at captured-Base screen; no complete capture/movement return. One same-caller diagnostic stops at an actual captor-region rejection.",
+  "cases": [
+    {
+      "id": "last_base_remote_homed_former",
+      "remote_unit_type": "Former",
+      "remote_home": "captured Base",
+      "remote_deleted_before_disposition": true,
+      "defender_bases_before": 1,
+      "defender_bases_after": 0,
+      "defender_units_after": 0,
+      "restart_called_by_capture": true,
+      "restart_result": 0,
+      "replacement_units": 0,
+      "active_mask_before": 6,
+      "active_mask_after": 2,
+      "human_mask_after": 6,
+      "ending_state": 7,
+      "ending_requested": true,
+      "current_focus": 1,
+      "unit_controller": 1,
+      "active_faction": 1,
+      "disposition_return": 1,
+      "capture_base_population_after": 1,
+      "capture_assimilation_after": 50,
+      "credits_after_capture": [
+        233,
+        67
+      ],
+      "credits_after_restart": [
+        233,
+        77
+      ],
+      "crt_draws_capture": 37,
+      "crt_draws_restart": 2050,
+      "shared_draws": 0,
+      "notification": "WIPEOUTYOU0",
+      "notification_return_ignored": true,
+      "notification_history_executed": true,
+      "stop": "captured Base screen entry",
+      "base_screen_answer_supplied": false,
+      "capture_return": false,
+      "movement_return": false,
+      "global_ending_controller_executed": false
+    },
+    {
+      "id": "last_base_remote_homed_pod",
+      "remote_unit_type": "Colony Pod",
+      "remote_home": "captured Base",
+      "remote_deleted_before_disposition": true,
+      "defender_bases_before": 1,
+      "defender_bases_after": 0,
+      "defender_units_after": 0,
+      "restart_called_by_capture": true,
+      "restart_result": 0,
+      "replacement_units": 0,
+      "active_mask_before": 6,
+      "active_mask_after": 2,
+      "human_mask_after": 6,
+      "ending_state": 7,
+      "ending_requested": true,
+      "current_focus": 1,
+      "unit_controller": 1,
+      "active_faction": 1,
+      "disposition_return": 1,
+      "capture_base_population_after": 1,
+      "capture_assimilation_after": 50,
+      "credits_after_capture": [
+        233,
+        67
+      ],
+      "credits_after_restart": [
+        233,
+        77
+      ],
+      "crt_draws_capture": 37,
+      "crt_draws_restart": 2050,
+      "shared_draws": 0,
+      "notification": "WIPEOUTYOU0",
+      "notification_return_ignored": true,
+      "notification_history_executed": true,
+      "stop": "captured Base screen entry",
+      "base_screen_answer_supplied": false,
+      "capture_return": false,
+      "movement_return": false,
+      "global_ending_controller_executed": false
+    }
+  ],
+  "restart_rejection": {
+    "candidate": [
+      47,
+      23
+    ],
+    "candidate_region": 1,
+    "nearest_base": 1,
+    "captor": 1,
+    "nearest_base_owner": 1,
+    "matched_captor_region": true
+  }
+}

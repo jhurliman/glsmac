@@ -158,7 +158,7 @@ WRAPIMPL_BEGIN( Pop )
 			"set_type",
 			NATIVE_CALL( this ) {
 
-				m_base->GetGame()->CheckRW( GSE_CALL );
+				m_base->GetGame()->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, String );

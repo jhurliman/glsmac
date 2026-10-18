@@ -15,6 +15,7 @@
 namespace game::backend::base {
 
 void BaseManager::RequireSmacWorkerRecalculation() const {
+	m_game->RequireSmacGameplayActive();
 	if ( !m_game->IsRunning() || m_dispatching_updates ) { THROW( "SMAC worker recalculation requires a running world outside update dispatch" ); }
 }
 

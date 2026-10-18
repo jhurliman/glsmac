@@ -159,6 +159,7 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	const SmacAllocationRoles& roles, const SmacBaseResourceContext& context,
 	const std::optional< ProductionState >& production, int64_t nutrients, std::optional< size_t > candidate_population, std::vector<std::pair<Base*,facilities_t>> facility_changes, slot::Slot* captured_owner, std::vector<Base*> refresh_only, bool finish_upkeep ) {
 	const auto population = candidate_population.value_or( m_pops.size() );
+	m_game->RequireSmacGameplayActive();
 	if ( population > 127 ) { THROW( "Candidate population exceeds 127" ); }
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "SMAC allocation publication requires its owning accumulation" ); }

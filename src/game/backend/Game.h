@@ -440,6 +440,9 @@ public:
 	gc::Space* const GetGCSpace() const;
 
 	void CheckRW( GSE_CALLABLE ) const;
+	// Script-facing writes also require a nonterminal campaign. Internal
+	// restoration and postcommit notification use CheckRW independently.
+	void CheckGameplayRW( GSE_CALLABLE ) const;
 
 	void SetSlotNum( const size_t slotnum ); // not thread-safe, make sure to call from game thread only
 
@@ -488,6 +491,8 @@ private:
 	void ValidateCanonicalColony() const;
 	bool HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacColony(GSE_CALLABLE) const;
+	gse::Value* GetSmacEnding(GSE_CALLABLE) const;
+	void RequireSmacGameplayActive() const;
 	void NotifyCanonicalColony(GSE_CALLABLE);
 	void ValidateCanonicalColonyScreen() const;
 	void NotifyCanonicalColonyScreen(GSE_CALLABLE);

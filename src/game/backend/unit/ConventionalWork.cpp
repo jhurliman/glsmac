@@ -75,6 +75,7 @@ UnitManager::ConventionalCommands UnitManager::QueryConventionalCommands(Unit* a
 }
 
 UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit* actor,Order requested,size_t caller,bool dispatch) const {
+    m_game->RequireSmacGameplayActive();
     if(!actor || GetUnit(actor->m_id)!=actor || !actor->IsConventional()) {throw std::runtime_error("Terraforming requires a registered conventional Former");}
     actor->RequireConventionalReady();
     m_game->RequireConventionalSightWorld();

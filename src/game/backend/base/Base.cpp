@@ -209,6 +209,7 @@ int64_t Base::GetAccumulatedNutrients() const {
 }
 
 void Base::SetAccumulatedNutrients( const int64_t nutrients ) {
+	m_game->RequireSmacGameplayActive();
 	if ( m_accumulated_nutrients != nutrients ) {
 		m_accumulated_nutrients = nutrients;
 		TriggerUpdate();
@@ -220,6 +221,7 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 }
 
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	if ( production ) { m_game->ValidateSmacProductionState( m_owner, *production ); }
 	// Copy completely before swapping: even an allocation failure preserves the
@@ -243,6 +245,7 @@ SmacBaseResourceContext Base::GetSmacResourceContext() const {
 }
 
 void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& context ) {
+	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	const auto previous = GetSmacResourceContext();
 	context.Validate();
@@ -531,7 +534,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"set_production_state",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			if ( arguments.at( 0 )->Deref()->type == gse::VT_UNDEFINED ) {
 				SetProductionState( GSE_CALL, std::nullopt );
@@ -574,7 +577,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"set_accumulated_nutrients",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( nutrients, 0, Int );
 			SetAccumulatedNutrients( nutrients );
@@ -586,7 +589,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		NATIVE_CALL( this ) {
 			RequireGenericPopulationMutation();
 
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( data, 0, Object );
@@ -623,7 +626,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"restore_pop",
 		NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( data, 0, Object );
 			N_GETPROP( id, data, "id", Int );
@@ -665,7 +668,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"destroy_pop",
 		NATIVE_CALL( this ) {
 
-			m_game->CheckRW( GSE_CALL );
+			m_game->CheckGameplayRW( GSE_CALL );
 
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( pop, 0, Pop );

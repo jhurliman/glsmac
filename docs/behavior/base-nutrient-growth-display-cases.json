@@ -1,0 +1,1353 @@
+{
+  "research_id": "RE-SMAC-BASE-GROWTH-DISPLAY-001",
+  "common_inputs": {
+    "human_owner": 1,
+    "world_category": "Standard",
+    "nutrients_per_citizen": 2,
+    "base_cost_before_rule_and_growth": 10,
+    "population_penalty": 0,
+    "ascetic_virtues": false,
+    "hab_complex_limit": 7,
+    "hab_dome_limit": 14,
+    "hab_dome": false,
+    "objective_protection": false
+  },
+  "cases": [
+    {
+      "id": "empty_positive",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "empty_positive"
+      },
+      "normalized_food": 0,
+      "capacity": 20,
+      "expected_label": "Growth: 11 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "below_one",
+      "inputs": {
+        "pop": 1,
+        "food": 19,
+        "surplus": 1,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "below_one"
+      },
+      "normalized_food": 19,
+      "capacity": 20,
+      "expected_label": "Growth: 2 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "surplus_overlay_cells": [
+          19
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 20,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "exact_fill_next",
+      "inputs": {
+        "pop": 1,
+        "food": 18,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "exact_fill_next"
+      },
+      "normalized_food": 18,
+      "capacity": 20,
+      "expected_label": "Growth: 2 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "surplus_overlay_cells": [
+          18,
+          19
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 20,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "at_threshold",
+      "inputs": {
+        "pop": 1,
+        "food": 20,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "at_threshold"
+      },
+      "normalized_food": 20,
+      "capacity": 20,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "above_threshold",
+      "inputs": {
+        "pop": 1,
+        "food": 21,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "above_threshold"
+      },
+      "normalized_food": 21,
+      "capacity": 20,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "fractional_positive",
+      "inputs": {
+        "pop": 1,
+        "food": 15,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "fractional_positive"
+      },
+      "normalized_food": 15,
+      "capacity": 20,
+      "expected_label": "Growth: 4 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "surplus_overlay_cells": [
+          15,
+          16
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 17,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "zero_below",
+      "inputs": {
+        "pop": 1,
+        "food": 5,
+        "surplus": 0,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "zero_below"
+      },
+      "normalized_food": 5,
+      "capacity": 20,
+      "expected_label": "Growth: -stagnant-",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "none"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 5,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "zero_at",
+      "inputs": {
+        "pop": 1,
+        "food": 20,
+        "surplus": 0,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "zero_at"
+      },
+      "normalized_food": 20,
+      "capacity": 20,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "none"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "deficit_buffer",
+      "inputs": {
+        "pop": 1,
+        "food": 5,
+        "surplus": -2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "deficit_buffer"
+      },
+      "normalized_food": 5,
+      "capacity": 20,
+      "expected_label": "Hunger!",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "surplus_overlay_cells": [
+          3,
+          4
+        ],
+        "overlay_kind": "loss"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 3,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "deficit_empty",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": -2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "deficit_empty"
+      },
+      "normalized_food": -1,
+      "capacity": 20,
+      "expected_label": "Hunger!",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "loss"
+      },
+      "next_population_step": {
+        "population": 0,
+        "stored": -1,
+        "base_removal_requested": true
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "deficit_at",
+      "inputs": {
+        "pop": 1,
+        "food": 20,
+        "surplus": -2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "deficit_at"
+      },
+      "normalized_food": 20,
+      "capacity": 20,
+      "expected_label": "Hunger: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "surplus_overlay_cells": [
+          18,
+          19
+        ],
+        "overlay_kind": "loss"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "starvation_pending",
+      "inputs": {
+        "pop": 1,
+        "food": -1,
+        "surplus": -2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "starvation_pending"
+      },
+      "normalized_food": -1,
+      "capacity": 20,
+      "expected_label": "Hunger!",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 20,
+        "filled_cells": [],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "loss"
+      },
+      "next_population_step": {
+        "population": 0,
+        "stored": -1,
+        "base_removal_requested": true
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "housing_below",
+      "inputs": {
+        "pop": 7,
+        "food": 78,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "housing_below"
+      },
+      "normalized_food": 78,
+      "capacity": 80,
+      "expected_label": "Growth: 2 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 80,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77
+        ],
+        "surplus_overlay_cells": [
+          78,
+          79
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 7,
+        "stored": 80,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "housing_full",
+      "inputs": {
+        "pop": 7,
+        "food": 80,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "housing_full"
+      },
+      "normalized_food": 80,
+      "capacity": 80,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 80,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 7,
+        "stored": 42,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "housing_complex",
+      "inputs": {
+        "pop": 7,
+        "food": 80,
+        "surplus": 2,
+        "growth": 0,
+        "complex": true,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "housing_complex"
+      },
+      "normalized_food": 80,
+      "capacity": 80,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 80,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 8,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "stagnant_below",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": -3,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "stagnant_below"
+      },
+      "normalized_food": 0,
+      "capacity": 24,
+      "expected_label": "Growth: 13 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 24,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "stagnant_full",
+      "inputs": {
+        "pop": 1,
+        "food": 24,
+        "surplus": 2,
+        "growth": -3,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "stagnant_full"
+      },
+      "normalized_food": 24,
+      "capacity": 24,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 24,
+        "filled_cells": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23
+        ],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 24,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "boom",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": 6,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "boom"
+      },
+      "normalized_food": 0,
+      "capacity": 10,
+      "expected_label": "Growth: 6 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 10,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 0,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "vats_stagnation",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": -3,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": true,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "vats_stagnation"
+      },
+      "normalized_food": 0,
+      "capacity": 24,
+      "expected_label": "Growth: 13 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 24,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 0,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "creche_golden_boom",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": 2,
+        "complex": false,
+        "creche": true,
+        "golden": true,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "creche_golden_boom"
+      },
+      "normalized_food": 0,
+      "capacity": 10,
+      "expected_label": "Growth: 6 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 10,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 0,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "zero_surplus_at_boom",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 0,
+        "growth": 6,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "zero_surplus_at_boom"
+      },
+      "normalized_food": 0,
+      "capacity": 10,
+      "expected_label": "Growth: -stagnant-",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 10,
+        "filled_cells": [],
+        "surplus_overlay_cells": [],
+        "overlay_kind": "none"
+      },
+      "next_population_step": {
+        "population": 1,
+        "stored": 0,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "upper_display_clamp",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 1,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10000,
+        "after_surplus": 2,
+        "id": "upper_display_clamp"
+      },
+      "normalized_food": 0,
+      "capacity": 20000,
+      "expected_label": "Growth: 9999 turns",
+      "nutrient_box": null,
+      "next_population_step": {
+        "population": 1,
+        "stored": 1,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "zero_cost",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": 0,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 0,
+        "after_surplus": 2,
+        "id": "zero_cost"
+      },
+      "normalized_food": 0,
+      "capacity": 0,
+      "expected_label": "Growth: 1 turn",
+      "nutrient_box": null,
+      "next_population_step": {
+        "population": 2,
+        "stored": 2,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    },
+    {
+      "id": "growth_rate_clamp",
+      "inputs": {
+        "pop": 1,
+        "food": 0,
+        "surplus": 2,
+        "growth": 20,
+        "complex": false,
+        "creche": false,
+        "golden": false,
+        "vats": false,
+        "multiplier": 10,
+        "after_surplus": 2,
+        "id": "growth_rate_clamp"
+      },
+      "normalized_food": 0,
+      "capacity": 10,
+      "expected_label": "Growth: 6 turns",
+      "nutrient_box": {
+        "geometry": [
+          0,
+          0,
+          300,
+          10
+        ],
+        "capacity": 10,
+        "filled_cells": [],
+        "surplus_overlay_cells": [
+          0,
+          1
+        ],
+        "overlay_kind": "addition"
+      },
+      "next_population_step": {
+        "population": 2,
+        "stored": 0,
+        "base_removal_requested": false
+      },
+      "post_population_solver_is_supplied": true
+    }
+  ],
+  "redraw_input_controls": [
+    {
+      "change": "cached_surplus_only_to_zero",
+      "expected_label": "Growth: -stagnant-"
+    },
+    {
+      "change": "stored_food_only_to_threshold",
+      "expected_label": "Growth: 1 turn"
+    }
+  ],
+  "validation": {
+    "native_label_cases": 24,
+    "native_population_steps": 24,
+    "native_box_fragments": 22,
+    "extra_redraw_inputs": 2,
+    "pixel_rendering_checked": false,
+    "independent_semantic_comparison_passed": true
+  }
+}

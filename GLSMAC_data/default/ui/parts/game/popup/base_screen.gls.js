@@ -367,7 +367,7 @@ return {
 					const selected = choice;
 					this.production_choices.button({
 						class: 'game-popup-button', left: 0, right: 0,
-						text: selected.name + ' â€” ' + #to_string(selected.cost) + ' minerals',
+						text: selected.name + ' — ' + #to_string(selected.cost) + ' minerals',
 					}).on('click', () => {
 						this.production_choice = selected;
 						this.production_confirming = false;
@@ -398,7 +398,7 @@ return {
 				});
 				this.production_confirming = true;
 				this.production_prompt.text = 'Retooling: ' + #to_string(this.production_data.minerals)
-					+ ' â†’ ' + #to_string(choice.minerals) + ' minerals. OK to confirm; Cancel keeps production.';
+					+ ' → ' + #to_string(choice.minerals) + ' minerals. OK to confirm; Cancel keeps production.';
 				return;
 			}
 			const confirm = this.production_confirming;

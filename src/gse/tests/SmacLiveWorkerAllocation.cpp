@@ -10,6 +10,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/SmacBaseUpkeepCache.h"
+#include "game/backend/base/SmacNutrientDisplay.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/FacilityDef.h"
 #include "game/backend/faction/Faction.h"
@@ -33,6 +34,7 @@
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
 #include "types/Buffer.h"
+#include "ui/BaseResourcePresentation.h"
 #include <sstream>
 #include <set>
 #include <stdexcept>
@@ -256,6 +258,78 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC nutrient grid helper matches original filled and prospective overlay controls",[](GSE*,context::Context*)->std::string {
+        struct Case {int64_t food;int32_t capacity,surplus;std::vector<int32_t> filled,overlay;};
+        const Case cases[]{
+            {0,20,2,{},{0,1}},
+            {19,20,1,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},{19}},
+            {18,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17},{18,19}},
+            {20,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {21,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {15,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14},{15,16}},
+            {5,20,0,{0,1,2,3,4},{}},
+            {20,20,0,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {5,20,-2,{0,1,2,3,4},{3,4}},
+            {0,20,-2,{},{}},
+            {20,20,-2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{18,19}},
+            {-1,20,-2,{},{}},
+            {78,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77},{78,79}},
+            {80,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79},{}},
+            {80,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79},{}},
+            {0,24,2,{},{0,1}},
+            {24,24,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23},{}},
+            {0,10,2,{},{0,1}},
+            {0,24,2,{},{0,1}},
+            {0,10,2,{},{0,1}},
+            {0,10,0,{},{}},
+            {0,10,2,{},{0,1}},
+        };
+        for(const auto& c:cases) {
+            const auto result=::ui::ResourceProgress::Format(c.surplus,0,c.food,c.capacity);
+            std::vector<int32_t> filled,overlay;
+            for(int32_t i=0;i<c.capacity;++i) {
+                if(i<result.filled_cells) {filled.push_back(i);if(result.direction<0 && i>=result.end_cells) {overlay.push_back(i);}}
+                else if(i<result.end_cells) {overlay.push_back(i);}
+            }
+            GT_ASSERT(filled==c.filled && overlay==c.overlay,"Original nutrient filled/overlay cells differ");
+        }
+        GT_OK();
+    });
+
+    task->AddTest("SMAC nutrient display matches original label controls independently of population outcomes",[](GSE*,context::Context*)->std::string {
+        struct Case {int64_t food;int32_t capacity,surplus;const char* label;};
+        const Case cases[]{
+            {0,20,2,"Growth: 11 turns"},
+            {19,20,1,"Growth: 2 turns"},
+            {18,20,2,"Growth: 2 turns"},
+            {20,20,2,"Growth: 1 turn"},
+            {21,20,2,"Growth: 1 turn"},
+            {15,20,2,"Growth: 4 turns"},
+            {5,20,0,"Growth: -stagnant-"},
+            {20,20,0,"Growth: 1 turn"},
+            {5,20,-2,"Hunger!"},
+            {0,20,-2,"Hunger!"},
+            {20,20,-2,"Hunger: 1 turn"},
+            {-1,20,-2,"Hunger!"},
+            {78,80,2,"Growth: 2 turns"},
+            {80,80,2,"Growth: 1 turn"},
+            {80,80,2,"Growth: 1 turn"},
+            {0,24,2,"Growth: 13 turns"},
+            {24,24,2,"Growth: 1 turn"},
+            {0,10,2,"Growth: 6 turns"},
+            {0,24,2,"Growth: 13 turns"},
+            {0,10,2,"Growth: 6 turns"},
+            {0,10,0,"Growth: -stagnant-"},
+            {0,20000,1,"Growth: 9999 turns"},
+            {0,0,2,"Growth: 1 turn"},
+            {0,10,2,"Growth: 6 turns"},
+            {INT64_MIN,20,1,"Growth: 9999 turns"},
+            {INT64_MAX,20,-1,"Hunger: 1 turn"},
+        };
+        for(const auto& c:cases) {GT_ASSERT(FormatSmacNutrientGrowthLabel(c.food,c.capacity,c.surplus)==c.label,"Original nutrient label differs");}
+        GT_OK();
+    });
+
     task->AddTest("SMAC Base nutrient presentation binds current box and native step without posting upkeep",[](GSE*,context::Context*)->std::string {
         struct Case {size_t population;bool doctor;int32_t growth,food;bool famine;int32_t threshold;const char* branch;int32_t result_population,surplus;bool recalculation;};
         const Case cases[]{

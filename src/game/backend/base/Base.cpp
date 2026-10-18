@@ -29,6 +29,7 @@
 #include "PopDef.h"
 #include "FacilityDef.h"
 #include "SmacPopulationStep.h"
+#include "SmacNutrientDisplay.h"
 #include "game/backend/Random.h"
 #include "game/backend/resource/ResourceManager.h"
 
@@ -884,6 +885,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				{ "cost_per_step", VALUE( gse::value::Int,, rules.cost_per_step ) },
 				{ "rows", VALUE( gse::value::Int,, m_pops.size() + 1 ) },
 				{ "threshold", VALUE( gse::value::Int,, threshold ) },
+				{ "display_basis", VALUE( gse::value::String,, "current_resource_preparation" ) },
+				{ "display_label", VALUE( gse::value::String,, FormatSmacNutrientGrowthLabel(m_accumulated_nutrients, static_cast<int32_t>(threshold), resources.nutrients.surplus) ) },
 				{ "housing_allows_growth", VALUE( gse::value::Bool,, rules.housing_allows_growth ) },
 				{ "effective_growth", VALUE( gse::value::Int,, rules.effective_growth ) },
 				{ "next_step", VALUE( gse::value::Undefined ) }

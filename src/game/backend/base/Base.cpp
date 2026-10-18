@@ -28,6 +28,8 @@
 #include "Pop.h"
 #include "PopDef.h"
 #include "FacilityDef.h"
+#include "SmacPopulationStep.h"
+#include "SmacNutrientDisplay.h"
 #include "game/backend/Random.h"
 #include "game/backend/resource/ResourceManager.h"
 
@@ -863,6 +865,60 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				{ "allocated", categories( energy.allocation.after_specialists ) },
 				{ "final", categories( energy.tail.final ) }
 			} ) );
+		} )
+	},
+	{
+		"get_smac_nutrient_presentation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			if ( !m_resource_context || !m_allocation || !m_production || m_pops.empty()
+				|| !m_owner || m_owner->GetPlayer() != m_game->GetPlayer()
+				|| !m_game->GetState()->m_settings.global.IsOrdinarySmacCampaign() ) { return VALUE( gse::value::Undefined ); }
+			const auto rules = m_game->GetCanonicalPopulationRules( *this );
+			const auto resources = PrepareSmacResourceCalculation();
+			const auto threshold = int64_t( rules.cost_per_step ) * static_cast<int64_t>( m_pops.size() + 1 );
+			if ( threshold > INT32_MAX ) { return VALUE( gse::value::Undefined ); }
+			gse::value::object_properties_t fields{
+				{ "stored", VALUE( gse::value::Int,, m_accumulated_nutrients ) },
+				{ "normalized_stored", VALUE( gse::value::Int,, resources.nutrients.normalized_stored ) },
+				{ "surplus", VALUE( gse::value::Int,, resources.nutrients.surplus ) },
+				{ "cost_per_step", VALUE( gse::value::Int,, rules.cost_per_step ) },
+				{ "rows", VALUE( gse::value::Int,, m_pops.size() + 1 ) },
+				{ "threshold", VALUE( gse::value::Int,, threshold ) },
+				{ "display_basis", VALUE( gse::value::String,, "current_resource_preparation" ) },
+				{ "display_label", VALUE( gse::value::String,, FormatSmacNutrientGrowthLabel(m_accumulated_nutrients, static_cast<int32_t>(threshold), resources.nutrients.surplus) ) },
+				{ "housing_allows_growth", VALUE( gse::value::Bool,, rules.housing_allows_growth ) },
+				{ "effective_growth", VALUE( gse::value::Int,, rules.effective_growth ) },
+				{ "next_step", VALUE( gse::value::Undefined ) }
+			};
+			try {
+				// This is the nutrient kernel at the CURRENT population/allocation,
+				// not a forecast of production, governor repair, Colony completion
+				// or the outer upkeep recalculation. Drawing never runs those writes.
+				const auto step = SmacPopulationStep::Prepare( rules, static_cast<int32_t>(m_pops.size()),
+					m_accumulated_nutrients, resources.nutrients.surplus, false );
+				const char* branch = nullptr;
+				switch ( step.branch ) {
+					case SmacPopulationPlan::Branch::Collection: branch = "collection"; break;
+					case SmacPopulationPlan::Branch::Starvation: branch = "starvation"; break;
+					case SmacPopulationPlan::Branch::Removal: branch = "removal"; break;
+					case SmacPopulationPlan::Branch::Boom: branch = "boom"; break;
+					case SmacPopulationPlan::Branch::Growth: branch = "growth"; break;
+					case SmacPopulationPlan::Branch::Stagnation: branch = "stagnation"; break;
+					case SmacPopulationPlan::Branch::Housing: branch = "housing"; break;
+					default: THROW( "Unknown native nutrient step" );
+				}
+				fields.at("next_step") = VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
+					{ "basis", VALUE( gse::value::String,, "current_population_and_allocation" ) },
+					{ "branch", VALUE( gse::value::String,, branch ) },
+					{ "population", VALUE( gse::value::Int,, step.population ) },
+					{ "requires_recalculation", VALUE( gse::value::Bool,, step.NeedsRecalculation() ) }
+				} ) );
+			} catch ( const std::overflow_error& ) {
+				// Preserve a useful current box at the unsupported signed-byte
+				// growth edge; do not invent a population128 or post-growth food.
+			}
+			return new gse::value::Object( GSE_CALL, fields );
 		} )
 	},
 	{

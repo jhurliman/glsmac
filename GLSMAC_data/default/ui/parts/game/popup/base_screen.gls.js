@@ -158,7 +158,9 @@ return {
 		this.hide_production_selection();
 
 		if (canonical) {
-			this.sections.nutrients.set_stored(base.get_accumulated_nutrients());
+			let nutrients = base.get_smac_nutrient_presentation();
+			if (!#is_defined(nutrients)) { nutrients = {stored: base.get_accumulated_nutrients()}; }
+			this.sections.nutrients.set_stored(nutrients);
 		} else {
 			this.sections.nutrients.set({
 				rows: base.get_size() + 1,

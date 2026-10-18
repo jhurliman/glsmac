@@ -10,6 +10,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/SmacBaseUpkeepCache.h"
+#include "game/backend/base/SmacNutrientDisplay.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/FacilityDef.h"
 #include "game/backend/faction/Faction.h"
@@ -33,6 +34,7 @@
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
 #include "types/Buffer.h"
+#include "ui/BaseResourcePresentation.h"
 #include <sstream>
 #include <set>
 #include <stdexcept>
@@ -256,6 +258,119 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC nutrient grid helper matches original filled and prospective overlay controls",[](GSE*,context::Context*)->std::string {
+        struct Case {int64_t food;int32_t capacity,surplus;std::vector<int32_t> filled,overlay;};
+        const Case cases[]{
+            {0,20,2,{},{0,1}},
+            {19,20,1,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},{19}},
+            {18,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17},{18,19}},
+            {20,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {21,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {15,20,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14},{15,16}},
+            {5,20,0,{0,1,2,3,4},{}},
+            {20,20,0,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{}},
+            {5,20,-2,{0,1,2,3,4},{3,4}},
+            {0,20,-2,{},{}},
+            {20,20,-2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19},{18,19}},
+            {-1,20,-2,{},{}},
+            {78,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77},{78,79}},
+            {80,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79},{}},
+            {80,80,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79},{}},
+            {0,24,2,{},{0,1}},
+            {24,24,2,{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23},{}},
+            {0,10,2,{},{0,1}},
+            {0,24,2,{},{0,1}},
+            {0,10,2,{},{0,1}},
+            {0,10,0,{},{}},
+            {0,10,2,{},{0,1}},
+        };
+        for(const auto& c:cases) {
+            const auto result=::ui::ResourceProgress::Format(c.surplus,0,c.food,c.capacity);
+            std::vector<int32_t> filled,overlay;
+            for(int32_t i=0;i<c.capacity;++i) {
+                if(i<result.filled_cells) {filled.push_back(i);if(result.direction<0 && i>=result.end_cells) {overlay.push_back(i);}}
+                else if(i<result.end_cells) {overlay.push_back(i);}
+            }
+            GT_ASSERT(filled==c.filled && overlay==c.overlay,"Original nutrient filled/overlay cells differ");
+        }
+        GT_OK();
+    });
+
+    task->AddTest("SMAC nutrient display matches original label controls independently of population outcomes",[](GSE*,context::Context*)->std::string {
+        struct Case {int64_t food;int32_t capacity,surplus;const char* label;};
+        const Case cases[]{
+            {0,20,2,"Growth: 11 turns"},
+            {19,20,1,"Growth: 2 turns"},
+            {18,20,2,"Growth: 2 turns"},
+            {20,20,2,"Growth: 1 turn"},
+            {21,20,2,"Growth: 1 turn"},
+            {15,20,2,"Growth: 4 turns"},
+            {5,20,0,"Growth: -stagnant-"},
+            {20,20,0,"Growth: 1 turn"},
+            {5,20,-2,"Hunger!"},
+            {0,20,-2,"Hunger!"},
+            {20,20,-2,"Hunger: 1 turn"},
+            {-1,20,-2,"Hunger!"},
+            {78,80,2,"Growth: 2 turns"},
+            {80,80,2,"Growth: 1 turn"},
+            {80,80,2,"Growth: 1 turn"},
+            {0,24,2,"Growth: 13 turns"},
+            {24,24,2,"Growth: 1 turn"},
+            {0,10,2,"Growth: 6 turns"},
+            {0,24,2,"Growth: 13 turns"},
+            {0,10,2,"Growth: 6 turns"},
+            {0,10,0,"Growth: -stagnant-"},
+            {0,20000,1,"Growth: 9999 turns"},
+            {0,0,2,"Growth: 1 turn"},
+            {0,10,2,"Growth: 6 turns"},
+            {INT64_MIN,20,1,"Growth: 9999 turns"},
+            {INT64_MAX,20,-1,"Hunger: 1 turn"},
+        };
+        for(const auto& c:cases) {GT_ASSERT(FormatSmacNutrientGrowthLabel(c.food,c.capacity,c.surplus)==c.label,"Original nutrient label differs");}
+        GT_OK();
+    });
+
+    task->AddTest("SMAC Base nutrient presentation binds current box and native step without posting upkeep",[](GSE*,context::Context*)->std::string {
+        struct Case {size_t population;bool doctor;int32_t growth,food;bool famine;int32_t threshold;const char* branch;int32_t result_population,surplus;bool recalculation;};
+        const Case cases[]{
+            {1,false,0,13,false,20,"collection",1,2,false},
+            {1,false,0,20,false,20,"growth",2,2,true},
+            {1,false,-3,24,false,24,"stagnation",1,2,false},
+            {1,false,6,0,false,10,"boom",2,2,true},
+            {7,true,0,80,false,80,"housing",7,-12,false},
+            {2,true,0,0,false,30,"starvation",1,-2,false},
+            {1,true,0,0,true,20,"removal",0,-1,false},
+        };
+        for(const auto& c:cases) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,c.doctor,false,0,1,c.population);
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+                if(!c.doctor) {auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());}
+                fixture.ResourceState([&](auto& state){state.social.factions.front().current[6]=c.growth;});
+                const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+                base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+                base->SetAccumulatedNutrients(c.food);
+                if(c.famine) {auto context=base->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;base->SetSmacResourceContext(GSE_CALL,context);}
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                for(int repeat=0;repeat<3;++repeat) {
+                    auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_nutrient_presentation"));
+                    const auto integer=[](value::Object* o,const std::string& key){return static_cast<value::Int*>(o->Get(key))->value;};
+                    GT_ASSERT(integer(view,"stored")==c.food && integer(view,"rows")==int64_t(c.population+1)
+                        && integer(view,"threshold")==c.threshold && integer(view,"surplus")==c.surplus,"Current box values: stored="+std::to_string(integer(view,"stored"))+" rows="+std::to_string(integer(view,"rows"))+" threshold="+std::to_string(integer(view,"threshold"))+" surplus="+std::to_string(integer(view,"surplus")));
+                    auto* step=static_cast<value::Object*>(view->Get("next_step"));
+                    GT_ASSERT(static_cast<value::String*>(step->Get("basis"))->value=="current_population_and_allocation"
+                        && static_cast<value::String*>(step->Get("branch"))->value==c.branch
+                        && integer(step,"population")==c.result_population
+                        && static_cast<value::Bool*>(step->Get("requires_recalculation"))->value==c.recalculation,"Native nutrient step or its limited basis changed");
+                }
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random && !base->GetSmacUpkeepCache(),"Nutrient presentation posted food/population, invented history or changed RNG");
+                GT_OK();
+            });if(!result.empty()) {return std::string(c.branch)+": "+result;}
+        }
+        GT_OK();
+    });
+
     task->AddTest("SMAC Base support presentation withholds remote foreign roster before calculation",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
         return fixture.Run([&](GSE_CALLABLE)->std::string {

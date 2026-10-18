@@ -12,6 +12,8 @@ account.info_energy = {};
 account.info_ecodamage = {};
 let balance = null;
 let reads = 0;
+let nutrient_view = {stored: 13, threshold: 20};
+let displayed_nutrients = undefined;
 let response = {credits: 137, raw_intake: 15, waste: 3, net: 12, maintenance: 2,
 	rates: {economy: 5, labs: 5, psych: 0}, allocated: {economy: 7, labs: 8, psych: 2},
 	final: {economy: 7, labs: 12, psych: 2}};
@@ -23,15 +25,17 @@ const base = {
 	}; },
 	get_smac_energy_calculation: () => { reads++; return response; },
 	get_accumulated_nutrients: () => { return 13; },
+	get_smac_nutrient_presentation: () => { return nutrient_view; },
 	get_facilities: () => { return {}; },
 };
 const sink = {set: (data) => {}, set_stored: (value) => {}, set_commerce: (value) => {}};
-screen.sections = {nutrients: sink, economy: sink, game_state: account, facilities: sink,
+screen.sections = {nutrients: {set_stored: (data) => { displayed_nutrients = data; }}, economy: sink, game_state: account, facilities: sink,
 	resources: {set: (data) => {balance = data;}}, energy: allocation, middle_area: sink, bottom_bar: sink};
 screen.p = {game: {get_year: () => {return 2101;}}};
 screen.production_selection = null;
 screen.set({base: base});
 test.assert(reads == 1 && account.info_year.text == '2101' && account.info_energy.text == '137');
+test.assert(displayed_nutrients == nutrient_view);
 test.assert(account.info_ecodamage.text == 'Eco-Damage: N/A');
 test.assert(balance.energy == {profit: 15, loss: 3});
 test.assert(balance.minerals == {profit: 18, loss: 2});
@@ -50,8 +54,11 @@ test.assert(allocation.labels.labs.percentage.text == '100%' && allocation.label
 
 // Partial legacy canonical Base records retain explicit unavailable values.
 response = undefined;
+nutrient_view = undefined;
 screen.set({base: base});
 test.assert(reads == 3 && account.info_energy.text == 'N/A' && !#is_defined(balance.energy.loss));
 for (type of ['economy', 'labs', 'psych']) {
 	test.assert(allocation.labels[type].percentage.text == 'N/A' && allocation.labels[type].total.text == 'N/A');
 }
+
+test.assert(displayed_nutrients == {stored: 13});

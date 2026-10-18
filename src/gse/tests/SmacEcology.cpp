@@ -1,6 +1,9 @@
 #include "SmacEcology.h"
 #include "fixtures/SmacEcology.h"
 #include "fixtures/SmacBloom.h"
+#include "fixtures/SmacBloomTerrain.h"
+#include "fixtures/SmacBloomClass.h"
+#include <map>
 #include "game/backend/SmacGameplayRandomState.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/settings/Settings.h"
@@ -34,6 +37,70 @@ auto Values(const b::SmacEcologyDamage& v) {
 bool Overflows(const std::function<void()>& call) {try {call();}catch(const std::overflow_error&) {return true;}return false;}
 }
 void AddSmacEcologyTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC bloom class-only setter matches11 native exact turn rockiness and landmark controls",GT(){
+        for(const auto& row:smac_bloom_class_fixture::cases) {
+            const b::SmacBloomTerrainCell cell{row.before,row.rockiness,0xa5a5a5a5u,row.landmarks,7};
+            game::backend::SmacGameplayRandomState rng(1234,row.seed);size_t draws=0;
+            const auto after=b::ChangeSmacBloomClassOnly(cell,row.after,row.turn!=0,[&]()->int32_t {
+                const auto raw=rng.NextCrtRaw15();
+                if(draws>=row.draws.size() || row.draws[draws]!=raw) {throw std::runtime_error("Native class CRT differs: "+std::string(row.id));}
+                ++draws;return raw;
+            });
+            GT_ASSERT(after.cell.altitude_class==row.after && after.cell.rockiness==row.result_rockiness
+                && after.cell.landmarks==row.result_landmarks && after.cell.items==cell.items && after.cell.affiliation==7
+                && after.native_dirty_mask==row.dirty && draws==row.draws.size() && rng.Crt()==row.result_seed && rng.Shared()==1234,
+                "Native class-only helper differs: "+std::string(row.id));
+        }
+        int draws=0;
+        GT_ASSERT(Rejects([&]{b::ChangeSmacBloomClassOnly({2,1,0,0,15},3,true,[&]{++draws;return 0;});}) && draws==0,
+            "Cross-category conversion silently used same-category helper");
+        GT_ASSERT(Rejects([&]{b::PrepareSmacBloomTerrain({{8,6},16,12,true},INT32_MAX,2,true,
+            [](int32_t,int32_t){return b::SmacBloomTerrainCell{2,1,0,0,15};},[&]{++draws;return 0;});}) && draws==0,
+            "History overflow consumed RNG or invoked signed overflow");GT_OK();
+    });
+
+    task->AddTest("SMAC bloom terrain reproduces26 original selection class slope item and CRT controls",GT(){
+        for(const auto& row:smac_bloom_terrain_fixture::cases) {
+            using Coordinate=std::array<int32_t,2>;
+            std::map<Coordinate,b::SmacBloomTerrainCell> source;
+            for(const auto& cell:row.cells) {source.emplace(cell.coordinate,cell.value);}
+            const auto original=source;
+            const auto query=[&](int32_t x,int32_t y) {
+                if(x<0 || x>=row.map.width || y<0 || y>=row.map.height || ((x+y)&1)) {throw std::runtime_error("Invalid terrain fixture query");}
+                const auto found=source.find({x,y});return found==source.end() ? row.default_tile : found->second;
+            };
+            game::backend::SmacGameplayRandomState rng(1234,row.seed);size_t draws=0;
+            const auto draw=[&]()->int32_t {
+                const auto raw=rng.NextCrtRaw15();
+                if(draws>=row.draws.size() || raw!=row.draws[draws].raw || rng.Crt()!=row.draws[draws].after) {
+                    throw std::runtime_error("Native terrain CRT sequence differs: "+std::string(row.id));
+                }++draws;return raw;
+            };
+            GT_ASSERT(b::AdmitSmacEcologyBloom(row.damage,row.perihelion,row.primary,row.secondary,draw),"Terrain fixture rejected native entry");
+            const auto winner=b::SelectSmacEcologyBloom(row.map,row.base,row.bases,[&](int32_t x,int32_t y) {
+                const auto cell=query(x,y);uint32_t improvements=0;
+                for(const auto bit:std::array<std::pair<uint32_t,uint32_t>,5>{{
+                    {0x10,b::SmacEcologySquare::Mine},{0x40,b::SmacEcologySquare::Solar},{0x8000,b::SmacEcologySquare::Farm},
+                    {0x80000,b::SmacEcologySquare::SoilEnricher},{0x200000,b::SmacEcologySquare::Forest}}}) {
+                    if(cell.items&bit.first) {improvements|=bit.second;}
+                }
+                return b::SmacBloomTile{cell.altitude_class,bool(cell.items&0x20u),bool((cell.items&1u) && cell.affiliation<=7),improvements};
+            },draw);
+            GT_ASSERT(winner && winner->coordinate==row.winner && winner->ordinal==row.ordinal,"Terrain fixture selected a different cell: "+std::string(row.id));
+            auto region=row.map;region.center=winner->coordinate;
+            const auto plan=b::PrepareSmacBloomTerrain(region,row.history,row.difficulty,true,query,draw);
+            GT_ASSERT(plan.history==row.after_history && plan.nominal_cell_budget==row.budget && plan.native_dirty_mask==row.dirty
+                && plan.fungus_cell==row.fungus && draws==row.draws.size() && rng.Shared()==1234 && source==original,
+                "Native terrain history/budget/dirty/direct mutation/RNG differs: "+std::string(row.id));
+            std::map<Coordinate,std::pair<b::SmacBloomTerrainCell,b::SmacBloomTerrainCell>> expected,actual;
+            for(const auto& delta:row.changes) {expected.emplace(delta.coordinate,std::make_pair(delta.before,delta.after));}
+            for(const auto& delta:plan.changes) {
+                GT_ASSERT(actual.emplace(delta.coordinate,std::make_pair(delta.before,delta.after)).second,"Duplicate terrain delta");
+            }
+            GT_ASSERT(actual==expected,"Native final terrain cells differ: "+std::string(row.id));
+        }GT_OK();
+    });
+
     task->AddTest("SMAC bloom selector replays5 original sparse terrain maps and exact CRT states",GT(){
         for(const auto& row:smac_bloom_fixture::cases) {
             game::backend::SmacGameplayRandomState rng(1234,row.seed);size_t draws=0;

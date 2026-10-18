@@ -32,7 +32,8 @@ def load_capture(path):
 def compare(reference, candidate, output_dir):
     inputs = {reference.resolve(), candidate.resolve()}
     for name in ('difference.png', 'overlay.png', 'comparison.json'):
-        if (output_dir / name).resolve() in inputs:
+        output = output_dir / name
+        if output.resolve() in inputs or (output.exists() and any(output.samefile(source) for source in inputs)):
             raise ValueError('diagnostic output would overwrite an input capture')
     original = load_capture(reference)
     actual = load_capture(candidate)

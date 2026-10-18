@@ -59,5 +59,27 @@ class TitleComparisonTests(unittest.TestCase):
             self.assertEqual(reference.read_bytes(), original)
 
 
+    def test_diagnostics_cannot_overwrite_hardlinked_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            reference, candidate = root / 'reference.png', root / 'candidate.png'
+            Image.new('RGB', comparison.SIZE, (10, 20, 30)).save(reference)
+            Image.new('RGB', comparison.SIZE, (30, 20, 10)).save(candidate)
+            originals = [path.read_bytes() for path in (reference, candidate)]
+            for name in ('difference.png', 'overlay.png', 'comparison.json'):
+                for source in (reference, candidate):
+                    with self.subTest(name=name, source=source.name):
+                        output = root / 'diagnostics'
+                        output.mkdir(exist_ok=True)
+                        link = output / name
+                        link.hardlink_to(source)
+                        try:
+                            with self.assertRaisesRegex(ValueError, 'overwrite'):
+                                comparison.compare(reference, candidate, output)
+                            self.assertEqual([path.read_bytes() for path in (reference, candidate)], originals)
+                        finally:
+                            link.unlink()
+
+
 if __name__ == '__main__':
     unittest.main()

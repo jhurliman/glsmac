@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "game/frontend/TileObject.h"
 
@@ -67,7 +68,9 @@ public:
 	const size_t GetId() const;
 
 	const std::string& GetName() const;
-	void SetName( const std::string& name );
+	size_t GetOwnerSlot() const { return m_owner_slot; }
+	void SetIdentity( Slot* owner, faction::Faction* faction, std::string name,
+		bool is_owned, std::unique_ptr<text::InstancedText> label );
 
 	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
@@ -99,7 +102,8 @@ protected:
 private:
 
 	BaseManager* m_bm = nullptr;
-	SlotBadges* const m_slot_badges;
+	SlotBadges* m_slot_badges;
+	size_t m_owner_slot;
 
 	size_t m_id = 0;
 	std::string m_name = "";
@@ -122,7 +126,7 @@ private:
 
 	bool m_is_guarded = false;
 
-	const bool m_is_owned = false;
+	bool m_is_owned = false;
 
 	render_data_t m_render_data = {};
 
@@ -132,6 +136,7 @@ private:
 	void HideBadge();
 
 	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
+	sprite::Sprite* GetSpriteFor( faction::Faction* faction ) const;
 };
 
 }

@@ -211,21 +211,46 @@ M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
 before their smaller PRs land; its contents must not be confused with main.
 
-The [campaign-upkeep checkpoint](validation/campaign-upkeep-2026-10-17.md)
-connects editable workers, actual production selection and manufacture, Colony
-movement and second-base founding, current SUPPORT and mineral-shortage losses,
-and non-last-base starvation with home reassignment. The affected Linux run
-passes 112 native groups with allocation tracking. The working branch also owns
-saved faction economy and actual energy calculations; default treasury/research
-posting awaits the research-choice continuation. Component analysis is reused
-for unchanged source. This is a gameplay integration receipt, not a full platform
-checkpoint or a complete campaign claim.
+The accepted integration now connects [default conventional startup](default-conventional-startup.md),
+editable workers, [production selection](canonical-production-selection.md),
+Scout/Former/Colony manufacture, second-base founding, SUPPORT and shortage
+losses, starvation and home reassignment. [Research and discovery](smac-live-research.md)
+have a [player choice continuation](research-choice-ui.md); saved Former orders
+drive terrain work. [Local campaign saves](local-campaign-save-load.md) have a
+[save/load UI](campaign-save-load-ui.md). These are bounded live systems with
+their own admission limits, not proof of complete campaign or network acceptance.
 
-Research choice and discovery, saved Former orders and terrain work, and their
-player commands are the next parallel consumers. Full conventional combat,
-conquest, networking and complete disk-save acceptance still need integrated
-campaign evidence. Small reviewed PRs continue landing separately from this
-working integration branch.
+Recent reviewed merges add HQ relocation and Energy Bank/Network Node
+construction ([#185](https://github.com/jhurliman/glsmac/pull/185)), individual
+facility fees and insolvency sales ([#186](https://github.com/jhurliman/glsmac/pull/186)),
+and friendly occupied movement ([#188](https://github.com/jhurliman/glsmac/pull/188)).
+[Hostile Scout movement](smac-live-scout-combat.md) merged in
+[#189](https://github.com/jhurliman/glsmac/pull/189) after current-head review
+and the relevant hosted checks passed. It joins actual casualties, saved hostile history,
+mode1 morale and subsequent movement; it does not implement Base capture.
+
+The next three actionable slices are:
+
+1. Finish review and integration of frontend Base ownership refresh. Its live
+   update path must retain stable Base identity, refresh owner badges and
+   labels, and move the Base between owner navigation rings. Focused rendered
+   tests use synthetic pixels and glyphs; original interactive capture remains
+   an integration check.
+2. Connect ordinary undefended enemy-Base entry through the actual capture
+   return or authentic choice continuation. Original capture research has
+   reached the nonmodal Base-screen construction boundary; that is not proof
+   of a required management choice or close before movement can return.
+   Transfer Base/Unit homes, production, population, treasury, territory and
+   saved history together, using the frontend ownership update above.
+3. Compose defended capture and last-Base disposition with conquest and the
+   M2 save checkpoints. Establish the original remaining-unit/pod and victory
+   conditions first. Then exercise the same scenario through network authority;
+   local controlled human tests alone do not satisfy M2.
+
+The earlier [campaign-upkeep checkpoint](validation/campaign-upkeep-2026-10-17.md)
+retains its 112-group affected Linux evidence. The historical checkpoints below
+describe their recorded revisions, not the current completion state. Full SMAC,
+SMAX, strategic AI, presentation and release gates above remain required.
 
 The earlier live-worker and movement integrations at `50d43f9f` and `fa159ff8`
 retain their 16-group and 59-group focused Linux results. Their later production,

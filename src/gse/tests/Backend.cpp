@@ -14,6 +14,13 @@
 #include "game/frontend/unit/UnitDef.h"
 #include "game/frontend/unit/UnitManager.h"
 #include "game/frontend/unit/BadgeDefs.h"
+#include "game/frontend/base/Base.h"
+#include "game/frontend/base/BaseManager.h"
+#include "game/frontend/text/InstancedTextManager.h"
+#include "game/frontend/text/InstancedText.h"
+#include "game/frontend/faction/FactionManager.h"
+#include "loader/font/FontLoader.h"
+#include "types/Font.h"
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/Slot.h"
 #include "game/frontend/tile/TileManager.h"
@@ -2235,6 +2242,68 @@ public:
 		return check();
 	}
 
+
+	std::string CheckFrontendBaseOwnership() {
+		class Textures final : public loader::texture::TextureLoader {
+		public: types::texture::Texture bitmap{512,512};
+		protected:
+			types::texture::Texture* LoadTextureImpl(const std::string&,types::texture::texture_flag_t) override {return &bitmap;}
+			types::texture::Texture* LoadTextureImpl(const std::string&,size_t,size_t,size_t,size_t,uint8_t,float,types::texture::texture_flag_t) override {return &bitmap;}
+		} textures;
+		class Fonts final : public loader::font::FontLoader {
+		protected:
+			types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char size) override {
+				NEWV(font,types::Font,name+std::to_string(size));
+				util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});font->m_dimensions={2,6};
+				for(size_t i=32;i<128;++i) {auto& symbol=font->m_symbols[i];symbol={2,0,1,1,0,1,static_cast<unsigned char*>(malloc(1))};if(!symbol.data) {throw std::bad_alloc();}*symbol.data=255;}
+				auto* result=font;font=nullptr;return result;
+			}
+		} fonts;
+		resource::ResourceManager resources("");
+		for(auto id:{resource::TTF_ARIALN,resource::TTF_ARIALNB}) {resources.m_resource_paths[id]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";}
+		resources.m_custom_resource_paths["synthetic-base-grid"]="synthetic-base-grid";
+		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_fonts=g_engine->m_font_loader;
+		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_font_loader=&fonts;}
+		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_font_loader=old_fonts;});
+		return WithScriptValues([&](GSE_CALLABLE)->std::string {
+			auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+			util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+			game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+			game::frontend::tile::Tile captured_tile({2,2}),first_tile({4,2}),second_tile({6,2});
+			scene::Scene scene("Base ownership",scene::SCENE_TYPE_WORLD);
+			game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+			game::frontend::text::InstancedTextManager texts(&sprites);
+			frontend.m_ism=&sprites;frontend.m_itm=&texts;frontend.m_slot_index=0;
+			game::frontend::faction::FactionManager factions(&frontend);
+			game::backend::faction::Faction blue("BLUE","Blue"),red("RED","Red");
+			blue.m_colors.text=types::Color::FromRGB(0,0,255);red.m_colors.text=types::Color::FromRGB(255,0,0);
+			for(auto* definition:{&blue,&red}) {definition->m_bases_render.file="synthetic-base-grid";definition->m_bases_render.cell_width=16;definition->m_bases_render.cell_height=16;factions.DefineFaction(definition);}
+			game::frontend::Slot first(0,factions.GetFactionById("BLUE")),second(6,factions.GetFactionById("RED"));
+			frontend.m_slots={{0,&first},{6,&second}};
+			game::frontend::base::BaseManager manager(&frontend);
+			util::FinallyGuard detach([&]{frontend.m_ism=nullptr;frontend.m_itm=nullptr;frontend.m_slots.clear();});
+			manager.DefineSlotBadges(0,first.GetFaction());manager.DefineSlotBadges(6,second.GetFaction());
+			const auto add=[&](size_t id,game::frontend::Slot* owner,game::frontend::tile::Tile* tile) {
+				auto* label=texts.CreateInstancedText("Original",manager.m_name_font,owner->GetFaction()->m_colors.text,owner->GetFaction()->m_colors.text_shadow);
+				auto* base=new game::frontend::base::Base(&manager,id,"Original",owner,tile,owner==&first,{0,0,0},label);
+				manager.m_bases.emplace(id,base);manager.m_owner_base_ids[owner->GetIndex()].insert(id);base->Show();return base;
+			};
+			auto* captured=add(9,&second,&captured_tile);auto* friendly=add(10,&first,&first_tile);auto* enemy=add(11,&second,&second_tile);
+			auto* red_actor=captured->GetSprite()->instanced_sprite->actor;auto* blue_actor=friendly->GetSprite()->instanced_sprite->actor;
+			GT_ASSERT(red_actor->HasInstance(1) && red_actor->HasInstance(2) && blue_actor->HasInstance(1),"fixture did not render independent Base instances");
+			manager.UpdateBaseIdentity(captured,0,first.GetFaction(),"Captured");
+			GT_ASSERT(manager.GetBaseById(9)==captured && captured_tile.GetBase()==captured && captured->IsOwned() && captured->GetOwnerSlot()==0
+				&& captured->GetFaction()==first.GetFaction() && captured->GetName()=="Captured","owner refresh replaced stable identity or retained old ownership");
+			GT_ASSERT(!red_actor->HasInstance(1) && red_actor->HasInstance(2) && blue_actor->HasInstance(1) && blue_actor->HasInstance(2),"capture left an old render instance or overwrote an independent Base");
+			GT_ASSERT(manager.GetBaseAfter(captured)==friendly && manager.GetBaseBefore(friendly)==captured && manager.GetBaseAfter(enemy)==enemy,"capture did not move the Base between owner navigation rings");
+			manager.UpdateBaseIdentity(captured,6,first.GetFaction(),"Foreign style");
+			GT_ASSERT(!captured->IsOwned() && captured->GetFaction()==first.GetFaction() && manager.GetBaseAfter(captured)==enemy
+				&& manager.GetBaseAfter(friendly)==friendly,"navigation inferred owner from visual faction");
+			manager.UpdateBaseIdentity(captured,6,second.GetFaction(),"Recaptured");
+			GT_ASSERT(red_actor->HasInstance(2) && red_actor->HasInstance(3) && blue_actor->HasInstance(1) && !blue_actor->HasInstance(3),"repeated ownership/style changes reused stale actor instance IDs");
+			GT_OK();
+		});
+	}
 
 	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) {
 		class BadgeLoader final : public loader::texture::TextureLoader {
@@ -10021,6 +10090,9 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+	task->AddTest("frontend Base ownership refresh retains identity rendering and owner navigation",GT(){
+		return BackendFixture::WithControllerViewport([] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership();});
+	});
 	for ( const int failure : { 6, 7 } ) {
 		task->AddTest( "SMAC gameplay RNG claimed Start entropy failure " + std::to_string( failure - 5 ), GT( failure ) {
 			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );

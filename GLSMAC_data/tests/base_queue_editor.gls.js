@@ -17,7 +17,7 @@ let expected = 'original';
 const base = {id: 701, get_smac_specialist_selection_state: () => { return expected; }};
 const data = {expected_state: 'original', limit: 9, items: [{existing: 0, name: 'Retained'}, {existing: 1, name: 'Former'}], choices: [{source_id: 2, name: 'Scout'}]};
 dialog.open(base, data);
-test.assert(dialog.active && !window.hidden && dialog.caption.text == '2 / 9 pending (port storage limit)');
+test.assert(dialog.active && !window.hidden && dialog.caption.text == '2 / 9 pending');
 test.assert(dialog.choices.children[0].click() == true && #sizeof(dialog.entries) == 3 && dialog.entries[2].source_id == 2);
 let up = undefined;
 for (child of dialog.rows.children) { if (child.text == 'Up' && !#is_defined(up)) { up = child.click; } }

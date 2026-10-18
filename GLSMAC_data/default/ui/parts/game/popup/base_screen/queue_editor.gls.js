@@ -32,7 +32,7 @@ return {
     },
     refresh: () => {
         this.rows.clear();
-        this.caption.text = #to_string(#sizeof(this.entries)) + ' / ' + #to_string(this.data.limit) + ' pending (port storage limit)';
+        this.caption.text = #to_string(#sizeof(this.entries)) + ' / ' + #to_string(this.data.limit) + ' pending';
         if (#sizeof(this.entries) == 0) { this.rows.text({class: 'game-popup-text', top: 8, left: 8, text: 'Empty queue: repeat current production.'}); }
         let index = 0;
         for (entry of this.entries) {

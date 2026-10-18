@@ -110,6 +110,25 @@ public:
 		std::unique_ptr<Data> m_data;
 	};
 	PreparedConventionalRemoval PrepareConventionalRemoval( GSE_CALLABLE, const std::vector<size_t>& ids, PreparedConventionalUnit* created = nullptr );
+	// Last-base disposition: retire this owner's complete old roster and stage
+	// the admitted restart package at one site. The Base caller commits its own
+	// registry and faction state in the same accumulation, before Notify.
+	class PreparedFactionUnits {
+	public:
+		~PreparedFactionUnits();
+		PreparedFactionUnits( PreparedFactionUnits&& ) noexcept;
+		PreparedFactionUnits& operator=( PreparedFactionUnits&& ) noexcept;
+		void Commit() noexcept;
+		void Notify( GSE_CALLABLE );
+	private:
+		friend class UnitManager;
+		struct Data;
+		explicit PreparedFactionUnits( std::unique_ptr<Data> data );
+		std::unique_ptr<Data> m_data;
+	};
+	PreparedFactionUnits PrepareFactionUnits( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* destination,
+		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,
+		const map::SmacWorkerKnowledge& territory, PreparedConventionalUnit* transient = nullptr );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;

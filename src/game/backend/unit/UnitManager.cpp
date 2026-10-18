@@ -375,6 +375,140 @@ void UnitManager::PreparedConventionalRemoval::Notify(GSE_CALLABLE) {
     }
 }
 
+struct UnitManager::PreparedFactionUnits::Data {
+    UnitManager* manager;
+    map::tile::Tile* destination;
+    PreparedConventionalUnit* transient;
+    std::optional<PreparedConventionalRemoval> removal;
+    std::vector<std::unique_ptr<Unit>> candidates;
+    std::vector<Unit*> published;
+    std::map<size_t,Unit*> units;
+    std::vector<size_t> order;
+    std::unordered_map<size_t,unit_update_t> updates;
+    std::map<map::tile::Tile*,std::map<size_t,Unit*>> occupants;
+    std::optional<map::SmacWorkerKnowledge> knowledge;
+    std::pair<SmacMovementHistory*,size_t> history{nullptr,0};
+    bool committed=false,notified=false;
+};
+UnitManager::PreparedFactionUnits::PreparedFactionUnits(std::unique_ptr<Data> data):m_data(std::move(data)) {}
+UnitManager::PreparedFactionUnits::~PreparedFactionUnits() = default;
+UnitManager::PreparedFactionUnits::PreparedFactionUnits(PreparedFactionUnits&&) noexcept = default;
+UnitManager::PreparedFactionUnits& UnitManager::PreparedFactionUnits::operator=(PreparedFactionUnits&&) noexcept = default;
+
+UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,slot::Slot* owner,map::tile::Tile* destination,
+    const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
+    PreparedConventionalUnit* transient) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacLocalHumanOwner(owner);RequireConventionalUnitsReady();
+    if(replacements.size()>8 || (replacements.empty() ? destination!=nullptr : destination==nullptr)) {
+        THROW("Faction disposition requires at most eight replacements at one admitted site");
+    }
+    const auto& participant=m_game->RequireSmacProductionOwner(owner);
+    const auto simulation_id=participant.simulation_id;
+    std::vector<size_t> removed;
+    for(const auto id:m_unit_order) {
+        const auto* unit=GetUnit(id);
+        if(!unit) {THROW("Faction disposition Unit order is incomplete");}
+        if(unit->m_owner==owner) {removed.push_back(id);}
+    }
+    if(transient) {
+        if(!transient->m_data || !transient->m_data->candidate || transient->m_data->manager!=this
+            || transient->m_data->published || transient->m_data->candidate->m_owner!=owner
+            || transient->m_data->id!=Unit::GetNextId()) {THROW("Faction disposition transient is not its pending factory");}
+        removed.push_back(transient->m_data->id);
+    }
+    auto data=std::make_unique<PreparedFactionUnits::Data>();data->manager=this;data->destination=destination;data->transient=transient;
+    data->removal.emplace(PrepareConventionalRemoval(GSE_CALL,removed,transient));
+    const auto& removal=*data->removal->m_data;
+    if(!removal.knowledge) {THROW("Faction disposition requires saved sight and territory");}
+    data->units=removal.units;data->order=removal.order;data->updates=removal.updates;data->occupants=removal.occupants;
+    auto knowledge=removal.knowledge->CopyData();const auto claims=territory.CopyData();
+    if(knowledge.width!=claims.width || knowledge.height!=claims.height || knowledge.horizontal_wrap!=claims.horizontal_wrap
+        || knowledge.tiles.size()!=claims.tiles.size()) {THROW("Faction disposition territory geometry differs");}
+    for(size_t i=0;i<knowledge.tiles.size();++i) {knowledge.tiles[i].claimant=claims.tiles[i].claimant;}
+    knowledge.bases=claims.bases;
+    const uint64_t first=uint64_t(Unit::GetNextId())+(transient ? 1u : 0u);
+    if(!replacements.empty() && (!first || first>=uint64_t(INT64_MAX) || first>=SIZE_MAX
+        || replacements.size()>uint64_t(INT64_MAX)-first || replacements.size()>SIZE_MAX-first)) {
+        THROW("Faction disposition has no available Unit identity range");
+    }
+    data->candidates.reserve(replacements.size());data->published.resize(replacements.size(),nullptr);
+    uint8_t visibility=0;
+    if(!replacements.empty()) {
+        const auto actual=m_game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+        const auto sight=m_game->PrepareConventionalSight(first,simulation_id,destination,nullptr);
+        if(!sight) {THROW("Restart site has no admitted sight producer");}
+        const auto explored=sight->CopyData();
+        auto& remembered=knowledge.remembered[simulation_id];
+        if(remembered.empty()) {remembered.resize(knowledge.tiles.size());}
+        for(size_t i=0;i<knowledge.tiles.size();++i) {
+            knowledge.tiles[i].explored_by|=explored.tiles[i].explored_by;
+            // Preserve any transient-factory reveal, then apply the new site's
+            // actual refreshes rather than replacing the complete old memory.
+            if(actual.remembered[simulation_id].empty() || explored.remembered[simulation_id][i]!=actual.remembered[simulation_id][i]) {
+                remembered[i]=explored.remembered[simulation_id][i];
+            }
+        }
+        for(auto& observation:knowledge.units) {
+            const auto changed=std::find_if(explored.units.begin(),explored.units.end(),[&](const auto& row){return row.id==observation.id;});
+            if(changed==explored.units.end()) {THROW("Restart sight lost a surviving Unit observation");}
+            observation.visible_to|=changed->visible_to;
+        }
+        const auto created=std::find_if(explored.units.begin(),explored.units.end(),[&](const auto& row){return row.id==first;});
+        if(created==explored.units.end()) {THROW("Restart factory sight lacks its new identity");}
+        visibility=created->visible_to;
+        data->occupants.try_emplace(destination,destination->units);
+    }
+    const ConventionalUnitResolver resolver=[this](const auto& state,const auto* slot){return ResolveConventional(state,slot);};
+    for(size_t i=0;i<replacements.size();++i) {
+        const auto& spec=replacements[i];const auto& state=spec.second;const auto id=static_cast<size_t>(first+i);
+        if(state.owner_simulation_id!=simulation_id || state.home!=ConventionalUnitState::Home::None || state.home_base_id
+            || state.stored_morale!=1 || state.damage || state.spent || state.failed_move
+            || state.work_order!=ConventionalUnitState::WorkOrder::None || state.work_progress) {
+            THROW("Restart factory requires fresh owned unhomed Unit state");
+        }
+        ValidateConventionalCreation(id,spec.first,owner,destination,state,resolver);
+        auto candidate=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,id,spec.first,owner,state));
+        if(!i) {data->history=PreparePlacementHistory(*candidate,destination);}
+        if(!data->units.emplace(id,candidate.get()).second || !data->occupants.at(destination).emplace(id,candidate.get()).second
+            || !data->updates.emplace(id,unit_update_t{UUO_SPAWN,candidate.get()}).second) {THROW("Restart Unit publication identity conflicts");}
+        data->order.push_back(id);knowledge.units.push_back({id,visibility,false});data->candidates.push_back(std::move(candidate));
+    }
+    // Own departing positions and Base removal are observed by their owner.
+    // Other observers keep their independently retained memories.
+    auto& memory=knowledge.remembered[simulation_id];
+    if(!memory.empty()) {
+        for(const auto& tile:data->occupants) {
+            const auto index=tile.first->coord.y*(knowledge.width/2)+tile.first->coord.x/2;
+            if(memory[index]) {memory[index]->unit_present=!tile.second.empty();}
+        }
+        for(const auto& base:m_game->GetBM()->GetBases()) {
+            if(base.second->m_owner!=owner || std::any_of(claims.bases.begin(),claims.bases.end(),[&](const auto& row){return row.id==base.first;})) {continue;}
+            const auto* tile=base.second->GetTile();const auto index=tile->coord.y*(knowledge.width/2)+tile->coord.x/2;
+            if(memory[index]) {memory[index]->base_present=false;}
+        }
+    }
+    data->knowledge=map::SmacWorkerKnowledge::Create(knowledge);
+    return PreparedFactionUnits(std::move(data));
+}
+void UnitManager::PreparedFactionUnits::Commit() noexcept {
+    if(!m_data || m_data->committed) {return;}
+    auto& d=*m_data;
+    static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
+        && std::is_nothrow_swappable_v<decltype(d.updates)>);
+    if(d.transient) {d.transient->Commit();}
+    d.removal->Commit();
+    d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);
+    for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
+    for(size_t i=0;i<d.candidates.size();++i) {d.published[i]=d.candidates[i].release();d.published[i]->CommitInitialPlacement(d.destination);}
+    if(d.history.first) {d.history.first->MarkPlaced(d.history.second);}
+    d.manager->m_game->CommitConventionalSight(d.knowledge);d.committed=true;
+}
+void UnitManager::PreparedFactionUnits::Notify(GSE_CALLABLE) {
+    if(!m_data || !m_data->committed || m_data->notified) {THROW("Faction Unit notifications are not pending");}
+    auto& d=*m_data;d.notified=true;d.removal->Notify(GSE_CALL);
+    for(auto* unit:d.published) {d.manager->TriggerSpawnHook(GSE_CALL,unit);}
+}
+
 UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner,
 	map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->CheckRW( GSE_CALL );

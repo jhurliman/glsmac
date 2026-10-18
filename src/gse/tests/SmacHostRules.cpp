@@ -35,7 +35,8 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			}return result;
 		};
 		GlobalSettings host;host.SelectRuleset("smac");host.InitializeHostRules(source);fixture::AcceptWorldSize(host);
-		const SmacCombatRules expected{-7,INT32_MAX,INT32_MIN};
+		SmacCombatRules expected{-7,INT32_MAX,INT32_MIN};
+		expected.psi_ratios=SmacCombatRules::PsiRatios{{{18,19},{19,20},{20,21}}};
 		GT_ASSERT(host.GetSmacCombatRules() && *host.GetSmacCombatRules()==expected,"source combat percentages were defaulted or clamped");
 		const auto wire=host.Serialize().ToString();GlobalSettings client;client.Deserialize(types::Buffer(wire));
 		GT_ASSERT(client.Serialize().ToString()==wire,"combat profile did not survive host settings");
@@ -50,6 +51,38 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT(Rejects([&]{SmacCombatRules::Deserialize(types::Buffer(expected.Serialize().ToString().substr(0,length)));}),"truncated combat profile accepted");
 		}
 		host.ResetRuleset();GT_ASSERT(!host.GetSmacCombatRules(),"reset retained combat profile");GT_OK();
+	});
+	task->AddTest("SMAC PSI ratios retain source fields and reject host replacement without inventing legacy values",GT(){
+		const auto source=[](const std::string& ratios) {
+			auto text=fixture::Source("alpha.txt");
+			const auto start=text.find("#RULES\n")+7;auto row=start;
+			for(size_t i=1;i<18;++i) {row=text.find('\n',row)+1;}
+			text.replace(row,text.find('\n',row)-row,ratios);return text;
+		};
+		const auto read=[&](const std::string& ratios) {return loader::txt::SmacRulesTXTLoader::ParseCombatRules(source(ratios));};
+		const auto profile=read("-2147483648,+2147483647, ; signed metadata, no default ratio");
+		GT_ASSERT(profile.psi_ratios && profile.psi_ratios->at(0)==(std::array<int32_t,2>{INT32_MIN,INT32_MAX}),"ratio fields were clamped or replaced");
+		GT_ASSERT(read("0,0,").psi_ratios->at(0)==(std::array<int32_t,2>{0,0}),"source ingestion imposed arithmetic division rules");
+		for(const auto* malformed:{"3,","3,,2,","3,2,1,","3,nope,","2147483648,2,"}) {
+			GT_ASSERT(Rejects([&]{read(malformed);}),"malformed PSI ratio accepted");
+		}
+		GlobalSettings host;host.SelectRuleset("smac");
+		host.InitializeHostRules([&](const std::string& name){return name=="alpha.txt"?source("3,2,"):fixture::Source(name);});fixture::AcceptWorldSize(host);
+		const auto saved=host.Serialize().ToString();GlobalSettings client;client.Deserialize(types::Buffer(saved));
+		GlobalSettings changed;changed.SelectRuleset("smac");
+		changed.InitializeHostRules([&](const std::string& name){return name=="alpha.txt"?source("4,3,"):fixture::Source(name);});fixture::AcceptWorldSize(changed);
+		GT_ASSERT(Rejects([&]{client.Deserialize(changed.Serialize());}) && client.Serialize().ToString()==saved,"locked host replaced only the PSI ratio");
+		types::Buffer world;game::backend::world_snapshot::WriteHeader(world,changed);
+		GT_ASSERT(Rejects([&]{game::backend::world_snapshot::ValidateHeader(world,client);}),"world accepted a changed PSI ratio");
+		types::Buffer legacy;legacy.WriteInt(1);legacy.WriteInt(25);legacy.WriteInt(25);legacy.WriteInt(25);
+		const auto old=SmacCombatRules::Deserialize(types::Buffer(legacy.ToString()));
+		GT_ASSERT(!old.psi_ratios && !SmacCombatRules::Deserialize(old.Serialize()).psi_ratios,"legacy ratio absence became installed defaults");
+		const auto encoded=profile.Serialize().ToString();
+		GT_ASSERT(SmacCombatRules::Deserialize(types::Buffer(encoded))==profile,"signed PSI ratio codec changed values");
+		for(size_t length=0;length<encoded.size();++length) {
+			GT_ASSERT(Rejects([&]{SmacCombatRules::Deserialize(types::Buffer(encoded.substr(0,length)));}),"truncated PSI ratio profile accepted");
+		}
+		GT_OK();
 	});
 	task->AddTest( "SMAC host preparation loads once while SMAX and joining never read rules files", GT() {
 		for ( const auto role : { LocalSettings::NR_NONE, LocalSettings::NR_SERVER } ) {

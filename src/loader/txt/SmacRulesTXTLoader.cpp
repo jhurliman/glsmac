@@ -294,7 +294,19 @@ game::backend::settings::SmacCombatRules SmacRulesTXTLoader::ParseCombatRules( c
 		if(!field.empty() && field.back()==',') {field.pop_back();field=util::String::TrimCopy(field);}
 		return ParseField(field,"row "+std::to_string(row),1,"RULES");
 	};
-	return {percentage(22),percentage(28),percentage(30)};
+	game::backend::settings::SmacCombatRules result{percentage(22),percentage(28),percentage(30)};
+	result.psi_ratios.emplace();
+	for(size_t i=0;i<result.psi_ratios->size();++i) {
+		const auto row=18+i;
+		auto line=util::String::TrimCopy(rules[row-1].substr(0,rules[row-1].find(';')));
+		if(!line.empty() && line.back()==',') {line.pop_back();}
+		const auto fields=util::String::Split(line,',');
+		if(fields.size()!=2 || std::count(line.begin(),line.end(),',')!=1) {
+			throw std::invalid_argument("SMAC PSI RULES row requires two ratio fields");
+		}
+		for(size_t column=0;column<2;++column) {(*result.psi_ratios)[i][column]=ParseField(fields[column],"row "+std::to_string(row),column+1,"RULES");}
+	}
+	return result;
 }
 
 game::backend::settings::SmacTerritoryRules SmacRulesTXTLoader::ParseTerritoryRules( const std::string& source ) {

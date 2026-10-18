@@ -131,7 +131,8 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     candidate->m_pops.at(1)=coordinates.empty() ? Pop(nullptr,1,specialists.at(result.specialists.types[0]),0)
         : Pop(nullptr,1,worker,0,m_game->GetMap()->GetTile(coordinates[0].x,coordinates[0].y));
     candidate->ValidateAllocationProjection(false);
-    candidate->m_accumulated_nutrients=result.workers.intake[0]<global.GetSmacResourceRules()->nutrients_per_citizen ? -1 : 0;
+    candidate->m_smac_upkeep_cache=PrepareNewBaseResourceCache(*candidate,result.workers.intake,false,colony.m_id);
+    candidate->m_accumulated_nutrients=candidate->m_smac_upkeep_cache->calculation.nutrients.normalized_stored;
     auto removal=m_game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{colony.m_id});
     PrepareBaseName(candidate.get());
     auto* base=candidate.get();

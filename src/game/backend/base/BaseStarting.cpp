@@ -11,12 +11,54 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/UnitManager.h"
 #include "gc/Space.h"
 #include <algorithm>
 #include <limits>
 #include <memory>
 
 namespace game::backend::base {
+
+SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candidate,
+    const std::array<int32_t,3>& intake, bool startup, std::optional<size_t> consumed_unit ) const {
+    if(startup) {m_game->RequireConventionalStartupClaim();}
+    if(!m_game->m_simulation || !candidate.m_resource_context || GetBase(candidate.m_id)
+        || candidate.GetGame()!=m_game || candidate.m_pops.size()!=1 || !m_game->GetUM()) {
+        THROW("Initial resource cache requires the prepared new Base");
+    }
+    const auto* social=m_game->m_simulation->value.social.Find(candidate.m_resource_context->owner_simulation_id);
+    const auto phase=startup ? faction::SmacFactionSocialState::Phase::Early : faction::SmacFactionSocialState::Phase::Refreshed;
+    if(!social || social->phase!=phase) {THROW("Initial resource cache has no current owner SUPPORT");}
+    // The existing candidate/knowledge projection proves that a fresh Base ID
+    // has no home links. Retain every surviving actual record as Ignored, using
+    // the actual current rating for the allowance; do not invent retained Early
+    // social ratings or an empty global Unit roster.
+    auto support=SmacUnitSupport::Recalculate(social->current.at(2),1,{});
+    const auto* um=m_game->GetUM();support.units.reserve(um->GetUnits().size());
+    for(const auto id:um->GetUnitRecordOrder()) {
+        const auto* current=um->GetUnit(id);
+        if(!current || !current->IsConventional() || current->m_id!=id) {THROW("Initial support has an invalid Unit record");}
+        if(current->Conventional().home_base_id==candidate.m_id || (startup && current->Conventional().home_base_id)) {
+            THROW("Initial resource cache cannot assume an existing home is absent");
+        }
+        if(consumed_unit!=id) {support.units.push_back({id,SmacSupportDisposition::Ignored});}
+    }
+    int32_t multiplier_steps=0;
+    for(const auto& entry:candidate.m_facilities) {
+        if(!entry.second || GetFacilityDef(entry.first)!=entry.second) {THROW("Initial resource cache facility is not registered");}
+        ValidateSmacFacilityDef(entry.second);
+        if(!entry.second->m_smac_source_id || *entry.second->m_smac_source_id<1 || *entry.second->m_smac_source_id>33) {
+            THROW("Initial resource cache requires resolved local facility roles");
+        }
+        const auto source=*entry.second->m_smac_source_id;
+        if(source>=19 && source<=22) {++multiplier_steps;}
+    }
+    const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();
+    if(!rules) {THROW("Initial resource cache has no frozen nutrient demand");}
+    return {FinishSmacResourceIntake({intake[0],intake[1],intake[2]},rules->nutrients_per_citizen,
+        candidate.m_accumulated_nutrients,support.mineral_support,multiplier_steps),std::move(support)};
+}
 
 Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* tile,
     const std::string& worker_id, const std::array< std::string, 7 >& specialist_ids ) {
@@ -115,7 +157,8 @@ Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::
     candidate->ValidateAllocationProjection(false);
     // Initial food is zero. Preserve the actual first N-calculation's deficit
     // marker without posting a turn of food or mineral production.
-    candidate->m_accumulated_nutrients = result.workers.intake[0] < global.GetSmacResourceRules()->nutrients_per_citizen ? -1 : 0;
+    candidate->m_smac_upkeep_cache=PrepareNewBaseResourceCache(*candidate,result.workers.intake,true);
+    candidate->m_accumulated_nutrients=candidate->m_smac_upkeep_cache->calculation.nutrients.normalized_stored;
     PrepareBaseName(candidate.get());
     auto* result_base=candidate.get();
     RegisterBase(result_base); // prepares every allocating registry/update copy

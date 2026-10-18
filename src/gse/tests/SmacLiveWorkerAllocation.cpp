@@ -333,6 +333,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 && founded->GetProductionState()->baseline_item==founded->GetProductionState()->current_item
                 && founded->GetProductionState()->baseline_minerals==founded->GetProductionState()->minerals
                 && founded->GetProductionState()->queue->empty(),"later Base used startup HQ/target/credit or omitted baselines");
+            const auto& cache=founded->GetSmacUpkeepCache();const auto fresh=founded->PrepareSmacResourceCalculation();
+            GT_ASSERT(cache && cache->calculation.raw_intake==fresh.raw_intake
+                && cache->calculation.nutrients.surplus==fresh.nutrients.surplus && cache->calculation.minerals.surplus==fresh.minerals.surplus
+                && cache->calculation.nutrients.stored_before==0 && cache->calculation.nutrients.normalized_stored==founded->GetAccumulatedNutrients()
+                && cache->support.mineral_support==0 && cache->support.units.size()==1 && cache->support.units.front().id==91
+                && cache->support.units.front().disposition==SmacSupportDisposition::Ignored,
+                "running founding omitted its actual initial calculation or retained the consumed Pod in support");
             const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
             GT_ASSERT(after.remembered==knowledge.remembered && after.observers==knowledge.observers && after.units.size()+1==knowledge.units.size(),
                 "founding replayed memory/observer state or retained Pod observation");

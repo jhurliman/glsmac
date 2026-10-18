@@ -112,6 +112,8 @@ private:
 	friend class gse::tests::BaseAllocationFixture;
 	std::array< bool, 89 > GetSmacSpecialistKnowledge( const Base& base ) const;
 	void RequireSmacWorkerRecalculation() const;
+	SmacBaseUpkeepCache PrepareNewBaseResourceCache( const Base& candidate, const std::array<int32_t,3>& intake,
+		bool startup, std::optional<size_t> consumed_unit = {} ) const;
 	// Called only by the actual population-removal branch; owns retirement.
 	void RemoveStarvedSmacBase( GSE_CALLABLE, Base& base );
 	using tile_key_t = std::pair< size_t, size_t >;

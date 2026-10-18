@@ -3979,11 +3979,23 @@ public:
 			for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 			const std::array<std::string,7> roles{{"TECHNICIAN","DOCTOR","LIBRARIAN","ENGINEER","EMPATH","THINKER","TRANSCEND"}};
 			const auto require=[](bool ok,const char* why) {if(!ok) {throw std::runtime_error(why);}};
-			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require) {
+			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require,scenario) {
 				N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);N_GETPROP_UNWRAP(base,args,"base",Base);
 				++callbacks;const auto state=base->GetSmacResourceContext();
 				require(m_game.GetTurnId()==0 && !m_game.m_simulation->value.social.Find(state.owner_simulation_id)->retained,"first Base refreshed social before callback");
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
+				const auto& cache=base->GetSmacUpkeepCache();
+				require(cache && cache->calculation.nutrients.intake==(scenario==1 ? 4 : 2)
+					&& cache->calculation.nutrients.demand==2 && cache->calculation.nutrients.surplus==(scenario==1 ? 2 : 0)
+					&& cache->calculation.nutrients.stored_before==0 && cache->calculation.nutrients.normalized_stored==0
+					&& cache->calculation.minerals.intake==1 && cache->calculation.minerals.demand==0,
+					"first Base callback lost its actual initial resource pass");
+				const auto& order=m_game.GetUM()->GetUnitRecordOrder();
+				require(cache->support.free_allowance==2 && cache->support.minerals_per_paid_unit==1
+					&& cache->support.eligible_count==0 && cache->support.paid_count==0 && cache->support.mineral_support==0
+					&& cache->support.units.size()==order.size(),"first Base cache invented retained SUPPORT or omitted actual homeless roster");
+				for(size_t i=0;i<order.size();++i) {require(cache->support.units[i].id==order[i]
+					&& cache->support.units[i].disposition==SmacSupportDisposition::Ignored,"first Base cache reordered or charged a homeless Unit");}
 				return VALUE(value::Undefined);
 			}));
 			const auto* raw_before=&m_game.m_simulation->value.gameplay_random;

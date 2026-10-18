@@ -1,0 +1,661 @@
+{
+  "research_id": "RE-SMAC-CLEAN-M-001",
+  "status": "original-x86 checked; not full-game observed",
+  "specification": "clean-minerals-and-ecology-burden.md",
+  "input_contract": "History transitions apply only after the specified original completion or selected-bloom stage is reached. Random draws are supplied nonnegative RNG outputs, not probabilities. Arithmetic results precede human/faction/global/final ecology scaling; they are NOT final displayed eco-damage.",
+  "cases": [
+    {
+      "kind": "arithmetic",
+      "name": "initial allowance",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-001"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "first retained bloom raises allowance",
+      "inputs": {
+        "history": 1,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 17,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 3
+      },
+      "id": "CLEAN-M-002"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "allowance consumed by terraforming before minerals",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 80,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 10,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 6,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 14
+      },
+      "id": "CLEAN-M-003"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "terraforming exceeds allowance",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 160,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 20,
+        "residual_terraforming": 4,
+        "remaining_clean_allowance": 0,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 24
+      },
+      "id": "CLEAN-M-004"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "negative forest input retains negative residual",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": -1,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": -1,
+        "residual_terraforming": -1,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 3
+      },
+      "id": "CLEAN-M-005"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "nanoreplicator halves mineral remainder",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": true,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-006"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "singularity substitutes for nanoreplicator in ecology",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": true,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-007"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "nanoreplicator and singularity do not stack",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": true,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": true,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-008"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "preserve adds divisor",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": true,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-009"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "temple adds divisor",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": true,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-010"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "pholus adds divisor",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 25,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": true
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-011"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "all divisor effects",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 39,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": true,
+        "centauri_preserve": true,
+        "temple_of_planet": true,
+        "singularity_inductor": true,
+        "pholus_mutagen": true
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 5,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-012"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "mining satellite deduction capped by population",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 20,
+        "population": 3,
+        "mining_satellites": 8,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 3,
+        "pre_faction_ecology_burden": 1
+      },
+      "id": "CLEAN-M-013"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "negative satellite count gives zero deduction",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 20,
+        "population": 5,
+        "mining_satellites": -1,
+        "nanoreplicator": false,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 1,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-014"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "negative mineral term truncates toward zero",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 0,
+        "processed_minerals": 11,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": true,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 0,
+        "residual_terraforming": 0,
+        "remaining_clean_allowance": 16,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": -2
+      },
+      "id": "CLEAN-M-015"
+    },
+    {
+      "kind": "arithmetic",
+      "name": "residual terraforming is outside mineral divisor",
+      "inputs": {
+        "history": 0,
+        "raw_terraforming_points": 160,
+        "processed_minerals": 0,
+        "population": 5,
+        "mining_satellites": 0,
+        "nanoreplicator": true,
+        "centauri_preserve": false,
+        "temple_of_planet": false,
+        "singularity_inductor": false,
+        "pholus_mutagen": false
+      },
+      "expected": {
+        "scaled_terraforming": 20,
+        "residual_terraforming": 4,
+        "remaining_clean_allowance": 0,
+        "ecological_divisor": 2,
+        "mining_satellite_deduction": 0,
+        "pre_faction_ecology_burden": 4
+      },
+      "id": "CLEAN-M-016"
+    },
+    {
+      "kind": "completion",
+      "name": "tree_farm completed at history 0",
+      "inputs": {
+        "history": 0,
+        "facility": "tree_farm"
+      },
+      "expected_history": 0,
+      "id": "CLEAN-M-017"
+    },
+    {
+      "kind": "completion",
+      "name": "hybrid_forest completed at history 0",
+      "inputs": {
+        "history": 0,
+        "facility": "hybrid_forest"
+      },
+      "expected_history": 0,
+      "id": "CLEAN-M-018"
+    },
+    {
+      "kind": "completion",
+      "name": "centauri_preserve completed at history 0",
+      "inputs": {
+        "history": 0,
+        "facility": "centauri_preserve"
+      },
+      "expected_history": 0,
+      "id": "CLEAN-M-019"
+    },
+    {
+      "kind": "completion",
+      "name": "temple_of_planet completed at history 0",
+      "inputs": {
+        "history": 0,
+        "facility": "temple_of_planet"
+      },
+      "expected_history": 0,
+      "id": "CLEAN-M-020"
+    },
+    {
+      "kind": "completion",
+      "name": "other completed at history 0",
+      "inputs": {
+        "history": 0,
+        "facility": "other"
+      },
+      "expected_history": 0,
+      "id": "CLEAN-M-021"
+    },
+    {
+      "kind": "completion",
+      "name": "tree_farm completed at history 1",
+      "inputs": {
+        "history": 1,
+        "facility": "tree_farm"
+      },
+      "expected_history": 2,
+      "id": "CLEAN-M-022"
+    },
+    {
+      "kind": "completion",
+      "name": "hybrid_forest completed at history 1",
+      "inputs": {
+        "history": 1,
+        "facility": "hybrid_forest"
+      },
+      "expected_history": 2,
+      "id": "CLEAN-M-023"
+    },
+    {
+      "kind": "completion",
+      "name": "centauri_preserve completed at history 1",
+      "inputs": {
+        "history": 1,
+        "facility": "centauri_preserve"
+      },
+      "expected_history": 2,
+      "id": "CLEAN-M-024"
+    },
+    {
+      "kind": "completion",
+      "name": "temple_of_planet completed at history 1",
+      "inputs": {
+        "history": 1,
+        "facility": "temple_of_planet"
+      },
+      "expected_history": 2,
+      "id": "CLEAN-M-025"
+    },
+    {
+      "kind": "completion",
+      "name": "other completed at history 1",
+      "inputs": {
+        "history": 1,
+        "facility": "other"
+      },
+      "expected_history": 1,
+      "id": "CLEAN-M-026"
+    },
+    {
+      "kind": "completion",
+      "name": "tree_farm completed at history 4",
+      "inputs": {
+        "history": 4,
+        "facility": "tree_farm"
+      },
+      "expected_history": 5,
+      "id": "CLEAN-M-027"
+    },
+    {
+      "kind": "completion",
+      "name": "hybrid_forest completed at history 4",
+      "inputs": {
+        "history": 4,
+        "facility": "hybrid_forest"
+      },
+      "expected_history": 5,
+      "id": "CLEAN-M-028"
+    },
+    {
+      "kind": "completion",
+      "name": "centauri_preserve completed at history 4",
+      "inputs": {
+        "history": 4,
+        "facility": "centauri_preserve"
+      },
+      "expected_history": 5,
+      "id": "CLEAN-M-029"
+    },
+    {
+      "kind": "completion",
+      "name": "temple_of_planet completed at history 4",
+      "inputs": {
+        "history": 4,
+        "facility": "temple_of_planet"
+      },
+      "expected_history": 5,
+      "id": "CLEAN-M-030"
+    },
+    {
+      "kind": "completion",
+      "name": "other completed at history 4",
+      "inputs": {
+        "history": 4,
+        "facility": "other"
+      },
+      "expected_history": 4,
+      "id": "CLEAN-M-031"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "human retains selected bloom increment",
+      "inputs": {
+        "history": 0,
+        "human": true,
+        "global_difficulty": 5,
+        "random_draws": []
+      },
+      "expected": {
+        "history": 1,
+        "draws_used": 0
+      },
+      "id": "CLEAN-M-032"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "AI odd first draw retains increment",
+      "inputs": {
+        "history": 0,
+        "human": false,
+        "global_difficulty": 5,
+        "random_draws": [
+          1
+        ]
+      },
+      "expected": {
+        "history": 1,
+        "draws_used": 1
+      },
+      "id": "CLEAN-M-033"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "AI even first draw and nonzero remainder undo increment",
+      "inputs": {
+        "history": 0,
+        "human": false,
+        "global_difficulty": 5,
+        "random_draws": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "history": 0,
+        "draws_used": 2
+      },
+      "id": "CLEAN-M-034"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "AI even first draw and zero remainder retain increment",
+      "inputs": {
+        "history": 0,
+        "human": false,
+        "global_difficulty": 5,
+        "random_draws": [
+          0,
+          6
+        ]
+      },
+      "expected": {
+        "history": 1,
+        "draws_used": 2
+      },
+      "id": "CLEAN-M-035"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "AI easiest difficulty retains without second draw",
+      "inputs": {
+        "history": 0,
+        "human": false,
+        "global_difficulty": 0,
+        "random_draws": [
+          0
+        ]
+      },
+      "expected": {
+        "history": 1,
+        "draws_used": 1
+      },
+      "id": "CLEAN-M-036"
+    },
+    {
+      "kind": "bloom_history",
+      "name": "AI rollback preserves existing history",
+      "inputs": {
+        "history": 4,
+        "human": false,
+        "global_difficulty": 3,
+        "random_draws": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "history": 4,
+        "draws_used": 2
+      },
+      "id": "CLEAN-M-037"
+    }
+  ]
+}

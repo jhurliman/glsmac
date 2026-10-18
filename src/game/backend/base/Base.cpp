@@ -247,6 +247,7 @@ void Base::SetSmacResourceContext( GSE_CALLABLE, const SmacBaseResourceContext& 
 	const auto previous = GetSmacResourceContext();
 	context.Validate();
 	if ( context.owner_simulation_id != previous.owner_simulation_id ) { THROW( "Cannot rebind a base resource context" ); }
+	if(!(context.conquest==previous.conquest)) {THROW("Conquest history requires native capture/upkeep publication");}
 	if ( previous.drone_riots == context.drone_riots ) {
 		// Governor/resource-only edits do not refresh unrelated Unit stats.
 		m_resource_context = context; TriggerUpdate(); return;

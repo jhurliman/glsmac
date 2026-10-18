@@ -233,6 +233,7 @@ private:
 	friend class base::BaseManager; // staged home refresh queues
 	friend class base::Base; // prepared home-morale refresh transaction
 	std::pair< SmacMovementHistory*, size_t > PreparePlacementHistory( const Unit& unit, const map::tile::Tile* tile ) const;
+	void CommitPlacementHistory(const std::pair<SmacMovementHistory*,size_t>& prepared) const noexcept;
 	map::Map* GetMap() const;
 	slot::Slot* GetSlot( const size_t slot_num ) const;
 };

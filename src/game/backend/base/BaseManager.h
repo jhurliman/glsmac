@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "gse/GCWrappable.h"
 
@@ -75,6 +76,18 @@ public:
 		const std::string& worker, const std::array< std::string, 7 >& specialists );
 	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles );
 	void ValidateSmacFounding( const unit::Unit& colony ) const;
+	class PreparedSmacCapture {
+	public:
+		~PreparedSmacCapture();
+		PreparedSmacCapture(PreparedSmacCapture&&) noexcept;
+	private:
+		friend class BaseManager;
+		struct Data;
+		explicit PreparedSmacCapture(std::unique_ptr<Data> data);
+		std::unique_ptr<Data> m_data;
+	};
+	PreparedSmacCapture PrepareSmacCapture(unit::Unit* actor,map::tile::Tile* destination,size_t caller) const;
+	void ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared);
 	struct SmacAbandonmentResult {
 		size_t newborn_id;
 		std::optional<size_t> successor_id;

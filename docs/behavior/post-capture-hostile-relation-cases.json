@@ -1,0 +1,48 @@
+{
+  "research_id": "RE-SMAC-POST-CAPTURE-HOSTILE-RELATION-001",
+  "ruleset": "SMAC",
+  "scope": "One complete ordinary local two-human Scout attack with the capture-produced primary word supplied; not a continuous capture-close-attack replay.",
+  "cases": [
+    {
+      "id": "capture_word_survives_ordinary_hostile_setter_and_attack",
+      "primary_before": [
+        2147524888,
+        2147524888
+      ],
+      "mutual_setter_request": 32784,
+      "all_six_setter_primary_writes_preserve_exact_words": true,
+      "primary_after": [
+        2147524888,
+        2147524888
+      ],
+      "capture_marker_mask": 8192,
+      "keyboard_admitted": true,
+      "gameplay_choice_supplied": false,
+      "normal_wrapper_return": true,
+      "wrapper_return": 0,
+      "return_reason": "normal Unit-count-change exit after defender casualty",
+      "remaining_units": [
+        {
+          "design": 2,
+          "owner": 1,
+          "position": [
+            8,
+            8
+          ],
+          "damage": 9,
+          "morale": 2,
+          "spent": 3,
+          "home": -1,
+          "links": [
+            -1,
+            -1
+          ]
+        }
+      ],
+      "selected": 0,
+      "secondary": null,
+      "crt_draws": 38,
+      "shared_draws": 1
+    }
+  ]
+}

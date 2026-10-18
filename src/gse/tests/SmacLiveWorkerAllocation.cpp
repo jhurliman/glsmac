@@ -255,6 +255,99 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(const int scenario:{2,1,0}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);fixture.BasePresentationRoles(names);
+            std::string saved,own_record,foreign_record;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+                auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+                own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");
+                const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
+                own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                bm->DefineFacility(new FacilityDef("tanks","Tanks","",40,{},3));
+                std::vector<Base*> bases;
+                for(size_t i=0;i<2;++i) {
+                    Base::pops_t pops;
+                    for(size_t p=0;p<(i ? 1u : 2u);++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+                    const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
+                    auto* base=new Base(game,702+i,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20+6*i,16),"Capture "+std::to_string(i),{},pops,41,5,
+                        ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
+                    bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(pops.size())}},Roles());bases.push_back(base);
+                }
+                auto* target=bases[0];target->m_facilities.emplace("tanks",bm->GetFacilityDef("tanks"));
+                actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
+                ConventionalUnitState former{1,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};former.home_base_id=702;
+                auto* remote=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-former"),foreign,game->GetMap()->GetTile(30,16),former);
+                fixture.ResourceState([](auto& state) {
+                    state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
+                    state.economy.at(1).credits=100;state.economy.at(2).credits=200;
+                    state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=3;
+                });
+                auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+                for(int observer=1;observer<=2;++observer) {
+                    knowledge.remembered[observer].resize(knowledge.tiles.size());
+                    for(int y=0;y<64;++y) {for(int x=y&1;x<128;x+=2) {
+                        const auto* tile=game->GetMap()->GetTile(x,y);
+                        knowledge.remembered[observer][y*64+x/2]=Knowledge::Improvements{tile->features,tile->terraforming,tile->base!=nullptr,!tile->units.empty()};
+                    }}
+                }
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));fixture.GameplayRandom({3,3});
+                fixture.Updates();const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
+                auto* survivor=&target->m_pops.at(19);auto* retained=survivor->Wrap(GSE_CALL);auto* retired=target->m_pops.at(20).Wrap(GSE_CALL);
+                if(scenario==2) {
+                    game->GetMap()->GetTile(18,16)->terraforming=TERRAFORMING_MIRROR;
+                    const auto rejected=fixture.Snapshot();
+                    GT_ASSERT(Rejects([&]{um->ValidateConventionalMove(actor,target->GetTile(),0);}) && fixture.Snapshot()==rejected
+                        && fixture.Updates().empty() && Pop::Unwrap(retained)==survivor && retired->type!=VT_UNDEFINED,
+                        "future resource query failure did not restore capture preview authority");GT_OK();
+                }
+                um->ValidateConventionalMove(actor,target->GetTile(),0);
+                GT_ASSERT(fixture.Snapshot()==before && fixture.Updates().empty(),"capture validation published authoritative state or refreshes");
+                if(scenario==1) {
+                    auto roles=names;roles[7]="missing-role";fixture.BasePresentationRoles(roles);
+                    const auto rejected=fixture.Snapshot();
+                    GT_ASSERT(Rejects([&]{fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}) && fixture.Snapshot()==rejected
+                        && fixture.Updates().empty() && target->m_owner==foreign && Pop::Unwrap(retained)==survivor && retired->type!=VT_UNDEFINED,
+                        "late capture publication failure changed Base, Units, wrappers, streams or queues");GT_OK();
+                }
+                own_record=Base::Serialize(own).ToString();foreign_record=Base::Serialize(bases[1]).ToString();
+                fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
+                const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
+                GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==1 && &target->m_pops.at(19)==survivor && Pop::Unwrap(retained)==survivor
+                    && retired->type==VT_UNDEFINED && context.conquest==std::optional<SmacConquestState>({2,50}) && context.owner_simulation_id==1
+                    && context.governor_options==own->GetSmacResourceContext().governor_options && !target->m_facilities.count("tanks"),"capture lost ownership, citizen lifetime, governor or facility rules");
+                GT_ASSERT(actor->GetTile()==target->GetTile() && actor->Conventional().spent==3 && remote->Conventional().home_base_id==703
+                    && remote->GetTile()==game->GetMap()->GetTile(30,16) && remote->m_owner==foreign && um->GetUnits().size()==2
+                    && Unit::GetNextId()==next && game->GetRandom()->GetStateString()==jsf && !fixture.BattlePalette()
+                    && fixture.GameplayRandom()==SmacGameplayRandomState(3,1951609278u),"capture changed movement, remote unit, identities or measured random streams");
+                GT_ASSERT(target->GetAccumulatedNutrients()==5 && production && production->minerals==0 && production->current_item==scout
+                    && production->baseline_item.kind==ProductionItemKind::Stockpile && production->baseline_minerals==0 && production->queue && production->queue->empty()
+                    && Base::Serialize(own).ToString()==own_record && Base::Serialize(bases[1]).ToString()==foreign_record,"capture changed food/control Bases or selected wrong production");
+                bool exact=false;fixture.ResourceState([&](auto& state) {
+                    const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
+                    exact=state.economy.at(1).credits==200 && state.economy.at(2).credits==100 && state.economy.at(1).population_aggregate==111
+                        && state.economy.at(2).population_aggregate==3 && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
+                        && a.directions[2].paired_a==4 && a.directions[2].paired_b==4 && d.directions[1].paired_a==0 && d.losses[2]==0;
+                });GT_ASSERT(exact,"capture differs from original loot and nondeduced history");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!result.empty()) {return "capture: "+result;}
+            if(scenario==0) {
+                ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
+                const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                    restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
+                    GT_ASSERT(base && base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50}) && base->m_owner->GetIndex()==0
+                        && base->m_pops.size()==1 && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
+                        && restored.GameplayRandom()==SmacGameplayRandomState(3,1951609278u) && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record
+                        && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,"actual Start replayed capture or lost saved ownership/history/home/control Bases");GT_OK();
+                });if(!result.empty()) {return "capture restore: "+result;}
+            }
+        }GT_OK();
+    });
+
     task->AddTest("SMAC nonzero initialization clears mutual relation mask and retains battle history",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);
         return fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -274,7 +367,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
     task->AddTest("SMAC live hostile Scout movement joins battle history casualties palette and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
-        for(int scenario=0;scenario<6;++scenario) {
+        for(int scenario=0;scenario<7;++scenario) {
             const auto provider=scenario==5 ? FanaticBattleSource : BattleSource;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(provider,true);
             std::string saved;uint32_t saved_crt=0;size_t survivor_id=0;int32_t winner=0,loser=0;
@@ -294,7 +387,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 fixture.ResourceState([&](auto& state){
                     auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
-                    a.directions[2].primary=d.directions[1].primary=scenario==1 ? 16 : 0;
+                    a.directions[2].primary=d.directions[1].primary=scenario==6 ? 0x8000a118u : scenario==1 ? 16 : 0;
                     a.directions[2].transition_turn=2;d.directions[1].transition_turn=3;
                     a.directions[2].paired_b=5;d.directions[1].paired_b=7;a.bookkeeping=4;d.bookkeeping=7;
                     if(scenario==4) {state.social.factions[0].retained->at(4)=-1;}
@@ -313,8 +406,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(fixture.Snapshot()==before && !fixture.BattlePalette(),"attack validation published random, palette, war or Unit state");
                 size_t hooks=0;bool coherent=true;
                 um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&fixture,game,scenario,&hooks,&coherent) {
-                    ++hooks;bool history=false;fixture.ResourceState([&](auto& state){history=state.hostility.owners.at(1).directions[2].primary==0x80008118u
-                        && state.hostility.owners.at(2).directions[1].primary==0x80008118u;});
+                    ++hooks;const auto word=scenario==6 ? 0x8000a118u : 0x80008118u;bool history=false;
+                    fixture.ResourceState([&](auto& state){history=state.hostility.owners.at(1).directions[2].primary==word
+                        && state.hostility.owners.at(2).directions[1].primary==word;});
                     coherent=coherent && history && fixture.BattlePalette()==9605 && game->GetUM()->GetUnits().size()==(scenario==0 ? 4-hooks : 1);
                     return VALUE(value::Undefined);
                 }));

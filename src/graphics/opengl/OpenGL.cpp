@@ -106,6 +106,15 @@ void OpenGL::Start() {
 	}
 
 	SDL_SetWindowMinimumSize( m_window, 320, 240 );
+	int window_width = 0, window_height = 0;
+	SDL_GetWindowSize( m_window, &window_width, &window_height );
+	if ( window_width < 320 || window_height < 240 ) {
+		SDL_SetWindowSize( m_window, (std::max)(320, window_width), (std::max)(240, window_height) );
+		SDL_GetWindowSize( m_window, &window_width, &window_height );
+	}
+	m_window_size = m_last_window_size = {
+		static_cast<unsigned short>(window_width), static_cast<unsigned short>(window_height)
+	};
 
 	Log( "Initializing OpenGL" );
 
@@ -193,7 +202,7 @@ void OpenGL::Start() {
 		( *it )->Start();
 	}
 
-	UpdateViewportSize( m_options.viewport_width, m_options.viewport_height );
+	UpdateViewportSize( m_window_size.x, m_window_size.y );
 
 	ApplyDefaultViewport();
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );

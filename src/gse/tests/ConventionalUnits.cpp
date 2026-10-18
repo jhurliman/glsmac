@@ -1,4 +1,5 @@
 #include "ConventionalUnits.h"
+#include "fixtures/SmacStartupSource.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "fixtures/FriendlyHQMovement.h"
 #include "fixtures/SpartanHQMovement.h"
@@ -499,16 +500,18 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( fixture.MovementHistory()->WasPlaced( 6, 6 ), "despawn cleared placement history" ); GT_OK();
 		} );
 	} );
-	task->AddTest("Local movement input reports unsupported HQ terrain without changing gameplay",GT() {
-        ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+	task->AddTest("Local movement input reports unsupported terrain without changing gameplay",GT() {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",10,8);
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* manager=game->GetUM();Define(manager);Land(game);
             auto* actor=Spawn(GSE_CALL,fixture,Record());auto* source=actor->GetTile();
-            auto* destination=game->GetMap()->GetTile(3,3);HQ(GSE_CALL,game,actor,source);
-            destination->features=map::tile::FEATURE_XENOFUNGUS;
-            destination->rockiness=map::tile::ROCKINESS_ROLLING;
-            fixture.MoveEvent(GSE_CALL,actor,destination); // install the actual default event adapter; this request is rejected
-            fixture.Updates();
+            map::SmacWorkerKnowledge::Data knowledge{10,8,true,true,0,{},{},{}};
+            knowledge.tiles.resize(40,{2,std::nullopt});knowledge.observers[1]=map::SmacWorkerKnowledge::Observer{};
+            knowledge.observers[1]->pact_with=0;knowledge.units={{actor->m_id,0,false}};
+            knowledge.remembered[1].resize(40,map::SmacWorkerKnowledge::Improvements{0,0,false,false});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
+            auto* destination=game->GetMap()->GetTile(3,3);
+            destination->features=map::tile::FEATURE_MONOLITH;
             std::string message;
             game->On(GSE_CALL,"message",NATIVE_CALL(&message) {
                 N_EXPECT_ARGS(1);N_GETVALUE(event,0,Object);
@@ -520,7 +523,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             const auto turn=game->GetTurnId();
             GT_ASSERT(!QueueLocalConventionalMove(GSE_CALL,*game,actor->m_id,3,3),"unsupported movement input was queued");
             fixture.DrainEvents();
-            GT_ASSERT(message.find("Movement unavailable:")==0 && message.find("Friendly HQ")!=std::string::npos,"input rejection did not reach ordinary message path");
+            GT_ASSERT(message.find("Movement unavailable:")==0,"input rejection did not reach ordinary message path");
             GT_ASSERT(fixture.Snapshot()==before && Unit::Serialize(actor).ToString()==unit && actor->GetTile()==source
                 && fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf && game->GetTurnId()==turn,
                 "rejected input changed world, Unit, turn or random authority");

@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <utility>
 #include <cstdlib>
+#include <fstream>
+#include <iterator>
 
 namespace gse::tests {
 namespace {
@@ -26,6 +28,30 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet ecology header words retain independent signed32 authorities", GT() {
+        for (const int32_t value : {0, 1, 2, -1, 16909060, INT32_MIN, INT32_MAX}) {
+            auto wire = Synthetic();
+            Put(wire, 15 + 0x00c, static_cast<uint32_t>(value));
+            Put(wire, 15 + 0xa44, static_cast<uint32_t>(~value));
+            Put(wire, 15 + 0xa48, static_cast<uint32_t>(value));
+            const auto map = Planet::Decode(wire);
+            GT_ASSERT(map.CumulativeSeaLevelOffset() == value && map.CloudCoverCategory() == ~value
+                && map.NativeLifeCategory() == value && map.Encode() == wire, "Ecology fields aliased, lost sign or changed the map bytes");
+        }
+        GT_OK();
+    });
+    if (const char* asset = std::getenv("GLSMAC_TEST_PLANET_ASSET")) {
+        const std::string path = asset;
+        task->AddTest("SMAC installed Planet ecology header matches original loader1 1 0", GT(path) {
+            std::ifstream input(path, std::ios::binary);
+            GT_ASSERT(input.good(), "Installed Planet asset unavailable");
+            const std::string bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+            const auto map = Planet::Decode(bytes);
+            GT_ASSERT(map.CloudCoverCategory() == 1 && map.NativeLifeCategory() == 1 && map.CumulativeSeaLevelOffset() == 0,
+                "Installed map ecology authority differs from original loader");
+            GT_OK();
+        });
+    }
     task->AddTest("SMAC standard Planet native loader stages terrain topology cancellation and failure atomically", GT() {
         return CheckInstalledPlanetBackend();
     });

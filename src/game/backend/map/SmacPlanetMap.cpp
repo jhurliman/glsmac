@@ -8,6 +8,10 @@ namespace {
 uint32_t Read32(const uint8_t* value) {
     return uint32_t(value[0]) | (uint32_t(value[1]) << 8) | (uint32_t(value[2]) << 16) | (uint32_t(value[3]) << 24);
 }
+int32_t ReadSigned32(const uint8_t* bytes) {
+    const auto value = Read32(bytes);
+    return value <= INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value) - (int64_t(1) << 32));
+}
 }
 
 uint32_t SmacPlanetMap::Tile::Items() const { return Read32(bytes.data() + 8); }
@@ -21,6 +25,9 @@ int32_t SmacPlanetMap::OceanCoverageCategory() const {
     return value<=INT32_MAX ? static_cast<int32_t>(value) : static_cast<int32_t>(int64_t(value)-(int64_t(1)<<32));
 }
 int32_t SmacPlanetMap::WorldSizeCategory() const { return static_cast<int32_t>(Read32(m_header.data() + 0xa30)); }
+int32_t SmacPlanetMap::CloudCoverCategory() const { return ReadSigned32(m_header.data() + 0xa44); }
+int32_t SmacPlanetMap::NativeLifeCategory() const { return ReadSigned32(m_header.data() + 0xa48); }
+int32_t SmacPlanetMap::CumulativeSeaLevelOffset() const { return ReadSigned32(m_header.data() + 0x00c); }
 
 std::string SmacPlanetMap::Encode() const {
     if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }

@@ -332,8 +332,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
             std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
             auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));const auto offer=base->GetSmacHurryOffer();
+            const auto governor_expected=base->SmacGovernorSelectionState();
             game->Event(GSE_CALL,"complete_turn",{});
             game->Event(GSE_CALL,"hurry_smac_production",{{"base",wrapper},{"expected_state",VALUE(value::String,,offer.expected)},{"full",VALUE(value::Bool,,false)},{"amount",VALUE(value::Int,,0)}});
+            game->Event(GSE_CALL,"apply_smac_governor",{{"base",wrapper},{"expected_state",VALUE(value::String,,governor_expected)},{"controls",VALUE(value::Int,,2)}});
             fixture.DrainEvents();
             GT_ASSERT(!bm->GetBase(701) && bm->GetBase(702)==survivor && !wrapper->wrapobj && wrapper->type==VT_UNDEFINED,
                 "Earlier turn did not retire queued Hurry target through actual upkeep");
@@ -2356,18 +2358,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false}); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             std::array<std::string,8> roles; roles[0]=Roles().worker; for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
             fixture.BasePresentationRoles(roles); (void)fixture.Updates();
-            for(const int failure:{0,1,2,3,5,4}) {
+            for(const int failure:{0,1,2,3,5,4,6}) {
                 if(failure==0) {site->features|=FEATURE_XENOFUNGUS;}
                 if(failure==1) {site->rockiness=ROCKINESS_ROCKY;}
                 if(failure==2) {roles[7]="absent-role";}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant=2; game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
                 if(failure==4) {auto value=pod->Conventional(); value.spent=3; um->UpdateConventionalUnit(GSE_CALL,pod,value);}
                 if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=INT32_MAX;});}
+                if(failure==6) {fixture.ResourceState([](auto& state){state.remembered_governor[1].reset();});}
                 const auto before=fixture.Snapshot(); const auto id=Base::GetNextId();
                 GT_ASSERT(Rejects([&]{game->GetBM()->FoundSmacBase(GSE_CALL,*pod,roles);}) && fixture.Snapshot()==before && Base::GetNextId()==id,
                     "rejected founding changed Base/Unit/knowledge or ID");
                 site->features=0; site->rockiness=ROCKINESS_FLAT; roles[7]=Roles().specialists[6];
                 if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=1;});}
+                if(failure==6) {fixture.ResourceState([](auto& state){state.remembered_governor[1]=SmacBaseResourceContext::NewGameGovernorOptions(state.designs.global_difficulty);});}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant.reset(); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
             }
             GT_OK();
@@ -2386,7 +2390,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 game->GetState()->m_settings.global.difficulty_level=difficulty-3;
                 fixture.ResourceState([&](auto& state){
                     state.designs.global_difficulty=difficulty;
-                    state.remembered_governor[1]=SmacBaseResourceContext::NewGameGovernorOptions(difficulty);
+                    state.remembered_governor[1]=0x02000020u; // explicit accepted owner template, independent of startup difficulty
                     state.social.factions.front().retained->at(2)=support;
                     state.social.factions.front().current[2]=support==-2 ? 3 : -4;
                     // Explicit owner1 custom ID64, identical score to actual source2.
@@ -2407,8 +2411,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(founded && founded->GetProductionState()->current_item.smac_source_id==64
                     && founded->GetProductionState()->minerals==(support==-2 ? 0 : game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption),
                     "founding hardcoded Scout or substituted current SUPPORT for retained credit");
-                GT_ASSERT(founded->GetSmacResourceContext().governor_options==(difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
-                    && base->GetSmacResourceContext().governor_options==0x40u,"later founding copied another Base override instead of the initial faction default"); GT_OK();
+                GT_ASSERT(founded->GetSmacResourceContext().governor_options==0x02000020u
+                    && base->GetSmacResourceContext().governor_options==0x40u,"later founding ignored the remembered owner template or copied another Base override"); GT_OK();
             });GT_ASSERT(error.empty(),"founding selection: "+error);
         } GT_OK();
     });

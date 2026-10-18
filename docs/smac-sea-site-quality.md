@@ -20,10 +20,11 @@ exclusions and both clamps. The fixture records the native receipt's SHA256.
 All31 original land cases also exercise the shared entry. These are supplied
 decoded inputs, not a new generator, rendered-game or founding acceptance claim.
 
-The query remains pure and limited to ordinary turns1..100. It neither refreshes
+The query remains pure; the40 cases above cover ordinary turns1..100. It neither refreshes
 cache state nor draws randomness. Actual saved cache ownership, invalidation
-and territory refill remain the next joined live producer. The late-turn fungus
-adjustment, original generation and AI consumers are separate contracts.
+and territory refill remain the next joined live producer. The
+[startup/late-turn extension](smac-site-quality-turns.md) now supplies the shared
+turn-dependent rule. Original generation and AI consumers remain separate.
 
 Validation: cached Linux Debug build; three affected native groups with
 allocation tracking (31 land cases,40 sea cases and domain rejection); scoped

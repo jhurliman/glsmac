@@ -2053,6 +2053,18 @@ public:
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
 				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
+            // Actual Game::RenderTile -> Tile::Render -> Hide/Show path must
+            // retain selection phase, not merely restart a pure timer helper.
+            auto& blink=unit->m_render.badge.blink;
+            using Blink=game::frontend::unit::SelectionBlink;
+            blink.Stop();const auto blink_epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
+            blink.Start(blink_epoch);
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(blink.IsRunning() && blink.Visible(blink_epoch+Blink::HALF_PERIOD),
+                "actual tile redraw restarted selected Unit blink phase");
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(blink.Visible(blink_epoch+Blink::HALF_PERIOD),"repeat redraw changed selected phase");
+            unit->StopBadgeBlink(true);
 			// Publish the real Unit for the production Game widget lookup. Its
 			// scoped owner remains here; remove the entry before either teardown.
 			um->m_units.emplace( 1, unit.get() );
@@ -2446,8 +2458,8 @@ public:
 		};
 		const char* idle="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]";
 		const char* working="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]";
-		const char* none="Former â€” Order: None  |  Stored work: 0";
-		const char* farm="Former â€” Order: Farm  |  Stored work: 0";
+		const char* none="Former — Order: None  |  Stored work: 0";
+		const char* farm="Former — Order: Farm  |  Stored work: 0";
 		const auto before=WorldSnapshot();
 		auto error=script("check",idle,none);if(!error.empty()){return error;}
 		error=script("click","Farm [F]");if(!error.empty()){return error;}

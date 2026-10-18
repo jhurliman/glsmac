@@ -82,7 +82,7 @@ bool SmacVictoryPressure(const SmacVictoryContext& context,const SmacVictoryRequ
 
 bool SmacLeadingHumanDominance(const SmacVictoryContext& context,const SmacDominanceQuery& query,
     const SmacVictoryRequirements& requirements,const settings::SmacTechnologyRules& catalog) {
-    Require(Positive(query.owner) && Positive(query.leader) && context.turn>=0 && query.difficulty>=0 && query.difficulty<=5
+    Require(Positive(query.owner) && query.leader>=0 && query.leader<=7 && context.turn>=0 && query.difficulty>=0 && query.difficulty<=5
         && query.retained_base_count>=0,"Dominance query exceeds the measured domain");
     if(!(context.humans&(1u<<query.owner)) || query.owner!=query.leader
         || query.retained_base_count<=std::max<int64_t>(4,(int64_t(context.turn)+25)/50)) {return false;}

@@ -149,14 +149,12 @@ const std::string Unit::GetMovesString() const {
 }
 
 void Unit::Iterate() {
-	while ( m_render.badge.blink.timer.HasTicked() ) {
-		if ( IsBadgeVisible() ) {
-			HideBadge();
-		}
-		else {
-			ShowBadge();
-		}
-	}
+    if(m_render.badge.blink) {
+        const auto visible=m_badge_defs->IsSelectionBlinkVisible();
+        if(visible!=IsBadgeVisible()) {
+            if(visible) {ShowBadge();} else {HideBadge();}
+        }
+    }
 	while ( m_mover.HasTicked() ) {
 		SetRenderCoords( m_mover.GetPosition() );
 	}
@@ -190,16 +188,15 @@ void Unit::Show() {
 			m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
 		}
 
-		ShowBadge();
-
 		m_render.is_rendered = true;
+		ShowBadge();
 	}
 }
 
 void Unit::Hide() {
 	if ( m_render.is_rendered ) {
 		m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
-		StopBadgeBlink( false );
+		HideBadge(); // Tile redraws hide sprites without ending selection.
 		m_render.is_rendered = false;
 	}
 }
@@ -209,6 +206,7 @@ const bool Unit::IsBadgeVisible() const {
 }
 
 void Unit::ShowBadge() {
+	if(!m_render.is_rendered || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
 }
@@ -237,12 +235,12 @@ void Unit::HideFakeBadge() {
 }
 
 void Unit::StartBadgeBlink() {
-	HideBadge();
-	m_render.badge.blink.timer.SetInterval( m_badge_defs->GetBadgeBlinkInterval() );
+    m_badge_defs->SetSelectionBlinkAdmission(m_um->IsSelectionBlinkAdmitted(this));
+	m_render.badge.blink=true;ShowBadge();
 }
 
 void Unit::StopBadgeBlink( const bool is_badge_shown ) {
-	m_render.badge.blink.timer.Stop();
+	m_render.badge.blink=false;
 	if ( is_badge_shown ) {
 		ShowBadge();
 	}

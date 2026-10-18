@@ -17,6 +17,7 @@ SET( SRC ${SRC}
 	${PWD}/CvrScoutRender.cpp
 	${PWD}/Unit.cpp
 	${PWD}/SmacNativeUnitRecord.cpp
+	${PWD}/NativeUnit.cpp
 	${PWD}/ConventionalUnitState.cpp
 	${PWD}/SmacConventionalStats.cpp
 	${PWD}/Morale.cpp

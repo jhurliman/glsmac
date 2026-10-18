@@ -31,7 +31,32 @@ wire boundaries, direct-morale byte controls and existing-Unit lifecycle
 boundaries. This adds detached native state; the live manager/visibility/
 render/save integration, native AI and complete ecology handler remain open.
 
-Validation: three focused native groups pass from the cached build. Targeted
-correctness analysis reports zero failures for the new production TU. The same
-three groups pass ASan/UBSan with that TU instrumented, other normal objects
-reused and leak checking disabled. No platform matrix was repeated locally.
+The production `Unit` now has a distinct native variant. Its version5/kind2
+record envelope preserves the complete native payload and uses an absent
+controller sentinel independently of native owner0 and ecology attribution.
+Conventional and legacy Units keep their existing version4 bytes. Decode checks
+the world coordinate, canonical presentation definition, source-pool identity,
+and the admitted living, homeless singleton state before claiming a tile.
+
+Native presentation queries resolve Infantry/Psi/reactor components and movement
+quantum from the frozen source catalog. They use the current global turn for
+neutral display level; the manager's explicit opposing-faction query reads the
+retained major-atrocity word. No borrowed conventional retained MORALE, elite
+movement increment, maximum-health field or mutable legacy float is introduced.
+
+This is an integration checkpoint, not completed ecology creation. The complete
+factory still needs owning registry/pool allocation, native initialization and
+counters, event-updated visibility, viewer-context badges, frontend ownership,
+and atomic publication with bloom terrain/history/RNG. Full campaign restore
+with those live entities remains unverified. PR289 stays draft until those
+production paths and their gameplay validation are connected.
+
+Validation: cached incremental build and six focused native groups pass,
+including the production Unit decoder/encoder and presentation query over all
+ten original complete birth records, existing conventional malformed-record
+controls and private-context snapshot restoration. The old record byte-equality
+check caught an unnecessary conventional envelope change; version4 output is
+retained. Targeted correctness analysis passes Unit.cpp, NativeUnit.cpp and
+UnitManager.cpp. The same six groups pass ASan/UBSan with those three production
+TUs plus SmacNativeUnitRecord.cpp instrumented; remaining normal objects are
+reused and leak detection is disabled. No platform matrix was repeated locally.

@@ -6,6 +6,7 @@
 
 #include "Types.h"
 #include "ConventionalUnitState.h"
+#include "SmacNativeUnitRecord.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacScoutCombat.h"
 #include "game/backend/faction/SmacHostileState.h"
@@ -52,6 +53,7 @@ public:
 	void DefineUnit( Def* def );
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
+	SmacNativeUnitStats QueryNativeUnit(const SmacNativeUnitRecord& state,int32_t opposing_faction=0) const;
 	// Same owning accumulation: no callbacks, yields or world mutations between
 	// preparation and commit. Destruction before commit publishes nothing.
 	class PreparedConventionalUnit {
@@ -168,6 +170,7 @@ public:
 private:
 	friend class game::backend::Game;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
+	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	struct PreparedConventionalAttack {
 		Unit* survivor;

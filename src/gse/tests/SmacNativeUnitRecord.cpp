@@ -1,4 +1,15 @@
 #include "SmacNativeUnitRecord.h"
+#include "ConventionalUnits.h"
+#include "fixtures/SmacStartupSource.h"
+#include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/MoraleSet.h"
+#include "game/backend/unit/StaticDef.h"
+#include "game/backend/unit/SpriteRender.h"
+#include "util/FinallyGuard.h"
+#include <memory>
 #include "fixtures/SmacNativeUnitRecord.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
 #include "task/gsetests/GSETests.h"
@@ -19,6 +30,41 @@ std::string Replace(const Record& record,size_t index,int64_t value) {
 }
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC native Unit live record roundtrip keeps owner zero separate from controllers and ecology",GT(){
+        ConventionalUnitFixture fixture;
+        fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* manager=game->GetUM();
+            MoraleSet::morale_values_t names;
+            for(const auto* name:{"Hatchling","Larval Mass","Pre-Boil","Boil","Mature Boil","Great Boil","Demon Boil"}) {names.emplace_back(name);}
+            manager->DefineMoraleSet(new MoraleSet("NATIVE_MORALE",names));
+            manager->DefineUnit(new StaticDef("MindWorms",manager->GetMoraleSet("NATIVE_MORALE"),"Mind Worms",MT_LAND,999,
+                new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            const auto random=fixture.GameplayRandom();
+            for(const auto& literal:smac_native_record_fixture::records) {
+                auto* tile=game->GetMap()->GetTile(literal.x,literal.y);
+                for(auto* corner:tile->elevation.corners) {*corner=100;}tile->Update();
+                types::Buffer wire;wire.WriteInt(5);wire.WriteInt(2);wire.WriteInt(71);wire.WriteString("MindWorms");
+                wire.WriteInt(-1);wire.WriteInt(literal.x);wire.WriteInt(literal.y);wire.WriteString(literal.Serialize().ToString());
+                auto decoded=wire;
+                std::unique_ptr<Unit> unit(Unit::Deserialize(GSE_CALL,decoded,manager));
+                util::FinallyGuard cleanup([&]{tile->units.erase(unit->m_id);});
+                GT_ASSERT(unit->IsNative() && !unit->IsConventional() && !unit->m_owner && unit->Native()==literal,
+                    "Native live state borrowed a controller, dropped fields or lost attribution");
+                GT_ASSERT(Unit::Serialize(unit.get()).ToString()==wire.ToString(),"Live Unit record did not preserve complete native state");
+                const auto presentation=unit->GetPresentation();
+                GT_ASSERT(presentation.movement==1 && presentation.full_movement==1 && presentation.health==1
+                    && presentation.morale==0 && unit->HasMovesLeft(),"Native display used stored floats or stored morale");
+                const auto stats=manager->QueryNativeUnit(unit->Native());
+                GT_ASSERT(stats.quantum==3 && stats.full_allowance==3 && stats.hit_points==10,
+                    "Native stats did not resolve frozen produced design components");
+                GT_ASSERT(Rejects([&]{unit->Legacy();}),"Native record exposed mutable legacy float state");
+            }
+            GT_ASSERT(fixture.GameplayRandom()==random,"Native record load/save/query consumed gameplay RNG");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC native Unit complete record retains ten original ecology births and source ID zero",GT(){
         for(const auto& literal:smac_native_record_fixture::records) {
             auto initialized=Record::InitializeMindWorm(literal.id,0);

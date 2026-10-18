@@ -45,6 +45,10 @@ struct SmacNativeUnitRecord {
     static SmacNativeUnitRecord Deserialize(const std::string& wire);
 };
 
+struct SmacNativeUnitStats {
+    int32_t level, quantum, full_allowance, remaining_allowance, hit_points, maximum_hit_points;
+};
+
 // Owner0/design8 and neutral special markers only. Stored morale and ecology
 // attribution do not select lifecycle level. No AI, combat or RNG side effects.
 int32_t SmacWildMindWormLevel(const SmacNativeUnitRecord& record, int32_t global_turn,

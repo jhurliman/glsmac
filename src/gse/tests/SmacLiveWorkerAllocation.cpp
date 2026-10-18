@@ -1149,8 +1149,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     if(!committed || um->GetUnits().size()!=5 || um->GetUnit(91) || um->GetUnit(92) || um->GetUnit(93)!=foreign
                         || site->units.size()!=4 || Unit::GetNextId()!=first+4) {throw std::runtime_error("callback observed a partial replacement roster");}
                 };
-                um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&){complete();++removed;return VALUE(value::Undefined);});
-                um->On(GSE_CALL,"unit_spawn",NATIVE_CALL(&){complete();++spawned;return VALUE(value::Undefined);});
+                um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&){complete();++removed;return VALUE(value::Undefined);}));
+                um->On(GSE_CALL,"unit_spawn",NATIVE_CALL(&){complete();++spawned;return VALUE(value::Undefined);}));
                 auto* old=static_cast<value::Object*>(um->GetUnit(91)->Wrap(GSE_CALL));
                 auto staged=um->PrepareFactionUnits(GSE_CALL,base->m_owner,site,specs,claims,pending);
                 staged.Commit();committed=true;GT_ASSERT(!removed && !spawned && old->wrapobj,"replacement notified or destroyed borrowed wrappers before publication");

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <limits>
 
 #include "common/Mutex.h"
 
@@ -59,6 +60,13 @@ void glTexImage2D_real( GLenum target, GLint level, GLint internalformat, GLsize
 
 void glTexSubImage2D_real( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels ) {
 	glTexSubImage2D( target, level, xoffset, yoffset, width, height, format, type, pixels );
+}
+
+void glTexImage3D_real(GLenum target,GLint level,GLint internalformat,GLsizei width,GLsizei height,GLsizei depth,GLint border,GLenum format,GLenum type,const void* pixels) {
+	glTexImage3D(target,level,internalformat,width,height,depth,border,format,type,pixels);
+}
+void glTexSubImage3D_real(GLenum target,GLint level,GLint x,GLint y,GLint z,GLsizei width,GLsizei height,GLsizei depth,GLenum format,GLenum type,const void* pixels) {
+	glTexSubImage3D(target,level,x,y,z,width,height,depth,format,type,pixels);
 }
 
 void glDeleteTextures_real( GLsizei n, GLuint* textures ) {
@@ -589,7 +597,16 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 
 	CheckGLThread( source );
 
-	ASSERT( target == GL_TEXTURE_2D, "glBindTexture unknown target " + std::to_string( target ) + " @" + source );
+	ASSERT(target==GL_TEXTURE_2D || target==GL_TEXTURE_2D_ARRAY,"glBindTexture unknown target @"+source);
+	GLint unit=0;glGetIntegerv(GL_ACTIVE_TEXTURE,&unit);
+	if(target==GL_TEXTURE_2D_ARRAY) {
+		auto& bound=m_opengl.current_array_textures[unit];
+		ASSERT(bound!=texture,"array texture already bound @"+source);
+		ASSERT(!texture || !bound,"array texture unit already occupied @"+source);
+		ASSERT(!texture || m_opengl.textures.count(texture),"array texture was not generated @"+source);
+		bound=texture;glBindTexture_real(target,texture);return;
+	}
+	ASSERT(unit==GL_TEXTURE0,"legacy 2D texture requires unit zero @"+source);
 
 	if ( texture ) {
 		ASSERT( m_opengl.textures.find( texture ) != m_opengl.textures.end(), "glBindTexture texture " + std::to_string( texture ) + " was not generated @" + source );
@@ -744,6 +761,32 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 	glTexSubImage2D_real( target, level, xoffset, yoffset, width, height, format, type, pixels );
 }
 
+void MemoryWatcher::GLTexImage3D(GLenum target,GLint level,GLint internalformat,GLsizei width,GLsizei height,GLsizei depth,GLint border,GLenum format,GLenum type,const void* pixels,const std::string& file,size_t line) {
+	std::lock_guard guard(*m_mutex);const auto source=file+":"+std::to_string(line);CheckGLThread(source);
+	ASSERT(target==GL_TEXTURE_2D_ARRAY && level==0 && internalformat==GL_RGBA8 && border==0 && format==GL_RGBA && type==GL_UNSIGNED_BYTE,
+		"unsupported paged texture allocation @"+source);
+	ASSERT(width>0 && height>0 && depth>0,"invalid paged texture dimensions @"+source);
+	ASSERT(size_t(width)<=std::numeric_limits<size_t>::max()/size_t(height)/size_t(depth)/4,"paged texture byte count overflow @"+source);
+	GLint unit=0;glGetIntegerv(GL_ACTIVE_TEXTURE,&unit);const auto bound=m_opengl.current_array_textures.at(unit);
+	ASSERT(bound,"paged texture allocation without a binding @"+source);
+	const size_t bytes=size_t(width)*height*depth*4;
+	auto& allocation=m_opengl.textures.at(bound);
+	DEBUG_STAT_CHANGE_BY(opengl_textures_size,-allocation.size);
+	allocation={bytes,source};DEBUG_STAT_CHANGE_BY(opengl_textures_size,bytes);
+	glTexImage3D_real(target,level,internalformat,width,height,depth,border,format,type,pixels);
+}
+
+void MemoryWatcher::GLTexSubImage3D(GLenum target,GLint level,GLint x,GLint y,GLint z,GLsizei width,GLsizei height,GLsizei depth,GLenum format,GLenum type,const void* pixels,const std::string& file,size_t line) {
+	std::lock_guard guard(*m_mutex);const auto source=file+":"+std::to_string(line);CheckGLThread(source);
+	ASSERT(target==GL_TEXTURE_2D_ARRAY && level==0 && format==GL_RGBA && type==GL_UNSIGNED_BYTE,
+		"unsupported paged texture update @"+source);
+	ASSERT(x>=0 && y>=0 && z>=0 && width>0 && height>0 && depth>0,"invalid paged texture update @"+source);
+	GLint unit=0;glGetIntegerv(GL_ACTIVE_TEXTURE,&unit);
+	ASSERT(m_opengl.current_array_textures.at(unit),"paged texture update without a binding @"+source);
+	DEBUG_STAT_INC(opengl_textures_updates);
+	glTexSubImage3D_real(target,level,x,y,z,width,height,depth,format,type,pixels);
+}
+
 void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
 	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
@@ -756,6 +799,7 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::st
 	ASSERT( it != m_opengl.textures.end(), "glDeleteTextures texture does not exist @" + source );
 
 	ASSERT( m_opengl.current_texture != *textures, "glDeleteTextures destroying texture while it's still bound @" + source );
+	for(const auto& binding:m_opengl.current_array_textures) {ASSERT(binding.second!=*textures,"destroying a bound array texture @"+source);}
 
 	if ( m_opengl.current_framebuffer ) {
 		auto it = m_opengl.framebuffers.find( m_opengl.current_framebuffer );
@@ -1010,7 +1054,9 @@ void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const
 		ASSERT( !m_opengl.current_program, "glUseProgram starting but other program is already active @" + source );
 		auto it = m_opengl.programs.find( program );
 		ASSERT( it != m_opengl.programs.end(), "glUseProgram starting but program not found @" + source );
-		ASSERT( it->second.is_validated, "glUseProgram starting but program not validated @" + source );
+		// Linked programs may be bound to initialize sampler uniforms before
+		// validation. Drawing still requires validation below.
+		ASSERT( it->second.is_linked, "glUseProgram starting but program not linked @" + source );
 		m_opengl.current_program = program;
 	}
 	else {
@@ -1052,6 +1098,7 @@ void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, con
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawElements vertex buffer not bound @" + source );
 	ASSERT( m_opengl.current_index_buffer, "glDrawElements index buffer not bound @" + source );
 	ASSERT( m_opengl.current_program, "glDrawElements program not bound @" + source );
+	ASSERT(m_opengl.programs.at(m_opengl.current_program).is_validated,"draw with unvalidated program @"+source);
 
 	const size_t bpi = 4; // bytes per index, 4 for unsigned int
 	auto it = m_opengl.index_buffers.find( m_opengl.current_index_buffer );
@@ -1076,6 +1123,7 @@ void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum 
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawElementsInstanced vertex buffer not bound @" + source );
 	ASSERT( m_opengl.current_index_buffer, "glDrawElementsInstanced index buffer not bound @" + source );
 	ASSERT( m_opengl.current_program, "glDrawElementsInstanced program not bound @" + source );
+	ASSERT(m_opengl.programs.at(m_opengl.current_program).is_validated,"draw with unvalidated program @"+source);
 
 	const size_t bpi = 4; // bytes per index, 4 for unsigned int
 	auto it = m_opengl.index_buffers.find( m_opengl.current_index_buffer );
@@ -1095,6 +1143,7 @@ void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const
 	CheckGLThread( source );
 
 	ASSERT( mode == GL_TRIANGLE_STRIP, "glDrawArrays unknown mode " + std::to_string( mode ) + " @" + source );
+	ASSERT(m_opengl.current_program && m_opengl.programs.at(m_opengl.current_program).is_validated,"draw with unvalidated program @"+source);
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawArrays vertex buffer not bound @" + source );
 	ASSERT( !m_opengl.current_index_buffer, "glDrawArrays index buffer is bound but not supposed to be @" + source );
 	ASSERT( m_opengl.current_program, "glDrawArrays program not bound @" + source );

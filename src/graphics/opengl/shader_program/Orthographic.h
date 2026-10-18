@@ -10,6 +10,7 @@ class Mesh;
 class Text;
 class FBO;
 class Cache;
+struct TexturePaging;
 
 namespace shader_program {
 
@@ -17,6 +18,7 @@ CLASS( Orthographic, ShaderProgram )
 
 	Orthographic()
 		: ShaderProgram( TYPE_ORTHO ) {};
+	void SetTexturePaging(const TexturePaging* paging,bool smoothen) const;
 
 protected:
 	friend class opengl::Sprite;
@@ -28,6 +30,7 @@ protected:
 	struct {
 		GLuint position;
 		GLuint texture;
+		GLuint paged_texture, logical_size, page_size, page_columns, smoothen;
 		GLuint world;
 		GLuint instances;
 		GLuint light_pos;

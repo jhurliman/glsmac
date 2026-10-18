@@ -22,13 +22,14 @@ void ShaderProgram::Start() {
 	glGetProgramiv( m_gl_shader_program, GL_LINK_STATUS, &success );
 	ASSERT( success, "Shader program linking failed!" );
 
-	glValidateProgram( m_gl_shader_program );
-	glGetProgramiv( m_gl_shader_program, GL_VALIDATE_STATUS, &success );
-	ASSERT( success, "Invalid shader program!" );
-
 	glUseProgram( m_gl_shader_program );
 	Initialize();
 	glUseProgram( 0 );
+	// Sampler bindings are program state. Validate after initialization so
+	// distinct sampler types do not alias the default texture unit zero.
+	glValidateProgram( m_gl_shader_program );
+	glGetProgramiv( m_gl_shader_program, GL_VALIDATE_STATUS, &success );
+	ASSERT( success, "Invalid shader program!" );
 
 	m_enabled = false;
 }

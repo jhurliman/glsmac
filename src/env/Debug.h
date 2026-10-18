@@ -116,6 +116,13 @@ extern debug_stats_t g_debug_stats;
 #define glTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr ) \
     debug::g_memory_watcher->GLTexSubImage2D( _target, _level, _xoffset, _yoffset, _width, _height, format, _type, _ptr, __FILE__, __LINE__ )
 
+#undef glTexImage3D
+#define glTexImage3D(_target,_level,_internal,_width,_height,_depth,_border,_format,_type,_pixels) \
+    debug::g_memory_watcher->GLTexImage3D(_target,_level,_internal,_width,_height,_depth,_border,_format,_type,_pixels,__FILE__,__LINE__)
+#undef glTexSubImage3D
+#define glTexSubImage3D(_target,_level,_x,_y,_z,_width,_height,_depth,_format,_type,_pixels) \
+    debug::g_memory_watcher->GLTexSubImage3D(_target,_level,_x,_y,_z,_width,_height,_depth,_format,_type,_pixels,__FILE__,__LINE__)
+
 #undef glGenFramebuffers
 #define glGenFramebuffers( _size, _ptr ) debug::g_memory_watcher->GLGenFramebuffers( _size, _ptr, __FILE__, __LINE__ )
 

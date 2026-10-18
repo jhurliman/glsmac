@@ -8,6 +8,7 @@
 #include "types/texture/Texture.h"
 #include "util/Perlin.h"
 #include "task/gsetests/GSETests.h"
+#include "graphics/opengl/TexturePaging.h"
 #include <cstring>
 #include <stdexcept>
 
@@ -71,6 +72,31 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("GPU texture paging preserves full Planet dimensions and split update pixels",GT(){
+		using graphics::opengl::TexturePaging;
+		const auto planet=TexturePaging::Make(4536,17920,16384,2048);
+		GT_ASSERT(planet.Paged() && planet.page_width==4536 && planet.page_height==8960 && planet.Layers()==2,
+			"standard Planet was reduced or exceeds GPU page limits");
+		const auto huge=TexturePaging::Make(7224,28672,16384,2048);
+		const auto custom=TexturePaging::Make(28728,57344,16384,2048);
+		GT_ASSERT(huge.Layers()==2 && custom.Layers()==8 && custom.page_width==14364 && custom.page_height==14336,
+			"large map atlas paging lost full dimensions");
+		const auto paged=TexturePaging::Make(7,9,4,8);
+		std::array<unsigned,63> visits{};size_t count=0;
+		for(const auto& patch:paged.Updates(1,2,6,8)) {
+			++count;GT_ASSERT(patch.x+patch.right-patch.left<=4 && patch.y+patch.bottom-patch.top<=3 && patch.layer<6,
+				"update escaped a GPU page");
+			for(size_t y=patch.top;y<patch.bottom;++y) {for(size_t x=patch.left;x<patch.right;++x) {++visits[y*7+x];}}
+		}
+		GT_ASSERT(count==6,"cross-page update omitted a slice");
+		for(size_t y=0;y<9;++y) {for(size_t x=0;x<7;++x) {
+			GT_ASSERT(visits[y*7+x]==unsigned(x>=1 && x<6 && y>=2 && y<8),"update repeated or omitted a logical pixel");
+		}}
+		const auto rejects=[](auto call) {try{call();return false;}catch(const std::exception&){return true;}};
+		GT_ASSERT(rejects([]{TexturePaging::Make(9,9,4,8);}) && rejects([&]{paged.Updates(0,0,8,9);})
+			&& !TexturePaging::Make(7,9,16,8).Paged() && TexturePaging::Make(0,0,16,8).Updates(0,0,0,0).empty(),
+			"texture paging accepted invalid bounds or changed ordinary/empty textures");GT_OK();
+	});
 	task->AddTest( "Former terrain render patches own pixels and preserve coast replay", GT() {
 		TerrainRenderFixture f;
 		auto* t = f.world.GetTile( 2, 2 ); auto* neighbor = f.world.GetTile( 4, 2 );

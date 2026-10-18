@@ -297,6 +297,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("SMAC Base support presentation withholds remote foreign roster before calculation",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=Populate(GSE_CALL,fixture,false,true,2,2);
+            GT_ASSERT(base->m_owner->GetPlayer()!=fixture.Game()->GetPlayer(),"Fixture does not inspect a foreign Base");
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            auto* view=Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_support_presentation");
+            GT_ASSERT(view->type==VT_UNDEFINED && fixture.Snapshot()==before && fixture.GameplayRandom()==random,
+                "Foreign inspector exposed homed Unit identities/locations, ran the support provider or changed world/RNG");
+            GT_OK();
+        });
+    });
+
     task->AddTest("SMAC Base support presentation preserves live home order and retained pass without mutation", [](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

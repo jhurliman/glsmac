@@ -941,7 +941,10 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"get_smac_support_presentation",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 0 );
-			if ( !m_resource_context || !m_allocation || !m_production ) { return VALUE( gse::value::Undefined ); }
+			// Visible foreign Bases can open this screen too. Their remote home
+			// roster is private even when the Base tile itself is explored.
+			if ( !m_resource_context || !m_allocation || !m_production || !m_owner
+				|| m_owner->GetPlayer() != m_game->GetPlayer() ) { return VALUE( gse::value::Undefined ); }
 			const auto current = m_game->CalculateCanonicalUnitSupport( *this, m_pops.size(), nullptr );
 			const auto totals = [ & ]( const SmacUnitSupportResult& support ) {
 				return gse::value::object_properties_t{

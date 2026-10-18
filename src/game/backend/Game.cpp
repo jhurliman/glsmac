@@ -626,6 +626,24 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+        {"is_campaign_restore", NATIVE_CALL(this) {
+            N_EXPECT_ARGS(0);
+            bool restoring=false;
+            {
+                std::lock_guard lock(m_admission_mutex);
+                auto admission=m_active_admission;
+                // configure_game may run before OP_INIT is consumed. The
+                // published ticket already owns the immutable restore payload.
+                for(const auto& entry:m_admissions) {
+                    const auto& pending=entry.second;
+                    if(pending->kind==WorldAdmission::INITIALIZATION && !pending->cancelled && pending->state==m_state
+                        && pending->binding && pending->binding->IsActive()
+                        && (!admission || pending->ticket>admission->ticket)) {admission=pending;}
+                }
+                restoring=admission && !admission->cancelled && admission->campaign_world.has_value();
+            }
+            return VALUE(gse::value::Bool,,restoring);
+        })},
         {"save_campaign", NATIVE_CALL(this, session = m_state ? m_state->CaptureGameSession() : State::game_session_t{}) {
             N_EXPECT_ARGS(1);N_GETVALUE(path,0,String);
             try {return VALUE(gse::value::Int,,QueueCampaignSave(session,path));}

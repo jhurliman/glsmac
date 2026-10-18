@@ -2723,7 +2723,16 @@ public:
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
             util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
-            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);ProcessRequests();
+            const auto restore_mode=[&]() {
+                auto* wrapped=static_cast<value::Object*>(m_game.Wrap(GSE_CALL));
+                auto* query=static_cast<value::Callable*>(wrapped->Get("is_campaign_restore"));
+                return static_cast<value::Bool*>(query->Run(GSE_CALL,{}))->value;
+            };
+            GT_ASSERT(!restore_mode(),"empty controller invented a restore admission");
+            const auto pending=m_game.MT_RestoreCampaign(candidate,saved.world);
+            GT_ASSERT(!m_game.m_active_admission && restore_mode(),"configure mode lost the published restore before OP_INIT consumption");
+            ProcessRequests();
+            GT_ASSERT(restore_mode(),"active restore changed configuration mode");
             GT_ASSERT(m_game.MT_GetResponse(pending.request).result==R_SUCCESS,"campaign restore request was not admitted");
             util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
             for(int i=0;i<4;++i){m_game.Iterate();}

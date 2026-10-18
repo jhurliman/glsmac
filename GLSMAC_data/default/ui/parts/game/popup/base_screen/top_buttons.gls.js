@@ -4,7 +4,8 @@ return {
         this.labels = ['Governor active', 'Allow multiple or no priorities', 'Automate newly built units', 'Manage citizens and specialists', 'Manage production', 'Produce scouts', 'Produce land combat units', 'Produce naval combat units', 'Produce air combat units', 'Produce land defense units', 'Produce air defense units', 'Produce prototypes', 'Produce transports', 'Produce probe teams', 'Produce terraformers', 'Produce colony pods', 'Produce facilities', 'Produce Secret Projects', 'Hurry production'];
         this.buttons = p.body.panel({align: 'top', top: 3, left: 3, right: 3, height: 26, border: 'rgb(136,69,28),2'});
         this.buttons.button({class: 'game-popup-button', align: 'left', left: 4, width: 180, top: 1, bottom: 1, text: 'Governor settings'}).on('click', () => { this.open(); return true; });
-        this.buttons.text({class: 'base-screen-frame-text', align: 'center', left: 185, text: 'Production priorities unavailable'});
+        this.energy = #include('./energy_rates'); this.energy.init(p);
+        this.buttons.button({class: 'game-popup-button', align: 'left', left: 190, width: 180, top: 1, bottom: 1, text: 'Energy allocation'}).on('click', () => { this.energy.open(); return true; });
         this.window = p.ui.root.window({class: 'game-popup', zindex: 0.9, width: 660, height: 420, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.hide();
         this.window.text({class: 'game-popup-text', top: 10, left: 12, text: 'Governor settings'});
@@ -26,7 +27,7 @@ return {
         this.window.listen(p.game, 'turn_status', (e) => { if (e.status == 'please_wait') { this.hide_view(); } });
         return this.buttons;
     },
-    set_base: (base) => { this.hide_view(); this.base = base; },
+    set_base: (base) => { this.active = false; this.window.hide(); this.base = base; this.energy.set_base(base); },
     open: () => {
         if (this.base == null || !this.base.has_smac_resource_context) { return; }
         const data = this.base.get_smac_governor_settings(); if (!#is_defined(data)) { return; }
@@ -49,5 +50,5 @@ return {
         this.p.game.event('apply_smac_governor', {base: base, expected_state: expected, controls: controls});
         this.hide_view();
     },
-    hide_view: () => { this.active = false; this.window.hide(); },
+    hide_view: () => { this.active = false; this.window.hide(); this.energy.hide_view(); },
 };

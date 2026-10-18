@@ -70,6 +70,27 @@ int32_t Multiply( int32_t value, int32_t quarters ) { return Checked( int64_t( C
 int32_t Reduce( int32_t value, int32_t percent ) { return Checked( int64_t( Checked( int64_t( value ) * ( 100 - percent ) ) ) + 50 ) / 100; }
 }
 
+SmacEnergyRates AdjustSmacEnergyRates(SmacEnergyRates rates,int32_t button,uint32_t locks) {
+    rates.Validate();
+    if(button<29 || button>34 || locks>7) {throw std::invalid_argument("Invalid energy rate button or locks");}
+    // Native axis cycle E -> P -> L. The edited axis is a last-resort fallback,
+    // including when that axis itself is locked.
+    const int axis=button<=30 ? 0 : button<=32 ? 2 : 1;
+    std::array<int32_t,3> values{10-rates.psych-rates.labs,rates.psych,rates.labs};
+    values[axis]=std::clamp(values[axis]+(button%2==0 ? 1 : -1),0,10);
+    int total=values[0]+values[1]+values[2];
+    while(total!=10) {
+        const int direction=total<10 ? 1 : -1;
+        for(int step=1;step<=3;++step) {
+            const int other=(axis+step)%3;
+            if(other!=axis && (locks&(1u<<other))) {continue;}
+            if((direction>0 && values[other]>=10) || (direction<0 && values[other]<=0)) {continue;}
+            values[other]+=direction;total+=direction;break;
+        }
+    }
+    return {values[1],values[2]};
+}
+
 void SmacEnergyRates::Validate() const {
 	if ( psych < 0 || labs < 0 || psych > 10 || labs > 10 - psych ) { throw std::invalid_argument( "SMAC energy rates must be nonnegative tenths totaling at most ten" ); }
 }

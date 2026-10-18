@@ -101,6 +101,7 @@ std::string Game::SaveCampaign(const std::string& path) {
     if(!m_state || m_state->GetConnection() || m_game_state!=GS_RUNNING || !m_player || m_player->GetRole()!=Player::PR_SINGLE
         || m_state->m_settings.global.GetRulesetId()!="smac") {THROW("Save requires a running local SMAC campaign");}
     {std::lock_guard lock(m_pending_events_mutex); if(!m_pending_events.empty()) {THROW("Finish queued commands before saving");}}
+    if(m_energy_rate_session) {THROW("Close the energy allocation window before saving");}
     ValidateCurrentSimulation();
     campaign::Record record{m_state->Serialize().ToString(),m_state->ExportRoster(),m_slot_num,SerializeWorldSnapshot()};
     return campaign::Write(path,record);

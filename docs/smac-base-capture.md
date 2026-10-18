@@ -33,8 +33,11 @@ Inner resource-context V3 adds optional conquest history; V2 migrates with that
 history absent rather than inventing it. Complete saved-world Start restores the
 transfer without replaying loot or facility rolls.
 
-Presentation currently posts the capture message and refreshes the Base's owner.
-Automatic captured-Base screen entry remains to connect; the original constructor
+Presentation posts the capture message, refreshes the Base's owner and population,
+then emits the existing Base selection event to open its management screen.
+The selection travels with the prepared Base update queue, is delivered once
+after the ownership refresh, and is not saved or replayed by Start. It does not
+suspend backend movement for a screen-close continuation. The original constructor
 is a [documented research boundary](behavior/captured-base-screen-close.md), with
 [static return-tail evidence](behavior/capture-return-tail-static.md) distinguished
 from a successful dynamic return. Assimilation history is stored and its upkeep
@@ -76,3 +79,10 @@ Colony, starvation and capture groups pass; final next-upkeep checks pass too.
 Correctness analysis passed five production translation units in6.40 seconds.
 The capture ownership sanitizer evidence above is reused; this following timer
 arithmetic/publication slice does not add another ownership or platform matrix.
+
+The screen-entry follow-up passes five focused native groups, including capture
+queue ordering, no duplicate selection on later flush, actual Start/upkeep and
+the existing synthetic rendered ownership/navigation check. It reuses the current
+`base_select` UI listener; no GSE behavior is rewritten. Native interactive capture
+on the original installation and in the port remains a milestone validation.
+Correctness analysis passed four affected production translation units in10.92s.

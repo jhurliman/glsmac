@@ -22,18 +22,19 @@ static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_n
 	{ CM_ACTIVE, "_active" },
 };
 
-Class::Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master )
+Class::Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master, const class_modifier_t modifier )
 	: gse::GCWrappable( gc_space )
 	, m_ui( ui )
 	, m_name( name )
-	, m_is_master( is_master ) {
+	, m_is_master( is_master )
+	, m_modifier( modifier ) {
 	if ( m_is_master ) {
 		m_subclasses = {
-			{ CM_HOVER, new Class( gc_space, ui, name + "._hover", false ) },
-			{ CM_ACTIVE, new Class( gc_space, ui, name + "._active", false ) },
-			{ CM_SELECTED, new Class( gc_space, ui, name + "._selected", false ) },
-			{ CM_HIGHLIGHT, new Class( gc_space, ui, name + "._highlight", false ) },
-			{ CM_FOCUS, new Class( gc_space, ui, name + "._focus", false ) },
+			{ CM_HOVER, new Class( gc_space, ui, name + "._hover", false, CM_HOVER ) },
+			{ CM_ACTIVE, new Class( gc_space, ui, name + "._active", false, CM_ACTIVE ) },
+			{ CM_SELECTED, new Class( gc_space, ui, name + "._selected", false, CM_SELECTED ) },
+			{ CM_HIGHLIGHT, new Class( gc_space, ui, name + "._highlight", false, CM_HIGHLIGHT ) },
+			{ CM_FOCUS, new Class( gc_space, ui, name + "._focus", false, CM_FOCUS ) },
 		};
 	}
 }
@@ -51,7 +52,8 @@ const std::pair< gse::Value*, class_modifier_t > Class::GetProperty( const std::
 
 	if ( m_is_master ) {
 		// search in modifiers
-		for ( const auto& m : modifiers ) {
+		for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; ++it ) {
+			const auto m = *it;
 			ASSERT( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			v = m_subclasses.at( m )->GetProperty( key, {} );
 			if ( v.first ) {
@@ -331,8 +333,11 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* valu
 		for ( const auto& cls : m_child_classes ) {
 			cls->SetPropertyFromParent( GSE_CALL, name, value );
 		}
-		for ( const auto& object : m_objects ) {
-			object.first->SetPropertyFromClass( GSE_CALL, name, value, CM_NONE );
+		// Modifier definitions contain DOM properties; their names are not DOM properties.
+		if ( it == s_name_to_modifier.end() ) {
+			for ( const auto& object : m_objects ) {
+				object.first->SetPropertyFromClass( GSE_CALL, name, value, m_modifier );
+			}
 		}
 	}
 }
@@ -355,6 +360,14 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 	const auto& it = m_properties.find( name );
 	if ( it != m_properties.end() ) {
 		m_properties.erase( it );
+		const auto modifier_it = s_name_to_modifier.find( name );
+		if ( modifier_it != s_name_to_modifier.end() ) {
+			// Erase payload properties before resolving the remaining style fallback.
+			auto* cls = m_subclasses.at( modifier_it->second );
+			std::vector< std::string > names;
+			for ( const auto& property : cls->m_properties ) { names.push_back( property.first ); }
+			for ( const auto& property : names ) { cls->UnsetProperty( GSE_CALL, property ); }
+		}
 		{
 			for ( const auto& obj : m_wrapobjs ) {
 				obj->Assign( name, nullptr );
@@ -363,8 +376,10 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 		for ( const auto& cls : m_child_classes ) {
 			cls->UnsetPropertyFromParent( GSE_CALL, name );
 		}
-		for ( const auto& object : m_objects ) {
-			object.first->UnsetPropertyFromClass( GSE_CALL, name );
+		if ( modifier_it == s_name_to_modifier.end() ) {
+			for ( const auto& object : m_objects ) {
+				object.first->UnsetPropertyFromClass( GSE_CALL, name );
+			}
 		}
 	}
 }

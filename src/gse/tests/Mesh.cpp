@@ -96,6 +96,11 @@ private:
 	loader::texture::TextureLoader* m_previous_textures = nullptr;
 };
 
+std::string WithWidgetGraphics( const std::function< std::string() >& check ) {
+	WidgetGraphicsFixture graphics;
+	return check();
+}
+
 static std::string CheckMeshCoordinates() {
 	try {
 		types::mesh::Render mesh( 3, 1 );

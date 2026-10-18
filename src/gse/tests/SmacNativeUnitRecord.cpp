@@ -415,6 +415,50 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
         GT_ASSERT(Rejects([&]{linked.AfterUnlinkedIndexErasure(2);}),"Erased record treated as a survivor");
         GT_OK();
     });
+    task->AddTest("SMAC native direct despawn unlinks head middle and tail before dense compaction",GT(){
+        using namespace game::backend::unit;
+        for(int removed=0;removed<3;++removed) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS",80,40);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();BirthDefinitions(game);auto* manager=game->GetUM();
+                types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+                for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t n=0;n<count;++n) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+                GT_ASSERT(definitions.ReadInt()==0,"Despawn fixture already contains Units");loaded.WriteInt(3);
+                std::vector<Record> records;
+                for(int n=0;n<3;++n) {
+                    auto record=Record::InitializeMindWorm(n,2);record.x=6;record.y=2;record.stack_previous=n==0?-1:n-1;record.stack_next=n==2?-1:n+1;
+                    record.state=0x400100;record.flags=0x104+8*n;record.movement_spent=5;record.aux_word=17+n;
+                    record.order=1;record.waypoint_x[0]=2;record.waypoint_y[0]=37;record.ecology_owner_tag=3;
+                    records.push_back(record);types::Buffer unit;unit.WriteInt(5);unit.WriteInt(2);unit.WriteInt(71+n);unit.WriteString("MindWorms");unit.WriteInt(-1);
+                    unit.WriteInt(6);unit.WriteInt(2);unit.WriteString(record.Serialize().ToString());loaded.WriteString(unit.ToString());
+                }
+                loaded.WriteInt(74);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+                auto* wrapper=manager->GetUnit(71+removed)->Wrap(GSE_CALL);const auto next=Unit::GetNextId();const auto random=fixture.GameplayRandom();
+                fixture.ResourceState([](auto& state){state.native_factory=game::backend::faction::SmacNativeFactoryState{0,{{-1,-1}},0,{}};});
+                manager->DespawnUnit(GSE_CALL,71+removed);
+                bool debit=false;fixture.ResourceState([&](const auto& state){debit=state.native_factory->active_plan_tally==UINT32_MAX && state.native_factory->active_designs[8]==255;});
+                GT_ASSERT(debit,"Legacy native despawn omitted known factory accounting");
+                GT_ASSERT(!manager->GetUnit(71+removed) && wrapper->type==VT_UNDEFINED && manager->GetUnits().size()==2
+                    && game->GetMap()->GetTile(6,2)->units.size()==2,"Native despawn retained the retired record, wrapper or physical occupant");
+                std::vector<size_t> order;
+                for(int n=0;n<3;++n) {
+                    if(n==removed) {continue;}
+                    const int index=order.size();order.push_back(71+n);auto expected=records[n];expected.id=index;
+                    expected.stack_previous=index==0?-1:0;expected.stack_next=index==0?1:-1;
+                    if(removed==2) {expected.order=0;}else {expected.waypoint_x[0]=1;}
+                    GT_ASSERT(manager->GetUnit(71+n)->Native()==expected,"Native despawn lost retained fields or repaired links after compaction");
+                }
+                GT_ASSERT(manager->GetUnitRecordOrder()==order && Unit::GetNextId()==next && fixture.GameplayRandom()==random,
+                    "Native despawn changed stable IDs, record order or RNG");
+                // Reusing the ordinary manager codec validates reciprocal links
+                // and complete same-tile stack membership after removal.
+                std::vector<std::string> wires;for(const auto id:order) {wires.push_back(Unit::Serialize(manager->GetUnit(id)).ToString());}
+                types::Buffer saved;manager->Serialize(saved);manager->Clear();game->GetMap()->GetTile(6,2)->units.clear();manager->Deserialize(GSE_CALL,saved);
+                GT_ASSERT(manager->GetUnitRecordOrder()==order && Unit::GetNextId()==next,"Despawned native stack lost IDs during ordinary manager restore");
+                for(size_t n=0;n<order.size();++n) {GT_ASSERT(Unit::Serialize(manager->GetUnit(order[n])).ToString()==wires[n],"Despawned native stack lost complete records during ordinary manager restore");}GT_OK();
+            });GT_ASSERT(error.empty(),"Native direct despawn: "+error);
+        }GT_OK();
+    });
     task->AddTest("SMAC native dense restore rejects stale indices dangling links cycles and split stacks",GT(){
         using namespace game::backend::unit;
         for(int scenario=0;scenario<4;++scenario) {

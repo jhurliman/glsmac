@@ -12,8 +12,8 @@ void SmacNativeFactoryState::Adjust(int32_t design,uint8_t plan,int32_t delta) {
     if(design<0 || design>=512 || (delta!=1 && delta!=-1)) {
         throw std::invalid_argument("Native count adjustment requires a catalog design and unit delta");
     }
-    active_designs[design]=static_cast<uint8_t>(int32_t(active_designs[design])+delta);
     if(plan<=7) {active_plan_tally+=static_cast<uint32_t>(delta);}
+    active_designs[design]=static_cast<uint8_t>(int32_t(active_designs[design])+delta);
 }
 bool SmacNativeFactoryState::operator==(const SmacNativeFactoryState& other) const noexcept {
     return definition_morale==other.definition_morale && assignment_reference==other.assignment_reference

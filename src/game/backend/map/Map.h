@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <map>
 #include "TerrainRenderUpdate.h"
 
 #include "types/Serializable.h"
@@ -127,6 +128,14 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const tile_texture_info_t GetTileTextureInfo( const texture_variants_type_t type, const tile::Tile* tile, const tile_grouping_criteria_t criteria, const tile::feature_t feature = tile::FEATURE_NONE ) const;
 	Random* GetRandom() const;
 	uint16_t GetRenderTerraforming( const tile::Tile* tile ) const;
+    uint16_t GetRenderFeatures(const tile::Tile* tile) const;
+    tile::rockiness_t GetRenderRockiness(const tile::Tile* tile) const;
+    bool IsPreparingTerrain() const { return m_terrain_candidates != nullptr; }
+    void EnsureWaterFungusRecipe();
+    void AddWaterFungus(const pcx_texture_coordinates_t& tc, types::texture::add_flag_t flags, uint8_t rotate);
+    struct TerrainAppearance { uint16_t features, terraforming; tile::rockiness_t rockiness; };
+    using TerrainAppearances = std::map<const tile::Tile*, TerrainAppearance>;
+
 
 	class PreparedTerrainUpdate {
 	public:
@@ -137,6 +146,8 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 		PreparedTerrainUpdate();
 		std::unique_ptr< Data > data;
 	};
+    // Batch presentation only; caller publishes the corresponding live tile fields.
+    std::unique_ptr<PreparedTerrainUpdate> PrepareTerrainAppearanceUpdate(const TerrainAppearances& changes);
 	// No live terrain/atlas mutation; empty only for headless maps without render state.
 	std::unique_ptr< PreparedTerrainUpdate > PrepareOrdinaryTerrainUpdate( const tile::Tile* tile, uint16_t terraforming );
 	const TerrainRenderUpdate& GetTerrainUpdatePayload( const PreparedTerrainUpdate& prepared ) const;
@@ -220,6 +231,9 @@ private:
 	Random* m_land_random = nullptr;
 	const tile::Tile* m_land_changed = nullptr;
 	uint16_t m_land_terraforming = 0;
+    const TerrainAppearances* m_terrain_candidates = nullptr;
+    std::optional<TerrainCoastRecipes::Paint>* m_water_fungus_output = nullptr;
+    bool m_recording_fungus = false;
 	void RecordWaterPaint( const types::texture::Texture* source, size_t x, size_t y,
 		size_t dx, size_t dy, types::texture::add_flag_t flags, uint8_t rotate, float alpha,
 		util::Perlin* perlin, std::optional< TerrainCoastRecipes::Key > land = std::nullopt );

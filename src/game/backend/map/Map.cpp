@@ -452,7 +452,7 @@ const Map::tile_texture_info_t Map::GetTileTextureInfo( const texture_variants_t
 				}
 				case TG_FEATURE: {
 					matches[ idx++ ] = (
-						( t->features & value ) == ( tile->features & value ) ||
+						( GetRenderFeatures(t) & value ) == ( GetRenderFeatures(tile) & value ) ||
 							( type == TVT_RIVERS_FORESTS && !tile->is_water_tile && t->is_water_tile ) // rivers end in oceans
 					);
 					break;
@@ -528,6 +528,10 @@ Random* Map::GetRandom() const {
 }
 
 uint16_t Map::GetRenderTerraforming( const tile::Tile* tile ) const {
+    if (m_terrain_candidates) {
+        const auto found = m_terrain_candidates->find(tile);
+        if (found != m_terrain_candidates->end()) return found->second.terraforming;
+    }
 	return tile == m_land_changed ? m_land_terraforming : tile->terraforming;
 }
 
@@ -539,6 +543,21 @@ const size_t Map::GetWidth() const {
 const size_t Map::GetHeight() const {
 	ASSERT( m_tiles, "tiles not set" );
 	return m_tiles->GetHeight();
+}
+
+uint16_t Map::GetRenderFeatures(const tile::Tile* tile) const {
+    if (m_terrain_candidates) {
+        const auto found = m_terrain_candidates->find(tile);
+        if (found != m_terrain_candidates->end()) return found->second.features;
+    }
+    return tile->features;
+}
+tile::rockiness_t Map::GetRenderRockiness(const tile::Tile* tile) const {
+    if (m_terrain_candidates) {
+        const auto found = m_terrain_candidates->find(tile);
+        if (found != m_terrain_candidates->end()) return found->second.rockiness;
+    }
+    return tile->rockiness;
 }
 
 tile::Tiles* Map::GetTilesPtr() const {

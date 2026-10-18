@@ -72,7 +72,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 	}
 
 	// add underwater color
-	if ( tile->is_water_tile ) {
+	if ( tile->is_water_tile && !m_map->IsPreparingTerrain() ) {
 #define x( _k ) ts->layers[ tile::LAYER_LAND ].colors._k.value = s_consts.underwater_tint;
 		x( center );
 		x( left );
@@ -85,7 +85,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 	// add map details
 	// order is important (textures are drawn on top of previous ones)
 
-	if ( tile->features & tile::FEATURE_DUNES ) {
+	if ( m_map->GetRenderFeatures(tile) & tile::FEATURE_DUNES ) {
 		m_map->AddTexture(
 			tile::LAYER_LAND,
 			s_consts.tc.texture_pcx.dunes[ 0 ],
@@ -94,7 +94,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 		);
 	}
 
-	switch ( tile->rockiness ) {
+	switch ( m_map->GetRenderRockiness(tile) ) {
 		case tile::ROCKINESS_NONE:
 		case tile::ROCKINESS_FLAT: {
 			// nothing
@@ -122,7 +122,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			THROW( "invalid rockiness value" );
 	}
 
-	if ( tile->features & tile::FEATURE_JUNGLE ) {
+	if ( m_map->GetRenderFeatures(tile) & tile::FEATURE_JUNGLE ) {
 		auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, tile::FEATURE_JUNGLE );
 		m_map->AddTexture(
 			tile::LAYER_LAND,
@@ -156,7 +156,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			);
 		}
 
-		if ( tile->features & tile::FEATURE_XENOFUNGUS ) {
+		if ( m_map->GetRenderFeatures(tile) & tile::FEATURE_XENOFUNGUS ) {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_TILES, tile, Map::TG_FEATURE, tile::FEATURE_XENOFUNGUS );
 			m_map->AddTexture(
 				tile::LAYER_LAND,
@@ -166,7 +166,11 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			);
 		}
 
-		if ( tile->features & tile::FEATURE_RIVER ) {
+		if ( m_map->GetRenderFeatures(tile) & tile::FEATURE_RIVER ) {
+            if (m_map->IsPreparingTerrain() && ts->has_water) {
+                ASSERT(ts->river_original,"missing cached coastal river texture");
+                m_map->SetTexture(tile::LAYER_LAND,ts->river_original,types::texture::AM_MERGE);
+            } else {
 			auto txinfo = m_map->GetTileTextureInfo( Map::TVT_RIVERS_FORESTS, tile, Map::TG_FEATURE, tile::FEATURE_RIVER );
 			auto& tc = s_consts.tc.texture_pcx.river[ txinfo.texture_variant ];
 			auto add_flags = types::texture::AM_MERGE | txinfo.texture_flags;
@@ -176,7 +180,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 				add_flags,
 				txinfo.rotate_direction
 			);
-			if ( ts->has_water ) {
+			if ( ts->has_water && !m_map->IsPreparingTerrain() ) {
 				// need to save original river texture to draw it on top of coastline border later (to erase 'beach' on river exit)
 				if ( !ts->river_original ) {
 					NEW(
@@ -189,6 +193,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 				}
 				m_map->GetTexture( ts->river_original, tc, add_flags, txinfo.rotate_direction );
 			}
+            } // retain the existing river-exit pixels during detached preparation
 		}
 
 		for ( const auto& t : {

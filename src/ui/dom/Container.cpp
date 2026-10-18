@@ -97,6 +97,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_b
 void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
 	for ( const auto& key : {
 		"surface",
+		"area",
 		"group",
 		"panel",
 		"window",
@@ -104,6 +105,12 @@ void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
 		"button",
 		"input",
 		"sound",
+		"choicelist",
+		"select",
+		"scrollbar",
+		"scrollview",
+		"listview",
+		"widget",
 	} ) {
 		ForwardProperty( GSE_CALL, key, child );
 	}

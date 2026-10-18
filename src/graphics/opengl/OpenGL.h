@@ -83,6 +83,7 @@ CLASS( OpenGL, Graphics )
 	void WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const;
 
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
+	void CaptureToGPUTexture( GLuint texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
 	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
 	void NoRender( const std::function< void() >& f ) override;

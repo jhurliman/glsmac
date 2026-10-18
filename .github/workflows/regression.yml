@@ -53,12 +53,16 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             ccache --set-config=max_size=2G
+            ccache --zero-stats
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
           fi
       - name: Build
         run: cmake --build build --parallel 3
+      - name: Report Linux compiler cache reuse
+        if: always() && runner.os == 'Linux'
+        run: ccache --show-stats
       # Preserve a successful compile even when the following tests fail.
       # A fixture-only correction can then reuse the just-built production TUs.
       - name: Save Linux compiler outputs

@@ -75,7 +75,7 @@ public:
 	SmacBaseResourceContext PrepareStartingResourceContext( const slot::Slot* owner ) const;
 	Base* SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* tile,
 		const std::string& worker, const std::array< std::string, 7 >& specialists );
-	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles );
+	Base* FoundSmacBase( GSE_CALLABLE, unit::Unit& colony, const std::array<std::string,8>& roles, std::optional<uint32_t> governor_recovery = {} );
 	void ValidateSmacFounding( const unit::Unit& colony ) const;
 	class PreparedSmacCapture {
 	public:

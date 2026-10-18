@@ -54,7 +54,7 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
     }
 }
 
-Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::array<std::string,8>& roles) {
+Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::array<std::string,8>& roles,std::optional<uint32_t> governor_recovery) {
     m_game->CheckRW(GSE_CALL);
     if (gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Founding requires the owning accumulation");}
     ValidateSmacFounding(colony);
@@ -65,7 +65,14 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     const auto* technology=m_game->m_simulation->value.technology.Find(simulation_id);
     const auto* social=m_game->m_simulation->value.social.Find(simulation_id);
     if (!profile || !technology || !social || !social->retained) {THROW("Founding requires actual retained owner inputs");}
-    const auto options=m_game->m_simulation->value.remembered_governor.at(simulation_id);
+    auto options=m_game->m_simulation->value.remembered_governor.at(simulation_id);
+    if(governor_recovery) {
+        const bool has_base=std::any_of(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second->m_owner==owner;});
+        if(options || has_base || *governor_recovery!=SmacBaseResourceContext::NewGameGovernorOptions(m_game->m_simulation->value.designs.global_difficulty)) {
+            THROW("Default Governor recovery requires an explicit base-less choice with missing settings");
+        }
+        options=governor_recovery;
+    }
     if(!options) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
     SmacBaseResourceContext context{simulation_id,false,0,0,*options,false};
     ValidateSmacResourceContext(context,owner,owner->GetPlayer()->GetFaction());
@@ -162,6 +169,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
 	}
     RegisterBase(base); // every allocating registry/queue operation precedes writes
     candidate.release(); base->CommitStartupPlacement(); removal.Commit();
+    if(governor_recovery) {m_game->m_simulation->value.remembered_governor.at(simulation_id)=governor_recovery;}
     m_game->CommitBaseTerritory(knowledge,topology);
     economy.regional_base_counts=regional;
 	m_game->m_simulation->value.retained_base_totals=totals;

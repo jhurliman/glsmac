@@ -277,6 +277,7 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
         update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
     }
     auto knowledge=data.sight->CopyData();
+    if(knowledge.occupancy) {knowledge.occupancy->RemoveBase({static_cast<int32_t>(abandoned.GetTile()->coord.x),static_cast<int32_t>(abandoned.GetTile()->coord.y)});}
     const auto claims=territory.CopyData();
     if ( knowledge.width!=claims.width || knowledge.height!=claims.height
         || knowledge.tiles.size()!=claims.tiles.size() ) { THROW( "Abandonment territory geometry differs" ); }
@@ -389,6 +390,7 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
                     if((visible & (1u<<observer)) && !memory.empty() && memory.at(index)) {memory.at(index)->unit_present=!occupants.empty();}
                 }
             }
+            if(knowledge->occupancy) {knowledge->occupancy->RemoveUnit({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},occupants.empty());}
             knowledge->units.erase(row);
         }
         data->removed.push_back(unit);
@@ -595,6 +597,13 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         || knowledge.tiles.size()!=claims.tiles.size()) {THROW("Faction disposition territory geometry differs");}
     for(size_t i=0;i<knowledge.tiles.size();++i) {knowledge.tiles[i].claimant=claims.tiles[i].claimant;}
     knowledge.bases=claims.bases;
+    if(knowledge.occupancy) {
+        for(const auto& cell:removal.occupants) {knowledge.occupancy->RemoveUnit({static_cast<int32_t>(cell.first->coord.x),static_cast<int32_t>(cell.first->coord.y)},cell.second.empty());}
+        for(const auto& row:m_game->GetBM()->GetBases()) {if(row.second->m_owner==owner && std::none_of(claims.bases.begin(),claims.bases.end(),[&](const auto& memory){return memory.id==row.first;})) {
+            const auto* tile=row.second->GetTile();knowledge.occupancy->RemoveBase({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)});
+        }}
+    }
+
     const uint64_t first=uint64_t(Unit::GetNextId())+(transient ? 1u : 0u);
     if(!replacements.empty() && (!first || first>=uint64_t(INT64_MAX) || first>=SIZE_MAX
         || replacements.size()>uint64_t(INT64_MAX)-first || replacements.size()>SIZE_MAX-first)) {
@@ -640,6 +649,7 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         if(!i) {data->history=PreparePlacementHistory(*candidate,destination);}
         if(!data->units.emplace(id,candidate.get()).second || !data->occupants.at(destination).emplace(id,candidate.get()).second
             || !data->updates.emplace(id,unit_update_t{UUO_SPAWN,candidate.get()}).second) {THROW("Restart Unit publication identity conflicts");}
+        if(knowledge.occupancy) {knowledge.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},simulation_id,data->occupants.at(destination).size()==1);}
         data->order.push_back(id);knowledge.units.push_back({id,visibility,false});data->candidates.push_back(std::move(candidate));
     }
     // Own departing positions and Base removal are observed by their owner.

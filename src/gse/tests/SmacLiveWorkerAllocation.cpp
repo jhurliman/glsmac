@@ -771,6 +771,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(suspended) {bm->DefineFacility(new FacilityDef("transfer-hq","HQ","",0,{},1));old_peer->m_facilities.emplace("transfer-hq",bm->GetFacilityDef("transfer-hq"));}
                 auto known=KnowledgeValue(true,true,128,64).CopyData();known.observers[2]=Knowledge::Observer{false,{}};known.observers[2]->pact_with=0;
                 for(auto& tile:known.tiles) {tile.explored_by=6;tile.claimant=old_owner;}
+                known.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+                for(const auto& row:bm->GetBases()) {const auto* tile=row.second->GetTile();known.occupancy->FoundBase({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},row.second->GetSmacResourceContext().owner_simulation_id);}
+                for(const auto& row:game->GetUM()->GetUnits()) {const auto* tile=row.second->GetTile();known.occupancy->PlaceUnit({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},row.second->SimulationOwner(),true);}
                 game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
                 using UnitState=unit::ConventionalUnitState;auto* um=game->GetUM();
                 const auto spawn=[&](size_t id,int32_t owner,int32_t design,size_t home,size_t x,size_t y,const std::string& definition) {
@@ -816,6 +819,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 GT_ASSERT(game->GetTurnId()==2 && base->GetSmacResourceContext().owner_simulation_id==recipient,
                     "Actual owner pass did not transfer the rioting Base");
+                const auto occupancy=game->GetMap()->GetSmacWorkerKnowledge()->CopyData().occupancy;const auto* center=base->GetTile();
+                GT_ASSERT(occupancy->At({static_cast<int32_t>(center->coord.x),static_cast<int32_t>(center->coord.y)}).affiliation==recipient,"Riot transfer omitted independent Base-center cache write");
+                if(!screen) {GT_ASSERT(occupancy->At({2,2}).affiliation==recipient && (occupancy->At({2,2}).presence&2u),"Riot Unit conversion omitted its separate cache write");}
+                GT_ASSERT(!(occupancy->At({20,20}).presence&2u),"Riot casualty retained Unit presence");
                 food=(screen ? 0:13)+surplus*(old_owner==1 && !suspended && !inactive ? 2:1);final_food=13+2*surplus;
                 GT_ASSERT(base->GetAccumulatedNutrients()==food && base->GetSmacResourceContext().FormerOwner()==former
                     && base->GetSmacResourceContext().conquest->assimilation==(former==recipient ? 0:49),
@@ -2178,6 +2185,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         knowledge.remembered[observer][y*64+x/2]=Knowledge::Improvements{tile->features,tile->terraforming,tile->base!=nullptr,!tile->units.empty()};
                     }}
                 }
+                knowledge.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+                for(const auto& row:bm->GetBases()) {const auto* tile=row.second->GetTile();knowledge.occupancy->FoundBase({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},row.second->GetSmacResourceContext().owner_simulation_id);}
+                knowledge.occupancy->PlaceUnit({19,15},1,true);knowledge.occupancy->PlaceUnit({30,16},2,true);
                 game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
                 if(with_native) {
                     MoraleSet::morale_values_t native_names;for(int level=0;level<7;++level) {native_names.emplace_back("Native"+std::to_string(level));}
@@ -2218,6 +2228,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 foreign_record=Base::Serialize(bases[1]).ToString();
                 if(paid) {bases[1]->m_facilities.erase("capture-hq");}
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
+                GT_ASSERT(game->GetMap()->GetSmacWorkerKnowledge()->CopyData().occupancy->At({20,16}).affiliation==1,"Capture omitted independent Base-center affiliation write");
                 GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture commit rewrote raw shared detail");
                 const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
                 if(with_native) {std::string factory;fixture.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});

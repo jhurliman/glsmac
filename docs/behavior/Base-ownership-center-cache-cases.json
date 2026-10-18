@@ -1,0 +1,79 @@
+{
+  "research_id": "RE-SMAC-BASE-OWNER-CENTER-CACHE-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "id": "ordinary_capture",
+      "before_movement": {
+        "cached_occupant": 2,
+        "site_rating": 0,
+        "presence": 1,
+        "center_Units": []
+      },
+      "capture_entry": {
+        "cached_occupant": 2,
+        "site_rating": 0,
+        "presence": 3,
+        "center_Units": [
+          {
+            "id": 1,
+            "owner": 1
+          }
+        ]
+      },
+      "before_center_setter": {
+        "cached_occupant": 2,
+        "site_rating": 0,
+        "presence": 3,
+        "center_Units": [
+          {
+            "id": 1,
+            "owner": 1
+          }
+        ]
+      },
+      "after_center_setter": {
+        "cached_occupant": 1,
+        "site_rating": 0,
+        "presence": 3,
+        "center_Units": [
+          {
+            "id": 1,
+            "owner": 1
+          }
+        ]
+      },
+      "after_outer_return": {
+        "cached_occupant": 1,
+        "site_rating": 0,
+        "presence": 3,
+        "center_Units": [
+          {
+            "id": 1,
+            "owner": 1
+          }
+        ]
+      },
+      "complete_outer_return": true,
+      "Unit_conversion_required": false
+    },
+    {
+      "id": "riot_empty_center",
+      "before": {
+        "cached_occupant": 1,
+        "site_rating": 10,
+        "presence": 1
+      },
+      "after": {
+        "cached_occupant": 2,
+        "site_rating": 10,
+        "presence": 1
+      },
+      "center_Units_at_write": [],
+      "Base_return": 1,
+      "high_rating_nibble_is_diagnostic": true
+    }
+  ],
+  "scope": "One reused full undefended capture through Base-screen/outer movement return; one complete riot Base return after real deletion of center Units. Riot site-rating high nibble A is a diagnostic input. No capture/riot matrix or global ownership recount.",
+  "passed": true
+}

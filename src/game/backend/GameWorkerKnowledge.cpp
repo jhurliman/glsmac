@@ -164,6 +164,17 @@ void Game::CompleteSmacWorkerKnowledgeRestore() {
 	if ( m_map && m_map->m_worker_knowledge ) {
 		if ( !m_map->m_territory_topology ) { throw std::runtime_error( "Worker knowledge lacks saved territory topology" ); }
 		m_map->m_territory_topology->ValidateTerrain( m_map->TerritorySea() );
+        auto data=m_map->m_worker_knowledge->CopyData();
+        if(data.occupancy) {
+            std::vector<map::SmacOccupancyCache::Entity> units,bases;
+            for(const auto id:m_um->GetUnitRecordOrder()) {const auto* unit=m_um->GetUnit(id);const auto* tile=unit->GetTile();
+                units.push_back({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},unit->SimulationOwner()});}
+            for(const auto id:m_bm->GetBaseRecordOrder()) {const auto* base=m_bm->GetBase(id);const auto* tile=base->GetTile();
+                bases.push_back({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},base->GetSmacResourceContext().owner_simulation_id});}
+            data.occupancy->Repair(units,bases);
+            auto repaired=std::optional<map::SmacWorkerKnowledge>(map::SmacWorkerKnowledge::Create(data));
+            ValidateSmacWorkerKnowledge(*repaired);m_map->m_worker_knowledge.swap(repaired);
+        }
 		ValidateSmacWorkerKnowledge( *m_map->m_worker_knowledge );
 		m_map->m_worker_knowledge_ready = true;
 	}
@@ -375,6 +386,10 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 		if(center->coord.x<2 || center->coord.x+2>=m_map->GetWidth() || center->coord.y<2 || center->coord.y+2>=m_map->GetHeight()) {ordinary(center);}
 		if(adjacent(destination,center)) {ordinary(center); moving.visible_to |= uint8_t(1u<<faction);}
 	}
+    if(data.occupancy) {
+        if(source) {data.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.size()==1 && source->units.count(id));}
+        data.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},owner,destination->units.empty());
+    }
 	return map::SmacWorkerKnowledge::Create(data);
 }
 

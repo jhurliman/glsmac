@@ -41,6 +41,10 @@ size_t MemorySize( const Knowledge::Data& data ) {
 		}
 	}
 	AddSize( size, data.bases.size(), BASE_BYTES, Knowledge::MAX_WIRE_BYTES );
+    if(data.occupancy) {
+        Require(data.occupancy->Width()==data.width && data.occupancy->Height()==data.height && data.occupancy->Wraps()==data.horizontal_wrap,"Occupancy and knowledge geometry differ");
+        AddSize(size,1,4+data.occupancy->SerializedSize(),Knowledge::MAX_WIRE_BYTES);
+    }
 	return size;
 }
 void ValidateId( uint64_t id ) {
@@ -93,7 +97,7 @@ bool SmacWorkerKnowledge::UnitObservation::operator==( const UnitObservation& o 
 bool SmacWorkerKnowledge::BaseObservation::operator==( const BaseObservation& o ) const noexcept { return id == o.id && known_by == o.known_by && population == o.population; }
 bool SmacWorkerKnowledge::Data::operator==( const Data& o ) const noexcept {
 	return width == o.width && height == o.height && horizontal_wrap == o.horizontal_wrap && ordinary_local_mode == o.ordinary_local_mode
-		&& all_map_revealed == o.all_map_revealed && observers == o.observers && tiles == o.tiles && units == o.units && remembered == o.remembered && bases == o.bases;
+		&& all_map_revealed == o.all_map_revealed && observers == o.observers && tiles == o.tiles && units == o.units && remembered == o.remembered && bases == o.bases && occupancy==o.occupancy;
 }
 SmacWorkerKnowledge::SmacWorkerKnowledge( Data data ) : m_data( std::move( data ) ) {}
 SmacWorkerKnowledge SmacWorkerKnowledge::Create( const Data& data ) { Validate( data ); return SmacWorkerKnowledge( data ); }
@@ -133,7 +137,7 @@ SmacWorkerMapFrame SmacWorkerKnowledge::Project( int32_t observer, const std::ve
 
 std::string SmacWorkerKnowledge::Serialize() const {
 	std::string wire( "SWKN" ); wire.resize( MemorySize( m_data ) );
-	Write( wire, 4, 4, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
+	Write( wire, 4, m_data.occupancy?5:4, 4 ); Write( wire, 8, m_data.width, 4 ); Write( wire, 12, m_data.height, 4 );
 	wire[16] = m_data.horizontal_wrap; wire[17] = m_data.ordinary_local_mode; wire[18] = static_cast< char >( m_data.all_map_revealed );
 	uint8_t presence = 0;
 	for ( size_t i = 0; i < 8; ++i ) {
@@ -179,12 +183,14 @@ std::string SmacWorkerKnowledge::Serialize() const {
 		} }
 		wire[offset+9]=static_cast<char>(present); offset += BASE_BYTES;
 	}
+    if(m_data.occupancy) {const auto cache=m_data.occupancy->Serialize();Write(wire,offset,cache.size(),4);wire.replace(offset+4,cache.size(),cache);}
 	return wire;
 }
 
 SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) {
 	Require( wire.size() >= HEADER_BYTES && wire.size() <= MAX_WIRE_BYTES, "Worker knowledge wire length exceeds budget" );
-	Require( wire.compare( 0, 4, "SWKN" ) == 0 && Read( wire, 4, 4 ) == 4, "Unsupported worker knowledge version" );
+    const auto version=Read(wire,4,4);
+    Require(wire.compare(0,4,"SWKN")==0 && (version==4 || version==5),"Unsupported worker knowledge version");
 	const auto width = Read( wire, 8, 4 ), height = Read( wire, 12, 4 );
 	Require( width <= 512 && height <= 256, "Worker knowledge dimensions exceed budget" );
 	const auto tiles = TileCount( static_cast< int32_t >( width ), static_cast< int32_t >( height ) );
@@ -210,8 +216,14 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 	}
 	const auto base_start=scan+9;
 	const auto base_count=static_cast<size_t>(Read(wire,base_start,4));
-	Require( base_count <= (wire.size()-base_start-4)/BASE_BYTES && wire.size()-base_start-4 == base_count*BASE_BYTES,
-		"Inconsistent Base memory count or trailing bytes" );
+    Require(base_count<=(wire.size()-base_start-4)/BASE_BYTES,"Inconsistent Base memory count");
+    const auto base_end=base_start+4+base_count*BASE_BYTES;
+    if(version==4) {Require(base_end==wire.size(),"Trailing worker knowledge bytes");}
+    else {
+        Require(wire.size()-base_end>=4,"Missing occupancy suffix");const auto count=Read(wire,base_end,4);
+        Require(count<=SmacOccupancyCache::MAX_WIRE_BYTES && wire.size()-base_end-4==count,"Invalid occupancy suffix extent");
+    }
+
 	for(size_t i=0;i<base_count;++i) {
 		const auto at=base_start+4+i*BASE_BYTES; ValidateId(Read(wire,at,8));
 		for(size_t observer=0;observer<8;++observer) {
@@ -261,6 +273,7 @@ SmacWorkerKnowledge SmacWorkerKnowledge::Deserialize( const std::string& wire ) 
 		for(size_t observer=0;observer<8;++observer) { if(Byte(wire,at+9)&(1u<<observer)) {base.population[observer]=Byte(wire,at+10+observer);} }
 		data.bases.push_back(base);
 	}
+    if(version==5) {data.occupancy=SmacOccupancyCache::Deserialize(wire.substr(base_end+4));}
 	Validate( data ); return SmacWorkerKnowledge( std::move( data ) );
 }
 

@@ -134,6 +134,10 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
         transfer->Query([&] {
             auto view=m_game->GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto bit=uint8_t(1u<<new_owner);
             for(auto& row:view.units) {if(converted.count(row.id)) {row.visible_to|=bit;}}
+            if(view.occupancy) {
+                for(const auto id:converted) {const auto* tile=um->GetUnit(id)->GetTile();view.occupancy->SetAffiliation({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},new_owner);}
+                const auto* tile=GetTile();view.occupancy->SetAffiliation({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},new_owner);
+            }
             const auto old_bit=uint8_t(1u<<old_owner);
             auto observed=std::find_if(view.bases.begin(),view.bases.end(),[&](const auto& row){return row.id==m_id;});
             if(observed==view.bases.end()) {view.bases.push_back({m_id,uint8_t(bit|old_bit),{}});observed=view.bases.end()-1;}

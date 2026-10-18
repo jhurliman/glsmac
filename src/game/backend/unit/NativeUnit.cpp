@@ -264,6 +264,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
         ValidateNativeCreation(static_cast<size_t>(next),def,tile,value);
         if(tile->base) {throw std::runtime_error("Native birth on an occupied Base requires mixed-owner stack admission");}
         auto& stack=d->occupants.try_emplace(tile,tile->units).first->second;
+        if(knowledge.occupancy) {knowledge.occupancy->PlaceUnit({x,y},0,stack.empty());}
         Unit* head=nullptr;
         for(const auto& row:stack) {
             if(!row.second || !row.second->IsNative() || row.second->SimulationOwner()!=0) {throw std::runtime_error("Native birth requires an ordinary same-native stack");}

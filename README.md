@@ -156,7 +156,7 @@ You will also need following libraries (unless you build with `-DVENDORED_DEPEND
 
 Gentoo: `emerge cmake libsdl2 sdl2-image freetype glu glew ossp-uuid yaml-cpp`
 
-Ubuntu: `apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev`
+Ubuntu: `apt install cmake build-essential libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev libavformat-dev libavcodec-dev libavutil-dev libswscale-dev`
 
 ArchLinux:
 `pacman -Syu cmake base-devel freetype2 sdl2 sdl2_image glew yaml-cpp` (you'll need to install `ossp-uuid` manually because it's not in repos)
@@ -197,7 +197,7 @@ You can also just download binary releases from github, they are built for ubunt
 In order to build it on Mac install XCode from AppStore - it is free, no Apple Development Program is required. Then install the following dependencies:
 
 - Brew as a package manager from https://brew.sh
-- `brew install cmake PkgConfig sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype`
+- `brew install cmake PkgConfig sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype ffmpeg`
 - In case of missing packages just install it using brew.
 
 Package `ossp-uuid` is visible as `uuid`. Additionally we must link with OpenGL framework (dependency added to make file)
@@ -206,6 +206,13 @@ Then we can follow with build commands as for Linux versions: `cmake -S . -B bui
 Game is build correctly however there are problems related to OpenGL currently which crashes the game.
 
 ### Windows
+
+Movie playback needs a shared FFmpeg development distribution. Run
+`./tools/install_ffmpeg_windows.ps1` and set `FFMPEG_ROOT` to its printed
+directory before configuring. The script verifies a pinned LGPL archive;
+CMake copies its DLLs/license beside the executable. See
+[original movie playback](docs/original-movie-playback.md) for supported formats
+and the explicit `-DGLSMAC_MOVIES=OFF` build option.
 
 #### Visual Studio
 

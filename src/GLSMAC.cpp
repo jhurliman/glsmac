@@ -523,7 +523,13 @@ void GLSMAC::S_Reset( GSE_CALLABLE ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	TriggerObject( this, "intro" );
+	m_intro_played=true;
+	TriggerObject( this, "intro", ARGS_F(this) {
+		{"opening_movie", VALUEEXT(gse::value::String, m_gc_space,
+			g_engine->GetConfig()->GetRuleset() == "smac" ||
+			g_engine->GetResourceManager()->TryGetCustomPath("movies/openingx.wve").empty()
+				? "movies/opening.wve" : "movies/openingx.wve")}
+	}; } );
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
@@ -587,8 +593,7 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 		StartGame( m_gc_space, ctx, si, ep2 );
 	}
 	else if (
-		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
-			g_engine->GetResourceManager()->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
+		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) || m_intro_played
 		) {
 		S_MainMenu( GSE_CALL );
 	}

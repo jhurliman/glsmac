@@ -13,6 +13,16 @@
 #include "types/texture/Filter.h"
 #include "ui/UI.h"
 #include "gse/value/Float.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Undefined.h"
+#include "gse/callable/Native.h"
+#include "task/intro/Movie.h"
+#include "resource/ResourceManager.h"
+#include "config/Config.h"
+#include "audio/Audio.h"
+#include "ui/dom/Container.h"
+#include <cstring>
+#include <stdexcept>
 
 namespace ui {
 namespace dom {
@@ -26,6 +36,34 @@ Surface::Surface( DOM_ARGS_T )
 	m_actor = new scene::actor::Mesh( "UI::Surface", m_mesh );
 	Actor( m_actor );
 	g->AddActor( m_actor );
+
+	Method( GSE_CALL, "playmovie", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 ); N_GETVALUE( path, 0, String );
+		StopMovie();
+		const auto& resolved = g_engine->GetResourceManager()->TryGetCustomPath(path);
+		if (resolved.empty()) { return VALUE(gse::value::Bool,,false); }
+		g_engine->GetAudio()->SuspendForMovie();
+		try { m_movie=std::make_unique<task::intro::Movie>(resolved,!g_engine->GetConfig()->HasLaunchFlag(config::Config::LF_NOSOUND)); }
+		catch (...) {g_engine->GetAudio()->ResumeAfterMovie();throw;}
+		return VALUE(gse::value::Bool,,true);
+	} ) );
+	Method( GSE_CALL, "tickmovie", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 0 );
+		if (!m_movie) {return VALUE(gse::value::Bool,,false);}
+		task::intro::Movie::Frame frame;
+		if(m_movie->Tick(frame)) {
+			PresentMovieFrame(frame.width,frame.height,frame.rgba);
+		}
+		const auto status=m_movie->GetStatus();
+		if(!status.error.empty() || status.finished) {
+			if(!status.error.empty()) {Log("Movie playback: "+status.error);}
+			StopMovie();return VALUE(gse::value::Bool,,false);
+		}
+		return VALUE(gse::value::Bool,,true);
+	} ) );
+	Method( GSE_CALL, "stopmovie", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
+	} ) );
 
 	Property(
 		GSE_CALL, "opacity", gse::VT_FLOAT, VALUE( gse::value::Float, , 1.0f ), PF_NONE,
@@ -233,10 +271,44 @@ Surface::Surface( DOM_ARGS_T )
 }
 
 Surface::~Surface() {
+	StopMovie();
 	if ( m_background.texture && m_background.is_texture_owned ) {
 		delete m_background.texture;
 	}
 }
+
+void Surface::PresentMovieFrame(int width,int height,const std::vector<uint8_t>& rgba) {
+	if(width<=0 || height<=0 || width>2048 || height>2048 || rgba.size()!=static_cast<size_t>(width)*height*4) {
+		throw std::invalid_argument("Invalid movie RGBA frame");
+	}
+	CreateTexture();m_background.texture->Resize(width,height);
+	std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+	m_background.texture->FullUpdate();
+	// Refresh the actor revision too: UI caches otherwise retain the first frame.
+	m_actor->SetTexture(m_background.texture);
+	auto* geometry=m_geometry->AsRectangle();geometry->SetStretched();
+	const auto* parent=m_parent->GetGeometry();
+	// GetInnerWidth/Height describe child-content bounds, which can be zero
+	// before the first frame. The root's actual box is the presentation stage.
+	const auto& parent_area=parent->GetEffectiveArea();
+	const float viewport_width=std::min(parent_area.width,parent_area.height*4.0f/3.0f);
+	const float scale=std::min(viewport_width/width,parent_area.height/height);
+	geometry->SetWidth(width*scale);geometry->SetHeight(height*scale);
+}
+
+void Surface::StopMovie() {
+	if(m_movie) {
+		const auto s=m_movie->GetStatus();
+		Log("Movie stopped: frames="+std::to_string(s.decoded_frames)+
+			" samples="+std::to_string(s.decoded_samples)+" clock="+std::to_string(s.clock)+
+			" finished="+std::to_string(s.finished)+" audio_device="+std::to_string(s.audio_device_opened)+
+			" damaged_packets="+std::to_string(s.damaged_packets)+
+			(s.audio_fallback.empty() ? "" : " silent_fallback="+s.audio_fallback));
+		m_movie.reset();g_engine->GetAudio()->ResumeAfterMovie();
+	}
+}
+
+void Surface::Destroy( GSE_CALLABLE ) { StopMovie(); Area::Destroy(GSE_CALL); }
 
 void Surface::CreateTexture() {
 	if ( !m_background.texture || !m_background.is_texture_owned ) {

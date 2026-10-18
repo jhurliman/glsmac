@@ -80,6 +80,7 @@
 #include "SmacAutomaticWorkerControls.h"
 #include "SmacAutomaticWorkerAllocation.h"
 #include "SmacUnitSupport.h"
+#include "Movie.h"
 #include "SmacBaseAllocationState.h"
 #include "SmacBaseAllocation.h"
 #include "SmacWorkerAvailability.h"
@@ -319,6 +320,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacAutomaticWorkerControlTests( task );
 		tests::AddSmacAutomaticWorkerAllocationTests( task );
 		tests::AddSmacUnitSupportTests( task );
+		tests::AddMovieTests( task );
 		tests::AddSmacBaseAllocationStateTests( task );
 		tests::AddSmacBaseAllocationTests( task );
 		tests::AddSmacWorkerAvailabilityTests( task );

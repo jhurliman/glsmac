@@ -1,0 +1,302 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-INPUT-001",
+  "status": "Original-x86 checked citizen prefix through ordinary/faction inputs with assimilation counter zero; later facilities, psych, conversion and calming unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "ordinary-citizen-inputs.md",
+  "scope": "Population 0..127, difficulty 0..5, Standard map scale resolved as 40, faction base count 1 and current global base position 0 (bureaucracy input zero). Assimilation counter explicitly zero. Raw inputs are not final citizens or riots.",
+  "defaults": {
+    "faction": 1,
+    "human": true,
+    "faction_difficulty": 5,
+    "population": 7,
+    "drone_parameter": 0,
+    "talent_parameter": 0,
+    "current_social_talent": 0
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-INPUT-001",
+      "name": "Transcend population 7",
+      "overrides": {},
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 6,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-002",
+      "name": "Transcend population 1",
+      "overrides": {
+        "population": 1
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 0,
+        "drone_input_after_faction": 0,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-003",
+      "name": "Transcend population 2",
+      "overrides": {
+        "population": 2
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 1,
+        "drone_input_after_faction": 1,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-004",
+      "name": "Citizen content allowance 6",
+      "overrides": {
+        "faction_difficulty": 0,
+        "population": 6
+      },
+      "expected": {
+        "content_allowance": 6,
+        "ordinary_drone_input": 0,
+        "drone_input_after_faction": 0,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-005",
+      "name": "Citizen first ordinary drone",
+      "overrides": {
+        "faction_difficulty": 0,
+        "population": 7
+      },
+      "expected": {
+        "content_allowance": 6,
+        "ordinary_drone_input": 1,
+        "drone_input_after_faction": 1,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-006",
+      "name": "AI fixed difficulty despite stored zero",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 0,
+        "population": 4
+      },
+      "expected": {
+        "content_allowance": 3,
+        "ordinary_drone_input": 1,
+        "drone_input_after_faction": 1,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-007",
+      "name": "AI fixed difficulty despite stored five",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 5,
+        "population": 4
+      },
+      "expected": {
+        "content_allowance": 3,
+        "ordinary_drone_input": 1,
+        "drone_input_after_faction": 1,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-008",
+      "name": "University parameter below first group",
+      "overrides": {
+        "drone_parameter": 4,
+        "population": 3
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 2,
+        "drone_input_after_faction": 2,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-009",
+      "name": "University parameter first full group",
+      "overrides": {
+        "drone_parameter": 4,
+        "population": 4
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 3,
+        "drone_input_after_faction": 4,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-010",
+      "name": "University parameter population 7",
+      "overrides": {
+        "drone_parameter": 4,
+        "population": 7
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 7,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-011",
+      "name": "talent parameter gives first partial group",
+      "overrides": {
+        "talent_parameter": 4,
+        "population": 1
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 0,
+        "drone_input_after_faction": 0,
+        "faction_talent_input": 1
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-012",
+      "name": "talent parameter exact group",
+      "overrides": {
+        "talent_parameter": 4,
+        "population": 4
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 3,
+        "drone_input_after_faction": 3,
+        "faction_talent_input": 1
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-013",
+      "name": "talent parameter next partial group",
+      "overrides": {
+        "talent_parameter": 4,
+        "population": 5
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 4,
+        "drone_input_after_faction": 4,
+        "faction_talent_input": 2
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-014",
+      "name": "both faction modifiers stay separate",
+      "overrides": {
+        "drone_parameter": 4,
+        "talent_parameter": 4
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 7,
+        "faction_talent_input": 2
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-015",
+      "name": "parameter one can exceed population in raw demand",
+      "overrides": {
+        "drone_parameter": 1
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 13,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-016",
+      "name": "zero parameters disable their terms",
+      "overrides": {},
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 6,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-017",
+      "name": "negative drone parameter uses signed division",
+      "overrides": {
+        "drone_parameter": -4
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 5,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-018",
+      "name": "negative talent parameter literal signed expression",
+      "overrides": {
+        "talent_parameter": -4,
+        "population": 1
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 0,
+        "drone_input_after_faction": 0,
+        "faction_talent_input": 1
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-019",
+      "name": "current social TALENT does not replace definition parameter",
+      "overrides": {
+        "current_social_talent": 3
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 6,
+        "faction_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-020",
+      "name": "negative current social TALENT does not alter this prefix",
+      "overrides": {
+        "current_social_talent": -3,
+        "talent_parameter": 4
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 6,
+        "drone_input_after_faction": 6,
+        "faction_talent_input": 2
+      }
+    },
+    {
+      "id": "CITIZEN-INPUT-021",
+      "name": "zero population is synthetic prefix boundary",
+      "overrides": {
+        "population": 0
+      },
+      "expected": {
+        "content_allowance": 1,
+        "ordinary_drone_input": 0,
+        "drone_input_after_faction": 0,
+        "faction_talent_input": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,538 @@
+{
+  "research_id": "RE-SMAC-STARTUP-ECONOMY-001",
+  "scope": "Seven installed faction profiles loaded into human slot1, original faction-initialization entry through explicit pre-placement prefix, separate admitted fresh-game allocation-writer prefix; poison checks for treasury/debit/diplomacy/commerce/sliders and flat-labs constructor. Fourteen complete maintenance calls with fee2 supplied as distinguishing control; original free-facility waiver. Actual installed starting-energy10 taken from retained full alpha loader capture. No complete new-game placement/first-income composition.",
+  "cases": [
+    {
+      "profile": "gaians",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "hive",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 100,
+          "charged": 0
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "univ",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 100,
+          "charged": 0
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "morgan",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 100,
+      "after_initialization": {
+        "credits": 110,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 110,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "spartans",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "believe",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    },
+    {
+      "profile": "peace",
+      "rule_initial_energy": 10,
+      "faction_energy_bonus": 0,
+      "after_initialization": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 777,
+        "labs_tenths": 777,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "after_allocation_writer": {
+        "credits": 10,
+        "pending_debit": 0,
+        "psych_tenths": 0,
+        "labs_tenths": 5,
+        "flat_faction_labs_adjustment": 0,
+        "commerce_blocked": 0,
+        "relations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "commerce_counters": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "maintenance_controls": [
+        {
+          "facility": "Perimeter Defense",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        },
+        {
+          "facility": "Network Node",
+          "supplied_maintenance": 2,
+          "credits": 98,
+          "charged": 2
+        }
+      ],
+      "flat_labs_after_constructor_poison": 0
+    }
+  ]
+}

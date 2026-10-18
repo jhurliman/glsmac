@@ -1,0 +1,406 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-FAC-001",
+  "status": "Original-x86 checked full citizen prefix through facility/project input construction, including original stored-facility and bit-index helpers; later application/conversion/calming unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "citizen-facility-project-inputs.md",
+  "scope": "Positive faction, population1..127, ordinary neutral assimilation/faction parameters, Standard resolved map scale. Project locations/owners supplied. Outputs are separate intermediate adjustments, not final citizen counts.",
+  "defaults": {
+    "faction": 1,
+    "population": 7,
+    "facilities": [],
+    "queued_facilities": [],
+    "genejack_drone_rule": 1,
+    "virtual_world": "none",
+    "planetary_transit_system": "none",
+    "human_genome_project": "none",
+    "clinical_immortality": "none"
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-FAC-001",
+      "name": "neutral base",
+      "overrides": {},
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-002",
+      "name": "recreation_commons",
+      "overrides": {
+        "facilities": [
+          "recreation_commons"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-003",
+      "name": "network_node",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-004",
+      "name": "hologram_theatre",
+      "overrides": {
+        "facilities": [
+          "hologram_theatre"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-005",
+      "name": "paradise_garden",
+      "overrides": {
+        "facilities": [
+          "paradise_garden"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 2,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-006",
+      "name": "research_hospital",
+      "overrides": {
+        "facilities": [
+          "research_hospital"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -1,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-007",
+      "name": "nanohospital",
+      "overrides": {
+        "facilities": [
+          "nanohospital"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -1,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-008",
+      "name": "genejack_factory",
+      "overrides": {
+        "facilities": [
+          "genejack_factory"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": 1,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-009",
+      "name": "Node without Virtual World gives no reduction",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-010",
+      "name": "owned Virtual World with Node",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ],
+        "virtual_world": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-011",
+      "name": "Virtual World without Node",
+      "overrides": {
+        "virtual_world": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-012",
+      "name": "rival Virtual World does not enable Node reduction",
+      "overrides": {
+        "facilities": [
+          "network_node"
+        ],
+        "virtual_world": "other"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-013",
+      "name": "Hologram and Node Virtual World do not double",
+      "overrides": {
+        "facilities": [
+          "network_node",
+          "hologram_theatre"
+        ],
+        "virtual_world": "self_here"
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-014",
+      "name": "Commons stacks with Hologram reduction",
+      "overrides": {
+        "facilities": [
+          "recreation_commons",
+          "hologram_theatre"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -4,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-015",
+      "name": "Hospital and Nanohospital stack",
+      "overrides": {
+        "facilities": [
+          "research_hospital",
+          "nanohospital"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-016",
+      "name": "Transit population 3",
+      "overrides": {
+        "population": 3,
+        "planetary_transit_system": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": -1,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-017",
+      "name": "Transit population 4",
+      "overrides": {
+        "population": 4,
+        "planetary_transit_system": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-018",
+      "name": "rival Transit at population 3",
+      "overrides": {
+        "population": 3,
+        "planetary_transit_system": "other"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-019",
+      "name": "Human Genome talent",
+      "overrides": {
+        "human_genome_project": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 1
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-020",
+      "name": "Clinical talent",
+      "overrides": {
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 2
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-021",
+      "name": "both talent projects stack",
+      "overrides": {
+        "human_genome_project": "self_here",
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 3
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-022",
+      "name": "rival talent projects ignored",
+      "overrides": {
+        "human_genome_project": "other",
+        "clinical_immortality": "other"
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-023",
+      "name": "all local facilities and owned projects",
+      "overrides": {
+        "population": 3,
+        "facilities": [
+          "recreation_commons",
+          "network_node",
+          "hologram_theatre",
+          "paradise_garden",
+          "research_hospital",
+          "nanohospital",
+          "genejack_factory"
+        ],
+        "virtual_world": "self_elsewhere",
+        "planetary_transit_system": "self_elsewhere",
+        "human_genome_project": "self_elsewhere",
+        "clinical_immortality": "self_elsewhere"
+      },
+      "expected": {
+        "facility_drone_adjustment": -6,
+        "paradise_talent_input": 2,
+        "project_talent_input": 3
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-024",
+      "name": "queued facilities do not count",
+      "overrides": {
+        "queued_facilities": [
+          "recreation_commons",
+          "hologram_theatre",
+          "paradise_garden",
+          "genejack_factory"
+        ]
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-025",
+      "name": "custom zero Genejack rule",
+      "overrides": {
+        "facilities": [
+          "genejack_factory"
+        ],
+        "genejack_drone_rule": 0
+      },
+      "expected": {
+        "facility_drone_adjustment": 0,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-026",
+      "name": "custom negative Genejack rule",
+      "overrides": {
+        "facilities": [
+          "genejack_factory"
+        ],
+        "genejack_drone_rule": -2
+      },
+      "expected": {
+        "facility_drone_adjustment": -2,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    },
+    {
+      "id": "CITIZEN-FAC-027",
+      "name": "custom larger Genejack rule",
+      "overrides": {
+        "facilities": [
+          "genejack_factory"
+        ],
+        "genejack_drone_rule": 4
+      },
+      "expected": {
+        "facility_drone_adjustment": 4,
+        "paradise_talent_input": 0,
+        "project_talent_input": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,1114 @@
+{
+  "research_id": "RE-SMAC-SPECIALIST-REPLACE-001",
+  "status": "Original-x86 complete specialist output/replacement loop with original overflow and tech helpers; installed specialist prerequisite/obsolete/output definitions and supplied technology knowledge",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "specialist-replacement-and-overflow.md",
+  "scope": "Faction1, count0..population<=127, first16 selected types supplied. Technology knowledge may omit prerequisite closure to isolate direct gates. Worker assignment/UI legality and larger whole energy path excluded.",
+  "defaults": {
+    "population": 20,
+    "minimum_specialist_size": 5,
+    "known_technologies": [],
+    "stored_specialists": [
+      "doctor"
+    ],
+    "specialist_count": 1,
+    "output_overrides": {}
+  },
+  "technology_labels": {
+    "PlaNets": "Planetary Networks",
+    "Fusion": "Fusion Power",
+    "CentMed": "Centauri Meditation",
+    "MindMac": "Mind/Machine Interface",
+    "AlphCen": "Secrets of Alpha Centauri"
+  },
+  "cases": [
+    {
+      "id": "SPECIALIST-REPLACE-001",
+      "name": "Doctor initially retained",
+      "overrides": {},
+      "expected": {
+        "stored_specialists_after": [
+          "doctor"
+        ],
+        "effective_specialists": [
+          "doctor"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-002",
+      "name": "Technician upgrades to Engineer",
+      "overrides": {
+        "known_technologies": [
+          "Fusion"
+        ],
+        "stored_specialists": [
+          "technician"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 2
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-003",
+      "name": "Doctor upgrades to Empath",
+      "overrides": {
+        "known_technologies": [
+          "CentMed"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "empath"
+        ],
+        "effective_specialists": [
+          "empath"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-004",
+      "name": "Librarian upgrades to Thinker",
+      "overrides": {
+        "known_technologies": [
+          "MindMac"
+        ],
+        "stored_specialists": [
+          "librarian"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "thinker"
+        ],
+        "effective_specialists": [
+          "thinker"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 0,
+          "psych": 1,
+          "labs": 3
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-005",
+      "name": "Doctor skips obsolete Empath for Transcend",
+      "overrides": {
+        "known_technologies": [
+          "CentMed",
+          "AlphCen"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "transcend"
+        ],
+        "effective_specialists": [
+          "transcend"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 4
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-006",
+      "name": "Thinker upgrades to Transcend",
+      "overrides": {
+        "known_technologies": [
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "thinker"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "transcend"
+        ],
+        "effective_specialists": [
+          "transcend"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 4
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-007",
+      "name": "custom obsolete type without dominating replacement retained",
+      "overrides": {
+        "known_technologies": [
+          "Fusion"
+        ],
+        "stored_specialists": [
+          "technician"
+        ],
+        "output_overrides": {
+          "engineer": {
+            "economy": 2,
+            "psych": 0,
+            "labs": 2
+          }
+        }
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "technician"
+        ],
+        "effective_specialists": [
+          "technician"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-008",
+      "name": "custom equal output first candidate beats later better type",
+      "overrides": {
+        "known_technologies": [
+          "Fusion",
+          "CentMed"
+        ],
+        "output_overrides": {
+          "engineer": {
+            "economy": 0,
+            "psych": 2,
+            "labs": 0
+          }
+        }
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-009",
+      "name": "unavailable stored Engineer remains nonobsolete",
+      "overrides": {
+        "stored_specialists": [
+          "engineer"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 2
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-010",
+      "name": "stored Transcend without prerequisite remains",
+      "overrides": {
+        "stored_specialists": [
+          "transcend"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "transcend"
+        ],
+        "effective_specialists": [
+          "transcend"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 2,
+          "psych": 2,
+          "labs": 4
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-011",
+      "name": "selected Technician does not upgrade without obsolescence",
+      "overrides": {
+        "known_technologies": [
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "technician"
+        ]
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "technician"
+        ],
+        "effective_specialists": [
+          "technician"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-012",
+      "name": "sixteen stored slots all persist",
+      "overrides": {
+        "stored_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "specialist_count": 16
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "effective_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 48,
+          "psych": 0,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-013",
+      "name": "seventeenth uses automatic selector",
+      "overrides": {
+        "stored_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "specialist_count": 17
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "effective_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "doctor"
+        ],
+        "overflow_initial_choices": [
+          "doctor"
+        ],
+        "output": {
+          "economy": 48,
+          "psych": 2,
+          "labs": 0
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-014",
+      "name": "overflow ignores stored selection",
+      "overrides": {
+        "stored_specialists": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer"
+        ],
+        "specialist_count": 20
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor"
+        ],
+        "overflow_initial_choices": [
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor"
+        ],
+        "output": {
+          "economy": 48,
+          "psych": 8,
+          "labs": 32
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-015",
+      "name": "overflow below custom size threshold",
+      "overrides": {
+        "minimum_specialist_size": 21,
+        "known_technologies": [
+          "PlaNets",
+          "Fusion",
+          "CentMed",
+          "MindMac",
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "specialist_count": 17
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "transcend"
+        ],
+        "overflow_initial_choices": [
+          "doctor"
+        ],
+        "output": {
+          "economy": 50,
+          "psych": 2,
+          "labs": 36
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-016",
+      "name": "overflow at custom size threshold",
+      "overrides": {
+        "minimum_specialist_size": 20,
+        "known_technologies": [
+          "PlaNets",
+          "Fusion",
+          "CentMed",
+          "MindMac",
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician",
+          "technician"
+        ],
+        "specialist_count": 17
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer"
+        ],
+        "effective_specialists": [
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "engineer",
+          "transcend"
+        ],
+        "overflow_initial_choices": [
+          "transcend"
+        ],
+        "output": {
+          "economy": 50,
+          "psych": 2,
+          "labs": 36
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-017",
+      "name": "overflow initial obsolete Doctor then Transcend",
+      "overrides": {
+        "minimum_specialist_size": 21,
+        "known_technologies": [
+          "PlaNets",
+          "Fusion",
+          "CentMed",
+          "MindMac",
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor"
+        ],
+        "specialist_count": 17
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "effective_specialists": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "overflow_initial_choices": [
+          "doctor"
+        ],
+        "output": {
+          "economy": 34,
+          "psych": 34,
+          "labs": 68
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-018",
+      "name": "mixed stored types upgrade independently",
+      "overrides": {
+        "known_technologies": [
+          "PlaNets",
+          "Fusion",
+          "CentMed",
+          "MindMac",
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "technician",
+          "doctor",
+          "librarian",
+          "engineer",
+          "empath",
+          "thinker",
+          "transcend"
+        ],
+        "specialist_count": 7
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "engineer",
+          "transcend",
+          "transcend",
+          "engineer",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "effective_specialists": [
+          "engineer",
+          "transcend",
+          "transcend",
+          "engineer",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "overflow_initial_choices": [],
+        "output": {
+          "economy": 16,
+          "psych": 10,
+          "labs": 24
+        }
+      }
+    },
+    {
+      "id": "SPECIALIST-REPLACE-019",
+      "name": "maximum population overflow",
+      "overrides": {
+        "population": 127,
+        "known_technologies": [
+          "PlaNets",
+          "Fusion",
+          "CentMed",
+          "MindMac",
+          "AlphCen"
+        ],
+        "stored_specialists": [
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor",
+          "doctor"
+        ],
+        "specialist_count": 127
+      },
+      "expected": {
+        "stored_specialists_after": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "effective_specialists": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "overflow_initial_choices": [
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend",
+          "transcend"
+        ],
+        "output": {
+          "economy": 254,
+          "psych": 254,
+          "labs": 508
+        }
+      }
+    }
+  ]
+}

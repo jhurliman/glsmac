@@ -68,6 +68,7 @@ SET( SRC ${SRC}
 	${PWD}/Scripts.cpp
 	${PWD}/SmacMineralCostFactor.cpp
 	${PWD}/SmacPopulationStep.cpp
+	${PWD}/SmacCitizens.cpp
 	${PWD}/SmacBaseEnergy.cpp
 	${PWD}/SmacEconomyState.cpp
 	${PWD}/SmacLiveEconomy.cpp

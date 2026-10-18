@@ -1,0 +1,518 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-CONVERT-001",
+  "status": "Original-x86 checked contiguous initial, psych and local facility conversion stages with resolved stage inputs supplied; later police/projects/final conversion unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "citizen-conversion-stages.md",
+  "scope": "Population1..127, excluded_population0..population, nonnegative ordinary/bureaucracy/faction talent inputs. extra_drone_steps is an additional calming burden, not a disjoint population category. Psych input and excluded count upstream construction remain outside scope.",
+  "defaults": {
+    "population": 7,
+    "excluded_population": 0,
+    "ordinary_drone_input": 6,
+    "bureaucracy_input": 0,
+    "faction_talent_input": 0,
+    "social_talent": 0,
+    "psych_points": 0,
+    "facility_drone_adjustment": 0,
+    "paradise_talent_input": 0
+  },
+  "cases": [
+    {
+      "id": "CITIZEN-CONVERT-001",
+      "name": "ordinary baseline",
+      "overrides": {},
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-002",
+      "name": "positive social talents",
+      "overrides": {
+        "social_talent": 3
+      },
+      "expected": {
+        "initial": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-003",
+      "name": "negative social increases demand before cap",
+      "overrides": {
+        "social_talent": -3
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-004",
+      "name": "ordinary excess alone does not create extra steps",
+      "overrides": {
+        "ordinary_drone_input": 14
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-005",
+      "name": "bureaucracy after ordinary cap creates extra steps",
+      "overrides": {
+        "ordinary_drone_input": 14,
+        "bureaucracy_input": 3
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 3
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-006",
+      "name": "talent cancels extra step first",
+      "overrides": {
+        "ordinary_drone_input": 14,
+        "bureaucracy_input": 3,
+        "faction_talent_input": 1
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 2
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 2
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 2
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-007",
+      "name": "enough talents to cancel extra and ordinary steps",
+      "overrides": {
+        "ordinary_drone_input": 14,
+        "bureaucracy_input": 3,
+        "faction_talent_input": 5
+      },
+      "expected": {
+        "initial": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-008",
+      "name": "one psych point rounds down",
+      "overrides": {
+        "psych_points": 1
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-009",
+      "name": "two psych points add one",
+      "overrides": {
+        "psych_points": 2
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-010",
+      "name": "three psych points still add one",
+      "overrides": {
+        "psych_points": 3
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 1,
+          "drones": 6,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-011",
+      "name": "psych above population saturates",
+      "overrides": {
+        "psych_points": 100
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 4,
+          "drones": 3,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 4,
+          "drones": 3,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-012",
+      "name": "negative odd psych truncates toward zero",
+      "overrides": {
+        "faction_talent_input": 3,
+        "psych_points": -3
+      },
+      "expected": {
+        "initial": {
+          "talents": 2,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-013",
+      "name": "facility drone reduction",
+      "overrides": {
+        "facility_drone_adjustment": -4
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 2,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-014",
+      "name": "facility positive adjustment clamps",
+      "overrides": {
+        "facility_drone_adjustment": 8
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-015",
+      "name": "Paradise enters after psych",
+      "overrides": {
+        "psych_points": 4,
+        "paradise_talent_input": 2
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 6,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 1,
+          "drones": 5,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 2,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-016",
+      "name": "facility reduction with extra steps",
+      "overrides": {
+        "ordinary_drone_input": 7,
+        "bureaucracy_input": 3,
+        "facility_drone_adjustment": -4
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 7,
+          "extra_drone_steps": 3
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 3,
+          "extra_drone_steps": 3
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-017",
+      "name": "half population excluded",
+      "overrides": {
+        "excluded_population": 3,
+        "faction_talent_input": 2
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 4,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-018",
+      "name": "all population excluded",
+      "overrides": {
+        "excluded_population": 7,
+        "bureaucracy_input": 7,
+        "psych_points": 20,
+        "paradise_talent_input": 2
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-019",
+      "name": "single citizen and excess input",
+      "overrides": {
+        "population": 1,
+        "ordinary_drone_input": 2,
+        "bureaucracy_input": 1,
+        "psych_points": 2
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 1,
+          "extra_drone_steps": 1
+        },
+        "after_psych": {
+          "talents": 0,
+          "drones": 1,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 0,
+          "drones": 1,
+          "extra_drone_steps": 0
+        }
+      }
+    },
+    {
+      "id": "CITIZEN-CONVERT-020",
+      "name": "large population boundary",
+      "overrides": {
+        "population": 127,
+        "ordinary_drone_input": 127,
+        "bureaucracy_input": 127,
+        "faction_talent_input": 127,
+        "psych_points": 254
+      },
+      "expected": {
+        "initial": {
+          "talents": 0,
+          "drones": 127,
+          "extra_drone_steps": 0
+        },
+        "after_psych": {
+          "talents": 63,
+          "drones": 63,
+          "extra_drone_steps": 0
+        },
+        "after_facilities": {
+          "talents": 63,
+          "drones": 63,
+          "extra_drone_steps": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "research_id": "RE-SMAC-RIOT-FACILITY-001",
+  "status": "Original human riot routine through grace/eligibility and actual facility-bit removal or later-branch admission; RNG returns supplied, notification/map callbacks omitted; defection and removal aftermath unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "riot-facility-loss.md",
+  "scope": "Human faction1, valid population/rank/difficulty and nonnegative supplied RNG returns, no callback interventions. Stop immediately after facility removal before formatting/notification or at post-search branch before possible defection.",
+  "defaults": {
+    "population": 7,
+    "police": 0,
+    "difficulty": 3,
+    "faction_rank": 4,
+    "base_count": 2,
+    "assimilation_counter": 0,
+    "riots_before": true,
+    "facilities": [
+      "recreation_commons"
+    ],
+    "faction_facility_grants": [],
+    "random_returns": [
+      0,
+      6
+    ]
+  },
+  "facility_selection_order": [
+    "headquarters",
+    "children_s_creche",
+    "recycling_tanks",
+    "perimeter_defense",
+    "tachyon_field",
+    "recreation_commons",
+    "energy_bank",
+    "network_node",
+    "biology_lab",
+    "skunkworks",
+    "hologram_theatre",
+    "paradise_garden",
+    "tree_farm",
+    "hybrid_forest",
+    "fusion_lab",
+    "quantum_lab",
+    "research_hospital",
+    "nanohospital",
+    "robotic_assembly_plant",
+    "nanoreplicator",
+    "quantum_converter",
+    "genejack_factory",
+    "punishment_sphere",
+    "hab_complex",
+    "habitation_dome",
+    "pressure_dome",
+    "command_center",
+    "naval_yard",
+    "aerospace_complex",
+    "bioenhancement_center",
+    "centauri_preserve",
+    "temple_of_planet",
+    "psi_gate",
+    "sky_hydroponics_lab",
+    "nessus_mining_station",
+    "orbital_power_transmitter",
+    "orbital_defense_pod",
+    "stockpile_energy"
+  ],
+  "cases": [
+    {
+      "id": "RIOT-FACILITY-001",
+      "name": "ongoing riot destroys first eligible selection",
+      "overrides": {},
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 2,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-002",
+      "name": "new human riot no random consequence",
+      "overrides": {
+        "riots_before": false
+      },
+      "expected": {
+        "passed_police_gate": false,
+        "entered_facility_search": false,
+        "random_calls": 0,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-003",
+      "name": "POLICE gate rejects nonzero remainder",
+      "overrides": {
+        "random_returns": [
+          1,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": false,
+        "entered_facility_search": false,
+        "random_calls": 1,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-004",
+      "name": "POLICE minus six bypasses first draw",
+      "overrides": {
+        "police": -6,
+        "random_returns": [
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 1,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-005",
+      "name": "POLICE below minus six avoids zero divisor",
+      "overrides": {
+        "police": -7,
+        "random_returns": [
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 1,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-006",
+      "name": "HQ protects after POLICE draw",
+      "overrides": {
+        "facilities": [
+          "headquarters",
+          "recreation_commons"
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": false,
+        "random_calls": 1,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "headquarters",
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-007",
+      "name": "single base protects",
+      "overrides": {
+        "base_count": 1
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": false,
+        "random_calls": 1,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-008",
+      "name": "assimilation forty four allows",
+      "overrides": {
+        "assimilation_counter": 44
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 2,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-009",
+      "name": "assimilation forty five protects",
+      "overrides": {
+        "assimilation_counter": 45
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": false,
+        "random_calls": 1,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-010",
+      "name": "assimilation high byte protects",
+      "overrides": {
+        "assimilation_counter": 255
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": false,
+        "random_calls": 1,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-011",
+      "name": "population three additional gate rejects",
+      "overrides": {
+        "population": 3,
+        "random_returns": [
+          0,
+          1,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": false,
+        "random_calls": 2,
+        "selection_attempts": 0,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-012",
+      "name": "population three additional gate passes",
+      "overrides": {
+        "population": 3,
+        "random_returns": [
+          0,
+          0,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 3,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-013",
+      "name": "population four skips small gate",
+      "overrides": {
+        "population": 4,
+        "random_returns": [
+          0,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 2,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-014",
+      "name": "faction FACILITY grant immune",
+      "overrides": {
+        "faction_facility_grants": [
+          "recreation_commons"
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 22,
+        "selection_attempts": 21,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": true,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-015",
+      "name": "immune selection retries another facility",
+      "overrides": {
+        "facilities": [
+          "recreation_commons",
+          "energy_bank"
+        ],
+        "faction_facility_grants": [
+          "recreation_commons"
+        ],
+        "random_returns": [
+          0,
+          6,
+          7
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 3,
+        "selection_attempts": 2,
+        "facility_removed": "energy_bank",
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-016",
+      "name": "absent candidate retries",
+      "overrides": {
+        "random_returns": [
+          0,
+          7,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 3,
+        "selection_attempts": 2,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-017",
+      "name": "selection modulo thirty nine",
+      "overrides": {
+        "random_returns": [
+          0,
+          45
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 2,
+        "selection_attempts": 1,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-018",
+      "name": "zero and one ignored",
+      "overrides": {
+        "random_returns": [
+          0,
+          0,
+          1,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 4,
+        "selection_attempts": 3,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-019",
+      "name": "above thirty three ignored",
+      "overrides": {
+        "facilities": [
+          "sky_hydroponics_lab",
+          "recreation_commons"
+        ],
+        "random_returns": [
+          0,
+          34,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 3,
+        "selection_attempts": 2,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [
+          "sky_hydroponics_lab"
+        ],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-020",
+      "name": "Psi Gate thirty three allowed",
+      "overrides": {
+        "facilities": [
+          "psi_gate"
+        ],
+        "random_returns": [
+          0,
+          33
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 2,
+        "selection_attempts": 1,
+        "facility_removed": "psi_gate",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-021",
+      "name": "no facility reaches later branch",
+      "overrides": {
+        "facilities": []
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 22,
+        "selection_attempts": 21,
+        "facility_removed": null,
+        "remaining_facilities": [],
+        "reached_post_search_branch": true,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-022",
+      "name": "attempt limit inclusive",
+      "overrides": {
+        "population": 4,
+        "difficulty": 5,
+        "faction_rank": 7,
+        "random_returns": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 14,
+        "selection_attempts": 13,
+        "facility_removed": "recreation_commons",
+        "remaining_facilities": [],
+        "reached_post_search_branch": false,
+        "riots_after": true
+      }
+    },
+    {
+      "id": "RIOT-FACILITY-023",
+      "name": "attempt just beyond limit never consumed",
+      "overrides": {
+        "population": 4,
+        "difficulty": 5,
+        "faction_rank": 7,
+        "random_returns": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          6
+        ]
+      },
+      "expected": {
+        "passed_police_gate": true,
+        "entered_facility_search": true,
+        "random_calls": 14,
+        "selection_attempts": 13,
+        "facility_removed": null,
+        "remaining_facilities": [
+          "recreation_commons"
+        ],
+        "reached_post_search_branch": true,
+        "riots_after": true
+      }
+    }
+  ]
+}

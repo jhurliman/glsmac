@@ -1,0 +1,4968 @@
+{
+  "research_id": "RE-SMAC-CITIZEN-UPKEEP-COMPOSITION-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Twelve Base caller returns over accepted first-world services: ten ordinary Unit/Colony controls without cleanup jumps; two facility controls omit reached production cleanup tails by continuing at native production epilogue. Actual citizen/resource/grant/population/status bodies; notifications/history/destructors/deallocation supplied. No full faction caller, live GUI or riot consequences.",
+  "defaults": {
+    "owner": 1,
+    "human_mask": 2,
+    "turn_counter": 2,
+    "initial_population": 3,
+    "initial_specialists": 0,
+    "difficulty": 0,
+    "social_TALENT": 2,
+    "social_GROWTH": 0,
+    "projects_present": false,
+    "governor": 0,
+    "initial_food": 33,
+    "declared_nutrient_factor": 10,
+    "declared_mineral_factor": 10,
+    "declared_center_resource_rule": [
+      2,
+      1,
+      1
+    ],
+    "map": "accepted synthetic first-world cylinder, ordinary moist-land radius",
+    "ordinary_scout_cost": 10,
+    "ordinary_Colony_Pod_cost": 30,
+    "declared_Paradise_Garden_cost": 40,
+    "initial_citizen_canaries": {
+      "talents": 77,
+      "drones": 66,
+      "extra_drone_steps": 55
+    }
+  },
+  "ordering": [
+    "initial resource/citizen pass",
+    "production/grant/Colony debit",
+    "secondary production and baseline",
+    "food/population and any population-change resource pass",
+    "mineral deficit check",
+    "unconditional second resource/citizen pass",
+    "status admission",
+    "post-status specialist policy",
+    "later research/cache/ecology/income/tail"
+  ],
+  "critical_rules": {
+    "growth_uses_incoming_Golden_Age": true,
+    "new_status_not_retroactive": true,
+    "mineral_posting_uses_incoming_saved_riots": true,
+    "status_reads_second_pass_final_T_and_D": true,
+    "status_reads_current_post_population_size": true,
+    "status_directly_recalculates_citizens": false,
+    "unconditional_post_status_resource_pass": false
+  },
+  "cases": [
+    {
+      "id": "scout_complete_new_golden",
+      "inputs": {
+        "id": "scout_complete_new_golden",
+        "design": 2,
+        "store": 9
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 2,
+        "minerals": 9,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 8400900,
+          "golden": true,
+          "riots": false,
+          "target": 2,
+          "minerals": 0,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 2,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "PRODUCE",
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "scout_control_new_golden",
+      "inputs": {
+        "id": "scout_control_new_golden",
+        "design": 2,
+        "store": 8
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 2,
+        "minerals": 8,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 12292,
+          "golden": true,
+          "riots": false,
+          "target": 2,
+          "minerals": 9,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 8,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "scout_complete_incoming_golden",
+      "inputs": {
+        "id": "scout_complete_incoming_golden",
+        "design": 2,
+        "store": 9,
+        "golden": true
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 4,
+        "golden": true,
+        "riots": false,
+        "target": 2,
+        "minerals": 9,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 4,
+          "food": 2,
+          "status": 8396804,
+          "golden": true,
+          "riots": false,
+          "target": 2,
+          "minerals": 0,
+          "workers": 31,
+          "specialists": 0,
+          "intake": [
+            10,
+            1,
+            3
+          ],
+          "surplus": [
+            2,
+            1,
+            3
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 2,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 0,
+              "workers": 31,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 8,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "PRODUCE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "scout_control_incoming_golden",
+      "inputs": {
+        "id": "scout_control_incoming_golden",
+        "design": 2,
+        "store": 8,
+        "golden": true
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 4,
+        "golden": true,
+        "riots": false,
+        "target": 2,
+        "minerals": 8,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 4,
+          "food": 2,
+          "status": 8196,
+          "golden": true,
+          "riots": false,
+          "target": 2,
+          "minerals": 9,
+          "workers": 61,
+          "specialists": 0,
+          "intake": [
+            10,
+            1,
+            3
+          ],
+          "surplus": [
+            2,
+            1,
+            3
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 8,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 4,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 61,
+              "specialists": 0,
+              "intake": [
+                10,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 8,
+        "nutrient_cost_after_return": 8,
+        "notifications": [],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "colony_complete_population_debit",
+      "inputs": {
+        "id": "colony_complete_population_debit",
+        "design": 0,
+        "store": 29
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 0,
+        "minerals": 29,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 2,
+          "status": 58732548,
+          "golden": true,
+          "riots": false,
+          "target": 0,
+          "minerals": 0,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 2,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_colony_debit",
+            "state": {
+              "population": 2,
+              "food": 33,
+              "status": 50331648,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 2,
+              "food": 33,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 2,
+              "food": 33,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "PRODUCE",
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "colony_control_no_debit",
+      "inputs": {
+        "id": "colony_control_no_debit",
+        "design": 0,
+        "store": 28
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 0,
+        "minerals": 28,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 12292,
+          "golden": true,
+          "riots": false,
+          "target": 0,
+          "minerals": 29,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 28,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "incoming_riot_blocks_posting_then_recovers",
+      "inputs": {
+        "id": "incoming_riot_blocks_posting_then_recovers",
+        "design": 2,
+        "store": 9,
+        "riots": true
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 2,
+        "golden": false,
+        "riots": true,
+        "target": 2,
+        "minerals": 9,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 12292,
+          "golden": true,
+          "riots": false,
+          "target": 2,
+          "minerals": 9,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 2,
+              "golden": false,
+              "riots": true,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 2,
+              "golden": false,
+              "riots": true,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 2,
+              "golden": false,
+              "riots": true,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 2,
+              "golden": false,
+              "riots": true,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 2,
+              "golden": false,
+              "riots": true,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 2,
+              "minerals": 9,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "colony_debit_empty_box_no_golden",
+      "inputs": {
+        "id": "colony_debit_empty_box_no_golden",
+        "design": 0,
+        "store": 29,
+        "food": 0
+      },
+      "before": {
+        "population": 3,
+        "food": 0,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 0,
+        "minerals": 29,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 2,
+          "food": 2,
+          "status": 58732544,
+          "golden": false,
+          "riots": false,
+          "target": 0,
+          "minerals": 0,
+          "workers": 7,
+          "specialists": 0,
+          "intake": [
+            6,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 2,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 0,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_colony_debit",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 50331648,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 10,
+        "notifications": [
+          "PRODUCE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "colony_control_empty_box_golden",
+      "inputs": {
+        "id": "colony_control_empty_box_golden",
+        "design": 0,
+        "store": 28,
+        "food": 0
+      },
+      "before": {
+        "population": 3,
+        "food": 0,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": 0,
+        "minerals": 28,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 2,
+          "status": 12292,
+          "golden": true,
+          "riots": false,
+          "target": 0,
+          "minerals": 29,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 0,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 28,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 0,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 2,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "colony_debit_ends_incoming_golden",
+      "inputs": {
+        "id": "colony_debit_ends_incoming_golden",
+        "design": 0,
+        "store": 29,
+        "food": 0,
+        "golden": true
+      },
+      "before": {
+        "population": 3,
+        "food": 0,
+        "status": 4,
+        "golden": true,
+        "riots": false,
+        "target": 0,
+        "minerals": 29,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 2,
+          "food": 2,
+          "status": 58732544,
+          "golden": false,
+          "riots": false,
+          "target": 0,
+          "minerals": 0,
+          "workers": 7,
+          "specialists": 0,
+          "intake": [
+            6,
+            1,
+            3
+          ],
+          "surplus": [
+            2,
+            1,
+            3
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 2,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 0,
+              "status": 4,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 29,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_colony_debit",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 50331652,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 2,
+              "food": 0,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": -1,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720260,
+              "golden": true,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 2,
+              "food": 2,
+              "status": 58720256,
+              "golden": false,
+              "riots": false,
+              "target": 0,
+              "minerals": 0,
+              "workers": 7,
+              "specialists": 0,
+              "intake": [
+                6,
+                1,
+                3
+              ],
+              "surplus": [
+                2,
+                1,
+                3
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 2,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 8,
+        "nutrient_cost_after_return": 10,
+        "notifications": [
+          "PRODUCE",
+          "GOLDENAGEOVER"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 0
+      },
+      "omitted_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "notification",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "id": "paradise_complete_recalculates_talents",
+      "inputs": {
+        "id": "paradise_complete_recalculates_talents",
+        "design": -12,
+        "store": 39,
+        "talent": 0
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": -12,
+        "minerals": 39,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 8400900,
+          "golden": true,
+          "riots": false,
+          "target": -38,
+          "minerals": 0,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 2,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": true
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "queue_after_completion",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388608,
+              "golden": false,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 8388612,
+              "golden": true,
+              "riots": false,
+              "target": -38,
+              "minerals": 0,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 2,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": true
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 8,
+        "notifications": [
+          "GOLDENAGE"
+        ],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 1
+      },
+      "omitted_services": [
+        "completion_history",
+        "facility_production_cleanup_to_native_epilogue",
+        "notification"
+      ]
+    },
+    {
+      "id": "paradise_control_no_grant",
+      "inputs": {
+        "id": "paradise_control_no_grant",
+        "design": -12,
+        "store": 38,
+        "talent": 0
+      },
+      "before": {
+        "population": 3,
+        "food": 33,
+        "status": 0,
+        "golden": false,
+        "riots": false,
+        "target": -12,
+        "minerals": 38,
+        "workers": 15,
+        "specialists": 0,
+        "intake": [
+          2,
+          1,
+          2
+        ],
+        "surplus": [
+          0,
+          1,
+          2
+        ],
+        "psych": 2,
+        "talents": 77,
+        "drones": 66,
+        "extra_drone_steps": 55,
+        "unit_count": 1,
+        "remembered_base": -1,
+        "Paradise": false
+      },
+      "expected": {
+        "after": {
+          "population": 3,
+          "food": 35,
+          "status": 12288,
+          "golden": false,
+          "riots": false,
+          "target": -12,
+          "minerals": 39,
+          "workers": 29,
+          "specialists": 0,
+          "intake": [
+            8,
+            1,
+            2
+          ],
+          "surplus": [
+            2,
+            1,
+            2
+          ],
+          "psych": 1,
+          "talents": 0,
+          "drones": 0,
+          "extra_drone_steps": 0,
+          "unit_count": 1,
+          "remembered_base": -1,
+          "Paradise": false
+        },
+        "complete_Base_caller_return": true,
+        "return_value": 0,
+        "stages": [
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "production",
+          "secondary_production",
+          "population",
+          "support",
+          "intake",
+          "nutrients",
+          "minerals",
+          "energy",
+          "citizens",
+          "status",
+          "post_status_specialist_policy"
+        ],
+        "snapshots": [
+          {
+            "point": "production_entry",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 38,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_population",
+            "state": {
+              "population": 3,
+              "food": 33,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_population",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "after_second_resources",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_entry",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "status_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "specialist_policy_return",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_cache_validation",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          },
+          {
+            "point": "before_ecology",
+            "state": {
+              "population": 3,
+              "food": 35,
+              "status": 0,
+              "golden": false,
+              "riots": false,
+              "target": -12,
+              "minerals": 39,
+              "workers": 29,
+              "specialists": 0,
+              "intake": [
+                8,
+                1,
+                2
+              ],
+              "surplus": [
+                2,
+                1,
+                2
+              ],
+              "psych": 1,
+              "talents": 0,
+              "drones": 0,
+              "extra_drone_steps": 0,
+              "unit_count": 1,
+              "remembered_base": 0,
+              "Paradise": false
+            }
+          }
+        ],
+        "nutrient_cost_during_population": 10,
+        "nutrient_cost_after_return": 10,
+        "notifications": [],
+        "later_ecology_CRT_draw_count": 1,
+        "production_cleanup_redirects": 1
+      },
+      "omitted_services": [
+        "facility_production_cleanup_to_native_epilogue"
+      ]
+    }
+  ],
+  "validation": {
+    "Base_caller_returns": 12,
+    "complete_without_production_cleanup_redirects": 10,
+    "facility_controls_with_declared_cleanup_omission": 2,
+    "post_return_cost_queries": 12,
+    "full_faction_returns": 0,
+    "riot_consequence_paths": 0,
+    "supplied_notifications_history_and_UI_services": true
+  },
+  "raw_receipt_sha256": "bafdb244d80b360984facd89a2c08f7acbf9fa53a6a0900fff493f92930dbf28",
+  "related_contracts": [
+    "golden-age-and-riot-admission.md",
+    "citizen-conversion-stages.md",
+    "citizen-police-and-pacifism.md",
+    "citizen-final-projects-and-suppression.md",
+    "growth-and-starvation.md",
+    "nutrient-cost-factors.md",
+    "upkeep-production-loop.md",
+    "colony-production-loop.md"
+  ]
+}

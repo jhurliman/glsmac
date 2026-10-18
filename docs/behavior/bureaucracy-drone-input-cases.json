@@ -1,0 +1,246 @@
+{
+  "research_id": "RE-SMAC-BUREAU-DRONE-001",
+  "status": "Original-x86 checked citizen bureaucracy-component fragment and raw-drone addition fragment; intervening and later citizen effects unexecuted",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "specification": "bureaucracy-drone-input.md",
+  "scope": "Resolved current faction/map/base-list position. Map scale constructed by original integer-root code. Other raw drone demand supplied at later addition boundary. Results are pre-conversion/calming contributions, not final unhappy citizens or riots.",
+  "defaults": {
+    "faction": 1,
+    "human": true,
+    "faction_difficulty": 5,
+    "efficiency": 0,
+    "map_width": 80,
+    "map_height": 40,
+    "faction_base_count": 5,
+    "global_base_position": 3,
+    "population": 7,
+    "other_raw_drone_demand": 0
+  },
+  "cases": [
+    {
+      "id": "BUREAU-DRONE-001",
+      "name": "one above interval affects position 3",
+      "overrides": {},
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-002",
+      "name": "at interval adds no bureaucracy input",
+      "overrides": {
+        "faction_base_count": 4
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-003",
+      "name": "one above interval position 0 stays unaffected",
+      "overrides": {
+        "global_base_position": 0
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-004",
+      "name": "new fifth base position 4 stays unaffected",
+      "overrides": {
+        "global_base_position": 4
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-005",
+      "name": "global position 7 matches position 3 residue",
+      "overrides": {
+        "global_base_position": 7
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-006",
+      "name": "global position 8 matches position 0 residue",
+      "overrides": {
+        "global_base_position": 8
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-007",
+      "name": "two intervals gives one point",
+      "overrides": {
+        "faction_base_count": 8,
+        "global_base_position": 0
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-008",
+      "name": "two intervals plus one gives two at final residue",
+      "overrides": {
+        "faction_base_count": 9
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 2,
+        "combined_raw_drone_demand": 2
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-009",
+      "name": "component caps at base population",
+      "overrides": {
+        "faction_base_count": 100,
+        "population": 1
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-010",
+      "name": "zero population synthetic boundary",
+      "overrides": {
+        "population": 0
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-011",
+      "name": "negative efficiency treated as zero",
+      "overrides": {
+        "efficiency": -4
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-012",
+      "name": "positive efficiency delays component",
+      "overrides": {
+        "efficiency": 4
+      },
+      "expected": {
+        "interval": 8,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-013",
+      "name": "AI fixed difficulty ignores stored zero",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 0,
+        "faction_base_count": 8,
+        "global_base_position": 6
+      },
+      "expected": {
+        "interval": 7,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-014",
+      "name": "AI fixed difficulty ignores stored five",
+      "overrides": {
+        "human": false,
+        "faction_difficulty": 5,
+        "faction_base_count": 8,
+        "global_base_position": 6
+      },
+      "expected": {
+        "interval": 7,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-015",
+      "name": "adds to supplied other raw demand",
+      "overrides": {
+        "other_raw_drone_demand": 5
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 6
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-016",
+      "name": "raw sum can exceed population before later processing",
+      "overrides": {
+        "other_raw_drone_demand": 7
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 8
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-017",
+      "name": "zero interval yields zero input without divide fault",
+      "overrides": {
+        "map_width": 8,
+        "map_height": 8,
+        "faction_base_count": 100,
+        "global_base_position": 511
+      },
+      "expected": {
+        "interval": 0,
+        "bureaucracy_drone_input": 0,
+        "combined_raw_drone_demand": 0
+      }
+    },
+    {
+      "id": "BUREAU-DRONE-018",
+      "name": "high global position uses same modulo rule",
+      "overrides": {
+        "global_base_position": 511
+      },
+      "expected": {
+        "interval": 4,
+        "bureaucracy_drone_input": 1,
+        "combined_raw_drone_demand": 1
+      }
+    }
+  ]
+}

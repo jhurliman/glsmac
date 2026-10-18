@@ -181,3 +181,13 @@ CI runs both sets after installing LLVM:
 ```sh
 python3 -m unittest discover -s tools/tests -p 'test_analyze_cpp*.py'
 ```
+
+When scope already selects a Windows integration job, that job compiles changed
+standalone C++ objects before the full build. This uses the configured Ninja
+targets, real Windows SDK headers and ordinary compiler flags, so macro
+collisions can fail early. Successful objects are reused by the full build;
+there is no separate syntax-only compilation or additional platform job.
+Header consumers and unchanged sources retain the normal build coverage.
+Included `.cpp` fragments without their own target are handled by their normal
+consumers. `tools/prioritize_changed_cpp.py --dry-run` prints the selected build
+command without compiling, and its selection tests run in the Windows job.

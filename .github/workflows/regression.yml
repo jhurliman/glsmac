@@ -83,9 +83,17 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          # PR checkout is GitHub's merge commit; its first parent is the base.
+          fetch-depth: 2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Test compile-priority selection
+        run: python tools/test_prioritize_changed_cpp.py
       - name: Configure
         run: cmake --preset x64-debug-win-clang -G Ninja '-DBUILD_TESTING=ON' '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+      - name: Compile changed C++ objects first
+        if: github.event_name == 'pull_request'
+        run: python tools/prioritize_changed_cpp.py --build-dir out/build/x64-debug-win-clang --base 'HEAD^1' --jobs 3
       - name: Build
         run: cmake --build out/build/x64-debug-win-clang --parallel 3
       - name: Test without game assets or a display

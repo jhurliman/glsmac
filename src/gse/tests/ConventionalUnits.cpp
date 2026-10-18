@@ -1,4 +1,5 @@
 #include "ConventionalUnits.h"
+#include "game/backend/LocalMoveCommand.h"
 #include "fixtures/FriendlyHQMovement.h"
 #include "fixtures/SpartanHQMovement.h"
 #include "fixtures/GaianHQMovement.h"
@@ -498,6 +499,37 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( fixture.MovementHistory()->WasPlaced( 6, 6 ), "despawn cleared placement history" ); GT_OK();
 		} );
 	} );
+	task->AddTest("Local movement input reports unsupported HQ terrain without changing gameplay",GT() {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* manager=game->GetUM();Define(manager);Land(game);
+            auto* actor=Spawn(GSE_CALL,fixture,Record());auto* source=actor->GetTile();
+            auto* destination=game->GetMap()->GetTile(3,3);HQ(GSE_CALL,game,actor,source);
+            destination->features=map::tile::FEATURE_XENOFUNGUS;
+            destination->rockiness=map::tile::ROCKINESS_ROLLING;
+            fixture.MoveEvent(GSE_CALL,actor,destination); // install the actual default event adapter; this request is rejected
+            fixture.Updates();
+            std::string message;
+            game->On(GSE_CALL,"message",NATIVE_CALL(&message) {
+                N_EXPECT_ARGS(1);N_GETVALUE(event,0,Object);
+                message=static_cast<value::String*>(event.at("text"))->value;
+                return VALUE(value::Undefined);
+            }));
+            const auto before=fixture.Snapshot(),unit=Unit::Serialize(actor).ToString();
+            const auto random=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+            const auto turn=game->GetTurnId();
+            GT_ASSERT(!QueueLocalConventionalMove(GSE_CALL,*game,actor->m_id,3,3),"unsupported movement input was queued");
+            fixture.DrainEvents();
+            GT_ASSERT(message.find("Movement unavailable:")==0 && message.find("Friendly HQ")!=std::string::npos,"input rejection did not reach ordinary message path");
+            GT_ASSERT(fixture.Snapshot()==before && Unit::Serialize(actor).ToString()==unit && actor->GetTile()==source
+                && fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf && game->GetTurnId()==turn,
+                "rejected input changed world, Unit, turn or random authority");
+            destination->features=0;destination->rockiness=map::tile::ROCKINESS_FLAT;
+            GT_ASSERT(QueueLocalConventionalMove(GSE_CALL,*game,actor->m_id,3,3),"valid input after rejection was not queued");
+            fixture.DrainEvents();
+            GT_ASSERT(actor->GetTile()==destination,"valid input after rejection did not move the actual Unit");GT_OK();
+        });
+    });
 	task->AddTest( "movement history HQ failed attempt commits nearest but unsupported requests remain atomic", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
 		fixture.MovementHistory( SmacMovementHistory::NewGeneratedWorld( 8, 8 ) );

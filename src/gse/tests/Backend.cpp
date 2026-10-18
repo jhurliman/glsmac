@@ -4195,6 +4195,9 @@ public:
 			};
 			for ( size_t slot : { 0u, 2u, 6u } ) {
 				auto* value = spawn( slot, slot ); auto* base = base::Base::Unwrap( value ); const auto state = base->GetSmacResourceContext();
+				const auto& regional=m_game.m_simulation->value.economy.at(state.owner_simulation_id).regional_base_counts;
+				if(!regional || std::count(regional->begin(),regional->end(),uint8_t(1))!=1
+					|| std::count(regional->begin(),regional->end(),uint8_t(0))!=127) {throw std::runtime_error("generic canonical spawn omitted its regional count");}
 				if ( m_game.GetTurnId() != 0 || state.golden_age || state.resource_events || state.resource_event_timer || state.governor_options != (difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
 					|| state.GovernorActive() != (difficulty==0) || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->retained ) {
 					throw std::runtime_error( "first-base context producer or Early event position differs" );
@@ -4216,7 +4219,13 @@ public:
 				retired.push_back( entry.first );
 			}
 			// Isolate the claimed-Start guard from the independent first-Base gate.
-			for ( auto id : retired ) { m_game.GetBM()->DespawnBase( GSE_CALL, id ); }
+			for ( auto id : retired ) {
+				const auto owner=m_game.GetBM()->GetBase(id)->GetSmacResourceContext().owner_simulation_id;
+				auto* manager=static_cast<value::Object*>(m_game.GetBM()->Wrap(GSE_CALL));
+				m_game.WithRW([&]{static_cast<value::Callable*>(manager->Get("despawn_base"))->Run(GSE_CALL,{VALUE(value::Int,,id)});});
+				const auto& regional=m_game.m_simulation->value.economy.at(owner).regional_base_counts;
+				GT_ASSERT(regional && std::all_of(regional->begin(),regional->end(),[](auto value){return value==0;}),"generic canonical despawn omitted its regional decrement");
+			}
 			bool rejected = false; try { m_game.GetBM()->PrepareStartingResourceContext( &m_state->m_slots->GetSlot( 0 ) ); } catch ( const std::exception& ) { rejected = true; }
 			GT_ASSERT( rejected, "late producer bypassed claimed Start" ); GT_OK();
 		} );

@@ -242,8 +242,10 @@ std::optional<faction::SmacEconomyState::RegionalBaseCounts> Game::PrepareCanoni
 	// Founding supplies a validated private candidate, before registration.
 	auto counts=m_simulation->value.economy.at(base.m_resource_context->owner_simulation_id).regional_base_counts;
 	if(counts) {
-		if(!topology) {throw std::runtime_error("Regional Base delta requires owned topology");}
-		const auto region=GetCanonicalRegion(*base.GetTile(),*topology);
+		// The generic canonical creator can run before worker knowledge owns
+		// topology. Use the same fresh labeling without changing any map state.
+		const auto region=topology ? GetCanonicalRegion(*base.GetTile(),*topology)
+			: GetCanonicalRegion(*base.GetTile(),map::GlsmacTerritoryTopology::Build(m_map->GetWidth(),m_map->GetHeight(),true,m_map->TerritorySea()));
 		// Original storage is a byte, including wrap on a stale zero or 255.
 		(*counts)[region]=static_cast<uint8_t>(int((*counts)[region])+delta);
 	}

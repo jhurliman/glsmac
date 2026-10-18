@@ -198,6 +198,7 @@ private:
 protected:
 	friend class ui::Class;
 
+	std::pair< gse::Value*, class_modifier_t > GetClassProperty( const std::string& key ) const;
 	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier );
 	virtual void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key );
 

@@ -94,7 +94,7 @@ return {
 		this.screen = null;
 		this.screen_submitted = false;
 		this.choice_buttons = [];
-		this.window = p.root.window({class: 'game-popup', width: 568, height: 222, blocker: 'rgba(0, 0, 0, 180)'});
+		this.window = p.root.window({class: 'game-popup', zindex: 0.9, width: 568, height: 222, blocker: 'rgba(0, 0, 0, 180)'});
 		this.window.hide();
 		this.prompt = this.window.text({class: 'game-popup-text', top: 12, left: 12, right: 12});
 		this.window.text({class: 'game-popup-text', top: 44, left: 12, right: 12, text: 'The Base has only one citizen. Completing the Pod abandons it.'});

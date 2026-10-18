@@ -11,7 +11,7 @@ return {
 	},
 	init: (p) => {
 		this.p = p;
-		this.window = p.root.window({class: 'game-popup', width: 480, height: 160, blocker: 'rgba(0, 0, 0, 180)'});
+		this.window = p.root.window({class: 'game-popup', zindex: 0.9, width: 480, height: 160, blocker: 'rgba(0, 0, 0, 180)'});
 		this.prompt = this.window.text({class: 'game-popup-text', top: 16, left: 16, right: 16});
 		const menu = this.window.button({class: 'game-popup-button', align: 'bottom left', bottom: 16, left: 16, right: 16, height: 32, text: 'Return to Main Menu'});
 		menu.on('click', () => { this.p.glsmac.reset(); return true; });

@@ -30,3 +30,51 @@ The completed world passes actual Start restore with that same native body,
 then reaches the captured Base's next assimilation tail. Six focused capture/
 dense groups and targeted BaseCapture.cpp correctness analysis pass. No codec
 or lifetime format changed in this guard.
+
+## Human-turn coexistence
+
+The positive-owner turn-start reset validates wild native records without treating
+owner0 as a human controller or resetting its retained movement byte. Faction
+existence during economy settlement uses the canonical owner identity for both
+Unit variants. This fixes the first ordinary complete_turn after a native birth;
+it does not implement a native AI/controller turn.
+
+The actual capture/save/Start fixture now advances a full human turn with the
+factory-born native still registered. It checks stable identity, complete native
+wire and factory counters, alongside the human Scout movement reset. The new
+case failed at the former non-conventional-unit guard before the fix and passes
+after it. Both changed production translation units passed targeted correctness
+analysis. No new platform matrix or native AI fidelity is claimed.
+
+## Founding and direct manager removal
+
+New-Base support preparation validates and omits owner0 natives, matching the
+ordinary support consumer. The real manufactured/moved Colony Pod action now
+runs both without and with a factory-born native. It checks the new Base cache,
+Pod consumption, native dense-index repair and complete record/factory retention
+through save/load. The native variant reproduced the previous preparation error.
+
+The direct manager despawn path validates the native graph, excludes the retired
+record and unlinks its neighbors before dense compaction. Head/middle/tail tests
+check retained state, order-target repair, wrapper retirement, physical occupants,
+stable port IDs and complete Unit records through manager restore. This exercises
+the admitted direct manager path without canonical worker knowledge; the existing
+canonical mutation fence remains in place. Native combat/casualty and AI producers
+are separate unfinished callers.
+
+Twelve affected native groups pass across the development runs. Five groups pass
+focused ASan/UBSan with UnitManager.cpp, Unit.cpp, NativeUnit.cpp,
+SmacNativeUnitRecord.cpp and BaseStarting.cpp instrumented; remaining objects use
+the current normal cached build and leak detection is disabled. Targeted
+correctness analysis passes the two changed production translation units.
+
+## Conventional Base workflows
+
+Network Node completion, Colony abandonment and starvation rehoming validate
+and omit unrelated owner0 natives before examining conventional packages or
+homes. Actual construction/turn, abandonment and starvation regressions retain
+the complete unrelated native record and factory counters while still checking
+facility income, newborn publication, repaired homes, Base order and restore.
+The three live caller groups pass; the three affected production translation
+units pass correctness analysis. This closes the remaining shared-roster
+consumers identified by the 4c90c1e0 review.

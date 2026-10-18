@@ -370,7 +370,7 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	if ( !GetGCSpace()->IsAccumulating() || !IsRunning() ) { throw std::runtime_error( "Economy settlement requires the owning native upkeep" ); }
 	auto& saved = m_simulation->value.economy.at( owner );
 	const bool has_base=std::any_of(m_bm->GetBases().begin(),m_bm->GetBases().end(),[&](const auto& row){return row.second->GetSmacResourceContext().owner_simulation_id==owner;});
-	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->Conventional().owner_simulation_id==owner;});
+	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->SimulationOwner()==owner;});
 	if (!has_base && !has_unit) {
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
 		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);

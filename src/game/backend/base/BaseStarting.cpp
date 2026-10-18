@@ -39,7 +39,9 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     const auto* um=m_game->GetUM();support.units.reserve(um->GetUnits().size());
     for(const auto id:um->GetUnitRecordOrder()) {
         const auto* current=um->GetUnit(id);
-        if(!current || !current->IsConventional() || current->m_id!=id) {THROW("Initial support has an invalid Unit record");}
+        if(!current || current->m_id!=id) {THROW("Initial support has an invalid Unit record");}
+        if(current->IsNative()) {(void)um->QueryNativeUnit(current->Native());continue;}
+        if(!current->IsConventional()) {THROW("Initial support has an invalid Unit record");}
         if(current->Conventional().home_base_id==candidate.m_id || (startup && current->Conventional().home_base_id)) {
             THROW("Initial resource cache cannot assume an existing home is absent");
         }

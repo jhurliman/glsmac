@@ -1,0 +1,87 @@
+name: Publish integration build caches
+
+on:
+  push:
+    branches: [codex/faithful-1.0]
+
+# Distinct revisions retain their own per-push scope: a later docs-only push
+# must not replace pending compiler/codec publication from an earlier revision.
+# Only duplicate runs for the same revision may coalesce.
+concurrency:
+  group: integration-build-cache-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    uses: ./.github/workflows/ci-scope.yml
+
+  publish:
+    name: Publish trusted Linux build caches
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # This runs only after a trusted integration push, never on PR/workflow_run.
+      # PR merge-ref caches cannot be read by sibling PRs; this branch can.
+      - uses: actions/checkout@v4
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev libavformat-dev libavcodec-dev libavutil-dev libswscale-dev
+      - name: Restore compiler outputs
+        id: compiler-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: linux-debug-ccache-${{ github.sha }}
+          restore-keys: linux-debug-ccache-
+      - name: Configure matching regression build
+        run: |
+          ccache --set-config=max_size=2G
+          ccache --zero-stats
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - name: Build compiler cache
+        run: cmake --build build --parallel 3
+      - name: Report compiler cache reuse
+        if: always()
+        run: ccache --show-stats
+      - name: Publish compiler outputs for subsequent PRs
+        if: success() && steps.compiler-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+      - name: Identify portable codec toolchain
+        if: needs.scope.outputs.movies == 'true'
+        id: movie-toolchain
+        run: echo "version=$(cc -dumpmachine)-$(cc -dumpfullversion)" >> "$GITHUB_OUTPUT"
+      - name: Restore pinned portable movie codecs
+        if: needs.scope.outputs.movies == 'true'
+        id: movie-codec-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            build/movie-portable/movie-ffmpeg/install
+            build/movie-portable/movie-ffmpeg/source/COPYING.LGPLv2.1
+            build/movie-portable/movie-ffmpeg/download/ffmpeg-*.tar.xz
+          key: movie-ffmpeg-${{ runner.os }}-${{ runner.arch }}-${{ steps.movie-toolchain.outputs.version }}-${{ hashFiles('cmake/PortableMovieFFmpeg.cmake') }}
+      - name: Seed changed portable codec recipe
+        if: needs.scope.outputs.movies == 'true' && steps.movie-codec-cache.outputs.cache-hit != 'true'
+        run: |
+          cmake -S tools/tests/portable_movie -B build/movie-portable -G Ninja -DCMAKE_BUILD_TYPE=Portable64 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DGLSMAC_REUSE_PORTABLE_MOVIE_FFMPEG=OFF
+          cmake --build build/movie-portable --parallel 3
+      - name: Publish pinned portable movie codecs
+        if: needs.scope.outputs.movies == 'true' && steps.movie-codec-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/movie-portable/movie-ffmpeg/install
+            build/movie-portable/movie-ffmpeg/source/COPYING.LGPLv2.1
+            build/movie-portable/movie-ffmpeg/download/ffmpeg-*.tar.xz
+          key: ${{ steps.movie-codec-cache.outputs.cache-primary-key }}

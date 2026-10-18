@@ -227,6 +227,8 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 		m_canonical_continuation=std::move(continuation);
         if(!m_canonical_continuation->owners.empty() && IsActiveOwner(m_simulation->value,m_canonical_continuation->owners.front().first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,m_canonical_continuation->owners.front().first);}
 		for (const auto& entry:m_um->GetUnits()) {
+            // Positive-owner upkeep does not run the separate native controller.
+            if(entry.second->IsNative()) {(void)m_um->QueryNativeUnit(entry.second->Native());continue;}
 			if (!entry.second->IsConventional()) { throw std::runtime_error("Canonical upkeep contains an unsupported legacy Unit"); }
 			if(!IsActiveOwner(m_simulation->value,entry.second->Conventional().owner_simulation_id)) {continue;}
 			m_um->ResetConventionalSpent(GSE_CALL,entry.second);

@@ -146,7 +146,7 @@ void Game::PrepareNewSimulation() {
 		// used by submission. Restore retains its saved value without replay.
 		value.economy.emplace( participant.simulation_id, faction::SmacEconomyState::NewWorld( { 0, 5 }, static_cast< int32_t >( credits ), 0 ) );
 	}
-	if ( m_active_admission && m_active_admission->generated_map ) {
+	if ( m_active_admission && (m_active_admission->generated_map || m_active_admission->installed_planet) ) {
 		const auto& selected = settings.map.GetSmacWorldSize();
 		if ( !selected ) { throw std::runtime_error( "Generated movement history requires accepted world geometry" ); }
 		value.movement_history = SmacMovementHistory::NewGeneratedWorld( selected->width, selected->height );

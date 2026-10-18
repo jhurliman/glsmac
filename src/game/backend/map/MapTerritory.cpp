@@ -1,5 +1,6 @@
 #include "Map.h"
 #include "tile/Tiles.h"
+#include "SmacPlanetMap.h"
 
 namespace game::backend::map {
 std::vector< bool > Map::TerritorySea() const {
@@ -28,7 +29,13 @@ GlsmacTerritoryTopology Map::PrepareFreshTerritoryTopology() const {
 		fertile.push_back(tile->moisture>tile::MOISTURE_ARID && tile->rockiness<=tile::ROCKINESS_ROLLING
 			&& !(tile->features&tile::FEATURE_XENOFUNGUS));
 	}}
+	std::vector<uint8_t> details(sea.size(),0);
+	if(const auto* planet=m_resource_policy->OriginalPlanet()) {
+		for(size_t y=0;y<GetHeight();++y) {for(size_t x=y&1;x<GetWidth();x+=2) {
+			details[y*(GetWidth()/2)+x/2]=static_cast<uint8_t>(planet->At(x,y).Landmarks()>>24);
+		}}
+	}
 	return topology.WithTerrainPostpass(sea,fertile).WithSiteRatings(smac_site::RatingCache::Fresh({
-		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true})).WithLandmarkDetails(std::vector<uint8_t>(sea.size(),0));
+		static_cast<int32_t>(GetWidth()),static_cast<int32_t>(GetHeight()),true})).WithLandmarkDetails(std::move(details));
 }
 }

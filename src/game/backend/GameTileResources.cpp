@@ -245,7 +245,8 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	}
 	if ( !base_count ) { throw std::runtime_error( "Canonical resource owner has no registered base" ); }
 
-	constexpr feature_t supported_features = FEATURE_RIVER | FEATURE_MONOLITH | FEATURE_XENOFUNGUS | FEATURE_JUNGLE;
+	const feature_t supported_features = FEATURE_RIVER | FEATURE_MONOLITH | FEATURE_XENOFUNGUS | FEATURE_JUNGLE
+		| (m_map->GetResourcePolicy()->OriginalPlanet() ? FEATURE_URANIUM | FEATURE_GEOTHERMAL | FEATURE_VOLCANO | FEATURE_GARLAND_CRATER | FEATURE_FOSSIL_FIELD_RIDGE : 0);
 	constexpr terraforming_t supported_terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST
 		| TERRAFORMING_FARM | TERRAFORMING_SOIL_ENRICHER | TERRAFORMING_SOLAR | TERRAFORMING_MINE
 		| TERRAFORMING_CONDENSER | TERRAFORMING_BOREHOLE | TERRAFORMING_SENSOR | TERRAFORMING_BUNKER | TERRAFORMING_AIRBASE;
@@ -257,11 +258,12 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 		throw std::runtime_error( "Canonical resource terrain has unknown moisture/rockiness/elevation" );
 	}
 	const auto& policy = *m_map->GetResourcePolicy();
-	const auto altitude = policy.Altitude( tile.is_water_tile, *tile.elevation.center );
+	const auto altitude = policy.Altitude( tile );
 	const auto bonus = policy.Bonus( tile );
 	const auto feature = [ & ]( feature_t bit ) { return ( tile.features & bit ) != 0; };
 	const auto improved = [ & ]( terraforming_t bit ) { return ( tile.terraforming & bit ) != 0; };
-	const bool nutrient_landmark = !tile.is_water_tile && feature( FEATURE_JUNGLE );
+	const auto landmarks = policy.LandmarkBonuses( tile );
+	const bool nutrient_landmark = landmarks[0];
 	using Events = base::SmacBaseResourceContext;
 	const bool dust = global.atmospheric_dust_countdown != 0;
 	// Ordinary display/intake evaluation is explicit. Upkeep's separate solar
@@ -274,7 +276,7 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	}
 	if ( evaluating_base.GetTile() == &tile ) {
 		return CalculateBaseSquareYield( rules->BaseSquare(), {
-			{ !tile.is_water_tile, bonus, { nutrient_landmark, false, false }, feature( FEATURE_RIVER ) },
+			{ !tile.is_water_tile, bonus, landmarks, feature( FEATURE_RIVER ) },
 			{ facilities.headquarters, facilities.recycling, facilities.pressure_dome },
 			{ economy, context.golden_age, base_count, global.planetary_governor == context.owner_simulation_id, false },
 			{ { context.HasEvent( Events::BumperCrop ), context.HasEvent( Events::IndustrialBoom ), context.HasEvent( Events::HeatWave ) },
@@ -299,13 +301,13 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 			context.HasEvent( Events::BumperCrop ), context.HasEvent( Events::Famine ) }
 	} );
 	const auto m = CalculateTileMinerals( rules->TileMinerals(), {
-		{ altitude, tile.rockiness - ROCKINESS_FLAT, bonus, false, forest, fungal, borehole, monolith },
+		{ altitude, tile.rockiness - ROCKINESS_FLAT, bonus, landmarks[1], forest, fungal, borehole, monolith },
 		{ improved( TERRAFORMING_MINE ), improved( TERRAFORMING_ROAD ) },
 		{ HasConfiguredTechnology( refs[ 1 ], *technologies, *owned ), HasConfiguredTechnology( refs[ 3 ], *technologies, *owned ), fungus.minerals, planet,
 			context.HasEvent( Events::IndustrialBoom ), context.HasEvent( Events::IndustrialBust ) }
 	} );
 	const auto e = CalculateTileEnergy( rules->TileEnergy(), {
-		{ altitude, bonus, false, forest, fungal, monolith, borehole, feature( FEATURE_RIVER ) },
+		{ altitude, bonus, landmarks[2], forest, fungal, monolith, borehole, feature( FEATURE_RIVER ) },
 		{ improved( TERRAFORMING_SOLAR ), false, 0 },
 		{ facilities.hybrid_forest, HasConfiguredTechnology( refs[ 2 ], *technologies, *owned ), fungus.energy, planet, economy, context.golden_age, false,
 			context.HasEvent( Events::HeatWave ), context.HasEvent( Events::CloudCover ), dust, solar }

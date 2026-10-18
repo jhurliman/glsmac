@@ -58,7 +58,7 @@ void AddGlsmacResourceMapPolicyTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "GLSMAC map resource policy codec preserves absence and bounds before allocation", GT() {
 		const auto policy = Policy::DisplayedTerrainV1(); const auto wire = policy.Serialize().ToString();
-		GT_ASSERT( wire.size() == 28 && Policy::MAX_WIRE_BYTES == 28 && Policy::Deserialize( wire ) == policy, "policy framing differs" );
+		GT_ASSERT( wire.size() == 28 && Policy::MAX_WIRE_BYTES == 256*1024 && Policy::Deserialize( wire ) == policy, "policy framing differs" );
 		for ( size_t end = 0; end < wire.size(); ++end ) { GT_ASSERT( Rejects( [ & ] { Policy::Deserialize( wire.substr( 0, end ) ); } ), "truncated policy accepted" ); }
 		for ( int field = 0; field < 2; ++field ) { for ( const auto value : { int64_t( -1 ), int64_t( 0 ), int64_t( 2 ), INT64_MAX } ) {
 			types::Buffer bad; bad.WriteInt( field == 0 ? value : 1 ); bad.WriteInt( field == 1 ? value : 1 );
@@ -83,7 +83,7 @@ void AddGlsmacResourceMapPolicyTests( task::gsetests::GSETests* task ) {
 		types::Buffer unexpected; Policy::WriteOptional( unexpected, policy, true );
 		types::Buffer presence; presence.WriteBool( true );
 		GT_ASSERT( Rejects( [ & ] { Policy::ReadOptional( unexpected, false ); } ) && unexpected.lenr == presence.lenw, "SMAX policy accepted or copied before rejection" );
-		for ( const auto count : { 29u, 65536u } ) {
+		for ( const auto count : { Policy::MAX_WIRE_BYTES+1, Policy::MAX_WIRE_BYTES*2 } ) {
 			types::Buffer input; input.WriteBool( true ); const auto length_offset = input.lenw; input.WriteString( std::string( count, 'x' ) );
 			GT_ASSERT( Rejects( [ & ] { Policy::ReadOptional( input, true ); } ) && input.lenr == length_offset, "oversized complete frame copied or advanced before budget rejection" );
 		}

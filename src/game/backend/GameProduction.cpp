@@ -138,10 +138,9 @@ bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::t
 	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	if ( catalog.weapons.weapons.at( design.weapon ).mode == loader::txt::WeaponMode::Colonist ) {
 		RequireSmacLocalHumanOwner( owner );
-		const auto map_type = m_state->m_settings.global.map.type;
 		// The current ordinary generated campaign has no scenario/no-colony rule
 		// producer. Scenario admission must supply that authority before this path.
-		if ( map_type != settings::MapSettings::MT_RANDOM && map_type != settings::MapSettings::MT_CUSTOM ) {
+		if ( !m_state->m_settings.global.IsOrdinarySmacCampaign() ) {
 			throw std::runtime_error( "Colony queue admission requires the ordinary generated non-scenario campaign" );
 		}
 	}

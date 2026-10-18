@@ -559,6 +559,7 @@ private:
 		// Set only after this admission's actual Generate call succeeds. File,
 		// debug-dump and downloaded map paths never infer fresh placement history.
 		bool generated_map = false;
+		bool installed_planet = false;
 		StartupStage stage = StartupStage::Complete;
 		connection::Connection* connection = nullptr;
 		size_t slot = 0;

@@ -6,6 +6,8 @@
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacPlanetMap.h"
+#include "types/Buffer.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
@@ -87,6 +89,21 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
             const auto bad_path=Temporary();util::FinallyGuard remove_bad([&]{std::error_code ignored;std::filesystem::remove(bad_path,ignored);});
             {std::ofstream output(bad_path,std::ios::binary);output.write(truncated.data(),static_cast<std::streamsize>(truncated.size()));}
             const auto failure=fixture.CheckCampaignRejectedLoad(GSE_CALL,bad_path);if(!failure.empty()){return failure;}
+            // A checksummed policy envelope can still contradict accepted map
+            // provenance. Reject through the real menu loader before replacing
+            // its State/session, rather than during later backend restore.
+            using Planet=map::SmacPlanetMap;using Policy=map::GlsmacResourceMapPolicy;
+            std::string planet(Planet::FILE_BYTES,'\0');planet.replace(0,11,"TERRANMAP\0\x1a",11);
+            const auto put=[&](size_t at,uint32_t value){for(size_t i=0;i<4;++i){planet.at(at+i)=char(value>>(i*8));}};
+            put(11,5);put(15,80);put(19,80);put(15+0xa30,4);
+            types::Buffer old_policy,new_policy;
+            Policy::WriteOptional(old_policy,Policy::DisplayedTerrainV1(),true);
+            Policy::WriteOptional(new_policy,Policy::InstalledPlanetV1(Planet::Decode(planet),false),true);
+            auto forged=saved;const auto field=old_policy.ToString();const auto offset=forged.world.find(field);
+            GT_ASSERT(offset!=std::string::npos && forged.world.find(field,offset+1)==std::string::npos,"policy fixture field is not unique");
+            forged.world.replace(offset,field.size(),new_policy.ToString());campaign::Write(bad_path,forged);
+            const auto provenance_failure=fixture.CheckCampaignRejectedLoad(GSE_CALL,bad_path);
+            if(!provenance_failure.empty()){return provenance_failure;}
             GT_ASSERT(Rejects([&]{campaign::Decode(truncated);})&&Rejects([&]{campaign::Decode(encoded+"x");}),"truncated or trailing file admitted");
             auto invalid=saved;invalid.local_slot=1;GT_ASSERT(Rejects([&]{campaign::Write(path,invalid);}),"invalid replacement admitted");
             GT_ASSERT(campaign::Read(path).world==snapshot,"failed replacement damaged existing file");

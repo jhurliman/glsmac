@@ -1,0 +1,166 @@
+{
+  "research_id": "RE-SMAC-PLANET-OCEAN-001",
+  "profile": "installed original SMAC standard Map of Planet",
+  "asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "ocean_coverage_category": 1,
+  "setup_label": "50\u201370% ocean",
+  "world_size_category": 4,
+  "authority": "serialized map header imported by original loader",
+  "derived_from_measured_water_fraction": false,
+  "inherited_from_generator": false,
+  "loader_cases": [
+    {
+      "prior_category": 0,
+      "expected_imported_category": 1,
+      "loader_succeeded": true
+    },
+    {
+      "prior_category": 2,
+      "expected_imported_category": 1,
+      "loader_succeeded": true
+    },
+    {
+      "prior_category": 77,
+      "expected_imported_category": 1,
+      "loader_succeeded": true
+    },
+    {
+      "prior_category": -1,
+      "expected_imported_category": 1,
+      "loader_succeeded": true
+    }
+  ],
+  "menu_case": {
+    "prior_category": 77,
+    "after_load": 1,
+    "after_complete_terrain_climate_river_region_cache_preparation": 1,
+    "at_setup_controller_entry": 1,
+    "map_regeneration_enabled": false,
+    "category_recomputed_or_randomized": false
+  },
+  "validation": {
+    "complete_loader_controls": 4,
+    "selected_menu_arm_control": 1,
+    "observed_menu_stages": 15,
+    "complete_world_preparation_returned": true,
+    "category_producer_supplied": false,
+    "world_builder_parameters": "installed tokens through original clamp/store",
+    "setup_dialog_or_faction_placement_executed": false,
+    "full_startup_rng_parity_claim": false,
+    "original_asset_payloads_embedded": false,
+    "field_only_mutation_controls": 5,
+    "total_complete_loader_controls": 9
+  },
+  "wire_format": {
+    "offset_basis": "zero-based bytes from beginning of file",
+    "absolute_file_offset": 2627,
+    "header_start_file_offset": 15,
+    "header_relative_offset": 2612,
+    "width_bytes": 4,
+    "exclusive_field_end_file_offset": 2631,
+    "scalar": "int32",
+    "signed": true,
+    "endianness": "little",
+    "normal_semantic_range_inclusive": [
+      0,
+      2
+    ],
+    "pinned_asset_value": 1,
+    "original_loader_category_range_check": false,
+    "port_out_of_range_rejection": "explicit normal-map admission guard, not an original loader rejection",
+    "container": {
+      "magic": "TERRANMAP",
+      "nul_offset": 9,
+      "following_delimiter_offset": 10,
+      "pinned_delimiter_value": 26,
+      "delimiter_validation_newly_established": false,
+      "version_file_offset": 11,
+      "version_width_bytes": 4,
+      "version_signed": true,
+      "version_endianness": "little",
+      "pinned_version": 5,
+      "admitted_layout_versions": [
+        5
+      ],
+      "native_map_minimum_version": 5,
+      "native_upper_version_check_at_this_gate": false,
+      "header_size_bytes": 2724,
+      "header_size_source": "fixed native read size; not a serialized length field",
+      "exclusive_header_end_file_offset": 2739,
+      "minimum_file_bytes_through_complete_header": 2739,
+      "full_import_requires_existing_geometry_tile_and_coarse_data_checks": true
+    }
+  },
+  "field_mutation_cases": [
+    {
+      "signed_value_written": 0,
+      "little_endian_field_bytes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected_loaded_signed_value": 0,
+      "original_loader_succeeds": true,
+      "inside_normal_semantic_range": true,
+      "mutated_only_this_field": true,
+      "downstream_gameplay_executed": false
+    },
+    {
+      "signed_value_written": 2,
+      "little_endian_field_bytes": [
+        2,
+        0,
+        0,
+        0
+      ],
+      "expected_loaded_signed_value": 2,
+      "original_loader_succeeds": true,
+      "inside_normal_semantic_range": true,
+      "mutated_only_this_field": true,
+      "downstream_gameplay_executed": false
+    },
+    {
+      "signed_value_written": -1,
+      "little_endian_field_bytes": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "expected_loaded_signed_value": -1,
+      "original_loader_succeeds": true,
+      "inside_normal_semantic_range": false,
+      "mutated_only_this_field": true,
+      "downstream_gameplay_executed": false
+    },
+    {
+      "signed_value_written": 3,
+      "little_endian_field_bytes": [
+        3,
+        0,
+        0,
+        0
+      ],
+      "expected_loaded_signed_value": 3,
+      "original_loader_succeeds": true,
+      "inside_normal_semantic_range": false,
+      "mutated_only_this_field": true,
+      "downstream_gameplay_executed": false
+    },
+    {
+      "signed_value_written": 16909060,
+      "little_endian_field_bytes": [
+        4,
+        3,
+        2,
+        1
+      ],
+      "expected_loaded_signed_value": 16909060,
+      "original_loader_succeeds": true,
+      "inside_normal_semantic_range": false,
+      "mutated_only_this_field": true,
+      "downstream_gameplay_executed": false
+    }
+  ]
+}

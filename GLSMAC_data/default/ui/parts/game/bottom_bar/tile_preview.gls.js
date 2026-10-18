@@ -198,6 +198,7 @@ return {
 		});
 
 		frame_outer.on('mousedown', (e) => {
+			if (!#is_defined(this.tile)) { return true; }
 			this.show_resources = !this.show_resources;
 			this.set_lines();
 			return true;

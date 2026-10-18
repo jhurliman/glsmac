@@ -21,6 +21,10 @@ return {
 		const body = this.frame.panel({
 			class: 'base-screen-body',
 		});
+		body.text({
+			class: 'base-screen-frame-text', align: 'top center',
+			text: 'Support details unavailable',
+		});
 
 	},
 

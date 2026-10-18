@@ -1,0 +1,205 @@
+{
+  "research_id": "RE-SMAC-PROPOSALS-REQUIREMENT-READER-001",
+  "profile": "Stock SMAC installed alpha.txt; original comma reader and technology key catalog",
+  "Supreme_Leader_requirement_source": {
+    "section": "PROPOSALS",
+    "row_one_based": 2,
+    "column_one_based": 2,
+    "proposal_index": 1,
+    "installed_key": "MindMac",
+    "installed_technology_id": 41,
+    "immediate_prerequisite_ids_reused_from_pressure": [
+      39,
+      52
+    ]
+  },
+  "installed_proposal_records": [
+    {
+      "row": 1,
+      "name": "Elect Planetary Governor",
+      "requirement": -1,
+      "description": "New Governor Appointed"
+    },
+    {
+      "row": 2,
+      "name": "Unite Behind Me As Supreme Leader",
+      "requirement": 41,
+      "description": "Diplomatic Victory; Game Ends"
+    },
+    {
+      "row": 3,
+      "name": "Salvage Unity Fusion Core",
+      "requirement": 77,
+      "description": "+500 Energy Credits Every Faction"
+    },
+    {
+      "row": 4,
+      "name": "Global Trade Pact",
+      "requirement": 61,
+      "description": "Commerce Rates Doubled"
+    },
+    {
+      "row": 5,
+      "name": "Repeal Global Trade Pact",
+      "requirement": 61,
+      "description": "Commerce Rates Halved"
+    },
+    {
+      "row": 6,
+      "name": "Launch Solar Shade",
+      "requirement": 66,
+      "description": "Global Cooling; Sea Levels Drop"
+    },
+    {
+      "row": 7,
+      "name": "Increase Solar Shade",
+      "requirement": 66,
+      "description": "Global Cooling; Sea Levels Drop"
+    },
+    {
+      "row": 8,
+      "name": "Melt Polar Caps",
+      "requirement": 62,
+      "description": "Global Warming; Sea Levels Rise"
+    },
+    {
+      "row": 9,
+      "name": "Repeal U.N. Charter",
+      "requirement": 17,
+      "description": "Atrocity Prohibitions Lifted"
+    },
+    {
+      "row": 10,
+      "name": "Reinstate U.N. Charter",
+      "requirement": 17,
+      "description": "Atrocity Prohibitions Return"
+    },
+    {
+      "row": 11,
+      "name": "...",
+      "requirement": -2,
+      "description": "..."
+    }
+  ],
+  "reference_cases": [
+    {
+      "input": "None",
+      "trimmed": "None",
+      "value": -1,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "none",
+      "trimmed": "none",
+      "value": -1,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "NONE",
+      "trimmed": "NONE",
+      "value": -1,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "Disable",
+      "trimmed": "Disable",
+      "value": -2,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "disable",
+      "trimmed": "disable",
+      "value": -2,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "MindMac",
+      "trimmed": "MindMac",
+      "value": 41,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "mindmac",
+      "trimmed": "mindmac",
+      "value": 41,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "MINDMAC",
+      "trimmed": "MINDMAC",
+      "value": 41,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": " MindMac ",
+      "trimmed": "MindMac",
+      "value": 41,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "MindMacX",
+      "trimmed": "MindMacX",
+      "value": -2,
+      "notice_count": 1,
+      "remaining": "next"
+    },
+    {
+      "input": "MindMa",
+      "trimmed": "MindMa",
+      "value": -2,
+      "notice_count": 1,
+      "remaining": "next"
+    },
+    {
+      "input": "Orbital",
+      "trimmed": "Orbital",
+      "value": 77,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "PlaEcon",
+      "trimmed": "PlaEcon",
+      "value": 61,
+      "notice_count": 0,
+      "remaining": "next"
+    },
+    {
+      "input": "",
+      "trimmed": "",
+      "value": -2,
+      "notice_count": 1,
+      "remaining": "next"
+    },
+    {
+      "input": "41",
+      "trimmed": "41",
+      "value": -2,
+      "notice_count": 1,
+      "remaining": "next"
+    }
+  ],
+  "definition_storage_control": {
+    "input": "LongKeyExtra",
+    "stored": "LongKey",
+    "byte_limit": 7
+  },
+  "validation": {
+    "installed_rows": 11,
+    "token_controls": 15,
+    "definition_copy_controls": 1,
+    "reference_lookup_truncates": false,
+    "case_insensitive_reference_comparison": true,
+    "unknown_notice_presentation_supplied": true,
+    "pressure_or_majority_rerun": false
+  }
+}

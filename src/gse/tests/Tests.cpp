@@ -133,9 +133,8 @@ namespace gse {
 namespace tests {
 
 void AddTests( task::gsetests::GSETests* task ) {
-	AddSoundTests( task );
-
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
+		AddSoundTests( task );
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddRosterRecordTests( task );

@@ -36,8 +36,15 @@ void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
 		return;
 	}
 
-	if ( m_is_finished || !m_is_active || m_sound->m_buffer_size == 0 ) {
+	if ( m_is_finished || !m_is_active ) {
 		memset( ptr( buffer, 0, len ), 0, len );
+		return;
+	}
+	if ( m_sound->m_buffer_size == 0 ) {
+		memset( ptr( buffer, 0, len ), 0, len );
+		if ( !m_is_repeatable ) {
+			Stop();
+		}
 		return;
 	}
 

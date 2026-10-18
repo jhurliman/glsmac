@@ -104,13 +104,16 @@ void AddSoundTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( actor.IsFinished() && !actor.IsActive() && actor.GetPos() == 0, "explicit stop resumed playback" );
 		GT_ASSERT( std::all_of(output.begin(), output.end(), [](uint8_t b){ return b == 0; }), "stopped playback emitted PCM" );
 		types::Sound empty;
-		scene::actor::Sound empty_actor( "empty fixture", &empty );
-		empty_actor.SetRepeatable( true );
-		empty_actor.Play();
-		output.fill( 99 );
-		empty_actor.GetNextBuffer( output.data(), output.size() );
-		GT_ASSERT( std::all_of(output.begin(), output.end(), [](uint8_t b){ return b == 0; }), "empty sound emitted PCM" );
-		GT_ASSERT( empty_actor.GetPos() == 0, "empty sound advanced" );
+		for ( bool repeat : { false, true } ) {
+			scene::actor::Sound empty_actor( "empty fixture", &empty );
+			empty_actor.SetRepeatable( repeat );
+			empty_actor.Play();
+			output.fill( 99 );
+			empty_actor.GetNextBuffer( output.data(), output.size() );
+			GT_ASSERT( std::all_of(output.begin(), output.end(), [](uint8_t b){ return b == 0; }), "empty sound emitted PCM" );
+			GT_ASSERT( empty_actor.GetPos() == 0, "empty sound advanced" );
+			GT_ASSERT( empty_actor.IsFinished() == !repeat && empty_actor.IsActive() == repeat, "empty sound retained the wrong lifecycle" );
+		}
 		GT_OK();
 	} );
 }

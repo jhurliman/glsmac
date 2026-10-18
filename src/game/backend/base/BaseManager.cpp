@@ -289,12 +289,19 @@ void BaseManager::UndefineFacility( const std::string& id ) {
 
 void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	m_game->RequireSmacGameplayActive();
+	faction::SmacEconomyState* economy=nullptr;
+	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	if(base->HasSmacResourceContext()) {
+		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
+		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
+	}
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true );
 	if ( GetBase( base->m_id ) ) { GSE_ERROR( gse::EC.GAME_ERROR, "Base ID already exists" ); }
 
 	PrepareBaseName( base );
 	RegisterBase( base );
 	m_game->CommitBaseTerritory( territory );
+	if(economy) {economy->regional_base_counts=regional;}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -379,6 +386,12 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	}
 
 	auto* base = it->second;
+	faction::SmacEconomyState* economy=nullptr;
+	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	if(base->HasSmacResourceContext()) {
+		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,-1,m_game->GetMap()->GetTerritoryTopology());
+		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
+	}
 	const auto ordered = std::find( m_base_order.begin(), m_base_order.end(), base_id );
 	if ( ordered == m_base_order.end() ) { THROW( "Base is missing its record order" ); }
 	const auto* units = m_game->GetUM();
@@ -404,6 +417,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	m_bases.erase( it );
 	m_base_order.erase( ordered );
 	m_game->CommitBaseTerritory( territory );
+	if(economy) {economy->regional_base_counts=regional;}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {

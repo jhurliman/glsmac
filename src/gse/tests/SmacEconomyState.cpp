@@ -11,7 +11,9 @@ template< typename F > bool Rejects( F&& operation ) { try { operation(); } catc
 }
 
 std::string CheckSmacEconomyRestore() {
-	const SmacEconomyState value{ { 1, 7 }, INT32_MIN, INT32_MAX, 99, 0xa5 };
+	SmacEconomyState value{ { 1, 7 }, INT32_MIN, INT32_MAX, 99, 0xa5 };
+	value.regional_base_counts=SmacEconomyState::RegionalBaseCounts{};
+	for(size_t i=0;i<128;++i) {(*value.regional_base_counts)[i]=static_cast<uint8_t>(i*2+1);}
 	const auto wire = value.Serialize().ToString();
 	const auto restored = SmacEconomyState::Deserialize( wire );
 	if ( wire.size() != SmacEconomyState::MAX_WIRE_BYTES || !( restored == value ) || restored.Serialize().ToString() != wire ) {
@@ -77,6 +79,20 @@ std::string CheckSmacResearchSubmission() {
 }
 
 void AddSmacEconomyStateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("SMAC regional Base byte counts preserve stale values and migrate absent V2 history",GT(){
+		auto fresh=SmacEconomyState::NewWorld({0,5},100,0);
+		GT_ASSERT(fresh.regional_base_counts && *fresh.regional_base_counts==SmacEconomyState::RegionalBaseCounts{},"fresh faction did not clear all 128 counts");
+		types::Buffer legacy;for(const auto v:{int64_t(0x534d4543),int64_t(2),int64_t(0),int64_t(5),int64_t(100),int64_t(0),int64_t(0),int64_t(0)}) {legacy.WriteInt(v);}
+		legacy.WriteBool(true);legacy.WriteInt(77);
+		const auto migrated=SmacEconomyState::Deserialize(legacy.ToString());
+		GT_ASSERT(!migrated.regional_base_counts && migrated.population_aggregate==77
+			&& SmacEconomyState::Deserialize(migrated.Serialize().ToString())==migrated,"V2 load invented historical regional counts");
+		for(const size_t size:{0,127,129}) {
+			types::Buffer malformed;for(const auto v:{int64_t(0x534d4543),int64_t(3),int64_t(0),int64_t(5),int64_t(100),int64_t(0),int64_t(0),int64_t(0)}) {malformed.WriteInt(v);}
+			malformed.WriteBool(false);malformed.WriteBool(true);malformed.WriteString(std::string(size,'x'));
+			GT_ASSERT(Rejects([&]{SmacEconomyState::Deserialize(malformed.ToString());}),"wrong-sized count array accepted");
+		}GT_OK();
+	});
 	task->AddTest("SMAC economy retains independent population history and marks V1 migration unknown",GT(){
 		for(const auto aggregate:{INT32_MIN,0,2,INT32_MAX}) {
 			auto value=SmacEconomyState::NewWorld({5,0},100,0);value.population_aggregate=aggregate;

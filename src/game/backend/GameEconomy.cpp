@@ -227,24 +227,57 @@ faction::SmacEconomyState Game::PrepareSmacNonzeroInitialization( int32_t owner 
 	candidate.credits=static_cast<int32_t>(credits);candidate.pending_debit=0;candidate.Validate();return candidate;
 }
 
+uint8_t Game::GetCanonicalRegion(const map::tile::Tile& tile,const map::GlsmacTerritoryTopology& topology) const {
+	if(!m_map || tile.tiles!=m_map->GetTilesPtr() || tile.coord.x>=m_map->GetWidth() || tile.coord.y>=m_map->GetHeight()
+		|| ((tile.coord.x^tile.coord.y)&1) || m_map->GetTile(tile.coord.x,tile.coord.y)!=&tile
+		|| topology.Width()!=static_cast<int64_t>(m_map->GetWidth()) || topology.Height()!=static_cast<int64_t>(m_map->GetHeight())) {
+		throw std::runtime_error("Regional Base count requires its current topology and coordinate");
+	}
+	return topology.Regions().at(size_t(tile.coord.y)*(m_map->GetWidth()/2)+tile.coord.x/2);
+}
+
+std::optional<faction::SmacEconomyState::RegionalBaseCounts> Game::PrepareCanonicalRegionalBaseDelta(
+	const base::Base& base,int delta,const std::optional<map::GlsmacTerritoryTopology>& topology) const {
+	if(!m_simulation || !base.GetTile() || !base.m_resource_context || (delta!=1 && delta!=-1)) {throw std::runtime_error("Invalid regional Base delta");}
+	// Founding supplies a validated private candidate, before registration.
+	auto counts=m_simulation->value.economy.at(base.m_resource_context->owner_simulation_id).regional_base_counts;
+	if(counts) {
+		// The generic canonical creator can run before worker knowledge owns
+		// topology. Use the same fresh labeling without changing any map state.
+		const auto region=topology ? GetCanonicalRegion(*base.GetTile(),*topology)
+			: GetCanonicalRegion(*base.GetTile(),map::GlsmacTerritoryTopology::Build(m_map->GetWidth(),m_map->GetHeight(),true,m_map->TerritorySea()));
+		// Original storage is a byte, including wrap on a stale zero or 255.
+		(*counts)[region]=static_cast<uint8_t>(int((*counts)[region])+delta);
+	}
+	return counts;
+}
+
 void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	ValidateCurrentSimulation();
 	if(!GetGCSpace()->IsAccumulating() || !IsRunning() || !m_simulation->value.economy.count(owner)) {
 		throw std::runtime_error("Population refresh requires its current owning faction upkeep");
 	}
 	int64_t population=0;
+	const auto& topology=m_map->GetTerritoryTopology();
+	std::optional<faction::SmacEconomyState::RegionalBaseCounts> counts;
+	if(topology) {counts=faction::SmacEconomyState::RegionalBaseCounts{};}
 	for(const auto& entry:m_bm->GetBases()) {
 		const auto* base=entry.second;
 		if(!base || base->m_id!=entry.first) {throw std::runtime_error("Population refresh found an invalid Base");}
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
 			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
 			population+=static_cast<int64_t>(base->m_pops.size());
+			if(counts) {
+				if(!base->GetTile()) {throw std::runtime_error("Regional summary Base has no center");}
+				++(*counts)[GetCanonicalRegion(*base->GetTile(),*topology)];
+			}
 		}
 	}
 	if(population>INT32_MAX) {throw std::overflow_error("Population aggregate exceeds signed32");}
 	// Founding, removal and individual Base recalculation deliberately do not
 	// update this saved field. The native post-Base owner pass owns its refresh.
 	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
+	m_simulation->value.economy.at(owner).regional_base_counts=counts;
 }
 
 void Game::SettleCanonicalEconomy( int32_t owner ) {

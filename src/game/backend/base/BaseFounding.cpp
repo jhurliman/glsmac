@@ -149,9 +149,12 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     auto removal=m_game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{colony.m_id});
     PrepareBaseName(candidate.get());
     auto* base=candidate.get();
+    const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
+    auto& economy=m_game->m_simulation->value.economy.at(simulation_id);
     RegisterBase(base); // every allocating registry/queue operation precedes writes
     candidate.release(); base->CommitStartupPlacement(); removal.Commit();
     m_game->CommitBaseTerritory(knowledge);
+    economy.regional_base_counts=regional;
     removal.Notify(GSE_CALL); // retired wrappers are owned even if a hook throws
     m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});
     return base;

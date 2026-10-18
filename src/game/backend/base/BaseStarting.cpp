@@ -162,10 +162,13 @@ Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::
     candidate->m_accumulated_nutrients=candidate->m_smac_upkeep_cache->calculation.nutrients.normalized_stored;
     PrepareBaseName(candidate.get());
     auto* result_base=candidate.get();
+    const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(*result_base,1,knowledge.topology);
+    auto& economy=m_game->m_simulation->value.economy.at(context.owner_simulation_id);
     RegisterBase(result_base); // prepares every allocating registry/update copy
     candidate.release();
     result_base->CommitStartupPlacement();
     m_game->CommitStartingBaseKnowledge(knowledge);
+    economy.regional_base_counts=regional;
     m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(result_base) {
         {"base",result_base->Wrap(GSE_CALL)},
     }; });

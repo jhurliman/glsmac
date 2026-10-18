@@ -70,6 +70,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,
     unit::Def* transient_definition,unit::SmacMoraleMode mode) {
     auto plan=PrepareLastSmacBaseDisposition(base);
+    plan.economy.regional_base_counts=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,m_game->GetMap()->GetTerritoryTopology());
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
     if(!territory) {THROW("Faction disposition requires staged territory");}
     auto* um=m_game->GetUM();
@@ -171,6 +172,8 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
         if (distance<=nearest) {replacement=candidate;nearest=distance;}
     }
     if (!replacement) {return DisposeLastSmacBase(GSE_CALL,base,definition,mode);}
+    const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
+    auto& economy=m_game->m_simulation->value.economy.at(base.GetSmacResourceContext().owner_simulation_id);
     auto* um=m_game->GetUM();
     if (!um) {THROW("Colony abandonment requires its Unit manager");}
     um->RequireConventionalUnitsReady();
@@ -195,6 +198,7 @@ BaseManager::SmacAbandonmentResult BaseManager::AbandonSmacBase( GSE_CALLABLE, B
     m_bases.swap(bases); m_base_order.swap(order); m_work_assignments.swap(assignments);
     m_base_updates.swap(updates); m_updated_bases.swap(triggers); tile->base=nullptr;
     newborn.Commit(); // also commits the joined sight/claims and old home repairs
+    economy.regional_base_counts=regional;
     std::unique_ptr<Base> retired(&base);
     lock.unlock();
     newborn.Notify(GSE_CALL);
@@ -230,6 +234,8 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
         if (distance<=nearest) {replacement=candidate;nearest=distance;}
     }
     if (!replacement) {(void)DisposeLastSmacBase(GSE_CALL,base,nullptr,unit::SmacMoraleMode::Mode0);return;}
+    const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
+    auto& economy=m_game->m_simulation->value.economy.at(base.GetSmacResourceContext().owner_simulation_id);
     auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false);
     if (!territory) {THROW("Canonical starvation requires saved worker knowledge and territory");}
 
@@ -273,6 +279,7 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     m_bases.swap(bases); m_base_order.swap(order); m_work_assignments.swap(assignments);
     m_base_updates.swap(updates); m_updated_bases.swap(triggers); tile->base=nullptr;
     m_game->CommitBaseTerritory(territory);
+    economy.regional_base_counts=regional;
     std::unique_ptr<Base> retired(&base);
     lock.unlock();
     // Stable IDs are unchanged; only record order compacts. Retire Pop/Base

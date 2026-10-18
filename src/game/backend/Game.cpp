@@ -3168,6 +3168,10 @@ void Game::ResetGame() {
 		if(m_simulation) {for(const auto& owner:m_simulation->value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {m_smac_secondary_relations.at(owner.first)[i]=owner.second.directions[i].secondary;}
 		}}
+		if(m_simulation) {
+			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
+			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
+		}
 		m_pending_simulation.reset(); m_simulation.reset();m_pending_canonical_continuation.reset();
 		m_smac_presentations.reset();
 		m_smac_base_presentations.reset();

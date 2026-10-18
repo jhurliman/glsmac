@@ -6,6 +6,7 @@
 #include "SmacRankOrder.h"
 #include "SmacHostileState.h"
 #include "SmacRegionalMilitaryState.h"
+#include "SmacRegionalStrategy.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -144,6 +145,13 @@ struct SmacSimulationState {
 	// counts: action deltas preserve stale offsets, summary refreshes one owner.
 	// V11-V22 migration retains absence rather than recounting current Bases.
 	std::optional<SmacBaseTotals> retained_base_totals;
+	// Retained native bytes, including slot0 and every region0. Cold new port
+	// worlds start0; owner summaries replace only that owner's regions1..127.
+	// Nonzero faction initialization preserves them. V11-V23 remain absent.
+	std::optional<std::array<SmacRegionalStrategyRow,8>> regional_strategy;
+	// Global score provider writes positive slots; slot0 retains its prior word.
+	// Dominance reads this table at retained rank IDs, not fresh per-owner scores.
+	std::optional<std::array<int32_t,8>> ranking_scores;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

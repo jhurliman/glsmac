@@ -1183,6 +1183,81 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }
         return {};
     });
+    task->AddTest("SMAC Colony Accept consumes compacted cached surplus without duplicate posting",[](GSE*,context::Context*) -> std::string {
+        // COLONY-ABANDONMENT-001: the successor receives the remainder of the
+        // abandoned record's call, not a fresh mineral-production pass. The
+        // stale control must consume N2 before the final forest pass returns N1.
+        for(const bool stale:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+            fixture.ResourceState([](auto& state){
+                auto& economy=state.economy.at(1);economy.rates={0,5};economy.credits=100;economy.pending_debit=7;economy.research_fraction=0;
+                state.social.factions[0].current[1]=2;state.social.factions[0].current[10]=0;
+                auto& research=state.technology.factions[0];research.target=5;research.cached_threshold=1000;research.labs=0;
+            });
+            size_t newborn_id=0;std::string scout_before,random_before;
+            auto pair=fixture.GameplayRandom();
+            const auto prefix=fixture.Run([&](GSE_CALLABLE)->std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();
+                auto* first=Populate(GSE_CALL,fixture,false);first->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");SelectionPresentations(fixture);
+                const auto roles=Roles();std::array<std::string,8> names;names[0]=roles.worker;
+                for(size_t i=0;i<7;++i){names[i+1]=roles.specialists[i];}fixture.BasePresentationRoles(names);
+                auto allocation=*first->GetSmacAllocation();allocation.selected=5;first->PublishSmacAllocation(GSE_CALL,allocation,roles);
+                const auto former=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,1);
+                auto* forest=game->GetMap()->GetTile(8,2);forest->terraforming=TERRAFORMING_FOREST;
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(roles.worker),0,forest));
+                auto* second=new Base(game,702,first->m_owner,first->m_faction,game->GetMap()->GetTile(6,2),"Compacted successor",{},pops,20,0,
+                    ProductionState{former,0,former,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+                bm->SpawnBase(GSE_CALL,second);second->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{5,{{},0}},roles);
+                for(size_t i=0;i<2;++i){um->SpawnConventionalUnit(GSE_CALL,92+i,um->GetUnitDef("choice-former"),first->m_owner,game->GetMap()->GetTile(i*2,8),
+                    {1,1,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0,first->m_id});}
+                auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles){tile.explored_by=2;tile.claimant=1;}
+                knowledge.units.push_back({92,0,false});knowledge.units.push_back({93,0,false});game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                if(stale){forest->terraforming=0;forest->moisture=MOISTURE_RAINY;}
+                second->RecalculateSmacWorkers(GSE_CALL,roles);
+                if(stale){forest->terraforming=TERRAFORMING_FOREST;}
+                GT_ASSERT(second->GetSmacUpkeepCache()->calculation.nutrients.surplus==(stale?2:1)
+                    && second->PrepareSmacResourceCalculation().nutrients.surplus==1,"Accept fixture did not preserve its recorded versus fresh surplus");
+                const auto colony=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,0);
+                first->SetProductionState(GSE_CALL,ProductionState{colony,27,colony,27,std::vector<ProductionItem>{}});first->SetAccumulatedNutrients(0);
+                newborn_id=Unit::GetNextId();scout_before=Unit::Serialize(um->GetUnit(91)).ToString();pair=fixture.GameplayRandom();random_before=game->GetRandom()->GetStateString();fixture.Updates();
+                fixture.BeginColonyChoice(GSE_CALL,first->m_id);
+                GT_ASSERT(first->GetProductionState()->minerals==30 && first->GetAccumulatedNutrients()==0
+                    && second->GetProductionState()->minerals==0 && second->GetAccumulatedNutrients()==0,"question posted food or ran successor before Accept");
+                auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
+                const auto request=static_cast<value::Int*>(pending->Get("request_id"))->value;
+                for(int i=0;i<2;++i){game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"accept")}});}
+                GT_OK();
+            });GT_ASSERT(prefix.empty(),"Accept prefix: "+prefix);
+            fixture.DrainEvents(); // actual queued dispatch, outside owning source accumulation
+            const auto tail=fixture.Run([&](GSE_CALLABLE)->std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* survivor=bm->GetBase(702);
+                GT_ASSERT(game->IsRunning() && !bm->GetBase(701) && survivor && bm->GetBaseRecordOrder()==std::vector<size_t>{702},"Accept did not finish with the actual compacted survivor");
+                GT_ASSERT(survivor->GetAccumulatedNutrients()==(stale?2:1) && survivor->m_pops.size()==1
+                    && survivor->GetProductionState()->minerals==0 && survivor->GetProductionState()->baseline_minerals==0
+                    && survivor->GetProductionState()->current_item.smac_source_id==1 && survivor->GetProductionState()->baseline_item.smac_source_id==1,
+                    "Accept recomputed cached food early or reposted successor mineral production");
+                const auto& cache=survivor->GetSmacUpkeepCache();
+                GT_ASSERT(cache && cache->calculation.nutrients.surplus==1 && cache->calculation.nutrients.stored_before==(stale?2:1),"Accept omitted the later resource pass or collected food twice");
+                const auto* newborn=um->GetUnit(newborn_id);
+                GT_ASSERT(newborn && Unit::GetNextId()==newborn_id+1 && newborn->GetTile()==game->GetMap()->GetTile(2,2)
+                    && newborn->Conventional().home==ConventionalUnitState::Home::None && !newborn->Conventional().home_base_id
+                    && newborn->Conventional().damage==0 && newborn->Conventional().spent==0,"Accept lost, rehomed or duplicated the actual Pod");
+                GT_ASSERT(um->GetUnit(92)->Conventional().home_base_id==702 && um->GetUnit(93)->Conventional().home_base_id==702
+                    && Unit::Serialize(um->GetUnit(91)).ToString()==scout_before,"Accept home repair changed newborn/unhomed semantics");
+                bool research=false;fixture.ResourceState([&](auto& state){research=state.technology.factions[0].labs==1;});
+                GT_ASSERT(game->GetCanonicalEconomy(survivor->m_owner).credits==94 && research,"Accept skipped or duplicated successor research/credit or faction debit");
+                GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony")->type==VT_NULL
+                    && fixture.GameplayRandom()==pair && game->GetRandom()->GetStateString()==random_before,"Accept retained a question or consumed unexpected RNG");
+                size_t spawn=0,despawn=0;for(const auto& update:fixture.Updates()){
+                    if(update.type==game::FrontendRequest::FR_UNIT_SPAWN && update.data.unit_spawn.unit_id==newborn_id){++spawn;}
+                    if(update.type==game::FrontendRequest::FR_BASE_DESPAWN && update.data.base_despawn.base_id==701){++despawn;}
+                }
+                GT_ASSERT(spawn==1 && despawn==1,"duplicate Accept repeated a lifecycle publication");GT_OK();
+            });GT_ASSERT(tail.empty(),"Accept tail: "+tail);
+        }GT_OK();
+    });
     task->AddTest("SMAC Colony abandonment rejects missing retained and last-Base authority atomically",[](GSE*,context::Context*) -> std::string {
         for (const bool last:{false,true}) {
             ConventionalUnitFixture fixture; fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");

@@ -446,8 +446,12 @@ These are engine/script checks, not a completed human playthrough or M2 exit.
    saved ordinary turns → completion coverage. The next extension joins HQ
    relocation and Bank/Node production to their current energy consumers.
    Node/Artifact link state, citizen-status facilities and conventional defense
-   effects remain separate dependencies. Hurry spending and maintenance-deficit
-   disposal remain separate economy producers.
+   effects remain separate dependencies. The subsequent maintenance continuation
+   now joins per-facility charges, ordered insolvency sales and retained research
+   to actual upkeep, with five composed scenarios and saved inventory/treasury.
+   [The original contract](behavior/facility-maintenance-insolvency.md) records
+   the measured human branch and static-only exceptions. Hurry spending and
+   the charged-maintenance statistics consumer remain separate dependencies.
 2. Keep the [visually reviewed first session](first-session-checkpoint.md) as an
    integration acceptance task while gameplay development continues. It covers
    normal setup, units/commands, Base/production/research screens and disk

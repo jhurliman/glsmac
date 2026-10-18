@@ -185,10 +185,9 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		}
 		if(!ContinueCanonicalResearch(GSE_CALL)) {return;}
 		if(next.stage!=Stage::Credit || !next.energy) {throw std::runtime_error("Canonical research omitted its credit stage");}
-		auto& saved=m_simulation->value.economy.at(owner.first);
-		const auto posted=saved.CreditBase(next.energy->tail.final.economy,next.energy->maintenance);
-		saved=posted;
+		const auto notifications=PostCanonicalBaseMaintenance(*base,*next.energy);
 		m_bm->RefreshBase(base);
+		for(const auto& notification:notifications) {Message(notification);}
 		if(next.screen_base) {
 			next.stage=Stage::Screen;
 			ValidateCanonicalColonyScreen();

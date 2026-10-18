@@ -784,6 +784,7 @@ private:
 	// Native controller stages these calls in its once-only Base/faction order.
 	// They are deliberately not script callbacks or independently queued events.
 	void PostCanonicalBaseEconomy( const base::Base& base, const base::SmacBaseResourceCalculation& resources );
+	std::vector<std::string> PostCanonicalBaseMaintenance( const base::Base& base, const base::SmacBaseEnergyCalculation& energy );
 	void SettleCanonicalEconomy( int32_t simulation_id );
 	friend class animation::AnimationManager;
 	void AddFrontendRequest( const FrontendRequest& request );

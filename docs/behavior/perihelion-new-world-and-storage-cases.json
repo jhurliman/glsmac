@@ -1,0 +1,84 @@
+{
+  "research_id": "RE-SMAC-PERIHELION-LIFETIME-001",
+  "setup_cases": [
+    {
+      "difficulty_answer": -1,
+      "perihelion_at_stop": true,
+      "boundaries": [
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 90,
+          "active": true
+        }
+      ]
+    },
+    {
+      "difficulty_answer": 3,
+      "perihelion_at_stop": false,
+      "boundaries": [
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 90,
+          "active": true
+        },
+        {
+          "turn": 0,
+          "active": false
+        }
+      ]
+    }
+  ],
+  "initializer_cases": [
+    {
+      "fresh": true,
+      "active_before": false,
+      "active_before_child": false,
+      "active_after_child_prefix": false
+    },
+    {
+      "fresh": true,
+      "active_before": true,
+      "active_before_child": false,
+      "active_after_child_prefix": false
+    },
+    {
+      "fresh": false,
+      "active_before": true,
+      "active_before_child": null,
+      "active_after_child_prefix": true
+    }
+  ],
+  "save_load_cases": [
+    {
+      "saved_active": false,
+      "restored_active": false,
+      "saved_word": 1073741824,
+      "restored_word": 1073741824
+    },
+    {
+      "saved_active": true,
+      "restored_active": true,
+      "saved_word": 1074790400,
+      "restored_word": 1074790400
+    }
+  ],
+  "full_frontend_replayed": false
+}

@@ -7,6 +7,7 @@
 #include "SmacHostileState.h"
 #include "SmacRegionalMilitaryState.h"
 #include "SmacRegionalStrategy.h"
+#include "SmacEcologyWorld.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -168,6 +169,10 @@ struct SmacSimulationState {
 	// V11-V24 did not retain these words. Loading preserves absence and never
 	// rebuilds H from facilities, atrocity history or aggregate from current Bases.
 	std::optional<SmacEcologyHistory> ecology_history;
+	// V11-V25 did not retain these inputs. World metadata and the campaign's
+	// active perihelion bit have independent authorities and lifetimes.
+	std::optional<SmacEcologyWorld> ecology_world;
+	std::optional<bool> perihelion;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

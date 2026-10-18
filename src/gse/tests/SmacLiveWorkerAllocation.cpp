@@ -258,6 +258,32 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base navigation follows saved owner order and rereads removal without world mutation",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,true);auto* bm=game->GetBM();
+            const auto query=[&](Base* base){return Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_base_navigation");};
+            GT_ASSERT(query(first)->type==VT_UNDEFINED,"Singleton Base invented a neighbor");
+            const auto add=[&](size_t id,size_t slot,int32_t simulation,size_t x,size_t y)->Base* {
+                auto* owner=&game->GetState()->m_slots->GetSlot(slot);
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+                auto* base=new Base(game,id,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(x,y),"Navigation "+std::to_string(id),{},pops,20,0,Production(),SmacBaseResourceContext{simulation,false,0,0,0,false});
+                bm->SpawnBase(GSE_CALL,base);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());return base;
+            };
+            auto* second=add(902,0,1,6,2);auto* foreign=add(65,2,2,2,6);auto* third=add(13,0,1,6,6);
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            const auto matches=[&](Base* base,Base* previous,Base* next) {
+                auto* view=static_cast<value::Object*>(query(base));
+                return Base::Unwrap(view->Get("previous"))==previous && Base::Unwrap(view->Get("next"))==next;
+            };
+            GT_ASSERT(matches(first,third,second) && matches(second,first,third) && matches(third,second,first),"Navigation used numeric IDs or included a foreign Base");
+            GT_ASSERT(query(foreign)->type==VT_UNDEFINED && fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Navigation leaked foreign roster or changed world/RNG");
+            bm->DespawnBase(GSE_CALL,second->m_id);
+            GT_ASSERT(matches(first,third,third) && matches(third,first,first),"Navigation retained removed Base identity");
+            GT_OK();
+        });
+    });
+
     task->AddTest("SMAC nutrient grid helper matches original filled and prospective overlay controls",[](GSE*,context::Context*)->std::string {
         struct Case {int64_t food;int32_t capacity,surplus;std::vector<int32_t> filled,overlay;};
         const Case cases[]{

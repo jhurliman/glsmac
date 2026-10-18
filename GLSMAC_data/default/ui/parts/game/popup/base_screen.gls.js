@@ -110,6 +110,7 @@ return {
 				modules: p.modules,
 				utils: {
 					set_cells: parent.parent.set_cells,
+					navigate_base: parent.parent.navigate_base,
 					show_production_selection: parent.parent.show_production_selection,
 					hide_production_selection: parent.parent.hide_production_selection,
 					update_production_selection: parent.parent.update_production_selection,
@@ -256,6 +257,15 @@ return {
 		this.sections.bottom_bar.set({
 			base: base,
 		});
+	},
+
+	navigate_base: (direction) => {
+		// A required Colony Screen owns its completion callback and viewed Base.
+		if (!this.is_open || this.p.game.get_pending_smac_colony_screen() != null) { return; }
+		const neighbors = this.base.get_smac_base_navigation();
+		if (!#is_defined(neighbors)) { return; }
+		if (direction == 'previous') { this.p.game.select_base(neighbors.previous); }
+		if (direction == 'next') { this.p.game.select_base(neighbors.next); }
 	},
 
 	on_hide: () => {

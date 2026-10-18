@@ -1980,11 +1980,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         restored.ResourceState([](auto& state){for(auto& technology:state.technology.factions) {
                             technology.target=5;technology.cached_threshold=100000;technology.labs=0;
                         }});
+                        // Owner2 retains its Base but no Units. Its existence scan
+                        // must reach owner0 rather than unpacking it as conventional.
+                        auto removal=game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{92});removal.Commit();removal.Notify(GSE_CALL);
                         const auto turn=game->GetTurnId();const auto* body=game->GetUM()->GetUnit(native_id);
+                        const auto turn_wire=Unit::Serialize(body).ToString();
                         game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
                         std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
                         GT_ASSERT(game->GetTurnId()==turn+1 && game->GetUM()->GetUnit(native_id)==body
-                            && Unit::Serialize(body).ToString()==native_wire && factory==native_factory,
+                            && Unit::Serialize(body).ToString()==turn_wire && factory==native_factory,
                             "Actual human turn rejected or rewrote the independently owned native body/factory");
                         GT_ASSERT(game->GetUM()->GetUnit(91)->Conventional().spent==0,
                             "Native coexistence bypassed human movement upkeep");

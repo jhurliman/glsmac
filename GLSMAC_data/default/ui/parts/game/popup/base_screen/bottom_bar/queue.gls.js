@@ -34,14 +34,15 @@ return {
 			vscroll_class: 'default-scroll-v',
 		});
 
-		this.frame.button({
+		this.change_button = this.frame.button({
 			class: 'game-popup-button',
 			text: 'CHANGE',
 			align: 'bottom',
 			bottom: 45,
 			left: 2,
 			right: 2,
-		}).on('click', () => { this.p.utils.show_production_selection(); return true; });
+		});
+		this.change_button.on('click', () => { this.p.utils.show_production_selection(); return true; });
 		this.edit_button = this.frame.button({
 			class: 'game-popup-button',
 			text: 'Queue unavailable',
@@ -54,6 +55,11 @@ return {
 		this.hurry_button = this.frame.button({class: 'game-popup-button', text: 'Hurry unavailable', align: 'bottom', bottom: 2, left: 2, right: 2});
 		this.hurry_button.on('click', () => { if (this.p.utils.can_edit_queue()) { this.p.utils.open_hurry(); } return true; });
 
+	},
+
+	set_read_only: (value) => {
+		if (value) { this.change_button.hide(); this.edit_button.hide(); this.hurry_button.hide(); }
+		else { this.change_button.show(); this.edit_button.show(); this.hurry_button.show(); }
 	},
 
 	set_stored: (presentation) => {

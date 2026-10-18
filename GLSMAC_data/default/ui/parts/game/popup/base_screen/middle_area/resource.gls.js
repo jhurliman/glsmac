@@ -135,6 +135,7 @@ return {
 		}
 
 		this.el.on('mousedown', (e) => {
+			if (#is_defined(data.read_only) && data.read_only) { return true; }
 			if (e.button == 'left') {
 				// check if any tile was clicked
 				const twh = this.tile_width / 2;

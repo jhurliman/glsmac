@@ -2,9 +2,10 @@
 const colony = #include('../default/ui/parts/game/colony/colony');
 return (game, reset) => {
 	let popup = null;
+	let popup_data = null;
 	const popups = {
 		clear: () => { popup = null; },
-		set: (name, data) => {},
+		set: (name, data) => { popup_data = data; },
 		show: (name, callback) => { popup = {name: name, callback: callback}; },
 	};
 	const node = (properties) => {
@@ -34,5 +35,6 @@ return (game, reset) => {
 		reset: () => { colony.reset_button.handlers.click({}); },
 		save: () => { colony.save_button.handlers.click({}); },
 		popup: () => { return popup; },
+		popup_data: () => { return popup_data; },
 	};
 };

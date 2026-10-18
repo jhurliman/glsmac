@@ -1,11 +1,15 @@
 return {
     init: (p) => {
-        this.p = p; this.base = null; this.active = false; this.options = []; this.rows = [];
+        this.p = p; this.base = null; this.active = false; this.options = []; this.rows = []; this.read_only = false;
         this.labels = ['Governor active', 'Allow multiple or no priorities', 'Automate newly built units', 'Manage citizens and specialists', 'Manage production', 'Produce scouts', 'Produce land combat units', 'Produce naval combat units', 'Produce air combat units', 'Produce land defense units', 'Produce air defense units', 'Produce prototypes', 'Produce transports', 'Produce probe teams', 'Produce terraformers', 'Produce colony pods', 'Produce facilities', 'Produce Secret Projects', 'Hurry production'];
         this.buttons = p.body.panel({align: 'top', top: 3, left: 3, right: 3, height: 26, border: 'rgb(136,69,28),2'});
-        this.buttons.button({class: 'game-popup-button', align: 'left', left: 4, width: 180, top: 1, bottom: 1, text: 'Governor settings'}).on('click', () => { this.open(); return true; });
+        this.governor_button = this.buttons.button({class: 'game-popup-button', align: 'left', left: 4, width: 180, top: 1, bottom: 1, text: 'Governor settings'});
+        this.governor_button.on('click', () => { this.open(); return true; });
         this.energy = #include('./energy_rates'); this.energy.init(p);
-        this.buttons.button({class: 'game-popup-button', align: 'left', left: 190, width: 180, top: 1, bottom: 1, text: 'Energy allocation'}).on('click', () => { this.energy.open(); return true; });
+        this.energy_button = this.buttons.button({class: 'game-popup-button', align: 'left', left: 190, width: 180, top: 1, bottom: 1, text: 'Energy allocation'});
+        this.energy_button.on('click', () => { if (!this.read_only) { this.energy.open(); } return true; });
+        this.read_only_notice = this.buttons.text({class: 'base-screen-frame-text', left: 4, top: 4, text: 'Base changed faction. Close this screen to continue.'});
+        this.read_only_notice.hide();
         this.window = p.ui.root.window({class: 'game-popup', zindex: 0.9, width: 660, height: 420, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.hide();
         this.window.text({class: 'game-popup-text', top: 10, left: 12, text: 'Governor settings'});
@@ -28,8 +32,13 @@ return {
         return this.buttons;
     },
     set_base: (base) => { this.active = false; this.window.hide(); this.base = base; this.energy.set_base(base); },
+    set_read_only: (value) => {
+        this.read_only = value;
+        if (value) { this.hide_view(); this.governor_button.hide(); this.energy_button.hide(); this.read_only_notice.show(); }
+        else { this.governor_button.show(); this.energy_button.show(); this.read_only_notice.hide(); }
+    },
     open: () => {
-        if (this.base == null || !this.base.has_smac_resource_context) { return; }
+        if (this.read_only || this.base == null || !this.base.has_smac_resource_context) { return; }
         const data = this.base.get_smac_governor_settings(); if (!#is_defined(data)) { return; }
         this.selection = data; this.options = [];
         for (label of this.labels) { this.options :+ false; }
@@ -43,7 +52,7 @@ return {
         this.note.text = this.unavailable ? 'Active production, citizen and new-unit automation unavailable.' : 'Apply settings to this Base.';
     },
     submit: () => {
-        if (!this.active || this.unavailable) { return; }
+        if (this.read_only || !this.active || this.unavailable) { return; }
         let controls = 0; let power = 1;
         for (selected of this.options) { if (selected) { controls += power; } power *= 2; }
         const base = this.base; const expected = this.selection.expected_state;

@@ -100,7 +100,7 @@ return {
 		this.window.hide();
 		const request_id = pending.request_id;
 		this.p.modules.popup.clear();
-		this.p.modules.popup.set('base_screen', {base: selected});
+		this.p.modules.popup.set('base_screen', {base: selected, read_only: #is_defined(pending.read_only) && pending.read_only});
 		this.p.modules.popup.show('base_screen', (result) => {
 			if (this.screen == null || this.screen.request_id != request_id || this.screen_submitted) { return; }
 			const current = this.p.game.get_pending_smac_colony_screen();

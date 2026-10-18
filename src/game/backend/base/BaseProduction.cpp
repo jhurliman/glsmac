@@ -1,6 +1,7 @@
 #include "Base.h"
 
 #include "BaseManager.h"
+#include "FacilityDef.h"
 #include "SmacPopulationStep.h"
 #include "SmacUnitSupport.h"
 #include "game/backend/Game.h"
@@ -104,7 +105,8 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	m_game->ValidateSmacProductionState( m_owner, *m_production );
 	auto production = *m_production;
 	auto population = m_pops.size();
-	if ( production.current_item.kind != ProductionItemKind::Unit && production.current_item.kind != ProductionItemKind::Stockpile ) {
+	if ( production.current_item.kind != ProductionItemKind::Unit && production.current_item.kind != ProductionItemKind::Stockpile
+		&& !(production.current_item.kind==ProductionItemKind::Facility && production.current_item.smac_source_id==3) ) {
 		THROW( "Production completion for this target kind is not yet connected" );
 	}
 	Checked( production.minerals ); Checked( production.baseline_minerals ); Checked( m_accumulated_nutrients );
@@ -114,14 +116,19 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	auto support = retained ? retained->support : m_game->CalculateCanonicalUnitSupport( *this, population, nullptr );
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
 	std::optional< unit::UnitManager::PreparedConventionalRemoval > removal;
+	const FacilityDef* granted=nullptr;
+	std::optional<facilities_t> replacement_facilities;
 	if ( !pause && !retained && resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
 		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
 		}
 		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item );
 		bool complete = production.minerals >= cost;
+		if(production.current_item.kind==ProductionItemKind::Facility) {
+			for(const auto& row:m_facilities) {if(row.second->m_smac_source_id==3 || row.second->m_smac_source_id==26) {complete=false;}}
+		}
 		bool colony = false;
-		if ( complete ) {
+		if ( complete && production.current_item.kind==ProductionItemKind::Unit ) {
 			// Classify the actual owned package before preparing a factory. A
 			// governor deferral neither needs a presentation nor reserves a Unit.
 			const unit::ConventionalUnitState identity{ *production.current_item.smac_source_id, context.owner_simulation_id,
@@ -153,10 +160,16 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			production.baseline_minerals = production.minerals;
 			// Resolve presentation before any authority writes. The factory checks
 			// the actual owner/design/home/package and stages sight and every queue.
-			const auto design_id = *production.current_item.smac_source_id;
-			if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
-			auto* def = definition( design_id );
-			unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
+			if(production.current_item.kind==ProductionItemKind::Facility) {
+				granted=m_game->GetBM()->GetSmacFacilityDef(3);
+				if(!granted) {THROW("Tanks completion has no registered facility definition");}
+				replacement_facilities=m_facilities;replacement_facilities->emplace(granted->m_id,granted);
+			} else {
+				const auto design_id = *production.current_item.smac_source_id;
+				if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
+				auto* def = definition( design_id );
+				unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
+			}
 			if ( colony && population > 1 ) {
 				--population; // factory/home first; debit before queue, baselines and growth
 			}
@@ -165,7 +178,11 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			while ( !production.queue->empty() ) {
 				production.current_item = production.queue->front();
 				production.queue->erase( production.queue->begin() );
-				if ( m_game->IsSmacUnitProductionEligible( *this, production.current_item ) ) { result.queue_advanced = true; break; }
+				const auto& item=production.current_item;
+				const bool eligible=item.kind==ProductionItemKind::Stockpile ? true
+					: item.kind==ProductionItemKind::Unit ? m_game->IsSmacUnitProductionEligible(*this,item)
+					: m_game->IsSmacFacilityProductionEligible(*this,item,granted);
+				if (eligible) { result.queue_advanced = true; break; }
 			}
 		}
 	}
@@ -194,8 +211,8 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		const auto* newborn = unit ? &unit->Candidate() : nullptr;
 		auto gross_minerals = resources.minerals.intake;
 		if ( plan.NeedsRecalculation() ) {
-			allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production );
-			const auto internal = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn );
+			allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, {}, granted );
+			const auto internal = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, {}, granted );
 			food = plan.Finish( internal.nutrients.surplus );
 			gross_minerals = internal.minerals.intake;
 			support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn );
@@ -238,8 +255,8 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		// food again. Surviving Pop nodes are still untouched during these reads.
 		support = m_game->CalculateCanonicalUnitSupport( *this, population, newborn, result.removed_units );
 		const auto remaining_support = support.mineral_support;
-		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, remaining_support );
-		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support );
+		allocation = CalculateSmacWorkers( allocation, context, SmacBaseResourcePhase::Upkeep, population, newborn, &production, remaining_support, granted );
+		result.final_calculation = CalculateSmacResourceCalculation( SmacBaseResourcePhase::Upkeep, &allocation, population, food, newborn, remaining_support, granted );
 		food = result.final_calculation->nutrients.normalized_stored;
 	}
 	std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{result.final_calculation.value_or(result.first_calculation),support}};
@@ -248,7 +265,8 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	// No callback, allocation or validation between Unit and Base authority.
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
-	prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
+	static_assert(std::is_nothrow_swappable_v<facilities_t>);
+	prepared.Commit();if(replacement_facilities) {m_facilities.swap(*replacement_facilities);}m_smac_upkeep_cache.swap(cache);prepared.Finish();
 	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
 	if ( removal ) { removal->Notify( GSE_CALL ); }
 	return result;

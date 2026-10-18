@@ -175,7 +175,7 @@ std::array< int64_t, 3 > Game::GetCanonicalTileResources( const map::tile::Tile&
 	return CalculateCanonicalTileResources( tile, evaluating_base, phase, false );
 }
 
-std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase, bool startup, bool founding ) const {
+std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& evaluating_base, ResourceQueryPhase phase, bool startup, bool founding, const base::FacilityDef* granted ) const {
 	using namespace map::tile;
 	if ( startup || founding ) {
 		if ( startup ) { RequireConventionalStartupClaim(); }
@@ -223,7 +223,13 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	const auto fungus = m_simulation->value.technology.FungalCapabilities( context.owner_simulation_id, *technologies, *profiles );
 	const auto refs = rules->TechnologyReferences( *technologies );
 	const auto& global = m_simulation->value.resource_modifiers;
-	const auto facilities = ReadFacilityRoles( evaluating_base, *m_bm );
+	auto facilities = ReadFacilityRoles( evaluating_base, *m_bm );
+	if(granted) {
+		if(startup || founding || m_bm->GetFacilityDef(granted->m_id)!=granted || granted->m_smac_source_id!=3) {
+			throw std::runtime_error("Prepared resource grant requires registered ordinary Recycling Tanks");
+		}
+		m_bm->ValidateSmacFacilityDef(granted);facilities.recycling=true;
+	}
 	uint32_t base_count = ( startup || founding ) ? 1 : 0;
 	for ( const auto& entry : m_bm->GetBases() ) {
 		const auto* candidate = entry.second;

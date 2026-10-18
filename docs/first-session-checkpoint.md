@@ -1,8 +1,9 @@
 # First-session checkpoint
 
-Next milestone after the current Former/controller/render integration. Gameplay
-breadth waits until this path is usable and visually reviewed. This is not a
-claim that SMAC or Alien Crossfire is complete.
+Integration milestone for the current Former/controller/render work. Gameplay
+development continues with the cached build while rendered validation is pending;
+it is not a prerequisite for every gameplay change. This is not a claim that
+SMAC or Alien Crossfire is complete.
 
 ## Acceptance
 
@@ -38,8 +39,11 @@ The cached Linux Debug build passes 19 affected groups with memory tracking;
 targeted clang-tidy 15 passes in 2.15 seconds. These checks compose the recovered
 allowance, KEY-001 admission and ordinary movement consumers; they are not new
 original-game captures. Conventional attacks remain unintegrated, and the
-prepared size-one Colony choice still awaits complete last-base disposition
-before default activation.
+size-one Colony choice, saved question and last-base restart/refounding are now
+active through PR #183. Its Codex review and required CI pass, as do focused
+ASan/UBSan checks. The current facility slice adds registered Recycling Tanks to
+the live picker and upkeep path, including completion across saved turns; broader
+facilities, combat/capture/conquest and full SMAX rules remain ahead.
 
 ## Reference and platform routes
 

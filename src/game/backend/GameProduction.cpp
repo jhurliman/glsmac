@@ -4,6 +4,8 @@
 #include "slot/Slot.h"
 #include "slot/Slots.h"
 #include "base/Base.h"
+#include "base/BaseManager.h"
+#include "base/FacilityDef.h"
 #include "map/Map.h"
 #include "map/tile/Tile.h"
 #include "resource/SmacMineralCostFactor.h"
@@ -95,6 +97,25 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 	base.GetSmacResourceContext();
 	if ( base.GetGame() != this ) { throw std::runtime_error("Production Base belongs to another game"); }
 	return IsSmacUnitProductionEligibleAt( base.m_owner, base.GetTile(), item );
+}
+
+bool Game::IsSmacFacilityProductionEligible(const base::Base& base,const base::ProductionItem& item,const base::FacilityDef* granted) const {
+	base.GetSmacResourceContext();
+	if(base.GetGame()!=this || m_bm->GetBase(base.m_id)!=&base || item.kind!=base::ProductionItemKind::Facility || item.smac_source_id!=3) {
+		throw std::runtime_error("Live facility construction currently supports registered Recycling Tanks");
+	}
+	RequireSmacLocalHumanOwner(base.m_owner);
+	if(!HasSmacProductionPrerequisite(base.m_owner,item)) {return false;}
+	if(granted) {
+		if(m_bm->GetFacilityDef(granted->m_id)!=granted || granted->m_smac_source_id!=3) {throw std::runtime_error("Staged facility grant is not the registered Tanks definition");}
+		m_bm->ValidateSmacFacilityDef(granted);return false;
+	}
+	for(const auto& row:base.m_facilities) {
+		if(!row.second || m_bm->GetFacilityDef(row.first)!=row.second) {throw std::runtime_error("Facility eligibility has an invalid local definition");}
+		m_bm->ValidateSmacFacilityDef(row.second);
+		if(row.second->m_smac_source_id==3 || row.second->m_smac_source_id==26) {return false;}
+	}
+	return true;
 }
 
 bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const {

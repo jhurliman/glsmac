@@ -60,6 +60,7 @@ public:
 	void ValidateSmacPopDef( const PopDef* def ) const;
 
 	FacilityDef* GetFacilityDef( const std::string& id ) const;
+	FacilityDef* GetSmacFacilityDef( int32_t source_id ) const;
 	void DefineFacility( FacilityDef* facility_def );
 	void UndefineFacility( const std::string& id );
 	void ValidateSmacFacilityDef( const FacilityDef* def ) const;

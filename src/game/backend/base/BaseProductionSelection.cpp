@@ -33,7 +33,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const auto& expected = static_cast< const gse::value::String* >( field( "expected_state", gse::VT_STRING ) )->value;
     const auto confirm = static_cast< const gse::value::Bool* >( field( "confirm", gse::VT_BOOL ) )->value;
     const auto shown = static_cast< const gse::value::Int* >( field( "expected_minerals", gse::VT_INT ) )->value;
-    if ( !base || base->GetGame() != this || caller != m_slot_num || id < 0 || id > 511 || expected.size() > 16384 ) {
+    if ( !base || base->GetGame() != this || caller != m_slot_num || (id<0 && id!=-3) || id > 511 || expected.size() > 16384 ) {
         THROW( "Production selection has invalid authority or arguments" );
     }
     base->RequireSmacProductionSelection();
@@ -66,12 +66,14 @@ void Base::RequireSmacProductionSelection() const {
 SmacManualSwitchResult Base::PrepareSmacProductionSelection( const int32_t source_id, const bool confirm ) const {
     RequireSmacProductionSelection();
     const auto* designs = m_game->m_simulation->value.designs.Find( GetSmacResourceContext().owner_simulation_id );
-    if ( !designs || ( source_id != 0 && source_id != 1 && source_id != 2 && source_id != designs->starting_scout ) ) {
+    const bool tanks=source_id==-3;
+    if(tanks && !m_game->GetBM()->GetSmacFacilityDef(3)) {THROW("Tanks selection has no registered facility definition");}
+    if ( !designs || (!tanks && source_id != 0 && source_id != 1 && source_id != 2 && source_id != designs->starting_scout ) ) {
         THROW( "Production selector does not support this design" );
     }
-    const auto target = m_game->MakeSmacProductionItem( m_owner, ProductionItemKind::Unit, source_id );
-    if ( !m_game->IsSmacUnitProductionEligible( *this, target ) ) { THROW( "Production target is no longer eligible" ); }
-    (void)m_game->ResolveSmacProductionPresentation( m_owner, source_id );
+    const auto target = m_game->MakeSmacProductionItem( m_owner, tanks ? ProductionItemKind::Facility : ProductionItemKind::Unit, tanks ? 3 : source_id );
+    if (!(tanks ? m_game->IsSmacFacilityProductionEligible(*this,target) : m_game->IsSmacUnitProductionEligible(*this,target))) {THROW("Production target is no longer eligible");}
+    if(!tanks) {(void)m_game->ResolveSmacProductionPresentation( m_owner, source_id );}
     (void)m_game->GetSmacProductionCost( m_owner, target );
     const auto& rules = *m_game->GetState()->m_settings.global.GetSmacProductionRules();
     SmacProductionSwitchContext context{ rules.retool_strictness, rules.retool_loss_percent, rules.retool_exemption,
@@ -103,6 +105,13 @@ std::vector< Base::ProductionChoice > Base::GetSmacProductionChoices() const {
         const auto* def = m_game->ResolveSmacProductionPresentation( m_owner, id );
         result.push_back( { id, def->m_name, m_game->GetSmacProductionCost( m_owner, item ), switched.state.minerals, switched.penalty_prompt_required } );
     }
+    const auto tanks=m_game->MakeSmacProductionItem(m_owner,ProductionItemKind::Facility,3);
+    if(const auto* definition=m_game->GetBM()->GetSmacFacilityDef(3)) {
+        if(m_game->IsSmacFacilityProductionEligible(*this,tanks)) {
+            const auto switched=PrepareSmacProductionSelection(-3,true);
+            result.push_back({-3,definition->m_name,m_game->GetSmacProductionCost(m_owner,tanks),switched.state.minerals,switched.penalty_prompt_required});
+        }
+    }
     return result;
 }
 
@@ -133,7 +142,7 @@ void Base::SelectSmacProduction( GSE_CALLABLE, const int32_t source_id, const st
     if ( SerializeProductionState( m_production ).ToString() != expected ) { return; }
     const auto result = PrepareSmacProductionSelection( source_id, confirm );
     auto context = GetSmacResourceContext();
-    const auto target = m_game->MakeSmacProductionItem( m_owner, ProductionItemKind::Unit, source_id );
+    const auto target = m_game->MakeSmacProductionItem( m_owner, source_id==-3 ? ProductionItemKind::Facility : ProductionItemKind::Unit, source_id==-3 ? 3 : source_id );
     if ( !( target == m_production->current_item ) && ( context.governor_options & SmacBaseResourceContext::STARTUP_AUTOMATION ) ) {
         context.governor_options &= ~( SmacBaseResourceContext::GOVERNOR_ACTIVE | SmacBaseResourceContext::STARTUP_AUTOMATION );
     }

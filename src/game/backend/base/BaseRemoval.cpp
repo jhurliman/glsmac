@@ -2,6 +2,7 @@
 #include "Base.h"
 #include "SmacPopulationStep.h"
 #include "SmacWorkedSquareCollection.h"
+#include "SmacFactionDisposition.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slot.h"
@@ -18,36 +19,30 @@
 
 namespace game::backend::base {
 
-struct BaseManager::SmacDispositionPlan {
-    size_t participant, technology;
-    faction::SmacEconomyState economy;
-    faction::SmacHostileState hostility;
-    map::tile::Tile* site=nullptr;
-    std::vector<std::pair<unit::Def*,unit::ConventionalUnitState>> units;
-    SmacGameplayRandomState random;
-    std::optional<map::SmacWorkerKnowledge> territory;
-    std::optional<map::GlsmacTerritoryTopology> topology;
-};
-
 BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(const Base& base) const {
     if(!m_game->IsRunning() || m_dispatching_updates || GetBase(base.m_id)!=&base || base.m_pops.size()!=1) {
         THROW("Faction disposition requires the current size-one Base");
     }
-    m_game->RequireSmacLocalHumanOwner(base.m_owner);
-    const auto owner=base.GetSmacResourceContext().owner_simulation_id;
-    for(const auto& row:m_bases) {if(row.second!=&base && row.second->m_owner==base.m_owner) {THROW("Faction disposition requires the last owned Base");}}
+    const auto* map=m_game->GetMap();const auto* center=base.GetTile();
+    if(!center || center->tiles!=map->GetTilesPtr() || center->base!=&base) {THROW("Faction disposition has no canonical center");}
+    return PrepareSmacFactionDisposition(base.m_owner,&base,0,m_game->m_simulation->value.gameplay_random);
+}
+BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot::Slot* owner_slot,const Base* removed,int32_t captor,const SmacGameplayRandomState& random) const {
+    m_game->RequireSmacLocalHumanOwner(owner_slot);
+    const auto owner=m_game->RequireSmacProductionOwner(owner_slot).simulation_id;
+    for(const auto& row:m_bases) {if(row.second!=removed && row.second->m_owner==owner_slot) {THROW("Faction disposition requires no surviving owned Base");}}
     auto& state=m_game->m_simulation->value;
     const auto participant=std::find_if(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner;});
     const auto technology=std::find_if(state.technology.factions.begin(),state.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
     if(participant==state.roster.end() || !participant->active || technology==state.technology.factions.end()) {THROW("Faction disposition has no active saved owner");}
     SmacDispositionPlan plan{static_cast<size_t>(participant-state.roster.begin()),static_cast<size_t>(technology-state.technology.factions.begin()),
-        m_game->PrepareSmacNonzeroInitialization(owner),state.hostility,nullptr,{},state.gameplay_random,{},{}};
+        m_game->PrepareSmacNonzeroInitialization(owner),state.hostility,nullptr,{},random,{},{}};
     plan.hostility.Reinitialize(owner);
-    const auto* map=m_game->GetMap();auto* center=base.GetTile();
-    if(!center || center->tiles!=map->GetTilesPtr() || center->base!=&base || !map->GetSmacWorkerKnowledge()) {THROW("Faction disposition has no canonical center or knowledge");}
+    const auto* map=m_game->GetMap();
+    if(!map->GetSmacWorkerKnowledge()) {THROW("Faction disposition has no saved knowledge");}
     const auto& global=m_game->GetState()->m_settings.global;
-    plan.economy.regional_base_counts=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
-    plan.territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&plan.topology);
+    if(removed) {plan.economy.regional_base_counts=m_game->PrepareCanonicalRegionalBaseDelta(*removed,-1,map->GetTerritoryTopology());}
+    plan.territory=m_game->PrepareBaseTerritory(nullptr,removed,false,&plan.topology);
     if(!plan.territory || !plan.topology || !map->GetResourcePolicy() || !plan.topology->Areas()
         || !plan.topology->Postpass() || !plan.topology->SiteRatings() || !plan.topology->LandmarkDetails()
         || !global.map.GetSmacOceanCoverage() || m_game->GetTurnId()==0 || m_game->GetTurnId()>INT32_MAX) {
@@ -59,7 +54,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     const auto index=[&](map::smac_site::Coordinate point) {return size_t(point[1])*(geometry.width/2)+point[0]/2;};
     std::vector<const Base*> survivors;std::vector<map::smac_site::Coordinate> centers;
     for(const auto id:m_base_order) {
-        const auto* current=GetBase(id);if(current==&base) {continue;}
+        const auto* current=GetBase(id);if(current==removed) {continue;}
         if(!current) {THROW("Restart Base order is incomplete");}
         survivors.push_back(current);centers.push_back({{static_cast<int32_t>(current->GetTile()->coord.x),static_cast<int32_t>(current->GetTile()->coord.y)}});
     }
@@ -75,7 +70,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     std::vector<bool> occupied(topology.Regions().size(),false);
     for(const auto point:centers) {occupied[index(point)]=true;}
     for(const auto& entry:m_game->GetUM()->GetUnits()) {
-        const auto* current=entry.second;if(current->m_owner==base.m_owner) {continue;}
+        const auto* current=entry.second;if(current->m_owner==owner_slot) {continue;}
         current->RequireConventionalReady();const auto* tile=current->GetTile();
         occupied[index({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)}})]=true;
     }
@@ -91,8 +86,8 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
         return tile->moisture>map::tile::MOISTURE_ARID && tile->rockiness<=map::tile::ROCKINESS_ROLLING
             && !(tile->features&map::tile::FEATURE_XENOFUNGUS);
     };
-    const auto search=map::smac_restart::Search({geometry,static_cast<int32_t>(m_game->GetTurnId()),owner,0,
-        unit::SmacStartupDesignState::OriginalDifficulty(base.m_owner->GetPlayer()->GetDifficultyLevel()),
+    const auto search=map::smac_restart::Search({geometry,static_cast<int32_t>(m_game->GetTurnId()),owner,captor,
+        unit::SmacStartupDesignState::OriginalDifficulty(owner_slot->GetPlayer()->GetDifficultyLevel()),
         map::smac_restart::ScaleFromGeometry(geometry),*global.map.GetSmacOceanCoverage()},plan.random,[&](auto point) {
         map::smac_restart::Candidate candidate;const auto at=index(point);const auto* tile=map->GetTile(point[0],point[1]);
         candidate.elevation=altitude(tile);candidate.rockiness=tile->is_water_tile ? 0 : tile->rockiness-map::tile::ROCKINESS_FLAT;
@@ -122,10 +117,18 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     const auto package=unit::SmacRestartUnitPackage::Select(static_cast<int32_t>(m_game->GetTurnId()),state.designs,
         global.GetSmacPredefinedUnitRules()->catalog,*technology,*global.GetSmacTechnologyRules());
     for(const auto id:package.creation_order) {
-        plan.units.push_back({m_game->ResolveSmacProductionPresentation(base.m_owner,id),
+        plan.units.push_back({m_game->ResolveSmacProductionPresentation(owner_slot,id),
             {id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0}});
     }
     plan.economy.rates={0,5};return plan;
+}
+void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexcept {
+    auto& state=m_game->m_simulation->value;const auto owner=state.roster[plan.participant].simulation_id;
+    static_assert(std::is_nothrow_copy_assignable_v<faction::SmacEconomyState> && std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
+    state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
+    state.hostility.owners.swap(plan.hostility.owners);state.gameplay_random=plan.random;
+    state.roster[plan.participant].active=plan.site!=nullptr;
+    if(!plan.site) {state.human_defeat_request=owner;}
 }
 
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,
@@ -145,19 +148,12 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
     for(auto it=assignments.begin();it!=assignments.end();) {if(it->second.first==base.m_id) {it=assignments.erase(it);} else {++it;}}
     auto updates=m_base_updates;QueueBaseUpdateInto(updates,&base,BUO_DESPAWN);
     std::unique_lock lock(m_updated_bases_mutex);auto triggers=m_updated_bases;triggers.erase(&base);
-    auto& state=m_game->m_simulation->value;
-    const auto lost_owner=base.GetSmacResourceContext().owner_simulation_id;
-    auto& economy=state.economy.at(lost_owner);
     static_assert(std::is_nothrow_swappable_v<decltype(bases)> && std::is_nothrow_swappable_v<decltype(order)>
         && std::is_nothrow_swappable_v<decltype(assignments)> && std::is_nothrow_swappable_v<decltype(updates)>
         && std::is_nothrow_swappable_v<decltype(triggers)> && std::is_nothrow_copy_assignable_v<faction::SmacEconomyState>);
     m_bases.swap(bases);m_base_order.swap(order);m_work_assignments.swap(assignments);
     m_base_updates.swap(updates);m_updated_bases.swap(triggers);base.GetTile()->base=nullptr;
-    economy=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
-    state.hostility.owners.swap(plan.hostility.owners);
-    state.roster[plan.participant].active=plan.site!=nullptr;
-    if(!plan.site) {state.human_defeat_request=lost_owner;}
-    state.gameplay_random=plan.random;
+    CommitSmacFactionDisposition(plan);
     units.Commit();m_game->CommitBaseTerritoryTopology(plan.topology);std::unique_ptr<Base> retired(&base);lock.unlock();
     units.Notify(GSE_CALL);
     m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&base) {{"base",base.Wrap(GSE_CALL)},};});

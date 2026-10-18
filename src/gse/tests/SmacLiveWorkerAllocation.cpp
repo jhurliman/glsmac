@@ -2,6 +2,7 @@
 #include "ConventionalUnits.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacRestartSearch.h"
+#include "fixtures/SmacCaptureRestart.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -182,7 +183,7 @@ std::string FanaticBattleSource(const std::string& filename) {
     if(filename=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FANATIC,1");}
     return source;
 }
-Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1 ) {
+Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1, size_t center_x=2,size_t center_y=2 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
@@ -196,7 +197,7 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	auto* owner = &game->GetState()->m_slots->GetSlot( owner_slot );
 	Base::pops_t pops;
 	for ( size_t i = 0; i < population; ++i ) { pops.emplace( std::piecewise_construct, std::forward_as_tuple( 19 + i ), std::forward_as_tuple( nullptr, 19 + i, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) ); }
-	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Live allocation", {},
+	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( center_x, center_y ), "Live allocation", {},
 		pops, 41, 13, Production(), SmacBaseResourceContext{ simulation_id, false, 0, 0, 0x40 } );
 	bm->SpawnBase( GSE_CALL, base );
 	SmacBaseAllocationState allocation{ doctor ? 1u : population == 2 ? 7u : 3u, { {}, doctor ? static_cast< int32_t >( population ) : 0 } };
@@ -367,6 +368,149 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }}GT_OK();
     });
 
+    task->AddTest("SMAC last Base capture stages successful replacement queries on another land region",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        // Turn6 is the native caller. Turn100 checks the statically established
+        // fresh-stack rule with the existing three-Scout reinforcement package.
+        for(const size_t turn:{6u,100u}) {
+        const size_t count=turn==6 ? 4 : 7;
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved,remembered;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true,false,0,1,1,16,16);SelectionPresentations(fixture);
+            auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+            own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(turn);
+            const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
+            own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            Base::pops_t pops;for(size_t p=0;p<2;++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+            const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
+            auto* target=new Base(game,702,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20,16),"Restart capture",{},pops,41,5,
+                ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
+            bm->SpawnBase(GSE_CALL,target);target->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},2}},Roles());actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
+            ConventionalUnitState remote{1,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};remote.home_base_id=702;
+            um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-former"),foreign,game->GetMap()->GetTile(24,16),remote);
+            // Two displayed land regions, separated even across periodic X.
+            // Set shared vertices first, then update every cached classification.
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {for(auto* corner:game->GetMap()->GetTile(x,y)->elevation.corners) {*corner=100;}}}
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {if(x<4 || x>60 || (x>=29 && x<=35)) {
+                for(auto* corner:game->GetMap()->GetTile(x,y)->elevation.corners) {*corner=-1000;}
+            }}}
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {auto* tile=game->GetMap()->GetTile(x,y);tile->Update();tile->moisture=MOISTURE_RAINY;}}
+            auto knowledge=KnowledgeValue(true,true,64,32).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+            knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+            knowledge.remembered[1].resize(1024);
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {if(x>=36 && x<60) {
+                const auto at=y*32+x/2;knowledge.tiles[at].explored_by=4;
+                knowledge.remembered[1][at]=Knowledge::Improvements{FEATURE_RIVER,TERRAFORMING_ROAD,false,false};
+            }}}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
+                state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;});
+            fixture.GameplayRandom({3,3});fixture.Updates();const auto before=fixture.Snapshot();const auto first=Unit::GetNextId();
+            um->ValidateConventionalMove(actor,target->GetTile(),0);
+            GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==first && um->GetUnit(92),"successful replacement query published candidate placements or retired old Units");
+            fixture.MoveEvent(GSE_CALL,actor,target->GetTile());GT_ASSERT(um->GetUnits().size()==count+1 && !um->GetUnit(92),"successful capture restart did not replace old faction Units");
+            const std::array<int32_t,4> designs{{0,1,0,2}};const auto& topology=*game->GetMap()->GetTerritoryTopology();
+            const auto captured_region=topology.Regions().at(16*32+10);map::tile::Tile* site=nullptr;
+            for(size_t i=0;i<count;++i) {const auto* unit=um->GetUnit(first+i);GT_ASSERT(unit && unit->Conventional().design_id==(i<4 ? designs[i] : 2) && !unit->Conventional().home_base_id,"successful capture lost native package order or unhomed state");
+                if(!site) {site=unit->GetTile();}GT_ASSERT(unit->GetTile()==site && topology.Regions().at(site->coord.y*32+site->coord.x/2)!=captured_region,"captor-region rejection failed or package split across sites");}
+            GT_ASSERT(site->coord.x==size_t(smac_capture_restart_fixture::site[0]) && site->coord.y==size_t(smac_capture_restart_fixture::site[1])
+                && fixture.GameplayRandom()==SmacGameplayRandomState(3,smac_capture_restart_fixture::final_crt),"native two-attempt restart or extra tracking CRT draw differs");
+            const auto revealed=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();size_t explored=0;
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {if(x>=36 && x<60 && (revealed.tiles[y*32+x/2].explored_by&2)) {++explored;}}}
+            GT_ASSERT(explored==9,"tracking did not reveal exactly the native nine squares to the captor");
+            for(const auto point:smac_capture_restart_fixture::reveal) {
+                const auto* tile=game->GetMap()->GetTile(point[0],point[1]);const auto& memory=revealed.remembered[1][point[1]*32+point[0]/2];
+                GT_ASSERT(memory && memory->features==tile->features && memory->terraforming==tile->terraforming && memory->unit_present==(tile==site),"tracking failed to refresh the captor's remembered terrain");
+            }
+            for(size_t i=0;i<count;++i) {const auto found=std::find_if(revealed.units.begin(),revealed.units.end(),[&](const auto& row){return row.id==first+i;});
+                GT_ASSERT(found!=revealed.units.end() && found->visible_to==(i<4 ? smac_capture_restart_fixture::visibility[i] : 0),"tracking used numeric/reverse stack order or exposed every replacement");}
+            size_t centers=0;for(const auto& request:fixture.QueuedFrontendRequests()) {if(request.type==game::FrontendRequest::FR_MAP_CENTER) {
+                GT_ASSERT(request.data.map_center.x==44 && request.data.map_center.y==6,"native tracking recenter differs");++centers;
+            }}GT_ASSERT(centers==1,"tracking omitted or duplicated camera request");
+            bool active=false;fixture.ResourceState([&](auto& state){active=state.roster[1].active && !state.human_defeat_request;});GT_ASSERT(active,"successful capture restart requested defeat");
+            remembered=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();saved=fixture.Snapshot();GT_OK();
+        });if(!result.empty()) {return result;}
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true,64,32);restored.BasePresentationRoles(names);
+        const auto loaded=restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            GT_ASSERT(restored.Game()->GetUM()->GetUnits().size()==count+1 && restored.Game()->GetBM()->GetBases().size()==2
+                && restored.GameplayRandom()==SmacGameplayRandomState(3,smac_capture_restart_fixture::final_crt)
+                && restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==remembered,"actual Start replayed tracking or lost its visibility/exploration history");GT_OK();
+        });
+        if(!loaded.empty()) {return loaded;}
+        }GT_OK();
+    });
+    task->AddTest("SMAC last Base capture joins native failed restart cleanup ending and actual Start",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(const int design:{1,0}) {for(const bool rollback:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+                auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+                own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(6);
+                const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
+                own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                Base::pops_t pops;for(size_t p=0;p<2;++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+                const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
+                auto* target=new Base(game,702,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20,16),"Last capture",{},pops,41,5,
+                    ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
+                bm->SpawnBase(GSE_CALL,target);target->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},2}},Roles());
+                actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
+                ConventionalUnitState remote{design,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};remote.home_base_id=702;
+                auto* homed=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef(design ? "choice-former" : "choice-colony"),foreign,game->GetMap()->GetTile(30,16),remote);
+                // Also exercise disposition's remaining-unit cleanup.
+                um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("choice-scout"),foreign,game->GetMap()->GetTile(40,16),
+                    {2,2,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                auto knowledge=KnowledgeValue(true,true,64,32).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+                knowledge.units={{91,6,false},{92,6,false},{93,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {game->GetMap()->GetTile(x,y)->moisture=MOISTURE_RAINY;}}
+                fixture.ResourceState([](auto& state) {
+                    state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
+                    state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;
+                    state.economy.at(1).regional_base_counts->at(1)=3;state.economy.at(2).regional_base_counts->at(1)=2;
+                });fixture.GameplayRandom({3,3});fixture.Updates();
+                auto* retained=homed->Wrap(GSE_CALL);auto* citizen=target->m_pops.at(19).Wrap(GSE_CALL);
+                const auto before=fixture.Snapshot();const auto id=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
+                um->ValidateConventionalMove(actor,target->GetTile(),0);
+                GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==id && Unit::Unwrap(retained)==homed,"capture query view published removal RNG IDs or ownership");
+                if(rollback) {
+                    auto missing=names;missing[7]="missing-role";fixture.BasePresentationRoles(missing);
+                    GT_ASSERT(Rejects([&]{fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}) && fixture.Snapshot()==before && Unit::GetNextId()==id
+                        && Unit::Unwrap(retained)==homed && Pop::Unwrap(citizen)==&target->m_pops.at(19),"late last-capture failure published prepared retirement or faction authority");GT_OK();
+                }
+                fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
+                const auto& native=smac_restart_fixture::cases.back();
+                GT_ASSERT(um->GetUnits().size()==1 && um->GetUnit(91)==actor && !um->GetUnit(92) && !um->GetUnit(93) && retained->type==VT_UNDEFINED
+                    && Unit::GetNextId()==id && actor->GetTile()==target->GetTile() && actor->Conventional().spent==3,"capture kept old homed/remaining Units or made replacements after failed search");
+                GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==1 && target->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50})
+                    && target->GetAccumulatedNutrients()==5 && target->GetProductionState()->minerals==0 && Pop::Unwrap(citizen)==&target->m_pops.at(19),"last capture lost retained Base/citizen state");
+                GT_ASSERT(fixture.GameplayRandom()==SmacGameplayRandomState(3,native.final_crt) && game->GetRandom()->GetStateString()==jsf,
+                    "capture and failed restart did not consume original37+2050 CRT draws");
+                bool exact=false;fixture.ResourceState([&](auto& state) {exact=state.economy.at(1).credits==233 && state.economy.at(2).credits==77
+                    && !state.roster[1].active && state.human_defeat_request==std::optional<int32_t>(2) && state.roster[0].active
+                    && state.economy.at(1).regional_base_counts->at(1)==3 && state.economy.at(2).regional_base_counts->at(1)==2;});
+                GT_ASSERT(exact && game->GetSlotNum()==0,"native last-capture loot initialization stale counts activity ending or controller differs");
+                size_t selections=0;bool refreshed=false;
+                for(const auto& request:fixture.Updates()) {
+                    if(request.type==game::FrontendRequest::FR_BASE_UPDATE && request.data.base_update.base_id==702 && request.data.base_update.slot_index==0) {refreshed=true;}
+                    if(request.type==game::FrontendRequest::FR_BASE_SELECT && request.data.base_select.base_id==702) {GT_ASSERT(refreshed,"last-capture screen preceded ownership refresh");++selections;}
+                }
+                GT_ASSERT(selections==1,"ending request omitted or duplicated captured-Base screen entry");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!result.empty()) {return "last capture "+std::to_string(design)+(rollback ? " rollback: " : ": ")+result;}
+            if(!rollback) {
+                ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true,64,32);restored.BasePresentationRoles(names);
+                const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                    restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
+                    GT_ASSERT(game->GetBM()->GetBases().size()==2 && game->GetUM()->GetUnits().size()==1 && game->GetBM()->GetBase(702)->m_owner->GetIndex()==0
+                        && restored.GameplayRandom()==SmacGameplayRandomState(3,smac_restart_fixture::cases.back().final_crt),"actual Start replayed last-capture disposition");GT_OK();
+                });if(!result.empty()) {return result;}
+            }
+        }}GT_OK();
+    });
     task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};

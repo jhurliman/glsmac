@@ -58,6 +58,7 @@ public:
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
 		FR_LOADER_HIDE,
+		FR_MAP_CENTER,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -134,6 +135,9 @@ public:
 			size_t x;
 			size_t y;
 		} tile_select;
+		struct {
+			size_t x,y;
+		} map_center;
 		struct {
 			size_t unit_id;
 		} unit_select;

@@ -47,8 +47,10 @@ nonzero scores without refilling neighboring tiles. The package selector runs
 only after search and later guards permit restart. Preparation changes neither
 current authority nor either random stream.
 
-Last-Base capture remains refused until its larger capture/disposition
-transaction supplies the captor and its different future Base/Unit context.
+Last-Base capture now supplies the captor and its prepared future Base/Unit
+context to the same disposition producer. Its successful caller also owns the
+separate [post-restart tracking continuation](behavior/successful-capture-restart.md),
+including the additional CRT draw, terrain knowledge and fresh-stack visibility.
 No original generation, AI/startup placement or golden1.0.0 acceptance is
 implied here.
 

@@ -1,0 +1,1111 @@
+{
+  "research_id": "RE-SMAC-ANIMATION-LIFECYCLE-001",
+  "profile": "Pinned stock SMAC; admitted native paths and explicitly supplied services. No live visible timing measurement.",
+  "cases": [
+    {
+      "id": "map_service_ordinary",
+      "inputs": {
+        "control": "ordinary",
+        "views": [
+          [
+            0,
+            12845056
+          ],
+          [
+            1,
+            262144
+          ],
+          [
+            0,
+            12845056
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_map_animation_off",
+      "inputs": {
+        "control": "map_animation_off",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_map_animation_on",
+      "inputs": {
+        "control": "map_animation_on",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_unfocused",
+      "inputs": {
+        "control": "unfocused",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": false,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_lifecycle",
+      "inputs": {
+        "control": "lifecycle",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 0,
+        "model_counter": 14,
+        "draws": [],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_effect",
+      "inputs": {
+        "control": "effect",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 0,
+        "model_counter": 14,
+        "draws": [],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_base_modal",
+      "inputs": {
+        "control": "base_modal",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 0,
+        "model_counter": 14,
+        "draws": [],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_second_modal",
+      "inputs": {
+        "control": "second_modal",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 0,
+        "model_counter": 14,
+        "draws": [],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_shutdown",
+      "inputs": {
+        "control": "shutdown",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "map_service_not_awaiting",
+      "inputs": {
+        "control": "not_awaiting",
+        "views": [
+          [
+            0,
+            12845056
+          ]
+        ],
+        "focus_match": true,
+        "subordinate_UI_draw_services_supplied": true
+      },
+      "expected": {
+        "counter": 4294967295,
+        "model_counter": 14,
+        "draws": [
+          [
+            0,
+            1
+          ]
+        ],
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "pending_modal_drop",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "pending_effect_drop",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "pending_lifecycle_drop",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        1,
+        1,
+        1,
+        0,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "pending_selection_ensure_visible",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "pending_preference_change",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "pending_stall_coalesces",
+      "inputs": {
+        "notification_before_transition": true,
+        "services_supplied": true
+      },
+      "expected": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        17,
+        2
+      ]
+    },
+    {
+      "id": "idle_0_0_0",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 0,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "counter": 0,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_0_128",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 0,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "counter": 0,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_1_0",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 1,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        "counter": 1,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_1_128",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 1,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        "counter": 1,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_14_0",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 14,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          14,
+          0,
+          14,
+          0,
+          14,
+          0
+        ],
+        "counter": 14,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_14_128",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 14,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          14,
+          0,
+          14,
+          0,
+          14,
+          0
+        ],
+        "counter": 14,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_15_0",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 15,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "counter": 15,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_15_128",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 15,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "counter": 15,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_1000_0",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 1000,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          10,
+          0,
+          10,
+          0,
+          10,
+          0
+        ],
+        "counter": 1000,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_0_1000_128",
+      "inputs": {
+        "chassis_field": 0,
+        "initial_counter": 1000,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [
+          10,
+          0,
+          10,
+          0,
+          10,
+          0
+        ],
+        "counter": 1000,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_0_0",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 0,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 0,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_0_128",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 0,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 0,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_1_0",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 1,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 1,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_1_128",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 1,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 1,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_14_0",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 14,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 14,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_14_128",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 14,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 14,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_15_0",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 15,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 15,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_15_128",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 15,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 15,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_1000_0",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 1000,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": false
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 1000,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "idle_1_1000_128",
+      "inputs": {
+        "chassis_field": 1,
+        "initial_counter": 1000,
+        "redraws": 3,
+        "clock_stalls_ms": 100000,
+        "component_assembly_raster_morale_supplied": true,
+        "map_animations_enabled": true
+      },
+      "expected": {
+        "component_calls": 3,
+        "frames": [],
+        "counter": 1000,
+        "clock_reads": 0
+      }
+    },
+    {
+      "id": "preference_projection_0_0",
+      "inputs": {
+        "supplied_settings": {
+          "map_animations": false,
+          "sliding_windows": false,
+          "sliding_scrollbars": false,
+          "whole_unit_blinks": false
+        },
+        "admitted_native_projection_loop": true
+      },
+      "expected": {
+        "map_animations": false,
+        "sliding_windows": false,
+        "sliding_scrollbars": false,
+        "whole_unit_blinks": false
+      }
+    },
+    {
+      "id": "preference_projection_128_0",
+      "inputs": {
+        "supplied_settings": {
+          "map_animations": true,
+          "sliding_windows": false,
+          "sliding_scrollbars": false,
+          "whole_unit_blinks": false
+        },
+        "admitted_native_projection_loop": true
+      },
+      "expected": {
+        "map_animations": true,
+        "sliding_windows": false,
+        "sliding_scrollbars": false,
+        "whole_unit_blinks": false
+      }
+    },
+    {
+      "id": "preference_projection_0_512",
+      "inputs": {
+        "supplied_settings": {
+          "map_animations": false,
+          "sliding_windows": false,
+          "sliding_scrollbars": false,
+          "whole_unit_blinks": true
+        },
+        "admitted_native_projection_loop": true
+      },
+      "expected": {
+        "map_animations": false,
+        "sliding_windows": false,
+        "sliding_scrollbars": false,
+        "whole_unit_blinks": true
+      }
+    },
+    {
+      "id": "preference_projection_134217856_524800",
+      "inputs": {
+        "supplied_settings": {
+          "map_animations": true,
+          "sliding_windows": true,
+          "sliding_scrollbars": true,
+          "whole_unit_blinks": true
+        },
+        "admitted_native_projection_loop": true
+      },
+      "expected": {
+        "map_animations": true,
+        "sliding_windows": true,
+        "sliding_scrollbars": true,
+        "whole_unit_blinks": true
+      }
+    },
+    {
+      "id": "native_component_8_0",
+      "inputs": {
+        "retained_counter": 0,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Mind Worms"
+      },
+      "expected": [
+        [
+          30
+        ],
+        0,
+        0
+      ]
+    },
+    {
+      "id": "native_component_8_4",
+      "inputs": {
+        "retained_counter": 4,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Mind Worms"
+      },
+      "expected": [
+        [
+          34
+        ],
+        4,
+        0
+      ]
+    },
+    {
+      "id": "native_component_8_5",
+      "inputs": {
+        "retained_counter": 5,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Mind Worms"
+      },
+      "expected": [
+        [
+          30
+        ],
+        5,
+        0
+      ]
+    },
+    {
+      "id": "native_component_8_14",
+      "inputs": {
+        "retained_counter": 14,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Mind Worms"
+      },
+      "expected": [
+        [
+          34
+        ],
+        14,
+        0
+      ]
+    },
+    {
+      "id": "native_component_8_1000",
+      "inputs": {
+        "retained_counter": 1000,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Mind Worms"
+      },
+      "expected": [
+        [
+          30
+        ],
+        1000,
+        0
+      ]
+    },
+    {
+      "id": "native_component_9_0",
+      "inputs": {
+        "retained_counter": 0,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Isle of the Deep"
+      },
+      "expected": [
+        [
+          30
+        ],
+        0,
+        0
+      ]
+    },
+    {
+      "id": "native_component_9_4",
+      "inputs": {
+        "retained_counter": 4,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Isle of the Deep"
+      },
+      "expected": [
+        [
+          34
+        ],
+        4,
+        0
+      ]
+    },
+    {
+      "id": "native_component_9_5",
+      "inputs": {
+        "retained_counter": 5,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Isle of the Deep"
+      },
+      "expected": [
+        [
+          30
+        ],
+        5,
+        0
+      ]
+    },
+    {
+      "id": "native_component_9_14",
+      "inputs": {
+        "retained_counter": 14,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Isle of the Deep"
+      },
+      "expected": [
+        [
+          34
+        ],
+        14,
+        0
+      ]
+    },
+    {
+      "id": "native_component_9_1000",
+      "inputs": {
+        "retained_counter": 1000,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Isle of the Deep"
+      },
+      "expected": [
+        [
+          30
+        ],
+        1000,
+        0
+      ]
+    },
+    {
+      "id": "native_component_10_0",
+      "inputs": {
+        "retained_counter": 0,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Locusts of Chiron"
+      },
+      "expected": [
+        [
+          0
+        ],
+        0,
+        0
+      ]
+    },
+    {
+      "id": "native_component_10_4",
+      "inputs": {
+        "retained_counter": 4,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Locusts of Chiron"
+      },
+      "expected": [
+        [
+          4
+        ],
+        4,
+        0
+      ]
+    },
+    {
+      "id": "native_component_10_5",
+      "inputs": {
+        "retained_counter": 5,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Locusts of Chiron"
+      },
+      "expected": [
+        [
+          5
+        ],
+        5,
+        0
+      ]
+    },
+    {
+      "id": "native_component_10_14",
+      "inputs": {
+        "retained_counter": 14,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Locusts of Chiron"
+      },
+      "expected": [
+        [
+          14
+        ],
+        14,
+        0
+      ]
+    },
+    {
+      "id": "native_component_10_1000",
+      "inputs": {
+        "retained_counter": 1000,
+        "scene_assembly_morale_supplied": true,
+        "native_type": "Locusts of Chiron"
+      },
+      "expected": [
+        [
+          1000
+        ],
+        1000,
+        0
+      ]
+    },
+    {
+      "id": "gravship_workshop_draw_0",
+      "inputs": {
+        "chassis_field": 6,
+        "workshop_visibility": 0,
+        "retained_counter": 14,
+        "scene_assembly_supplied": true
+      },
+      "expected": [
+        [
+          0,
+          0,
+          0,
+          14
+        ],
+        14,
+        0
+      ]
+    },
+    {
+      "id": "gravship_workshop_draw_1",
+      "inputs": {
+        "chassis_field": 6,
+        "workshop_visibility": 1,
+        "retained_counter": 14,
+        "scene_assembly_supplied": true
+      },
+      "expected": [
+        [
+          0,
+          0,
+          0,
+          14
+        ],
+        15,
+        0
+      ]
+    }
+  ],
+  "validation": {
+    "new_native_controls": 57,
+    "complete_map_service_callbacks": 10,
+    "pending_overlay_sequences": 6,
+    "complete_idle_map_cases": 20,
+    "idle_draws_per_case": 3,
+    "native_preference_projection_fragments": 4,
+    "native_unit_component_cases": 15,
+    "gravship_workshop_component_cases": 2,
+    "terrain_frame_producer_closed": false,
+    "autonomous_idle_clock_closed": false,
+    "smax_or_pracx_analyzed": false
+  },
+  "reused_receipts": [
+    "animation-timing-followup",
+    "selected-unit-blink-timing",
+    "../scout-idle-renderer.md"
+  ]
+}

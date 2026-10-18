@@ -46,6 +46,8 @@ def validate_reference_receipts(paths, root=Path(__file__).resolve().parents[1])
         if not reference_receipt(name):
             continue
         path = root / name
+        if path.is_symlink():
+            raise ValueError("Reference receipt must be a regular file: " + name)
         if not path.exists():  # A deleted receipt needs no JSON decoding.
             continue
         try:

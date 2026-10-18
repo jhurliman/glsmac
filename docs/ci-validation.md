@@ -17,7 +17,7 @@ the small asset-free CTest baseline to avoid guessing which tests a change needs
 Reference receipts are limited to `docs/behavior/*-cases.json` (one directory
 level). The scope job decodes changed receipts as UTF-8 JSON and rejects invalid
 syntax/non-JSON numeric constants before choosing jobs. Deleted receipts need
-no decode. This checks syntax, not original-game correctness or native fixture
+no decode; symlink receipts are rejected, including dangling links. This checks syntax, not original-game correctness or native fixture
 agreement. These files are not engine runtime input; compiled fixture/test,
 projection tool, script and production changes still request their normal jobs.
 Other JSON paths retain normal coverage.

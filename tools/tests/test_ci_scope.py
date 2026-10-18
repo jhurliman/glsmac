@@ -92,6 +92,20 @@ class ScopeTests(unittest.TestCase):
             # Unrelated JSON is never classified as a published receipt.
             self.assertEqual(policy.validate_reference_receipts(["docs/unknown.json"], root), 0)
 
+    def test_dangling_reference_symlink_is_not_a_deleted_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "docs/behavior/example-cases.json"
+            path.parent.mkdir(parents=True)
+            try:
+                path.symlink_to(root / "absent.json")
+            except OSError as error:
+                self.skipTest("Host does not permit creating symlinks: " + str(error))
+            self.assertTrue(path.is_symlink())
+            self.assertFalse(path.exists())
+            with self.assertRaisesRegex(ValueError, "regular file.*docs/behavior/example-cases.json"):
+                policy.validate_reference_receipts([path.relative_to(root).as_posix()], root)
+
     def test_action_rejects_invalid_receipt_before_emitting_scope(self):
         import json
         import os

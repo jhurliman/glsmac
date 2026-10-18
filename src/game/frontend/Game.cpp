@@ -1441,6 +1441,10 @@ void Game::Initialize(
 				event.data.mouse.x > m_viewport.width ||
 					event.data.mouse.y > m_viewport.height
 			) ) {
+				if ( event.type == input::EV_MOUSE_MOVE ) {
+					m_map_control.edge_scrolling.speed = {};
+					m_map_control.edge_scrolling.timer.Stop();
+				}
 				return false;
 			}
 

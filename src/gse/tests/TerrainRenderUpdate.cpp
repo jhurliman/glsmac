@@ -9,6 +9,7 @@
 #include "util/Perlin.h"
 #include "task/gsetests/GSETests.h"
 #include "graphics/opengl/TexturePaging.h"
+#include "graphics/PresentationViewport.h"
 #include <cstring>
 #include <stdexcept>
 
@@ -72,6 +73,37 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){
+		using graphics::PresentationViewport;
+		const auto wide=PresentationViewport::Fit(1920,1080);
+		GT_ASSERT(wide.x==240 && wide.y==0 && wide.width==1440 && wide.height==1080,"wide window stretched or cropped");
+		const auto square=PresentationViewport::Fit(1000,1000);
+		GT_ASSERT(square.x==0 && square.y==125 && square.width==1000 && square.height==750,"square window lost letterboxing");
+		const auto original=PresentationViewport::Fit(1024,768);
+		GT_ASSERT(original.x==0 && original.y==0 && original.width==1024 && original.height==768,"native 4:3 changed");
+		for(int w=0;w<=4096;w+=17) {for(int h=0;h<=2160;h+=13) {
+			const auto a=PresentationViewport::Fit(w,h);
+			GT_ASSERT(a.width<=w && a.height<=h && a.width*3==a.height*4 && a.width%2==0 && a.height%2==0,
+				"aspect, containment or even texture dimensions violated");
+			GT_ASSERT(w-a.width-2*a.x<=1 && h-a.height-2*a.y<=1,"bars are not centered");
+			if(!a.width) {continue;}
+			int x=a.x,y=a.y;
+			GT_ASSERT(a.MapPoint(x,y) && x==0 && y==0,"first pixel mapped incorrectly");
+			x=a.x+a.width-1;y=a.y+a.height-1;
+			GT_ASSERT(a.MapPoint(x,y) && x==a.width-1 && y==a.height-1,"last pixel mapped incorrectly");
+			x=a.x-1;y=a.y;
+			GT_ASSERT(!a.MapPoint(x,y),"left bar accepted input");
+			x=a.x+a.width;y=a.y;
+			GT_ASSERT(!a.MapPoint(x,y),"right bar accepted input");
+			x=a.x;y=a.y-1;
+			GT_ASSERT(!a.MapPoint(x,y),"top bar accepted input");
+			x=a.x;y=a.y+a.height;
+			GT_ASSERT(!a.MapPoint(x,y),"bottom bar accepted input");
+		}}
+		const auto retina=PresentationViewport::Fit(3840,2160);
+		GT_ASSERT(retina.x==wide.x*2 && retina.width==wide.width*2 && retina.height==wide.height*2,"Retina drawable distorted aspect");GT_OK();
+	});
+
 	task->AddTest("GPU texture paging preserves full Planet dimensions and split update pixels",GT(){
 		using graphics::opengl::TexturePaging;
 		const auto planet=TexturePaging::Make(4536,17920,16384,2048);

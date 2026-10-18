@@ -50,6 +50,21 @@ void SDL2::Iterate() {
 
 	input::Event e = {};
 	input::Event e_mouse_move = {}; // send only once per iteration
+	const auto dispatch = [this]( input::Event& value ) {
+		if ( value.flags & EF_MOUSE ) {
+			int x = static_cast<int>(value.data.mouse.x), y = static_cast<int>(value.data.mouse.y);
+			const auto* graphics = g_engine->GetGraphics();
+			if ( !graphics->MapWindowPoint( x, y ) ) {
+				if ( value.type == EV_MOUSE_SCROLL ) { return; }
+				// A move outside clears hover; a release clears captured drag/button
+				// state. Use a single out-of-bounds sentinel, never clamp onto a control.
+				x = graphics->GetViewportWidth() + 1;
+				y = graphics->GetViewportHeight() + 1;
+			}
+			value.data.mouse.x = x; value.data.mouse.y = y;
+		}
+		ProcessEvent( value );
+	};
 
 	while ( SDL_PollEvent( &event ) ) {
 		e.SetType( EV_NONE );
@@ -75,6 +90,8 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
+				int x = event.button.x, y = event.button.y;
+				if ( !g_engine->GetGraphics()->MapWindowPoint( x, y ) ) { break; }
 				m_last_mouse_position = { // just in case, maybe some devices like touchscreens don't produce mouse move event before click
 					event.motion.x,
 					event.motion.y
@@ -98,9 +115,9 @@ void SDL2::Iterate() {
 				const auto button = GetMouseButton( event.button.button );
 				auto it = m_active_mousedowns.find( event.button.button );
 				if ( it != m_active_mousedowns.end() ) { // sometimes touchscreen sends mouseup without or before mousedown, just ignore it
-					auto& mousedown_data = m_active_mousedowns.at( event.button.button );
 					m_active_mousedowns.erase( event.button.button );
 				}
+				else { break; } // includes a press that began in a black bar
 				e.SetType( EV_MOUSE_UP );
 				e.data.mouse.x = event.motion.x;
 				e.data.mouse.y = event.motion.y;
@@ -145,11 +162,11 @@ void SDL2::Iterate() {
 		}
 
 		if ( e.type != EV_NONE ) {
-			ProcessEvent( e );
+			dispatch( e );
 		}
 	}
 	if ( e_mouse_move.type != EV_NONE ) {
-		ProcessEvent( e_mouse_move );
+		dispatch( e_mouse_move );
 	}
 }
 

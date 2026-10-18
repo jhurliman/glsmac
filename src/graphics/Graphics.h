@@ -38,6 +38,9 @@ CLASS( Graphics, common::Module )
 	virtual const unsigned short GetViewportWidth() const = 0;
 	virtual const unsigned short GetViewportHeight() const = 0;
 
+	// Translate SDL window coordinates to the rendered area; false means a bar.
+	virtual bool MapWindowPoint( int& x, int& y ) const { return true; }
+
 	virtual void LoadTexture( types::texture::Texture* texture, const bool smoothen ) = 0;
 	virtual void UnloadTexture( const types::texture::Texture* texture ) = 0;
 

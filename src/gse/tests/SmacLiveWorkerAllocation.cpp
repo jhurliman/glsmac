@@ -849,10 +849,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
 			fixture.BasePresentationRoles(roles);SelectionPresentations(fixture);
 			auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+			fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete_command=true;});
 			game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
 			const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
 			base->SetProductionState(GSE_CALL,ProductionState{target,27,target,77,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(0);
-			next_unit=game::backend::unit::Unit::GetNextId();fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete_command=true;});
+			next_unit=game::backend::unit::Unit::GetNextId();
 			fixture.BeginColonyChoice(GSE_CALL,base->m_id);
 			GT_ASSERT(base->GetProductionState()->minerals==30 && base->GetProductionState()->baseline_minerals==77
 				&& base->GetAccumulatedNutrients()==0 && base->m_pops.size()==1 && game::backend::unit::Unit::GetNextId()==next_unit,
@@ -979,10 +980,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				ProductionState{former,0,former,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
 			bm->SpawnBase(GSE_CALL,second);second->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{5,{{},0}},Roles());
 			auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles){tile.explored_by=2;tile.claimant=1;}
+			fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete=true;});
 			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
 			const auto colony=game->MakeSmacProductionItem(first->m_owner,ProductionItemKind::Unit,0);
 			first->SetProductionState(GSE_CALL,ProductionState{colony,27,colony,77,std::vector<ProductionItem>{}});first->SetAccumulatedNutrients(0);
-			fixture.QueueProbeEvent(GSE_CALL,[&]{obsolete=true;});fixture.BeginColonyChoice(GSE_CALL,first->m_id);
+			fixture.BeginColonyChoice(GSE_CALL,first->m_id);
 			auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
 			request=static_cast<value::Int*>(pending->Get("request_id"))->value;
 			game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"screen")}});GT_OK();

@@ -188,9 +188,8 @@ void Unit::Show() {
 			m_render.badge.healthbar.instance_id = m_render.badge.healthbar.def->next_instance_id++;
 		}
 
-		ShowBadge();
-
 		m_render.is_rendered = true;
+		ShowBadge();
 	}
 }
 

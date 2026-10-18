@@ -106,7 +106,7 @@ return {
 			this.pops.surface({
 				class: 'base-screen-bottombar-pop-' + pop_type + '-' + #to_string(variant),
 				left: left,
-			}).on('mousedown', (e) => { this.p.utils.open_specialist_selection(viewed_base, pop_id); return true; });
+			}).on('mousedown', (e) => { if (!#is_defined(data.read_only) || !data.read_only) { this.p.utils.open_specialist_selection(viewed_base, pop_id); } return true; });
 			left += shift;
 		}
 

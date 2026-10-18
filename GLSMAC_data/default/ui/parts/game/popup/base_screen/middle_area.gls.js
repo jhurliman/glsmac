@@ -72,6 +72,7 @@ return {
         this.pages.psych.set(data.citizens);
 		this.pages.resource.set({
 			base: data.base,
+			read_only: #is_defined(data.read_only) && data.read_only,
 		});
 	},
 

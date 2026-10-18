@@ -77,6 +77,7 @@ return {
 	},
 
 	set: (data) => {
+		this.parts.queue.set_read_only(#is_defined(data.read_only) && data.read_only);
 
 		if (data.base.has_smac_resource_context) {
 			const presentation = #is_defined(data.mineral_surplus) ? data.base.get_smac_production_presentation(data.mineral_surplus) : data.base.get_smac_production_presentation();
@@ -99,6 +100,7 @@ return {
 		this.parts.support.set(data.base.get_smac_support_presentation());
 		this.parts.middle_area.set({
 			base: data.base,
+			read_only: #is_defined(data.read_only) && data.read_only,
 			name: data.base.name,
 			owner: data.base.get_owner(),
 			pops: data.base.get_pops(),

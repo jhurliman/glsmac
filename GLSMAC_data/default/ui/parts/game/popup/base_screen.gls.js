@@ -1,4 +1,5 @@
 return {
+	read_only: false,
 
 	available_sections: [
 		'top_buttons',
@@ -156,8 +157,11 @@ return {
 		const faction = owner.get_faction();
 
 		this.base_id = base.id;
+		if (#is_defined(data.read_only)) { this.read_only = data.read_only; }
+		const read_only = this.read_only;
 		this.base = base;
 		this.sections.top_buttons.set_base(base);
+		this.sections.top_buttons.set_read_only(this.read_only);
 
 		const canonical = base.has_smac_resource_context;
 		let intake = undefined;
@@ -279,17 +283,18 @@ return {
 		}
 
 		this.sections.middle_area.set({
-			base: base, citizens: citizens,
+			base: base, citizens: citizens, read_only: read_only,
 		});
 
 		this.sections.bottom_bar.set({
 			base: base,
+            read_only: read_only,
             mineral_surplus: mineral_surplus,
 		});
 	},
 
-	can_rename: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
-	can_edit_queue: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
+	can_rename: () => { return !this.read_only && #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
+	can_edit_queue: () => { return !this.read_only && #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
 
 	open_hurry: () => {
 		if (!this.is_open || !this.can_edit_queue()) { return; }
@@ -300,7 +305,7 @@ return {
 	},
 
 	open_queue_editor: () => {
-		if (!this.is_open) { return; }
+		if (!this.is_open || this.read_only) { return; }
 		const base = this.base; const data = base.get_smac_queue_editor();
 		if (!#is_defined(data)) { return; }
 		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view(); this.sections.hurry.hide_view();
@@ -315,7 +320,7 @@ return {
 	},
 
 	open_specialist_selection: (base, pop_id) => {
-		if (!this.is_open || base.id != this.base_id) { return; }
+		if (!this.is_open || this.read_only || base.id != this.base_id) { return; }
 		const expected = base.get_smac_specialist_selection_state();
 		if (!#is_defined(expected)) { return; }
 		this.hide_production_selection();
@@ -339,6 +344,7 @@ return {
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;
+		this.read_only = false;
 	},
 
 	on_show: () => {
@@ -407,6 +413,7 @@ return {
 	},
 
 	show_production_selection: () => {
+		if (this.read_only) { return; }
 		if (this.production_selection == null) {
 			// Query before hiding anything: a stale/unavailable Base leaves the
 			// ordinary screen intact. All gameplay values come from the native Base.
@@ -458,6 +465,7 @@ return {
 	},
 
 	update_production_selection: () => {
+		if (this.read_only) { return; }
 		if (this.production_selection != null) {
 			if (!#is_defined(this.production_choice)) { return; }
 			const choice = this.production_choice;

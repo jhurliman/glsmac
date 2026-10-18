@@ -23,7 +23,7 @@ using namespace game::backend;
 using namespace game::backend::base;
 template<typename F> bool Rejects(F&& f) { try { f(); } catch(const std::exception&) { return true; } return false; }
 std::string Source(const std::string& filename) {
-	const auto original=smac_startup_fixture::Source(filename);
+	const auto original=smac_startup_fixture::OrdinarySource(filename);
 	if(filename!="alpha.txt") { return original; }
 	std::istringstream input(original);std::string line,section,result;size_t row=0;
 	while(std::getline(input,line)) {

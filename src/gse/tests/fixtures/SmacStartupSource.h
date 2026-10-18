@@ -55,6 +55,26 @@ inline std::string Source( const std::string& filename ) {
 	result.replace( result.find( old ), old.size(), PredefinedSource() );
 	return result;
 }
+// Live ordinary campaigns need nonnegative ranking scores. The raw Source
+// deliberately carries signed extreme technology ratings for parser/codec
+// coverage; keep that source unchanged and choose this profile explicitly for
+// gameplay tests that advance the canonical turn. These ratings are synthetic.
+inline std::string OrdinarySource(const std::string& filename) {
+    const auto source=Source(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,result;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line[0]=='#') {section=line;}
+        else if(section=="#TECHNOLOGY" && !line.empty()) {
+            std::istringstream row(line);std::string field;std::vector<std::string> fields;
+            while(std::getline(row,field,',')) {fields.push_back(field);}
+            if(fields.size()!=9) {throw std::runtime_error("Invalid ordinary fixture technology row");}
+            for(size_t i=2;i<6;++i) {fields[i]="1";}
+            line.clear();for(size_t i=0;i<fields.size();++i) {if(i) {line+=',';}line+=fields[i];}
+        }
+        result+=line+'\n';
+    }
+    return result;
+}
 inline game::backend::settings::SmacPredefinedUnitRules Units() {
 	return game::backend::settings::SmacPredefinedUnitRules::Parse( PredefinedSource(), smac_rules_fixture::Technologies() );
 }

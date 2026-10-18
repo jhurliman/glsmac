@@ -160,12 +160,16 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	GlsmacTerritoryTopology PrepareFreshTerritoryTopology() const;
 	GlsmacTerritoryTopology PrepareSiteRatingRefill(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn) const;
+	GlsmacTerritoryTopology PrepareSiteRatingQuery(const GlsmacTerritoryTopology& topology,
+		const std::vector<smac_site::Coordinate>& bases,size_t turn,smac_site::Coordinate point) const;
 
 	WRAPDEFS_PTR( Map )
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
+		const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const;
 	friend class gse::tests::BackendFixture;
 	friend class gse::tests::TerrainRenderFixture;
 	// Backend snapshot fixtures need only the tile grid. This constructor does

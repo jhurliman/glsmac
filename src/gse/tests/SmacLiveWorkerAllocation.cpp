@@ -1,6 +1,7 @@
 #include "SmacLiveWorkerAllocation.h"
 #include "ConventionalUnits.h"
 #include "fixtures/SmacStartupSource.h"
+#include "fixtures/SmacRestartSearch.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -2094,6 +2095,73 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             });GT_ASSERT(tail.empty(),"Accept tail: "+tail);
         }GT_OK();
     });
+    task->AddTest("SMAC live restart matches original starvation site CRT and post-search veto consumption",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const auto& native=smac_restart_fixture::cases.front();
+        for(int scenario=0;scenario<6;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(RestartSource,"GAIANS",64,32);
+            fixture.ResourceState([&](auto& state){state.do_or_die=scenario==1;state.roster[0].restart_prohibited=scenario==2;});
+            std::string saved;std::vector<size_t> created;
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+                game->AdvanceTurn(3);base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,64,32));
+                // A real dry-map postpass produced F=0. Subsequent displayed
+                // moisture changes must not repair that retained native input.
+                const auto before=*game->GetMap()->GetTerritoryTopology();
+                GT_ASSERT(before.Areas()->at(1)==native.area && before.Postpass()->fertility.at(1)==native.fertility,"native retained geography differs");
+                for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);tile->moisture=MOISTURE_RAINY;
+                    if(scenario==3) {tile->features=FEATURE_XENOFUNGUS;}
+                }}
+                if(scenario==1 || scenario==2) {
+                    const auto marked=before.SiteRatings()->FoundBase(*native.selected);fixture.SiteRatings(marked.Serialize());
+                }
+                if(scenario==5) {game->GetMap()->GetTile((*native.selected)[0],(*native.selected)[1])->features=FEATURE_MONOLITH;}
+                const auto& reference=scenario==3 ? smac_restart_fixture::cases.back() : native;
+                fixture.GameplayRandom({reference.shared,reference.crt});const auto jsf=game->GetRandom()->GetStateString();
+                const auto first=Unit::GetNextId();const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+                base->SetProductionState(GSE_CALL,ProductionState{colony,999,colony,0,std::vector<ProductionItem>{}});
+                if(scenario==4) {
+                    auto legacy=game->GetMap()->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-1024);
+                    legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
+                    fixture.Updates();const auto original=fixture.Snapshot();const auto queues=fixture.QueuedFrontendRequests().size();
+                    auto* retained=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+                    GT_ASSERT(Rejects([&]{game->GetBM()->AbandonSmacBase(GSE_CALL,*base,game->GetUM()->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);})
+                        && fixture.Snapshot()==original && Unit::GetNextId()==first && retained->wrapobj
+                        && fixture.QueuedFrontendRequests().size()==queues,"missing-history preparation changed authority IDs wrappers RNG or queues");GT_OK();
+                }
+                game->GetBM()->AbandonSmacBase(GSE_CALL,*base,game->GetUM()->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);
+                GT_ASSERT(fixture.GameplayRandom()==SmacGameplayRandomState(reference.shared,reference.final_crt)
+                    && game->GetRandom()->GetStateString()==jsf,"live search omitted native CRT prefix or consumed shared/map RNG");
+                GT_ASSERT(game->GetBM()->GetBases().empty() && !game->GetUM()->GetUnit(91),"future restart kept the lost Base or victim Unit");
+                if(scenario==1 || scenario==2) {
+                    const auto& sites=*game->GetMap()->GetTerritoryTopology()->SiteRatings();
+                    GT_ASSERT(sites.Excluded(*native.selected) && sites.Rating(*native.selected)==1,"later restart veto discarded an actual excluded cache-miss write");
+                }
+                if(scenario==5) {GT_ASSERT(game->GetMap()->GetTerritoryTopology()->SiteRatings()->Rating(*native.selected)==0,"monolith zero score did not remain a miss");}
+                if(scenario==0 || scenario==5) {
+                    GT_ASSERT(game->GetUM()->GetUnits().size()==4 && native.selected,"original starvation package missing");
+                    for(size_t i=0;i<4;++i) {
+                        const auto* unit=game->GetUM()->GetUnit(first+1+i);
+                        GT_ASSERT(unit && unit->GetTile()->coord.x==size_t((*native.selected)[0]) && unit->GetTile()->coord.y==size_t((*native.selected)[1]),
+                            "live caller selected another site than the original starvation trace");created.push_back(unit->m_id);
+                    }
+                    saved=fixture.Snapshot();
+                } else {GT_ASSERT(game->GetUM()->GetUnits().empty(),"failed/vetoed search manufactured replacement Units");}
+                GT_OK();
+            });if(!result.empty()) {return "native live restart "+std::to_string(scenario)+": "+result;}
+            if(scenario==0) {
+                ConventionalUnitFixture restored;restored.ConfigureProduction(RestartSource,"GAIANS",64,32);
+                const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                    restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+                    GT_ASSERT(restored.GameplayRandom()==SmacGameplayRandomState(native.shared,native.final_crt)
+                        && restored.Game()->GetUM()->GetUnits().size()==4,"actual Start replayed the candidate loop");
+                    for(const auto id:created) {GT_ASSERT(restored.Game()->GetUM()->GetUnit(id),"actual Start lost a native restart replacement");}GT_OK();
+                });if(!result.empty()) {return result;}
+            }
+        }GT_OK();
+    });
     task->AddTest("SMAC last Base loss restarts or eliminates using saved faction authority",[](GSE*,context::Context*) -> std::string {
         using namespace game::backend::unit;
         for(const bool accept:{false,true}) {for(int scenario=0;scenario<6;++scenario) {
@@ -2110,6 +2178,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();
                 game->AdvanceTurn(scenario==1 ? 100 : scenario==2 ? 101 : 3);
                 auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
+                base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
                 if(scenario==5) {for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {game->GetMap()->GetTile(x,y)->features=FEATURE_XENOFUNGUS;}}}
                 const auto target=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,accept ? 0 : 2);
                 base->SetProductionState(GSE_CALL,ProductionState{target,999,target,0,std::vector<ProductionItem>{}});
@@ -2123,7 +2192,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(result.removed_base && !result.completed_unit,"starvation manufactured before faction disposition");}
                 const bool restarted=scenario<2;const size_t count=restarted ? scenario==1 ? 7 : 4 : 0;
                 GT_ASSERT(bm->GetBases().empty() && !wrapper->wrapobj && !um->GetUnit(91) && um->GetUnits().size()==count,
-                    "last Base or old roster survived disposition, or replacement count differs");
+                    "last Base or old roster survived disposition, or replacement count differs: bases="+std::to_string(bm->GetBases().size())
+                    +" units="+std::to_string(um->GetUnits().size())+" expected="+std::to_string(count)+" CRT="+std::to_string(fixture.GameplayRandom().Crt()));
                 const std::vector<int32_t> designs=scenario==1 ? std::vector<int32_t>{0,1,0,2,2,2,2} : std::vector<int32_t>{0,1,0,2};
                 map::tile::Tile* site=nullptr;
                 for(size_t i=0;i<count;++i) {
@@ -2138,7 +2208,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
                         && e.pending_debit==0 && e.research_fraction==70 && t.target==5 && t.labs==40 && !t.cached_threshold
                         && e.rates.psych==(restarted ? 0 : 2) && e.rates.labs==(restarted ? 5 : 3);});
-                GT_ASSERT(exact && fixture.GameplayRandom()==pair && game->GetRandom()->GetStateString()==random,"disposition reset retained research, flags, treasury or RNG incorrectly");
+                GT_ASSERT(exact && fixture.GameplayRandom().Shared()==pair.Shared() && fixture.GameplayRandom().Crt()!=pair.Crt()
+                    && game->GetRandom()->GetStateString()==random,"disposition reset retained research, flags, treasury or search RNG incorrectly");
                 fixture.SettleEconomy(1);
                 fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120);});
                 GT_ASSERT(exact,"empty-faction tail omitted or duplicated its second initialization");
@@ -2354,13 +2425,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }
         return {};
     });
-	task->AddTest( "SMAC live upkeep rejects last-owned-Base removal without partial production", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "SMAC live upkeep rejects missing restart factory authority without partial production", []( GSE*, context::Context* ) -> std::string {
 		const auto source = []( const std::string& filename ) { auto text = UpkeepSource( filename );
 			if ( filename == "alpha.txt" ) { const auto at = text.find( "#RULES\n" ); const auto end = text.find( '\n', at + 7 ); const auto next = end + 1; text.replace( next, text.find( ',', next ) - next, "3" ); } return text; };
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( source, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
-			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true );
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian"); // make search reach the deliberately missing factory
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
 			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, 999, scout, 0, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( -1 );
 			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();

@@ -35,10 +35,12 @@ groups and current-head review/CI. The [original candidate loop](smac-restart-se
 now matches both full native traces; its live future-world producer is next.
 The next [shared landmark history](smac-shared-landmark-history.md) slice owns
 raw detail through fresh admission, save/Start and ordinary map mutations.
-Original world generation and the live restart producer remain open.
+The live starvation/Colony-abandonment restart now uses that owned future
+world and the original search. Original world generation and the combined
+last-Base capture/disposition transaction remain open.
 
-1. Complete the restart search contract used by `PrepareLastSmacBaseDisposition`.
-   Its current farthest-site policy is explicitly a port approximation. Capture
+1. Extend the joined restart caller used by `PrepareLastSmacBaseDisposition`.
+   Starvation/Colony abandonment now use the original candidate loop. Capture
    introduces a captor identity and a reached same-land-region/nearest-captor-Base
    rejection. Original candidate generation and retry consumption use the CRT
    stream. Establish success and all-attempts-failed outputs before substituting

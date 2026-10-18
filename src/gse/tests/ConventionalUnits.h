@@ -25,7 +25,7 @@ public:
 	void ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules );
 	void SpecialistKnowledge( int32_t simulation, const std::array< bool, 89 >& owned );
 	void ConfigureResources( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
-	void ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction );
+	void ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction, int32_t width=128,int32_t height=64 );
 	void ProductionPresentations( const std::array< std::string, 4 >& roles );
 	void ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map = false );
 	void ResourceState( const std::function< void( game::backend::faction::SmacSimulationState& ) >& edit );

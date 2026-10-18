@@ -24,6 +24,9 @@ public:
 	RatingCache FoundBase(Coordinate center) const;
 	RatingCache RemoveBase(Coordinate center,const std::vector<Coordinate>& surviving_centers) const;
 	RatingCache Refill(const RatingQuery& query) const;
+	// Direct native query-on-miss: unlike territory refill, an exclusion bit
+	// does not suppress the calculation. Preserve that bit and nonzero scores.
+	RatingCache Resolve(Coordinate point,const RatingQuery& query) const;
 	bool operator==(const RatingCache& other) const;
 private:
 	RatingCache(Geometry geometry,std::vector<uint8_t> values);

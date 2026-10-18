@@ -48,8 +48,11 @@ marks existing Bases once, without making every postpass unconditionally refill.
 Ordinary Former completions preserve existing nonzero ratings. Startup and
 late-turn scoring use the accepted query contract, without a turn100 refusal.
 
-This joins the site-cache producer; it does not replace the approximate
-last-Base restart search or enable last-Base capture. Those consumers are next.
+The live starvation/Colony-abandonment restart now uses direct query-on-miss
+at the original search stage. A direct miss calculates even when excluded,
+preserves the exclusion bit, and changes only the queried score. Cached
+nonzero values bypass the query; calculated zero remains a miss next time.
+Last-Base capture still requires its joined disposition transaction.
 
 Validation: cached Linux Debug build;64 affected native groups pass with
 allocation tracking, including capture, founding/abandonment, actual Start and

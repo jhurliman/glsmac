@@ -18,7 +18,7 @@ size_t Count(Geometry geometry) {
 		"Site cache requires a bounded parity grid");
 	return size_t(geometry.width)*geometry.height/2;
 }
-std::optional<Coordinate> Resolve(Geometry geometry,Coordinate center,Coordinate delta) {
+std::optional<Coordinate> ResolveRadius(Geometry geometry,Coordinate center,Coordinate delta) {
 	Coordinate point{{center[0]+delta[0],center[1]+delta[1]}};
 	if(geometry.wrap) {if(point[0]<0) {point[0]+=geometry.width;} else if(point[0]>=geometry.width) {point[0]-=geometry.width;}}
 	if(point[0]<0 || point[0]>=geometry.width || point[1]<0 || point[1]>=geometry.height) {return {};}
@@ -45,13 +45,13 @@ RatingCache RatingCache::ClearRatings() const {
 }
 RatingCache RatingCache::InvalidateLocal(Coordinate center) const {
 	(void)Index(center);auto result=*this;
-	for(size_t i=0;i<21;++i) {const auto point=Resolve(m_geometry,center,radius[i]);if(point) {result.m_values[Index(*point)]&=16;}}
+	for(size_t i=0;i<21;++i) {const auto point=ResolveRadius(m_geometry,center,radius[i]);if(point) {result.m_values[Index(*point)]&=16;}}
 	return result;
 }
 void RatingCache::BaseMark(Coordinate center) {
 	(void)Index(center);
 	for(size_t i=0;i<radius.size();++i) {
-		const auto point=Resolve(m_geometry,center,radius[i]);if(!point) {continue;}
+		const auto point=ResolveRadius(m_geometry,center,radius[i]);if(!point) {continue;}
 		auto& value=m_values[Index(*point)];if(i<21) {value|=16;} else {value&=16;}
 	}
 }
@@ -59,7 +59,7 @@ RatingCache RatingCache::FoundBase(Coordinate center) const {auto result=*this;r
 RatingCache RatingCache::RemoveBase(Coordinate center,const std::vector<Coordinate>& surviving_centers) const {
 	(void)Index(center);auto result=*this;
 	for(size_t i=0;i<radius.size();++i) {
-		const auto point=Resolve(m_geometry,center,radius[i]);if(point) {auto& value=result.m_values[Index(*point)];value=i<21 ? 0 : value&16;}
+		const auto point=ResolveRadius(m_geometry,center,radius[i]);if(point) {auto& value=result.m_values[Index(*point)];value=i<21 ? 0 : value&16;}
 	}
 	for(const auto survivor:surviving_centers) {result.BaseMark(survivor);}return result;
 }
@@ -69,6 +69,14 @@ RatingCache RatingCache::Refill(const RatingQuery& query) const {
 		auto& value=result.m_values[Index({{x,y}})];if(value) {continue;}
 		const auto rating=query({{x,y}});Require(rating<=15,"Site query returned an invalid rating");value=rating;
 	}}
+	return result;
+}
+RatingCache RatingCache::Resolve(Coordinate point,const RatingQuery& query) const {
+	const auto index=Index(point);auto result=*this;
+	if(!(m_values[index]&15)) {
+		Require(bool(query),"Site-cache miss requires its native score query");const auto rating=query(point);
+		Require(rating<=15,"Site query returned an invalid rating");result.m_values[index]=(m_values[index]&16)|rating;
+	}
 	return result;
 }
 bool RatingCache::operator==(const RatingCache& other) const {

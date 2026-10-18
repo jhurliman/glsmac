@@ -1,8 +1,13 @@
 #include "BaseManager.h"
 #include "Base.h"
 #include "SmacPopulationStep.h"
+#include "SmacWorkedSquareCollection.h"
 #include "game/backend/Game.h"
+#include "game/backend/Player.h"
+#include "game/backend/slot/Slot.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacRestartSearch.h"
+#include "game/backend/map/SmacRestartPreprocessing.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacRestartUnitPackage.h"
@@ -19,6 +24,9 @@ struct BaseManager::SmacDispositionPlan {
     faction::SmacHostileState hostility;
     map::tile::Tile* site=nullptr;
     std::vector<std::pair<unit::Def*,unit::ConventionalUnitState>> units;
+    SmacGameplayRandomState random;
+    std::optional<map::SmacWorkerKnowledge> territory;
+    std::optional<map::GlsmacTerritoryTopology> topology;
 };
 
 BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(const Base& base) const {
@@ -33,33 +41,86 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     const auto technology=std::find_if(state.technology.factions.begin(),state.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
     if(participant==state.roster.end() || !participant->active || technology==state.technology.factions.end()) {THROW("Faction disposition has no active saved owner");}
     SmacDispositionPlan plan{static_cast<size_t>(participant-state.roster.begin()),static_cast<size_t>(technology-state.technology.factions.begin()),
-        m_game->PrepareSmacNonzeroInitialization(owner),state.hostility,nullptr,{}};
+        m_game->PrepareSmacNonzeroInitialization(owner),state.hostility,nullptr,{},state.gameplay_random,{},{}};
     plan.hostility.Reinitialize(owner);
     const auto* map=m_game->GetMap();auto* center=base.GetTile();
     if(!center || center->tiles!=map->GetTilesPtr() || center->base!=&base || !map->GetSmacWorkerKnowledge()) {THROW("Faction disposition has no canonical center or knowledge");}
-    if(state.do_or_die || participant->restart_prohibited || m_game->GetTurnId()>100) {return plan;}
     const auto& global=m_game->GetState()->m_settings.global;
+    plan.economy.regional_base_counts=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
+    plan.territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&plan.topology);
+    if(!plan.territory || !plan.topology || !map->GetResourcePolicy() || !plan.topology->Areas()
+        || !plan.topology->Postpass() || !plan.topology->SiteRatings() || !plan.topology->LandmarkDetails()
+        || !global.map.GetSmacOceanCoverage() || m_game->GetTurnId()==0 || m_game->GetTurnId()>INT32_MAX) {
+        THROW("Faction restart requires owned terrain geography site and landmark history");
+    }
+    const auto& topology=*plan.topology;
+    const auto knowledge=plan.territory->CopyData();
+    const map::smac_site::Geometry geometry{topology.Width(),topology.Height(),topology.Wraps()};
+    const auto index=[&](map::smac_site::Coordinate point) {return size_t(point[1])*(geometry.width/2)+point[0]/2;};
+    std::vector<const Base*> survivors;std::vector<map::smac_site::Coordinate> centers;
+    for(const auto id:m_base_order) {
+        const auto* current=GetBase(id);if(current==&base) {continue;}
+        if(!current) {THROW("Restart Base order is incomplete");}
+        survivors.push_back(current);centers.push_back({{static_cast<int32_t>(current->GetTile()->coord.x),static_cast<int32_t>(current->GetTile()->coord.y)}});
+    }
+    std::array<int32_t,128> presence{};
+    for(const auto& entry:state.economy) {
+        if(entry.first<1 || entry.first>7) {continue;}
+        const auto& counts=entry.first==owner ? plan.economy.regional_base_counts : entry.second.regional_base_counts;
+        if(!counts) {THROW("Faction restart lacks retained regional Base counts");}
+        for(size_t region=0;region<presence.size();++region) {presence[region]+=counts->at(region)!=0;}
+    }
+    // All victim Units are absent from the future world, including a transient
+    // manufactured Pod. Keep current entities untouched throughout preparation.
+    std::vector<bool> occupied(topology.Regions().size(),false);
+    for(const auto point:centers) {occupied[index(point)]=true;}
+    for(const auto& entry:m_game->GetUM()->GetUnits()) {
+        const auto* current=entry.second;if(current->m_owner==base.m_owner) {continue;}
+        current->RequireConventionalReady();const auto* tile=current->GetTile();
+        occupied[index({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)}})]=true;
+    }
+    const auto altitude=[&](const map::tile::Tile* tile) {
+        if(!tile->elevation.center) {THROW("Restart terrain lacks elevation");}
+        return static_cast<uint8_t>(map->GetResourcePolicy()->Altitude(tile->is_water_tile,*tile->elevation.center));
+    };
+    const auto wet=[&](map::smac_site::Coordinate point) {
+        const auto* tile=map->GetTile(point[0],point[1]);
+        if(altitude(tile)<3) {return false;}
+        if(tile->moisture<map::tile::MOISTURE_ARID || tile->moisture>map::tile::MOISTURE_RAINY
+            || tile->rockiness<map::tile::ROCKINESS_FLAT || tile->rockiness>map::tile::ROCKINESS_ROCKY) {THROW("Restart terrain lacks decoded land ordinals");}
+        return tile->moisture>map::tile::MOISTURE_ARID && tile->rockiness<=map::tile::ROCKINESS_ROLLING
+            && !(tile->features&map::tile::FEATURE_XENOFUNGUS);
+    };
+    const auto search=map::smac_restart::Search({geometry,static_cast<int32_t>(m_game->GetTurnId()),owner,0,
+        unit::SmacStartupDesignState::OriginalDifficulty(base.m_owner->GetPlayer()->GetDifficultyLevel()),
+        map::smac_restart::ScaleFromGeometry(geometry),*global.map.GetSmacOceanCoverage()},plan.random,[&](auto point) {
+        map::smac_restart::Candidate candidate;const auto at=index(point);const auto* tile=map->GetTile(point[0],point[1]);
+        candidate.elevation=altitude(tile);candidate.rockiness=tile->is_water_tile ? 0 : tile->rockiness-map::tile::ROCKINESS_FLAT;
+        candidate.region=topology.Regions()[at];candidate.fungus=bool(tile->features&map::tile::FEATURE_XENOFUNGUS);
+        candidate.occupied=occupied[at];candidate.valid_occupant=occupied[at];
+        candidate.area=topology.Areas()->at(candidate.region);candidate.fertility=topology.Postpass()->fertility.at(candidate.region);
+        candidate.present_factions=presence[candidate.region];candidate.territory_owner=knowledge.tiles[at].claimant.value_or(-1);
+        candidate.landmark_bucket=map::smac_restart::LandmarkBucket(geometry,point,[&](auto square){return topology.LandmarkDetails()->at(index(square));});
+        for(int32_t i=0;i<21;++i) {
+            const auto square=SmacWorkedSquareCollection::Resolve({point,geometry.width,geometry.height,geometry.wrap},i);
+            if(square && wet(*square)) {++candidate.wet_neighbors;}
+        }
+        for(size_t i=0;i<survivors.size();++i) {
+            const auto position=centers[i];if(topology.Regions()[index(position)]!=candidate.region) {continue;}
+            auto dx=std::abs(point[0]-position[0]);if(geometry.wrap) {dx=std::min(dx,geometry.width-dx);}
+            const auto dy=std::abs(point[1]-position[1]);const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
+            if(distance<=candidate.nearest_distance) {
+                candidate.nearest=map::smac_restart::Base{survivors[i]->GetSmacResourceContext().owner_simulation_id,candidate.region};candidate.nearest_distance=distance;
+            }
+        }
+        return candidate;
+    },[&](auto point){plan.topology=map->PrepareSiteRatingQuery(*plan.topology,centers,m_game->GetTurnId(),point);});
+    plan.random=search.random;
+    // Original guards run after search and retain its draws/cache writes.
+    if(!search.site || state.do_or_die || participant->restart_prohibited || m_game->GetTurnId()>100) {return plan;}
+    plan.site=map->GetTile((*search.site)[0],(*search.site)[1]);
     const auto package=unit::SmacRestartUnitPackage::Select(static_cast<int32_t>(m_game->GetTurnId()),state.designs,
         global.GetSmacPredefinedUnitRules()->catalog,*technology,*global.GetSmacTechnologyRules());
-    // Explicit GLSMAC placement policy: maximize distance from surviving Bases
-    // and the lost center, with row-major ties. This is not the original search
-    // or a fixture coordinate. It consumes neither gameplay nor map RNG.
-    int64_t best=-1;
-    for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
-        auto* tile=map->GetTile(x,y);
-        if(tile->base || tile->is_water_tile || tile->IsLocked() || tile->rockiness==map::tile::ROCKINESS_ROCKY
-            || (tile->features & (map::tile::FEATURE_XENOFUNGUS|map::tile::FEATURE_MONOLITH))) {continue;}
-        if(std::any_of(tile->units.begin(),tile->units.end(),[&](const auto& row){return row.second->m_owner!=base.m_owner;})) {continue;}
-        if(std::any_of(tile->neighbours.begin(),tile->neighbours.end(),[&](const auto* adjacent){return adjacent->base && adjacent->base!=&base;})) {continue;}
-        int64_t nearest=INT64_MAX;
-        for(const auto& row:m_bases) {
-            const auto* other=row.second->GetTile();
-            auto dx=std::abs(int64_t(x)-int64_t(other->coord.x));dx=std::min(dx,int64_t(map->GetWidth())-dx);
-            const auto dy=std::abs(int64_t(y)-int64_t(other->coord.y));nearest=std::min(nearest,std::max(dx,dy));
-        }
-        if(nearest>best) {best=nearest;plan.site=tile;}
-    }}
-    if(!plan.site) {return plan;}
     for(const auto id:package.creation_order) {
         plan.units.push_back({m_game->ResolveSmacProductionPresentation(base.m_owner,id),
             {id,owner,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0}});
@@ -70,10 +131,6 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,
     unit::Def* transient_definition,unit::SmacMoraleMode mode) {
     auto plan=PrepareLastSmacBaseDisposition(base);
-    plan.economy.regional_base_counts=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,m_game->GetMap()->GetTerritoryTopology());
-    std::optional<map::GlsmacTerritoryTopology> topology;
-    auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&topology);
-    if(!territory) {THROW("Faction disposition requires staged territory");}
     auto* um=m_game->GetUM();
     std::optional<unit::UnitManager::PreparedConventionalUnit> transient;
     SmacAbandonmentResult result{};
@@ -81,7 +138,7 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
         transient.emplace(um->PrepareManufacturedConventionalUnit(GSE_CALL,base,*base.GetProductionState()->current_item.smac_source_id,transient_definition,mode));
         result.newborn_id=transient->Candidate().m_id;
     }
-    auto units=um->PrepareFactionUnits(GSE_CALL,base.m_owner,plan.site,plan.units,*territory,transient ? &*transient : nullptr);
+    auto units=um->PrepareFactionUnits(GSE_CALL,base.m_owner,plan.site,plan.units,*plan.territory,transient ? &*transient : nullptr);
     auto bases=m_bases;bases.erase(base.m_id);
     auto order=m_base_order;order.erase(std::remove(order.begin(),order.end(),base.m_id),order.end());
     auto assignments=m_work_assignments;
@@ -100,7 +157,8 @@ BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE
     state.hostility.owners.swap(plan.hostility.owners);
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site) {state.human_defeat_request=lost_owner;}
-    units.Commit();m_game->CommitBaseTerritoryTopology(topology);std::unique_ptr<Base> retired(&base);lock.unlock();
+    state.gameplay_random=plan.random;
+    units.Commit();m_game->CommitBaseTerritoryTopology(plan.topology);std::unique_ptr<Base> retired(&base);lock.unlock();
     units.Notify(GSE_CALL);
     m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&base) {{"base",base.Wrap(GSE_CALL)},};});
     return result;

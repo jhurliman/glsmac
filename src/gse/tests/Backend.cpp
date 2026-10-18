@@ -228,7 +228,7 @@ public:
 
 	void ConfigureConventional( bool refreshed, int32_t road_rate, bool single = false, bool selected_rover = false, bool movement_campaign = false,
 		const game::backend::settings::SmacSpecialistRules* specialists = nullptr,
-		const std::function< std::string( const std::string& ) >& source_override = {}, const std::string& resource_faction = {}, bool production_map = false ) {
+		const std::function< std::string( const std::string& ) >& source_override = {}, const std::string& resource_faction = {}, bool production_map = false, int32_t width=128,int32_t height=64 ) {
 		EnableWorldSnapshot();
 		const auto error = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto& settings = m_state->m_settings.global;
@@ -261,9 +261,9 @@ public:
 				m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( resource_faction ) );
 			}
 			if ( movement_campaign || production_map ) {
-				settings.SelectSmacCustomSize( 128, 64 );
+				settings.SelectSmacCustomSize( width, height );
 				auto* tiles = m_game.GetMap()->GetTilesPtr();
-				tiles->Resize( 128, 64 ); tiles->Clear();
+				tiles->Resize( width, height ); tiles->Clear();
 			}
 			m_game.PrepareNewSimulation();
 			if ( refreshed ) {
@@ -5415,8 +5415,8 @@ void ConventionalUnitFixture::SettleEconomy( int32_t owner ) { fixture->SettleEc
 bool ConventionalUnitFixture::HasTechnologyReveal( int32_t owner ) const { return fixture->HasTechnologyReveal(owner); }
 std::optional< game::backend::map::SmacWorkerKnowledge > ConventionalUnitFixture::PrepareTechnologyReveal( int32_t owner ) const { return fixture->PrepareTechnologyReveal(owner); }
 void ConventionalUnitFixture::CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value ) { fixture->CommitTechnologyReveal(std::move(value)); }
-void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction ) {
-	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true ); fixture->ResourcePolicy( true );
+void ConventionalUnitFixture::ConfigureProduction( const std::function< std::string( const std::string& ) >& source, const std::string& faction, int32_t width,int32_t height ) {
+	fixture->ConfigureConventional( true, 3, true, false, false, nullptr, source, faction, true,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ProductionPresentations( const std::array< std::string, 4 >& roles ) { fixture->ProductionPresentations( roles ); }
 void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::function< std::string( const std::string& ) >& source, bool production_map ) {

@@ -5,6 +5,8 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/SmacOrdinaryLandExploration.h"
 #include <set>
+#include <sstream>
+#include <algorithm>
 #include "game/backend/map/SmacWorkerKnowledge.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
@@ -18,6 +20,8 @@
 #include <memory>
 #include "fixtures/SmacNativeUnitRecord.h"
 #include "fixtures/SmacDenseUnitIdentity.h"
+#include "fixtures/SmacSeaNativeRecord.h"
+#include "game/backend/unit/SmacConventionalStats.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
 #include "task/gsetests/GSETests.h"
 #include <limits>
@@ -37,6 +41,94 @@ std::string Replace(const Record& record,size_t index,int64_t value) {
 }
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC sea native complete factory and final records retain separate stack and caller writes",GT(){
+        for(const auto& profile:smac_sea_native_fixture::profiles) {
+            for(size_t i=0;i<profile.returned.size();++i) {
+                const auto& literal=profile.returned[i];
+                auto initialized=Record::InitializeWild(literal.id,literal.design,0);
+                GT_ASSERT(initialized.x==-4 && initialized.y==-4 && initialized.ecology_owner_tag==0,"Sea native initializer placed or tagged before caller");
+                initialized.x=literal.x;initialized.y=literal.y;
+                initialized.stack_next=literal.stack_next;initialized.stack_previous=literal.stack_previous;
+                GT_ASSERT(initialized==literal,"Sea native initializer differs from actual full factory return");
+                GT_ASSERT(Record::Deserialize(literal.Serialize().ToString())==literal
+                    && Record::Deserialize(profile.placed[i].Serialize().ToString())==profile.placed[i],"Sea native codec lost retained record fields");
+            }
+            GT_ASSERT(profile.placed[0].stack_previous==2 && profile.placed[2].stack_next==0
+                && profile.placed[0].ecology_owner_tag==1 && profile.placed[1].ecology_owner_tag==1
+                && profile.placed[2].ecology_owner_tag==0,"Returned and final stack/tag snapshots conflated");
+        }
+        GT_ASSERT(Rejects([]{Record::InitializeWild(0,7,0);}) && Rejects([]{Record::InitializeWild(2048,9,0);}),"Invalid wild design or exhausted pool admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC sea native queries match sixty original level boundaries and sixteen damaged allowances",GT(){
+        ConventionalUnitFixture fixture;
+        // The shared synthetic catalog intentionally leaves carry/cost zero.
+        // Supply the two original-loaded native component rows for this test.
+        fixture.ConfigureProduction([](const std::string& filename) {
+            const auto source=smac_startup_fixture::OrdinarySource(filename);if(filename!="alpha.txt") {return source;}
+            std::istringstream input(source);std::string line,section,result;int index=-1;
+            while(std::getline(input,line)) {
+                if(!line.empty() && line[0]=='#') {section=line;index=-1;}
+                else if(section=="#UNITS") {
+                    if(index>=0 && (index==9 || index==10)) {
+                        std::istringstream row(line);std::vector<std::string> fields;std::string field;
+                        while(std::getline(row,field,',')) {fields.push_back(field);}
+                        fields.at(5)=index==9?"8":"10";fields.at(6)=index==9?"4":"0";
+                        line.clear();for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}
+                    }
+                    ++index;
+                }
+                result+=line+'\n';
+            }
+            return result;
+        },"GAIANS",80,80);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* manager=fixture.Game()->GetUM();const auto random=fixture.GameplayRandom();
+            for(const auto& q:smac_sea_native_fixture::queries) {
+                const auto& record=smac_sea_native_fixture::profiles.at(q.profile).placed.at(q.unit);const auto before=record;
+                GT_ASSERT(SmacWildNativeLevel(record,q.turn,0,3)==q.neutral && SmacWildNativeLevel(record,q.turn,1,3)==q.opposed,"Native intrinsic/opposing level differs from original");
+                const auto stats=manager->QueryNativeUnit(record);
+                GT_ASSERT(stats.quantum==3 && stats.basic_allowance==q.basic && stats.full_allowance==q.full
+                    && stats.hit_points==10 && record==before,"Native chassis/component query differs or mutates record");
+            }
+            for(const auto& c:smac_sea_native_fixture::damage) {
+                auto record=Record::InitializeWild(0,c.design,0);record.damage=c.damage;
+                const auto domain=c.design==9?SmacMovementDomain::Sea:SmacMovementDomain::Air;
+                GT_ASSERT(SmacWildNativeLevel(record,330,0,0)==c.level
+                    && SmacConventionalAllowance({c.basic,3,domain,1,record.damage,c.level,false,true})==c.full,"Damaged level6 Psi allowance differs from original");
+                for(const auto spent:{0,1,c.full,c.full+1,255}) {
+                    record.movement_spent=static_cast<uint8_t>(spent);const auto before=record;
+                    const auto stats=manager->QueryNativeUnit(record);
+                    GT_ASSERT(stats.basic_allowance==c.basic && stats.full_allowance==c.full && stats.hit_points==c.health
+                        && stats.maximum_hit_points==10 && stats.remaining_allowance==std::max(0,c.full-spent) && record==before,
+                        "Live damaged native query scaled air or rounded sea after Q");
+                }
+            }
+            MoraleSet::morale_values_t names;
+            for(const auto* name:{"Hatchling","Larval Mass","Pre-Boil","Boil","Mature Boil","Great Boil","Demon Boil"}) {names.emplace_back(name);}
+            manager->DefineMoraleSet(new MoraleSet("SEA_NATIVE_MORALE",names));
+            for(const auto design:{9,10}) {
+                const auto* name=design==9?"IsleOfTheDeep":"LocustsOfChiron";
+                manager->DefineUnit(new StaticDef(name,manager->GetMoraleSet("SEA_NATIVE_MORALE"),name,design==9?MT_WATER:MT_AIR,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            }
+            for(const auto& profile:smac_sea_native_fixture::profiles) {
+                for(const auto& literal:profile.returned) {
+                    const auto* name=literal.design==9?"IsleOfTheDeep":"LocustsOfChiron";
+                    types::Buffer wire;wire.WriteInt(5);wire.WriteInt(2);wire.WriteInt(71);wire.WriteString(name);
+                    wire.WriteInt(-1);wire.WriteInt(literal.x);wire.WriteInt(literal.y);wire.WriteString(literal.Serialize().ToString());
+                    auto decoded=wire;std::unique_ptr<Unit> unit(Unit::Deserialize(GSE_CALL,decoded,manager));
+                    util::FinallyGuard cleanup([&]{unit->GetTile()->units.erase(unit->m_id);});
+                    const auto presentation=unit->GetPresentation();const auto expected=literal.design==9?4:8;
+                    GT_ASSERT(unit->IsNative() && !unit->m_owner && unit->Native()==literal && Unit::Serialize(unit.get()).ToString()==wire.ToString()
+                        && presentation.full_movement==expected && presentation.movement==expected && presentation.health==1,
+                        "Native sea/air live Unit restore or presentation borrowed legacy movement");
+                }
+            }
+            GT_ASSERT(fixture.GameplayRandom()==random,"Native immutable query/load consumed gameplay RNG");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC native dense index repair matches five original mixed-owner erasures",GT(){
         const auto record=[](const smac_dense_identity_fixture::Row& row) {
             auto value=Record::InitializeMindWorm(row[0],0);value.owner=row[2];value.design=row[3];value.x=row[4];value.y=row[5];

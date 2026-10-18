@@ -1,0 +1,2490 @@
+{
+  "research_id": "RE-SMAC-ECOLOGY-SEA-NATIVE-RECORDS-001",
+  "scope": "Two existing sea spawn-stage profiles, six actual factory returns with full52-byte records;60 immutable full level/basic/full-allowance query sets and6 actual health fragments. Original-loader-produced component tails, initialized negative reference input and prior explicit map/gate controls reused. No battle, AI assignment, climate, live frontend or design8 recapture.",
+  "opponent1_major_atrocity_word": 3,
+  "Maritime_project_location": -1,
+  "native_definition_morale": 0,
+  "assignment_reference": [
+    -1,
+    -1
+  ],
+  "cases": [
+    {
+      "profile": "sea_region_present_H9",
+      "inputs": {
+        "name": "sea_region_present_H9",
+        "H": 9,
+        "region": 65,
+        "count": 0,
+        "pop": 3
+      },
+      "designs": [
+        {
+          "design": 9,
+          "chassis": 3,
+          "domain": 1,
+          "speed": 4,
+          "weapon": 12,
+          "weapon_power": -1,
+          "armor": 9,
+          "armor_power": -1,
+          "reactor": 1,
+          "quantum": 3,
+          "abilities": 0,
+          "carry": 4,
+          "cost": 8,
+          "plan": 7,
+          "icon": 6,
+          "flags": 1
+        },
+        {
+          "design": 10,
+          "chassis": 7,
+          "domain": 2,
+          "speed": 8,
+          "weapon": 12,
+          "weapon_power": -1,
+          "armor": 9,
+          "armor_power": -1,
+          "reactor": 1,
+          "quantum": 3,
+          "abilities": 32,
+          "carry": 0,
+          "cost": 10,
+          "plan": 4,
+          "icon": 9,
+          "flags": 1
+        }
+      ],
+      "factories": [
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            40
+          ],
+          "returned_id": 0,
+          "returned_record": {
+            "x": 40,
+            "y": 40,
+            "state": 0,
+            "flags": 0,
+            "design": 10,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        },
+        {
+          "arguments": [
+            9,
+            0,
+            41,
+            39
+          ],
+          "returned_id": 1,
+          "returned_record": {
+            "x": 41,
+            "y": 39,
+            "state": 0,
+            "flags": 0,
+            "design": 9,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        },
+        {
+          "arguments": [
+            9,
+            0,
+            40,
+            40
+          ],
+          "returned_id": 2,
+          "returned_record": {
+            "x": 40,
+            "y": 40,
+            "state": 0,
+            "flags": 0,
+            "design": 9,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": 0,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        }
+      ],
+      "final_records": [
+        {
+          "x": 40,
+          "y": 40,
+          "state": 0,
+          "flags": 0,
+          "design": 10,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": 2,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 41,
+          "y": 39,
+          "state": 0,
+          "flags": 0,
+          "design": 9,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 40,
+          "y": 40,
+          "state": 0,
+          "flags": 0,
+          "design": 9,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 0,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": 0,
+          "stack_previous": -1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ],
+      "queries": [
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 1
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 1
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        }
+      ],
+      "health_fragments": [
+        {
+          "unit": 0,
+          "design": 10,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        },
+        {
+          "unit": 2,
+          "design": 9,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        }
+      ],
+      "all52_bytes_written": true,
+      "queries_preserve_Unit_bytes": true,
+      "queries_preserve_CRT": true
+    },
+    {
+      "profile": "sea_region_absent_H9",
+      "inputs": {
+        "name": "sea_region_absent_H9",
+        "H": 9,
+        "region": 65,
+        "count": 0,
+        "pop": 3,
+        "absent": true
+      },
+      "designs": [
+        {
+          "design": 9,
+          "chassis": 3,
+          "domain": 1,
+          "speed": 4,
+          "weapon": 12,
+          "weapon_power": -1,
+          "armor": 9,
+          "armor_power": -1,
+          "reactor": 1,
+          "quantum": 3,
+          "abilities": 0,
+          "carry": 4,
+          "cost": 8,
+          "plan": 7,
+          "icon": 6,
+          "flags": 1
+        },
+        {
+          "design": 10,
+          "chassis": 7,
+          "domain": 2,
+          "speed": 8,
+          "weapon": 12,
+          "weapon_power": -1,
+          "armor": 9,
+          "armor_power": -1,
+          "reactor": 1,
+          "quantum": 3,
+          "abilities": 32,
+          "carry": 0,
+          "cost": 10,
+          "plan": 4,
+          "icon": 9,
+          "flags": 1
+        }
+      ],
+      "factories": [
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            40
+          ],
+          "returned_id": 0,
+          "returned_record": {
+            "x": 40,
+            "y": 40,
+            "state": 0,
+            "flags": 0,
+            "design": 10,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        },
+        {
+          "arguments": [
+            9,
+            0,
+            41,
+            39
+          ],
+          "returned_id": 1,
+          "returned_record": {
+            "x": 41,
+            "y": 39,
+            "state": 0,
+            "flags": 0,
+            "design": 9,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": -1,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        },
+        {
+          "arguments": [
+            10,
+            0,
+            40,
+            40
+          ],
+          "returned_id": 2,
+          "returned_record": {
+            "x": 40,
+            "y": 40,
+            "state": 0,
+            "flags": 0,
+            "design": 10,
+            "aux_word": 0,
+            "owner": 0,
+            "aux_owner_control": 0,
+            "damage": 0,
+            "order": 0,
+            "automation_control": 0,
+            "waypoint_count": 0,
+            "stored_morale": 1,
+            "terraforming_progress": 0,
+            "ecology_owner_tag": 0,
+            "observation_mask": 0,
+            "movement_spent": 0,
+            "facing": 2,
+            "movement_iteration_control": 0,
+            "status_character": 0,
+            "probe_action_control": 0,
+            "probe_target_control": 0,
+            "home_Base": -1,
+            "stack_next": 0,
+            "stack_previous": -1,
+            "waypoint_x": [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            "waypoint_y": [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          }
+        }
+      ],
+      "final_records": [
+        {
+          "x": 40,
+          "y": 40,
+          "state": 0,
+          "flags": 0,
+          "design": 10,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": 2,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 41,
+          "y": 39,
+          "state": 0,
+          "flags": 0,
+          "design": 9,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 1,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": -1,
+          "stack_previous": -1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        },
+        {
+          "x": 40,
+          "y": 40,
+          "state": 0,
+          "flags": 0,
+          "design": 10,
+          "aux_word": 0,
+          "owner": 0,
+          "aux_owner_control": 0,
+          "damage": 0,
+          "order": 0,
+          "automation_control": 0,
+          "waypoint_count": 0,
+          "stored_morale": 1,
+          "terraforming_progress": 0,
+          "ecology_owner_tag": 0,
+          "observation_mask": 0,
+          "movement_spent": 0,
+          "facing": 2,
+          "movement_iteration_control": 0,
+          "status_character": 0,
+          "probe_action_control": 0,
+          "probe_target_control": 0,
+          "home_Base": -1,
+          "stack_next": 0,
+          "stack_previous": -1,
+          "waypoint_x": [
+            -1,
+            -1,
+            -1,
+            -1
+          ],
+          "waypoint_y": [
+            -1,
+            -1,
+            -1,
+            -1
+          ]
+        }
+      ],
+      "queries": [
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 0,
+          "design": 10,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 0
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 1
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 12,
+          "full": 12,
+          "full_elite_suppressed": 12
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 44,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 1
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 2
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 45,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 89,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 2
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 3
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 90,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 169,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 3
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 4
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 170,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 249,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 4
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 5
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 250,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 329,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 5
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "turn": 330,
+          "levels": [
+            {
+              "mode": 0,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 0,
+              "opponent": 1,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 0,
+              "value": 6
+            },
+            {
+              "mode": 1,
+              "opponent": 1,
+              "value": 6
+            }
+          ],
+          "basic": 24,
+          "full": 24,
+          "full_elite_suppressed": 24
+        }
+      ],
+      "health_fragments": [
+        {
+          "unit": 0,
+          "design": 10,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        },
+        {
+          "unit": 1,
+          "design": 9,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        },
+        {
+          "unit": 2,
+          "design": 10,
+          "health_as_attacker": 10,
+          "health_as_defender": 10
+        }
+      ],
+      "all52_bytes_written": true,
+      "queries_preserve_Unit_bytes": true,
+      "queries_preserve_CRT": true
+    }
+  ]
+}

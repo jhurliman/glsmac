@@ -38,6 +38,7 @@ struct SmacNativeUnitRecord {
     int16_t stack_next = -1;
     int16_t stack_previous = -1;
     std::array<int16_t,4> waypoint_x{{-1,-1,-1,-1}}, waypoint_y{{-1,-1,-1,-1}};
+    static SmacNativeUnitRecord InitializeWild(int32_t id, int32_t design, int32_t native_direct_morale);
     static SmacNativeUnitRecord InitializeMindWorm(int32_t id, int32_t native_direct_morale);
     // Caller has already unlinked the removed node. Returns a detached survivor
     // with dense index, surviving stack links and order1 payload repaired.
@@ -49,11 +50,14 @@ struct SmacNativeUnitRecord {
 };
 
 struct SmacNativeUnitStats {
-    int32_t level, quantum, full_allowance, remaining_allowance, hit_points, maximum_hit_points;
+    int32_t level, quantum, full_allowance, remaining_allowance, hit_points, maximum_hit_points, basic_allowance;
 };
 
-// Owner0/design8 and neutral special markers only. Stored morale and ecology
+// Owner0/design8..10 and neutral special markers only. Stored morale and ecology
 // attribution do not select lifecycle level. No AI, combat or RNG side effects.
+int32_t SmacWildNativeLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
+    int32_t opposing_faction, int32_t opposing_major_atrocities);
+// Compatibility entry point for existing Mind Worm callers.
 int32_t SmacWildMindWormLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
     int32_t opposing_faction, int32_t opposing_major_atrocities);
 

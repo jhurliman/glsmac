@@ -13,6 +13,7 @@ return (base) => {
 	// creation/destruction, and the production event handlers remain real.
 	const game = {
 		get_ruleset: () => { return 'smac'; },
+        is_campaign_restore: () => { return false; },
 		configure_smac_base_presentations: (roles) => {}, // definitions are substituted
 		get_bm: () => { return { on: (name, callback) => {} }; },
 		get_tm: () => { return { get_map_width: () => { return 8; }, get_map_height: () => { return 8; } }; },

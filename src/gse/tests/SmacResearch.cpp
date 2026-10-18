@@ -1,4 +1,5 @@
 #include "SmacResearch.h"
+#include "game/backend/faction/SmacRankOrder.h"
 #include "game/backend/faction/SmacResearch.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacResearch.h"

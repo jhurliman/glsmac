@@ -28,8 +28,9 @@ struct SmacConventionalAllowanceInput {
 	bool suppress_elite_bonus;
 };
 
-// Supplied conventional faction-owned units only: excludes native/Psi/Probe
-// morale branches and the Artifact-plan allowance branch. No RNG, state
+// Morale accepts conventional faction-owned contexts, excluding native/Psi/Probe.
+// Allowance accepts already resolved design/level inputs; native Psi callers
+// suppress the elite bonus. Artifact-plan allowance is separate. No RNG, state
 // mutation, ownership lookup or startup defaults.
 // Invalid metadata throws invalid_argument; evaluated signed32 arithmetic
 // outside the supported port domain throws overflow_error before later clamps.

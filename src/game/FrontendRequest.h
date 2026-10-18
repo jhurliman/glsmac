@@ -167,7 +167,7 @@ public:
 			backend::unit::morale_t morale;
 			const std::string* morale_string;
 			backend::unit::health_t health;
-			bool conventional, has_moves;
+			bool conventional, has_moves, native;
 			backend::unit::movement_t full_movement;
 		} unit_spawn;
 		struct {

@@ -1133,7 +1133,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.movement,
 				d.morale,
 				*d.morale_string,
-				d.health, d.conventional, d.has_moves, d.full_movement
+				d.health, d.conventional, d.has_moves, d.full_movement, d.native
 			);
 			break;
 		}
@@ -1151,7 +1151,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
-				if ( !d.conventional ) { THROW( "unexpected legacy unit relocation" ); }
+				if ( !d.conventional && !unit->IsNative() ) { THROW( "unexpected legacy unit relocation" ); }
 				m_um->RelocateConventionalUnit( unit, m_tm->GetTile( { d.tile_coords.x, d.tile_coords.y } ) );
 			}
 			else {

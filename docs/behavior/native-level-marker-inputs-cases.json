@@ -1,0 +1,142 @@
+{
+  "research_id": "RE-SMAC-NATIVE-LEVEL-MARKERS-001",
+  "scope": "Eight existing-record controls/16 complete original level queries. Record identity/state/flags/turn/opponent are supplied discriminators, not producers. No factory,combat,AI or lifecycle execution; original routines read only these level inputs and source thresholds/modifiers.",
+  "cases": [
+    {
+      "name": "inert_state1",
+      "design": 9,
+      "turn": 90,
+      "state": 1,
+      "flags": 0,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 2,
+      "actual_modes": [
+        2,
+        2
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "inert_flags440",
+      "design": 9,
+      "turn": 90,
+      "state": 0,
+      "flags": 1088,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 2,
+      "actual_modes": [
+        2,
+        2
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "state_level_bonus",
+      "design": 9,
+      "turn": 90,
+      "state": 256,
+      "flags": 0,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 3,
+      "actual_modes": [
+        3,
+        3
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "flag_one",
+      "design": 9,
+      "turn": 90,
+      "state": 0,
+      "flags": 8,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 3,
+      "actual_modes": [
+        3,
+        3
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "flag_three",
+      "design": 9,
+      "turn": 90,
+      "state": 0,
+      "flags": 24,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 5,
+      "actual_modes": [
+        5,
+        5
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "combined_inert_and_bonus",
+      "design": 9,
+      "turn": 90,
+      "state": 257,
+      "flags": 1096,
+      "opponent": 0,
+      "opponent_atrocity_word": null,
+      "expected": 4,
+      "actual_modes": [
+        4,
+        4
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "combined_clamp",
+      "design": 10,
+      "turn": 250,
+      "state": 257,
+      "flags": 1112,
+      "opponent": 1,
+      "opponent_atrocity_word": 3,
+      "expected": 6,
+      "actual_modes": [
+        6,
+        6
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "low_turn_all_modifiers",
+      "design": 10,
+      "turn": 1,
+      "state": 256,
+      "flags": 24,
+      "opponent": 1,
+      "opponent_atrocity_word": 3,
+      "expected": 6,
+      "actual_modes": [
+        6,
+        6
+      ],
+      "record_unchanged": true,
+      "shared_word_unchanged": true,
+      "passed": true
+    }
+  ]
+}

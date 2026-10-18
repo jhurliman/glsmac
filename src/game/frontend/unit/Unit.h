@@ -59,13 +59,14 @@ public:
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
 		const backend::unit::health_t health,
-		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0
+		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0, bool native = false
 	);
 	~Unit();
 
 	const size_t GetId() const;
 	const bool IsOwned() const;
 	bool IsConventional() const { return m_conventional; }
+	bool IsNative() const {return m_native;}
 	const bool IsActive() const;
 	tile::Tile* GetTile() const;
 
@@ -159,6 +160,7 @@ private:
 	std::string m_morale_string = "";
 	backend::unit::health_t m_health = 0;
 	bool m_conventional = false, m_has_moves = false;
+	const bool m_native = false;
 	backend::unit::movement_t m_full_movement = 0;
 
 	bool m_need_refresh = true;

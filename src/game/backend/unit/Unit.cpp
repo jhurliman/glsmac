@@ -63,6 +63,8 @@ Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, slot::Slot* owne
 
 Unit::Unit( Unplaced, UnitManager* um, size_t id, Def* def, slot::Slot* owner, ConventionalUnitState state )
 	: MapObject(um->GetMap(),nullptr), m_id(id), m_def(def), m_owner(owner), m_state(state), m_um(um) {}
+Unit::Unit( Unplaced, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state )
+    : MapObject(um->GetMap(),tile), m_id(id), m_def(def), m_owner(nullptr), m_state(state), m_um(um) {}
 Unit::Unit( GSE_CALLABLE, UnitManager* um, size_t id, Def* def, map::tile::Tile* tile, SmacNativeUnitRecord state )
     : MapObject(um->GetMap(),nullptr), m_id(id), m_def(def), m_owner(nullptr), m_state(state), m_um(um) {
     Publish(GSE_CALL,tile,false);
@@ -116,9 +118,9 @@ ConventionalUnitStats Unit::QueryStats( const SmacMoraleMode mode ) const {
 	const auto& state = Conventional();
 	return QueryConventionalUnit( state, m_um->ResolveConventional( state, m_owner ), mode );
 }
-Unit::Presentation Unit::GetPresentation() const {
+Unit::Presentation Unit::GetPresentation( int32_t native_viewer ) const {
     if(IsNative()) {
-        const auto stats=m_um->QueryNativeUnit(Native());
+        const auto stats=m_um->QueryNativeUnit(Native(),native_viewer);
         return {float(stats.remaining_allowance)/stats.quantum,static_cast<morale_t>(stats.level),
             float(stats.hit_points)/stats.maximum_hit_points,float(stats.full_allowance)/stats.quantum};
     }
@@ -291,6 +293,21 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		auto* result = VALUE( gse::value::Undefined ); // allocate before authority commit
 		m_um->MoveConventionalUnit( GSE_CALL, this, tile, static_cast< size_t >( caller ) ); return result;
 	} ) },
+	{ "query_native_stats", NATIVE_CALL( this ) {
+        N_EXPECT_ARGS(1); N_GETVALUE(viewer,0,Int);
+        if(viewer<0 || viewer>7) {GSE_ERROR(gse::EC.INVALID_CALL,"Native viewing faction must be explicit0..7");}
+        const auto stats=m_um->QueryNativeUnit(Native(),static_cast<int32_t>(viewer));
+        return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+            {"effective_morale",VALUE(gse::value::Int,,stats.level)},
+            {"morale_name",VALUE(gse::value::String,,m_def->m_moraleset->m_morale_values.at(stats.level).m_name)},
+            {"quantum",VALUE(gse::value::Int,,stats.quantum)},
+            {"basic_allowance",VALUE(gse::value::Int,,stats.basic_allowance)},
+            {"full_allowance",VALUE(gse::value::Int,,stats.full_allowance)},
+            {"remaining_allowance",VALUE(gse::value::Int,,stats.remaining_allowance)},
+            {"hit_points",VALUE(gse::value::Int,,stats.hit_points)},
+            {"maximum_hit_points",VALUE(gse::value::Int,,stats.maximum_hit_points)}
+        }));
+    })},
 	{ "query_conventional_stats", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 ); N_GETVALUE( mode, 0, Int );
 		if ( mode < 0 || mode > 1 ) { GSE_ERROR( gse::EC.INVALID_CALL, "Conventional morale mode must be explicit 0 or 1" ); }

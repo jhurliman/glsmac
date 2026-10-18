@@ -13,6 +13,15 @@
 namespace audio {
 namespace sdl2 {
 
+void SDL2::SuspendForMovie() {
+	if (++m_movie_suspensions == 1 && m_is_sound_enabled) { SDL_PauseAudio(1); }
+}
+
+void SDL2::ResumeAfterMovie() {
+	ASSERT(m_movie_suspensions > 0, "unbalanced movie audio suspension");
+	if (--m_movie_suspensions == 0 && m_is_sound_enabled) { SDL_PauseAudio(0); }
+}
+
 SDL2::SDL2() {
 
 }

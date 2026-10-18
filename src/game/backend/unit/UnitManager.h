@@ -34,7 +34,7 @@ namespace slot {
 class Slot;
 }
 
-namespace base { class Base; class BaseManager; }
+namespace base { class Base; class BaseManager; class SmacNativeSpawnPlan; }
 
 namespace unit {
 
@@ -54,6 +54,28 @@ public:
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
 	SmacNativeUnitStats QueryNativeUnit(const SmacNativeUnitRecord& state,int32_t opposing_faction=0) const;
+    // Owning accumulation only. The plan retains attempted factories; this
+    // batch stages successful bodies, stacks, sight and native counters together.
+    class PreparedNativeBirths {
+    public:
+        ~PreparedNativeBirths();
+        PreparedNativeBirths(PreparedNativeBirths&&) noexcept;
+        PreparedNativeBirths& operator=(PreparedNativeBirths&&) noexcept;
+        size_t Size() const;
+        const Unit& Candidate(size_t index) const;
+        void Commit() noexcept;
+        void Notify(GSE_CALLABLE);
+    private:
+        friend class UnitManager;
+        friend class game::backend::Game;
+        friend class base::Base;
+        friend class base::BaseManager;
+        void Query(const std::function<void()>& query) const;
+        struct Data;
+        explicit PreparedNativeBirths(std::unique_ptr<Data> data);
+        std::unique_ptr<Data> m_data;
+    };
+    PreparedNativeBirths PrepareEcologyNativeBirths(GSE_CALLABLE, const base::SmacNativeSpawnPlan& plan);
 	// Same owning accumulation: no callbacks, yields or world mutations between
 	// preparation and commit. Destruction before commit publishes nothing.
 	class PreparedConventionalUnit {

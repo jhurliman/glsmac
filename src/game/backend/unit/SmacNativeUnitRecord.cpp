@@ -16,8 +16,12 @@ template<typename T> T Read(types::Buffer& input) {
 }
 
 SmacNativeUnitRecord SmacNativeUnitRecord::InitializeMindWorm(int32_t identity, int32_t native_direct_morale) {
-    if (identity<0 || identity>=2048) throw std::runtime_error("Native Unit pool is full or identity invalid");
-    SmacNativeUnitRecord result; result.id=static_cast<uint16_t>(identity);
+    return InitializeWild(identity,8,native_direct_morale);
+}
+
+SmacNativeUnitRecord SmacNativeUnitRecord::InitializeWild(int32_t identity, int32_t design, int32_t native_direct_morale) {
+    if (identity<0 || identity>=2048 || design<8 || design>10) throw std::runtime_error("Native Unit pool or wild design invalid");
+    SmacNativeUnitRecord result; result.id=static_cast<uint16_t>(identity); result.design=static_cast<int16_t>(design);
     // Native direct scalar plus1, stored through the original byte domain.
     result.stored_morale=static_cast<uint8_t>(static_cast<uint32_t>(native_direct_morale)+1u);
     result.Validate(); return result;
@@ -124,13 +128,22 @@ SmacNativeUnitRecord SmacNativeUnitRecord::Deserialize(const std::string& wire) 
 
 int32_t SmacWildMindWormLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
     int32_t opposing_faction, int32_t opposing_major_atrocities) {
+    if(record.design!=8) {throw std::runtime_error("Mind Worm level requires design8");}
+    return SmacWildNativeLevel(record,global_turn,opposing_faction,opposing_major_atrocities);
+}
+
+int32_t SmacWildNativeLevel(const SmacNativeUnitRecord& record, int32_t global_turn,
+    int32_t opposing_faction, int32_t opposing_major_atrocities) {
     record.Validate();
-    if (record.owner!=0 || record.design!=8 || record.state!=0 || record.flags!=0 || global_turn<0
+    if (record.owner!=0 || record.design<8 || record.design>10 || global_turn<0
         || opposing_faction<0 || opposing_faction>7)
-        throw std::runtime_error("Native level requires measured wild Mind Worm context");
+        throw std::runtime_error("Native level requires measured wild native context");
     const int32_t base=global_turn<45 ? 0 : global_turn<90 ? 1 : global_turn<170 ? 2
         : global_turn<250 ? 3 : global_turn<330 ? 4 : 6;
-    return std::min(base+int32_t(opposing_faction>0 && opposing_major_atrocities!=0),6);
+    // Original515dd3..515df6: state bit8 and flags bits3..4 are additive;
+    // unrelated carried controls (including sight flags0x440) do not select level.
+    return std::min(base+int32_t(record.design==10)+int32_t(opposing_faction>0 && opposing_major_atrocities!=0)
+        +int32_t((record.state&0x100u)!=0)+int32_t((record.flags>>3)&3u),6);
 }
 
 }

@@ -1980,6 +1980,11 @@ public:
 		class BadgeLoader final : public loader::texture::TextureLoader {
 		public:
 			types::texture::Texture bitmap{ 512, 512 };
+            types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override {
+                if(level<0 || level>6 || variant!=0) {throw std::runtime_error("Wrong native badge bank");}
+                auto image=std::make_unique<types::texture::Texture>(23,30);
+                image->Fill(0,0,22,29,types::Color(1.0f,0.0f,0.0f));image->FullUpdate();return image.release();
+            }
 		protected:
 			types::texture::Texture* LoadTextureImpl( const std::string&, types::texture::texture_flag_t ) override { return &bitmap; }
 			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override { return &bitmap; }
@@ -2140,6 +2145,25 @@ public:
 			game::frontend::tile::Tile tile( { 2, 2 } );
 			auto unit = std::make_unique< game::frontend::unit::Unit >( um.get(), badges.get(), 1, def.get(), &slot, &tile,
 				types::Vec3{ 3, 5, 0 }, true, 1, 0, "Rank", 1 );
+            std::vector<std::weak_ptr<types::texture::Texture>> native_badge_owners;
+            {
+                // Body pixels are this existing Scout fixture. This control
+                // verifies native identity/badge lifetime, not native CVR art.
+                auto native=std::make_unique<game::frontend::unit::Unit>(um.get(),badges.get(),99,def.get(),nullptr,&tile,
+                    types::Vec3{},false,1,0,"Neutral native",1,false,true,1,true);
+                GT_ASSERT(native->IsNative() && !native->IsOwned() && !native->IsActive() && native->GetStatsString()=="? - ? - 1",
+                    "Frontend native borrowed human slot or legacy Def movement");
+                for(uint8_t level=0;level<7;++level) {
+                    native->SetMorale(level,"Neutral native");native->Refresh();
+                    const auto* badge=native->GetBadgeSprite();auto retained=badge->instanced_sprite->texture_owner;
+                    GT_ASSERT(retained && retained->GetWidth()==23 && retained->GetHeight()==30 && native->GetMoraleString()=="Neutral native",
+                        "Native bank lost owned pixels or replaced neutral description");
+                    native_badge_owners.push_back(retained);
+                    native->SetMovement(0);native->SetActionability(false,false,1);native->Refresh();
+                    GT_ASSERT(native->GetBadgeSprite()==badge,"Exhausted native selected alternate badge variant");
+                    native->SetMovement(1);
+                }
+            }
             // Actual Game::RenderTile -> Tile::Render -> Hide/Show path
             // must read the retained shared phase even for the first render.
             using Blink=game::frontend::unit::SelectionBlink;
@@ -2279,6 +2303,7 @@ public:
 				"inactive despawn retained selection or tile membership");
 			frontend.HideTileSelector();
 			def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
+            for(const auto& native:native_badge_owners) {GT_ASSERT(native.expired(),"Native badge texture survived its actor bank retirement");}
 			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
 				"scene/cache retirement released a still-borrowed Scout image" );
 			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,

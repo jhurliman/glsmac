@@ -34,7 +34,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev
+          sudo apt-get install -y ccache ninja-build libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev libavformat-dev libavcodec-dev libavutil-dev libswscale-dev
       - name: Restore Linux compiler outputs
         if: runner.os == 'Linux'
         id: linux-compiler-cache
@@ -46,7 +46,7 @@ jobs:
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install ninja pkg-config sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype
+          brew install ninja pkg-config sdl2 sdl2_image ossp-uuid glew yaml-cpp freetype ffmpeg
           echo "PKG_CONFIG_PATH=$(brew --prefix ossp-uuid)/lib/pkgconfig" >> "$GITHUB_ENV"
           echo "LDFLAGS=-L$(brew --prefix)/lib" >> "$GITHUB_ENV"
       - name: Configure
@@ -59,6 +59,19 @@ jobs:
           fi
       - name: Build
         run: cmake --build build --parallel 3
+      - name: Verify portable movie codecs and I/O cancellation
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S tools/tests/portable_movie -B build/movie-io -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build/movie-io --parallel 3
+          python3 tools/tests/test_movie_io_cancel.py build/movie-io/GLSMAC_movie_probe
+          cmake -S tools/tests/portable_movie -B build/movie-portable -G Ninja -DCMAKE_BUILD_TYPE=Portable64
+          cmake --build build/movie-portable --parallel 3
+          ctest --test-dir build/movie-portable --output-on-failure
+          if readelf -d build/movie-portable/GLSMAC_movie_probe | grep -E 'NEEDED.*lib(avformat|avcodec|avutil|swscale)'; then
+            echo "Portable movie codecs unexpectedly require system FFmpeg" >&2
+            exit 1
+          fi
       # Preserve a successful compile even when the following tests fail.
       # A fixture-only correction can then reuse the just-built production TUs.
       - name: Save Linux compiler outputs
@@ -69,13 +82,18 @@ jobs:
           path: ~/.cache/ccache
           key: ${{ steps.linux-compiler-cache.outputs.cache-primary-key }}
       - name: Test without game assets or a display
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure --parallel 2
+      - name: Summarize GSE group timings
+        if: always()
+        run: python3 tools/summarize_gse_timings.py --log build/Testing/Temporary/LastTest.log --output build/gse-timings.json --summary "$GITHUB_STEP_SUMMARY"
       - name: Upload test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: regression-${{ matrix.os }}
-          path: build/Testing/Temporary/
+          path: |
+            build/Testing/Temporary/
+            build/gse-timings.json
 
   windows:
     needs: scope
@@ -87,6 +105,8 @@ jobs:
           # PR checkout is GitHub's merge commit; its first parent is the base.
           fetch-depth: 2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install movie decoder
+        run: ./tools/install_ffmpeg_windows.ps1
       - name: Test compile-priority selection
         run: python tools/test_prioritize_changed_cpp.py
       - name: Configure
@@ -97,13 +117,18 @@ jobs:
       - name: Build
         run: cmake --build out/build/x64-debug-win-clang --parallel 3
       - name: Test without game assets or a display
-        run: ctest --test-dir out/build/x64-debug-win-clang --output-on-failure
+        run: ctest --test-dir out/build/x64-debug-win-clang --output-on-failure --parallel 2
+      - name: Summarize GSE group timings
+        if: always()
+        run: python tools/summarize_gse_timings.py --log out/build/x64-debug-win-clang/Testing/Temporary/LastTest.log --output out/build/x64-debug-win-clang/gse-timings.json --summary "$env:GITHUB_STEP_SUMMARY"
       - name: Upload test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: regression-windows-2022
-          path: out/build/x64-debug-win-clang/Testing/Temporary/
+          path: |
+            out/build/x64-debug-win-clang/Testing/Temporary/
+            out/build/x64-debug-win-clang/gse-timings.json
 
   gate:
     name: Regression gate

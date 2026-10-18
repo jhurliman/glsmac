@@ -27,6 +27,8 @@
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/backend/unit/FormerMarkerRender.h"
 #include "game/backend/unit/ColonyMarkerRender.h"
+#include "game/backend/unit/SpriteRender.h"
+#include "game/backend/base/SmacEcologyNativeSpawn.h"
 #include "game/FrontendRequest.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
@@ -1823,11 +1825,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         // The final extension distinguishes relocation scoring from nearest
         // home repair: the larger farther Base receives HQ, not the Former.
-        for(const int scenario:{2,1,0,3,4,5,6,7}) {
+        for(const int mode:{2,1,0,3,4,5,6,7,8,9}) {
+            const bool with_native=mode>=8;const int scenario=with_native?mode-8:mode;
             const size_t population=scenario>=3 ? 3 : 2;
             const bool paid=scenario>=5;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true);fixture.BasePresentationRoles(names);
-            std::string saved,own_record,foreign_record;std::vector<uint8_t> shared_details;
+            std::string saved,own_record,foreign_record,native_wire,native_factory;size_t native_id=0;std::vector<uint8_t> shared_details;
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
                 auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
@@ -1870,7 +1873,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         knowledge.remembered[observer][y*64+x/2]=Knowledge::Improvements{tile->features,tile->terraforming,tile->base!=nullptr,!tile->units.empty()};
                     }}
                 }
-                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));fixture.GameplayRandom({3,3});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                if(with_native) {
+                    MoraleSet::morale_values_t native_names;for(int level=0;level<7;++level) {native_names.emplace_back("Native"+std::to_string(level));}
+                    um->DefineMoraleSet(new MoraleSet("capture-native",native_names));
+                    um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("capture-native"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                    fixture.ResourceState([](auto& state){if(!state.native_factory) {state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);}});
+                    const auto plan=PrepareSmacNativeSpawn({{{80,40},128,64,true},1,7,9,1},{{{16,16},1}},[](int32_t,int32_t){return SmacNativeSpawnTile{3,false,1,1,false,15};});
+                    auto birth=um->PrepareEcologyNativeBirths(GSE_CALL,plan);GT_ASSERT(birth.Size()==1,"Capture fixture did not create one native body");
+                    native_id=birth.Candidate(0).m_id;birth.Commit();birth.Notify(GSE_CALL);native_wire=Unit::Serialize(um->GetUnit(native_id)).ToString();
+                    fixture.ResourceState([&](auto& state){native_factory=state.native_factory->Serialize().ToString();});
+                }
+                fixture.GameplayRandom({3,3});
                 shared_details.resize(4096);const std::array<uint8_t,5> detail_pattern{{0,1,127,128,255}};
                 for(size_t i=0;i<shared_details.size();++i) {shared_details[i]=detail_pattern[i%detail_pattern.size()];}
                 fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithLandmarkDetails(shared_details).Serialize());
@@ -1901,6 +1915,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
                 GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture commit rewrote raw shared detail");
                 const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
+                if(with_native) {std::string factory;fixture.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
+                    GT_ASSERT(Unit::Serialize(um->GetUnit(native_id)).ToString()==native_wire && factory==native_factory,"Capture changed the unrelated native record or native factory counts");}
 				bool capture_history=false;fixture.ResourceState([&](auto& state){capture_history=state.victory_history->last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(game->GetTurnId())
 					&& state.victory_history->last_base_expansion_or_advice_turn[2]==888 && state.retained_base_totals->at(1)==11 && state.retained_base_totals->at(2)==19;});
 				GT_ASSERT(capture_history,"Capture did not stamp only the gaining owner");
@@ -1908,7 +1924,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     && retired->type==VT_UNDEFINED && context.conquest==std::optional<SmacConquestState>({2,50}) && context.owner_simulation_id==1
                     && context.governor_options==own->GetSmacResourceContext().governor_options && !target->m_facilities.count("tanks") && !target->m_facilities.count("capture-hq"),"capture lost ownership, citizen lifetime, governor or facility rules");
                 GT_ASSERT(actor->GetTile()==target->GetTile() && actor->Conventional().spent==3 && remote->Conventional().home_base_id==703
-                    && remote->GetTile()==game->GetMap()->GetTile(30,16) && remote->m_owner==foreign && um->GetUnits().size()==2
+                    && remote->GetTile()==game->GetMap()->GetTile(30,16) && remote->m_owner==foreign && um->GetUnits().size()==(with_native?3u:2u)
                     && Unit::GetNextId()==next && game->GetRandom()->GetStateString()==jsf && !fixture.BattlePalette()
                     && fixture.GameplayRandom()==SmacGameplayRandomState(3,1951609278u),"capture changed movement, remote unit, identities or measured random streams");
                 GT_ASSERT(target->GetAccumulatedNutrients()==5 && production && production->minerals==0 && production->current_item==scout
@@ -1947,6 +1963,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
+                    if(with_native) {std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
+                        GT_ASSERT(game->GetUM()->GetUnits().size()==3 && Unit::Serialize(game->GetUM()->GetUnit(native_id)).ToString()==native_wire && factory==native_factory,"Captured world Start lost native identity or factory authority");}
                     GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"actual captured world Start lost shared bytes");
                     GT_ASSERT(base && base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50}) && base->m_owner->GetIndex()==0
                         && base->m_pops.size()==population-1 && !base->m_facilities.count("capture-hq") && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703

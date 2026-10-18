@@ -1,6 +1,11 @@
 #pragma once
 
 #include "Area.h"
+#include <memory>
+#include <cstdint>
+#include <vector>
+
+namespace task::intro { class Movie; }
 
 namespace types {
 namespace mesh {
@@ -26,6 +31,9 @@ class Surface : public Area {
 public:
 
 	Surface( DOM_ARGS_T = "surface" );
+	void Destroy( GSE_CALLABLE ) override;
+	// Main-thread RGBA upload; updates both the texture and cached actor revision.
+	void PresentMovieFrame(int width, int height, const std::vector<uint8_t>& rgba);
 
 protected:
 	virtual ~Surface();
@@ -42,6 +50,8 @@ private:
 	scene::actor::Mesh* m_actor = nullptr;
 
 	void ClearTexture();
+	std::unique_ptr<task::intro::Movie> m_movie;
+	void StopMovie();
 
 private:
 	friend class Panel;

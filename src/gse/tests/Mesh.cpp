@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <filesystem>
 
 #include "Mesh.h"
 #include "graphics/opengl/actor/TextureReloadState.h"
+#include "graphics/PresentationViewport.h"
 #include "loader/texture/SmacPalette.h"
 
 #include "task/gsetests/GSETests.h"
@@ -47,7 +49,8 @@ namespace gse::tests {
 // rendering remains disabled. This fixture outlives the local UI's GC runtime.
 class WidgetGraphicsFixture {
 public:
-	explicit WidgetGraphicsFixture( const std::string& texture_path = {} ) {
+	explicit WidgetGraphicsFixture( const std::string& texture_path = {}, unsigned short width=64, unsigned short height=64, bool fit_stage=false )
+		: m_graphics(width,height,fit_stage) {
 		if ( !texture_path.empty() ) {
 			m_resources = std::make_unique< resource::ResourceManager >( texture_path );
 			m_textures = std::make_unique< loader::texture::SDL2 >();
@@ -80,11 +83,14 @@ public:
 private:
 	class SizedNull : public graphics::Null {
 	public:
-		SizedNull() { OnWindowResize(); }
-		const unsigned short GetWindowWidth() const override { return 64; }
-		const unsigned short GetWindowHeight() const override { return 64; }
-		const unsigned short GetViewportWidth() const override { return 64; }
-		const unsigned short GetViewportHeight() const override { return 64; }
+		SizedNull(unsigned short width,unsigned short height,bool fit_stage):width(width),height(height),
+			stage(fit_stage ? graphics::PresentationViewport::Fit(width,height) : graphics::PresentationViewport{0,0,width,height}) { OnWindowResize(); }
+		const unsigned short GetWindowWidth() const override { return width; }
+		const unsigned short GetWindowHeight() const override { return height; }
+		const unsigned short GetViewportWidth() const override { return stage.width; }
+		const unsigned short GetViewportHeight() const override { return stage.height; }
+		unsigned short width,height;
+		graphics::PresentationViewport stage;
 		void UnloadTexture( const types::texture::Texture* texture ) override {
 			std::lock_guard guard( texture_mutex );
 			++texture_unloads[ texture ];
@@ -513,6 +519,36 @@ static std::string CheckMinimapCaptureOwnership() {
 	return result;
 }
 
+static std::string CheckMovieStageLayout() {
+	WidgetGraphicsFixture graphics({},1920,1080,true);
+	GSE runtime;
+	std::string result;
+	auto* gc_space=runtime.GetGCSpace();
+	gc_space->Accumulate(&runtime,[&] {
+		auto* ctx=runtime.CreateGlobalContext();const si_t si;ExecutionPointer ep;
+		auto* ui=new ::ui::UI(GSE_CALL);
+		util::FinallyGuard cleanup([&] {ui->GetRoot()->Container::Destroy(GSE_CALL);});
+		auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+		auto* props=new value::Object(GSE_CALL,{{"align",new value::String(gc_space,"center")}});
+		auto* surface=static_cast<::ui::dom::Surface*>(::ui::dom::Object::Unwrap(
+			static_cast<value::Callable*>(root->Get("surface"))->Run(GSE_CALL,{props})));
+		surface->PresentMovieFrame(592,288,std::vector<uint8_t>(592*288*4,255));
+		ui->GetRoot()->GetGeometry()->NeedUpdate();
+		const auto art=surface->GetGeometry()->GetEffectiveArea();
+		const auto stage=graphics::PresentationViewport::Fit(1920,1080);
+		result=[&]() -> std::string {
+			GT_ASSERT(g_engine->GetGraphics()->GetWindowWidth()==1920 && ui->GetRoot()->GetGeometry()->GetWidth()==1440,
+				"movie UI root used raw window width instead of presentation stage");
+			GT_ASSERT(stage.x==240 && stage.width==1440 && art.left==0 && art.right==1440 &&
+				std::abs(art.top-189.72973f)<0.1f && std::abs(art.bottom-890.27027f)<0.1f,
+				"native movie aspect did not remain letterboxed inside the 4:3 stage: "+
+				std::to_string(art.left)+","+std::to_string(art.top)+","+std::to_string(art.right)+","+std::to_string(art.bottom));
+			GT_OK();
+		}();
+	});
+	return result;
+}
+
 static std::string CheckSurfaceBackgroundOwnership() {
 	std::string result;
 	try {
@@ -584,6 +620,14 @@ static std::string CheckSurfaceBackgroundOwnership() {
 					GT_OK();
 				};
 				result = [ & ]() -> std::string {
+					std::vector<uint8_t> movie_pixels(16,255);
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					const auto first_revision=actor->GetTextureRevision();
+					const auto* first_texture=actor->GetTexture();
+					movie_pixels[0]=17;
+					surface->PresentMovieFrame(2,2,movie_pixels);
+					GT_ASSERT(actor->GetTexture()==first_texture && actor->GetTextureRevision()>first_revision &&
+						actor->GetTexture()->GetBitmap()[0]==17,"movie frame failed to refresh the cached actor or reused texture");
 					for ( const auto* background : { "#123456", "fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)",
 						"fixture.bmp:crop(0,0,0,0)", "fixture.bmp:crop(1,1,1,1)", "fixture.bmp", "#456789", "#abcdef" } ) {
 						const auto error = change( background );
@@ -656,6 +700,29 @@ static std::string CheckTextureCopyUpdates() {
 	}
 	catch ( const std::exception& error ) { GT_FAIL( std::string( "texture copy update failed: " ) + error.what() ); }
 	GT_OK();
+}
+
+static std::string CheckNativeBadgePalette() {
+    try {
+        const auto directory=std::filesystem::temp_directory_path()/("glsmac-native-badge-"+util::UUID::Generate());const auto data=directory/"default";std::filesystem::create_directories(data);
+        util::FinallyGuard remove([&]{std::filesystem::remove(data/"units.pcx");std::filesystem::remove(data/"palette.pcx");std::filesystem::remove(data);std::filesystem::remove(directory);});
+        using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+        Surface units(SDL_CreateRGBSurfaceWithFormat(0,170,762,8,SDL_PIXELFORMAT_INDEX8),SDL_FreeSurface),palette(SDL_CreateRGBSurfaceWithFormat(0,1,1,8,SDL_PIXELFORMAT_INDEX8),SDL_FreeSurface);
+        GT_ASSERT(units && palette,"Native indexed fixture allocation failed");
+        SDL_Color local[256]{},common[256]{};for(auto& c:local) {c={25,25,25,255};}for(auto& c:common) {c.a=255;}common[62]={173,196,192,255};
+        GT_ASSERT(SDL_SetPaletteColors(units->format->palette,local,0,256)==0 && SDL_SetPaletteColors(palette->format->palette,common,0,256)==0,"Native fixture palette setup failed");
+        auto* pixels=static_cast<uint8_t*>(units->pixels);std::fill_n(pixels,size_t(units->pitch)*units->h,uint8_t(255));const uint8_t markers[]{249,250,255,55,252,253,62};
+        for(int m=0;m<7;++m) {for(int v=0;v<2;++v) {std::copy(std::begin(markers),std::end(markers),pixels+(700+31*v)*units->pitch+1+24*m);}}
+        GT_ASSERT(SDL_SaveBMP(units.get(),(data/"units.pcx").string().c_str())==0 && SDL_SaveBMP(palette.get(),(data/"palette.pcx").string().c_str())==0,"Native fixture save failed");
+        WidgetGraphicsFixture graphics(directory.string());auto* loader=g_engine->GetTextureLoader();std::unique_ptr<types::texture::Texture> first(loader->CreateSmacNativeBadgeTexture(0,0));
+        GT_ASSERT(first->GetWidth()==23 && first->GetHeight()==30 && first->GetPixel(0,0)==types::Color::RGB(128,0,0) && first->GetPixel(1,0)==types::Color::RGB(255,0,0)
+            && first->GetPixel(2,0)==0 && first->GetPixel(3,0)==types::Color::RGB(0,0,0) && first->GetPixel(4,0)==0 && first->GetPixel(5,0)==0 && first->GetPixel(6,0)==types::Color::RGB(173,196,192),
+            "Native decode lost index wrap, reserved remap, key transparency, opaque black or common palette");
+        std::fill_n(pixels,size_t(units->pitch)*units->h,uint8_t(0));GT_ASSERT(SDL_SaveBMP(units.get(),(data/"units.pcx").string().c_str())==0,"Native cache fixture overwrite failed");
+        std::unique_ptr<types::texture::Texture> last(loader->CreateSmacNativeBadgeTexture(6,1));GT_ASSERT(last->GetPixel(0,0)==types::Color::RGB(128,0,0) && last->GetPixel(2,0)==0,"Native bank source was reread for a later level");
+        first->SetPixel(0,0,types::Color::RGB(0,0,255));GT_ASSERT(last->GetPixel(0,0)==types::Color::RGB(128,0,0),"Caller-owned native textures alias each other");
+        bool rejected=false;try {std::unique_ptr<types::texture::Texture> bad(loader->CreateSmacNativeBadgeTexture(7,0));}catch(const std::exception&) {rejected=true;}GT_ASSERT(rejected,"Native loader accepted an invalid bank index");
+    }catch(const std::exception& error) {GT_FAIL(std::string("Native badge palette: ")+error.what());}GT_OK();
 }
 
 static std::string CheckDisplayPalette() {
@@ -801,8 +868,10 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	});
 
 	task->AddTest( "UI viewport cache includes the bottom-right pixel", GT() { return CheckViewportEdges(); } );
+	task->AddTest( "movie native aspect stays inside the 4:3 presentation stage", GT() { return CheckMovieStageLayout(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
+	task->AddTest("SMAC native badge indexed palette transparency cached bank and owned textures",GT(){return CheckNativeBadgePalette();});
 	task->AddTest(
 		"test surface background replacement preserves texture ownership",
 		GT() { return CheckSurfaceBackgroundOwnership(); }

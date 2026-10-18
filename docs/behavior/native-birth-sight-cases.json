@@ -1,0 +1,2691 @@
+{
+  "research_id": "RE-SMAC-NATIVE-BIRTH-SIGHT-001",
+  "scope": "Fourteen complete native factory returns (one design8 Base discriminator, others9/10) with actual placement/sight/stack; one actual deletion for each Base-only control. Original initialized negative references and loaded components. Explicit interior terrain/sensor-claim/exploration/retained stack canaries. Existing240design8 grid not repeated. No AI/climate or nonnegative assignment-tail producer; native9sea/Base-only placement isolates factory query not ecological terrain eligibility.",
+  "viewer": 1,
+  "observer_profile": "ordinary Gaia Scout; original Rover/MindWorm family reused from240-case prior receipt",
+  "cases": [
+    {
+      "inputs": {
+        "name": "Isle_coast_adjacent",
+        "design": 9,
+        "birth": [
+          33,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ],
+        "coast": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 1,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 9,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 2,
+      "map_changes": [
+        {
+          "x": 33,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 31,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1048578,
+          "items_after": 1048578,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1048578,
+          "human_remembered_after": 1048578
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Isle_coast_outer",
+        "design": 9,
+        "birth": [
+          35,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ],
+        "coast": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 9,
+          "owner": 0,
+          "x": 35,
+          "y": 15,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 2,
+      "map_changes": [
+        {
+          "x": 35,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_land_adjacent",
+        "design": 10,
+        "birth": [
+          33,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ]
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 1,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 10,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 2,
+      "map_changes": [
+        {
+          "x": 33,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 31,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1048578,
+          "items_after": 1048578,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1048578,
+          "human_remembered_after": 1048578
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_coast_adjacent",
+        "design": 10,
+        "birth": [
+          33,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ],
+        "coast": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 1,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 10,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 2,
+      "map_changes": [
+        {
+          "x": 33,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 31,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1048578,
+          "items_after": 1048578,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1048578,
+          "human_remembered_after": 1048578
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_outer",
+        "design": 10,
+        "birth": [
+          35,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ]
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 10,
+          "owner": 0,
+          "x": 35,
+          "y": 15,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 2,
+      "map_changes": [
+        {
+          "x": 35,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Isle_Base_only_adjacent",
+        "design": 9,
+        "birth": [
+          18,
+          16
+        ],
+        "base_only": true,
+        "sea": true
+      },
+      "before": [],
+      "after": [
+        {
+          "id": 0,
+          "design": 9,
+          "owner": 0,
+          "x": 18,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 0,
+      "map_changes": [
+        {
+          "x": 18,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 16,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1052673,
+          "items_after": 1052673,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1052675,
+          "human_remembered_after": 1052675
+        },
+        {
+          "x": 18,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4098,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4098
+        },
+        {
+          "x": 20,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 18,
+          "y": 18,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 3,
+        "remembered_population": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_Base_only_outer",
+        "design": 10,
+        "birth": [
+          20,
+          16
+        ],
+        "base_only": true
+      },
+      "before": [],
+      "after": [
+        {
+          "id": 0,
+          "design": 10,
+          "owner": 0,
+          "x": 20,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 0,
+      "map_changes": [
+        {
+          "x": 20,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 19,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 21,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 18,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 20,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 22,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 19,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 21,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 20,
+          "y": 18,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Isle_sensor_adjacent",
+        "design": 9,
+        "birth": [
+          34,
+          16
+        ],
+        "sensor": [
+          32,
+          16
+        ],
+        "sea": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 9,
+          "owner": 0,
+          "x": 34,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 1,
+      "map_changes": [
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 2147483648,
+          "items_after": 2147483648,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 36,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 18,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_sensor_outer",
+        "design": 10,
+        "birth": [
+          36,
+          16
+        ],
+        "sensor": [
+          32,
+          16
+        ]
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 10,
+          "owner": 0,
+          "x": 36,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 1,
+      "map_changes": [
+        {
+          "x": 36,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 38,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 18,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Isle_explored_only",
+        "design": 9,
+        "birth": [
+          33,
+          15
+        ],
+        "explored_only": true,
+        "sea": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 9,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 1,
+      "map_changes": [
+        {
+          "x": 33,
+          "y": 13,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 31,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 32,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 33,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_insert_native_mixed_design_stack",
+        "design": 10,
+        "birth": [
+          33,
+          15
+        ],
+        "observer": [
+          32,
+          16
+        ],
+        "stack": true,
+        "coast": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 9,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 6,
+          "flags": 1088,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 2,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 1,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 9,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 6,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": 3
+        },
+        {
+          "id": 2,
+          "design": 2,
+          "owner": 1,
+          "x": 32,
+          "y": 16,
+          "visible": 1,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 3,
+          "design": 10,
+          "owner": 0,
+          "x": 33,
+          "y": 15,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": 1,
+          "previous": -1
+        }
+      ],
+      "born": 3,
+      "map_changes": [],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "MindWorm_Base_only_adjacent",
+        "design": 8,
+        "birth": [
+          18,
+          16
+        ],
+        "base_only": true
+      },
+      "before": [],
+      "after": [
+        {
+          "id": 0,
+          "design": 8,
+          "owner": 0,
+          "x": 18,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 0,
+      "map_changes": [
+        {
+          "x": 18,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 16,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1052673,
+          "items_after": 1052673,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1052675,
+          "human_remembered_after": 1052675
+        },
+        {
+          "x": 18,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4098,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4098
+        },
+        {
+          "x": 20,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 18,
+          "y": 18,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 3,
+        "remembered_population": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Locust_Base_only_adjacent",
+        "design": 10,
+        "birth": [
+          18,
+          16
+        ],
+        "base_only": true
+      },
+      "before": [],
+      "after": [
+        {
+          "id": 0,
+          "design": 10,
+          "owner": 0,
+          "x": 18,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 0,
+      "map_changes": [
+        {
+          "x": 18,
+          "y": 14,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 15,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 16,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 1052673,
+          "items_after": 1052673,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 1052675,
+          "human_remembered_after": 1052675
+        },
+        {
+          "x": 18,
+          "y": 16,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4098,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4098
+        },
+        {
+          "x": 20,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 17,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 4096,
+          "human_remembered_after": 4096
+        },
+        {
+          "x": 19,
+          "y": 17,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 18,
+          "y": 18,
+          "explored_before": 2,
+          "explored_after": 3,
+          "items_before": 4096,
+          "items_after": 4096,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 3,
+        "remembered_population": [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "inputs": {
+        "name": "Isle_sensor_outer",
+        "design": 9,
+        "birth": [
+          36,
+          16
+        ],
+        "sensor": [
+          32,
+          16
+        ],
+        "sea": true
+      },
+      "before": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "after": [
+        {
+          "id": 0,
+          "design": 2,
+          "owner": 1,
+          "x": 16,
+          "y": 16,
+          "visible": 0,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        },
+        {
+          "id": 1,
+          "design": 9,
+          "owner": 0,
+          "x": 36,
+          "y": 16,
+          "visible": 2,
+          "flags": 0,
+          "state": 0,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "born": 1,
+      "map_changes": [
+        {
+          "x": 36,
+          "y": 14,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 15,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 34,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 3,
+          "items_before": 0,
+          "items_after": 2,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 2
+        },
+        {
+          "x": 38,
+          "y": 16,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 35,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 37,
+          "y": 17,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        },
+        {
+          "x": 36,
+          "y": 18,
+          "explored_before": 0,
+          "explored_after": 1,
+          "items_before": 0,
+          "items_after": 0,
+          "native_landmark_word_before": 4194304,
+          "native_landmark_word_after": 4194304,
+          "human_remembered_before": 0,
+          "human_remembered_after": 0
+        }
+      ],
+      "Base_knowledge_before": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "Base_knowledge_after": {
+        "visibility": 2,
+        "remembered_population": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "assignment_reference": [
+        -1,
+        -1
+      ]
+    }
+  ]
+}

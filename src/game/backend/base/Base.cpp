@@ -478,6 +478,23 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_rename_state",
+		NATIVE_CALL(this) {
+			N_EXPECT_ARGS(0);
+			if(!CanSmacRename()) {return VALUE(gse::value::Undefined);}
+			return VALUE(gse::value::String,,SmacSpecialistSelectionState());
+		})
+	},
+	{
+		"get_smac_specialist_selection_state",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			if(!m_owner || !m_game->GetPlayer() || m_owner->GetPlayer()!=m_game->GetPlayer()
+				|| m_game->GetBM()->GetBase(m_id)!=this || !m_resource_context || !m_allocation || !m_production) {return VALUE(gse::value::Undefined);}
+			return VALUE(gse::value::String,,SmacSpecialistSelectionState());
+		} )
+	},
+	{
 		"get_smac_specialist_menu",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 1 );
@@ -511,6 +528,14 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				{ "governor_active", VALUE( gse::value::Bool,, state.GovernorActive() ) },
 				{ "manage_citizens", VALUE( gse::value::Bool,, state.ManageCitizens() ) },
 			} );
+		} )
+	},
+	{
+		"get_smac_queue_editor",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			if(!m_resource_context || !m_production || !m_production->queue || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()) {return VALUE(gse::value::Undefined);}
+			return CopySmacQueueEditor(GSE_CALL);
 		} )
 	},
 	{
@@ -865,6 +890,29 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				{ "allocated", categories( energy.allocation.after_specialists ) },
 				{ "final", categories( energy.tail.final ) }
 			} ) );
+		} )
+	},
+	{
+		"get_smac_base_navigation",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			const auto* bm = m_game->GetBM();
+			if ( !m_owner || m_owner->GetPlayer() != m_game->GetPlayer() || bm->GetBase(m_id) != this
+				|| !m_resource_context || !m_allocation || !m_production ) { return VALUE(gse::value::Undefined); }
+			std::vector<Base*> owned;
+			size_t position = SIZE_MAX;
+			for ( const auto id : bm->GetBaseRecordOrder() ) {
+				auto* candidate = bm->GetBase(id);
+				if ( !candidate || candidate->m_owner != m_owner || !candidate->m_resource_context
+					|| !candidate->m_allocation || !candidate->m_production ) { continue; }
+				if ( candidate == this ) { position = owned.size(); }
+				owned.push_back(candidate);
+			}
+			if ( owned.size() < 2 || position >= owned.size() ) { return VALUE(gse::value::Undefined); }
+			return VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
+				{"previous", owned[(position + owned.size() - 1) % owned.size()]->Wrap(GSE_CALL)},
+				{"next", owned[(position + 1) % owned.size()]->Wrap(GSE_CALL)}
+			}));
 		} )
 	},
 	{

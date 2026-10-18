@@ -1,0 +1,316 @@
+{
+  "research_id": "RE-SMAC-MANUAL-SPECIALIST-MENU-001",
+  "specification": "manual-specialist-selection.md",
+  "defaults": {
+    "population": 5,
+    "minimum_specialist_size": 5,
+    "current_type": "Doctor",
+    "available": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "obsolete": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "psych_overrides": {}
+  },
+  "scope": "Original per-type prerequisite/obsolete/population/psych gates; presentation/list formatting omitted. Availability/obsolete represented with None/Disable records; actual technology helper executes.",
+  "cases": [
+    {
+      "id": "MANUAL-SPECIALIST-MENU-001",
+      "name": "all available nonobsolete types at minimum size",
+      "overrides": {},
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Doctor",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-002",
+      "name": "below size only psych at least two",
+      "overrides": {
+        "population": 4
+      },
+      "expected": {
+        "eligible_types": [
+          "Doctor",
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-003",
+      "name": "custom minimum lower admits all types",
+      "overrides": {
+        "population": 4,
+        "minimum_specialist_size": 4
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Doctor",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-004",
+      "name": "custom minimum higher excludes low psych",
+      "overrides": {
+        "minimum_specialist_size": 20
+      },
+      "expected": {
+        "eligible_types": [
+          "Doctor",
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-005",
+      "name": "current obsolete Doctor remains listed",
+      "overrides": {
+        "obsolete": [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Doctor",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-006",
+      "name": "other obsolete Doctor excluded",
+      "overrides": {
+        "current_type": "Technician",
+        "obsolete": [
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-007",
+      "name": "missing prerequisite excludes current type too",
+      "overrides": {
+        "available": [
+          true,
+          false,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-008",
+      "name": "current low-psych obsolete type still excluded below size",
+      "overrides": {
+        "population": 4,
+        "current_type": "Thinker",
+        "obsolete": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          true,
+          false
+        ]
+      },
+      "expected": {
+        "eligible_types": [
+          "Doctor",
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-009",
+      "name": "custom Technician psych two admits below minimum",
+      "overrides": {
+        "population": 4,
+        "psych_overrides": {
+          "Technician": 2
+        }
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Doctor",
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-010",
+      "name": "custom Doctor psych one excludes below minimum",
+      "overrides": {
+        "population": 4,
+        "psych_overrides": {
+          "Doctor": 1
+        }
+      },
+      "expected": {
+        "eligible_types": [
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-011",
+      "name": "negative custom psych excludes below minimum",
+      "overrides": {
+        "population": 4,
+        "psych_overrides": {
+          "Doctor": -1
+        }
+      },
+      "expected": {
+        "eligible_types": [
+          "Empath",
+          "Transcend"
+        ],
+        "size_explanation_requested": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-012",
+      "name": "negative custom psych admitted at minimum",
+      "overrides": {
+        "psych_overrides": {
+          "Doctor": -1
+        }
+      },
+      "expected": {
+        "eligible_types": [
+          "Technician",
+          "Doctor",
+          "Librarian",
+          "Engineer",
+          "Empath",
+          "Thinker",
+          "Transcend"
+        ],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-013",
+      "name": "no prerequisites available",
+      "overrides": {
+        "available": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "expected": {
+        "eligible_types": [],
+        "size_explanation_requested": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-MENU-014",
+      "name": "worker current type has no obsolete exception",
+      "overrides": {
+        "current_type": "Worker",
+        "obsolete": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "expected": {
+        "eligible_types": [],
+        "size_explanation_requested": false
+      }
+    }
+  ]
+}

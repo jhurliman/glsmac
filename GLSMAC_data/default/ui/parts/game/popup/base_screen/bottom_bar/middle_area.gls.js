@@ -38,8 +38,12 @@ return {
 			transform: 'uppercase',
 		});
 
-		header_title.text({ class: 'base-screen-frame-text', font: 'arialnb.ttf:10',
+		this.navigation_status = header_title.text({ class: 'base-screen-frame-text', font: 'arialnb.ttf:10',
 			align: 'bottom center', bottom: 0, text: 'Base navigation unavailable' });
+		this.previous = header.button({class: 'game-popup-button', left: 2, width: 20, top: 3, bottom: 3, text: '<'});
+		this.next = header.button({class: 'game-popup-button', align: 'right', right: 2, width: 20, top: 3, bottom: 3, text: '>'});
+		this.previous.on('click', () => { this.p.utils.navigate_base('previous'); return true; });
+		this.next.on('click', () => { this.p.utils.navigate_base('next'); return true; });
 
 		p.ui.class('base-screen-bottombar-pop').set({
 			width: 38,
@@ -72,6 +76,9 @@ return {
 	set: (data) => {
 
 		this.basename.text = data.name;
+		const available = #is_defined(data.base.get_smac_base_navigation()) && this.p.game.get_pending_smac_colony_screen() == null;
+		if (available) { this.previous.show(); this.next.show(); this.navigation_status.text = ''; }
+		else { this.previous.hide(); this.next.hide(); this.navigation_status.text = 'Base navigation unavailable'; }
 
 		// prepare classes with population images
 		const renders = this.p.game.get_bm().get_pop_renders(data.owner);
@@ -94,10 +101,12 @@ return {
 			if (!#is_defined(renders[pop_type][variant])) {
 				variant = 0;
 			}
+			const viewed_base = data.base;
+			const pop_id = pop.id;
 			this.pops.surface({
 				class: 'base-screen-bottombar-pop-' + pop_type + '-' + #to_string(variant),
 				left: left,
-			});
+			}).on('mousedown', (e) => { this.p.utils.open_specialist_selection(viewed_base, pop_id); return true; });
 			left += shift;
 		}
 

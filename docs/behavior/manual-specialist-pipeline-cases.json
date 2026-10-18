@@ -1,0 +1,467 @@
+{
+  "research_id": "RE-SMAC-MANUAL-SPECIALIST-PIPELINE-001",
+  "specification": "manual-specialist-selection.md",
+  "defaults": {
+    "slot": 0,
+    "choice": "Engineer",
+    "specialist_count": 3,
+    "stored_types": [
+      "Doctor",
+      "Engineer",
+      "Thinker"
+    ],
+    "unused_stored_type": "Doctor",
+    "selected_indices": [
+      0,
+      1,
+      3
+    ],
+    "provisional_count": 0,
+    "manage_citizens_specialists": true,
+    "governor_active": true,
+    "lock_refused": false,
+    "creation_source": "worker_hit",
+    "worker_source_index": 1
+  },
+  "scope": "Actual selection/current-type/commit stages with supplied lock/hit inputs, complete intake, then real specialist-output loop. All21 worker squares usable fungus2/1/1, center2/1/1, Doctor/Engineer available and nonobsolete with stock outputs; allocation counts coherent.",
+  "cases": [
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-001",
+      "name": "Engineer selection persists through intake and contributes output",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 1,
+        "effective_types": [
+          "Engineer"
+        ],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 2
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-002",
+      "name": "create Engineer from hit worker",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "slot": -1
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 2,
+        "effective_types": [
+          "Doctor",
+          "Engineer"
+        ],
+        "output": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-003",
+      "name": "background creation removes highest selected worker",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "slot": -1,
+        "creation_source": "background"
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "specialist_count": 2,
+        "effective_types": [
+          "Doctor",
+          "Engineer"
+        ],
+        "output": {
+          "economy": 3,
+          "psych": 2,
+          "labs": 2
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-004",
+      "name": "Worker choice on first type drops last counted specialist",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 2,
+        "stored_types": [
+          "Engineer",
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "choice": "Worker"
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 1,
+        "effective_types": [
+          "Engineer"
+        ],
+        "output": {
+          "economy": 3,
+          "psych": 0,
+          "labs": 2
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-005",
+      "name": "Worker choice on only specialist fills an additional worker",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "choice": "Worker"
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "specialist_count": 0,
+        "effective_types": [],
+        "output": {
+          "economy": 0,
+          "psych": 0,
+          "labs": 0
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-006",
+      "name": "overflow creation does not persist Engineer choice",
+      "overrides": {
+        "population": 20,
+        "slot": -1,
+        "specialist_count": 16,
+        "stored_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 17,
+        "effective_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ],
+        "output": {
+          "economy": 0,
+          "psych": 34,
+          "labs": 0
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-007",
+      "name": "overflow edit does not persist Engineer choice",
+      "overrides": {
+        "population": 20,
+        "slot": 16,
+        "specialist_count": 17,
+        "stored_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "specialist_count": 17,
+        "effective_types": [
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor",
+          "Doctor"
+        ],
+        "output": {
+          "economy": 0,
+          "psych": 34,
+          "labs": 0
+        },
+        "manage_citizens_specialists": false
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-008",
+      "name": "cancel retains Doctor and citizen management",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "choice": "Cancel"
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 1,
+        "effective_types": [
+          "Doctor"
+        ],
+        "output": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        },
+        "manage_citizens_specialists": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-009",
+      "name": "same type retains Doctor and citizen management",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "choice": "Doctor"
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 1,
+        "effective_types": [
+          "Doctor"
+        ],
+        "output": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        },
+        "manage_citizens_specialists": true
+      }
+    },
+    {
+      "id": "MANUAL-SPECIALIST-PIPELINE-010",
+      "name": "lock refusal retains Doctor and citizen management",
+      "overrides": {
+        "population": 5,
+        "specialist_count": 1,
+        "stored_types": [
+          "Doctor"
+        ],
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "lock_refused": true
+      },
+      "expected": {
+        "selected_indices": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "specialist_count": 1,
+        "effective_types": [
+          "Doctor"
+        ],
+        "output": {
+          "economy": 0,
+          "psych": 2,
+          "labs": 0
+        },
+        "manage_citizens_specialists": true
+      }
+    }
+  ]
+}

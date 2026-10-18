@@ -26,6 +26,8 @@ return (game, base) => {
 	screen.production_selection = null;
 	screen.sections = {buttons: buttons};
 	buttons.init({body: screen.body, ui: {class: (name) => { return style; }}, hide: () => {}, utils: {
+		can_rename: () => { return screen.can_rename(); },
+		open_rename: () => { screen.open_rename(); },
 		hide_production_selection: () => { screen.hide_production_selection(); },
 		update_production_selection: () => { screen.update_production_selection(); },
 	}});

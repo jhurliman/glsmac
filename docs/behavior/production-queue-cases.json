@@ -1,0 +1,3934 @@
+{
+  "research_id": "RE-SMAC-QUEUE-001",
+  "status": "original-x86 checked",
+  "scope": "Complete original queue-advance helper with actual unit/facility/project eligibility and technology/facility/coastal checks; presentation/project signal supplied. Actual admitted manual counter rebuild initializes queue counters. Complete unit eligibility separately checked. 80 admitted queue/baseline/Stockpile-energy/treasury-credit compositions, with intervening upkeep stages excluded. Rules prerequisites and technology records are explicit synthetic inputs. No chooser admission/queue-edit interface, full production aftermath, arbitrary facility policy or complete turn/income timing.",
+  "designs": {
+    "0": {
+      "kind": "predefined",
+      "owner": null,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "none",
+      "role": "combat",
+      "domain": "land"
+    },
+    "1": {
+      "kind": "predefined",
+      "owner": null,
+      "active": false,
+      "excluded_factions": [],
+      "prerequisite": "none",
+      "role": "combat",
+      "domain": "land"
+    },
+    "2": {
+      "kind": "predefined",
+      "owner": null,
+      "active": true,
+      "excluded_factions": [
+        1
+      ],
+      "prerequisite": "none",
+      "role": "combat",
+      "domain": "land"
+    },
+    "3": {
+      "kind": "predefined",
+      "owner": null,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "land"
+    },
+    "4": {
+      "kind": "predefined",
+      "owner": null,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "technology_10",
+      "role": "combat",
+      "domain": "land"
+    },
+    "5": {
+      "kind": "predefined",
+      "owner": null,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "technology_88",
+      "role": "combat",
+      "domain": "land"
+    },
+    "64": {
+      "kind": "custom",
+      "owner": 1,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "land"
+    },
+    "65": {
+      "kind": "custom",
+      "owner": 1,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "colony",
+      "domain": "land"
+    },
+    "66": {
+      "kind": "custom",
+      "owner": 1,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "sea"
+    },
+    "67": {
+      "kind": "custom",
+      "owner": 1,
+      "active": true,
+      "excluded_factions": [
+        1
+      ],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "land"
+    },
+    "68": {
+      "kind": "custom",
+      "owner": 1,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "air"
+    },
+    "128": {
+      "kind": "custom",
+      "owner": 2,
+      "active": true,
+      "excluded_factions": [],
+      "prerequisite": "disabled",
+      "role": "combat",
+      "domain": "land"
+    }
+  },
+  "fixture_world": "Owner1 base at supplied coordinate, full land map except named sea tiles; base1 owner2 for foreign project controls. Local prerequisites None except7 Disable and8 technology10. Project39 prerequisite None and location controlled. Original admitted chooser counter-rebuild fragment counts every current/queued unit reference, including duplicates. No cost/helper result supplied.",
+  "cases": [
+    {
+      "id": "QUEUE-001",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          1,
+          3,
+          64,
+          -6
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [
+          -6
+        ],
+        "checked": [
+          1,
+          3,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-002",
+      "inputs": {
+        "current": 0,
+        "pending": [],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": false,
+        "current_item": 0,
+        "pending": [],
+        "checked": [],
+        "unit_production_counts": {
+          "0": 1,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 0,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-003",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          0
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 0,
+        "pending": [],
+        "checked": [
+          0
+        ],
+        "unit_production_counts": {
+          "0": 1,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-004",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          1,
+          3
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": false,
+        "current_item": 3,
+        "pending": [],
+        "checked": [
+          1,
+          3
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 0,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-005",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          1,
+          1,
+          3,
+          2
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": false,
+        "current_item": 2,
+        "pending": [],
+        "checked": [
+          1,
+          1,
+          3,
+          2
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 1,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 0,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-006",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          4,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          4,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-007",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          4,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "owned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 4,
+        "pending": [
+          64
+        ],
+        "checked": [
+          4
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-008",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          128,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          128,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-009",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          65,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": true,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          65,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-010",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          65
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 65,
+        "pending": [],
+        "checked": [
+          65
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 1,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-011",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          66,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-012",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [
+          [
+            10,
+            8
+          ]
+        ],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 66,
+        "pending": [
+          64
+        ],
+        "checked": [
+          66
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 1,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-013",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          0,
+          8
+        ],
+        "sea_tiles": [
+          [
+            126,
+            8
+          ]
+        ],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 66,
+        "pending": [
+          64
+        ],
+        "checked": [
+          66
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 1,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-014",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          0,
+          8
+        ],
+        "sea_tiles": [
+          [
+            126,
+            8
+          ]
+        ],
+        "base_at_sea": false,
+        "flat_map": true,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          66,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-015",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": true,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          66,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-016",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -6,
+          -38
+        ],
+        "facilities": [
+          6
+        ],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -6,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-017",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -11,
+          -6
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -6,
+        "pending": [],
+        "checked": [
+          -11,
+          -6
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-018",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -11
+        ],
+        "facilities": [
+          6
+        ],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -11,
+        "pending": [],
+        "checked": [
+          -11
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-019",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -14,
+          -6
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -6,
+        "pending": [],
+        "checked": [
+          -14,
+          -6
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-020",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -14
+        ],
+        "facilities": [
+          13
+        ],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -14,
+        "pending": [],
+        "checked": [
+          -14
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-021",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -34,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -34,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-022",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -34
+        ],
+        "facilities": [
+          29
+        ],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -34,
+        "pending": [],
+        "checked": [
+          -34
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-023",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -34
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "own",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -34,
+        "pending": [],
+        "checked": [
+          -34
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-024",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -34,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "foreign",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -34,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-025",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -39,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -39,
+        "pending": [
+          -38
+        ],
+        "checked": [
+          -39
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 1
+      }
+    },
+    {
+      "id": "QUEUE-026",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -39,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [
+          39
+        ],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -39,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-027",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -39,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": true,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -39,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-028",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -7,
+          -8,
+          -38
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -38,
+        "pending": [],
+        "checked": [
+          -7,
+          -8,
+          -38
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-029",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -8
+        ],
+        "facilities": [],
+        "tech_state": "owned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -8,
+        "pending": [],
+        "checked": [
+          -8
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-030",
+      "inputs": {
+        "current": 64,
+        "pending": [
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          64,
+          64
+        ],
+        "checked": [
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 9,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-031",
+      "inputs": {
+        "current": 1,
+        "pending": [],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": false,
+        "current_item": 1,
+        "pending": [],
+        "checked": [],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 0,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-032",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          -6
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 31,
+        "baseline_minerals": 31,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": -6,
+        "pending": [],
+        "checked": [
+          -6
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 31,
+        "baseline_minerals": 31,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-033",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          66,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          0
+        ],
+        "sea_tiles": [
+          [
+            8,
+            62
+          ]
+        ],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          66,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-034",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          68
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 68,
+        "pending": [],
+        "checked": [
+          68
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 0,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 1,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    },
+    {
+      "id": "QUEUE-035",
+      "inputs": {
+        "current": 0,
+        "pending": [
+          5,
+          64
+        ],
+        "facilities": [],
+        "tech_state": "unowned",
+        "colony_disabled": false,
+        "projects_disabled": false,
+        "completed_projects": [],
+        "space_elevator": "none",
+        "coordinate": [
+          8,
+          8
+        ],
+        "sea_tiles": [],
+        "base_at_sea": false,
+        "flat_map": false,
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0
+      },
+      "expected": {
+        "result": true,
+        "current_item": 64,
+        "pending": [],
+        "checked": [
+          5,
+          64
+        ],
+        "unit_production_counts": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0,
+          "64": 1,
+          "65": 0,
+          "66": 0,
+          "67": 0,
+          "68": 0,
+          "128": 0
+        },
+        "stored_minerals": 30,
+        "baseline_minerals": 30,
+        "baseline_item": 0,
+        "refresh_requests": 1,
+        "project_signal_requests": 0
+      }
+    }
+  ],
+  "unit_eligibility_cases": [
+    {
+      "id": "UNIT-ELIGIBLE-0061",
+      "inputs": {
+        "design": 0,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0065",
+      "inputs": {
+        "design": 0,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0181",
+      "inputs": {
+        "design": 1,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0185",
+      "inputs": {
+        "design": 1,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0301",
+      "inputs": {
+        "design": 2,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0305",
+      "inputs": {
+        "design": 2,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0421",
+      "inputs": {
+        "design": 3,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0425",
+      "inputs": {
+        "design": 3,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0541",
+      "inputs": {
+        "design": 4,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0545",
+      "inputs": {
+        "design": 4,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0661",
+      "inputs": {
+        "design": 5,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0665",
+      "inputs": {
+        "design": 5,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0781",
+      "inputs": {
+        "design": 64,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0785",
+      "inputs": {
+        "design": 64,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0901",
+      "inputs": {
+        "design": 65,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-0905",
+      "inputs": {
+        "design": 65,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1021",
+      "inputs": {
+        "design": 66,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1025",
+      "inputs": {
+        "design": 66,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1141",
+      "inputs": {
+        "design": 67,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1145",
+      "inputs": {
+        "design": 67,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1261",
+      "inputs": {
+        "design": 68,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1265",
+      "inputs": {
+        "design": 68,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": true
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1381",
+      "inputs": {
+        "design": 128,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "unowned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    },
+    {
+      "id": "UNIT-ELIGIBLE-1385",
+      "inputs": {
+        "design": 128,
+        "faction": 1,
+        "base_context": true,
+        "tech_state": "owned",
+        "coastal": false,
+        "colony_disabled": false
+      },
+      "expected": false
+    }
+  ],
+  "stockpile_credit_cases": [
+    {
+      "id": "STOCKPILE-CREDIT-001",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-002",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-003",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-004",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-005",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-006",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-007",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-008",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-009",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-010",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-011",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-012",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-013",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-014",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-015",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-016",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-017",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-018",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-019",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-020",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-021",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-022",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-023",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-024",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-025",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-026",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-027",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-028",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-029",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 1,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-030",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 1,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-031",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 8,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-032",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 8,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-033",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-034",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-035",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-036",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-037",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-038",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-039",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-040",
+      "inputs": {
+        "queued_stockpile": false,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": false,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-041",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-042",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-043",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-044",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-045",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-046",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-047",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-048",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-049",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-050",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-051",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-052",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-053",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-054",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-055",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-056",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-057",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-058",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-059",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": 0,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-060",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": 0,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-061",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-062",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-063",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-064",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": -1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-065",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-066",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 0,
+        "economy_at_credit": 0,
+        "treasury": 100,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-067",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-068",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 0,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 7,
+        "economy_at_credit": 7,
+        "treasury": 107,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-069",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 1,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-070",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 1,
+        "economy_at_credit": 1,
+        "treasury": 101,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-071",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 8,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-072",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 1,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 8,
+        "economy_at_credit": 8,
+        "treasury": 108,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-073",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-074",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-075",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-076",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 5,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-077",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-078",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 0,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 3,
+        "economy_at_credit": 3,
+        "treasury": 103,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-079",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": false
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    },
+    {
+      "id": "STOCKPILE-CREDIT-080",
+      "inputs": {
+        "queued_stockpile": true,
+        "baseline_item": -38,
+        "mineral_surplus": 6,
+        "economy_before_stockpile": 7,
+        "outer_baseline_commit": true
+      },
+      "expected": {
+        "queue_selected": true,
+        "current_item": -38,
+        "baseline_item": -38,
+        "economy_before_baseline": 10,
+        "economy_at_credit": 10,
+        "treasury": 110,
+        "reserved": 13,
+        "foreign_treasury": 400
+      }
+    }
+  ]
+}

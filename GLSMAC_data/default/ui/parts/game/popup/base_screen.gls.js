@@ -11,11 +11,17 @@ return {
 		'energy',
 		'buttons',
 		'bottom_bar',
+		'specialist_selection',
+		'rename',
+		'queue_editor',
 	],
 
 	production_selection_no_hiding: {
 		buttons: true,
 		bottom_bar: true,
+		specialist_selection: true,
+		rename: true,
+		queue_editor: true,
 	},
 
 	init: (p) => {
@@ -94,8 +100,16 @@ return {
 					});
 				}
 			});
+			body.listen(p.game, 'smac_specialist_menu', (e) => {
+				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.specialist_selection.open(e.base, e.selection); }
+			});
+			body.listen(p.game, 'smac_rename_menu', (e) => {
+				if (this.is_open && #is_defined(e.base) && e.base.id == this.base_id) { this.sections.specialist_selection.hide_view(); this.sections.queue_editor.hide_view(); this.sections.rename.open(e.base, e.selection); }
+			});
 			body.listen(p.game, 'base_despawn', (e) => {
 				if (this.base_id == e.base_id) {
+					this.sections.specialist_selection.hide_view();
+					this.sections.rename.hide_view(); this.sections.queue_editor.hide_view();
 					if (this.is_open) { this.p.modules.popup.hide('base_screen'); }
 					this.base = null;
 					this.base_id = null;
@@ -110,6 +124,12 @@ return {
 				modules: p.modules,
 				utils: {
 					set_cells: parent.parent.set_cells,
+					navigate_base: parent.parent.navigate_base,
+					open_specialist_selection: parent.parent.open_specialist_selection,
+					open_rename: parent.parent.open_rename,
+					open_queue_editor: parent.parent.open_queue_editor,
+					can_edit_queue: parent.parent.can_edit_queue,
+					can_rename: parent.parent.can_rename,
 					show_production_selection: parent.parent.show_production_selection,
 					hide_production_selection: parent.parent.hide_production_selection,
 					update_production_selection: parent.parent.update_production_selection,
@@ -156,6 +176,10 @@ return {
 		}
 
 		this.hide_production_selection();
+		this.sections.buttons.show_default(); // Recompute availability after the viewed Base is bound.
+		this.sections.specialist_selection.on_base_update(base);
+		this.sections.rename.on_base_update(base);
+		this.sections.queue_editor.on_base_update(base);
 
 		if (canonical) {
 			let nutrients = base.get_smac_nutrient_presentation();
@@ -258,7 +282,44 @@ return {
 		});
 	},
 
+	can_rename: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_rename_state()); },
+	can_edit_queue: () => { return #is_defined(this.base) && this.base != null && #is_defined(this.base.get_smac_specialist_selection_state()); },
+
+	open_queue_editor: () => {
+		if (!this.is_open) { return; }
+		const base = this.base; const data = base.get_smac_queue_editor();
+		if (!#is_defined(data)) { return; }
+		this.hide_production_selection(); this.sections.specialist_selection.hide_view(); this.sections.rename.hide_view();
+		this.sections.queue_editor.open(base, data);
+	},
+
+	open_rename: () => {
+		if (!this.is_open || !this.can_rename()) { return; }
+		const base = this.base; const expected = base.get_smac_rename_state();
+		this.hide_production_selection();
+		this.p.game.event('open_smac_rename', {base: base, expected_state: expected});
+	},
+
+	open_specialist_selection: (base, pop_id) => {
+		if (!this.is_open || base.id != this.base_id) { return; }
+		const expected = base.get_smac_specialist_selection_state();
+		if (!#is_defined(expected)) { return; }
+		this.hide_production_selection();
+		this.p.game.event('open_smac_specialist', {base: base, pop_id: pop_id, expected_state: expected});
+	},
+
+	navigate_base: (direction) => {
+		// A required Colony Screen owns its completion callback and viewed Base.
+		if (!this.is_open || this.p.game.get_pending_smac_colony_screen() != null) { return; }
+		const neighbors = this.base.get_smac_base_navigation();
+		if (!#is_defined(neighbors)) { return; }
+		if (direction == 'previous') { this.p.game.select_base(neighbors.previous); }
+		if (direction == 'next') { this.p.game.select_base(neighbors.next); }
+	},
+
 	on_hide: () => {
+		this.sections.specialist_selection.hide_view();
+		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view();
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;

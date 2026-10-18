@@ -173,6 +173,13 @@ ProductionState Production( ProductionItemKind kind = ProductionItemKind::Unit )
 	const ProductionItem item{ kind, kind == ProductionItemKind::Stockpile ? "" : "opaque-target" };
 	return { item, 17, { ProductionItemKind::Stockpile, "" }, 5 };
 }
+std::string ManualSpecialistSource(const std::string& filename) {
+    auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
+    const auto begin=source.find("#CITIZENS\n")+std::string("#CITIZENS\n").size();const auto end=source.find('#',begin);
+    source.replace(begin,end-begin,"Technician,Technicians,Disable,Disable,3,0,0,opaque\nDoctor,Doctors,None,Disable,0,2,0,opaque\nLibrarian,Librarians,Disable,Disable,0,0,3,opaque\nEngineer,Engineers,None,Disable,3,0,2,opaque\nEmpath,Empaths,Disable,Disable,0,2,2,opaque\nThinker,Thinkers,Disable,Disable,0,1,3,opaque\nTranscend,Transcends,Disable,Disable,2,2,4,opaque\nA,As,\nB,Bs,\nC,Cs,\n");
+    std::istringstream input(source);std::string line,section,output;size_t row=0;
+    while(std::getline(input,line)) {if(!line.empty() && line.front()=='#') {section=line;row=0;}else {++row;if(section=="#RULES" && row==11) {line.replace(0,line.find(','),"5");}}output+=line+'\n';}return output;
+}
 std::string MaintenanceSource(const std::string& filename) {
     auto source=EnergyFacilitySource(filename);if(filename!="alpha.txt") {return source;}
     const auto at=source.find("Forest,2,2,2");source.replace(at,std::string("Forest,2,2,2").size(),"Forest,2,2,1");return source;
@@ -260,6 +267,316 @@ void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC queue editor authenticates atomic ordered duplicates stale commands and actual saved upkeep",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(SelectionSource,"GAIANS");std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,0,1,2);SelectionPresentations(fixture);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto former=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,1);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,game->GetSmacProductionCost(base->m_owner,scout)-1,scout,7,std::vector<ProductionItem>{}});
+            const auto original=*base->GetProductionState();const auto random=fixture.GameplayRandom();const auto before=fixture.Snapshot();
+            auto* view=static_cast<value::Object*>(base->CopySmacQueueEditor(GSE_CALL));
+            GT_ASSERT(fixture.Snapshot()==before && static_cast<value::Int*>(view->Get("limit"))->value==9,"queue query mutated or changed port budget");
+            const auto entry=[&](const char* key,int64_t number)->Value* {return VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{key,VALUE(value::Int,,number)}}));};
+            auto expected=base->SmacSpecialistSelectionState();
+            const auto command=[&](value::array_elements_t entries) {game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},{"entries",VALUE(value::Array,,entries)}});};
+            command({entry("source_id",2),entry("source_id",1),entry("source_id",2)});
+            GT_ASSERT(*base->GetProductionState()==original,"queue edit applied before dispatch");fixture.DrainEvents();
+            GT_ASSERT(base->GetProductionState()->queue==std::optional<std::vector<ProductionItem>>({scout,former,scout})
+                && base->GetProductionState()->current_item==scout && base->GetProductionState()->minerals==original.minerals
+                && base->GetProductionState()->baseline_minerals==7 && fixture.GameplayRandom()==random,"queue edit lost duplicates or changed production/RNG");
+            auto unchanged=fixture.Snapshot();command({});fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==unchanged,"stale queue command changed saved state");
+            expected=base->SmacSpecialistSelectionState();
+            for(const auto entries:std::vector<value::array_elements_t>{{entry("existing",0),entry("existing",0)},{entry("existing",3)},{entry("source_id",511)},{entry("bad",0)}}) {
+                GT_ASSERT(Rejects([&]{command(entries);}) && fixture.Snapshot()==unchanged,"invalid queue token published state");
+            }
+            value::array_elements_t too_many;for(size_t i=0;i<10;++i) {too_many.push_back(entry("source_id",2));}
+            GT_ASSERT(Rejects([&]{command(too_many);}) && fixture.Snapshot()==unchanged,"oversized queue was admitted");
+            command({entry("existing",2),entry("existing",0),entry("existing",1)});fixture.DrainEvents();
+            GT_ASSERT(*base->GetProductionState()->queue==std::vector<ProductionItem>({scout,scout,former}),"queue reorder changed retained identities");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(result.empty(),"queue edit: "+result);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(SelectionSource,"GAIANS");restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetProductionState()->queue->size()==3,"actual save lost pending queue");
+            const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t id){return game->ResolveSmacProductionPresentation(base->m_owner,id);},unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(result.completed_unit && base->GetProductionState()->current_item.smac_source_id==2
+                && base->GetProductionState()->queue->size()==2 && base->GetProductionState()->queue->back().smac_source_id==1,"saved queue did not advance once through real completion");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC queue editor preserves unavailable retained items without copying them",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            auto* bm=game->GetBM();bm->DefineFacility(new FacilityDef("tanks","Tanks","",40,{},3));base->m_facilities.emplace("tanks",bm->GetFacilityDef("tanks"));
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto tanks=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,3);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,7,std::vector<ProductionItem>{tanks,scout}});
+            auto* view=static_cast<value::Object*>(base->CopySmacQueueEditor(GSE_CALL));
+            GT_ASSERT(static_cast<value::Array*>(view->Get("items"))->value.size()==2,"unavailable retained facility disappeared from editor");
+            const auto entry=[&](const char* key,int64_t id)->Value* {return VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{key,VALUE(value::Int,,id)}}));};
+            const auto command=[&](value::array_elements_t entries) {game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});};
+            const auto before=fixture.Snapshot();GT_ASSERT(Rejects([&]{command({entry("source_id",-3)});}) && fixture.Snapshot()==before,"existing facility was admitted as a new pending choice");
+            command({entry("existing",1),entry("existing",0)});fixture.DrainEvents();
+            GT_ASSERT(*base->GetProductionState()->queue==std::vector<ProductionItem>({scout,tanks}),"unavailable retained entry could not move");
+            command({});fixture.DrainEvents();GT_ASSERT(base->GetProductionState()->queue->empty() && base->GetProductionState()->minerals==2 && base->GetProductionState()->baseline_minerals==7,"queue clear changed mineral authority");GT_OK();
+        });
+    });
+    task->AddTest("SMAC queue editor rejects foreign Base control",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_queue_editor")->type==VT_UNDEFINED
+                && Rejects([&]{game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,value::array_elements_t{})}});})
+                && fixture.Snapshot()==before,"foreign queue admitted authority or mutation");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC Base Rename accepts empty duplicate spaced and byte bounded names through live requests",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        int64_t request=0;std::string expected;
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto* second=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(12,2),"Duplicate",{},pops,20,0,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+            bm->SpawnBase(GSE_CALL,second);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;second->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles) {tile.explored_by=2;tile.claimant=1;}game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            base->SetAccumulatedNutrients(-3);GT_OK();
+        });GT_ASSERT(setup.empty(),"Rename setup: "+setup);
+        const auto open=[&]()->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();
+            return fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacRenameChoices(GSE_CALL));
+                request=static_cast<value::Int*>(menu->Get("request_id"))->value;expected=static_cast<value::String*>(menu->Get("expected_state"))->value;
+                GT_ASSERT(base->GetAccumulatedNutrients()>=0 && static_cast<value::String*>(menu->Get("name"))->value==base->m_name,"Rename did not retain prelude/default text");GT_OK();
+            });
+        };
+        const auto answer=[&](const std::string& event,const std::string& text)->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)}};
+                if(event=="commit_smac_rename") {args.emplace("name",VALUE(value::String,,text));}game->Event(GSE_CALL,event,args);game->Event(GSE_CALL,event,args);GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();return {};
+        };
+        std::vector<std::pair<std::string,std::string>> roundtrips;
+        const auto random=fixture.GameplayRandom();
+        for(const std::string text:{std::string(""),std::string("   "),std::string("Duplicate"),std::string(" duplicate "),std::string("12345678901234567890123456789"),std::string("NUL\0ignored",11)}) {
+            const auto opened=open();GT_ASSERT(opened.empty(),"Rename open: "+opened);const auto committed=answer("commit_smac_rename",text);GT_ASSERT(committed.empty(),"Rename commit: "+committed);
+            const auto checked=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto accepted=text.substr(0,std::min(size_t(24),text.find('\0')));
+                GT_ASSERT(base->m_name==accepted && game->GetBM()->GetBase(702)->m_name=="Duplicate" && game->GetBM()->GetBaseRecordOrder()==std::vector<size_t>({701,702}) && fixture.GameplayRandom()==random,"Rename trimmed/coerced text, changed neighbor/order or drew RNG");roundtrips.emplace_back(accepted,fixture.Snapshot());GT_OK();
+            });GT_ASSERT(checked.empty(),"Rename check: "+checked);
+        }
+        const auto invalid_open=open();GT_ASSERT(invalid_open.empty(),"Rename invalid open: "+invalid_open);
+        const auto invalid=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto before=fixture.Snapshot();
+            for(const auto text:{std::string("high")+char(0x80),std::string("control\t")}) {
+                GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)},{"name",VALUE(value::String,,text)}});}) && fixture.Snapshot()==before,"Unsupported display bytes published or changed state");
+            }GT_OK();
+        });GT_ASSERT(invalid.empty(),"Rename unsupported text: "+invalid);
+        const auto opened=open();GT_ASSERT(opened.empty(),"Rename cancel open: "+opened);auto unchanged=fixture.Snapshot();
+        const auto cancelled=answer("cancel_smac_rename","");GT_ASSERT(cancelled.empty(),"Rename cancel: "+cancelled);
+        const auto replay=answer("commit_smac_rename","replay");GT_ASSERT(replay.empty(),"Rename replay: "+replay);GT_ASSERT(fixture.Snapshot()==unchanged,"Cancel or old request replay changed saved state");
+        const auto stale_open=open();GT_ASSERT(stale_open.empty(),"Rename stale open: "+stale_open);
+        const auto mutate=fixture.Run([&](GSE_CALLABLE)->std::string {fixture.Game()->GetBM()->GetBase(701)->SetAccumulatedNutrients(9);GT_OK();});GT_ASSERT(mutate.empty(),"Rename intervening mutation: "+mutate);unchanged=fixture.Snapshot();
+        const auto stale=answer("commit_smac_rename","stale");GT_ASSERT(stale.empty(),"Rename stale answer: "+stale);GT_ASSERT(fixture.Snapshot()==unchanged,"Stale Rename overwrote changed Base");
+        for(const auto& saved:roundtrips) {
+            ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");restored.BasePresentationRoles(roles);
+            const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Restore(GSE_CALL,saved.second,true);auto* bm=restored.Game()->GetBM();
+                GT_ASSERT(bm->GetBase(701)->m_name==saved.first && bm->GetBase(702)->m_name=="Duplicate" && bm->GetBaseRecordOrder()==std::vector<size_t>({701,702}),"Actual Base codec coerced duplicate/empty/byte-bounded names");GT_OK();
+            });GT_ASSERT(result.empty(),"Rename codec restore: "+result);
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC Base Rename withholds foreign authority",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_rename_state")->type==VT_UNDEFINED && Rejects([&]{game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});}) && fixture.Snapshot()==before,"Foreign Rename exposed authority or changed state");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC Base Rename withholds captured AI consequences until saved counter authority exists",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto context=own->GetSmacResourceContext();context.conquest=SmacConquestState{2,50};
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto* base=new Base(game,702,own->m_owner,own->m_faction,game->GetMap()->GetTile(6,4),"Captured saved history",{},pops,20,0,Production(),context);
+            bm->SpawnBase(GSE_CALL,base);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            fixture.ResourceState([](auto& state){state.human_membership=2;});const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            GT_ASSERT(!base->CanSmacRename() && Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_rename_state")->type==VT_UNDEFINED && Rejects([&]{game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});}) && fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Captured AI Rename fabricated diplomacy, changed RNG or exposed command");
+            fixture.ResourceState([](auto& state){state.human_membership=6;});
+            GT_ASSERT(base->CanSmacRename(),"Known human former owner was treated as captured AI");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC manual specialist foreign Base cannot expose or accept commands",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false,false,2,2);
+            const auto before=fixture.Snapshot();
+            GT_ASSERT(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_specialist_selection_state")->type==VT_UNDEFINED,"Foreign Base exposed manual specialist authority");
+            for(const auto* event:{"open_smac_specialist","select_smac_specialist","cancel_smac_specialist"}) {
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}};
+                if(std::string(event)!="open_smac_specialist") {args.emplace("request_id",VALUE(value::Int,,1));}
+                if(std::string(event)=="select_smac_specialist") {args.emplace("type",VALUE(value::Int,,1));}
+                GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,event,args);}) && fixture.Snapshot()==before,"Foreign specialist command changed gameplay");
+            }GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC manual specialist Worker drops last slot without shifting and recalculates real output",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(ManualSpecialistSource,"GAIANS");
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true,false,0,1,5);
+            for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<10;x+=2) {game->GetMap()->GetTile(x,y)->terraforming=TERRAFORMING_FOREST;}}
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles) {tile.explored_by=2;tile.claimant=1;}game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            SmacBaseAllocationState allocation{15,{{},2}};allocation.specialists.types[0]=3;allocation.specialists.types[1]=1;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            auto context=base->GetSmacResourceContext();context.governor_options=0;base->SetSmacResourceContext(GSE_CALL,context);
+            game->Event(GSE_CALL,"open_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,22)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+        });GT_ASSERT(setup.empty(),"setup: "+setup);fixture.DrainEvents();
+        const auto choose=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacSpecialistChoices(GSE_CALL,22));
+            GT_ASSERT(static_cast<value::Int*>(menu->Get("current_type"))->value==3,"Original Engineer slot lost before menu");
+            game->Event(GSE_CALL,"select_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,22)},{"request_id",menu->Get("request_id")},{"expected_state",menu->Get("expected_state")},{"type",VALUE(value::Int,,-1)}});GT_OK();
+        });GT_ASSERT(choose.empty(),"choose: "+choose);fixture.DrainEvents();
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto allocation=*base->GetSmacAllocation();
+            GT_ASSERT(allocation.specialists.total_count==1 && allocation.specialists.types[0]==3 && allocation.specialists.types[1]==1 && base->m_pops.size()==5,"Worker result count/types/size: "+std::to_string(allocation.specialists.total_count)+"/"+std::to_string(allocation.specialists.types[0])+"/"+std::to_string(allocation.specialists.types[1])+"/"+std::to_string(base->m_pops.size()));
+            const auto energy=game->GetCanonicalBaseEnergy(*base);const auto specialist=energy.allocation.after_specialists;const auto ordinary=energy.allocation.allocation;
+            GT_ASSERT(specialist.economy-ordinary.economy==3 && specialist.psych-ordinary.psych==0 && specialist.labs-ordinary.labs==2,"Remaining Engineer did not feed actual E/P/L calculation");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC manual specialist creation with sixteen stored types is explicitly unavailable",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(ManualSpecialistSource,"GAIANS");
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* seed=Populate(GSE_CALL,fixture,true);auto* bm=game->GetBM();
+
+            Base::pops_t pops;for(size_t i=0;i<17;++i) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+i),std::forward_as_tuple(nullptr,19+i,bm->GetPopDef(Roles().specialists[1]),0));}
+            const auto scout=game->MakeSmacProductionItem(seed->m_owner,ProductionItemKind::Unit,2);
+            auto* base=new Base(game,702,seed->m_owner,seed->m_faction,game->GetMap()->GetTile(12,2),"Sixteen stored",{},pops,36,13,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});
+            bm->SpawnBase(GSE_CALL,base);SmacBaseAllocationState allocation{3,{{},16}};allocation.specialists.types.fill(1);base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();for(auto& tile:knowledge.tiles) {tile.explored_by=2;tile.claimant=1;}game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            game->Event(GSE_CALL,"open_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+        });GT_ASSERT(setup.empty(),"setup: "+setup);fixture.DrainEvents();
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(702);auto* menu=static_cast<value::Object*>(base->CopySmacSpecialistChoices(GSE_CALL,19));const auto before=fixture.Snapshot();
+            GT_ASSERT(static_cast<value::Bool*>(menu->Get("creation_limited"))->value && static_cast<value::Array*>(menu->Get("choices"))->value.size()==1,"Unimplemented live overflow was offered as a real choice");
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"select_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"request_id",menu->Get("request_id")},{"expected_state",menu->Get("expected_state")},{"type",VALUE(value::Int,,1)}});}) && fixture.Snapshot()==before,"Unadmitted overflow mutated the Base");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC manual specialist live commands preserve prelude cancel same stale and stable Pop identity",[](GSE*,context::Context*)->std::string {
+        int menus=0;ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);
+        int64_t request=0;std::string expected;Pop* identity=nullptr;std::string unchanged;
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            game->On(GSE_CALL,"smac_specialist_menu",NATIVE_CALL(&menus) {++menus;return VALUE(value::Undefined); }));
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+            auto allocation=*base->GetSmacAllocation();allocation.selected=5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            auto context=base->GetSmacResourceContext();context.governor_options=SmacBaseResourceContext::GOVERNOR_ACTIVE|SmacBaseResourceContext::MANAGE_CITIZENS|8;base->SetSmacResourceContext(GSE_CALL,context);
+            base->SetAccumulatedNutrients(-3);identity=&base->m_pops.at(19);
+            GT_OK();
+        });GT_ASSERT(setup.empty(),"specialist stage: "+setup);
+        const auto open=[&]()->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                auto* state=Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_specialist_selection_state");
+                game->Event(GSE_CALL,"open_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"expected_state",state}});GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();
+            return fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* base=fixture.Game()->GetBM()->GetBase(701);auto* choices=static_cast<value::Object*>(base->CopySmacSpecialistChoices(GSE_CALL,19));
+                request=static_cast<value::Int*>(choices->Get("request_id"))->value;expected=static_cast<value::String*>(choices->Get("expected_state"))->value;
+                GT_ASSERT(menus>0 && request>0 && expected==base->SmacSpecialistSelectionState(),"Menu did not own its post-prelude snapshot/request");GT_OK();
+            });
+        };
+        const auto answer=[&](const std::string& event,int32_t type,bool duplicate)->std::string {
+            auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)}};
+                if(event=="select_smac_specialist") {args.emplace("type",VALUE(value::Int,,type));}
+                game->Event(GSE_CALL,event,args);if(duplicate) {game->Event(GSE_CALL,event,args);}GT_OK();
+            });if(!result.empty()) {return result;}fixture.DrainEvents();return {};
+        };
+        const auto first=open();GT_ASSERT(first.empty(),"specialist stage: "+first);
+        const auto prelude=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=fixture.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetAccumulatedNutrients()==0 && base->m_pops.size()==1 && base->GetSmacResourceContext().ManageCitizens(),"Opening skipped normalization, posted growth or cleared management");
+            unchanged=fixture.Snapshot();
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"request_id",VALUE(value::Int,,request)},{"expected_state",VALUE(value::String,,expected)},{"type",VALUE(value::Int,,3)}};
+            GT_ASSERT(Rejects([&]{fixture.Game()->Event(GSE_CALL,"select_smac_specialist",args);}),"Ineligible specialist entered actual event queue");
+            args.emplace("caller",VALUE(value::Int,,1));
+            GT_ASSERT(Rejects([&]{fixture.Game()->Event(GSE_CALL,"select_smac_specialist",args);}),"Caller-supplied authority entered actual event queue");
+            GT_ASSERT(fixture.Snapshot()==unchanged,"Rejected command changed world state");GT_OK();
+        });GT_ASSERT(prelude.empty(),"specialist stage: "+prelude);
+        const auto cancelled=answer("cancel_smac_specialist",0,true);GT_ASSERT(cancelled.empty(),"specialist stage: "+cancelled);
+        GT_ASSERT(fixture.Snapshot()==unchanged,"Cancel changed gameplay after its completed prelude");
+        // A cancelled request cannot be replayed even while its Base snapshot matches.
+        const auto replay=answer("select_smac_specialist",1,true);GT_ASSERT(replay.empty(),"specialist stage: "+replay);GT_ASSERT(fixture.Snapshot()==unchanged,"Cancelled request replayed");
+        const auto opened=open();GT_ASSERT(opened.empty(),"specialist stage: "+opened);
+        const auto random=fixture.GameplayRandom();
+        const auto selected=answer("select_smac_specialist",1,true);GT_ASSERT(selected.empty(),"specialist stage: "+selected);
+        const auto doctor=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=fixture.Game()->GetBM()->GetBase(701);const auto allocation=*base->GetSmacAllocation();
+            GT_ASSERT(allocation.selected==1 && allocation.specialists.total_count==1 && allocation.specialists.types[0]==1
+                && &base->m_pops.at(19)==identity && identity->m_def->m_smac_specialist_id==1 && !identity->GetWorkedTileCoords(),"Worker-to-Doctor lost live allocation/Pop identity");
+            GT_ASSERT(base->GetSmacResourceContext().governor_options==(SmacBaseResourceContext::GOVERNOR_ACTIVE|8)
+                && base->GetAccumulatedNutrients()==0 && fixture.GameplayRandom()==random,"Choice cleared unrelated governor bits, posted food or changed RNG");GT_OK();
+        });GT_ASSERT(doctor.empty(),"specialist stage: "+doctor);
+        const auto same_open=open();GT_ASSERT(same_open.empty(),"specialist stage: "+same_open);unchanged=fixture.Snapshot();
+        const auto same=answer("select_smac_specialist",1,true);GT_ASSERT(same.empty(),"specialist stage: "+same);GT_ASSERT(fixture.Snapshot()==unchanged,"Same type posted a second recalculation or mutated state");
+        const auto worker_open=open();GT_ASSERT(worker_open.empty(),"specialist stage: "+worker_open);
+        const auto worker=answer("select_smac_specialist",-1,true);GT_ASSERT(worker.empty(),"specialist stage: "+worker);
+        const auto restored=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=fixture.Game()->GetBM()->GetBase(701);const auto allocation=*base->GetSmacAllocation();
+            GT_ASSERT(allocation.specialists.total_count==0 && allocation.selected!=1 && &base->m_pops.at(19)==identity && identity->GetWorkedTileCoords(),"Worker choice did not refill an actual square with stable Pop");GT_OK();
+        });GT_ASSERT(restored.empty(),"specialist stage: "+restored);
+        const auto stale_open=open();GT_ASSERT(stale_open.empty(),"specialist stage: "+stale_open);
+        const auto edited=fixture.Run([&](GSE_CALLABLE)->std::string {fixture.Game()->GetBM()->GetBase(701)->SetAccumulatedNutrients(7);GT_OK();});GT_ASSERT(edited.empty(),"specialist stage: "+edited);unchanged=fixture.Snapshot();
+        const auto stale=answer("select_smac_specialist",1,true);GT_ASSERT(stale.empty(),"specialist stage: "+stale);GT_ASSERT(fixture.Snapshot()==unchanged,"Stale menu overwrote changed Base state");
+        GT_OK();
+    });
+
+    task->AddTest("SMAC Base navigation follows saved owner order and rereads removal without world mutation",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.Configure(true,3,false,true);fixture.ResourcePolicy(true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* first=Populate(GSE_CALL,fixture,true);auto* bm=game->GetBM();
+            const auto query=[&](Base* base){return Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_base_navigation");};
+            GT_ASSERT(query(first)->type==VT_UNDEFINED,"Singleton Base invented a neighbor");
+            const auto add=[&](size_t id,size_t slot,int32_t simulation,size_t x,size_t y)->Base* {
+                auto* owner=&game->GetState()->m_slots->GetSlot(slot);
+                Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+                auto* base=new Base(game,id,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(x,y),"Navigation "+std::to_string(id),{},pops,20,0,Production(),SmacBaseResourceContext{simulation,false,0,0,0,false});
+                bm->SpawnBase(GSE_CALL,base);SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());return base;
+            };
+            auto* second=add(902,0,1,6,2);auto* foreign=add(65,2,2,2,6);auto* third=add(13,0,1,6,6);
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            const auto matches=[&](Base* base,Base* previous,Base* next) {
+                auto* view=static_cast<value::Object*>(query(base));
+                return Base::Unwrap(view->Get("previous"))==previous && Base::Unwrap(view->Get("next"))==next;
+            };
+            GT_ASSERT(matches(first,third,second) && matches(second,first,third) && matches(third,second,first),"Navigation used numeric IDs or included a foreign Base");
+            GT_ASSERT(query(foreign)->type==VT_UNDEFINED && fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Navigation leaked foreign roster or changed world/RNG");
+            bm->DespawnBase(GSE_CALL,second->m_id);
+            GT_ASSERT(matches(first,third,third) && matches(third,first,first),"Navigation retained removed Base identity");
+            GT_OK();
+        });
+    });
+
     task->AddTest("SMAC nutrient grid helper matches original filled and prospective overlay controls",[](GSE*,context::Context*)->std::string {
         struct Case {int64_t food;int32_t capacity,surplus;std::vector<int32_t> filled,overlay;};
         const Case cases[]{
@@ -2445,6 +2762,40 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			request=static_cast<value::Int*>(pending->Get("request_id"))->value;
 			game->Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,request)},{"choice",VALUE(value::String,,"screen")}});GT_OK();
 		});GT_ASSERT(setup.empty(),"Screen setup: "+setup);fixture.DrainEvents();
+        const auto queue_edit=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            const value::array_elements_t entries{VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{"source_id",VALUE(value::Int,,2)}}))};
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"edit_smac_queue",{{"base",second->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,second->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});}),"Screen queue admitted another Base");
+            game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});GT_OK();
+        });GT_ASSERT(queue_edit.empty(),"Screen queue edit: "+queue_edit);fixture.DrainEvents();
+        const auto queue_check=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base->GetProductionState()->queue->size()==1 && base->GetProductionState()->queue->front().smac_source_id==2
+                && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"Screen queue edit failed or reposted upkeep");GT_OK();
+        });GT_ASSERT(queue_check.empty(),"Screen queue check: "+queue_check);
+        const auto rename_open=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+            game->Event(GSE_CALL,"open_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+        });GT_ASSERT(rename_open.empty(),"Screen Rename open: "+rename_open);fixture.DrainEvents();
+        const auto rename_commit=fixture.Run([&](GSE_CALLABLE)->std::string {auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacRenameChoices(GSE_CALL));
+            game->Event(GSE_CALL,"commit_smac_rename",{{"base",base->Wrap(GSE_CALL)},{"request_id",menu->Get("request_id")},{"expected_state",menu->Get("expected_state")},{"name",VALUE(value::String,,"Screen renamed")}});GT_OK();
+        });GT_ASSERT(rename_commit.empty(),"Screen Rename commit: "+rename_commit);fixture.DrainEvents();
+        const auto renamed=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base->m_name=="Screen renamed" && base->GetAccumulatedNutrients()==1 && base->GetProductionState()->minerals==30,"Screen Rename failed or reposted upkeep");GT_OK();
+        });GT_ASSERT(renamed.empty(),"Screen Rename result: "+renamed);
+        // Optional specialist menus must use the real suspended Screen command
+        // admission, rather than bypassing the stamped continuation dispatcher.
+        for(const int32_t type:{1,-1}) {
+            const auto open_specialist=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+                game->Event(GSE_CALL,"open_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())}});GT_OK();
+            });GT_ASSERT(open_specialist.empty(),"Screen specialist open: "+open_specialist);fixture.DrainEvents();
+            const auto choose_specialist=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* menu=static_cast<value::Object*>(base->CopySmacSpecialistChoices(GSE_CALL,19));
+                game->Event(GSE_CALL,"select_smac_specialist",{{"base",base->Wrap(GSE_CALL)},{"pop_id",VALUE(value::Int,,19)},{"request_id",menu->Get("request_id")},{"expected_state",menu->Get("expected_state")},{"type",VALUE(value::Int,,type)}});GT_OK();
+            });GT_ASSERT(choose_specialist.empty(),"Screen specialist choice: "+choose_specialist);fixture.DrainEvents();
+            const auto selected=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* base=fixture.Game()->GetBM()->GetBase(701);
+                GT_ASSERT(base->GetSmacAllocation()->specialists.total_count==(type==1 ? 1 : 0) && base->GetAccumulatedNutrients()==1,"Screen specialist edit failed or recollected food");GT_OK();
+            });GT_ASSERT(selected.empty(),"Screen specialist result: "+selected);
+        }
 		const auto opened=fixture.Run([&](GSE_CALLABLE)->std::string {
 			auto* game=fixture.Game();auto* first=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
 			auto* pending=Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony_screen");

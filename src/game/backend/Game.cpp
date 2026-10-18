@@ -611,6 +611,9 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 		|| HandleSmacFoundingEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacWorkerEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacProductionEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacSpecialistEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacQueueEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacRenameEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 		return;
@@ -1010,6 +1013,9 @@ WRAPIMPL_BEGIN( Game )
 					&& !HandleSmacFoundingEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacWorkerEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacProductionEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacSpecialistEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacQueueEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacRenameEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
 					std::lock_guard guard( m_event_handlers_mutex );
@@ -1954,6 +1960,21 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacProductionEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacProductionEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacSpecialistEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacSpecialistEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacQueueEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacQueueEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
+					continue;
+				}
+				if ( event->GetSource() == event::Event::ES_LOCAL
+					&& HandleSmacRenameEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
+					WithRW( [ & ] { HandleSmacRenameEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
 				if ( event->GetSource() == event::Event::ES_LOCAL

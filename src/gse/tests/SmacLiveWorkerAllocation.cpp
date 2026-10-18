@@ -182,7 +182,7 @@ std::string FanaticBattleSource(const std::string& filename) {
     if(filename=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FANATIC,1");}
     return source;
 }
-Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1 ) {
+Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, bool homed = false, size_t owner_slot = 0, int32_t simulation_id = 1, size_t population = 1, size_t center_x=2,size_t center_y=2 ) {
 	auto* game = fixture.Game(); auto* bm = game->GetBM(); const auto roles = Roles();
 	for ( const auto* id : { "NUTRIENTS", "MINERALS", "ENERGY" } ) { game->GetRM()->DefineResource( new game::backend::resource::Resource( id, id, {} ) ); }
 	bm->DefinePop( new PopDef( roles.worker, "Display only", {}, {}, PopDef::PF_TILE_WORKER ) );
@@ -196,7 +196,7 @@ Base* Populate( GSE_CALLABLE, ConventionalUnitFixture& fixture, bool doctor, boo
 	auto* owner = &game->GetState()->m_slots->GetSlot( owner_slot );
 	Base::pops_t pops;
 	for ( size_t i = 0; i < population; ++i ) { pops.emplace( std::piecewise_construct, std::forward_as_tuple( 19 + i ), std::forward_as_tuple( nullptr, 19 + i, bm->GetPopDef( roles.specialists[ 1 ] ), 1 ) ); }
-	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 2, 2 ), "Live allocation", {},
+	auto* base = new Base( game, 701, owner, owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( center_x, center_y ), "Live allocation", {},
 		pops, 41, 13, Production(), SmacBaseResourceContext{ simulation_id, false, 0, 0, 0x40 } );
 	bm->SpawnBase( GSE_CALL, base );
 	SmacBaseAllocationState allocation{ doctor ? 1u : population == 2 ? 7u : 3u, { {}, doctor ? static_cast< int32_t >( population ) : 0 } };
@@ -367,6 +367,52 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }}GT_OK();
     });
 
+    task->AddTest("SMAC last Base capture stages successful replacement queries on another land region",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true,false,0,1,1,16,16);SelectionPresentations(fixture);
+            auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
+            own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(6);
+            const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
+            own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            Base::pops_t pops;for(size_t p=0;p<2;++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+            const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
+            auto* target=new Base(game,702,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20,16),"Restart capture",{},pops,41,5,
+                ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
+            bm->SpawnBase(GSE_CALL,target);target->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},2}},Roles());actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
+            ConventionalUnitState remote{1,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};remote.home_base_id=702;
+            um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-former"),foreign,game->GetMap()->GetTile(24,16),remote);
+            // Two displayed land regions, separated even across periodic X.
+            // Set shared vertices first, then update every cached classification.
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {for(auto* corner:game->GetMap()->GetTile(x,y)->elevation.corners) {*corner=100;}}}
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {if(x<4 || x>60 || (x>=29 && x<=35)) {
+                for(auto* corner:game->GetMap()->GetTile(x,y)->elevation.corners) {*corner=-1000;}
+            }}}
+            for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {auto* tile=game->GetMap()->GetTile(x,y);tile->Update();tile->moisture=MOISTURE_RAINY;}}
+            auto knowledge=KnowledgeValue(true,true,64,32).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
+            knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
+                state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;});
+            fixture.GameplayRandom({3,3});fixture.Updates();const auto before=fixture.Snapshot();const auto first=Unit::GetNextId();
+            um->ValidateConventionalMove(actor,target->GetTile(),0);
+            GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==first && um->GetUnit(92),"successful replacement query published candidate placements or retired old Units");
+            fixture.MoveEvent(GSE_CALL,actor,target->GetTile());GT_ASSERT(um->GetUnits().size()==5 && !um->GetUnit(92),"successful capture restart did not replace old faction Units");
+            const std::array<int32_t,4> designs{{0,1,0,2}};const auto& topology=*game->GetMap()->GetTerritoryTopology();
+            const auto captured_region=topology.Regions().at(16*32+10);map::tile::Tile* site=nullptr;
+            for(size_t i=0;i<4;++i) {const auto* unit=um->GetUnit(first+i);GT_ASSERT(unit && unit->Conventional().design_id==designs[i] && !unit->Conventional().home_base_id,"successful capture lost native package order or unhomed state");
+                if(!site) {site=unit->GetTile();}GT_ASSERT(unit->GetTile()==site && topology.Regions().at(site->coord.y*32+site->coord.x/2)!=captured_region,"captor-region rejection failed or package split across sites");}
+            bool active=false;fixture.ResourceState([&](auto& state){active=state.roster[1].active && !state.human_defeat_request;});GT_ASSERT(active,"successful capture restart requested defeat");
+            saved=fixture.Snapshot();GT_OK();
+        });if(!result.empty()) {return result;}
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true,64,32);restored.BasePresentationRoles(names);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            GT_ASSERT(restored.Game()->GetUM()->GetUnits().size()==5 && restored.Game()->GetBM()->GetBases().size()==2,"actual Start replayed successful capture restart");GT_OK();
+        });
+    });
     task->AddTest("SMAC last Base capture joins native failed restart cleanup ending and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};

@@ -2425,13 +2425,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }
         return {};
     });
-	task->AddTest( "SMAC live upkeep rejects last-owned-Base removal without partial production", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "SMAC live upkeep rejects missing restart factory authority without partial production", []( GSE*, context::Context* ) -> std::string {
 		const auto source = []( const std::string& filename ) { auto text = UpkeepSource( filename );
 			if ( filename == "alpha.txt" ) { const auto at = text.find( "#RULES\n" ); const auto end = text.find( '\n', at + 7 ); const auto next = end + 1; text.replace( next, text.find( ',', next ) - next, "3" ); } return text; };
 		ConventionalUnitFixture fixture; fixture.ConfigureProduction( source, "GAIANS" );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			using namespace game::backend::unit;
-			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
+			auto* game = fixture.Game(); auto* base = Populate( GSE_CALL, fixture, true );
+			base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian"); // make search reach the deliberately missing factory
+			game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue( true, true, 128, 64 ) );
 			const auto scout = game->MakeSmacProductionItem( base->m_owner, ProductionItemKind::Unit, 2 );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, 999, scout, 0, std::vector< ProductionItem >{} } ); base->SetAccumulatedNutrients( -1 );
 			const auto before = fixture.Snapshot(); const auto id = Unit::GetNextId();

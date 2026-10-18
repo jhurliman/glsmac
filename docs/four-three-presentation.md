@@ -80,3 +80,26 @@ release in a bar (no click), a subsequent genuine click (one click), and repeate
 scrollbar drags released in bars. Handler retirement is observed at the real
 UI::RemoveGlobalHandler breakpoint, before widget destruction. Private controls
 exercise the production renderer/event path without changing gameplay rules.
+
+## Title palette integration
+
+The title background now requests `smacpalette()` before stretching. This
+opaque indexed-image operation uses the installed common palette at Gamma
+Correction 100, preserving source indices and capping channels at 235. It is
+explicitly separate from ordinary raw-PCX texture loading; both full and cropped
+texture cache entries retain their load flags. Transparent/shadow asset rules
+are not admitted by this operation. See the [original title contract](behavior/smac-title-screen.md).
+
+Actual Linux SDL/OpenGL native-1024x768 capture matches all 483,840 pixels in
+the background-only left region, eliminating its 11,305 previous mismatches.
+Whole-screen differences fall from 183,972 to 151,904 pixels. Button artwork,
+indexed blue tint and Arial/GDI labels remain open; this is not a passing title
+screen or native Windows/macOS visual validation. Native indexed/crop-cache and
+Surface ownership regressions pass with memory tracking.
+
+The final capture uses an actual hidden SDL/OpenGL window through a private
+SDL capture shim, avoiding external window-manager resizing. The scene and
+renderer are unchanged; the native Exit button still closes with exit 0.
+The backbuffer is exactly 1024x768, GL error is zero, and the exact comparator
+returns 1 for the remaining menu differences. A prior externally resized
+852x485 capture was rejected rather than scaled into the comparison.

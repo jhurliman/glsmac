@@ -60,7 +60,9 @@ Surface::Surface( DOM_ARGS_T )
 				//   texture.pcx:filter1(arg1,arg2,...):filter2():...
 				const auto params = util::String::Split( str, ':' );
 				ASSERT( !params.empty(), "texture params empty" );
-				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front() );
+				const auto palette_flags = params.size() > 1 && params.at( 1 ) == "smacpalette()"
+					? types::texture::TF_SMAC_PALETTE : types::texture::TF_NONE;
+				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front(), palette_flags );
 				if ( !texture ) {
 					GSE_ERROR( gse::EC.LOADER_ERROR, "Could not load texture: " + params.front() );
 				}
@@ -94,7 +96,13 @@ Surface::Surface( DOM_ARGS_T )
 						return f_expect_args_fromto( args, args );
 					};
 
-					if ( f == "stretch" ) {
+					if ( f == "smacpalette" ) {
+						f_expect_args( 0 );
+						if ( it != params.begin() + 1 || palette_flags != types::texture::TF_SMAC_PALETTE ) {
+							GSE_ERROR( gse::EC.UI_ERROR, "smacpalette() must be the first texture operation" );
+						}
+					}
+					else if ( f == "stretch" ) {
 						f_expect_args( 0 );
 						is_tiled = false;
 					}

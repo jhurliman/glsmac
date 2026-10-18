@@ -1,5 +1,8 @@
 #include "SDL2.h"
 
+#include <algorithm>
+#include <memory>
+
 #include "util/FS.h"
 #include "types/texture/Texture.h"
 
@@ -35,7 +38,8 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 
 types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {
 
-	texture_map_t::iterator it = m_textures.find( filename );
+	const auto cache_key = filename + ":flags=" + std::to_string( flags );
+	texture_map_t::iterator it = m_textures.find( cache_key );
 	if ( it != m_textures.end() ) {
 		return it->second;
 	}
@@ -43,21 +47,40 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 		Log( "Loading texture \"" + filename + "\"" );
 		std::vector< unsigned char > buffer = {};
 		util::FS::ReadFile( buffer, filename );
-		auto* image = load_image( buffer );
+		using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
+		Surface image( load_image( buffer ), SDL_FreeSurface );
 		ASSERT( image, IMG_GetError() );
+		if ( flags & types::texture::TF_SMAC_PALETTE ) {
+			ASSERT( image->format->BitsPerPixel == 8 && image->format->palette && image->format->palette->ncolors == 256,
+				"SMAC display palette requires an indexed source" );
+			ASSERT( m_transparent_colors.empty() && !m_fix_yellow_shadows,
+				"SMAC display palette currently requires an opaque source" );
+			std::vector< unsigned char > palette_buffer;
+			util::FS::ReadFile( palette_buffer, GetCustomFilename( "palette.pcx" ) );
+			Surface palette_image( load_image( palette_buffer ), SDL_FreeSurface );
+			ASSERT( palette_image && palette_image->format->palette && palette_image->format->palette->ncolors == 256,
+				"SMAC display palette requires the 256-color common palette" );
+			SDL_Color colors[ 256 ];
+			for ( size_t i = 0; i < 256; ++i ) {
+				colors[ i ] = palette_image->format->palette->colors[ i ];
+				colors[ i ].r = std::min< uint8_t >( colors[ i ].r, 235 );
+				colors[ i ].g = std::min< uint8_t >( colors[ i ].g, 235 );
+				colors[ i ].b = std::min< uint8_t >( colors[ i ].b, 235 );
+			}
+			ASSERT( SDL_SetPaletteColors( image->format->palette, colors, 0, 256 ) == 0, SDL_GetError() );
+		}
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
-			SDL_Surface * old = image;
-			image = SDL_ConvertSurfaceFormat( old, SDL_PIXELFORMAT_RGBA32, 0 );
-			ASSERT( image, IMG_GetError() );
-			SDL_FreeSurface( old );
+			auto* converted = SDL_ConvertSurfaceFormat( image.get(), SDL_PIXELFORMAT_RGBA32, 0 );
+			ASSERT( converted, SDL_GetError() );
+			image.reset( converted );
 		}
 
 		NEWV( texture, types::texture::Texture, filename, image->w, image->h, flags );
 		texture->SetBitmap( image->pixels );
 		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
-		SDL_FreeSurface( image );
+		image.reset();
 
 		FixTexture( texture ); // some pcx files have strange artifacts that we need to fix procedurally
 
@@ -66,7 +89,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 
 		m_textures.insert(
 			{
-				filename,
+				cache_key,
 				texture
 			}
 		);
@@ -89,7 +112,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 			std::to_string( x2 ) + ":" +
 			std::to_string( y2 ) + ":" +
 			std::to_string( flags ) + ":" +
-			std::to_string( value );
+			std::to_string( value ) + ":" + std::to_string( texture_flags );
 
 	texture_map_t::iterator it = m_subtextures.find( subtexture_key );
 	if ( it != m_subtextures.end() ) {

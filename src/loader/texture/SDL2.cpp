@@ -1,6 +1,6 @@
 #include "SDL2.h"
+#include "SmacPalette.h"
 
-#include <algorithm>
 #include <memory>
 
 #include "util/FS.h"
@@ -49,30 +49,20 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 		util::FS::ReadFile( buffer, filename );
 		using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
 		Surface image( load_image( buffer ), SDL_FreeSurface );
-		ASSERT( image, IMG_GetError() );
+		if ( !image ) { THROW( IMG_GetError() ); }
 		if ( flags & types::texture::TF_SMAC_PALETTE ) {
-			ASSERT( image->format->BitsPerPixel == 8 && image->format->palette && image->format->palette->ncolors == 256,
-				"SMAC display palette requires an indexed source" );
-			ASSERT( m_transparent_colors.empty() && !m_fix_yellow_shadows,
-				"SMAC display palette currently requires an opaque source" );
+			if ( !m_transparent_colors.empty() || m_fix_yellow_shadows ) {
+				THROW( "SMAC display palette currently requires an opaque source" );
+			}
 			std::vector< unsigned char > palette_buffer;
 			util::FS::ReadFile( palette_buffer, GetCustomFilename( "palette.pcx" ) );
 			Surface palette_image( load_image( palette_buffer ), SDL_FreeSurface );
-			ASSERT( palette_image && palette_image->format->palette && palette_image->format->palette->ncolors == 256,
-				"SMAC display palette requires the 256-color common palette" );
-			SDL_Color colors[ 256 ];
-			for ( size_t i = 0; i < 256; ++i ) {
-				colors[ i ] = palette_image->format->palette->colors[ i ];
-				colors[ i ].r = std::min< uint8_t >( colors[ i ].r, 235 );
-				colors[ i ].g = std::min< uint8_t >( colors[ i ].g, 235 );
-				colors[ i ].b = std::min< uint8_t >( colors[ i ].b, 235 );
-			}
-			ASSERT( SDL_SetPaletteColors( image->format->palette, colors, 0, 256 ) == 0, SDL_GetError() );
+			ApplySmacPalette( image.get(), palette_image ? palette_image->format->palette : nullptr );
 		}
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
 			auto* converted = SDL_ConvertSurfaceFormat( image.get(), SDL_PIXELFORMAT_RGBA32, 0 );
-			ASSERT( converted, SDL_GetError() );
+			if ( !converted ) { THROW( SDL_GetError() ); }
 			image.reset( converted );
 		}
 

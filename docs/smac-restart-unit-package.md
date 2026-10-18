@@ -38,5 +38,7 @@ allocation success and disposition. No Units are created, no RNG is consumed,
 and no live caller, persistence schema or default UI is changed. The original
 history-veto case and placement search are deliberately outside this API.
 
-Source and registration checks are complete. Linked native validation is pending
-the shared cached build; no separate engine build or platform run was performed.
+The cached Linux Debug build passes all four native groups with memory tracking.
+The focused clang-tidy 15 pass checks the production translation unit in 1.43
+seconds with zero failures. No additional platform build was needed for this
+bounded selection rule.
